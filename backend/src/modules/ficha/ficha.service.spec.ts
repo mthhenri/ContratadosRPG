@@ -87,6 +87,7 @@ interface CampanhaServiceDublado {
 interface CampanhaGatewayDublado {
   emitirFichaCriada: ReturnType<typeof vi.fn>;
   emitirFichaAlterada: ReturnType<typeof vi.fn>;
+  emitirFichaRecortesAlterados: ReturnType<typeof vi.fn>;
   emitirFichaVisibilidadeAlterada: ReturnType<typeof vi.fn>;
   emitirFichaRemovidaDaCampanha: ReturnType<typeof vi.fn>;
   emitirAcessoRevogado: ReturnType<typeof vi.fn>;
@@ -317,6 +318,7 @@ describe('FichaService', () => {
     campanhaGateway = {
       emitirFichaCriada: vi.fn(),
       emitirFichaAlterada: vi.fn(),
+      emitirFichaRecortesAlterados: vi.fn(),
       emitirFichaVisibilidadeAlterada: vi.fn(),
       emitirFichaRemovidaDaCampanha: vi.fn(),
       emitirAcessoRevogado: vi.fn(),
@@ -1595,6 +1597,27 @@ describe('FichaService', () => {
   });
 
   describe('alterarVitalidade', () => {
+    it('invalida fichas e membros quando Vida/Energia do jogador muda', async () => {
+      const fichaAlterada = {
+        ...fichaPersistida,
+        dados: criarDados({
+          estado: { ...criarDados().estado, vidaAtual: 17, energiaAtual: 8, machucado: true },
+        }),
+      };
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      fichaRepositorio.alterarVitalidade.mockResolvedValue(fichaAlterada);
+
+      await service.alterarVitalidade(
+        { id: 5, estado: { vidaAtual: 17, energiaAtual: 8 } },
+        usuarioDono,
+      );
+
+      expect(campanhaGateway.emitirFichaRecortesAlterados).toHaveBeenCalledWith({
+        campanhaId: 3,
+        fichas: true,
+        membros: true,
+      });
+    });
     it('aceita Energia atual negativa, regra já aplicada pelos controles da ficha', async () => {
       fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
       fichaRepositorio.alterarVitalidade.mockResolvedValue(fichaPersistida);
@@ -1705,6 +1728,54 @@ describe('FichaService', () => {
   });
 
   describe('alterarFicha', () => {
+    it('não invalida listas quando só dinheiro ou anotações mudam', async () => {
+      const dadosAlterados = criarDados({ dinheiro: 123, anotacoes: 'Pista nova' });
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      fichaRepositorio.alterarFicha.mockResolvedValue({ ...fichaPersistida, dados: dadosAlterados });
+
+      await service.alterarFicha(
+        { id: 5, nome: fichaPersistida.nome, dados: dadosAlterados },
+        usuarioDono,
+      );
+
+      expect(campanhaGateway.emitirFichaRecortesAlterados).not.toHaveBeenCalled();
+    });
+
+    it('invalida fichas e membros uma vez quando nome e condição mudam juntos', async () => {
+      const dadosAlterados = criarDados({
+        estado: { ...criarDados().estado, morrendo: true },
+      });
+      const fichaAlterada = { ...fichaPersistida, nome: 'Agente Beta', dados: dadosAlterados };
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      fichaRepositorio.alterarFicha.mockResolvedValue(fichaAlterada);
+
+      await service.alterarFicha(
+        { id: 5, nome: fichaAlterada.nome, dados: dadosAlterados },
+        usuarioDono,
+      );
+
+      expect(campanhaGateway.emitirFichaRecortesAlterados).toHaveBeenCalledTimes(1);
+      expect(campanhaGateway.emitirFichaRecortesAlterados).toHaveBeenCalledWith({
+        campanhaId: 3,
+        fichas: true,
+        membros: true,
+      });
+    });
+
+    it('trata condição ausente e false como equivalentes', async () => {
+      const dadosComFalse = criarDados({
+        estado: { ...criarDados().estado, morrendo: false, machucado: false, inconsciente: false },
+      });
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      fichaRepositorio.alterarFicha.mockResolvedValue({ ...fichaPersistida, dados: dadosComFalse });
+
+      await service.alterarFicha(
+        { id: 5, nome: fichaPersistida.nome, dados: dadosComFalse },
+        usuarioDono,
+      );
+
+      expect(campanhaGateway.emitirFichaRecortesAlterados).not.toHaveBeenCalled();
+    });
     it('altera a ficha quando o autor é o dono', async () => {
       fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
       const fichaAlterada = { ...fichaPersistida, nome: 'Agente Alfa Prime' };

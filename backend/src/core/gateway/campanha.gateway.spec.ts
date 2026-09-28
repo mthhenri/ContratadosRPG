@@ -387,22 +387,21 @@ describe('CampanhaGateway', () => {
       expect(encontroService.sincronizarFichaAlterada).toHaveBeenCalledWith(5, 3);
     });
 
-    it('emite ficha:condicoes-alteradas na sala da campanha junto de ficha:alterada (I-031)', () => {
-      const ficha = { id: 5, campanhaId: 3, usuarioId: 10, nome: 'Agente Alfa', dados: {} };
-
-      gateway.emitirFichaAlterada(ficha as never);
-
-      expect(paraSala).toHaveBeenCalledWith('ficha:5');
-      expect(paraSala).toHaveBeenCalledWith('campanha:3');
-      expect(emitir).toHaveBeenCalledWith('ficha:condicoes-alteradas', { campanhaId: 3 });
-    });
-
-    it('não emite ficha:condicoes-alteradas quando a ficha não tem campanha (solta)', () => {
+    it('não decide invalidadores de campanha ao transportar ficha:alterada', () => {
       const ficha = { id: 5, campanhaId: null, usuarioId: 10, nome: 'Agente Alfa', dados: {} };
 
       gateway.emitirFichaAlterada(ficha as never);
 
-      expect(emitir).not.toHaveBeenCalledWith('ficha:condicoes-alteradas', expect.anything());
+      expect(emitir).not.toHaveBeenCalledWith('ficha:recortes-alterados', expect.anything());
+    });
+
+    it('transporta os recortes alterados na sala da campanha sem dados da ficha', () => {
+      const evento = { campanhaId: 3, fichas: true, membros: false };
+
+      gateway.emitirFichaRecortesAlterados(evento);
+
+      expect(paraSala).toHaveBeenCalledWith('campanha:3');
+      expect(emitir).toHaveBeenCalledWith('ficha:recortes-alterados', evento);
     });
 
     it('emite ficha:visibilidade-alterada na sala da campanha com payload mínimo', () => {

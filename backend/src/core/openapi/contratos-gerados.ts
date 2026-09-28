@@ -4161,18 +4161,26 @@ export const schemasContratosPublicos = {
         "additionalProperties": false,
         "description": "Evento de tempo real que invalida a listagem autorizada de fichas de uma campanha. O payload é\ndeliberadamente mínimo: não revela nem o novo estado de visibilidade nem dados da ficha a quem\nestá na sala ampla `campanha:<id>`."
     },
-    "FichaCondicoesAlteradasDto": {
+    "FichaCampanhaRecortesAlteradosDto": {
         "type": "object",
         "properties": {
             "campanhaId": {
                 "type": "number"
+            },
+            "fichas": {
+                "type": "boolean"
+            },
+            "membros": {
+                "type": "boolean"
             }
         },
         "required": [
-            "campanhaId"
+            "campanhaId",
+            "fichas",
+            "membros"
         ],
         "additionalProperties": false,
-        "description": "Evento de tempo real (I-031): uma ficha `JOGADOR` da campanha pode ter mudado de condição\n(Morrendo/Machucado/Inconsciente) — emitido junto de todo `ficha:alterada` (não dá pra saber,\nno gateway, se a mudança tocou `estado` sem reabrir o documento). Payload mínimo de propósito,\nigual a `FichaVisibilidadeAlteradaDto`: não revela quem mudou nem o novo valor a quem está na\nsala ampla `campanha:<id>` sem acesso à ficha — o cliente refaz `listarMembros`, cujo recorte\nde carteirinha (`CampanhaMembroFichaResumoDto`) já inclui as três condições sempre."
+        "description": "Evento de tempo real que invalida somente as projeções de campanha realmente afetadas por uma\nmutação de ficha. A service compara o estado persistido anterior/posterior; o gateway apenas\ntransporta estas flags para `campanha:<id>`, sem expor qualquer campo da ficha na sala ampla."
     },
     "FichaCampanhaRemovidaDto": {
         "type": "object",

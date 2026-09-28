@@ -157,7 +157,11 @@ describe('CampanhaPreviaJogador', () => {
     const rolagemRegistrada$ = new Subject<RolagemResumoDto>();
     const membroEntrou$ = new Subject<unknown>();
     const fichaRemovidaDaCampanha$ = new Subject<unknown>();
-    const fichaCondicoesAlteradas$ = new Subject<{ campanhaId: number }>();
+    const fichaRecortesAlterados$ = new Subject<{
+      campanhaId: number;
+      fichas: boolean;
+      membros: boolean;
+    }>();
     const fichaAlterada$ = new Subject<FichaRecuperadaDto>();
     const encontroAlterado$ = new Subject<{ encontro: { campanhaId: number } }>();
 
@@ -197,7 +201,7 @@ describe('CampanhaPreviaJogador', () => {
       fichaCriada$: new Subject().asObservable(),
       membroEntrou$: membroEntrou$.asObservable(),
       fichaVisibilidadeAlterada$: new Subject().asObservable(),
-      fichaCondicoesAlteradas$: fichaCondicoesAlteradas$.asObservable(),
+      fichaRecortesAlterados$: fichaRecortesAlterados$.asObservable(),
       fichaRemovidaDaCampanha$: fichaRemovidaDaCampanha$.asObservable(),
       fichaAlterada$: fichaAlterada$.asObservable(),
       estadoAlterado$: new Subject().asObservable(),
@@ -245,7 +249,7 @@ describe('CampanhaPreviaJogador', () => {
       rolagemRegistrada$,
       membroEntrou$,
       fichaRemovidaDaCampanha$,
-      fichaCondicoesAlteradas$,
+      fichaRecortesAlterados$,
       fichaAlterada$,
       encontroAlterado$,
       reconexao$,
@@ -406,14 +410,18 @@ describe('CampanhaPreviaJogador', () => {
       expect(feed).not.toContain('Privada de outro');
     });
 
-    it('membro entrou, ficha removida e condições alteradas refazem a projeção do alvo', async () => {
-      const { membroEntrou$, fichaRemovidaDaCampanha$, fichaCondicoesAlteradas$, campanhaProjecaoService } =
-        montar();
+    it('membro entrou, ficha removida e recorte alterado refazem a projeção do alvo', async () => {
+      const {
+        membroEntrou$,
+        fichaRemovidaDaCampanha$,
+        fichaRecortesAlterados$,
+        campanhaProjecaoService,
+      } = montar();
 
       for (const disparar of [
         () => membroEntrou$.next({ campanhaId: CAMPANHA_ID, usuarioId: 99 }),
         () => fichaRemovidaDaCampanha$.next({ fichaId: 5, campanhaId: CAMPANHA_ID }),
-        () => fichaCondicoesAlteradas$.next({ campanhaId: CAMPANHA_ID }),
+        () => fichaRecortesAlterados$.next({ campanhaId: CAMPANHA_ID, fichas: true, membros: true }),
       ]) {
         campanhaProjecaoService.recuperarPreviaJogador.mockClear();
         disparar();

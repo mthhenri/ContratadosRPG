@@ -7,9 +7,8 @@
 > na ficha errada e dados antigos após reconexão. Carga inicial verificada em desktop/mobile.
 > Cenário isolado excluído; contas de teste mantidas conforme autorizado. Correções especificadas
 > em seis tasks no backlog, ordenadas em [requests-correcoes](../specs/backlog/requests-correcoes.spec.md).
-> `p-082`, `p-083` e `p-084` (3/6) **concluídas** (specs em `done/`) — `P-082`/`P-083`/`P-084`
-> fechados em `PROBLEMS.md`. Restam `p-085`/`p-086` e o inventário sob demanda; próxima
-> recomendada `p-085`.
+> `p-082`…`p-085` (4/6) **concluídas** (specs em `done/`) — `P-082`…`P-085` fechados em
+> `PROBLEMS.md`. Restam `p-086` e o inventário sob demanda; próxima recomendada `p-086`.
 
 > **Avaliação de usabilidade aberta:** [relatório e cobertura dos quatro viewports](../reviews/usabilidade-2026-09-13/RELATORIO.md).
 > Oito propostas de melhoria aguardam revisão; specs no backlog somente após aprovação do autor.
@@ -21,7 +20,16 @@
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
 > **Última revisão:** 2026-09-28 · **Última decisão registrada:**
-> `p-084-ressincronizacao-recursos` concluída (spec em `done/`, `P-084` fechado em `PROBLEMS.md`):
+> `p-085-invalidacao-seletiva-ficha` concluída (spec em `done/`, `P-085` fechado em
+> `PROBLEMS.md`): `FichaService`, com o estado persistido antes/depois, decide se os recortes
+> `fichas` e/ou `membros` mudaram e emite um único `ficha:recortes-alterados`; o gateway só
+> transporta. O frontend agrupa por recurso e protege a corrida entre invalidação e GET em voo —
+> resposta antiga é descartada e uma releitura é garantida. Dinheiro/anotações fazem zero GETs de
+> listas; nome/condição fazem no máximo um por lista afetada; criatura nunca invalida membros.
+> `ficha:alterada` privado e a ponte para o Encontro foram preservados. Verificado com mestre
+> 1920×1080 e jogador 360×800, inclusive condição visível na carteirinha sem acesso ao documento.
+> `requests-correcoes`: 4/6 (`p-082`…`p-085`) — seguem abertas `p-086` e o inventário sob demanda.
+> Antes: `p-084-ressincronizacao-recursos` concluída (spec em `done/`, `P-084` fechado em `PROBLEMS.md`):
 > `reconexao$` (P-083) agora coordena tudo que uma queda sem broadcast pode ter deixado antigo
 > (§9, nenhum evento tem replay). `CampanhaDetalheDadosService` passou a refazer também
 > campanha/estado + inventário (`recarregarCampanhaEInventario`, o par de `estadoAlterado$`) e o
@@ -50,8 +58,7 @@
 > hora, mutação direto no banco): estado da campanha, dinheiro/energia da ficha embutida, item de
 > inventário e rolagem feita durante a queda convergem sem reload; uma rolagem excluída direto no
 > banco durante a queda não reaparece — repetido também no painel de uma Cena (Encontro).
-> `requests-correcoes`: 3/6 (`p-082`, `p-083`, `p-084`) — seguem abertas `p-085`/`p-086` e o
-> inventário sob demanda. Antes:
+> `requests-correcoes` estava em 3/6 (`p-082`, `p-083`, `p-084`). Antes:
 > `p-083-reconexao-sem-carga-duplicada` concluída (spec em `done/`, `P-083` fechado em
 > `PROBLEMS.md`): `TempoRealService` ganhou `reconexao$` — um `Observable<void>` emitido a cada
 > reconexão real, no lugar do padrão `effect(() => reconexao() > 0)` que os 12 consumidores
@@ -710,16 +717,14 @@
 
 ## 1. Próxima Task
 
-**Requests-correcoes (guarda-chuva de 6 tasks, `P-082`…`P-086` + inventário sob demanda) — 3/6
-concluídas: `p-082` (autosave/seleção da ficha), `p-083` (reconexão sem carga duplicada) e `p-084`
-(ressincronização de recursos — ver cabeçalho deste arquivo). Próxima recomendada:
-`p-085-invalidacao-seletiva-ficha`** (hoje toda `ficha:alterada` refaz `listarMembros`+
-`listarFichas` nos painéis conectados, mesmo para um PUT que só mudou dinheiro/anotações —
-`P-085` em `PROBLEMS.md`; o gateway também decide incondicionalmente que toda ficha alterada
-implica condição alterada, dobrando a recarga). `p-086` é independente mas compartilha arquivo
-(`campanha-detalhe-dados.service.ts`) — integrar em sequência. Fontes e gates em
+**Requests-correcoes (guarda-chuva de 6 tasks, `P-082`…`P-086` + inventário sob demanda) — 4/6
+concluídas: `p-082` (autosave/seleção da ficha), `p-083` (reconexão sem carga duplicada), `p-084`
+(ressincronização de recursos) e `p-085` (invalidação seletiva da ficha — ver cabeçalho deste
+arquivo). Próxima recomendada: `p-086-estado-campanha-sem-refetch`**. Ela compartilha
+`campanha-detalhe-dados.service.ts` com a task recém-concluída; preservar o coordenador seletivo ao
+integrá-la. Fontes e gates em
 [requests-correcoes](../specs/backlog/requests-correcoes.spec.md); tasks em
-`docs/specs/backlog/p-08{5,6}-*.spec.md` e `requests-inventario-sob-demanda.spec.md`.
+`docs/specs/backlog/p-086-*.spec.md` e `requests-inventario-sob-demanda.spec.md`.
 
 **Biblioteca — melhorias especificadas (2026-09-28), não iniciadas:** `m9-07` (segundo clique fecha o
 documento aberto), `m9-08` (importar `.md` num documento de texto), `m9-09` (presença de leitura —
@@ -2678,13 +2683,18 @@ abrir uma ficha pela Iniciativa limita a janela a `1100×600` (mestre) ou geomet
 
 Gateway Socket.IO **broadcast-only**: toda mutação passa por REST, o gateway nunca recebe escrita.
 Handshake autenticado pelo mesmo `JwtService` do Passport. Salas `ficha:<id>` e `campanha:<id>`,
-reusando a permissão §14 das services. Eventos: `ficha:criada`, `ficha:alterada`, `membro:entrou`,
+reusando a permissão §14 das services. Eventos: `ficha:criada`, `ficha:alterada`,
+`ficha:recortes-alterados`, `membro:entrou`,
 `rolagem:registrada`, `campanha:estado-alterado`, `campanha:inventario-alterado`,
 `encontro:alterado` (por usuário — ver "Encontro de Combate" abaixo), `cena:alterada` (`m7-22`:
 cena `PLANEJADA` só na sala `campanha:<id>:mestre`; aberta/encerrada na sala cheia + espectador) e
 `documento:alterado` (`m9-02`: o que nunca foi visível à mesa só na sala do mestre — ver "Biblioteca
 de documentos" abaixo).
 Os eventos de inventário/estado sinalizam o frontend para reler a fonte de verdade por REST.
+`ficha:recortes-alterados` leva `{ campanhaId, fichas, membros }`: `FichaService` compara as
+projeções persistidas antes/depois e decide os flags; o gateway somente transporta. Os consumidores
+agrupam invalidações por recurso e garantem uma releitura quando outra alteração chega durante um
+GET, sem deixar a resposta anterior sobrescrever o estado mais novo.
 
 `CampanhaGateway.emitirFichaAlterada` também aciona `EncontroService.sincronizarFichaAlterada` após
 todo `ficha:alterada` (correção pós-`m7-17`, ver topo do arquivo): se a ficha alterada for
@@ -2981,8 +2991,9 @@ Decisões que **continuam governando código novo**. Não as re-litigue sem fala
   (`FichaEdicaoService.ajustarVitalidade`) — o toggle manual continua existindo (Anestesia etc.) e
   vale até a próxima mudança de Vida. As três condições de qualquer ficha `JOGADOR` da campanha
   (I-031) chegam a **todo** membro via `CampanhaMembroFichaResumoDto` — únicos campos que atravessam
-  a carteirinha sem `acessoCompleto` — e se propagam em tempo real por `ficha:condicoes-alteradas`
-  (payload só `campanhaId`, sala `campanha:<id>`, emitido junto de todo `ficha:alterada`).
+  a carteirinha sem `acessoCompleto` — e se propagam em tempo real pelo recorte `membros` de
+  `ficha:recortes-alterados` (sala `campanha:<id>`), emitido somente quando a projeção realmente
+  muda. Ausente e `false` são equivalentes nessa comparação.
 - **Gate de qualidade é definição de pronto** — toda tarefa exige evidência contra a spec e as
   convenções, revisão do diff e verificação proporcional. UI exige verificação ao vivo conforme
   `verify`; item sem uma verificação obrigatória permanece aberto. **Qualidade acima de velocidade**

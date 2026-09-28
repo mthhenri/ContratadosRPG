@@ -506,6 +506,7 @@ export class FichaService {
       dados: preservarCamposPrivados(fichaEncontrada.dados, dto.dados),
     });
     this.campanhaGateway.emitirFichaAlterada(fichaAlterada);
+    this.emitirRecortesAlterados(fichaEncontrada, fichaAlterada);
     if (
       fichaAlterada.campanhaId !== null &&
       fichaEncontrada.oculta !== fichaAlterada.oculta
@@ -601,6 +602,7 @@ export class FichaService {
     });
 
     this.campanhaGateway.emitirFichaAlterada(fichaAlterada);
+    this.emitirRecortesAlterados(fichaEncontrada, fichaAlterada);
     this.campanhaGateway.emitirInventarioAlterado({ campanhaId: fichaEncontrada.campanhaId });
 
     return fichaAlterada;
@@ -686,6 +688,7 @@ export class FichaService {
     });
 
     this.campanhaGateway.emitirFichaAlterada(fichaAlterada);
+    this.emitirRecortesAlterados(fichaEncontrada, fichaAlterada);
     this.campanhaGateway.emitirInventarioAlterado({ campanhaId: fichaEncontrada.campanhaId });
 
     return fichaAlterada;
@@ -710,6 +713,7 @@ export class FichaService {
       estado: estadoComMachucado,
     });
     this.campanhaGateway.emitirFichaAlterada(fichaAlterada);
+    this.emitirRecortesAlterados(fichaEncontrada, fichaAlterada);
     return fichaAlterada;
   }
 
@@ -756,6 +760,7 @@ export class FichaService {
 
     const fichaAlterada = await this.fichaRepositorio.alterarVitalidadeCriatura(dto);
     this.campanhaGateway.emitirFichaAlterada(fichaAlterada);
+    this.emitirRecortesAlterados(fichaEncontrada, fichaAlterada, TipoFichaEnum.CRIATURA);
     return fichaAlterada;
   }
 
@@ -794,6 +799,10 @@ export class FichaService {
       imagemUrl: imagemSalva.caminho,
     });
     this.campanhaGateway.emitirFichaAlterada({ ...fichaEncontrada, imagemUrl: imagemAlterada.imagemUrl });
+    this.emitirRecortesAlterados(fichaEncontrada, {
+      ...fichaEncontrada,
+      imagemUrl: imagemAlterada.imagemUrl,
+    });
     return imagemAlterada;
   }
 
@@ -819,6 +828,7 @@ export class FichaService {
 
     const imagemAlterada = await this.fichaRepositorio.alterarImagem({ id: dto.id, imagemUrl: null });
     this.campanhaGateway.emitirFichaAlterada({ ...fichaEncontrada, imagemUrl: null });
+    this.emitirRecortesAlterados(fichaEncontrada, { ...fichaEncontrada, imagemUrl: null });
     return imagemAlterada;
   }
 
@@ -970,6 +980,7 @@ export class FichaService {
     // sem cast necessário (a fronteira de tipos entre os dois contratos só existe para `dados`,
     // já resolvida acima).
     this.campanhaGateway.emitirFichaAlterada(fichaAlterada);
+    this.emitirRecortesAlterados(fichaEncontrada, fichaAlterada, TipoFichaEnum.CRIATURA);
     if (fichaEncontrada.oculta !== fichaAlterada.oculta) {
       this.campanhaGateway.emitirFichaVisibilidadeAlterada({
         fichaId: fichaAlterada.id,
@@ -981,6 +992,131 @@ export class FichaService {
     }
 
     return this.paraCriaturaAlterada(fichaAlterada);
+  }
+
+  /**
+   * Compara somente os campos materializados nas duas projeções de campanha. Assim dinheiro,
+   * anotações e demais conteúdo do documento continuam em `ficha:alterada`, mas não provocam GET
+   * de listas. Ausência e `false` das condições são normalizados para o mesmo valor.
+   */
+  private emitirRecortesAlterados(
+    anterior: FichaRecuperadaDto,
+    posterior: FichaRecuperadaDto,
+    tipoForcado?: TipoFichaEnum,
+  ): void {
+    if (posterior.campanhaId === null) {
+      return;
+    }
+
+    const tipo = tipoForcado ?? anterior.tipo ?? TipoFichaEnum.JOGADOR;
+    const fichas =
+      JSON.stringify(this.recorteListaFichas(anterior, tipo)) !==
+      JSON.stringify(this.recorteListaFichas(posterior, tipo));
+    const membros =
+      tipo === TipoFichaEnum.JOGADOR &&
+      JSON.stringify(this.recorteListaMembros(anterior)) !==
+        JSON.stringify(this.recorteListaMembros(posterior));
+
+    if (fichas || membros) {
+      this.campanhaGateway.emitirFichaRecortesAlterados({
+        campanhaId: posterior.campanhaId,
+        fichas,
+        membros,
+      });
+    }
+  }
+
+  private recorteListaMembros(ficha: FichaRecuperadaDto): unknown {
+    const estado = ficha.dados.estado;
+    return {
+      nome: ficha.nome,
+      oculta: ficha.oculta,
+      cor: ficha.cor,
+      imagemUrl: ficha.imagemUrl,
+      classe: ficha.dados.classe,
+      arquetipo: ficha.dados.arquetipo,
+      morrendo: estado?.morrendo ?? false,
+      machucado: estado?.machucado ?? false,
+      inconsciente: estado?.inconsciente ?? false,
+    };
+  }
+
+  private recorteListaFichas(ficha: FichaRecuperadaDto, tipo: TipoFichaEnum): unknown {
+    if (tipo === TipoFichaEnum.CRIATURA) {
+      const dados = ficha.dados as unknown as FichaCriaturaDadosDto;
+      return {
+        nome: ficha.nome,
+        cor: ficha.cor,
+        imagemUrl: ficha.imagemUrl,
+        na: dados.na,
+        vd: dados.vd,
+        registro: dados.registro ?? null,
+        porte: dados.porte,
+        comportamento: dados.identidade.comportamento,
+        vidaAtual: dados.vidaAtual,
+        vidaMaxima: dados.vidaMaxima,
+      };
+    }
+
+    const dados = ficha.dados;
+    const statsEfetivos = dados.atributos && dados.habilidades && dados.inventario
+      ? calcularStatsEfetivos({
+          classe: dados.classe,
+          nivel: dados.nivel,
+          atributos: dados.atributos,
+          habilidades: dados.habilidades,
+          derivados: dados.derivados ?? {},
+          estado: {
+            vidaMaxima: dados.estado?.vidaMaxima,
+            energiaMaxima: dados.estado?.energiaMaxima,
+          },
+          itens: dados.inventario.itens,
+          amplificadores: dados.inventario.amplificadores,
+        })
+      : null;
+    return {
+      nome: ficha.nome,
+      cor: ficha.cor,
+      imagemUrl: ficha.imagemUrl,
+      classe: dados.classe,
+      arquetipo: dados.arquetipo,
+      nivel: dados.nivel,
+      prestigio: dados.prestigio,
+      estado: {
+        vidaAtual: dados.estado?.vidaAtual,
+        vidaMaxima: statsEfetivos?.vidaMaxima ?? dados.estado?.vidaMaxima,
+        energiaAtual: dados.estado?.energiaAtual,
+        energiaMaxima: statsEfetivos?.energiaMaxima ?? dados.estado?.energiaMaxima,
+        morrendo: dados.estado?.morrendo ?? false,
+        machucado: dados.estado?.machucado ?? false,
+        inconsciente: dados.estado?.inconsciente ?? false,
+      },
+      defesa: statsEfetivos?.defesa ?? dados.derivados?.defesa,
+      esquiva: statsEfetivos?.esquiva ?? dados.derivados?.esquiva,
+      bloqueio: statsEfetivos?.bloqueio ?? dados.derivados?.bloqueio,
+      contraAtaque: statsEfetivos?.contraAtaque ?? dados.derivados?.contraAtaque,
+      personalidade: dados.identidade?.personalidade ?? null,
+      origemNome: dados.identidade?.origem?.nome ?? null,
+      sobrecarregado: this.calcularSobrecarregadoDados(dados),
+    };
+  }
+
+  private calcularSobrecarregadoDados(dados: FichaJogadorDadosDto): boolean | undefined {
+    const inventarioMaximo = dados.derivados?.inventarioMaximo;
+    if (inventarioMaximo === undefined || !dados.inventario || !dados.atributos) {
+      return undefined;
+    }
+    const inventarioEfetivo =
+      inventarioMaximo + ajusteInventarioAmplificadores(dados.inventario.amplificadores);
+    const resumo = calcularResumoCompras({
+      itens: dados.inventario.itens,
+      amplificadores: dados.inventario.amplificadores,
+      dinheiro: dados.dinheiro ?? 0,
+      prestigio: dados.prestigio ?? 0,
+      inventario: inventarioEfetivo,
+      vontade: dados.atributos.vontade,
+    });
+    return resumo.pesoUsado > resumo.inventarioEfetivo;
   }
 
   /** Valida o documento de criatura contra `shared/regras/criatura` (`m4-02`) — o motor é o único árbitro. */

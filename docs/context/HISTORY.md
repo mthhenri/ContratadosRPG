@@ -1,5 +1,32 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-28 — p-085: invalidação seletiva das listas de ficha (P-085 fechado)
+
+Quarta das 6 tasks de `requests-correcoes`. A emissão ampla de
+`ficha:condicoes-alteradas`, acoplada a todo `ficha:alterada`, foi substituída por
+`ficha:recortes-alterados`: depois de persistir cada mutação, `FichaService` compara as projeções
+antes/depois que alimentam `listarFichas` e `listarMembros` e informa, num único payload, quais
+recortes realmente mudaram. Ausente e `false` são equivalentes nas três condições. O gateway ficou
+somente com o transporte; `ficha:alterada` continua levando o documento completo à sala privada da
+ficha e continua sincronizando a ficha com o Encontro.
+
+No frontend, `CampanhaDetalheDadosService` agrupa intenções por recurso e mantém estado
+`emVoo`/`sujo`: uma rajada faz no máximo um GET por lista e, se uma invalidação chegar durante um
+GET, a resposta antiga não sobrescreve o estado e uma nova leitura é disparada ao terminar. A
+prévia de jogador passou a consumir o mesmo evento seletivo. Alterações só de dinheiro ou anotações
+não recarregam nenhuma lista; nome, imagem, resumo mecânico e condições invalidam apenas os
+recortes que realmente os exibem; criaturas nunca invalidam a lista de membros.
+
+Os testes cobrem decisão no service, transporte no gateway/cliente e consumidores, inclusive a
+corrida de resposta antiga (shared 772/772, backend 715/715, frontend 2420/2420). Lint terminou sem
+erros, com os 23.235 avisos conhecidos do repositório; builds dos três workspaces passaram,
+mantendo apenas o aviso preexistente de orçamento do bundle frontend (550,83 kB para limite de
+450 kB). Na aplicação
+real, com mestre em 1920×1080 e jogador em 360×800, editar dinheiro gerou zero GETs de listas;
+editar nome gerou exatamente um GET de fichas e um de membros por cliente; alterar condição repetiu
+esse limite e a carteirinha do jogador recebeu a condição sem acesso ao documento privado. Os dois
+viewports permaneceram visualmente íntegros. O seed de desenvolvimento foi restaurado ao final.
+
 ## 2026-09-28 — Correção visual: maximizar da ficha flutuante volta à geometria compacta
 
 O botão de maximizar da `FichaFlutuante` recebia o tamanho `compacto` canônico do

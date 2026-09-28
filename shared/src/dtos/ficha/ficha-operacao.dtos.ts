@@ -555,15 +555,14 @@ export interface FichaVisibilidadeAlteradaDto {
 }
 
 /**
- * Evento de tempo real (I-031): uma ficha `JOGADOR` da campanha pode ter mudado de condição
- * (Morrendo/Machucado/Inconsciente) — emitido junto de todo `ficha:alterada` (não dá pra saber,
- * no gateway, se a mudança tocou `estado` sem reabrir o documento). Payload mínimo de propósito,
- * igual a `FichaVisibilidadeAlteradaDto`: não revela quem mudou nem o novo valor a quem está na
- * sala ampla `campanha:<id>` sem acesso à ficha — o cliente refaz `listarMembros`, cujo recorte
- * de carteirinha (`CampanhaMembroFichaResumoDto`) já inclui as três condições sempre.
+ * Evento de tempo real que invalida somente as projeções de campanha realmente afetadas por uma
+ * mutação de ficha. A service compara o estado persistido anterior/posterior; o gateway apenas
+ * transporta estas flags para `campanha:<id>`, sem expor qualquer campo da ficha na sala ampla.
  */
-export interface FichaCondicoesAlteradasDto {
+export interface FichaCampanhaRecortesAlteradosDto {
   readonly campanhaId: number;
+  readonly fichas: boolean;
+  readonly membros: boolean;
 }
 
 /**

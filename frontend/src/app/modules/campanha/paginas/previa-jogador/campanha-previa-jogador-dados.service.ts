@@ -172,11 +172,8 @@ export class CampanhaPreviaJogadorDadosService extends CampanhaDetalheDadosServi
       this.tempoRealService.fichaRemovidaDaCampanha$.pipe(
         filter((evento) => evento.campanhaId === id),
       ),
-      this.tempoRealService.fichaCondicoesAlteradas$.pipe(
-        filter((evento) => evento.campanhaId === id),
-      ),
-      this.tempoRealService.fichaAlterada$.pipe(
-        filter((ficha) => this.fichas().some(({ id: fichaId }) => fichaId === ficha.id)),
+      this.tempoRealService.fichaRecortesAlterados$.pipe(
+        filter((evento) => evento.campanhaId === id && (evento.fichas || evento.membros)),
       ),
       this.tempoRealService.estadoAlterado$.pipe(filter((evento) => evento.id === id)),
     )

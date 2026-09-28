@@ -58,6 +58,7 @@ describe('CampanhaDetalheDadosService', () => {
     usuarioId: number;
     membros: CampanhaMembroResumoDto[];
     fichas?: FichaResumoDto[];
+    fichas$?: Observable<FichaResumoDto[]>;
     rolagens?: RolagemResumoDto[];
   }) {
     const campanhaService = {
@@ -67,7 +68,7 @@ describe('CampanhaDetalheDadosService', () => {
       alterarEstado: vi.fn((_id: number, naBase: boolean) => of({ id: CAMPANHA_ID, naBase })),
     };
     const fichaService = {
-      listarFichas: vi.fn(() => of(opts.fichas ?? [])),
+      listarFichas: vi.fn(() => opts.fichas$ ?? of(opts.fichas ?? [])),
     };
     const rolagemService = {
       listarPorCampanha: vi.fn(() => of(opts.rolagens ?? [])),
@@ -79,7 +80,11 @@ describe('CampanhaDetalheDadosService', () => {
     const membroEntrou$ = new Subject<unknown>();
     const fichaAlterada$ = new Subject<unknown>();
     const fichaVisibilidadeAlterada$ = new Subject<unknown>();
-    const fichaCondicoesAlteradas$ = new Subject<{ campanhaId: number }>();
+    const fichaRecortesAlterados$ = new Subject<{
+      campanhaId: number;
+      fichas: boolean;
+      membros: boolean;
+    }>();
     const fichaRemovidaDaCampanha$ = new Subject<unknown>();
     const rolagemRegistrada$ = new Subject<RolagemResumoDto>();
     const rolagemExcluida$ = new Subject<{ id: number }>();
@@ -97,7 +102,7 @@ describe('CampanhaDetalheDadosService', () => {
       membroEntrou$: membroEntrou$.asObservable(),
       fichaAlterada$: fichaAlterada$.asObservable(),
       fichaVisibilidadeAlterada$: fichaVisibilidadeAlterada$.asObservable(),
-      fichaCondicoesAlteradas$: fichaCondicoesAlteradas$.asObservable(),
+      fichaRecortesAlterados$: fichaRecortesAlterados$.asObservable(),
       fichaRemovidaDaCampanha$: fichaRemovidaDaCampanha$.asObservable(),
       rolagemRegistrada$: rolagemRegistrada$.asObservable() as Observable<RolagemResumoDto>,
       rolagemExcluida$: rolagemExcluida$.asObservable(),
@@ -135,7 +140,7 @@ describe('CampanhaDetalheDadosService', () => {
       inventarioAlterado$,
       fichaAlterada$,
       fichaRemovidaDaCampanha$,
-      fichaCondicoesAlteradas$,
+      fichaRecortesAlterados$,
       reconexao$,
     };
   }
@@ -171,28 +176,28 @@ describe('CampanhaDetalheDadosService', () => {
     expect(service.rolagensFeed().length).toBe(2);
   });
 
-  it('ficha:condicoes-alteradas (I-031) da própria campanha refaz o fetch de membros', () => {
-    const { campanhaService, fichaCondicoesAlteradas$ } = montar({
+  it('ficha:recortes-alterados da própria campanha refaz o fetch de membros marcado', async () => {
+    const { campanhaService, fichaRecortesAlterados$ } = montar({
       usuarioId: 1,
       membros: membrosCom(1, TipoCampanhaMembroPapelEnum.MESTRE),
     });
     campanhaService.listarMembros.mockClear();
 
-    fichaCondicoesAlteradas$.next({ campanhaId: CAMPANHA_ID });
-    TestBed.inject(ApplicationRef).tick();
+    fichaRecortesAlterados$.next({ campanhaId: CAMPANHA_ID, fichas: false, membros: true });
+    await new Promise((resolve) => setTimeout(resolve, 30));
 
     expect(campanhaService.listarMembros).toHaveBeenCalledWith(CAMPANHA_ID);
   });
 
-  it('ficha:condicoes-alteradas de outra campanha não refaz o fetch de membros', () => {
-    const { campanhaService, fichaCondicoesAlteradas$ } = montar({
+  it('ficha:recortes-alterados de outra campanha não refaz o fetch de membros', async () => {
+    const { campanhaService, fichaRecortesAlterados$ } = montar({
       usuarioId: 1,
       membros: membrosCom(1, TipoCampanhaMembroPapelEnum.MESTRE),
     });
     campanhaService.listarMembros.mockClear();
 
-    fichaCondicoesAlteradas$.next({ campanhaId: CAMPANHA_ID + 1 });
-    TestBed.inject(ApplicationRef).tick();
+    fichaRecortesAlterados$.next({ campanhaId: CAMPANHA_ID + 1, fichas: false, membros: true });
+    await new Promise((resolve) => setTimeout(resolve, 30));
 
     expect(campanhaService.listarMembros).not.toHaveBeenCalled();
   });
@@ -334,7 +339,7 @@ describe('CampanhaDetalheDadosService', () => {
     expect(fichaService.listarFichas).toHaveBeenCalledTimes(1);
   });
 
-  it('refaz somente o fetch de fichas ao receber ficha:alterada em tempo real', () => {
+  it('não usa ficha:alterada para invalidar a lista de fichas', () => {
     const { service, fichaService, fichaAlterada$ } = montar({
       usuarioId: 1,
       membros: membrosCom(1, TipoCampanhaMembroPapelEnum.MESTRE),
@@ -344,8 +349,92 @@ describe('CampanhaDetalheDadosService', () => {
 
     fichaAlterada$.next({ id: 1 });
 
-    expect(fichaService.listarFichas).toHaveBeenCalledWith(CAMPANHA_ID);
+    expect(fichaService.listarFichas).not.toHaveBeenCalled();
     void service;
+  });
+
+  it('não relê listas por ficha:alterada sem invalidador de recorte', () => {
+    const { campanhaService, fichaService, fichaAlterada$ } = montar({
+      usuarioId: 1,
+      membros: membrosCom(1, TipoCampanhaMembroPapelEnum.MESTRE),
+      fichas: [{ id: 1 } as FichaResumoDto],
+    });
+    campanhaService.listarMembros.mockClear();
+    fichaService.listarFichas.mockClear();
+
+    fichaAlterada$.next({ id: 1 });
+
+    expect(campanhaService.listarMembros).not.toHaveBeenCalled();
+    expect(fichaService.listarFichas).not.toHaveBeenCalled();
+  });
+
+  it('relê no máximo uma vez cada lista marcada na mesma invalidação', async () => {
+    const { campanhaService, fichaService, fichaRecortesAlterados$ } = montar({
+      usuarioId: 1,
+      membros: membrosCom(1, TipoCampanhaMembroPapelEnum.MESTRE),
+    });
+    campanhaService.listarMembros.mockClear();
+    fichaService.listarFichas.mockClear();
+
+    fichaRecortesAlterados$.next({ campanhaId: CAMPANHA_ID, fichas: true, membros: true });
+    await new Promise((resolve) => setTimeout(resolve, 30));
+
+    expect(campanhaService.listarMembros).toHaveBeenCalledTimes(1);
+    expect(fichaService.listarFichas).toHaveBeenCalledTimes(1);
+  });
+
+  it('refaz após invalidação durante GET lento e ignora a resposta antiga', async () => {
+    const primeiraResposta$ = new Subject<FichaResumoDto[]>();
+    const segundaResposta$ = new Subject<FichaResumoDto[]>();
+    const { service, fichaService, fichaRecortesAlterados$ } = montar({
+      usuarioId: 1,
+      membros: membrosCom(1, TipoCampanhaMembroPapelEnum.MESTRE),
+      fichas: [{ id: 1, nome: 'Inicial' } as FichaResumoDto],
+    });
+    fichaService.listarFichas.mockClear();
+    fichaService.listarFichas
+      .mockReturnValueOnce(primeiraResposta$)
+      .mockReturnValueOnce(segundaResposta$);
+
+    fichaRecortesAlterados$.next({ campanhaId: CAMPANHA_ID, fichas: true, membros: false });
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    fichaRecortesAlterados$.next({ campanhaId: CAMPANHA_ID, fichas: true, membros: false });
+    await new Promise((resolve) => setTimeout(resolve, 30));
+
+    expect(fichaService.listarFichas).toHaveBeenCalledTimes(1);
+    primeiraResposta$.next([{ id: 1, nome: 'Resposta antiga' } as FichaResumoDto]);
+    primeiraResposta$.complete();
+    expect(fichaService.listarFichas).toHaveBeenCalledTimes(2);
+    expect(service.fichas()[0].nome).toBe('Inicial');
+
+    segundaResposta$.next([{ id: 1, nome: 'Resposta recente' } as FichaResumoDto]);
+    segundaResposta$.complete();
+    expect(service.fichas()[0].nome).toBe('Resposta recente');
+  });
+
+  it('protege também a leitura inicial quando a invalidação chega antes da resposta', async () => {
+    const respostaInicial$ = new Subject<FichaResumoDto[]>();
+    const respostaRecente$ = new Subject<FichaResumoDto[]>();
+    const { service, fichaService, fichaRecortesAlterados$ } = montar({
+      usuarioId: 1,
+      membros: membrosCom(1, TipoCampanhaMembroPapelEnum.MESTRE),
+      fichas$: respostaInicial$,
+    });
+    fichaService.listarFichas.mockClear();
+    fichaService.listarFichas.mockReturnValue(respostaRecente$);
+
+    fichaRecortesAlterados$.next({ campanhaId: CAMPANHA_ID, fichas: true, membros: false });
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    expect(fichaService.listarFichas).not.toHaveBeenCalled();
+
+    respostaInicial$.next([{ id: 1, nome: 'Resposta inicial antiga' } as FichaResumoDto]);
+    respostaInicial$.complete();
+    expect(fichaService.listarFichas).toHaveBeenCalledTimes(1);
+    expect(service.fichas()).toEqual([]);
+
+    respostaRecente$.next([{ id: 1, nome: 'Resposta recente' } as FichaResumoDto]);
+    respostaRecente$.complete();
+    expect(service.fichas()[0].nome).toBe('Resposta recente');
   });
 
   it('refaz o fetch de membros/fichas ao receber ficha:removida-da-campanha em tempo real', () => {

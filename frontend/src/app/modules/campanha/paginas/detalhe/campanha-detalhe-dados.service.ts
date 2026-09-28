@@ -1,6 +1,6 @@
 import { DestroyRef, Injectable, Injector, computed, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { filter, finalize, forkJoin, merge, type Observable } from 'rxjs';
+import { bufferTime, filter, finalize, forkJoin, merge, Subject, type Observable } from 'rxjs';
 import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import {
   CampanhaInventarioItemDto,
@@ -123,6 +123,11 @@ export class CampanhaDetalheDadosService {
    * ressuscitar o item quando a resposta antiga finalmente volta (`mesclarFeedRolagens`).
    */
   private readonly idsRolagensExcluidas = new Set<number>();
+  private readonly invalidacoesListas = new Subject<'fichas' | 'membros'>();
+  private fichasEmLeitura = false;
+  private fichasInvalidas = false;
+  private membrosEmLeitura = false;
+  private membrosInvalidos = false;
 
   get id(): number {
     return this.idInterno;
@@ -149,6 +154,7 @@ export class CampanhaDetalheDadosService {
 
     this.carregar();
     this.carregarRolagens();
+    this.configurarInvalidacoesListas();
 
     // Tempo real (m3-05/m3-08): entra na sala `campanha:<id>` para as fichas/membros atualizarem
     // ao vivo. O recorte visível (§14) continua arbitrado pelo backend — o front só refaz o fetch.
@@ -156,9 +162,6 @@ export class CampanhaDetalheDadosService {
 
     merge(
       this.tempoRealService.fichaCriada$.pipe(filter((ficha) => ficha.campanhaId === id)),
-      this.tempoRealService.fichaAlterada$.pipe(
-        filter((ficha) => this.salasFichaAtivas.has(ficha.id)),
-      ),
       this.tempoRealService.fichaVisibilidadeAlterada$.pipe(
         filter((evento) => evento.campanhaId === id),
       ),
@@ -171,12 +174,14 @@ export class CampanhaDetalheDadosService {
     this.tempoRealService.membroEntrou$
       .pipe(filter((evento) => evento.campanhaId === id), takeUntilDestroyed(this.destroyRef))
       .subscribe({ next: () => this.recarregarMembros() });
-    // I-031: condição de alguém pode ter mudado (Machucado automático — I-032 — ou toggle manual)
-    // — refaz `listarMembros` pra atualizar a carteirinha de quem não tem acesso completo à
-    // ficha (só ela carrega as condições nesse caso; `recarregarFichas` não alcança essa forma).
-    this.tempoRealService.fichaCondicoesAlteradas$
+    this.tempoRealService.fichaRecortesAlterados$
       .pipe(filter((evento) => evento.campanhaId === id), takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: () => this.recarregarMembros() });
+      .subscribe({
+        next: (evento) => {
+          if (evento.fichas) this.invalidacoesListas.next('fichas');
+          if (evento.membros) this.invalidacoesListas.next('membros');
+        },
+      });
 
     // Feed de rolagens em tempo real (m3-27; correção): rolagens `PUBLICA` chegam para qualquer
     // membro; `PRIVADA` só chega aqui quando esta tela é a do mestre (backend emite só na sala
@@ -271,19 +276,33 @@ export class CampanhaDetalheDadosService {
 
   private carregar(): void {
     this.carregando.set(true);
+    this.membrosEmLeitura = true;
+    this.fichasEmLeitura = true;
+    this.membrosInvalidos = false;
+    this.fichasInvalidas = false;
     forkJoin({
       campanha: this.campanhaService.recuperarCampanha(this.idInterno),
       membros: this.campanhaService.listarMembros(this.idInterno),
       fichas: this.fichaService.listarFichas(this.idInterno),
     })
-      .pipe(finalize(() => this.carregando.set(false)))
+      .pipe(
+        finalize(() => {
+          this.carregando.set(false);
+          this.membrosEmLeitura = false;
+          this.fichasEmLeitura = false;
+          if (this.membrosInvalidos) this.invalidarMembros();
+          if (this.fichasInvalidas) this.invalidarFichas();
+        }),
+      )
       .subscribe({
         next: ({ campanha, membros, fichas }) => {
           this.campanha.set(campanha);
-          this.membros.set(membros);
-          this.fichas.set(fichas);
-          this.sincronizarSalasFicha(fichas);
-          this.ultimaAtualizacaoEm.set(Date.now());
+          if (!this.membrosInvalidos) this.membros.set(membros);
+          if (!this.fichasInvalidas) {
+            this.fichas.set(fichas);
+            this.sincronizarSalasFicha(fichas);
+            this.ultimaAtualizacaoEm.set(Date.now());
+          }
           this.carregarInventario();
         },
       });
@@ -304,33 +323,72 @@ export class CampanhaDetalheDadosService {
 
   /**
    * Recarrega membros e fichas (após transferir mestre, duplicar ficha, ou ao receber
-   * `ficha:criada`/`ficha:alterada`/`membro:entrou` em tempo real) — só a `campanha` (nome/
+   * `ficha:criada`/`membro:entrou` em tempo real) — só a `campanha` (nome/
    * descrição/convite) fica de fora, ela não muda por esses eventos.
    */
   recarregarMembrosEFichas(): void {
-    forkJoin({
-      membros: this.campanhaService.listarMembros(this.idInterno),
-      fichas: this.fichaService.listarFichas(this.idInterno),
-    }).subscribe({
-      next: ({ membros, fichas }) => {
-        this.membros.set(membros);
+    this.invalidarMembros();
+    this.invalidarFichas();
+  }
+
+  private configurarInvalidacoesListas(): void {
+    this.invalidacoesListas
+      .pipe(
+        bufferTime(25),
+        filter((recursos) => recursos.length > 0),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((recursos) => {
+        if (recursos.includes('fichas')) this.invalidarFichas();
+        if (recursos.includes('membros')) this.invalidarMembros();
+      });
+  }
+
+  private invalidarMembros(): void {
+    this.membrosInvalidos = true;
+    if (this.membrosEmLeitura) return;
+    this.membrosEmLeitura = true;
+    this.membrosInvalidos = false;
+    this.campanhaService
+      .listarMembros(this.idInterno)
+      .pipe(
+        finalize(() => {
+          this.membrosEmLeitura = false;
+          if (this.membrosInvalidos) this.invalidarMembros();
+        }),
+      )
+      .subscribe((membros) => {
+        if (!this.membrosInvalidos) this.membros.set(membros);
+      });
+  }
+
+  private invalidarFichas(): void {
+    this.fichasInvalidas = true;
+    if (this.fichasEmLeitura) return;
+    this.fichasEmLeitura = true;
+    this.fichasInvalidas = false;
+    this.fichaService
+      .listarFichas(this.idInterno)
+      .pipe(
+        finalize(() => {
+          this.fichasEmLeitura = false;
+          if (this.fichasInvalidas) this.invalidarFichas();
+        }),
+      )
+      .subscribe((fichas) => {
+        if (this.fichasInvalidas) return;
         this.fichas.set(fichas);
         this.sincronizarSalasFicha(fichas);
         this.ultimaAtualizacaoEm.set(Date.now());
-      },
-    });
+      });
   }
 
   private recarregarMembros(): void {
-    this.campanhaService.listarMembros(this.idInterno).subscribe((membros) => this.membros.set(membros));
+    this.invalidarMembros();
   }
 
   private recarregarFichas(): void {
-    this.fichaService.listarFichas(this.idInterno).subscribe((fichas) => {
-      this.fichas.set(fichas);
-      this.sincronizarSalasFicha(fichas);
-      this.ultimaAtualizacaoEm.set(Date.now());
-    });
+    this.invalidarFichas();
   }
 
   private carregarRolagens(): void {

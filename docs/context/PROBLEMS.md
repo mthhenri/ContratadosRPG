@@ -29,19 +29,6 @@
 
 ## Ativos
 
-### P-085 — Edição de ficha provoca recarga ampla de membros e fichas · `ABERTO` · requests
-
-- **Sintoma:** até editar nome provoca GETs de listas inteiras nos painéis conectados.
-- **Causa:** gateway emite condições alteradas sem verificar mudança; detalhe refaz membros e
-  fichas pelos dois eventos, sem coordenar invalidação.
-- **Correção:** service emite condições só quando mudarem; atualizar recorte necessário e
-  agrupar eventos sem ampliar exposição de dados privados.
-- **Reprodução:** editar somente dinheiro gerou GETs de membros e fichas em cada um dos dois
-  painéis, além do PUT do jogador.
-- **Desde:** revisão estática de 2026-09-26.
-- **Evidência:** [revisão de requests](../reviews/requests-2026-09-26.md), P-085.
-- **Spec:** [invalidação seletiva](../specs/backlog/p-085-invalidacao-seletiva-ficha.spec.md).
-
 ### P-086 — Estado operacional refaz campanha e inventário · `ABERTO` · requests
 
 - **Sintoma:** alternar Na Base/Em Missão dispara dois GETs adicionais por painel de campanha.
