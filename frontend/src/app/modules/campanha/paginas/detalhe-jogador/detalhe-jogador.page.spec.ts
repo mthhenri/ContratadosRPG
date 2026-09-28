@@ -1,7 +1,8 @@
 import { ApplicationRef } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, provideRouter } from '@angular/router';
-import { Subject, of } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Subject, of, throwError } from 'rxjs';
 import {
   ArquetipoEnum,
   ClasseEnum,
@@ -241,6 +242,7 @@ describe('CampanhaDetalheJogador', () => {
     const topbarContexto = { definir: vi.fn(), limpar: vi.fn() };
 
     const fichaAlterada$ = new Subject<unknown>();
+    const reconexao$ = new Subject<void>();
     const tempoRealService = {
       conectar: vi.fn(),
       entrarSalaCampanha: vi.fn(),
@@ -263,7 +265,7 @@ describe('CampanhaDetalheJogador', () => {
       paginaEsquadraoExcluida$: new Subject().asObservable(),
       presencaEsquadraoCaderno$: new Subject().asObservable(),
       reconexao: () => 0,
-      reconexao$: new Subject<void>().asObservable(),
+      reconexao$: reconexao$.asObservable(),
       conectado: () => true,
     };
 
@@ -301,6 +303,7 @@ describe('CampanhaDetalheJogador', () => {
       fichaService,
       confirmacaoService,
       navegar,
+      reconexao$,
     };
   }
 
@@ -536,6 +539,111 @@ describe('CampanhaDetalheJogador', () => {
 
       expect(componente['fichaExibidaId']()).toBe(4);
       expect(componente['fichaExibidaDados']()?.id).toBe(4);
+    });
+  });
+
+  // === P-084: nenhum evento tem replay (§9) — uma alteração feita na ficha exibida **durante** a
+  // queda (dinheiro, inventário…) só chega de volta por um refetch explícito ao reconectar, mesmo
+  // com o `id` exibido continuando o mesmo (docs/specs/done/p-084-ressincronizacao-recursos.spec.md).
+  describe('P-084: ressincronização da ficha exibida ao reconectar', () => {
+    it('reconexao$ refaz o documento completo da ficha exibida, mesmo com o mesmo id', () => {
+      const { fichaService, reconexao$ } = montar({ usuarioId: 2, membros: membrosDois(), fichas });
+      fichaService.recuperarFicha.mockClear();
+
+      reconexao$.next();
+
+      // Vera (id 4) é a própria ficha exibida (seleção inicial) — refeita mesmo sem trocar de ficha.
+      expect(fichaService.recuperarFicha).toHaveBeenCalledWith(4);
+    });
+
+    it('mescla o refetch de reconexão preservando uma edição local pendente (P-082)', () => {
+      const leitura$ = new Subject<unknown>();
+      const { fixture, fichaService, reconexao$ } = montar({ usuarioId: 2, membros: membrosDois(), fichas });
+      const componente = fixture.componentInstance;
+      const docBase = componente['fichaExibidaDados']()!;
+      fichaService.recuperarFicha.mockImplementation(() => leitura$.asObservable() as never);
+
+      componente['fichaEdicao'].ajustarNome('Vera (editada)');
+      expect(componente['fichaEdicao'].edicaoPendente()).toBe(true);
+
+      reconexao$.next();
+      // Servidor devolve o documento com um campo alterado por outra sessão durante a queda.
+      leitura$.next({
+        ...docBase,
+        nome: 'Vera',
+        dados: { ...docBase.dados, estado: { ...docBase.dados.estado, energiaAtual: 3 } },
+      });
+      fixture.detectChanges();
+
+      const atual = componente['fichaExibidaDados']()!;
+      expect(atual.nome).toBe('Vera (editada)');
+      expect(atual.dados.estado.energiaAtual).toBe(3);
+    });
+
+    it('ignora a resposta da reconexão se a ficha exibida já mudou nesse meio-tempo', () => {
+      const leituraVera$ = new Subject<unknown>();
+      const { fixture, fichaService, reconexao$ } = montar({
+        usuarioId: 2,
+        membros: membrosTres(),
+        fichas: fichasComColegaJogador(),
+      });
+      const componente = fixture.componentInstance;
+      const implementacaoOriginal = fichaService.recuperarFicha.getMockImplementation()!;
+      fichaService.recuperarFicha.mockImplementation((id: number) =>
+        id === 4 ? (leituraVera$.asObservable() as never) : implementacaoOriginal(id),
+      );
+
+      reconexao$.next();
+      componente['selecionarFichaExibida'](3);
+      fixture.detectChanges();
+      expect(componente['fichaExibidaId']()).toBe(3);
+
+      leituraVera$.next({ id: 4, campanhaId: CAMPANHA_ID, usuarioId: 2, nome: 'Vera', dados: {} });
+      fixture.detectChanges();
+
+      expect(componente['fichaExibidaId']()).toBe(3);
+    });
+
+    it('acesso revogado durante a queda (403) limpa a ficha exibida e cai no estado vazio', () => {
+      const { fixture, raiz, fichaService, reconexao$ } = montar({
+        usuarioId: 2,
+        membros: membrosTres(),
+        // Só a ficha do colega (Kane) — o jogador não tem ficha própria nesta campanha.
+        fichas: fichasComColegaJogador().filter((ficha) => ficha.usuarioId !== 2),
+      });
+      const componente = fixture.componentInstance;
+      componente['selecionarFichaExibida'](3);
+      fixture.detectChanges();
+      expect(componente['fichaExibidaId']()).toBe(3);
+
+      fichaService.recuperarFicha.mockReturnValue(
+        throwError(() => new HttpErrorResponse({ status: 403 })),
+      );
+      reconexao$.next();
+      fixture.detectChanges();
+
+      expect(componente['fichaExibidaId']()).toBeNull();
+      expect(componente['fichaExibidaDados']()).toBeNull();
+      expect(raiz.querySelector('.detalhe__jogador-vazio')).not.toBeNull();
+    });
+
+    it('uma falha transitória (não 403/404) não limpa a ficha exibida — permanece recuperável', () => {
+      const { fixture, fichaService, reconexao$ } = montar({
+        usuarioId: 2,
+        membros: membrosTres(),
+        fichas: fichasComColegaJogador().filter((ficha) => ficha.usuarioId !== 2),
+      });
+      const componente = fixture.componentInstance;
+      componente['selecionarFichaExibida'](3);
+      fixture.detectChanges();
+
+      fichaService.recuperarFicha.mockReturnValue(
+        throwError(() => new HttpErrorResponse({ status: 500 })),
+      );
+      reconexao$.next();
+      fixture.detectChanges();
+
+      expect(componente['fichaExibidaId']()).toBe(3);
     });
   });
 

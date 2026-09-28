@@ -265,6 +265,101 @@ describe('EncontroPainelDadosService', () => {
       expect(cenaService.recuperarCena).toHaveBeenCalledTimes(1);
     });
 
+    // === P-084: sem replay de eventos (§9), uma rolagem feita durante a queda só chega por uma
+    // releitura explícita do feed ao reconectar — `carregar()` já refazia cena/fichas/membros, mas
+    // deixava o histórico de rolagens preso ao último GET antes da queda.
+
+    it('reconexao$ também recarrega o feed de rolagens', () => {
+      const { rolagemService, reconexao$ } = montar();
+      rolagemService.listarPorCampanha.mockClear();
+
+      reconexao$.next();
+
+      expect(rolagemService.listarPorCampanha).toHaveBeenCalledWith(CAMPANHA_ID);
+    });
+
+    it('reconexao$ traz uma rolagem feita durante a queda para o feed', () => {
+      const rolagemDaQueda: RolagemResumoDto = {
+        id: 5,
+        fichaId: 200,
+        encontroCombatenteId: null,
+        campanhaId: CAMPANHA_ID,
+        usuarioId: USUARIO_JOGADOR,
+        nomeAutor: 'Bia',
+        nomeFicha: 'K. Amaral',
+        rotulo: 'Dano',
+        formula: '2d6',
+        visibilidade: RolagemVisibilidadeEnum.PUBLICA,
+        resultado: { dados: [], atributos: [], constante: 0, total: 9 },
+        createdDate: '2026-08-20T15:05:00.000Z',
+        corFicha: null,
+      };
+      const { dados, rolagemService, reconexao$ } = montar();
+      rolagemService.listarPorCampanha.mockReturnValue(of([rolagemDaQueda]));
+
+      reconexao$.next();
+
+      expect(dados.rolagensFeed()).toEqual([rolagemDaQueda]);
+    });
+
+    it('não ressuscita uma rolagem que sumiu do servidor sem nenhum evento de socket (queda total) — achado ao vivo', () => {
+      const rolagemQueSumiu: RolagemResumoDto = {
+        id: 7,
+        fichaId: 200,
+        encontroCombatenteId: null,
+        campanhaId: CAMPANHA_ID,
+        usuarioId: USUARIO_JOGADOR,
+        nomeAutor: 'Bia',
+        nomeFicha: 'K. Amaral',
+        rotulo: 'Rolagem antiga',
+        formula: '1d20',
+        visibilidade: RolagemVisibilidadeEnum.PUBLICA,
+        resultado: { dados: [], atributos: [], constante: 0, total: 9 },
+        createdDate: '2026-08-20T15:00:00.000Z',
+        corFicha: null,
+      };
+      const { dados, rolagemService, reconexao$ } = montar();
+      dados.adicionarRolagemAoFeed(rolagemQueSumiu);
+      rolagemService.listarPorCampanha.mockReturnValue(of([]));
+
+      reconexao$.next();
+
+      expect(dados.rolagensFeed()).toEqual([]);
+    });
+
+    it('a releitura do feed ao reconectar nunca ressuscita uma rolagem excluída por uma resposta antiga', () => {
+      const rolagem: RolagemResumoDto = {
+        id: 8,
+        fichaId: 200,
+        encontroCombatenteId: null,
+        campanhaId: CAMPANHA_ID,
+        usuarioId: USUARIO_JOGADOR,
+        nomeAutor: 'Bia',
+        nomeFicha: 'K. Amaral',
+        rotulo: 'Dano',
+        formula: '2d6',
+        visibilidade: RolagemVisibilidadeEnum.PUBLICA,
+        resultado: { dados: [], atributos: [], constante: 0, total: 9 },
+        createdDate: '2026-08-20T15:05:00.000Z',
+        corFicha: null,
+      };
+      const respostaLenta$ = new Subject<RolagemResumoDto[]>();
+      const { dados, rolagemService, rolagemExcluida$, reconexao$ } = montar();
+      rolagemService.listarPorCampanha.mockReturnValue(respostaLenta$);
+
+      reconexao$.next();
+      rolagemExcluida$.next({
+        id: rolagem.id,
+        fichaId: rolagem.fichaId,
+        campanhaId: rolagem.campanhaId,
+        visibilidade: rolagem.visibilidade,
+      });
+      // Resposta antiga do GET (pedida antes da exclusão) ainda traz a rolagem excluída.
+      respostaLenta$.next([rolagem]);
+
+      expect(dados.rolagensFeed()).toEqual([]);
+    });
+
     it('absorve o broadcast `encontro:alterado` da própria campanha', () => {
       const { dados, encontroAlterado$ } = montar();
       encontroAlterado$.next({

@@ -10,6 +10,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { filter, finalize } from 'rxjs';
@@ -311,6 +312,45 @@ export class CampanhaDetalheJogador {
   }
 
   /**
+   * Refaz o documento completo da ficha exibida ao reconectar (P-084) — sem isto, dinheiro,
+   * inventário ou qualquer campo alterado **durante a queda** ficava preso no último documento
+   * carregado (nenhum evento tem replay, §9), mesmo com o `id` exibido continuando o mesmo. Usa
+   * `dados.recuperarFicha` (polimórfico: rota redigida para o alvo na prévia, m8-04) e o mesmo
+   * merge de três vias de `absorverFichaExibidaRemota` — uma edição local pendente sobrevive ao
+   * refetch em vez de ser sobrescrita ou bloquear a ressincronização (P-082). Resposta de uma
+   * seleção que já não é a exibida é ignorada. Numa falha, a edição pendente não é tocada (nunca
+   * marcada como salva); só 403/404 (acesso revogado durante a queda ou ficha removida) limpa a
+   * seleção — o `effect` de semear `fichaExibidaId` reaponta sozinho para uma ficha própria
+   * restante, ou cai no estado vazio existente. Qualquer outra falha (rede) permanece recuperável
+   * sem retry em loop: a próxima reconexão tenta de novo.
+   */
+  private recarregarFichaExibidaAoReconectar(): void {
+    const fichaId = this.fichaExibidaId();
+    if (fichaId === null) {
+      return;
+    }
+    this.dados
+      .recuperarFicha(fichaId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (ficha) => {
+          if (this.fichaExibidaId() === ficha.id) {
+            this.absorverFichaExibidaRemota(ficha);
+          }
+        },
+        error: (erro: HttpErrorResponse) => {
+          if (
+            this.fichaExibidaId() === fichaId &&
+            (erro.status === HttpStatusCode.Forbidden || erro.status === HttpStatusCode.NotFound)
+          ) {
+            this.fichaExibidaId.set(null);
+            this.fichaExibidaDados.set(null);
+          }
+        },
+      });
+  }
+
+  /**
    * Prévia: o payload do socket chega com o recorte do mestre, então a ficha exibida é refeita pela
    * rota redigida para o alvo (`dados.recuperarFicha`) em vez de absorvida.
    */
@@ -436,6 +476,14 @@ export class CampanhaDetalheJogador {
             ? this.recarregarFichaExibida()
             : this.absorverFichaExibidaRemota(fichaAlterada),
       });
+
+    // Ressincronização ao reconectar (P-084): a lista de fichas (`dados.fichas()`) já refaz por
+    // conta do `CampanhaDetalheDadosService`; falta o documento completo da ficha exibida, que
+    // fica embutido aqui e não refetchava nunca ao reconectar. `reconexao$` (P-083) — só
+    // reconexões futuras à montagem.
+    this.tempoRealService.reconexao$
+      .pipe(takeUntilDestroyed())
+      .subscribe({ next: () => this.recarregarFichaExibidaAoReconectar() });
 
     // Cancela o agendamento do preview ampliado do avatar ao sair da página — senão um
     // `setTimeout` de hover sustentado ainda dispararia depois do destroy.

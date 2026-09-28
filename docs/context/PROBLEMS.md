@@ -29,17 +29,6 @@
 
 ## Ativos
 
-### P-084 — Ressincronização incompleta da campanha · `ABERTO` · frontend/tempo real
-
-- **Sintoma:** após queda, estado operacional, inventário, rolagens e ficha embutida podem
-  continuar antigos; feed do Encontro também não é recuperado na reconexão.
-- **Causa:** campanha refaz só membros/resumos; ficha embutida não refaz GET com o mesmo ID.
-- **Correção:** invalidar recursos carregados sujeitos a eventos perdidos, preservando edição.
-- **Desde:** revisão de 2026-09-26; confirmado com mestre/jogador no Chromium para estado
-  operacional e dinheiro da ficha. Inventário/feeds/Encontro ainda sem reprodução.
-- **Evidência:** [revisão de requests](../reviews/requests-2026-09-26.md), P-084.
-- **Spec:** [ressincronização](../specs/backlog/p-084-ressincronizacao-recursos.spec.md).
-
 ### P-085 — Edição de ficha provoca recarga ampla de membros e fichas · `ABERTO` · requests
 
 - **Sintoma:** até editar nome provoca GETs de listas inteiras nos painéis conectados.

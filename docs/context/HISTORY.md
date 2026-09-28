@@ -1,5 +1,105 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-28 — p-084: ressincronização de recursos após reconexão (P-084 fechado)
+
+Terceira das 6 tasks de `requests-correcoes`. Corrige a lacuna que a `p-083` deixou de propósito
+fora do escopo dela: `reconexao$` já refazia membros e fichas, mas nada mais — estado
+operacional/inventário da campanha, o documento completo da ficha embutida (dinheiro, energia,
+inventário…) e o feed de rolagens continuavam presos ao último GET antes da queda, mesmo depois
+do socket reconectar. Sem replay de eventos (§9), qualquer mutação que aconteceu **durante** a
+queda só existe pro cliente se ele a buscar de novo.
+
+**Entregável 1 — `CampanhaDetalheDadosService`/`CampanhaDetalheJogador`.** O handler de
+`reconexao$` (`campanha-detalhe-dados.service.ts`) passou a chamar, além de
+`recarregarMembrosEFichas()` (já existia), `recarregarCampanhaEInventario()` — o mesmo par que
+`estadoAlterado$` já disparava ao vivo — e a nova `recarregarRolagensFeed()`. Em
+`detalhe-jogador.page.ts`, novo método privado `recarregarFichaExibidaAoReconectar()`: a ficha
+embutida na coluna principal (`fichaExibidaDados`) **nunca** tinha refetch nenhum ao reconectar,
+mesmo com o `id` exibido continuando o mesmo — o achado mais grave da spec. Reusa
+`dados.recuperarFicha(fichaId)` (polimórfico: a prévia de jogador do mestre, m8-04, já usa a rota
+redigida para o alvo sem precisar de nenhum código novo aqui) e o merge de três vias de
+`absorverFichaExibidaRemota` já existente (P-082) — uma edição local pendente sobrevive ao
+refetch em vez de ser sobrescrita ou de bloquear a ressincronização. Resposta de uma seleção que
+já não é mais a exibida é ignorada (mesma trava que `recarregarFichaExibida`/o `effect` de troca
+já tinham). Numa falha, a edição pendente não é tocada (nunca marcada como salva); só 403/404
+(acesso revogado durante a queda a uma ficha de colega, ou ficha removida) limpa
+`fichaExibidaId`/`fichaExibidaDados` — o `effect` que semeia a própria ficha reaponta sozinho para
+uma ficha própria restante, ou cai no estado vazio já existente da tela (entregável 5: "apresentar
+o estado existente", não inventar um novo). Qualquer outra falha (rede) não mexe no estado —
+permanece recuperável na próxima reconexão, sem retry em loop.
+
+**Entregável 2 — `EncontroPainelDadosService`.** Um serviço só, compartilhado por
+mestre/jogador/espectador e pelos painéis de Cena com e sem iniciativa (`painel-mestre`,
+`painel-jogador`, `painel-espectador`, `painel-sem-iniciativa-{mestre,jogador}`,
+`painel-cena-shell`) — `carregar()` já refazia cena/encontro/fichas/membros ao reconectar (P-083),
+mas nunca o histórico de rolagens; ganhou a mesma `recarregarRolagensFeed()`. "Conferir
+prévia/espectador": não existe uma rota de prévia própria para o painel de Encontro — a prévia de
+jogador do mestre mostra só o resumo `encontroAtivo` embutido em `CampanhaDetalheJogador`
+(m8-05), já ressincronizado por `CampanhaPreviaJogadorDadosService.reconexao$` desde antes desta
+task (`invalidacoes.next('projecao')`); espectador e as janelas de histórico de rolagens
+(`historico-rolagens-janela.page.ts`, campanha e ficha) já usam suas próprias rotas/projeções
+autorizadas e sua própria ressincronização de reconexão desde a `p-083`, confirmado por leitura —
+nenhum dos dois usa endpoint do mestre como fallback.
+
+**Entregável 3 — reconciliar o feed por id, com um bug real corrigido em verificação ao vivo.**
+`mesclarFeedRolagens` (novo `frontend/src/app/shared/rolagem-feed.util.ts`, reusado pelos dois
+serviços) reconcilia a resposta do GET de recuperação contra: (a) `idsRolagensExcluidas`, um
+`Set<number>` permanente por instância, alimentado pelo handler de `rolagemExcluida$` que já
+existia — nunca ressuscita um id já visto como excluído; (b) uma lista de rolagens chegadas por
+`rolagemRegistrada$` **durante a própria releitura** (assinatura criada e desfeita com o mesmo
+tempo de vida do `Observable` do GET) — preserva um registro que a resposta do servidor, pedida um
+instante antes dele comitar, ainda não refletia.
+
+A ***primeira*** versão usava `rolagensFeed()`/`rolagensDoFeed()` **atual** (via `.update()`) como
+a lista de "extras" a preservar, em vez de uma lista escopada à própria releitura. Fazia sentido
+nos testes com dublês (onde "atual" e "chegado durante a releitura" coincidem, porque o cenário
+nunca tem itens de antes da própria reconexão) — mas a verificação ao vivo (backend derrubado de
+verdade, rolagem excluída **direto no Postgres** durante a queda, sem nenhum evento de socket
+possível pra registrar a exclusão) reproduziu exatamente o oposto do que a entregável 3 pede: a
+rolagem excluída **ressuscitava** na tela depois de reconectar, porque bastar faltar na resposta do
+servidor — sem nenhuma exclusão *vista por evento* — já contava como "extra a preservar" no
+desenho antigo. Corrigido trocando a fonte de "extras" para uma assinatura fetch-scoped (só
+`rolagemRegistrada$`, nunca o array atual do signal) — a função pura `mesclarFeedRolagens` não
+mudou, só o que os dois serviços passam como 2º argumento. Regressão nova em ambos os specs (`não
+ressuscita um item que sumiu do servidor sem nenhum evento de exclusão (queda total)`) cobrindo
+exatamente esse caminho, que nenhum teste anterior exercitava.
+
+**Testes.** Novo `rolagem-feed.util.spec.ts` (5 casos, função pura). `campanha-detalhe-dados.
+service.spec.ts` ganhou 5 casos (reconexão recarrega campanha/inventário/feed; rolagem da queda
+aparece; exclusão concorrente durante GET lento não ressuscita; registro concorrente durante GET
+lento não some; a regressão do achado ao vivo). `encontro-painel-dados.service.spec.ts` ganhou 3
+casos equivalentes (`painel-encontro.testing.ts` passou a expor `rolagemService` e
+`rolagemExcluida$` controláveis, antes inline/`Subject<never>`). `detalhe-jogador.page.spec.ts`
+ganhou 5 casos (refetch do documento exibido; merge preserva edição pendente; resposta obsoleta
+ignorada; 403 limpa a seleção e cai no estado vazio; falha transitória não mexe no estado). Suíte
+focada e completa do frontend verde (172 arquivos / 2410 testes, +2 sobre o baseline da p-083);
+`npm run lint` (raiz, 3 workspaces) sem erro novo, só os avisos pré-existentes de aspas.
+
+**Verificação ao vivo (REST + Playwright + Postgres real, backend derrubado de verdade — TCP cai
+na hora, não `context.setOffline`).** Três rodadas, cada uma com o roteiro completo da skill
+`verify` ("Testar a reconexão"): registro/login/campanha/ficha via REST, `CampanhaDetalheJogador`
+aberto como jogador com a sessão injetada, backend morto por `taskkill`, mutação direta no
+Postgres (sem broadcast possível) e backend religado. (1) Campanha: `na_base` alterado, `dinheiro`
+e `energiaAtual` da ficha embutida alterados, uma rolagem inserida e **outra excluída** (soft
+delete) — tudo convergiu sem reload (sentinela plantada em `window` sobreviveu), a rolagem
+excluída não reapareceu (só depois da correção do entregável 3 — a 1ª rodada reproduziu o bug
+descrito acima). (2) Inventário do esquadrão: item inserido direto no Postgres durante a queda
+apareceu na aba "Inv. Esquadrão" ao reconectar. (3) Encontro: uma Cena `INVESTIGACAO` criada via
+REST, painel aberto como mestre, mesma dança de queda/mutação/religa — nova rolagem apareceu, a
+excluída durante a queda não ressuscitou. Screenshots em anexo à sessão (não versionados).
+Armadilha de scripting encontrada e documentada: `docker exec ... psql -c "<sql com aspas>"`
+corrompe um literal JSON via `cmd.exe`; a correção foi passar o SQL inteiro por stdin
+(`-i`, sem `-c`) e `-v ON_ERROR_STOP=1` (sem isso, um erro de sintaxe no meio de um script psql não
+faz o processo sair com código de erro, e uma mutação que deveria ter falhado alto passa em
+silêncio — foi exatamente o que mascarou, numa 1ª tentativa, a exclusão que eu queria testar).
+
+**Gate comum do guarda-chuva:** `npm run build --workspace=frontend` verde (só o aviso
+pré-existente de orçamento de bundle, P-004). `shared`/`backend` não foram alterados por esta task
+— nenhum gate deles precisou rodar de novo.
+
+Restam 3/6 tasks de `requests-correcoes`: `p-085` (invalidação seletiva de ficha), `p-086` (estado
+sem refetch) e o inventário sob demanda — `P-085`/`P-086` continuam abertos em `PROBLEMS.md`.
+
 ## 2026-09-27 — p-083: reconexão só ressincroniza quem já estava montado (P-083 fechado)
 
 Segunda das 6 tasks de `requests-correcoes`. Corrige a duplicação de carga relatada na revisão:

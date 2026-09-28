@@ -11,6 +11,7 @@ import type { EncontroRecuperadoDto } from '@contratados-rpg/shared/dtos/encontr
 import type { FichaRecuperadaDto, FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 
+import { mesclarFeedRolagens } from '../../../../shared/rolagem-feed.util';
 import { rotuloRelativo } from '../../../../shared/rotulo-relativo.util';
 import { SessaoService } from '../../../../core/services/sessao.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
@@ -116,6 +117,12 @@ export class CampanhaDetalheDadosService {
   );
 
   private readonly salasFichaAtivas = new Set<number>();
+  /**
+   * Ids de rolagens excluídas nesta instância (ADMIN) — nunca esquecido enquanto a tela vive:
+   * uma releitura do feed disparada antes da exclusão chegar (reconexão, P-084) não pode
+   * ressuscitar o item quando a resposta antiga finalmente volta (`mesclarFeedRolagens`).
+   */
+  private readonly idsRolagensExcluidas = new Set<number>();
 
   get id(): number {
     return this.idInterno;
@@ -182,8 +189,10 @@ export class CampanhaDetalheDadosService {
     this.tempoRealService.rolagemExcluida$
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (excluida) =>
-          this.rolagensFeed.update((atuais) => atuais.filter((rolagem) => rolagem.id !== excluida.id)),
+        next: (excluida) => {
+          this.idsRolagensExcluidas.add(excluida.id);
+          this.rolagensFeed.update((atuais) => atuais.filter((rolagem) => rolagem.id !== excluida.id));
+        },
       });
 
     this.tempoRealService.estadoAlterado$
@@ -206,12 +215,22 @@ export class CampanhaDetalheDadosService {
         },
       });
 
-    // Ressincronização ao reconectar (§9): refaz o fetch. `reconexao$` (não `reconexao()` num
-    // `effect`, P-083) — só dispara em reconexões futuras à assinatura; um consumidor montado
-    // depois de uma reconexão já ocorrida não duplica a carga inicial.
+    // Ressincronização ao reconectar (§9): refaz o fetch de tudo que pode ter mudado durante a
+    // queda sem chegar por broadcast (nenhum evento tem replay) — membros/fichas, campanha/estado
+    // + inventário (o mesmo par de `estadoAlterado$`) e o feed de rolagens (P-084: antes só
+    // membros/fichas refaziam aqui, deixando estado, inventário e rolagens da queda perdidos).
+    // `reconexao$` (não `reconexao()` num `effect`, P-083) — só dispara em reconexões futuras à
+    // assinatura; um consumidor montado depois de uma reconexão já ocorrida não duplica a carga
+    // inicial.
     this.tempoRealService.reconexao$
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: () => this.recarregarMembrosEFichas() });
+      .subscribe({
+        next: () => {
+          this.recarregarMembrosEFichas();
+          this.recarregarCampanhaEInventario();
+          this.recarregarRolagensFeed();
+        },
+      });
 
     // Relógio do "Atualizado há Xs" — só recomputa o texto, nunca refaz fetch.
     const relogio = setInterval(() => this.agoraInterno.set(Date.now()), 5000);
@@ -319,5 +338,32 @@ export class CampanhaDetalheDadosService {
       .listarPorCampanha(this.idInterno)
       .pipe(finalize(() => this.carregandoRolagens.set(false)))
       .subscribe({ next: (itens) => this.rolagensFeed.set(itens), error: () => undefined });
+  }
+
+  /**
+   * Releitura do feed ao reconectar (P-084). A resposta do servidor é a base — **não** mescla
+   * contra `rolagensFeed()` atual: esse array pode carregar itens de antes da própria queda (uma
+   * ressincronização real, ao vivo, encontrou exatamente esse bug — uma rolagem excluída direto
+   * no Postgres durante a queda, sem nenhum evento de socket possível pra registrar a exclusão,
+   * "sobrevivia" porque só faltava no GET e nada a marcava como excluída). Só é preservado como
+   * extra o que chegar por `rolagemRegistrada$` **durante esta releitura específica** (assinatura
+   * com o mesmo tempo de vida do GET) — a única situação real em que a resposta pode ficar
+   * defasada: pedida um instante antes de um registro concorrente comitar. `idsRolagensExcluidas`
+   * (permanente) ainda filtra a resposta contra qualquer exclusão já vista nesta instância.
+   */
+  private recarregarRolagensFeed(): void {
+    const chegadasDuranteRecuperacao: RolagemResumoDto[] = [];
+    const assinatura = this.tempoRealService.rolagemRegistrada$.subscribe((rolagem) =>
+      chegadasDuranteRecuperacao.push(rolagem),
+    );
+    this.rolagemService
+      .listarPorCampanha(this.idInterno)
+      .pipe(finalize(() => assinatura.unsubscribe()))
+      .subscribe({
+        next: (itens) =>
+          this.rolagensFeed.set(
+            mesclarFeedRolagens(itens, chegadasDuranteRecuperacao, this.idsRolagensExcluidas),
+          ),
+      });
   }
 }

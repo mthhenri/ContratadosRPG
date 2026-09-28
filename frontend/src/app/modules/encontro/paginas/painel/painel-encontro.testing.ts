@@ -1,7 +1,7 @@
 import { Type } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
-import { Subject, map, of } from 'rxjs';
+import { Observable, Subject, map, of } from 'rxjs';
 import { vi } from 'vitest';
 
 import type { CenaAlteradaDto, CenaRecuperadaDto } from '@contratados-rpg/shared/dtos/cena';
@@ -16,7 +16,7 @@ import type {
   FichaRecuperadaDto,
   FichaResumoDto,
 } from '@contratados-rpg/shared/dtos/ficha';
-import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
+import type { RolagemExcluidaDto, RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 import type {
   PaginaCadernoEsquadraoAlteradaDto,
   PaginaCadernoResumoDto,
@@ -289,6 +289,7 @@ export function configurarPainel(opcoes: OpcoesDoPainel = {}) {
   const encontroPendente$ = new Subject<EncontroRecuperadoDto>();
   const cenaAlterada$ = new Subject<CenaAlteradaDto>();
   const fichaAlterada$ = new Subject<FichaAlteradaDto>();
+  const rolagemExcluida$ = new Subject<RolagemExcluidaDto>();
   const reconexao$ = new Subject<void>();
   const tempoReal = {
     conectar: vi.fn(),
@@ -305,7 +306,7 @@ export function configurarPainel(opcoes: OpcoesDoPainel = {}) {
     fichaAlterada$,
     encontroIniciativaPedido$,
     rolagemRegistrada$,
-    rolagemExcluida$: new Subject<never>(),
+    rolagemExcluida$,
     paginaEsquadraoCriada$,
     paginaEsquadraoAlterada$,
     paginaEsquadraoExcluida$,
@@ -379,6 +380,27 @@ export function configurarPainel(opcoes: OpcoesDoPainel = {}) {
     listarMembros: vi.fn(() => (membrosPendentes ? membrosPendentes$ : of(membrosDeTeste))),
     recuperarCampanha: vi.fn(() => of({ id: CAMPANHA_ID, nome: 'Campanha de Teste' })),
   };
+  const rolagemService = {
+    listarPorCampanha: vi.fn((): Observable<RolagemResumoDto[]> => of([])),
+    registrar: vi.fn(
+      (fichaId: number, dto: { rotulo: string; formula: string | null; resultado: unknown }) =>
+        of({
+          id: 1,
+          fichaId,
+          campanhaId: CAMPANHA_ID,
+          usuarioId,
+          nomeAutor: 'Bia',
+          nomeFicha: 'K. Amaral',
+          rotulo: dto.rotulo,
+          formula: dto.formula,
+          visibilidade: RolagemVisibilidadeEnum.PUBLICA,
+          resultado: dto.resultado,
+          createdDate: '2026-08-20T15:00:00.000Z',
+          corFicha: null,
+        }),
+    ),
+    registrarAvulso: vi.fn(),
+  };
 
   TestBed.configureTestingModule({
     providers: [
@@ -386,33 +408,7 @@ export function configurarPainel(opcoes: OpcoesDoPainel = {}) {
       ...(semServicoDeDados ? [] : [EncontroPainelDadosService]),
       { provide: EncontroService, useValue: encontroService },
       { provide: CenaService, useValue: cenaService },
-      {
-        provide: RolagemService,
-        useValue: {
-          listarPorCampanha: vi.fn(() => of([])),
-          registrar: vi.fn(
-            (
-              fichaId: number,
-              dto: { rotulo: string; formula: string | null; resultado: unknown },
-            ) =>
-              of({
-                id: 1,
-                fichaId,
-                campanhaId: CAMPANHA_ID,
-                usuarioId,
-                nomeAutor: 'Bia',
-                nomeFicha: 'K. Amaral',
-                rotulo: dto.rotulo,
-                formula: dto.formula,
-                visibilidade: RolagemVisibilidadeEnum.PUBLICA,
-                resultado: dto.resultado,
-                createdDate: '2026-08-20T15:00:00.000Z',
-                corFicha: null,
-              }),
-          ),
-          registrarAvulso: vi.fn(),
-        },
-      },
+      { provide: RolagemService, useValue: rolagemService },
       { provide: FichaService, useValue: fichaService },
       { provide: SessaoService, useValue: { usuario: () => ({ id: usuarioId }) } },
       { provide: CampanhaService, useValue: campanhaService },
@@ -442,9 +438,11 @@ export function configurarPainel(opcoes: OpcoesDoPainel = {}) {
     tempoReal,
     fichaService,
     campanhaService,
+    rolagemService,
     encontroAlterado$,
     encontroIniciativaPedido$,
     rolagemRegistrada$,
+    rolagemExcluida$,
     membrosPendentes$,
     encontroPendente$,
     reconexao$,

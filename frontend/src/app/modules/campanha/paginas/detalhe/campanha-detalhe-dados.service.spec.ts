@@ -82,6 +82,7 @@ describe('CampanhaDetalheDadosService', () => {
     const fichaCondicoesAlteradas$ = new Subject<{ campanhaId: number }>();
     const fichaRemovidaDaCampanha$ = new Subject<unknown>();
     const rolagemRegistrada$ = new Subject<RolagemResumoDto>();
+    const rolagemExcluida$ = new Subject<{ id: number }>();
     const estadoAlterado$ = new Subject<{ id: number; naBase: boolean }>();
     const inventarioAlterado$ = new Subject<{ campanhaId: number }>();
     const reconexao = signal(0);
@@ -99,7 +100,7 @@ describe('CampanhaDetalheDadosService', () => {
       fichaCondicoesAlteradas$: fichaCondicoesAlteradas$.asObservable(),
       fichaRemovidaDaCampanha$: fichaRemovidaDaCampanha$.asObservable(),
       rolagemRegistrada$: rolagemRegistrada$.asObservable() as Observable<RolagemResumoDto>,
-      rolagemExcluida$: new Subject().asObservable(),
+      rolagemExcluida$: rolagemExcluida$.asObservable(),
       estadoAlterado$: estadoAlterado$.asObservable(),
       inventarioAlterado$: inventarioAlterado$.asObservable(),
       reconexao,
@@ -129,6 +130,7 @@ describe('CampanhaDetalheDadosService', () => {
       rolagemService,
       tempoRealService,
       rolagemRegistrada$,
+      rolagemExcluida$,
       estadoAlterado$,
       inventarioAlterado$,
       fichaAlterada$,
@@ -224,6 +226,97 @@ describe('CampanhaDetalheDadosService', () => {
 
     expect(campanhaService.listarMembros).toHaveBeenCalledWith(CAMPANHA_ID);
     expect(fichaService.listarFichas).toHaveBeenCalledWith(CAMPANHA_ID);
+  });
+
+  // === P-084: reconexão coordena TODOS os recursos carregados, não só membros/fichas — sem
+  // replay de eventos (§9), estado/inventário/feed alterados durante a queda ficavam presos no
+  // último GET antes da queda.
+
+  it('reconexao$ também recarrega campanha/estado, inventário e o feed de rolagens', () => {
+    const { campanhaService, rolagemService, reconexao$ } = montar({
+      usuarioId: 1,
+      membros: membrosCom(1, TipoCampanhaMembroPapelEnum.MESTRE),
+      rolagens: [rolagem({ id: 1 })],
+    });
+    campanhaService.recuperarCampanha.mockClear();
+    campanhaService.recuperarInventario.mockClear();
+    rolagemService.listarPorCampanha.mockClear();
+
+    reconexao$.next();
+
+    expect(campanhaService.recuperarCampanha).toHaveBeenCalledWith(CAMPANHA_ID);
+    expect(campanhaService.recuperarInventario).toHaveBeenCalledWith(CAMPANHA_ID);
+    expect(rolagemService.listarPorCampanha).toHaveBeenCalledWith(CAMPANHA_ID);
+  });
+
+  it('reconexao$ traz uma rolagem feita durante a queda para o feed', () => {
+    const { service, rolagemService, reconexao$ } = montar({
+      usuarioId: 1,
+      membros: membrosCom(1, TipoCampanhaMembroPapelEnum.MESTRE),
+      rolagens: [rolagem({ id: 1 })],
+    });
+    rolagemService.listarPorCampanha.mockReturnValue(of([rolagem({ id: 2 }), rolagem({ id: 1 })]));
+
+    reconexao$.next();
+
+    expect(service.rolagensFeed().map((item) => item.id)).toEqual([2, 1]);
+  });
+
+  it('a releitura do feed nunca ressuscita uma rolagem excluída por uma resposta antiga (P-084)', () => {
+    // Simula o GET de recuperação em voo: a exclusão chega por socket ANTES da resposta (lenta)
+    // do GET, que ainda traz a rolagem excluída — a reconciliação por id não pode ressuscitá-la.
+    const respostaLenta$ = new Subject<RolagemResumoDto[]>();
+    const { service, rolagemService, rolagemExcluida$, reconexao$ } = montar({
+      usuarioId: 1,
+      membros: membrosCom(1, TipoCampanhaMembroPapelEnum.MESTRE),
+      rolagens: [rolagem({ id: 1 }), rolagem({ id: 2 })],
+    });
+    rolagemService.listarPorCampanha.mockReturnValue(respostaLenta$);
+
+    reconexao$.next();
+    rolagemExcluida$.next({ id: 2 });
+    expect(service.rolagensFeed().map((item) => item.id)).toEqual([1]);
+
+    // Resposta antiga do GET (pedida antes da exclusão) ainda traz o id 2.
+    respostaLenta$.next([rolagem({ id: 2 }), rolagem({ id: 1 })]);
+
+    expect(service.rolagensFeed().map((item) => item.id)).toEqual([1]);
+  });
+
+  it('não ressuscita um item que sumiu do servidor sem nenhum evento de socket (queda total) — achado ao vivo', () => {
+    // Verificação ao vivo (backend derrubado de verdade + exclusão direto no Postgres, sem
+    // nenhum evento de socket possível durante a queda): a 1ª versão desta reconciliação usava
+    // `rolagensFeed()` atual como "extra" a preservar, e um item que só sumiu do servidor —
+    // sem exclusão vista por evento — era reintroduzido como se fosse um registro concorrente.
+    const { service, rolagemService, reconexao$ } = montar({
+      usuarioId: 1,
+      membros: membrosCom(1, TipoCampanhaMembroPapelEnum.MESTRE),
+      rolagens: [rolagem({ id: 1 }), rolagem({ id: 2 })],
+    });
+    rolagemService.listarPorCampanha.mockReturnValue(of([rolagem({ id: 1 })]));
+
+    reconexao$.next();
+
+    expect(service.rolagensFeed().map((item) => item.id)).toEqual([1]);
+  });
+
+  it('a releitura do feed preserva um registro chegado por socket enquanto o GET estava em voo', () => {
+    const respostaLenta$ = new Subject<RolagemResumoDto[]>();
+    const { service, rolagemService, rolagemRegistrada$, reconexao$ } = montar({
+      usuarioId: 1,
+      membros: membrosCom(1, TipoCampanhaMembroPapelEnum.MESTRE),
+      rolagens: [rolagem({ id: 1 })],
+    });
+    rolagemService.listarPorCampanha.mockReturnValue(respostaLenta$);
+
+    reconexao$.next();
+    rolagemRegistrada$.next(rolagem({ id: 3, createdDate: '2099-01-01T00:00:00Z' }));
+    expect(service.rolagensFeed().map((item) => item.id)).toEqual([3, 1]);
+
+    // Resposta do GET, disparada antes do registro 3 existir, ainda não o inclui.
+    respostaLenta$.next([rolagem({ id: 1 })]);
+
+    expect(service.rolagensFeed().map((item) => item.id)).toEqual([3, 1]);
   });
 
   it('uma reconexão ocorrida antes de `inicializar` não duplica a carga inicial (P-083)', () => {

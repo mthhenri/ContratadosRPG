@@ -7,8 +7,9 @@
 > na ficha errada e dados antigos após reconexão. Carga inicial verificada em desktop/mobile.
 > Cenário isolado excluído; contas de teste mantidas conforme autorizado. Correções especificadas
 > em seis tasks no backlog, ordenadas em [requests-correcoes](../specs/backlog/requests-correcoes.spec.md).
-> `p-082` e `p-083` (2/6) **concluídas** (specs em `done/`) — `P-082`/`P-083` fechados em
-> `PROBLEMS.md`. Restam `p-084`…`p-086` e o inventário sob demanda; próxima recomendada `p-084`.
+> `p-082`, `p-083` e `p-084` (3/6) **concluídas** (specs em `done/`) — `P-082`/`P-083`/`P-084`
+> fechados em `PROBLEMS.md`. Restam `p-085`/`p-086` e o inventário sob demanda; próxima
+> recomendada `p-085`.
 
 > **Avaliação de usabilidade aberta:** [relatório e cobertura dos quatro viewports](../reviews/usabilidade-2026-09-13/RELATORIO.md).
 > Oito propostas de melhoria aguardam revisão; specs no backlog somente após aprovação do autor.
@@ -19,7 +20,38 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-27 · **Última decisão registrada:**
+> **Última revisão:** 2026-09-28 · **Última decisão registrada:**
+> `p-084-ressincronizacao-recursos` concluída (spec em `done/`, `P-084` fechado em `PROBLEMS.md`):
+> `reconexao$` (P-083) agora coordena tudo que uma queda sem broadcast pode ter deixado antigo
+> (§9, nenhum evento tem replay). `CampanhaDetalheDadosService` passou a refazer também
+> campanha/estado + inventário (`recarregarCampanhaEInventario`, o par de `estadoAlterado$`) e o
+> feed de rolagens ao reconectar — antes só membros/fichas refaziam ali. `CampanhaDetalheJogador`
+> ganhou `recarregarFichaExibidaAoReconectar`: a ficha embutida (dinheiro, energia, inventário…)
+> não tinha **nenhum** refetch ao reconectar, mesmo com o `id` exibido continuando o mesmo — usa o
+> merge de três vias de `absorverFichaExibidaRemota` (P-082, preserva edição local pendente) e,
+> por reusar `dados.recuperarFicha` polimórfico, já funciona sem código extra na prévia de jogador
+> do mestre (m8-04). Um 403/404 na releitura (acesso revogado durante a queda, ou ficha removida)
+> limpa a seleção — o `effect` de semeadura reaponta sozinho pra uma ficha própria restante ou cai
+> no estado vazio existente; outra falha não mexe no estado (recuperável na próxima reconexão, sem
+> retry em loop). `EncontroPainelDadosService.carregar()` (mestre/jogador/espectador e Cenas — um
+> serviço só) ganhou a mesma releitura do feed.
+> **Reconciliação do feed por id — bug real corrigido em verificação ao vivo.** A 1ª versão
+> mesclava a resposta do servidor contra `rolagensFeed()`/`rolagensDoFeed()` **atual** pra não
+> perder um registro chegado por socket durante o GET, mas isso ressuscitava uma rolagem excluída
+> **direto no Postgres durante a queda total** (sem nenhum evento de socket possível pra marcar a
+> exclusão) — bastava faltar na resposta do servidor pra virar "extra a preservar". Corrigido
+> preservando como extra só o que chega por `rolagemRegistrada$` **durante a própria releitura**
+> (assinatura com o tempo de vida do GET, não o estado acumulado do signal); `mesclarFeedRolagens`
+> (novo `frontend/src/app/shared/rolagem-feed.util.ts`) ainda filtra a resposta contra
+> `idsRolagensExcluidas` (permanente, por instância). O bug só apareceu na verificação ao vivo —
+> os testes com dublês escritos antes da reprodução não cobriam esse caminho; regressão
+> acrescentada depois do achado.
+> Verificado ao vivo (REST + Playwright + Postgres real, backend derrubado de verdade — TCP cai na
+> hora, mutação direto no banco): estado da campanha, dinheiro/energia da ficha embutida, item de
+> inventário e rolagem feita durante a queda convergem sem reload; uma rolagem excluída direto no
+> banco durante a queda não reaparece — repetido também no painel de uma Cena (Encontro).
+> `requests-correcoes`: 3/6 (`p-082`, `p-083`, `p-084`) — seguem abertas `p-085`/`p-086` e o
+> inventário sob demanda. Antes:
 > `p-083-reconexao-sem-carga-duplicada` concluída (spec em `done/`, `P-083` fechado em
 > `PROBLEMS.md`): `TempoRealService` ganhou `reconexao$` — um `Observable<void>` emitido a cada
 > reconexão real, no lugar do padrão `effect(() => reconexao() > 0)` que os 12 consumidores
@@ -678,15 +710,16 @@
 
 ## 1. Próxima Task
 
-**Requests-correcoes (guarda-chuva de 6 tasks, `P-082`…`P-086` + inventário sob demanda) — 2/6
-concluídas: `p-082` (autosave/seleção da ficha) e `p-083` (reconexão sem carga duplicada — ver
-cabeçalho deste arquivo). Próxima recomendada: `p-084-ressincronizacao-recursos`** (a reconexão
-recupera só membros/resumos; estado operacional, inventário, rolagens, ficha embutida e o feed do
-Encontro podem continuar desatualizados até outra mutação — `P-084` em `PROBLEMS.md`).
-`p-085`/`p-086` são independentes das primeiras mas compartilham arquivo com elas
+**Requests-correcoes (guarda-chuva de 6 tasks, `P-082`…`P-086` + inventário sob demanda) — 3/6
+concluídas: `p-082` (autosave/seleção da ficha), `p-083` (reconexão sem carga duplicada) e `p-084`
+(ressincronização de recursos — ver cabeçalho deste arquivo). Próxima recomendada:
+`p-085-invalidacao-seletiva-ficha`** (hoje toda `ficha:alterada` refaz `listarMembros`+
+`listarFichas` nos painéis conectados, mesmo para um PUT que só mudou dinheiro/anotações —
+`P-085` em `PROBLEMS.md`; o gateway também decide incondicionalmente que toda ficha alterada
+implica condição alterada, dobrando a recarga). `p-086` é independente mas compartilha arquivo
 (`campanha-detalhe-dados.service.ts`) — integrar em sequência. Fontes e gates em
 [requests-correcoes](../specs/backlog/requests-correcoes.spec.md); tasks em
-`docs/specs/backlog/p-08{4,5,6}-*.spec.md` e `requests-inventario-sob-demanda.spec.md`. Antes:
+`docs/specs/backlog/p-08{5,6}-*.spec.md` e `requests-inventario-sob-demanda.spec.md`. Antes:
 
 **Módulo de Cenas — `m7-25` (Investigação completa), desbloqueada: a `m9-02` (backend de
 documento) e a `m9-04` (`LeitorDocumento`) estão prontas.** `m7-21` (contrato + schema), `m7-22` (backend +

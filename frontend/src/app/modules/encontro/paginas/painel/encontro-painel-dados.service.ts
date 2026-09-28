@@ -21,6 +21,7 @@ import {
 } from '@contratados-rpg/shared/enums';
 import { cenaTemIniciativa } from '@contratados-rpg/shared/regras/cena';
 
+import { mesclarFeedRolagens } from '../../../../shared/rolagem-feed.util';
 import { SessaoService } from '../../../../core/services/sessao.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { TopbarContextoService } from '../../../../core/services/topbar-contexto.service';
@@ -164,6 +165,12 @@ export class EncontroPainelDadosService {
 
   /** Salas `ficha:<id>` em que esta tela entrou — só as da grade de agentes da cena sem iniciativa. */
   private readonly salasFichaAtivas = new Set<number>();
+  /**
+   * Ids de rolagens excluídas nesta instância (ADMIN) — mesma trava de
+   * `CampanhaDetalheDadosService` (P-084): uma releitura do feed disparada antes da exclusão
+   * chegar (reconexão) não pode ressuscitar o item quando a resposta antiga volta.
+   */
+  private readonly idsRolagensExcluidas = new Set<number>();
 
   /** `true` quando a tela está mostrando um encontro do histórico, não o combate da mesa. */
   readonly vendoHistorico = computed(
@@ -271,10 +278,17 @@ export class EncontroPainelDadosService {
       });
 
     // `reconexao$` (P-083): só reconexões futuras à montagem, nunca uma já ocorrida antes de
-    // abrir o painel.
+    // abrir o painel. `carregar()` já refaz cena/encontro/fichas/membros; faltava o histórico de
+    // rolagens (P-084) — sem replay de eventos, uma rolagem feita durante a queda só chega por
+    // esta releitura.
     this.tempoRealService.reconexao$
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: () => this.carregar() });
+      .subscribe({
+        next: () => {
+          this.carregar();
+          this.recarregarRolagensFeed();
+        },
+      });
 
     // Fichas ao vivo na grade da cena sem iniciativa (m7-24) — o mecanismo do Esquadrão
     // (`CampanhaDetalheDadosService.sincronizarSalasFicha`): entra nas salas `ficha:<id>` das
@@ -314,8 +328,10 @@ export class EncontroPainelDadosService {
     this.tempoRealService.rolagemExcluida$
       .pipe(takeUntilDestroyed())
       .subscribe({
-        next: (excluida) =>
-          this.rolagensDoFeed.update((atuais) => atuais.filter((rolagem) => rolagem.id !== excluida.id)),
+        next: (excluida) => {
+          this.idsRolagensExcluidas.add(excluida.id);
+          this.rolagensDoFeed.update((atuais) => atuais.filter((rolagem) => rolagem.id !== excluida.id));
+        },
       });
   }
 
@@ -380,6 +396,31 @@ export class EncontroPainelDadosService {
       .listarPorCampanha(this.campanhaId)
       .pipe(finalize(() => this.carregandoFeed.set(false)))
       .subscribe({ next: (itens) => this.rolagensDoFeed.set(itens), error: () => undefined });
+  }
+
+  /**
+   * Releitura do feed ao reconectar (P-084) — mesmo desenho de
+   * `CampanhaDetalheDadosService.recarregarRolagensFeed`: a resposta do servidor é a base, sem
+   * mesclar contra `rolagensDoFeed()` atual (pode carregar itens de antes da própria queda — uma
+   * verificação ao vivo encontrou exatamente esse bug: uma rolagem excluída direto no Postgres
+   * durante a queda, sem nenhum evento de socket possível, "sobrevivia" porque só faltava no GET).
+   * Só é preservado como extra o que chegar por `rolagemRegistrada$` durante esta releitura
+   * específica; `idsRolagensExcluidas` (permanente) ainda filtra qualquer exclusão já vista.
+   */
+  private recarregarRolagensFeed(): void {
+    const chegadasDuranteRecuperacao: RolagemResumoDto[] = [];
+    const assinatura = this.tempoRealService.rolagemRegistrada$.subscribe((rolagem) =>
+      chegadasDuranteRecuperacao.push(rolagem),
+    );
+    this.rolagemService
+      .listarPorCampanha(this.campanhaId)
+      .pipe(finalize(() => assinatura.unsubscribe()))
+      .subscribe({
+        next: (itens) =>
+          this.rolagensDoFeed.set(
+            mesclarFeedRolagens(itens, chegadasDuranteRecuperacao, this.idsRolagensExcluidas),
+          ),
+      });
   }
 
   /** Prepend único para a confirmação local e o broadcast público do mesmo registro. */
