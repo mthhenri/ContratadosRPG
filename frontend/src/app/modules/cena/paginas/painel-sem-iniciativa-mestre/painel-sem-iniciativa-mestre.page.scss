@@ -44,4 +44,63 @@
     &__esqueleto-agente {
         height: 196px;
     }
+
+    // Coluna Documentos (m7-25) — mesma largura/posição da `__trilha` da Iniciativa, só para a
+    // Investigação.
+    &__documentos {
+        flex: none;
+        width: 262px;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+
+        @include bp.tablet {
+            width: auto;
+            order: 1;
+        }
+    }
+
+    &__lista-documentos,
+    &__lista-biblioteca {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-8);
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        overflow-y: auto;
+    }
+
+    &__item-documento {
+        display: flex;
+        align-items: stretch;
+        gap: var(--space-4);
+    }
+
+    &__item-documento-acoes {
+        display: flex;
+        flex-direction: column;
+        flex: none;
+        gap: 2px;
+    }
+
+    // `chevron` é a seta para baixo; girada, "subir" (mesmo recurso do hub de cenas).
+    &__seta-cima {
+        transform: rotate(180deg);
+    }
+
+    &__esqueleto-documento {
+        height: 68px;
+    }
+
+    &__foco {
+        flex: none;
+        max-height: 45vh;
+        overflow-y: auto;
+    }
+
+    &__esqueleto-foco {
+        display: block;
+        height: 220px;
+    }
 }

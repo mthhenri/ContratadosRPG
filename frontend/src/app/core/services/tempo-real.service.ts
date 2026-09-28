@@ -7,7 +7,7 @@ import type {
   CampanhaInventarioAlteradoDto,
   CampanhaMembroEntradaDto,
 } from '@contratados-rpg/shared/dtos/campanha';
-import type { CenaAlteradaDto } from '@contratados-rpg/shared/dtos/cena';
+import type { CenaAlteradaDto, CenaDocumentoAlteradoDto } from '@contratados-rpg/shared/dtos/cena';
 import type {
   DocumentoBibliotecaAlteradaDto,
   DocumentoLeituraInformarDto,
@@ -114,6 +114,7 @@ export class TempoRealService {
   private readonly inventarioAlteradoSubject = new Subject<CampanhaInventarioAlteradoDto>();
   private readonly encontroAlteradoSubject = new Subject<EncontroAlteradoDto>();
   private readonly cenaAlteradaSubject = new Subject<CenaAlteradaDto>();
+  private readonly cenaDocumentoAlteradoSubject = new Subject<CenaDocumentoAlteradoDto>();
   private readonly documentoAlteradoSubject = new Subject<DocumentoBibliotecaAlteradaDto>();
   private readonly encontroIniciativaPedidoSubject = new Subject<
     EncontroIniciativaPedidoDto & { campanhaId: number }
@@ -182,6 +183,9 @@ export class TempoRealService {
    * que não pode ver.
    */
   readonly cenaAlterada$: Observable<CenaAlteradaDto> = this.cenaAlteradaSubject.asObservable();
+  /** `cena:documento-alterado` (m7-25) — dataless; quem recebe refaz o `GET` da coluna Documentos. */
+  readonly cenaDocumentoAlterado$: Observable<CenaDocumentoAlteradoDto> =
+    this.cenaDocumentoAlteradoSubject.asObservable();
   /**
    * A biblioteca de documentos da campanha mudou (m9-02) — só **que** mudou (`alteracao` e o
    * `documentoId`, `null` numa reordenação), sem título nem conteúdo: a tela refaz a listagem por
@@ -303,6 +307,9 @@ export class TempoRealService {
     );
     this.socket.on('cena:alterada', (evento: CenaAlteradaDto) =>
       this.cenaAlteradaSubject.next(evento),
+    );
+    this.socket.on('cena:documento-alterado', (evento: CenaDocumentoAlteradoDto) =>
+      this.cenaDocumentoAlteradoSubject.next(evento),
     );
     this.socket.on('documento:alterado', (evento: DocumentoBibliotecaAlteradaDto) =>
       this.documentoAlteradoSubject.next(evento),

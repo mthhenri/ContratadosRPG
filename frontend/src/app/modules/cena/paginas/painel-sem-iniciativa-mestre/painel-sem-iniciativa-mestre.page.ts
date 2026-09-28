@@ -1,6 +1,8 @@
-import { Component, computed, inject, signal, viewChild } from '@angular/core';
+import { Component, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
+import type { CenaDocumentoResumoDto } from '@contratados-rpg/shared/dtos/cena';
+import type { DocumentoRecuperadoDto, DocumentoResumoDto } from '@contratados-rpg/shared/dtos/documento';
 import type { FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
 import { CenaStatusEnum, TipoFichaEnum } from '@contratados-rpg/shared/enums';
 
@@ -16,11 +18,15 @@ import { ColunaAcoesItem } from '../../../../shared/ui/coluna-acoes/coluna-acoes
 import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
 import { Esqueleto } from '../../../../shared/ui/esqueleto/esqueleto.component';
 import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
+import { Modal } from '../../../../shared/ui/modal/modal.component';
 import { agruparFichasPorMembro, ordenarMembros } from '../../../campanha/campanha-equipe.util';
 import {
   EspectadorFichaCard,
   type EspectadorFichaCardDados,
 } from '../../../campanha/componentes/espectador-ficha-card/espectador-ficha-card.component';
+import { DocumentoCartao } from '../../../documento/componentes/documento-cartao/documento-cartao.component';
+import { LeitorDocumento } from '../../../documento/componentes/leitor-documento/leitor-documento.component';
+import { DocumentoService } from '../../../documento/documento.service';
 import { resolverFichaParaAbrir } from '../../../encontro/encontro-leitura.util';
 import { EncontroPainelDadosService } from '../../../encontro/paginas/painel/encontro-painel-dados.service';
 import { FichaFlutuante } from '../../../ficha/componentes/ficha-flutuante/ficha-flutuante.component';
@@ -52,6 +58,9 @@ import { rotuloStatusCena, rotuloTipoCena } from '../../rotulos-cena';
     ColunaAcoesItem,
     Esqueleto,
     EstadoVazio,
+    Modal,
+    DocumentoCartao,
+    LeitorDocumento,
     CalculadoraFlutuante,
     CadernoFlutuante,
     HistoricoRolagensSidebar,
@@ -66,6 +75,7 @@ export class PainelCenaSemIniciativaMestre {
   protected readonly janelaHistorico = inject(HistoricoRolagensJanelaService);
   private readonly cenaService = inject(CenaService);
   private readonly confirmacaoService = inject(ConfirmacaoService);
+  private readonly documentoService = inject(DocumentoService);
 
   private readonly fichaFlutuanteRef = viewChild<FichaFlutuante>('fichaFlutuante');
   private readonly calculadoraRef = viewChild<CalculadoraFlutuante>('calculadora');
@@ -100,6 +110,108 @@ export class PainelCenaSemIniciativaMestre {
   /** A lista do feed já vem em ordem decrescente; o primeiro item da ficha é sua última rolagem. */
   protected ultimaRolagemFicha(fichaId: number) {
     return this.dados.rolagensFeed().find((rolagem) => rolagem.fichaId === fichaId) ?? null;
+  }
+
+  // ── Coluna Documentos — Investigação (m7-25) ───────────────────────────────
+
+  /** O documento completo do foco atual, para o `app-leitor-documento` do palco. */
+  protected readonly documentoFoco = signal<DocumentoRecuperadoDto | null>(null);
+  protected readonly carregandoDocumentoFoco = signal(false);
+  protected readonly modalAnexarAberto = signal(false);
+  protected readonly bibliotecaCarregando = signal(false);
+  private readonly bibliotecaDocumentos = signal<readonly DocumentoResumoDto[]>([]);
+
+  /** Documentos da biblioteca ainda não anexados a esta cena — o que o modal "Anexar" oferece. */
+  protected readonly bibliotecaDisponivel = computed<readonly DocumentoResumoDto[]>(() => {
+    const anexados = new Set(this.dados.documentosCena().map((documento) => documento.documentoId));
+    return this.bibliotecaDocumentos().filter((documento) => !anexados.has(documento.id));
+  });
+
+  constructor() {
+    // Busca o documento completo (conteúdo/imagem) sempre que o foco do palco muda — a coluna só
+    // carrega o resumo (`CenaDocumentoResumoDto`); o leitor precisa do corpo inteiro.
+    effect(() => {
+      const foco = this.dados.documentoEmFoco();
+      untracked(() => this.carregarDocumentoFoco(foco?.documentoId ?? null));
+    });
+  }
+
+  private carregarDocumentoFoco(documentoId: number | null): void {
+    if (documentoId === null) {
+      this.documentoFoco.set(null);
+      return;
+    }
+    this.carregandoDocumentoFoco.set(true);
+    this.documentoService
+      .recuperar(documentoId)
+      .subscribe({
+        next: (documento) => {
+          this.documentoFoco.set(documento);
+          this.carregandoDocumentoFoco.set(false);
+        },
+        error: () => this.carregandoDocumentoFoco.set(false),
+      });
+  }
+
+  /** Clicar o cartão na coluna abre o documento no palco — não revela nada. */
+  protected focarDocumento(documento: CenaDocumentoResumoDto): void {
+    if (this.dados.emOperacao()) {
+      return;
+    }
+    this.dados.focarDocumento(documento.documentoId);
+  }
+
+  /** "Apresentar" — revela o documento à mesa (M9) e o mantém em foco no palco. */
+  protected apresentarDocumento(documento: CenaDocumentoResumoDto): void {
+    if (this.dados.emOperacao()) {
+      return;
+    }
+    this.dados.apresentarDocumento(documento.documentoId);
+  }
+
+  /** Remove o vínculo com a cena — o documento continua na biblioteca. */
+  protected removerDocumentoDaCena(documento: CenaDocumentoResumoDto): void {
+    if (this.dados.emOperacao()) {
+      return;
+    }
+    this.dados.removerDocumentoDaCena(documento.documentoId);
+  }
+
+  /** Sobe (`-1`) ou desce (`+1`) um documento — a lista inteira vai reordenada (mesmo padrão do hub). */
+  protected moverDocumento(documento: CenaDocumentoResumoDto, deslocamento: -1 | 1): void {
+    const ordem = [...this.dados.documentosCena()]
+      .sort((a, b) => a.ordem - b.ordem)
+      .map((item) => item.documentoId);
+    const origem = ordem.indexOf(documento.documentoId);
+    const destino = origem + deslocamento;
+    if (origem < 0 || destino < 0 || destino >= ordem.length || this.dados.emOperacao()) {
+      return;
+    }
+    [ordem[origem], ordem[destino]] = [ordem[destino], ordem[origem]];
+    this.dados.reordenarDocumentosCena(ordem);
+  }
+
+  protected abrirModalAnexar(): void {
+    this.modalAnexarAberto.set(true);
+    this.bibliotecaCarregando.set(true);
+    this.documentoService.listar(this.dados.campanhaId).subscribe({
+      next: (documentos) => {
+        this.bibliotecaDocumentos.set(documentos);
+        this.bibliotecaCarregando.set(false);
+      },
+      error: () => this.bibliotecaCarregando.set(false),
+    });
+  }
+
+  protected fecharModalAnexar(): void {
+    this.modalAnexarAberto.set(false);
+  }
+
+  protected anexarDocumento(documento: DocumentoResumoDto): void {
+    if (this.dados.emOperacao()) {
+      return;
+    }
+    this.dados.anexarDocumento(documento.id);
   }
 
   /** Abre a ficha do agente clicado na janela flutuante (o mestre olhando qualquer um). */

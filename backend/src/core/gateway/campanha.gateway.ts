@@ -18,7 +18,7 @@ import type {
   CampanhaRecuperarDto,
   CampanhaSalaSairDto,
 } from '@contratados-rpg/shared/dtos/campanha';
-import type { CenaAlteradaDto } from '@contratados-rpg/shared/dtos/cena';
+import type { CenaAlteradaDto, CenaDocumentoAlteradoDto } from '@contratados-rpg/shared/dtos/cena';
 import type {
   DocumentoBibliotecaAlteradaDto,
   DocumentoLeitoresDto,
@@ -659,6 +659,23 @@ export class CampanhaGateway implements OnGatewayConnection, OnGatewayDisconnect
    */
   emitirDocumentoLeitoresParaConexao(conexaoId: string, retrato: DocumentoLeitoresDto): void {
     this.servidor.to(conexaoId).emit('documento:leitores', retrato);
+  }
+
+  /**
+   * Emite `cena:documento-alterado` (m7-25) depois de anexar, remover, reordenar ou apresentar um
+   * documento da coluna Documentos — dataless como `campanha:inventario-alterado`: só avisa que a
+   * lista mudou, sem `alteracao` nem o item. Vai à sala cheia, à do espectador e à do mestre — quem
+   * recebe refaz o `GET` já no próprio recorte (o mestre vê tudo; jogador/espectador, só o
+   * revelado). "Focar" no palco do mestre não passa por aqui (não emite, ver `CenaDocumentoService`).
+   */
+  emitirCenaDocumentoAlterado(evento: CenaDocumentoAlteradoDto): void {
+    this.servidor
+      .to([
+        this.salaCampanha(evento.campanhaId),
+        this.salaCampanhaEspectador(evento.campanhaId),
+        this.salaCampanhaMestre(evento.campanhaId),
+      ])
+      .emit('cena:documento-alterado', evento);
   }
 
   /**

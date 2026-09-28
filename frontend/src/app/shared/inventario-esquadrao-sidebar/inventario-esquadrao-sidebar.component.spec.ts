@@ -19,6 +19,7 @@ describe('InventarioEsquadraoSidebar', () => {
       const fixture = TestBed.createComponent(InventarioEsquadraoSidebar);
       fixture.componentRef.setInput('campanhaId', 8);
       fixture.componentRef.setInput('itens', []);
+      fixture.componentRef.setInput('estado', 'PRONTO');
       fixture.componentRef.setInput('fichas', []);
       fixture.detectChanges();
 

@@ -13,6 +13,7 @@ import {
   EncontroStatusEnum,
   NivelAmeacaEnum,
   RolagemVisibilidadeEnum,
+  TipoDocumentoEnum,
 } from '@contratados-rpg/shared/enums';
 
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
@@ -477,6 +478,48 @@ describe('EncontroPainelDadosService', () => {
 
       expect(dados.encontrosDaCampanha()).toHaveLength(2);
       expect(dados.encontrosDaCampanha()[1]).toEqual(encerrado);
+    });
+  });
+
+  describe('coluna Documentos — Investigação (m7-25)', () => {
+    it('busca a coluna só para uma cena de Investigação', () => {
+      const { dados, cenaService } = montar({ cenaTipo: CenaTipoEnum.INVESTIGACAO });
+
+      expect(dados.ehInvestigacao()).toBe(true);
+      expect(cenaService.listarDocumentos).toHaveBeenCalledWith(CENA_ID);
+    });
+
+    it('não busca a coluna para as demais cenas', () => {
+      const { dados, cenaService } = montar({ cenaTipo: CenaTipoEnum.COMBATE });
+
+      expect(dados.ehInvestigacao()).toBe(false);
+      expect(cenaService.listarDocumentos).not.toHaveBeenCalled();
+      expect(dados.documentosCena()).toEqual([]);
+    });
+
+    it('refaz o GET ao receber `cena:documento-alterado` desta cena', () => {
+      const { cenaService, cenaDocumentoAlterado$ } = montar({
+        cenaTipo: CenaTipoEnum.INVESTIGACAO,
+      });
+      cenaService.listarDocumentos.mockClear();
+
+      cenaDocumentoAlterado$.next({ campanhaId: CAMPANHA_ID, cenaId: CENA_ID });
+      expect(cenaService.listarDocumentos).toHaveBeenCalledTimes(1);
+
+      cenaDocumentoAlterado$.next({ campanhaId: CAMPANHA_ID, cenaId: 999 });
+      expect(cenaService.listarDocumentos).toHaveBeenCalledTimes(1);
+    });
+
+    it('anexar/remover/reordenar/focar/apresentar trocam a coluna pela resposta do backend', () => {
+      const { dados, cenaService } = montar({ cenaTipo: CenaTipoEnum.INVESTIGACAO });
+      const listaNova = [
+        { documentoId: 40, titulo: 'Relatório', tipo: TipoDocumentoEnum.TEXTO, revelado: true, ordem: 1, emFoco: true },
+      ];
+      cenaService.anexarDocumento.mockReturnValueOnce(of(listaNova));
+
+      dados.anexarDocumento(40);
+      expect(cenaService.anexarDocumento).toHaveBeenCalledWith(CENA_ID, 40);
+      expect(dados.documentosCena()).toEqual(listaNova);
     });
   });
 });

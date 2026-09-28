@@ -22,6 +22,15 @@ import { RolagemService } from '../../../ficha/rolagem.service';
 import { agruparFichasPorMembro, ordenarMembros, type ItemFicha } from '../../campanha-equipe.util';
 
 /**
+ * Inventário de esquadrão sob demanda (`requests-inventario-sob-demanda`) — o painel só busca na
+ * 1ª vez que fica visível. `NAO_CARREGADO`: nunca pedido nesta instância. `CARREGANDO`: GET em
+ * voo. `PRONTO`: resposta aplicada, sem invalidação pendente. `DESATUALIZADO`: um evento real
+ * (`campanha:inventario-alterado`) ou reconexão chegou com o painel fechado — não bastou pra
+ * buscar, só pra saber que o conteúdo atual pode estar velho. `ERRO`: GET falhou, retry manual.
+ */
+export type EstadoInventario = 'NAO_CARREGADO' | 'CARREGANDO' | 'PRONTO' | 'DESATUALIZADO' | 'ERRO';
+
+/**
  * Contexto da prévia de jogador (m8-04) — preenchido só por `CampanhaPreviaJogadorDadosService`,
  * quando o mestre abre `/campanhas/:id/previa/:usuarioAlvoId`. `null` na visão real.
  */
@@ -66,6 +75,7 @@ export class CampanhaDetalheDadosService {
 
   readonly campanha = signal<CampanhaRecuperadaDto | null>(null);
   readonly inventarioEsquadrao = signal<readonly CampanhaInventarioItemDto[]>([]);
+  readonly estadoInventario = signal<EstadoInventario>('NAO_CARREGADO');
   readonly membros = signal<CampanhaMembroResumoDto[]>([]);
   readonly carregando = signal(true);
   readonly fichas = signal<FichaResumoDto[]>([]);
@@ -128,9 +138,46 @@ export class CampanhaDetalheDadosService {
   private fichasInvalidas = false;
   private membrosEmLeitura = false;
   private membrosInvalidos = false;
+  /** `true` enquanto a aba/painel "Inv. Esquadrão" está visível — ver `solicitarInventario`. */
+  protected inventarioAberto = false;
+  private inventarioInvalido = false;
+
+  /**
+   * Geração do `naBase` aplicado por `estadoAlterado$` (P-086) — incrementada a cada evento.
+   * Qualquer leitura de `campanha` (`carregar`/`recarregarCampanhaEInventario`, e a projeção da
+   * prévia) captura a geração antes de disparar o GET; se um evento mais novo chegar enquanto
+   * o GET está em voo, `mesclarEstadoOperacional` troca o `naBase` da resposta (desatualizada)
+   * pelo último valor conhecido, em vez de deixar a leitura antiga restaurar estado velho.
+   */
+  protected geracaoEstadoOperacional = 0;
+  private naBaseMaisRecente: boolean | null = null;
 
   get id(): number {
     return this.idInterno;
+  }
+
+  /**
+   * Aplica `naBase` direto no signal — chamado tanto pela resposta do PUT (`detalhe-mestre.page.
+   * ts`, autor da mutação) quanto pelo eco de `estadoAlterado$` (demais consumidores da sala);
+   * nenhum dos dois busca campanha nem inventário de novo (P-086). Público (não só o `protected`
+   * que bastaria para o próprio `inicializar`) porque a página do mestre, dona da mutação, precisa
+   * chamá-lo de fora para que sua leitura otimista entre na mesma reconciliação de geração que
+   * protege contra uma leitura antiga (reconexão) em voo restaurar o `naBase` anterior.
+   */
+  aplicarEstadoOperacional(naBase: boolean): void {
+    this.naBaseMaisRecente = naBase;
+    this.geracaoEstadoOperacional++;
+    this.campanha.update((atual) => (atual ? { ...atual, naBase } : atual));
+  }
+
+  /** Reconcilia o `naBase` de uma leitura contra um evento mais recente chegado durante o voo. */
+  protected mesclarEstadoOperacional<T extends { naBase: boolean }>(
+    entidade: T,
+    geracaoNoInicio: number,
+  ): T {
+    return geracaoNoInicio === this.geracaoEstadoOperacional
+      ? entidade
+      : { ...entidade, naBase: this.naBaseMaisRecente! };
   }
 
   /**
@@ -200,30 +247,24 @@ export class CampanhaDetalheDadosService {
         },
       });
 
+    // P-086: `CampanhaEstadoAlteradaDto` só carrega `{ id, naBase }` — aplica direto no signal em
+    // vez de refazer campanha+inventário; o inventário não muda por este evento (só
+    // `campanha:inventario-alterado`, tratado abaixo, invalida o inventário de verdade).
     this.tempoRealService.estadoAlterado$
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (evento) => {
-          if (evento.id === id) {
-            this.recarregarCampanhaEInventario();
-          }
-        },
-      });
+      .pipe(filter((evento) => evento.id === id), takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: (evento) => this.aplicarEstadoOperacional(evento.naBase) });
 
+    // requests-inventario-sob-demanda: o payload não carrega os itens — com o painel fechado só
+    // marca desatualizado (sem GET); com o painel aberto, refaz a leitura.
     this.tempoRealService.inventarioAlterado$
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (evento) => {
-          if (evento.campanhaId === id) {
-            this.carregarInventario();
-          }
-        },
-      });
+      .pipe(filter((evento) => evento.campanhaId === id), takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: () => this.invalidarInventario() });
 
     // Ressincronização ao reconectar (§9): refaz o fetch de tudo que pode ter mudado durante a
     // queda sem chegar por broadcast (nenhum evento tem replay) — membros/fichas, campanha/estado
-    // + inventário (o mesmo par de `estadoAlterado$`) e o feed de rolagens (P-084: antes só
-    // membros/fichas refaziam aqui, deixando estado, inventário e rolagens da queda perdidos).
+    // e o feed de rolagens (P-084: antes só membros/fichas refaziam aqui, deixando estado e
+    // rolagens da queda perdidos). Inventário só invalida (`recarregarCampanhaEInventario`, sob
+    // demanda desde `requests-inventario-sob-demanda`) — sem GET se o painel estiver fechado.
     // `reconexao$` (não `reconexao()` num `effect`, P-083) — só dispara em reconexões futuras à
     // assinatura; um consumidor montado depois de uma reconexão já ocorrida não duplica a carga
     // inicial.
@@ -280,6 +321,7 @@ export class CampanhaDetalheDadosService {
     this.fichasEmLeitura = true;
     this.membrosInvalidos = false;
     this.fichasInvalidas = false;
+    const geracaoEstadoNoInicio = this.geracaoEstadoOperacional;
     forkJoin({
       campanha: this.campanhaService.recuperarCampanha(this.idInterno),
       membros: this.campanhaService.listarMembros(this.idInterno),
@@ -296,29 +338,100 @@ export class CampanhaDetalheDadosService {
       )
       .subscribe({
         next: ({ campanha, membros, fichas }) => {
-          this.campanha.set(campanha);
+          this.campanha.set(this.mesclarEstadoOperacional(campanha, geracaoEstadoNoInicio));
           if (!this.membrosInvalidos) this.membros.set(membros);
           if (!this.fichasInvalidas) {
             this.fichas.set(fichas);
             this.sincronizarSalasFicha(fichas);
             this.ultimaAtualizacaoEm.set(Date.now());
           }
-          this.carregarInventario();
+          // Inventário NÃO entra na carga inicial (requests-inventario-sob-demanda) — só na 1ª
+          // vez que o painel "Inv. Esquadrão" fica visível, via `solicitarInventario`.
         },
       });
   }
 
-  carregarInventario(): void {
+  /**
+   * Chamado pela página quando a aba/painel "Inv. Esquadrão" fica visível — dispara a 1ª leitura
+   * real. Cliques repetidos durante o carregamento, ou reabrir sem invalidação, não duplicam GET.
+   */
+  solicitarInventario(): void {
+    this.inventarioAberto = true;
+    const estado = this.estadoInventario();
+    if (estado === 'CARREGANDO' || estado === 'PRONTO') return;
+    this.buscarInventario();
+  }
+
+  /** Chamado pela página quando o painel deixa de estar visível — novos eventos só marcam desatualizado. */
+  fecharInventario(): void {
+    this.inventarioAberto = false;
+  }
+
+  /**
+   * Aplica localmente a resposta de uma mutação que já devolve o inventário inteiro (adicionar/
+   * alterar/remover/ajustar/transferir) — sem GET novo; limpa qualquer invalidação pendente,
+   * porque esta resposta é, ela mesma, a leitura mais recente possível.
+   */
+  aplicarInventarioLocal(itens: readonly CampanhaInventarioItemDto[]): void {
+    this.inventarioInvalido = false;
+    this.inventarioEsquadrao.set(itens);
+    this.estadoInventario.set('PRONTO');
+  }
+
+  /** Busca de verdade — só chamada por `solicitarInventario`/`invalidarInventario`, nunca direto. */
+  protected buscarInventario(): void {
+    this.estadoInventario.set('CARREGANDO');
+    this.inventarioInvalido = false;
     this.campanhaService
       .recuperarInventario(this.idInterno)
-      .subscribe((inventario) => this.inventarioEsquadrao.set(inventario.itens));
+      .pipe(
+        finalize(() => {
+          // Um evento chegou enquanto este GET estava em voo: refaz se o painel segue aberto,
+          // ou marca desatualizado se ele fechou nesse meio-tempo — nunca deixa o estado preso
+          // em `CARREGANDO`.
+          if (!this.inventarioInvalido) return;
+          if (this.inventarioAberto) {
+            this.buscarInventario();
+          } else {
+            this.estadoInventario.set('DESATUALIZADO');
+          }
+        }),
+      )
+      .subscribe({
+        next: (inventario) => {
+          if (this.inventarioInvalido) return;
+          this.inventarioEsquadrao.set(inventario.itens);
+          this.estadoInventario.set('PRONTO');
+        },
+        error: () => {
+          if (this.inventarioInvalido) return;
+          this.estadoInventario.set('ERRO');
+        },
+      });
+  }
+
+  /**
+   * Evento real (`campanha:inventario-alterado`) ou reconexão — nunca busca com o painel fechado,
+   * só marca desatualizado; a próxima `solicitarInventario` (reabrir) busca de verdade.
+   */
+  invalidarInventario(): void {
+    this.inventarioInvalido = true;
+    if (!this.inventarioAberto) {
+      if (this.estadoInventario() !== 'CARREGANDO') {
+        this.estadoInventario.set('DESATUALIZADO');
+      }
+      return;
+    }
+    if (this.estadoInventario() === 'CARREGANDO') return;
+    this.buscarInventario();
   }
 
   recarregarCampanhaEInventario(): void {
+    const geracaoEstadoNoInicio = this.geracaoEstadoOperacional;
     this.campanhaService.recuperarCampanha(this.idInterno).subscribe((campanha) => {
-      this.campanha.set(campanha);
-      this.carregarInventario();
+      this.campanha.set(this.mesclarEstadoOperacional(campanha, geracaoEstadoNoInicio));
     });
+    this.invalidarInventario();
   }
 
   /**

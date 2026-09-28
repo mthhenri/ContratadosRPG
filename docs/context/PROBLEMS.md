@@ -29,17 +29,6 @@
 
 ## Ativos
 
-### P-086 — Estado operacional refaz campanha e inventário · `ABERTO` · requests
-
-- **Sintoma:** alternar Na Base/Em Missão dispara dois GETs adicionais por painel de campanha.
-- **Causa:** consumidor ignora estado recebido no evento e chama `recarregarCampanhaEInventario`;
-  trocar estado não altera os itens.
-- **Correção:** aplicar estado recebido e invalidar inventário quando seus dados mudarem.
-- **Reprodução:** clique Na Base/Em Missão fez dois GETs em cada painel (mestre e jogador).
-- **Desde:** revisão estática de 2026-09-26.
-- **Evidência:** [revisão de requests](../reviews/requests-2026-09-26.md), P-086.
-- **Spec:** [estado sem refetch](../specs/backlog/p-086-estado-campanha-sem-refetch.spec.md).
-
 ### P-088 — Upload de avatar sem arquivo responde 500 · `ABERTO` · backend/ficha
 
 - **Sintoma:** `POST /ficha/:id/imagem` (e o equivalente do avulso do encontro,

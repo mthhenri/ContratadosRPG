@@ -68,6 +68,229 @@ de exclusivo) e o item da presença de leitura (`documento:leitura` de entrada, 
 só para o mestre, efêmera e fora da proibição #25) — texto apresentado ao autor antes de gravar,
 como a spec exige, e aprovado. Spec movida para `done/`. Sem mudança de UI nesta task, então o gate visual não se aplica.
 
+## 2026-09-28 — m7-25-painel-investigacao: coluna Documentos no painel de Investigação (M9 consumida, m7-cenas 5/6)
+
+Quinta task do guarda-chuva `m7-cenas`: o painel de cena sem iniciativa (`m7-24`) ganhou a coluna
+Documentos para a Investigação, consumindo a biblioteca da M9 (`m9-02`/`m9-04`) sem duplicar o
+estado de visibilidade dela — "apresentar" chama `DocumentoService.revelarDocumento`, nunca o
+repository. Nenhum componente novo de casca: confirmado o texto mais recente da `m7-24`
+("a coluna entra sem trocar de componente"), que já resolvia a tensão com a redação mais antiga do
+guarda-chuva ("painel próprio").
+
+**Contrato e banco.** `shared/src/dtos/cena/` ganhou os DTOs de `cena_documento` (anexar, resumo,
+reordenar, remover, focar, apresentar e o broadcast dataless `CenaDocumentoAlteradoDto`, molde de
+`CampanhaInventarioAlteradoDto`). Migration `0035` cria `cena_documento` — tabela filha simples
+(molde `usuario_ficha_acesso`, 0008), com índice único parcial garantindo no máximo um documento em
+foco por cena (mesmo desenho da cena ativa única). A tabela nunca guarda se o documento está
+revelado — só `ordem` e `em_foco` são estado próprio da cena.
+
+**Backend.** `CenaDocumentoRepository`/`CenaDocumentoService` novos em `backend/src/modules/cena/`:
+`listar` (mestre vê tudo; jogador/espectador só o revelado; cena `PLANEJADA` nega a quem não é
+mestre), `anexar` (idempotente, valida campanha do documento), `remover`, `reordenar` (mesmo padrão
+de `reordenarCenas`), `focar` (abre no palco do mestre — não emite, não muda o que a mesa vê) e
+`apresentar` (revela via `DocumentoService` + marca em foco). Mutação exige mestre e recusa cena
+`ENCERRADA`. `CenaModule` importa `DocumentoModule` (mão única). `CampanhaGateway.emitirCenaDocumentoAlterado`
+— dataless (`{ campanhaId, cenaId }`), vai às três salas; quem recebe refaz o `GET` já no próprio
+recorte.
+
+**Frontend.** `EncontroPainelDadosService` ganhou `documentosCena`/`ehInvestigacao`/`documentoEmFoco`
+e os métodos de mutação, cada um trocando o sinal pela lista completa que o backend devolve — sem
+patch local. Assina o novo `cenaDocumentoAlterado$` (`TempoRealService`, evento
+`cena:documento-alterado`) filtrado pela cena da tela. `PainelCenaSemIniciativaMestre` ganhou a
+coluna Documentos (subir/descer com o mesmo padrão do hub de cenas, apresentar, remover), "Anexar
+documento" na coluna de ações (abre um `app-modal` listando a biblioteca via `DocumentoService`) e
+`app-leitor-documento` (M9) no palco acima da grade de Agentes quando há foco.
+`PainelCenaSemIniciativaJogador` ganhou "Documentos apresentados" (a mesma lista, já recortada pelo
+backend) — clicar um abre `app-leitor-documento` num `app-modal`, nada abre sozinho.
+
+**Decisões registradas na spec fechada** (`docs/specs/done/m7-25-painel-investigacao.spec.md`):
+espectador tratado como jogador (ponto em aberto do milestone, decidido aqui por falta de cenário
+que exija diferenciar os dois); foco é local ao mestre, não sincroniza entre dispositivos dele
+(aceitável — não é caminho de uso real); reordenar é por botões, não arrastar, mesma interação já
+usada no hub.
+
+**Testado:** `npm test -w shared` (772), `-w backend` (729, com 14 novos de
+`CenaDocumentoService`) e `-w frontend` (2476, com os novos casos de `EncontroPainelDadosService`,
+`PainelCenaSemIniciativaMestre`, `PainelCenaSemIniciativaJogador` e `TempoRealService`) verdes; lint
+dos três workspaces sem erro novo; builds de frontend e backend limpos. Migration `0035`:
+`db:migrate` → `db:rollback` → `db:migrate` sem erro.
+
+**Verificado ao vivo** (`verify`, Postgres nativo + backend + frontend reais, Playwright): mestre
+cria uma cena de Investigação ativa, anexa um documento oculto da biblioteca, foca-o no palco
+(leitor aparece, documento continua oculto), apresenta-o — o jogador, numa aba separada e **sem
+recarregar**, vê a seção "Documentos apresentados" aparecer via o evento de tempo real e abre o
+documento num modal de leitura. Confirmado em `1920×1080` (mestre) e `360×800` (mestre e jogador):
+sem overflow, coerente com o painel de Resistência (`m7-24`) e com a Biblioteca (`m9-04`/`m9-05`).
+`m7-cenas` fica 5/6 — falta só `m7-26` (passe responsivo dedicado do módulo inteiro).
+
+## 2026-09-28 — requests-inventario-sob-demanda: inventário só busca ao abrir o painel (guarda-chuva `requests-correcoes` fechado, 6/6)
+
+Sexta e última task de `requests-correcoes`. O inventário de esquadrão entrava na carga inicial de
+`CampanhaDetalheDadosService.carregar()` mesmo quando o painel "Inv. Esquadrão"/"Inventário" nunca
+era aberto — o componente `app-inventario-esquadrao` já existe sempre no DOM nas duas telas
+(`[hidden]`, nunca `@if`/desmontagem), então "abrir o painel" nunca foi um evento de ciclo de vida
+do Angular, só uma troca de valor no signal local `painelLateralAtivo` da página.
+
+**Máquina de estados no service base.** Novo `EstadoInventario` (`NAO_CARREGADO | CARREGANDO |
+PRONTO | DESATUALIZADO | ERRO`, convenção `Estado*` em maiúsculas já usada em `EstadoBusca`/
+`EstadoImagem`/`EstadoSincronizacao`) e `estadoInventario` como signal público. Inventário saiu da
+carga inicial — `carregar()` não chama mais `carregarInventario()`. Quatro métodos novos
+substituem o antigo `carregarInventario()` único e incondicional:
+
+- `solicitarInventario()` — chamado pela página quando o painel fica visível; busca só se o estado
+  ainda não é `CARREGANDO`/`PRONTO` (1ª vez, `DESATUALIZADO` ou `ERRO` sempre buscam).
+- `fecharInventario()` — chamado quando o painel deixa de estar visível.
+- `aplicarInventarioLocal(itens)` — aplica a resposta de uma mutação (adicionar/alterar/remover/
+  ajustar/transferir, todas já devolvem o inventário inteiro) sem GET novo.
+- `invalidarInventario()` — chamado pelo evento `campanha:inventario-alterado` (payload só
+  `{ campanhaId }`, nunca os itens) e pela reconexão: com o painel fechado só marca
+  `DESATUALIZADO`; com o painel aberto busca na hora.
+- `buscarInventario()` (protegido, único ponto que chama `GET /campanha/:id/inventario`) usa o
+  mesmo padrão de reentrada por `finalize()` que `invalidarMembros`/`invalidarFichas` já usavam —
+  um evento chegado durante o GET marca `inventarioInvalido`; ao terminar, refaz se o painel segue
+  aberto ou marca `DESATUALIZADO` se ele fechou nesse meio-tempo — nunca fica preso em
+  `CARREGANDO`.
+
+**Páginas.** `detalhe-mestre.page.ts`/`detalhe-jogador.page.ts` ganharam um `effect()` observando
+`painelLateralAtivo()`: `'inventario'` chama `solicitarInventario()`, qualquer outro valor chama
+`fecharInventario()`. A mesma página de jogador é reusada pela prévia do mestre (`CampanhaPreviaJogador`),
+então o mesmo efeito cobre os dois fluxos sem duplicar wiring. `mandarItemFichaParaBase`
+(transferência ficha→base) trocou a chamada direta ao antigo `carregarInventario()` por
+`invalidarInventario()` — mesma fonte de qualquer outra invalidação, sem forçar GET com o painel
+fechado.
+
+**Prévia de jogador.** `CampanhaPreviaJogadorDadosService` tinha um caminho paralelo inteiro para
+inventário dentro do coordenador de invalidação (`invalidacoes.next('inventario')`,
+`bufferTime`+`switchMap`) — removido; agora sobrescreve só `buscarInventario()` (protegido, gate de
+`podeAcessarInventarioEsquadrao`) e delega `solicitarInventario`/`fecharInventario`/
+`invalidarInventario` ao service base, herdados sem mudança. `IntencaoInvalidacao` perdeu o membro
+`'inventario'`. Reconexão da prévia ganhou `invalidarInventario()` ao lado de `'projecao'` — antes
+não invalidava inventário nenhum ao reconectar.
+
+**Componente `app-inventario-esquadrao`.** Novo input `estado: EstadoInventario` (obrigatório) e
+output `tentarNovamente`. Template: `CARREGANDO`/`NAO_CARREGADO`/`DESATUALIZADO` mostram o mesmo
+esqueleto (3 blocos `app-esqueleto`, mesmo padrão de "Carregando rolagens" já usado no histórico da
+campanha); `ERRO` reusa o par `app-estado-vazio` + botão `estadoVazioAcao` `contorno`/`pequeno` +
+"Tentar de novo" já estabelecido em `busca-documentos` (análogo aprovado: mesmo componente, mesmo
+recorte de "GET sob demanda com erro e retry"); `PRONTO` é o conteúdo antigo do componente, intocado.
+`InventarioEsquadraoSidebar` (componente existente mas **sem nenhum consumidor em produção** — só
+`itens`/`aberto` já feitos, nunca `[app-inventario-esquadrao-sidebar]` em nenhum template) ganhou o
+mesmo `estado`/`tentarNovamente` encaminhados, só para continuar compilando.
+
+**Testes.** `campanha-detalhe-dados.service.spec.ts` ganhou 13 casos novos (carga inicial não busca;
+1ª abertura busca e aplica `PRONTO`; reabrir sem invalidação não duplica; cliques repetidos durante
+`CARREGANDO` não duplicam; erro vira `ERRO` e retry busca de novo; evento com painel fechado marca
+`DESATUALIZADO` sem GET e reabrir busca uma vez; evento com painel aberto busca na hora; evento de
+outra campanha não invalida; evento durante GET lento reencadeia ou marca desatualizado conforme o
+painel; `aplicarInventarioLocal` sem GET; reconexão com painel fechado/aberto). `inventario-
+esquadrao.component.spec.ts` ganhou 4 casos dos estados visuais. `detalhe-mestre.page.spec.ts`,
+`detalhe-jogador.page.spec.ts` e `previa-jogador.page.spec.ts` ganharam casos de contagem de GET ao
+abrir/alternar/reabrir a aba pelas três telas reais (clique de verdade, não chamada direta ao
+service). Suíte completa do frontend verde (173 arquivos / 2464 testes). `npm run lint` (raiz): zero
+erros, só os avisos de aspas/comprimento de linha já conhecidos. `npm run build -w frontend`:
+aprovado, mesmo aviso preexistente de orçamento do bundle (550,83 kB para 450 kB, P-004).
+`shared`/`backend` não foram tocados — nenhum gate deles precisou rodar de novo. `convencoes-check`
+sobre o diff: sem DTO/enum novo, sem `atualizar`/`atualizado`, sem `NgModule`/`ngModel`, nenhum SQL
+tocado (só frontend), sem estilo hardcoded nem `title`/`style` nativos.
+
+**Verificação ao vivo (Playwright + REST + Postgres real — cluster nativo, sem Docker neste
+ambiente).** Backend e frontend reais, mestre (`codex.dev`, 1920×1080) e jogador
+(`jogador.stub.1`, 360×800) na "Campanha do Codex", captura de toda requisição REST por ação.
+Carga inicial: **zero** GETs de `/campanha/2/inventario` em qualquer um dos dois clientes. Mestre
+abre a aba "Inventário": **exatamente 1 GET**; alternar para "Rolagens" e reabrir sem mudança:
+**zero** GETs adicionais. Mestre adiciona um item custom com o painel aberto: aplica local (POST +
+o eco do próprio evento faz 1 GET extra — aceito, mesmo trade-off documentado em `p-086`: o payload
+do evento não carrega dados, não dá pra distinguir o próprio eco de uma mudança concorrente sem
+inventar um identificador de origem no backend, fora do escopo desta task) — e, importante, o
+**jogador com o painel fechado não fez nenhuma requisição** durante essa mutação do mestre. Jogador
+então navega até "ROLAGENS" (mobile: a barra lateral só existe com esse destino ativo no nav
+inferior) e abre "Inv. Esquadrão": **exatamente 1 GET**, e o item criado pelo mestre já aparece —
+confirma "reabrir mostra valor correto após uma consulta" depois de um evento perdido com o painel
+fechado. Estado vazio (`app-estado-vazio` com ícone/título/linha de apoio e os controles "Item
+custom"/"Adicionar itens") renderizado corretamente nos dois viewports, sem overflow; o card do
+item novo no mobile mostra categoria, nome, peso/custo e os controles de quantidade/"Pegar"
+corretamente. Cenário limpo ao final: inventário da campanha resetado para `[]` via SQL (mesmo
+banco de desenvolvimento/seed, sem dado de produção envolvido); servidores de dev encerrados,
+cluster Postgres nativo parado.
+
+`requests-correcoes` está **concluído**: as 6 tasks (`p-082`…`p-086` + esta) fecharam; `P-082`…
+`P-086` fechados em `PROBLEMS.md`; a oportunidade de "carregamento antecipado do inventário" da
+revisão de 2026-09-26 também está resolvida.
+
+## 2026-09-28 — p-086: estado Na Base/Em Missão aplicado sem refetch (P-086 fechado)
+
+Quinta das 6 tasks de `requests-correcoes`. `CampanhaEstadoAlteradaDto` (payload de
+`campanha:estado-alterado`) só carrega `{ id, naBase }` — o consumidor de `estado-alterado$` em
+`CampanhaDetalheDadosService.inicializar()` chamava `recarregarCampanhaEInventario()` (2 GETs:
+campanha + inventário) mesmo o inventário nunca mudando por esse evento (só `alterarEstado` no
+backend, que nunca emite `inventario-alterado`). Agora aplica `naBase` direto no signal `campanha`
+via `campanha.update()`, preservando os demais campos — zero GET causado pelo evento, tanto para o
+mestre (autor) quanto para o jogador (só espectador do broadcast).
+
+**Corrida — resposta antiga restaurando `naBase` velho.** Entregável 2 da spec pede que nenhuma
+leitura de campanha em voo (carga inicial, `recarregarCampanhaEInventario` de `reconexao$`)
+sobrescreva um `naBase` mais novo aplicado por evento enquanto ela ainda não respondeu. Novo par
+`geracaoEstadoOperacional`/`mesclarEstadoOperacional<T>` (protegido, no service base): toda leitura
+que vai definir `campanha` captura a geração antes de disparar o GET; se um evento mais novo chegou
+durante o voo, a resposta (desatualizada) tem seu `naBase` trocado pelo último valor conhecido, em
+vez de restaurá-lo. `aplicarEstadoOperacional(naBase)` é o único ponto que aplica um `naBase` novo
+(incrementa a geração, guarda o valor, atualiza o signal) — usado tanto pelo eco de
+`estadoAlterado$` quanto, importante, pela **resposta do próprio PUT** em `detalhe-mestre.page.ts`
+(`alterarEstadoCampanha`): antes ela também escrevia direto no signal por fora, então uma
+ressincronização de reconexão já em voo no momento do clique podia terminar depois do PUT e
+restaurar o estado anterior à mutação do próprio mestre — corrigido roteando as duas fontes
+("resposta da mutação e eco do evento", como a spec nomeia) pela mesma reconciliação.
+
+**Prévia de jogador (m8-04).** `CampanhaPreviaJogadorDadosService.assinarTempoReal` tratava
+`estadoAlterado$` como qualquer outro evento de `'projecao'`, refazendo a projeção inteira
+(campanha+membros+fichas+rolagens) só por causa do `naBase`. Passou a aplicar `naBase` direto via
+`aplicarEstadoOperacional` (herdado), com a mesma reconciliação de geração em `aplicarPrevia`
+(capturada em `carregarPrevia`/no branch `'projecao'` do coordenador) para a mesma corrida.
+`podeAcessarInventarioEsquadrao` ficou **de fora de propósito**: é `identidade.naBase` 1:1 no
+backend (`campanha-projecao.service.ts`), mas uma primeira tentativa de espelhar essa igualdade no
+frontend (para também evitar refetch nesse campo) duplicava a regra do lado errado da fronteira —
+`convencoes-check`/CLAUDE.md proíbem — e o teste existente `previa-jogador.page.spec.ts` (que monta
+`naBase: true` e `podeAcessarInventarioEsquadrao: false` deliberadamente independentes num mesmo
+fixture) provou isso ao quebrar. Revertido: esse campo continua só do backend, atualizado pela
+próxima invalidação real de `'projecao'` (ficha/membro, reconexão) — não pelo evento de estado.
+
+**Testes.** `campanha-detalhe-dados.service.spec.ts`: troca do teste antigo (que provava o
+comportamento a corrigir) por 4 casos — aplica direto sem GET; evento de outra campanha não altera
+nada; eco/resposta duplicados são idempotentes; corrida evento-durante-reconexão preserva o valor
+novo. `previa-jogador.page.spec.ts`: `estadoAlterado$` virou um `Subject` controlável (antes um
+`Subject` fixo nunca exercitado) e ganhou 2 casos (aplica direto sem refazer a projeção; evento de
+outra campanha não altera nada). `detalhe-mestre.page.spec.ts` não tinha nenhum teste do botão
+Na Base/Em Missão até agora — ganhou 3: clique troca o texto pela resposta do PUT sem GET de
+campanha/inventário; o eco do próprio evento é idempotente; uma leitura de reconexão em voo não
+restaura o `naBase` anterior ao PUT. Suíte completa do frontend verde (173 arquivos / 2444 testes).
+`npm run lint` (raiz): zero erros, só os avisos de aspas/comprimento de linha já conhecidos do
+repositório. `npm run build -w frontend`: aprovado, mesmo aviso preexistente de orçamento do bundle
+(550,83 kB para 450 kB, P-004). `shared`/`backend` não foram tocados por esta task — nenhum gate
+deles precisou rodar de novo.
+
+**Verificação ao vivo (Playwright + REST + Postgres real — sem Docker disponível neste ambiente,
+subido via cluster nativo `postgresql-16` já instalado, `npm run db:migrate`/`db:seed:dev`).**
+Backend e frontend reais em `:3100`/`:4300`, dois contextos de navegador simultâneos: mestre
+(`codex.dev`, 1920×1080) e jogador (`jogador.stub.1`, 360×800) na mesma campanha semeada
+("Campanha do Codex"), com captura de método/rota de toda requisição REST (Socket.IO/assets
+excluídos). Carga inicial: 5 GETs por cliente (`campanha/:id`, `/membros`, `ficha?campanhaId`,
+`/rolagem`, `/inventario`), igual ao baseline já estabelecido por `p-084`/`p-085` — sem regressão.
+Clique do mestre em Na Base → Em Missão: **exatamente 1 requisição no total** (`PUT
+/campanha/2/estado`, o próprio mestre) — zero GETs, e o jogador convergiu para "EM MISSÃO" só pelo
+evento de socket, sem nenhuma requisição própria. Clique de volta (Em Missão → Na Base): mesmo
+resultado, 1 PUT, 0 GETs, os dois clientes convergem. Texto/ícone do badge corretos nos dois
+viewports, sem overflow, screenshots capturados nos quatro momentos (antes/depois de cada clique,
+mestre e jogador). Ambiente revertido ao final: servidores de dev encerrados, cluster Postgres
+nativo parado (`pg_ctlcluster 16 main stop`), `.env` local permanece (git-ignored, não versionado).
+
+`convencoes-check` sobre o diff: sem DTO/enum novo, sem
+`atualizar`/`atualizado`, sem `NgModule`/`ngModel`, nenhuma query/SQL tocada (só frontend); a
+leitura manual é o que pegou a duplicação de regra revertida acima — a busca mecânica sozinha não
+teria acusado.
+
+Restam 2/6 tasks de `requests-correcoes`: o inventário sob demanda (task 6) — `P-086` fechado
+nesta task.
+
 ## 2026-09-28 — m9-08: importar Markdown como rascunho na Biblioteca
 
 Executada após a m9-07. A edição de documento TEXTO ganhou "Importar Markdown" abaixo do editor,

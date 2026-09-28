@@ -4,6 +4,38 @@
             Consulta disponível durante a missão.
         </p>
     }
+    @if (estado() === "ERRO") {
+        <app-estado-vazio
+            tamanho="compacto"
+            icone="alerta"
+            titulo="Não foi possível carregar o inventário."
+            linhaApoio="Verifique a conexão e tente de novo."
+        >
+            <button
+                estadoVazioAcao
+                app-botao
+                variante="secundario"
+                estilo="contorno"
+                tamanho="pequeno"
+                class="inventario-esquadrao__erro-acao"
+                type="button"
+                (click)="tentarNovamente.emit()"
+            >
+                <app-icone nome="atualizar" />
+                Tentar de novo
+            </button>
+        </app-estado-vazio>
+    } @else if (estado() !== "PRONTO") {
+        <div
+            class="inventario-esquadrao__esqueleto"
+            role="status"
+            aria-label="Carregando inventário"
+        >
+            @for (i of [0, 1, 2]; track i) {
+                <app-esqueleto class="inventario-esquadrao__esqueleto-item" />
+            }
+        </div>
+    } @else {
     <ng-container>
         @if (!somenteLeitura()) {
             <header class="inventario-esquadrao__acoes" aria-label="Ações do inventário">
@@ -502,6 +534,7 @@
             </ul>
         }
     </ng-container>
+    }
 </section>
 
 @if (!somenteLeitura()) {

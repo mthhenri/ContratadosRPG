@@ -1119,6 +1119,51 @@ export const schemasContratosPublicos = {
         "additionalProperties": false,
         "description": "Linha crua de `cena`, com o `codigo` de tipo/status resolvido e o encontro dela, se houver."
     },
+    "CenaDocumentoLinhaDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "cenaId": {
+                "type": "number"
+            },
+            "documentoId": {
+                "type": "number"
+            },
+            "ordem": {
+                "type": "number"
+            },
+            "emFoco": {
+                "type": "boolean"
+            },
+            "titulo": {
+                "type": "string"
+            },
+            "tipo": {
+                "type": "string",
+                "enum": [
+                    "TEXTO",
+                    "IMAGEM"
+                ]
+            },
+            "revelado": {
+                "type": "boolean"
+            }
+        },
+        "required": [
+            "id",
+            "cenaId",
+            "documentoId",
+            "ordem",
+            "emFoco",
+            "titulo",
+            "tipo",
+            "revelado"
+        ],
+        "additionalProperties": false,
+        "description": "Linha crua de `cena_documento`, já com os campos do documento resolvidos pelo `JOIN` (m7-25)."
+    },
     "CenaCriarDto": {
         "type": "object",
         "properties": {
@@ -1349,6 +1394,128 @@ export const schemasContratosPublicos = {
         ],
         "additionalProperties": false,
         "description": "Payload de broadcast (`cena:alterada`) — o resumo da cena após uma mutação já persistida,\nemitido pela service **depois** de salvar (§9, broadcast-only). Cena `PLANEJADA` só chega à sala\ndo mestre (trava anti-vazamento, m7-22); o estado do encontro segue pelo `encontro:alterado`."
+    },
+    "CenaDocumentoAnexarDto": {
+        "type": "object",
+        "properties": {
+            "documentoId": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "documentoId"
+        ],
+        "additionalProperties": false,
+        "description": "Entrada de \"anexar documento\" — o `cenaId` vem da rota."
+    },
+    "CenaDocumentoResumoDto": {
+        "type": "object",
+        "properties": {
+            "documentoId": {
+                "type": "number"
+            },
+            "titulo": {
+                "type": "string"
+            },
+            "tipo": {
+                "type": "string",
+                "enum": [
+                    "TEXTO",
+                    "IMAGEM"
+                ]
+            },
+            "revelado": {
+                "type": "boolean"
+            },
+            "ordem": {
+                "type": "number"
+            },
+            "emFoco": {
+                "type": "boolean"
+            }
+        },
+        "required": [
+            "documentoId",
+            "titulo",
+            "tipo",
+            "revelado",
+            "ordem",
+            "emFoco"
+        ],
+        "additionalProperties": false,
+        "description": "Item da coluna Documentos. Campos do documento embutidos direto (sem herança de DTO de negócio,\n§CONVENTIONS) — a coluna não busca o documento à parte para montar a lista."
+    },
+    "CenaDocumentoReordenarDto": {
+        "type": "object",
+        "properties": {
+            "ordem": {
+                "type": "array",
+                "items": {
+                    "type": "number"
+                }
+            }
+        },
+        "required": [
+            "ordem"
+        ],
+        "additionalProperties": false,
+        "description": "Entrada da reordenação — `ordem` lista os `documentoId` de todos os itens da cena, na nova ordem."
+    },
+    "CenaDocumentoRemoverDto": {
+        "type": "object",
+        "properties": {
+            "documentoId": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "documentoId"
+        ],
+        "additionalProperties": false,
+        "description": "Entrada de \"remover da cena\" — não afeta a biblioteca (M9), só o vínculo."
+    },
+    "CenaDocumentoFocarDto": {
+        "type": "object",
+        "properties": {
+            "documentoId": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "documentoId"
+        ],
+        "additionalProperties": false,
+        "description": "Entrada de \"focar no palco\" — só o mestre; não revela nem chega à mesa."
+    },
+    "CenaDocumentoApresentarDto": {
+        "type": "object",
+        "properties": {
+            "documentoId": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "documentoId"
+        ],
+        "additionalProperties": false,
+        "description": "Entrada de \"apresentar\" — revela o documento (M9) e o marca em foco no palco."
+    },
+    "CenaDocumentoAlteradoDto": {
+        "type": "object",
+        "properties": {
+            "campanhaId": {
+                "type": "number"
+            },
+            "cenaId": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "campanhaId",
+            "cenaId"
+        ],
+        "additionalProperties": false,
+        "description": "Payload de broadcast (`cena:documento-alterado`) — dataless como `campanha:inventario-alterado`:\nsó avisa que a coluna Documentos desta cena mudou; quem recebe refaz o `GET` já no próprio\nrecorte (mestre vê tudo; jogador/espectador, só o revelado)."
     },
     "DocumentoCriarDto": {
         "type": "object",
@@ -6575,6 +6742,56 @@ export const operacoesContratosPublicos = {
         "tag": "Cenas",
         "publica": false,
         "responseSchema": "EncontroRecuperadoDto"
+    },
+    "CenaController_listarDocumentos": {
+        "controller": "CenaController",
+        "metodo": "get",
+        "caminho": "/cena/:id/documento",
+        "tag": "Cenas",
+        "publica": false,
+        "responseSchema": "CenaDocumentoResumoDto[]"
+    },
+    "CenaController_anexarDocumento": {
+        "controller": "CenaController",
+        "metodo": "post",
+        "caminho": "/cena/:id/documento",
+        "tag": "Cenas",
+        "publica": false,
+        "requestSchema": "CenaDocumentoAnexarDto",
+        "responseSchema": "CenaDocumentoResumoDto[]"
+    },
+    "CenaController_reordenarDocumentos": {
+        "controller": "CenaController",
+        "metodo": "put",
+        "caminho": "/cena/:id/documento/ordem",
+        "tag": "Cenas",
+        "publica": false,
+        "requestSchema": "CenaDocumentoReordenarDto",
+        "responseSchema": "CenaDocumentoResumoDto[]"
+    },
+    "CenaController_removerDocumento": {
+        "controller": "CenaController",
+        "metodo": "delete",
+        "caminho": "/cena/:id/documento/:documentoId",
+        "tag": "Cenas",
+        "publica": false,
+        "responseSchema": "CenaDocumentoResumoDto[]"
+    },
+    "CenaController_focarDocumento": {
+        "controller": "CenaController",
+        "metodo": "post",
+        "caminho": "/cena/:id/documento/:documentoId/focar",
+        "tag": "Cenas",
+        "publica": false,
+        "responseSchema": "CenaDocumentoResumoDto[]"
+    },
+    "CenaController_apresentarDocumento": {
+        "controller": "CenaController",
+        "metodo": "post",
+        "caminho": "/cena/:id/documento/:documentoId/apresentar",
+        "tag": "Cenas",
+        "publica": false,
+        "responseSchema": "CenaDocumentoResumoDto[]"
     },
     "DocumentoController_criar": {
         "controller": "DocumentoController",

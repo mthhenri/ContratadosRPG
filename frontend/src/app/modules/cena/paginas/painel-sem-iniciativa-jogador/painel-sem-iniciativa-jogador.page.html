@@ -70,6 +70,28 @@
             <span class="cena-jogador__regua"></span>
         </header>
 
+        @if (dados.ehInvestigacao() && dados.documentosCena().length) {
+        <section class="cena-jogador__documentos" aria-label="Documentos apresentados">
+            <header class="cena-jogador__secao">
+                <h2 class="cena-jogador__secao-titulo">Documentos apresentados</h2>
+                <span class="cena-jogador__secao-regua"></span>
+            </header>
+            <ul class="cena-jogador__lista-documentos">
+                @for (documento of dados.documentosCena(); track documento.documentoId) {
+                <li>
+                    <!-- eslint-disable-next-line @angular-eslint/template/elements-content -->
+                    <button
+                        app-documento-cartao
+                        [titulo]="documento.titulo"
+                        [tipo]="documento.tipo"
+                        (click)="abrirDocumento(documento)"
+                    ></button>
+                </li>
+                }
+            </ul>
+        </section>
+        }
+
         <div class="cena-jogador__linha">
             @if (!janelaHistorico.estaAbertaCampanha(dados.campanhaId)) {
             <div class="cena-jogador__rolagens">
@@ -161,3 +183,17 @@
 
 <!-- As rolagens da própria ficha usam a mesma carta central das fichas. -->
 <app-bandeja-dados />
+
+@if (dados.ehInvestigacao()) {
+<app-modal
+    [aberto]="carregandoDocumentoModal() || documentoAbertoModal() !== null"
+    [titulo]="documentoAbertoModal()?.titulo ?? 'Carregando…'"
+    (fechou)="fecharDocumento()"
+>
+    @if (documentoAbertoModal(); as documento) {
+    <app-leitor-documento [documento]="documento" />
+    } @else {
+    <app-esqueleto class="cena-jogador__esqueleto-documento-modal" />
+    }
+</app-modal>
+}

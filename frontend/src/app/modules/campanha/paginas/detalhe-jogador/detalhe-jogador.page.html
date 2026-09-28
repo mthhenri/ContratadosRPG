@@ -816,9 +816,11 @@
                         <app-inventario-esquadrao
                             [campanhaId]="campanhaAtual.id"
                             [itens]="dados.inventarioEsquadrao()"
+                            [estado]="dados.estadoInventario()"
                             [fichas]="dados.fichasDestinoInventario()"
                             [somenteLeitura]="somenteLeitura() || !campanhaAtual.naBase"
-                            (alterado)="dados.inventarioEsquadrao.set($event)"
+                            (alterado)="dados.aplicarInventarioLocal($event)"
+                            (tentarNovamente)="dados.solicitarInventario()"
                         />
                     </div>
                 </div>

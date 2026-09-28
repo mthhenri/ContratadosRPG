@@ -1,14 +1,9 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Requests — pendências abertas:** revisão estática identificou `P-082`…`P-086`, incluindo
-> risco de troca de destino do autosave ao selecionar outra ficha, cargas duplicadas e
-> ressincronização incompleta. [Evidências e limites](../reviews/requests-2026-09-26.md).
-> Reprodução no Chromium confirmou os cinco achados com mestre/jogador: inclusive PUT aceito
-> na ficha errada e dados antigos após reconexão. Carga inicial verificada em desktop/mobile.
-> Cenário isolado excluído; contas de teste mantidas conforme autorizado. Correções especificadas
-> em seis tasks no backlog, ordenadas em [requests-correcoes](../specs/backlog/requests-correcoes.spec.md).
-> `p-082`…`p-085` (4/6) **concluídas** (specs em `done/`) — `P-082`…`P-085` fechados em
-> `PROBLEMS.md`. Restam `p-086` e o inventário sob demanda; próxima recomendada `p-086`.
+> **Requests — revisão de 2026-09-26 fechada:** as seis tasks do guarda-chuva
+> [requests-correcoes](../specs/done/requests-correcoes.spec.md) (`p-082`…`p-086` +
+> `requests-inventario-sob-demanda`) estão concluídas, specs em `done/`; `P-082`…`P-086` fechados
+> em `PROBLEMS.md`. [Evidências e limites da revisão original](../reviews/requests-2026-09-26.md).
 
 > **Avaliação de usabilidade aberta:** [relatório e cobertura dos quatro viewports](../reviews/usabilidade-2026-09-13/RELATORIO.md).
 > Oito propostas de melhoria aguardam revisão; specs no backlog somente após aprovação do autor.
@@ -20,7 +15,66 @@
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
 > **Última revisão:** 2026-09-28 · **Última decisão registrada:**
-> `p-085-invalidacao-seletiva-ficha` concluída (spec em `done/`, `P-085` fechado em
+> `m7-25-painel-investigacao` concluída (spec em `done/`) — **`m7-cenas` em 5/6, falta só `m7-26`**
+> (passe responsivo do módulo): o painel de cena sem iniciativa (`m7-24`) ganhou a coluna Documentos
+> da Investigação, consumindo a biblioteca da M9 (`m9-02`/`m9-04`) sem duplicar o estado de
+> visibilidade — "apresentar" chama `DocumentoService.revelarDocumento`, nunca o repository dela.
+> Nova tabela `cena_documento` (migration `0035`, molde `usuario_ficha_acesso`), só `ordem`/`em_foco`
+> como estado próprio da cena; `CenaDocumentoRepository`/`CenaDocumentoService` novos em
+> `backend/src/modules/cena/` (listar/anexar/remover/reordenar/focar/apresentar, mestre-only, cena
+> `ENCERRADA` é somente leitura); `CenaModule` importa `DocumentoModule` (mão única).
+> `CampanhaGateway.emitirCenaDocumentoAlterado` — dataless (`{ campanhaId, cenaId }`, molde de
+> `campanha:inventario-alterado`) — quem recebe refaz o `GET` já no próprio recorte; "focar" (palco
+> do mestre) não emite. Frontend: `EncontroPainelDadosService` ganhou `documentosCena`/
+> `ehInvestigacao`/`documentoEmFoco` + os métodos de mutação (cada um troca o sinal pela lista
+> completa que o backend devolve). `PainelCenaSemIniciativaMestre` ganhou a coluna Documentos
+> (subir/descer como o hub de cenas, apresentar, remover), "Anexar documento" na coluna de ações
+> (modal listando a biblioteca) e `app-leitor-documento` (M9) no palco acima da grade de Agentes.
+> `PainelCenaSemIniciativaJogador` ganhou "Documentos apresentados" — clicar abre o leitor num modal,
+> nada automático. Espectador tratado como jogador (ponto em aberto do milestone, decidido aqui por
+> falta de cenário que exija diferenciar os dois). Verificado ao vivo (Postgres nativo, backend/
+> frontend reais, mestre 1920×1080/jogador 360×800): mestre anexa, foca (sem revelar) e apresenta um
+> documento; o jogador, sem recarregar, vê "Documentos apresentados" aparecer via tempo real e abre o
+> documento num modal — sem overflow em nenhum viewport.
+> Antes: `requests-inventario-sob-demanda` concluída (spec em `done/`) — **`requests-correcoes`
+> fechado, 6/6**: o inventário de esquadrão saiu da carga inicial de `CampanhaDetalheDadosService.carregar()`
+> e só busca quando o painel "Inv. Esquadrão"/"Inventário" fica visível (`app-inventario-esquadrao`
+> é sempre montado, `[hidden]` — "abrir" é só o signal `painelLateralAtivo` da página mudando, sem
+> ciclo de vida do Angular pra ganchar). Novo `EstadoInventario`
+> (`NAO_CARREGADO|CARREGANDO|PRONTO|DESATUALIZADO|ERRO`) no service base, com
+> `solicitarInventario`/`fecharInventario` (chamados por um `effect()` novo nas duas páginas,
+> observando `painelLateralAtivo`), `aplicarInventarioLocal` (mutação aplica sem GET) e
+> `invalidarInventario` (evento `campanha:inventario-alterado`/reconexão: só marca `DESATUALIZADO`
+> com o painel fechado, busca na hora se aberto) — mesmo padrão de reentrada por `finalize()` que
+> `invalidarMembros`/`invalidarFichas` já usavam. Prévia de jogador perdeu o caminho paralelo que
+> tinha pra inventário dentro do coordenador (`bufferTime`+`switchMap`); agora só sobrescreve
+> `buscarInventario()` com o gate de permissão, herdando o resto do service base.
+> `app-inventario-esquadrao` ganhou `estado`/`tentarNovamente`: `CARREGANDO`/`NAO_CARREGADO`/
+> `DESATUALIZADO` mostram o mesmo esqueleto de "Carregando rolagens"; `ERRO` reusa o par
+> `app-estado-vazio`+retry de `busca-documentos` (análogo aprovado). Verificado ao vivo (Postgres
+> nativo, backend/frontend reais, mestre 1920×1080/jogador 360×800): carga inicial com **zero**
+> GETs de inventário nos dois clientes; abrir a aba faz **exatamente 1** GET; reabrir sem mudança,
+> **zero** adicionais; mestre adiciona item com o painel aberto (aplica local + 1 GET do próprio
+> eco, aceito) enquanto o **jogador com o painel fechado não faz nenhuma requisição**; jogador abre
+> depois e vê o item novo após **exatamente 1** GET. Cenário limpo ao final (inventário resetado via
+> SQL no banco de dev).
+> Antes: `p-086-estado-campanha-sem-refetch` concluída (spec em `done/`, `P-086` fechado em
+> `PROBLEMS.md`): `CampanhaEstadoAlteradaDto` (`{ id, naBase }`) passou a ser aplicado direto no
+> signal `campanha` (mestre, jogador e prévia de jogador do mestre) em vez de refazer
+> `recarregarCampanhaEInventario` (2 GETs) — o inventário nunca muda por esse evento, só
+> `campanha:inventario-alterado` o invalida de verdade. Reconciliação por geração
+> (`aplicarEstadoOperacional`/`mesclarEstadoOperacional`, no service base) protege tanto o eco do
+> evento quanto a resposta do próprio PUT do mestre (antes escrita direto no signal por fora)
+> contra uma leitura de campanha já em voo (reconexão) que responda depois e restaure o `naBase`
+> anterior à mutação. Na prévia de jogador, `podeAcessarInventarioEsquadrao` ficou de fora de
+> propósito — é `identidade.naBase` 1:1 só no backend (`campanha-projecao.service.ts`); uma
+> primeira tentativa de espelhar essa igualdade no frontend duplicava a regra do lado errado da
+> fronteira e quebrou um teste existente que as mantém deliberadamente independentes — revertida,
+> o campo continua atualizado só pela próxima invalidação real de `'projecao'`. Verificado ao vivo
+> (Postgres nativo, sem Docker no ambiente; backend/frontend reais; mestre 1920×1080/jogador
+> 360×800 em dois navegadores): cada clique produziu exatamente 1 PUT e 0 GETs, convergindo os
+> dois clientes só por Socket.IO.
+> Antes: `p-085-invalidacao-seletiva-ficha` concluída (spec em `done/`, `P-085` fechado em
 > `PROBLEMS.md`): `FichaService`, com o estado persistido antes/depois, decide se os recortes
 > `fichas` e/ou `membros` mudaram e emite um único `ficha:recortes-alterados`; o gateway só
 > transporta. O frontend agrupa por recurso e protege a corrida entre invalidação e GET em voo —
@@ -28,7 +82,6 @@
 > listas; nome/condição fazem no máximo um por lista afetada; criatura nunca invalida membros.
 > `ficha:alterada` privado e a ponte para o Encontro foram preservados. Verificado com mestre
 > 1920×1080 e jogador 360×800, inclusive condição visível na carteirinha sem acesso ao documento.
-> `requests-correcoes`: 4/6 (`p-082`…`p-085`) — seguem abertas `p-086` e o inventário sob demanda.
 > Antes: `p-084-ressincronizacao-recursos` concluída (spec em `done/`, `P-084` fechado em `PROBLEMS.md`):
 > `reconexao$` (P-083) agora coordena tudo que uma queda sem broadcast pode ter deixado antigo
 > (§9, nenhum evento tem replay). `CampanhaDetalheDadosService` passou a refazer também
@@ -717,14 +770,12 @@
 
 ## 1. Próxima Task
 
-**Requests-correcoes (guarda-chuva de 6 tasks, `P-082`…`P-086` + inventário sob demanda) — 4/6
-concluídas: `p-082` (autosave/seleção da ficha), `p-083` (reconexão sem carga duplicada), `p-084`
-(ressincronização de recursos) e `p-085` (invalidação seletiva da ficha — ver cabeçalho deste
-arquivo). Próxima recomendada: `p-086-estado-campanha-sem-refetch`**. Ela compartilha
-`campanha-detalhe-dados.service.ts` com a task recém-concluída; preservar o coordenador seletivo ao
-integrá-la. Fontes e gates em
-[requests-correcoes](../specs/backlog/requests-correcoes.spec.md); tasks em
-`docs/specs/backlog/p-086-*.spec.md` e `requests-inventario-sob-demanda.spec.md`.
+**Requests-correcoes (guarda-chuva de 6 tasks, `P-082`…`P-086` + inventário sob demanda) —
+concluído, 6/6**: `p-082` (autosave/seleção da ficha), `p-083` (reconexão sem carga duplicada),
+`p-084` (ressincronização de recursos), `p-085` (invalidação seletiva da ficha), `p-086` (estado Na
+Base/Em Missão aplicado sem refetch) e `requests-inventario-sob-demanda` (inventário só busca ao
+abrir o painel — ver cabeçalho deste arquivo). Specs todas em `done/`; nenhuma pendência do
+guarda-chuva. Fontes: [requests-correcoes](../specs/done/requests-correcoes.spec.md).
 
 **Biblioteca — melhorias (2026-09-28):** `m9-07` (segundo clique fecha), `m9-08` (importar
 Markdown como rascunho) e `m9-09` (presença de leitura — contrato, backend e envio do cliente;
@@ -732,15 +783,16 @@ Markdown como rascunho) e `m9-09` (presença de leitura — contrato, backend e 
 concluídas, specs em `done/`. Próxima da série: `m9-10` (presença — tela do mestre, consome `documento:leitores`); a
 `m9-11` (Biblioteca em painel flutuante) segue no backlog. Antes:
 
-**Módulo de Cenas — `m7-25` (Investigação completa), desbloqueada: a `m9-02` (backend de
-documento) e a `m9-04` (`LeitorDocumento`) estão prontas.** `m7-21` (contrato + schema), `m7-22` (backend +
-tempo real), `m7-23` (hub + "Nova cena" tipada) e `m7-24` (painel de cena sem iniciativa) concluídas
-em 2026-09-26. **Deploy: `m7-22` e `m7-23` sobem juntas** (os encontros de backfill em `MONTAGEM`
-vivem em cenas `PLANEJADA`, que só o hub deixa o mestre abrir); a `m7-24` é só frontend e pode ir
-junto ou depois. A mecânica da Resistência (Atributo, DT, Limiar) ficou fora e está em `IDEAS.md`
-`I-035`. A `m7-25` só começa depois de `m9-02` (backend de documento + revelar/ocultar) e `m9-04`
-(o `LeitorDocumento`). A Iniciativa do espectador (`campanhas/:id/espectador/iniciativa`) ficou fora
-da `m7-23` e segue com a rota e o rótulo de antes (ela já mostra só o encontro da cena ativa).
+**Módulo de Cenas — 5/6, falta só `m7-26` (passe responsivo dedicado do módulo inteiro).**
+`m7-21` (contrato + schema), `m7-22` (backend + tempo real), `m7-23` (hub + "Nova cena" tipada),
+`m7-24` (painel de cena sem iniciativa) e `m7-25` (coluna Documentos da Investigação, ver cabeçalho
+deste arquivo) concluídas — specs em `done/`. **Deploy: `m7-22` e `m7-23` sobem juntas** (os
+encontros de backfill em `MONTAGEM` vivem em cenas `PLANEJADA`, que só o hub deixa o mestre abrir);
+as demais são só frontend/backend aditivo e podem ir junto ou depois. A mecânica da Resistência
+(Atributo, DT, Limiar) ficou fora e está em `IDEAS.md` `I-035`. A Iniciativa do espectador
+(`campanhas/:id/espectador/iniciativa`) ficou fora da `m7-23` e segue com a rota e o rótulo de
+antes (ela já mostra só o encontro da cena ativa). Fonte: `docs/specs/active/m7-cenas.spec.md`
+(guarda-chuva, ainda ativo até a `m7-26` fechar).
 
 **M9 — Documentos de campanha ("Biblioteca"): concluída — `m9-01` a `m9-06`
 (2026-09-27).** `m9-01` (contrato +
@@ -1836,8 +1888,9 @@ secrets, IAM, trigger do Cloud Build — todo esse conhecimento foi extraído ao
 migração e está em `HISTORY.md`).
 
 Não há spec ativa no momento (`m8-06` concluída — ver acima; módulo `m8-espectadores-campanha`
-inteiro fechado). Resta `ui-23` no backlog (stat sem valor/rodapé do cartão — ver "Fila do backlog"
-abaixo). A única frente de código de milestone ainda pendente é o **M4** (`m4-05`…`m4-10`,
+inteiro fechado). `ui-23` (stat sem valor/rodapé do cartão) já foi concluída — ver `HISTORY.md`
+2026-09-02; a fila abaixo estava desatualizada. A única frente de código de milestone ainda
+pendente é o **M4** (`m4-05`…`m4-10`,
 criatura/NPC — ver seção 3), ao lado de `m3-53` (M3). M0, M1, M2, M6, M7 e M8 estão concluídos,
 incluindo todos os ajustes avulsos de pós-milestone.
 
@@ -1848,7 +1901,6 @@ incluindo todos os ajustes avulsos de pós-milestone.
 | `civil-guia-criacao` | ficha | mapeia o escopo de `PROBLEMS.md` `P-018` (o guia de criação trata a classe Civil como um agente comum em vários passos) — spec de levantamento, ainda não implementa |
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
 | `m4-05`…`m4-10` | criatura/NPC | 6 tasks restantes do M4 — contrato/regras/backend/frontend de NPC, listagem/revelação no painel do mestre, refinamento mobile |
-| `ui-23` | frontend/design system | última spec restante da auditoria visual (stat sem valor/rodapé do cartão) — não citada na ordem sugerida original como bloqueante de milestone |
 
 Milestones ainda não abertos: `m5-guia-missao`. O M8 `m8-espectadores-campanha` está **concluído**
 (`m8-01`…`m8-06`).
@@ -2594,8 +2646,8 @@ estar no `frontend/proxy.conf.json` (entrou na `m7-23`) — sem ele, `GET /cena/
 server.
 
 **Painel de cena sem iniciativa (`m7-24`, `modules/cena/paginas/painel-sem-iniciativa-*`).**
-Resistência e Investigação (a `m7-25` acrescenta à Investigação a coluna de Documentos no mesmo
-componente). Casca `casca` da Iniciativa sem trilha — **coluna de ações | Rolagens | palco**; blocos
+Resistência e Investigação, com a coluna de Documentos da `m7-25` acrescentada ao mesmo componente
+para a Investigação (ver abaixo). Casca `casca` da Iniciativa sem trilha — **coluna de ações | Rolagens | palco**; blocos
 BEM `cena-mestre`/`cena-jogador`. Mestre: categoria "Cena" com "Abrir cena" (`PLANEJADA`) ou
 "Encerrar cena" (`ATIVA`), confirmação + `CenaService` + `definirCena`; encerrada é só leitura (só
 Ferramentas); palco "Agentes" = `app-espectador-ficha-card` das fichas `JOGADOR` de membros, na
@@ -2608,6 +2660,26 @@ Ferramentas, a própria ficha (primeira ficha `JOGADOR` dele na campanha) no mes
 `EncontroPainelDadosService` entra nas salas `ficha:<id>` do conjunto exibido **só quando
 `semIniciativa()`** e refaz `listarFichas` a cada `ficha:alterada` de uma delas; o painel de
 Iniciativa não entra em sala de ficha nenhuma (teste da casca prova).
+
+**Coluna Documentos — Investigação (`m7-25`, `backend/src/modules/cena/cena-documento.*`,
+tabela `cena_documento`, migration `0035`).** Vínculo cena↔documento da biblioteca da M9
+(`documento`, M9-02/M9-04): só `ordem`/`em_foco` são estado próprio da cena — quem sabe se um
+documento está revelado continua sendo `documento.revelado`, e "apresentar" chama
+`DocumentoService.revelarDocumento` (nunca o repository dela). `CenaDocumentoService`:
+`listar` (mestre vê tudo; jogador/espectador só o revelado; cena `PLANEJADA` nega quem não é
+mestre), `anexar`/`remover`/`reordenar` (mestre-only, cena `ENCERRADA` é só leitura), `focar` (abre
+no palco do mestre — não emite, não sincroniza entre dispositivos dele) e `apresentar` (revela +
+marca em foco). `CampanhaGateway.emitirCenaDocumentoAlterado` — dataless (`{ campanhaId, cenaId }`,
+molde de `campanha:inventario-alterado`) para as três salas; quem recebe refaz o `GET`.
+`EncontroPainelDadosService.documentosCena`/`ehInvestigacao`/`documentoEmFoco` carregam só quando
+`cena.tipo === INVESTIGACAO` e assinam `cenaDocumentoAlterado$` (`TempoRealService`) filtrado pela
+cena da tela. No mestre: coluna Documentos entre a de ações e Rolagens (`app-documento-cartao` da
+M9, subir/descer como `moverPlanejada` do hub, apresentar só quando oculto, remover), "Anexar
+documento" na categoria "Cena" (modal listando a biblioteca via `DocumentoService.listar`, menos o
+já anexado) e `app-leitor-documento` (M9) no palco acima da grade de Agentes quando há foco (busca
+o documento completo por `DocumentoService.recuperar`). No jogador: seção "Documentos apresentados"
+(a mesma lista, já recortada pelo backend) — clicar abre o leitor num modal, nada automático.
+Espectador tratado como o jogador (mesma visão).
 
 Tela de Iniciativa (painel de uma cena com iniciativa) com
 duas visões em páginas separadas (`ui-39`): `PainelCenaShell` (antes `PainelEncontroShell`) resolve o papel

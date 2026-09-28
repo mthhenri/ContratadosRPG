@@ -46,8 +46,10 @@
             <app-inventario-esquadrao
                 [campanhaId]="campanhaId()"
                 [itens]="itens()"
+                [estado]="estado()"
                 [fichas]="fichas()"
                 (alterado)="alterado.emit($event)"
+                (tentarNovamente)="tentarNovamente.emit()"
             />
         </div>
     </aside>

@@ -20,10 +20,12 @@ import {
 import { Icone, type IconeNome } from '../../../../shared/icone/icone.component';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
+import { Esqueleto } from '../../../../shared/ui/esqueleto/esqueleto.component';
 import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
 import { Modal } from '../../../../shared/ui/modal/modal.component';
 import { CampanhaService } from '../../campanha.service';
 import { FichaService } from '../../../ficha/ficha.service';
+import type { EstadoInventario } from '../../paginas/detalhe/campanha-detalhe-dados.service';
 
 interface FichaDestinoInventario { readonly id: number; readonly nome: string; }
 
@@ -65,7 +67,7 @@ const ICONES_CATEGORIA: Readonly<Record<ItemCategoriaEnum, IconeNome>> = {
 
 @Component({
   selector: 'app-inventario-esquadrao',
-  imports: [ReactiveFormsModule, Icone, Botao, BotaoIcone, Modal, EstadoVazio],
+  imports: [ReactiveFormsModule, Icone, Botao, BotaoIcone, Modal, EstadoVazio, Esqueleto],
   templateUrl: './inventario-esquadrao.component.html',
   styleUrl: './inventario-esquadrao.component.scss',
 })
@@ -75,9 +77,13 @@ export class InventarioEsquadrao {
 
   readonly campanhaId = input.required<number>();
   readonly itens = input.required<readonly CampanhaInventarioItemDto[]>();
+  /** Sob demanda (`requests-inventario-sob-demanda`) — o pai busca só quando o painel abre. */
+  readonly estado = input.required<EstadoInventario>();
   readonly fichas = input<readonly FichaDestinoInventario[]>([]);
   readonly somenteLeitura = input(false);
   readonly alterado = output<readonly CampanhaInventarioItemDto[]>();
+  /** Emitido pelo botão "Tentar de novo" do estado de erro. */
+  readonly tentarNovamente = output<void>();
 
   protected readonly catalogoAberto = signal(false);
   protected readonly criandoItem = signal(false);

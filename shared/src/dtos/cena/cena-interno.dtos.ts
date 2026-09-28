@@ -1,4 +1,4 @@
-import type { CenaStatusEnum, CenaTipoEnum } from '../../enums';
+import type { CenaStatusEnum, CenaTipoEnum, TipoDocumentoEnum } from '../../enums';
 
 /**
  * DTOs **internos** do módulo `cena` — trafegam só entre `CenaService` e `CenaRepository`, nunca
@@ -33,6 +33,31 @@ export interface CenaStatusInternoAlterarDto {
 
 /** Entrada interna da reordenação de uma cena planejada. */
 export interface CenaOrdemInternoAlterarDto {
+  readonly id: number;
+  readonly ordem: number;
+}
+
+/** Linha crua de `cena_documento`, já com os campos do documento resolvidos pelo `JOIN` (m7-25). */
+export interface CenaDocumentoLinhaDto {
+  readonly id: number;
+  readonly cenaId: number;
+  readonly documentoId: number;
+  readonly ordem: number;
+  readonly emFoco: boolean;
+  readonly titulo: string;
+  readonly tipo: TipoDocumentoEnum;
+  readonly revelado: boolean;
+}
+
+/** Entrada interna de "anexar" — `ordem` já decidida pela service (fim da fila). */
+export interface CenaDocumentoInternoCriarDto {
+  readonly cenaId: number;
+  readonly documentoId: number;
+  readonly ordem: number;
+}
+
+/** Entrada interna da reordenação de um item de `cena_documento`. */
+export interface CenaDocumentoOrdemInternoAlterarDto {
   readonly id: number;
   readonly ordem: number;
 }

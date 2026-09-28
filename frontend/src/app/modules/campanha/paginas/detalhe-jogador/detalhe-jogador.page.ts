@@ -141,6 +141,18 @@ export class CampanhaDetalheJogador {
 
   /** Painel lateral fixo (Rolagens/Esquadrão/Inv. Esquadrão) — sempre montado, nunca overlay (mesmo padrão do mestre). */
   protected readonly painelLateralAtivo = signal<'rolar' | 'esquadrao' | 'inventario'>('rolar');
+  /**
+   * Inventário sob demanda (`requests-inventario-sob-demanda`) — vale também na prévia de jogador
+   * do mestre (`CampanhaPreviaJogador` reusa esta mesma página): `dados` resolve polimorficamente
+   * para o service certo, então este efeito não precisa saber qual dos dois está ativo.
+   */
+  private readonly _efeitoInventarioAberto = effect(() => {
+    if (this.painelLateralAtivo() === 'inventario') {
+      this.dados.solicitarInventario();
+    } else {
+      this.dados.fecharInventario();
+    }
+  });
 
   private readonly cadernoRef = viewChild<CadernoFlutuante>('caderno');
   /** Caderno aberto (mesmo minimizado) — marca o item "Caderno" da coluna de ações. */
@@ -807,7 +819,10 @@ export class CampanhaDetalheJogador {
           this.fichaExibidaDados.set(ficha);
           this.fichaEdicao.definirBase(ficha);
         });
-        this.dados.carregarInventario();
+        // requests-inventario-sob-demanda: mesma fonte de qualquer outra invalidação — só busca
+        // de verdade se o painel "Inv. Esquadrão" estiver aberto (o evento real do socket também
+        // chega e faria o mesmo, mas não custa nada chamar aqui: idempotente).
+        this.dados.invalidarInventario();
       });
   }
 

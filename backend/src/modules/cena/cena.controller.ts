@@ -1,7 +1,10 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put } from '@nestjs/common';
 import type {
   CenaCriadaDto,
   CenaCriarDto,
+  CenaDocumentoAnexarDto,
+  CenaDocumentoReordenarDto,
+  CenaDocumentoResumoDto,
   CenaRecuperadaDto,
   CenaReordenarDto,
   CenaResumoDto,
@@ -14,6 +17,7 @@ import type {
 import { ActiveUser } from '../../core/decorators';
 import { DocumentarController } from '../../core/openapi';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
+import { CenaDocumentoService } from './cena-documento.service';
 import { CenaService } from './cena.service';
 
 /**
@@ -28,7 +32,10 @@ import { CenaService } from './cena.service';
 @Controller()
 @DocumentarController('Cenas')
 export class CenaController {
-  constructor(private readonly cenaService: CenaService) {}
+  constructor(
+    private readonly cenaService: CenaService,
+    private readonly cenaDocumentoService: CenaDocumentoService,
+  ) {}
 
   @Post('campanha/:id/cena')
   criar(
@@ -95,5 +102,60 @@ export class CenaController {
     @ActiveUser() usuarioAtivo: JwtPayload,
   ): Promise<EncontroRecuperadoDto> {
     return this.cenaService.encerrarCenaDoEncontro({ id }, usuarioAtivo);
+  }
+
+  // ── Coluna Documentos (m7-25) ─────────────────────────────────────────────
+
+  @Get('cena/:id/documento')
+  listarDocumentos(
+    @Param('id', ParseIntPipe) id: number,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<CenaDocumentoResumoDto[]> {
+    return this.cenaDocumentoService.listar({ cenaId: id }, usuarioAtivo);
+  }
+
+  @Post('cena/:id/documento')
+  anexarDocumento(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: CenaDocumentoAnexarDto,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<CenaDocumentoResumoDto[]> {
+    return this.cenaDocumentoService.anexar({ ...dto, cenaId: id }, usuarioAtivo);
+  }
+
+  @Put('cena/:id/documento/ordem')
+  reordenarDocumentos(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: CenaDocumentoReordenarDto,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<CenaDocumentoResumoDto[]> {
+    return this.cenaDocumentoService.reordenar({ ...dto, cenaId: id }, usuarioAtivo);
+  }
+
+  @Delete('cena/:id/documento/:documentoId')
+  removerDocumento(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('documentoId', ParseIntPipe) documentoId: number,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<CenaDocumentoResumoDto[]> {
+    return this.cenaDocumentoService.remover({ cenaId: id, documentoId }, usuarioAtivo);
+  }
+
+  @Post('cena/:id/documento/:documentoId/focar')
+  focarDocumento(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('documentoId', ParseIntPipe) documentoId: number,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<CenaDocumentoResumoDto[]> {
+    return this.cenaDocumentoService.focar({ cenaId: id, documentoId }, usuarioAtivo);
+  }
+
+  @Post('cena/:id/documento/:documentoId/apresentar')
+  apresentarDocumento(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('documentoId', ParseIntPipe) documentoId: number,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<CenaDocumentoResumoDto[]> {
+    return this.cenaDocumentoService.apresentar({ cenaId: id, documentoId }, usuarioAtivo);
   }
 }
