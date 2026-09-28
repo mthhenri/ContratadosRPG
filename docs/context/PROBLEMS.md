@@ -29,18 +29,6 @@
 
 ## Ativos
 
-### P-082 — Troca de ficha não isola requests e salvamento pendente · `ABERTO` · frontend/ficha
-
-- **Sintoma:** resposta antiga pode substituir a seleção atual; edição agendada pode usar o ID
-  da nova seleção, perdendo a edição original ou tentando gravar dados na ficha errada.
-- **Causa:** GET sem cancelamento/conferência de ID em `detalhe-jogador.page.ts` e intenção sem
-  ID no debounce de `FichaEdicaoService`.
-- **Correção:** associar escrita à origem e coordenar troca, pendências e respostas obsoletas.
-- **Desde:** revisão de 2026-09-26; confirmado no Chromium: PUT 200 grava Alfa em Beta ao
-  trocar durante debounce, com GET de Beta atrasado 1,5 s. Resposta obsoleta também reproduzida.
-- **Evidência:** [revisão de requests](../reviews/requests-2026-09-26.md), P-082.
-- **Spec:** [autosave e seleção](../specs/backlog/p-082-ficha-autosave-e-selecao.spec.md).
-
 ### P-083 — Reconexão antiga duplica cargas ao navegar · `ABERTO` · frontend/tempo real
 
 - **Sintoma:** depois de uma reconexão, novas telas fazem carga inicial e refetch adicional.

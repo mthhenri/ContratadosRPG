@@ -1,5 +1,88 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-27 — p-082: autosave e seleção de ficha isolados por origem (P-082 fechado)
+
+Primeira das 6 tasks de `requests-correcoes` (revisão de requests, 2026-09-26). Corrige o achado
+mais grave da revisão: com o autosave debounced (500ms) ligado à ficha exibida em
+`CampanhaDetalheJogador`, editar uma ficha e trocar para outra antes do debounce disparar podia
+gravar os dados da edição na ficha **errada**, ou perder a edição — reproduzido no Chromium na
+revisão (`PUT /ficha/37` recebendo `nome`/`dinheiro` da ficha que não era mais a exibida).
+
+**Causa raiz.** `FichaEdicaoService.agendarPersistencia` só empilhava um `Subject<void>`; ao
+disparar (após `debounceTime(500)`), o `switchMap` relia `this.ficha()` e `this.obterFichaId()` —
+os valores **atuais**, não os da ficha que estava sendo editada quando o ajuste foi feito. Se a
+seleção mudasse nesse meio-tempo (`fichaExibidaId` troca na hora do clique, antes do GET da nova
+ficha voltar), o PUT saía com o ID novo e o documento que ainda estava na tela — uma mistura sem
+relação confiável com nenhuma das duas fichas. Fora isso, o efeito que busca a ficha completa ao
+trocar `fichaExibidaId` (`detalhe-jogador.page.ts`) não conferia se a seleção ainda era a mesma
+quando a resposta do GET chegava — uma leitura atrasada de uma seleção anterior podia substituir a
+ficha exibida mais recente (só `recarregarFichaExibida`, da prévia, já tinha essa trava).
+
+**Correção em `FichaEdicaoService`.** Reescrito o núcleo do debounce sem RxJS `Subject`/
+`switchMap`: `agendarPersistencia` captura `{ fichaId, documentoNoAgendamento }` no instante do
+ajuste (o "retrovisor"); `disparar` só usa esse ID congelado — nunca relê `obterFichaId()` para
+decidir o destino. Para o **corpo** do PUT, prefere o documento **vivo** (`this.ficha()`) contanto
+que `obterFichaId()` ainda bata com o ID congelado (ainda é a mesma origem) — isso preserva o merge
+remoto de três vias que `VisualizarPage.absorverRemoto` já fazia direto no signal (m3-17: um
+`ficha:alterada` chegando durante uma edição pendente mescla campo a campo, sem passar por
+`ajustar*`); só cai pro retrovisor quando a origem trocou por baixo. Serializa escritas da mesma
+origem com uma flag `emVoo` (nunca cancela uma escrita já em voo mandando outra por cima — a razão
+de trocar `switchMap` por esse controle manual) e, se uma resposta chega vendo que já havia edição
+mais nova (`pendente !== intencao`, comparação por referência), não aplica o documento antigo e
+dispara a intenção nova na hora, sem esperar outro debounce. Uma falha de PUT não descarta a edição
+local (ela continua em `this.ficha()`); só libera `edicaoPendente` de volta a `false` — sem isso,
+qualquer remoto futuro passaria a mesclar em vez de substituir pra sempre, congelando os
+live-updates por uma falha só (comportamento que o teste `um erro de save libera a edição
+pendente` de `visualizar.page.spec.ts`, m3-17, já cobria e não podia regredir). Novo método público
+`antecipar()`: envia a pendência agora (sem esperar o resto do debounce) e resolve `true`/`false`
+quando a intenção mais recente terminar — usado pela troca de ficha exibida (abaixo); chamar de
+novo depois de uma falha reenvia a mesma pendência (retry).
+
+**Correção em `CampanhaDetalheJogador`.** `selecionarFichaExibida` agora chama
+`fichaEdicao.antecipar()` antes de trocar: com pendência, força o envio imediato e só troca
+`fichaExibidaId` se a gravação confirmar; enquanto isso, um novo signal `trocandoFichaExibida`
+desabilita o botão "Ver ficha" (`[disabled]`) e `podeAjustarFichaExibida` (edição concorrente na
+origem) até resolver. Numa falha, a ficha e a edição de origem ficam como estavam — o interceptor
+global de erro já notifica, e tentar de novo reenvia. O efeito que busca a ficha completa ao trocar
+`fichaExibidaId` agora limpa `fichaExibidaDados` pra `null` **antes** do GET (a região editável não
+mostra mais o documento anterior enquanto o novo carrega — cai no "Carregando ficha…" já existente)
+e ignora a resposta se `fichaExibidaId()` já não for a mesma quando ela chegar (mesma trava que
+`recarregarFichaExibida` já tinha). `mandarItemFichaParaBase` ganhou a mesma trava de ID na sua
+própria leitura pós-escrita.
+
+**Testes.** `ficha-edicao.service.spec.ts` (novo, 6 casos, `HttpTestingController`): PUT debounced
+básico; a troca de ID/documento depois de agendar não muda o destino do PUT (a regressão exata do
+achado); serialização sem cancelar e sem resposta antiga apagar edição posterior; falha não
+descarta e `antecipar` reenvia; `antecipar` resolve na hora sem pendência e envia na hora com
+pendência, sem esperar os 500ms. `detalhe-jogador.page.spec.ts` ganhou 2 casos (edição pendente
+bloqueia e antecipa antes de trocar; resposta obsoleta de uma leitura anterior não substitui a
+seleção mais recente). Suíte focada e completa do frontend verde (170 arquivos / 2368 testes);
+`visualizar.page.spec.ts`/`painel-jogador.page.spec.ts` (outros consumidores de
+`FichaEdicaoService`) continuam verdes sem alteração — auditados e confirmados livres da mesma
+classe de risco: `FichaFlutuante` destrói/recria o serviço a cada troca de ficha (nunca reusa
+instância entre documentos diferentes) e `VisualizarPage`/`anotacoes-janela.page.ts` fixam o ID uma
+vez por instância (sem seleção trocável em tempo de vida do componente) — só
+`CampanhaDetalheJogador` reusa uma instância com ID trocável.
+
+**Verificação ao vivo (Playwright + REST, backend/Postgres reais, sem mock de API).** Dois
+cenários com atraso deliberado de rede via `page.route`, jogador com duas fichas próprias na mesma
+campanha: (1) editar Vida da ficha exibida e clicar "Ver ficha" da outra antes dos 500ms, com o PUT
+da origem atrasado 800ms — confirmado: botão desabilitado e card ainda mostrando a origem durante o
+flush, exatamente 1 PUT (na origem, com o valor editado), a troca só efetiva depois da confirmação,
+e leitura REST posterior confirma a origem com o valor novo e o destino intacto. (2) selecionar a
+ficha B (GET atrasado 2s) e, antes dele voltar, voltar pra ficha A (GET sem atraso) — confirmado:
+o card fica em "Carregando ficha…" (documento antigo retirado) até o GET de A voltar, mostra A, e a
+resposta atrasada de B (quando finalmente chega) não substitui A. Contas/campanha/fichas de teste
+excluídas pelos endpoints da aplicação (soft delete) ao final de cada rodada.
+
+**Gate comum do guarda-chuva:** `npm run build --workspace=shared/backend/frontend` e
+`npm run lint --workspace=shared/backend/frontend` verdes (só os avisos pré-existentes de aspas do
+ESLint, em arquivos não tocados por esta task). Backend não foi alterado por esta task.
+
+Restam 5/6 tasks de `requests-correcoes`: `p-083` (reconexão duplicando carga), `p-084`
+(ressincronização incompleta), `p-085` (invalidação seletiva), `p-086` (estado sem refetch) e o
+inventário sob demanda — `P-083`…`P-086` continuam abertos em `PROBLEMS.md`.
+
 ## 2026-09-27 — m9-06: passe responsivo da Biblioteca de documentos (M9 concluída)
 
 Última task do milestone M9 — só apresentação, nos quatro viewports padrão (`360×800`, `960×1080`,

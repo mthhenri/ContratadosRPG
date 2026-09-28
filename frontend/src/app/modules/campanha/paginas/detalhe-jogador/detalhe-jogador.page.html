@@ -278,8 +278,7 @@
                             <app-icone nome="olho" />
                             <span>Sair da prévia · {{ previa.nomeAlvo }}</span>
                         </a>
-                        }
-                        @if (somenteLeitura()) {
+                        } @if (somenteLeitura()) {
                         <button
                             app-botao
                             class="detalhe__cabecalho-menu-item"
@@ -635,7 +634,8 @@
 
                             <!-- Prévia: a janela externa lista o feed com o privilégio do mestre
                                  (privadas de todo mundo), então o histórico fica sempre aqui. -->
-                            @if (somenteLeitura() || !janelaHistorico.estaAbertaCampanha(dados.id)) {
+                            @if (somenteLeitura() || !janelaHistorico.estaAbertaCampanha(dados.id))
+                            {
                             <header class="detalhe__secao">
                                 <h2 class="detalhe__secao-titulo">Histórico</h2>
                                 <span class="detalhe__secao-regua"></span>
@@ -648,8 +648,9 @@
                                     (click)="janelaHistorico.abrirCampanha(dados.id)"
                                     aria-label="Abrir em janela"
                                     [appTooltip]="'Abrir em janela'"
-                                    ><app-icone nome="abrir-externo"
-                                /></button>
+                                >
+                                    <app-icone nome="abrir-externo" />
+                                </button>
                                 }
                             </header>
 
@@ -680,8 +681,7 @@
                                 ></li>
                                 }
                             </ul>
-                            }
-                            }
+                            } }
                         </div>
                     </div>
 
@@ -728,6 +728,7 @@
                                         [class.detalhe__equipe-ficha--ativa]="fichaExibidaId() === ficha.id"
                                         [attr.aria-pressed]="fichaExibidaId() === ficha.id"
                                         [attr.aria-label]="'Ver ficha de ' + ficha.nome + ' (' + item.membro.nome + ')'"
+                                        [disabled]="trocandoFichaExibida()"
                                         (click)="selecionarFichaExibida(ficha.id)"
                                     >
                                         <span

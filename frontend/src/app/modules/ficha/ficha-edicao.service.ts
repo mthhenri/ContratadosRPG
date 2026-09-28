@@ -1,6 +1,6 @@
 import { DestroyRef, Injectable, WritableSignal, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { EMPTY, Subject, catchError, debounceTime, switchMap } from 'rxjs';
+import { EMPTY, Observable, Subject, catchError, of, take } from 'rxjs';
 
 import {
   calcularAreaPercepcao,
@@ -73,7 +73,6 @@ export class FichaEdicaoService {
   readonly estadoPersistencia = signal<'ocioso' | 'salvando' | 'salvo'>('ocioso');
   private temporizadorSalvo: ReturnType<typeof setTimeout> | null = null;
 
-  private readonly ajustePendente = new Subject<void>();
   /**
    * `true` enquanto há uma edição local não persistida — exposto só para quem faz merge de
    * tempo real (`VisualizarPage.absorverRemoto`, m3-17); `CampanhaDetalhe` não precisa lê-lo.
@@ -87,6 +86,25 @@ export class FichaEdicaoService {
   private obterFichaId!: () => number;
   private iniciado = false;
 
+  /**
+   * Edição local ainda não confirmada pelo servidor — o ID de origem é capturado no instante de
+   * `agendarPersistencia` e nunca relido depois (P-082): trocar a ficha exibida não muda para
+   * onde esta escrita vai. `documentoNoAgendamento` é só o **retrovisor** — o corpo do PUT prefere
+   * o `ficha()` vivo em `disparar` (pega em cima um merge remoto de três vias absorvido depois do
+   * agendamento, ex.: `VisualizarPage.absorverRemoto`, m3-17) e só cai pro retrovisor se
+   * `obterFichaId()` não bater mais com este ID — sinal de que a página trocou a seleção e o
+   * `ficha()` vivo já pode ser de outra origem. Só volta a `null` quando uma resposta confirma
+   * exatamente esta intenção (comparação por referência em `disparar`) — uma falha a mantém, para
+   * `antecipar` poder reenviá-la depois (sem descarte silencioso).
+   */
+  private pendente: { readonly fichaId: number; readonly documentoNoAgendamento: FichaRecuperadaDto } | null =
+    null;
+  /** Só uma escrita em voo por vez — nunca cancela uma já enviada (serializa, não é `switchMap`). */
+  private emVoo = false;
+  private temporizadorDebounce: ReturnType<typeof setTimeout> | null = null;
+  /** Emite ao concluir a intenção mais recente — o único ouvinte é `antecipar`. */
+  private readonly confirmacao = new Subject<boolean>();
+
   /** Liga o composable à ficha exibida da página — chamado uma vez, no `constructor`. */
   inicializar(ficha: WritableSignal<FichaRecuperadaDto | null>, fichaId: () => number): void {
     if (this.iniciado) {
@@ -95,38 +113,6 @@ export class FichaEdicaoService {
     this.iniciado = true;
     this.ficha = ficha;
     this.obterFichaId = fichaId;
-
-    this.ajustePendente
-      .pipe(
-        debounceTime(500),
-        switchMap(() => {
-          const fichaAtual = this.ficha()!;
-          return this.fichaService
-            .alterarFicha(this.obterFichaId(), {
-              nome: fichaAtual.nome,
-              cor: fichaAtual.cor,
-              imagemFoco: fichaAtual.imagemFoco,
-              oculta: fichaAtual.oculta,
-              dados: fichaAtual.dados,
-            })
-            .pipe(
-              catchError(() => {
-                this.edicaoPendente.set(false);
-                this.estadoPersistencia.set('ocioso');
-                return EMPTY;
-              }),
-            );
-        }),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe({
-        next: (fichaAlterada) => {
-          this.ficha.set(fichaAlterada);
-          this.fichaBaseSignal.set(fichaAlterada);
-          this.edicaoPendente.set(false);
-          this.marcarSalvo();
-        },
-      });
   }
 
   /** Redefine a base do merge (carga inicial, refetch, ou um remoto absorvido sem edição pendente). */
@@ -141,9 +127,100 @@ export class FichaEdicaoService {
   }
 
   private agendarPersistencia(): void {
+    const fichaAtual = this.ficha();
+    if (!fichaAtual) {
+      return;
+    }
+    this.pendente = { fichaId: this.obterFichaId(), documentoNoAgendamento: fichaAtual };
     this.edicaoPendente.set(true);
     this.estadoPersistencia.set('salvando');
-    this.ajustePendente.next();
+    if (this.temporizadorDebounce) {
+      clearTimeout(this.temporizadorDebounce);
+    }
+    this.temporizadorDebounce = setTimeout(() => this.disparar(), 500);
+  }
+
+  /**
+   * Envia `pendente` agora, sem esperar o resto do debounce — nunca cancela uma escrita já em
+   * voo (`emVoo` trava um envio por vez), só deixa a atual terminar antes de mandar a próxima.
+   * Se, quando a resposta chegar, `pendente` já apontar para outra intenção (mais edição local no
+   * meio do caminho), a resposta antiga não é aplicada e a intenção nova sai na hora, sem esperar
+   * outro debounce — uma resposta anterior nunca apaga edição posterior.
+   */
+  private disparar(): void {
+    if (this.temporizadorDebounce) {
+      clearTimeout(this.temporizadorDebounce);
+      this.temporizadorDebounce = null;
+    }
+    if (this.emVoo) {
+      return;
+    }
+    const intencao = this.pendente;
+    if (!intencao) {
+      return;
+    }
+    this.emVoo = true;
+    // Reafirma (idempotente vindo do agendamento normal; necessário no reenvio de `antecipar`
+    // depois de uma falha, que chama `disparar` direto, sem passar por `agendarPersistencia`).
+    this.edicaoPendente.set(true);
+    this.estadoPersistencia.set('salvando');
+    // Ainda na mesma origem: usa o documento vivo (pega merges remotos absorvidos depois do
+    // agendamento). Origem trocou por baixo (`obterFichaId()` já é outra): cai pro retrovisor —
+    // o documento como estava no instante do agendamento, a única versão confiável da edição.
+    const documento =
+      this.obterFichaId() === intencao.fichaId ? this.ficha() ?? intencao.documentoNoAgendamento : intencao.documentoNoAgendamento;
+    this.fichaService
+      .alterarFicha(intencao.fichaId, {
+        nome: documento.nome,
+        cor: documento.cor,
+        imagemFoco: documento.imagemFoco,
+        oculta: documento.oculta,
+        dados: documento.dados,
+      })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (fichaAlterada) => {
+          this.emVoo = false;
+          if (this.pendente !== intencao) {
+            this.disparar();
+            return;
+          }
+          this.pendente = null;
+          if (this.obterFichaId() === intencao.fichaId) {
+            this.ficha.set(fichaAlterada);
+            this.fichaBaseSignal.set(fichaAlterada);
+          }
+          this.edicaoPendente.set(false);
+          this.marcarSalvo();
+          this.confirmacao.next(true);
+        },
+        error: () => {
+          this.emVoo = false;
+          // Restaura o comportamento pré-P-082 pro merge de tempo real (m3-17): sem retry
+          // automático, manter `edicaoPendente` presa pra sempre faria todo remoto futuro
+          // mesclar em vez de substituir — congelando os live-updates por uma falha só. `pendente`
+          // continua com `intencao`, então o documento local não é descartado (P-082): quem
+          // chamar `antecipar()` de novo reenvia exatamente o que falhou.
+          this.edicaoPendente.set(false);
+          this.estadoPersistencia.set('ocioso');
+          this.confirmacao.next(false);
+        },
+      });
+  }
+
+  /**
+   * Garante a edição pendente enviada e confirmada antes de outra ação prosseguir (troca da ficha
+   * exibida em `CampanhaDetalheJogador`, P-082) — resolve `true` sem pendência ou quando a
+   * intenção mais recente for persistida; `false` numa falha, para quem chamou decidir (manter a
+   * ficha e a edição de origem, sem descarte silencioso). Chamar de novo depois de uma falha
+   * reenvia a mesma pendência (retry).
+   */
+  antecipar(): Observable<boolean> {
+    if (!this.pendente) {
+      return of(true);
+    }
+    this.disparar();
+    return this.confirmacao.pipe(take(1));
   }
 
   ajustarVitalidade(ajuste: AjusteVitalidade): void {

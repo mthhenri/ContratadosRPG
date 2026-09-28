@@ -200,6 +200,22 @@ describe('CampanhaDetalheJogador', () => {
           },
         });
       }),
+      // Resposta padrão só o bastante pro autosave concluir nos testes que não controlam o
+      // envio (P-082): devolve o próprio corpo enviado, com o `usuarioId` da ficha original.
+      alterarFicha: vi.fn((id: number, dto: { nome: string; cor: string | null; imagemFoco: unknown; oculta: boolean; dados: unknown }) => {
+        const ficha = (opts.fichas ?? []).find((item) => item.id === id);
+        return of({
+          id,
+          campanhaId: CAMPANHA_ID,
+          usuarioId: ficha?.usuarioId ?? 0,
+          nome: dto.nome,
+          cor: dto.cor,
+          imagemUrl: null,
+          imagemFoco: dto.imagemFoco,
+          oculta: dto.oculta,
+          dados: dto.dados,
+        });
+      }),
       atribuirCampanha: vi.fn((id: number) => of({ id, campanhaId: null })),
       excluirFicha: vi.fn(() => of(undefined)),
       listarMinhasFichas: vi.fn(() => of([] as FichaResumoDto[])),
@@ -429,6 +445,97 @@ describe('CampanhaDetalheJogador', () => {
     expect(fichaService.recuperarFicha).toHaveBeenCalledWith(3);
     expect(componente['fichaExibidaId']()).toBe(3);
     expect(componente['podeAjustarFichaExibida']()).toBe(false);
+  });
+
+  // === P-082: escrita vinculada à origem e leitura imune a resposta antiga
+  // (docs/specs/done/p-082-ficha-autosave-e-selecao.spec.md) — a troca de ficha exibida
+  // ("Ver ficha") antecipa e aguarda a gravação pendente antes de efetivar, e a leitura da nova
+  // ficha ignora qualquer resposta obsoleta de uma seleção anterior.
+  describe('P-082: gravação vinculada à origem e leitura imune a resposta obsoleta', () => {
+    it('com edição pendente, "Ver ficha" antecipa e conclui a gravação na ficha de origem antes de trocar', async () => {
+      const escrita$ = new Subject<unknown>();
+      const { fixture, raiz, fichaService } = montar({
+        usuarioId: 2,
+        membros: membrosTres(),
+        fichas: fichasComColegaJogador(),
+      });
+      const componente = fixture.componentInstance;
+      fichaService.alterarFicha.mockImplementation(() => escrita$.asObservable() as never);
+
+      // Edita a própria ficha exibida (Vera, id 4) sem esperar o debounce de 500ms.
+      componente['fichaEdicao'].ajustarNome('Vera (editada)');
+      expect(componente['fichaEdicao'].edicaoPendente()).toBe(true);
+      const docEditado = componente['fichaExibidaDados']()!;
+      expect(docEditado.nome).toBe('Vera (editada)');
+
+      fichaService.recuperarFicha.mockClear();
+      const botaoKane = Array.from(raiz.querySelectorAll<HTMLButtonElement>('.detalhe__equipe-ficha')).find(
+        (botao) => botao.textContent?.includes('Kane'),
+      )!;
+      botaoKane.click();
+      fixture.detectChanges();
+
+      // A gravação de Vera foi antecipada (não esperou o debounce) e ainda está em voo — a troca
+      // não pode efetivar, ler Kane nem deixar editar Vera nesse meio-tempo.
+      expect(fichaService.alterarFicha).toHaveBeenCalledWith(
+        4,
+        expect.objectContaining({ nome: 'Vera (editada)' }),
+      );
+      expect(fichaService.recuperarFicha).not.toHaveBeenCalled();
+      expect(componente['fichaExibidaId']()).toBe(4);
+      expect(componente['trocandoFichaExibida']()).toBe(true);
+      expect(componente['podeAjustarFichaExibida']()).toBe(false);
+      expect(botaoKane.disabled).toBe(true);
+
+      escrita$.next(docEditado);
+      escrita$.complete();
+      await Promise.resolve();
+      fixture.detectChanges();
+
+      // Gravação confirmada: agora sim a troca efetiva, e só agora Kane é lido.
+      expect(componente['trocandoFichaExibida']()).toBe(false);
+      expect(componente['fichaEdicao'].edicaoPendente()).toBe(false);
+      expect(fichaService.recuperarFicha).toHaveBeenCalledWith(3);
+      expect(componente['fichaExibidaId']()).toBe(3);
+    });
+
+    it('a resposta obsoleta de uma leitura anterior não substitui a ficha selecionada depois (última seleção vence)', () => {
+      const leituraKane$ = new Subject<unknown>();
+      const { fixture, raiz, fichaService } = montar({
+        usuarioId: 2,
+        membros: membrosTres(),
+        fichas: fichasComColegaJogador(),
+      });
+      const componente = fixture.componentInstance;
+      const implementacaoOriginal = fichaService.recuperarFicha.getMockImplementation()!;
+      fichaService.recuperarFicha.mockImplementation((id: number) =>
+        id === 3 ? (leituraKane$.asObservable() as never) : implementacaoOriginal(id),
+      );
+
+      const botaoKane = Array.from(raiz.querySelectorAll<HTMLButtonElement>('.detalhe__equipe-ficha')).find(
+        (botao) => botao.textContent?.includes('Kane'),
+      )!;
+      botaoKane.click();
+      fixture.detectChanges();
+      // A leitura de Kane está em voo (atrasada de propósito) — o documento antigo (Vera) já saiu
+      // da região editável, sem esperar a resposta.
+      expect(componente['fichaExibidaId']()).toBe(3);
+      expect(componente['fichaExibidaDados']()).toBeNull();
+
+      // Volta pra própria ficha (Vera, id 4) antes da resposta de Kane chegar.
+      componente['selecionarFichaExibida'](4);
+      fixture.detectChanges();
+      expect(componente['fichaExibidaId']()).toBe(4);
+      expect(componente['fichaExibidaDados']()?.id).toBe(4);
+
+      // A leitura de Kane, atrasada, finalmente chega — não pode substituir Vera na tela.
+      leituraKane$.next({ id: 3, campanhaId: CAMPANHA_ID, usuarioId: 3, nome: 'Kane', dados: {} });
+      leituraKane$.complete();
+      fixture.detectChanges();
+
+      expect(componente['fichaExibidaId']()).toBe(4);
+      expect(componente['fichaExibidaDados']()?.id).toBe(4);
+    });
   });
 
   it('sinaliza o banner de ficha crítica mesmo sem ação do mestre (não é gated por papel)', () => {

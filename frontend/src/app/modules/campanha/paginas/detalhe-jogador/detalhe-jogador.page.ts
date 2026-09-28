@@ -164,15 +164,26 @@ export class CampanhaDetalheJogador {
   protected readonly fichaExibidaDados = signal<FichaRecuperadaDto | null>(null);
   protected readonly carregandoFichaExibida = signal(false);
 
-  /** `true` quando o usuário autenticado pode editar a ficha exibida — dono ou mestre; nunca na prévia. */
+  /** `true` quando o usuário autenticado pode editar a ficha exibida — dono ou mestre; nunca na
+   * prévia nem durante a troca de ficha exibida (`trocandoFichaExibida`, P-082: sem isto, dava
+   * pra editar a ficha de origem enquanto a gravação pendente dela ainda estava sendo antecipada
+   * para a troca). */
   protected readonly podeAjustarFichaExibida = computed(() => {
     const fichaExibida = this.fichaExibidaDados();
     return (
       !this.somenteLeitura() &&
+      !this.trocandoFichaExibida() &&
       fichaExibida !== null &&
       (this.dados.ehMestre() || fichaExibida.usuarioId === this.dados.usuarioAtivoId())
     );
   });
+
+  /**
+   * `true` enquanto `selecionarFichaExibida` antecipa e aguarda a gravação pendente da ficha de
+   * origem antes de efetivar a troca (P-082) — bloqueia edição concorrente
+   * (`podeAjustarFichaExibida`) e outra troca efetiva (guarda no próprio método) nessa janela.
+   */
+  protected readonly trocandoFichaExibida = signal(false);
 
   /**
    * Ficha exibida quando ela é sua (dono) — controla o `[disabled]` das ações do menu do cabeçalho.
@@ -275,12 +286,28 @@ export class CampanhaDetalheJogador {
     });
   }
 
-  /** Troca a ficha exibida na coluna principal ("Ver ficha") — dispara o fetch do documento completo. */
+  /**
+   * Troca a ficha exibida na coluna principal ("Ver ficha") — dispara o fetch do documento
+   * completo. Com edição pendente na ficha de origem, antecipa e aguarda a gravação antes de
+   * efetivar a troca (P-082): nunca troca com a escrita ainda em voo, e numa falha mantém a ficha
+   * e a edição de origem (o interceptor global já notificou o erro; chamar de novo reenvia).
+   */
   protected selecionarFichaExibida(fichaId: number): void {
-    if (this.fichaExibidaId() === fichaId) {
+    if (this.fichaExibidaId() === fichaId || this.trocandoFichaExibida()) {
       return;
     }
-    this.fichaExibidaId.set(fichaId);
+    this.trocandoFichaExibida.set(true);
+    this.fichaEdicao
+      .antecipar()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (sucesso) => {
+          this.trocandoFichaExibida.set(false);
+          if (sucesso) {
+            this.fichaExibidaId.set(fichaId);
+          }
+        },
+      });
   }
 
   /**
@@ -374,6 +401,10 @@ export class CampanhaDetalheJogador {
       if (fichaId === null) {
         return;
       }
+      // Tira o documento antigo da região editável assim que a nova leitura começa (P-082,
+      // achado ao vivo): sem isto, o card continuava mostrando — e editável — a ficha anterior
+      // enquanto este GET estava em voo, mesmo já com `fichaExibidaId` apontando para a nova.
+      untracked(() => this.fichaExibidaDados.set(null));
       this.carregandoFichaExibida.set(true);
       this.dados
         .recuperarFicha(fichaId)
@@ -381,6 +412,11 @@ export class CampanhaDetalheJogador {
         .subscribe({
           next: (ficha) =>
             untracked(() => {
+              // Seleção pode ter mudado de novo antes desta resposta chegar — ignora a resposta
+              // obsoleta (mesma trava de `recarregarFichaExibida`, P-082).
+              if (this.fichaExibidaId() !== ficha.id) {
+                return;
+              }
               this.fichaExibidaDados.set(ficha);
               this.fichaEdicao.definirBase(ficha);
             }),
@@ -715,6 +751,11 @@ export class CampanhaDetalheJogador {
     this.fichaService.mandarItemInventarioParaBase(fichaId, evento.indice, evento.quantidade)
       .subscribe(() => {
         this.fichaService.recuperarFicha(fichaId).subscribe((ficha) => {
+          // Seleção pode ter mudado enquanto este GET estava em voo — ignora a resposta obsoleta
+          // em vez de aplicar o documento de uma ficha na exibição de outra (P-082).
+          if (this.fichaExibidaId() !== ficha.id) {
+            return;
+          }
           this.fichaExibidaDados.set(ficha);
           this.fichaEdicao.definirBase(ficha);
         });
