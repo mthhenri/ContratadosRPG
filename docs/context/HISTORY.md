@@ -1,5 +1,34 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-29 — m9-12: Biblioteca em painel flutuante também no Painel do espectador
+
+Pedido do autor logo depois da `m9-11`, que deixara o espectador fora. Decisão do autor: **só o
+Painel do espectador** — a Iniciativa dele não tem coluna de ações e pediria um gatilho novo.
+
+O item "Biblioteca" da coluna do `espectador.page` (a barra inferior no celular) virou `button` com
+`[pressionado]` e `alternar()`, como na tela da campanha. O painel é montado com `ehMestre=false`
+só depois de o papel ser resolvido (`papelResolvido`, também em erro do `listarCampanhas`) e fora
+da prévia do mestre — senão, um clique antes da resolução iniciaria a store da prévia com o recorte
+do mestre na forma leitura. Na prévia, o item continua desabilitado e o painel nem é montado.
+`BibliotecaFlutuante` ganhou o input `paginaRota`: a rota de mestre/jogador devolveria o espectador à
+campanha, então o botão "Abrir página da Biblioteca" leva a `/campanhas/:id/espectador/documentos`.
+A presença de leitura do espectador já era tratada pela `m9-09`/`m9-10` ("(espectador)" no "Lendo
+agora" do mestre).
+
+**Testes:** `BibliotecaFlutuante` com `paginaRota`; Painel do espectador (item sem `href` chama
+`alternar()`, painel com a rota do espectador, prévia sem painel). Um teste antigo pegava "o primeiro
+`button` da coluna" como Rolagens — a Biblioteca virou `button` antes dele; passou a achar pelo
+texto. Suíte do frontend **176 arquivos / 2516 testes** verdes; build limpo; nenhum warning de lint
+novo.
+
+**Ao vivo** (stack isolado 3101/4301, banco recém-resetado e cenário recriado), espectador em
+`1920×1080` e `360×800`: nenhuma requisição de documento antes de abrir; aberto (só o revelado, sem
+chip), documento aberto, busca, minimizado (item continua pressionado e reabre). Com o mestre em
+outra sessão: revelar entra ao vivo na lista sem abrir nada; ocultar o documento aberto fecha com
+"Este documento não está mais disponível."; o botão leva a `/campanhas/:id/espectador/documentos`
+sem deixar o painel por cima. Prévia do mestre: item desabilitado, painel não montado. Mesma casca e
+densidade do Caderno e da página.
+
 ## 2026-09-29 — m9-11: Biblioteca em painel flutuante (cenas, ficha completa e tela da campanha)
 
 A Biblioteca abre também como painel flutuante, do jeito do Caderno e da Calculadora: uma ferramenta

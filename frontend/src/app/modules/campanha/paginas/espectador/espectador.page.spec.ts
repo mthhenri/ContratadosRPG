@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
 import { provideRouter } from '@angular/router';
+import { By } from '@angular/platform-browser';
 import { Subject, of } from 'rxjs';
 import { ClasseEnum, RolagemVisibilidadeEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import type { CampanhaMembroResumoDto, CampanhaPainelEspectadorDto, CampanhaResumoDto } from '@contratados-rpg/shared/dtos/campanha';
@@ -8,6 +9,7 @@ import type { FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 
 import { CampanhaEspectador } from './espectador.page';
+import { BibliotecaFlutuante } from '../../../documento/componentes/biblioteca-flutuante/biblioteca-flutuante.component';
 import { CampanhaProjecaoService } from '../../campanha-projecao.service';
 import { CampanhaService } from '../../campanha.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
@@ -183,7 +185,7 @@ describe('CampanhaEspectador', () => {
   });
 
   it('espectador real não vê a prévia na coluna, e tem "voltar às campanhas" e Iniciativa ativa', () => {
-    const { raiz } = montar({
+    const { raiz, fixture } = montar({
       campanhas: [
         { id: CAMPANHA_ID, nome: 'x', descricao: null, papel: TipoCampanhaMembroPapelEnum.ESPECTADOR,
           totalMembros: 2, totalFichas: 0, temFichaCritica: false, fichaCriticaNome: null,
@@ -193,8 +195,16 @@ describe('CampanhaEspectador', () => {
     });
     expect(raiz.querySelector('.espectador__preview-barra')).toBeNull();
     expect(itensColuna(raiz).map((item) => item.textContent?.trim())).toEqual(['Iniciativa', 'Biblioteca', 'Rolagens']);
+    // m9-12: "Biblioteca" abre o painel flutuante (forma leitura), cuja página é a do espectador.
     const biblioteca = itensColuna(raiz)[1];
-    expect(biblioteca.getAttribute('href')).toBe(`/campanhas/${CAMPANHA_ID}/espectador/documentos`);
+    expect(biblioteca.getAttribute('href')).toBeNull();
+    const painel = fixture.debugElement.query(By.directive(BibliotecaFlutuante))
+      .componentInstance as BibliotecaFlutuante;
+    expect(painel.ehMestre()).toBe(false);
+    expect(painel.paginaRota()).toEqual(['/campanhas', CAMPANHA_ID, 'espectador', 'documentos']);
+    const alternar = vi.spyOn(painel, 'alternar').mockImplementation(() => undefined);
+    (biblioteca as HTMLButtonElement).click();
+    expect(alternar).toHaveBeenCalledTimes(1);
     expect(raiz.querySelector('.espectador__voltar')).not.toBeNull();
   });
 
@@ -221,6 +231,8 @@ describe('CampanhaEspectador', () => {
     expect(biblioteca.textContent).toContain('Biblioteca');
     expect((biblioteca as HTMLButtonElement).disabled).toBe(true);
     expect(biblioteca.getAttribute('href')).toBeNull();
+    // Na prévia o painel da Biblioteca nem é montado (m9-12).
+    expect(raiz.querySelector('app-biblioteca-flutuante')).toBeNull();
     // Mestre em prévia não tem o "voltar às campanhas" genérico — a saída é pela coluna.
     expect(raiz.querySelector('.espectador__voltar')).toBeNull();
   });
@@ -436,9 +448,9 @@ describe('CampanhaEspectador', () => {
     it('o item "Rolagens" esconde a coluna de Rolagens públicas e expande a grade de fichas', () => {
       const { fixture, raiz } = montar({ painelRetorno: painel([rolagem()]) });
 
-      const itemRolagens = raiz.querySelector(
-        'button[app-coluna-acoes-item]',
-      ) as HTMLButtonElement;
+      const itemRolagens = Array.from(
+        raiz.querySelectorAll<HTMLButtonElement>('button[app-coluna-acoes-item]'),
+      ).find((item) => item.textContent?.trim() === 'Rolagens')!;
       expect(itemRolagens.getAttribute('aria-pressed')).toBe('true');
       expect(raiz.querySelector('.espectador__feed')).not.toBeNull();
       expect(raiz.querySelector('.espectador__grade--sem-rolagens')).toBeNull();

@@ -35,7 +35,8 @@
         </a>
         }
         <!-- Biblioteca (m9-05): na prévia fica indisponível, como a Iniciativa — a rota responderia
-             com o recorte do mestre, não o do espectador. -->
+             com o recorte do mestre, não o do espectador. Fora dela, abre o painel flutuante (m9-12);
+             a página do espectador fica no botão do próprio painel. -->
         @if (ehMestrePreview()) {
         <button
             app-coluna-acoes-item
@@ -46,14 +47,15 @@
             Biblioteca
         </button>
         } @else {
-        <a
+        <button
             app-coluna-acoes-item
             icone="biblioteca"
             appTooltip="Biblioteca"
-            [routerLink]="['/campanhas', id, 'espectador', 'documentos']"
+            [pressionado]="bibliotecaAberta()"
+            (click)="alternarBiblioteca()"
         >
             Biblioteca
-        </a>
+        </button>
         }
         <button
             app-coluna-acoes-item
@@ -253,3 +255,15 @@
         </div>
     </div>
 </section>
+
+<!-- Biblioteca do espectador em painel flutuante (m9-12): forma leitura, só fora da prévia e depois
+     de o papel ser resolvido; a store só inicia na primeira abertura. -->
+@if (papelResolvido() && !ehMestrePreview()) {
+<app-biblioteca-flutuante
+    #biblioteca
+    [campanhaId]="id"
+    [campanhaNome]="campanha()?.nome ?? ''"
+    [ehMestre]="false"
+    [paginaRota]="['/campanhas', id, 'espectador', 'documentos']"
+/>
+}

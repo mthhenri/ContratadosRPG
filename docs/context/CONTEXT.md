@@ -15,6 +15,10 @@
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
 > **Última revisão:** 2026-09-29 · **Última decisão registrada:**
+> `m9-12-biblioteca-painel-flutuante-espectador` concluída (spec em `done/`): no Painel do
+> espectador, o item "Biblioteca" também abre o painel flutuante (forma leitura), e o botão "Abrir
+> página da Biblioteca" leva à página do espectador (input `paginaRota` do `BibliotecaFlutuante`). A
+> Iniciativa do espectador ficou de fora (decisão do autor). Antes:
 > `m9-11-biblioteca-painel-flutuante` concluída (spec em `done/`): a Biblioteca abre também como
 > painel flutuante (`BibliotecaFlutuante`, casca do Caderno) nas quatro telas de cena, na ficha
 > completa (com campanha) e na tela da campanha, onde o item "Biblioteca" deixou de navegar (a página
@@ -789,8 +793,8 @@ guarda-chuva. Fontes: [requests-correcoes](../specs/done/requests-correcoes.spec
 Markdown como rascunho), `m9-09` (presença de leitura — contrato, backend e envio do cliente;
 `documento:leitura`/`documento:leitores` gravados na §9 do `SYSTEM.SPEC.md` com aprovação do autor)
 e `m9-10` (presença na tela do mestre — chip "N lendo" no cartão e "Lendo agora" no documento
-aberto) e `m9-11` (Biblioteca em painel flutuante nas cenas, na ficha completa e na tela da
-campanha) concluídas, specs em `done/`. Nenhuma task da Biblioteca no backlog.
+aberto), `m9-11` (Biblioteca em painel flutuante nas cenas, na ficha completa e na tela da
+campanha) e `m9-12` (o mesmo painel no Painel do espectador) concluídas, specs em `done/`. Nenhuma task da Biblioteca no backlog.
 Antes:
 
 **Módulo de Cenas — 5/6, falta só `m7-26` (passe responsivo dedicado do módulo inteiro).**
@@ -2870,7 +2874,8 @@ edição e destruir a página. Sem upload do arquivo ou mudança de backend.
 `app-painel-flutuante` `id="biblioteca"`, montado — sem gatilho próprio, com `alternar()` pelo item
 da coluna de ações/menu "⋯"/atalho de cabeçalho — em `painel-sem-iniciativa-mestre`/`-jogador`,
 `painel-mestre`/`painel-jogador` (encontro), `visualizar.page` (só com `campanhaId`) e
-`detalhe-mestre`/`detalhe-jogador` (fora da prévia; o item de lá abre o painel em vez de navegar).
+`detalhe-mestre`/`detalhe-jogador` e `espectador.page` (`m9-12`) — fora da prévia; nessas três o item
+abre o painel em vez de navegar. O input `paginaRota` dá ao espectador a rota da página dele.
 Inputs `campanhaId`, `campanhaNome`, `ehMestre` (o papel vem da tela, sem `listarMembros`). Provê a
 própria `BibliotecaLeituraStore` e só a inicia na **primeira abertura** — tela que nunca abre não faz
 requisição de documento; fechar só pausa a presença (`pausarLeitura`/`retomarLeitura`, informa `null`
@@ -2884,7 +2889,8 @@ Ocultar vive em `documento-revelacao.service.ts` (`DocumentoRevelacaoService.alt
 `BibliotecaLayout` (reprojeta os slots de documento; o leitor padrão é o fallback do próprio layout,
 porque o `ng-container` reprojetado sempre ocupa o slot do corpo) e pelo painel (`emPainel`: colunas
 rolando por dentro e vista única por `@container` abaixo de 800px de janela). O espectador não
-alcança a ficha completa (403; acesso não pode ser concedido a ele, `m8-02`) e continua sem painel.
+alcança a ficha completa (403; acesso não pode ser concedido a ele, `m8-02`); a Iniciativa dele
+(sem coluna de ações) segue sem o painel.
 
 `emitirRolagemRegistrada` (m3-27/`m3-77`) usa **duas salas mutuamente exclusivas**, nunca as duas:
 com campanha, só `campanha:<id>` (como sempre); ficha solta (`campanhaId === null`, m3-28), só

@@ -509,7 +509,9 @@ os controles do mestre.
   "biblioteca"`), na casca do Caderno — sem gatilho próprio, pelo item "Biblioteca" (`icone=
   "biblioteca"`, `[pressionado]` enquanto aberto, mesmo minimizado) da coluna de ações das cenas
   (com e sem iniciativa), da ficha completa (categoria "Ficha", logo depois de Caderno, só com
-  campanha) e da tela da campanha, onde o item deixou de navegar; nos menus "⋯" e nos atalhos de
+  campanha), da tela da campanha e do Painel do espectador (`m9-12`, forma leitura; o botão da
+  página leva à rota dele, `/campanhas/:id/espectador/documentos`) — nesses dois o item deixou de
+  navegar; nos menus "⋯" e nos atalhos de
   cabeçalho do celular, junto de Calculadora/Caderno. Título `Biblioteca · <campanha>`, kicker
   "Arquivo da campanha". Posição inicial `{ x: 320, y: 112 }`, em cascata com o Caderno (`{ 280, 72
   }`): abertos juntos, os dois cabeçalhos ficam à vista. Tamanho padrão 960×680, mínimo 440×480,

@@ -85,6 +85,11 @@ export class BibliotecaFlutuante {
   readonly campanhaNome = input.required<string>();
   /** O papel vem da tela hospedeira, que já o conhece — o painel não lista membros de novo. */
   readonly ehMestre = input.required<boolean>();
+  /**
+   * Destino do botão "Abrir página da Biblioteca" — o espectador tem a rota própria (m9-12), e a de
+   * mestre/jogador o devolveria à campanha. Sem valor, `/campanhas/:id/documentos`.
+   */
+  readonly paginaRota = input<readonly (string | number)[] | null>(null);
 
   protected readonly store = inject(BibliotecaLeituraStore);
   private readonly roteador = inject(Router);
@@ -150,7 +155,9 @@ export class BibliotecaFlutuante {
 
   /** A página tem a gestão (criar, editar, ordem, imagem); a tela hospedeira sai com o painel. */
   protected abrirPagina(): void {
-    void this.roteador.navigate(['/campanhas', this.campanhaId(), 'documentos']);
+    void this.roteador.navigate([
+      ...(this.paginaRota() ?? ['/campanhas', this.campanhaId(), 'documentos']),
+    ]);
   }
 
   protected alternarMaximizacao(): void {

@@ -20,10 +20,12 @@ import { BibliotecaFlutuante } from './biblioteca-flutuante.component';
     [campanhaId]="9"
     campanhaNome="Operação Maré"
     [ehMestre]="ehMestre()"
+    [paginaRota]="paginaRota()"
   />`,
 })
 class Hospedeira {
   readonly ehMestre = signal(false);
+  readonly paginaRota = signal<readonly (string | number)[] | null>(null);
   readonly biblioteca = viewChild.required<BibliotecaFlutuante>('biblioteca');
 }
 
@@ -137,6 +139,18 @@ describe('BibliotecaFlutuante', () => {
     raiz.querySelector<HTMLButtonElement>('[aria-label="Abrir página da Biblioteca"]')!.click();
 
     expect(navegar).toHaveBeenCalledWith(['/campanhas', 9, 'documentos']);
+  });
+
+  it('com `paginaRota` (espectador, m9-12), o botão leva à página dele', () => {
+    const { fixture, biblioteca, raiz } = montar();
+    fixture.componentInstance.paginaRota.set(['/campanhas', 9, 'espectador', 'documentos']);
+    const navegar = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    biblioteca.abrir();
+    fixture.detectChanges();
+
+    raiz.querySelector<HTMLButtonElement>('[aria-label="Abrir página da Biblioteca"]')!.click();
+
+    expect(navegar).toHaveBeenCalledWith(['/campanhas', 9, 'espectador', 'documentos']);
   });
 
   it('jogador: só o leitor — sem chip de estado nem Revelar/Ocultar/Editar/Remover', () => {

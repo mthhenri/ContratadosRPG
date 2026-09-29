@@ -1,4 +1,4 @@
-import { DestroyRef, Component, computed, effect, inject, signal } from '@angular/core';
+import { DestroyRef, Component, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { filter, finalize } from 'rxjs';
@@ -27,6 +27,7 @@ import { ColunaAcoes } from '../../../../shared/ui/coluna-acoes/coluna-acoes.com
 import { ColunaAcoesItem } from '../../../../shared/ui/coluna-acoes/coluna-acoes-item.component';
 import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
 import { Esqueleto } from '../../../../shared/ui/esqueleto/esqueleto.component';
+import { BibliotecaFlutuante } from '../../../documento/componentes/biblioteca-flutuante/biblioteca-flutuante.component';
 
 /** Tamanho de página do feed — mesmo degrau do histórico de rolagens da ficha (`visualizar.page.ts`). */
 const ITENS_POR_PAGINA = 20;
@@ -63,6 +64,7 @@ const UM_DIA_MS = 24 * 60 * 60 * 1000;
     EspectadorFichaCard,
     EstadoVazio,
     Esqueleto,
+    BibliotecaFlutuante,
   ],
   templateUrl: './espectador.page.html',
   styleUrl: './espectador.page.scss',
@@ -149,6 +151,12 @@ export class CampanhaEspectador {
 
   /** `true` quando quem abriu esta rota é o mestre da campanha, em prévia (nunca um espectador real). */
   protected readonly ehMestrePreview = signal(false);
+  /** O papel acima já foi resolvido — antes disso o painel da Biblioteca não é montado (m9-12). */
+  protected readonly papelResolvido = signal(false);
+
+  private readonly bibliotecaRef = viewChild<BibliotecaFlutuante>('biblioteca');
+  /** Biblioteca aberta (mesmo minimizada) — marca o item "Biblioteca" da coluna (m9-12). */
+  protected readonly bibliotecaAberta = computed(() => this.bibliotecaRef()?.aberto() ?? false);
 
   /** Alterna a exibição da descrição da campanha — mesmo padrão de `detalhe-jogador.page.ts`. */
   protected readonly descricaoAberta = signal(false);
@@ -234,8 +242,16 @@ export class CampanhaEspectador {
       next: (campanhas) => {
         const atual = campanhas.find((campanha) => campanha.id === this.id);
         this.ehMestrePreview.set(atual?.papel === TipoCampanhaMembroPapelEnum.MESTRE);
+        this.papelResolvido.set(true);
       },
+      // Sem a lista, vale o mesmo `false` de sempre: o espectador real segue com a Biblioteca.
+      error: () => this.papelResolvido.set(true),
     });
+  }
+
+  /** Alterna a Biblioteca flutuante (m9-12) — `alternar()` restaura se estiver minimizada. */
+  protected alternarBiblioteca(): void {
+    this.bibliotecaRef()?.alternar();
   }
 
   private carregarPainel(pagina: number): void {
