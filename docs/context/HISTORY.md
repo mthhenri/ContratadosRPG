@@ -118,6 +118,18 @@ já foram publicadas e verificadas no armazenamento **local**; o texto delas agu
 autor. Falhas preexistentes fora do escopo: orçamento do bundle inicial (`P-004`, 551,92 → 554,47 kB)
 e os erros de `tsc` em specs do backend (já registrados em `PROBLEMS.md`).
 
+## 2026-09-29 — ajuste-ficha-busca-habilidade-icones: escopo da busca em ícones + ícone d20 no mobile
+
+Pedido direto do autor (sem spec). No seletor "Adicionar do sistema" (`FichaHabilidadeSeletor`, usado
+na ficha de Agente e de Criatura via `FichaHabilidades`), o `app-segmentado` Título/Descrição/Ambos
+passou a viver dentro da caixa da busca: no desktop, três ícones (`busca-titulo`, `busca-descricao`,
+`busca-ambos`, novos em `Icone`) no fim do campo, com tooltip e `aria-label`; no mobile
+(`bp.mobile`), o campo mantém a borda e o segmentado desce para uma barra própria com itens
+`flex: 1`, ícone + rótulo, alvo de toque mínimo. Mesmo DOM nos dois viewports, só CSS muda. Na barra
+inferior mobile da ficha (`DESTINOS_MOBILE` em `ficha-visualizacao` e `ficha-campanha-card`),
+"Rolagens" usava `d6`; agora `d20`, igual ao desktop. Verificado ao vivo em 1920×1080 e 360×800
+(ficha de Agente; a Criatura reutiliza os mesmos componentes): sem overflow horizontal.
+
 ## 2026-09-29 — fix-ficha-oculta-identidade-encontro: agente oculto some do encontro de terceiros
 
 Origem: FO-01 da auditoria de ficha oculta (`P-090`). Jogador sem acesso e espectador recebiam,

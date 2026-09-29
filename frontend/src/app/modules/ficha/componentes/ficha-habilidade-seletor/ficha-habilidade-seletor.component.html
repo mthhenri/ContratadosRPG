@@ -53,45 +53,36 @@
             </div>
         }
 
-        <!-- Busca -->
+        <!-- Busca + escopo (I-028): título, descrição ou ambos. No desktop os três ícones ficam no
+             fim do campo; no mobile descem para uma barra própria, cada item com ícone e rótulo. -->
         <div class="seletor__busca">
-            <span class="seletor__busca-icone" aria-hidden="true">⌕</span>
-            <input
-                class="seletor__busca-campo"
-                type="text"
-                [formControl]="busca"
-                placeholder="Buscar habilidade…"
-                aria-label="Buscar habilidade"
-            />
+            <div class="seletor__busca-entrada">
+                <span class="seletor__busca-icone" aria-hidden="true">⌕</span>
+                <input
+                    class="seletor__busca-campo"
+                    type="text"
+                    [formControl]="busca"
+                    placeholder="Buscar habilidade…"
+                    aria-label="Buscar habilidade"
+                />
+            </div>
+            <app-segmentado class="seletor__busca-escopo" rotulo="Buscar em">
+                @for (opcao of escoposBusca; track opcao.escopo) {
+                    <button
+                        app-segmentado-item
+                        class="seletor__escopo-item"
+                        type="button"
+                        [ativo]="escopoBusca() === opcao.escopo"
+                        [appTooltip]="opcao.dica"
+                        [attr.aria-label]="opcao.dica"
+                        (click)="selecionarEscopoBusca(opcao.escopo)"
+                    >
+                        <app-icone [nome]="opcao.icone" />
+                        <span class="seletor__escopo-rotulo">{{ opcao.rotulo }}</span>
+                    </button>
+                }
+            </app-segmentado>
         </div>
-
-        <!-- Escopo da busca (I-028): título, descrição ou ambos -->
-        <app-segmentado class="seletor__busca-escopo" rotulo="Buscar em">
-            <button
-                app-segmentado-item
-                type="button"
-                [ativo]="escopoBusca() === 'titulo'"
-                (click)="selecionarEscopoBusca('titulo')"
-            >
-                Título
-            </button>
-            <button
-                app-segmentado-item
-                type="button"
-                [ativo]="escopoBusca() === 'descricao'"
-                (click)="selecionarEscopoBusca('descricao')"
-            >
-                Descrição
-            </button>
-            <button
-                app-segmentado-item
-                type="button"
-                [ativo]="escopoBusca() === 'ambos'"
-                (click)="selecionarEscopoBusca('ambos')"
-            >
-                Ambos
-            </button>
-        </app-segmentado>
 
         <!-- Lista do catálogo (2 colunas, fade nas bordas roláveis) -->
         <ul class="seletor__lista" appOverflowFade>

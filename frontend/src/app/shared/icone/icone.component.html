@@ -574,6 +574,26 @@
             <circle cx="10.5" cy="10.5" r="6.5" />
             <path d="m20 20-4.8-4.8" />
         }
+        @case ("busca-titulo") {
+            <!-- "T" de título: escopo da busca de habilidades restrito ao nome. -->
+            <path d="M5 6h14" />
+            <path d="M12 6v13" />
+            <path d="M9 19h6" />
+        }
+        @case ("busca-descricao") {
+            <!-- Linhas de texto: escopo da busca de habilidades restrito à descrição. -->
+            <path d="M4 6h16" />
+            <path d="M4 11h16" />
+            <path d="M4 16h16" />
+            <path d="M4 21h9" />
+        }
+        @case ("busca-ambos") {
+            <!-- Barra de título sobre linhas de texto: escopo título + descrição. -->
+            <path d="M4 5h16" stroke-width="3" />
+            <path d="M4 12h16" />
+            <path d="M4 17h16" />
+            <path d="M4 22h9" />
+        }
         @case ("info") {
             <!-- Círculo com "i": informação — mostrar/ocultar o texto da missão da campanha. -->
             <circle cx="12" cy="12" r="9" />

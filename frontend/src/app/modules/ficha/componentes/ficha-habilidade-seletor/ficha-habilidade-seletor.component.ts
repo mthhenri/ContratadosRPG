@@ -11,6 +11,7 @@ import {
 
 import { ClampTruncado } from '../../../../shared/clamp-truncado/clamp-truncado.directive';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
+import { Icone, type IconeNome } from '../../../../shared/icone/icone.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
@@ -59,6 +60,7 @@ const VALORES_CLASSE = new Set<string>(Object.values(ClasseEnum));
     EstadoVazio,
     Segmentado,
     SegmentadoItem,
+    Icone,
   ],
   templateUrl: './ficha-habilidade-seletor.component.html',
   styleUrl: './ficha-habilidade-seletor.component.scss',
@@ -128,6 +130,23 @@ export class FichaHabilidadeSeletor {
 
   /** Escopo da busca (`I-028`) — "Título" é o padrão, preserva o comportamento anterior. */
   protected readonly escopoBusca = signal<EscopoBuscaHabilidade>('titulo');
+
+  /** Opções do escopo: ícone + dica (tooltip/aria-label) e rótulo (visível só no mobile). */
+  protected readonly escoposBusca: readonly {
+    readonly escopo: EscopoBuscaHabilidade;
+    readonly rotulo: string;
+    readonly dica: string;
+    readonly icone: IconeNome;
+  }[] = [
+    { escopo: 'titulo', rotulo: 'Título', dica: 'Buscar no título', icone: 'busca-titulo' },
+    {
+      escopo: 'descricao',
+      rotulo: 'Descrição',
+      dica: 'Buscar na descrição',
+      icone: 'busca-descricao',
+    },
+    { escopo: 'ambos', rotulo: 'Ambos', dica: 'Buscar em título e descrição', icone: 'busca-ambos' },
+  ];
 
   constructor() {
     this.busca.valueChanges.subscribe((valor) => this.buscaTexto.set(valor));
