@@ -66,11 +66,13 @@ description: >
 
 - **Sem nota, sem versão.** Se o `package.json` sobe e falta `docs/patchnotes/<versao>.md`, o workflow falha
   (`::error::`) antes de publicar ou taguear.
-- **Cache de 24 h no backend.** Nota corrigida sem deploy só aparece quando o cache vence; nota nova cai junto
-  do deploy, mas **se o Render subir antes do workflow publicar**, o índice vazio fica em cache por 24 h —
-  reinicie o serviço. Localmente, reinicie a API.
+- **Cache de 24 h no backend, por instância do Cloud Run.** Nota corrigida sem novo deploy só aparece quando o
+  cache de cada instância vence; nota nova cai junto do deploy, mas **se a revisão do Cloud Run receber tráfego
+  antes do workflow publicar**, o índice antigo fica em cache por 24 h — force uma revisão nova (rode o trigger
+  do Cloud Build de novo). Localmente, reinicie a API.
 - **Corrigir uma nota publicada:** edite o `.md`, PR, merge — o workflow republica (substitui a versão).
-- **Segredos e permissão:** sem os cinco `ARMAZENAMENTO_R2_*` em Actions (ou com "Read and write" desligado)
+- **Segredos e permissão:** sem os cinco `ARMAZENAMENTO_R2_*` em Actions (valores no Secret Manager do GCP e nas
+  substituições do trigger do Cloud Build) (ou com "Read and write" desligado)
   o workflow falha; credencial nunca em arquivo versionado, log ou commit.
 - **Tag retroativa** exige `commit:` na nota e o commit precisa existir no repositório; a tag já criada não é
   movida pelo workflow (apagar/recriar é ação do autor).

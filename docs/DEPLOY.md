@@ -201,14 +201,23 @@ A cada push em `master`, o workflow `.github/workflows/versao.yml` roda `scripts
 
 - **Secrets and variables → Actions → Repository secrets:** `ARMAZENAMENTO_R2_ACCOUNT_ID`,
   `ARMAZENAMENTO_R2_ACCESS_KEY_ID`, `ARMAZENAMENTO_R2_SECRET_ACCESS_KEY`, `ARMAZENAMENTO_R2_BUCKET` e
-  `ARMAZENAMENTO_R2_URL_PUBLICA` — os mesmos valores do backend no Render (seção 2). A chave precisa de
-  **escrita** no bucket (a do backend já grava avatares, então serve).
+  `ARMAZENAMENTO_R2_URL_PUBLICA` — os mesmos valores que o backend usa no **Google Cloud**: os três
+  primeiros estão no Secret Manager (`armazenamento-r2-account-id`, `armazenamento-r2-access-key-id`,
+  `armazenamento-r2-secret-access-key`); bucket e URL pública, nas substituições do trigger do Cloud Build
+  (`_ARMAZENAMENTO_R2_BUCKET`, `_ARMAZENAMENTO_R2_URL_PUBLICA`). A chave precisa de **escrita** no bucket
+  (a do backend já grava avatares, então serve).
 - **Actions → General → Workflow permissions → Read and write** (o workflow cria tags). Se o repositório
   tiver regra de proteção de tags, permita o `github-actions[bot]` criar `v*`.
 
 **Publicação manual / reserva:** *Actions → Versão e patchnotes → Run workflow* (a opção "Republicar
-todas as notas" força mesmo sem mudança). **Cuidado com o cache:** o backend guarda o índice por 24 h;
-se o Render subir *antes* de o workflow publicar, reinicie o serviço para a nota aparecer.
+todas as notas" força mesmo sem mudança).
+
+**Cuidado com o cache (Cloud Run):** o backend guarda o índice e cada nota em memória por 24 h, **por
+instância**. O deploy (trigger do Cloud Build, também no push em `master`) sobe uma revisão nova, cujas
+instâncias começam sem cache. Se essa revisão receber o primeiro acesso *antes* de o workflow publicar no
+R2, ela guarda o índice antigo por 24 h; e uma nota publicada **sem** novo deploy só aparece quando o cache
+de cada instância vence. Nos dois casos, force uma revisão nova (rode o trigger do Cloud Build de novo)
+para as notas aparecerem na hora.
 
 ## 5. Pós-deploy
 

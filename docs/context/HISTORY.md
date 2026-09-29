@@ -16,8 +16,12 @@ Verificado em clones descartáveis com remoto bare: primeiro push cria as cinco 
 não faz nada; versão sem nota falha antes de publicar; achado só no teste: com clone sem tags o script não
 via as do remoto e o push era recusado — passou a fazer `git fetch --tags` antes de decidir. **Não
 testável aqui:** a execução no GitHub Actions em si. **Depende do autor:** cadastrar os 5 segredos
-`ARMAZENAMENTO_R2_*` e liberar "Read and write" em Actions (`docs/DEPLOY.md`); risco residual conhecido: se o
-Render subir antes de o workflow publicar, o índice vazio fica em cache por 24 h (reiniciar o serviço).
+`ARMAZENAMENTO_R2_*` e liberar "Read and write" em Actions (`docs/DEPLOY.md`); risco residual conhecido: o cache
+de 24 h é por instância do Cloud Run; se a revisão nova receber tráfego antes de o workflow publicar, guarda o
+índice antigo (forçar nova revisão pelo trigger do Cloud Build). **Correção no mesmo dia:** a primeira versão
+deste texto e da seção do `DEPLOY.md` citava o Render como destino do backend — o backend roda no Cloud Run
+desde 01/09/2026 (o `DEPLOY.md` segue desatualizado, pendência já registrada no `CONTEXT.md`); os valores dos
+segredos vêm do Secret Manager, não do Render.
 
 ## 2026-09-29 — patchnotes-versao-sistema (revisão do autor): formato de escrita mais rico
 
