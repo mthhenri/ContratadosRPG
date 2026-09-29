@@ -14,8 +14,10 @@ import { HistoricoRolagensJanelaService } from '../../../../shared/historico-rol
 import { Icone } from '../../../../shared/icone/icone.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
-import { Botao } from "../../../../shared/ui/botao/botao.component";
-import { CenaDocumentoLeituraService } from "../../cena-documento-leitura.service";
+import { Botao } from '../../../../shared/ui/botao/botao.component';
+import { Segmentado } from '../../../../shared/ui/segmentado/segmentado.component';
+import { SegmentadoItem } from '../../../../shared/ui/segmentado/segmentado-item.component';
+import { CenaDocumentoLeituraService } from '../../cena-documento-leitura.service';
 import { Chip } from '../../../../shared/ui/chip/chip.component';
 import { ColunaAcoes } from '../../../../shared/ui/coluna-acoes/coluna-acoes.component';
 import { ColunaAcoesItem } from '../../../../shared/ui/coluna-acoes/coluna-acoes-item.component';
@@ -34,6 +36,7 @@ import { FichaService } from '../../../ficha/ficha.service';
 import { CadernoFlutuante } from '../../../pagina-caderno/caderno-flutuante.component';
 import { BibliotecaFlutuante } from '../../../documento/componentes/biblioteca-flutuante/biblioteca-flutuante.component';
 import { rotuloStatusCena, rotuloTipoCena } from '../../rotulos-cena';
+import { EsquadraoCenaJogador } from '../../componentes/esquadrao-cena-jogador/esquadrao-cena-jogador.component';
 
 /**
  * Painel de uma cena **sem iniciativa** — visão do jogador (m7-24). A composição da `ui-39` sem a
@@ -52,6 +55,9 @@ import { rotuloStatusCena, rotuloTipoCena } from '../../rotulos-cena';
     Tooltip,
     BotaoIcone,
     Botao,
+    Segmentado,
+    SegmentadoItem,
+    EsquadraoCenaJogador,
     Chip,
     ColunaAcoes,
     ColunaAcoesItem,
@@ -96,6 +102,8 @@ export class PainelCenaSemIniciativaJogador {
 
   protected readonly rotuloTipoCena = rotuloTipoCena;
   protected readonly rotuloStatusCena = rotuloStatusCena;
+  protected readonly painelLateral = signal<'esquadrao' | 'rolagens'>('esquadrao');
+  private readonly fichaAlheiaAbertaId = signal<number | null>(null);
 
   /** Id da ficha de jogador deste usuário na campanha — `null` para quem não tem ficha. */
   private readonly meuFichaId = computed<number | null>(() => {
@@ -157,12 +165,46 @@ export class PainelCenaSemIniciativaJogador {
           }),
       });
     });
+    effect(() => {
+      const fichaId = this.fichaAlheiaAbertaId();
+      if (fichaId === null) return;
+      const autorizado = this.dados.membrosDaCampanha().some((membro) =>
+        membro.usuarioId !== this.dados.usuarioAtivoId() &&
+        membro.fichas.some((ficha) => ficha.id === fichaId && ficha.acessoCompleto),
+      ) && this.dados.fichasCampanha().some((ficha) => ficha.id === fichaId);
+      if (!autorizado) {
+        untracked(() => {
+          this.fichaFlutuanteRef()?.fecharSeAlvo(fichaId);
+          this.fichaAlheiaAbertaId.set(null);
+        });
+      }
+    });
+  }
+
+  protected abrirFichaDoEsquadrao(fichaId: number): void {
+    const usuarioId = this.dados.usuarioAtivoId();
+    const autorizado = this.dados.membrosDaCampanha().some((membro) =>
+      membro.usuarioId !== usuarioId &&
+      membro.fichas.some((ficha) => ficha.id === fichaId && ficha.acessoCompleto),
+    );
+    if (!autorizado) return;
+    const fichas = this.dados.fichasCampanha();
+    const ficha = fichas.find((item) => item.id === fichaId);
+    const alvo = resolverFichaParaAbrir(fichaId, ficha?.tipo ?? null, fichas);
+    if (alvo) {
+      this.fichaAlheiaAbertaId.set(fichaId);
+      this.fichaFlutuanteRef()?.abrir(alvo);
+    }
   }
 
   /** "Ver ficha" disparado de dentro das Anotações (`app-caderno-flutuante`) — só o `fichaId`. */
   protected abrirFichaFlutuanteDeAnotacoes(fichaId: number): void {
     const fichas = this.dados.fichasCampanha();
     const tipo = fichas.find((ficha) => ficha.id === fichaId)?.tipo ?? null;
+    if (tipo === TipoFichaEnum.JOGADOR && fichaId !== this.meuFichaId()) {
+      this.abrirFichaDoEsquadrao(fichaId);
+      return;
+    }
     const alvo = resolverFichaParaAbrir(fichaId, tipo, fichas);
     if (alvo) {
       this.fichaFlutuanteRef()?.abrir(alvo);

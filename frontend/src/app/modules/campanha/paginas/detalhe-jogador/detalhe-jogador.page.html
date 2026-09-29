@@ -69,16 +69,15 @@
     }
     <div class="coluna-acoes__categoria">Campanha</div>
     @if (somenteLeitura()) {
-    <!-- Prévia: as Cenas e a Biblioteca ficam indisponíveis (as rotas `/cenas` e `/documentos`
-         responderiam com o recorte do mestre). -->
-    <button
+    <!-- A Investigação da prévia usa a projeção do jogador-alvo. -->
+    <a
         app-coluna-acoes-item
         icone="combate"
-        appTooltip="Cenas indisponíveis na prévia"
-        [disabled]="true"
+        appTooltip="Investigação na prévia"
+        [routerLink]="['/campanhas', campanhaAtual.id, 'previa', dados.previa()?.usuarioAlvoId, 'investigacao']"
     >
         Cenas
-    </button>
+    </a>
     <button
         app-coluna-acoes-item
         icone="biblioteca"
@@ -290,16 +289,16 @@
                             <span>Sair da prévia · {{ previa.nomeAlvo }}</span>
                         </a>
                         } @if (somenteLeitura()) {
-                        <button
+                        <a
                             app-botao
                             class="detalhe__cabecalho-menu-item"
-                            type="button"
                             role="menuitem"
-                            [disabled]="true"
+                            [routerLink]="['/campanhas', campanhaAtual.id, 'previa', dados.previa()?.usuarioAlvoId, 'investigacao']"
+                            (click)="fecharMenu()"
                         >
                             <app-icone nome="combate" />
                             <span>Cenas</span>
-                        </button>
+                        </a>
                         <button
                             app-botao
                             class="detalhe__cabecalho-menu-item"

@@ -43,6 +43,35 @@ describe('EncontroPainelDadosService', () => {
   };
 
   describe('carga e papel', () => {
+    it('recarrega membros ao entrar alguém e descarta resposta antiga após nova invalidação', () => {
+      const { dados, campanhaService, membroEntrou$ } = montar();
+      const antiga = new Subject<typeof dados.membrosDaCampanha extends () => infer T ? T : never>();
+      campanhaService.listarMembros.mockReturnValueOnce(antiga as never)
+        .mockReturnValueOnce(of([]));
+      membroEntrou$.next({ campanhaId: CAMPANHA_ID });
+      membroEntrou$.next({ campanhaId: CAMPANHA_ID });
+      antiga.next([{ usuarioId: 55, nome: 'Resposta antiga' }] as never);
+      expect(dados.membrosDaCampanha()).toEqual([]);
+    });
+
+    it('refaz membros quando uma ficha é criada na campanha', () => {
+      const { campanhaService, fichaCriada$ } = montar();
+      campanhaService.listarMembros.mockClear();
+      fichaCriada$.next({ campanhaId: CAMPANHA_ID });
+      expect(campanhaService.listarMembros).toHaveBeenCalledWith(CAMPANHA_ID);
+    });
+
+    it('recortes alterados invalidam apenas as listas indicadas pelo evento', () => {
+      const { dados, campanhaService, fichaService, fichaRecortesAlterados$ } = montar();
+      campanhaService.listarMembros.mockClear();
+      fichaService.listarFichas.mockClear();
+      fichaRecortesAlterados$.next({ campanhaId: CAMPANHA_ID, membros: true, fichas: false });
+      expect(campanhaService.listarMembros).toHaveBeenCalledTimes(1);
+      expect(fichaService.listarFichas).not.toHaveBeenCalled();
+      fichaRecortesAlterados$.next({ campanhaId: CAMPANHA_ID, membros: false, fichas: true });
+      expect(fichaService.listarFichas).toHaveBeenCalledTimes(1);
+      expect(dados.membrosDaCampanha()).toBeDefined();
+    });
     it("trocar de cena limpa o foco anterior enquanto a nova lista está pendente", () => {
       const { dados, cenaService } = montar({ cenaTipo: CenaTipoEnum.INVESTIGACAO });
       const item = { documentoId: 40, titulo: "A", tipo: TipoDocumentoEnum.TEXTO,

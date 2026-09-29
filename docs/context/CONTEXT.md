@@ -23,6 +23,9 @@
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
 > **Última revisão:** 2026-09-29 · **Última decisão registrada:**
+> `m7-27-investigacao-jogador-visao-esquadrao` concluída: Investigação do jogador abre com
+> Esquadrão/Rolagens alternáveis; a prévia do mestre usa o recorte do alvo em leitura. Ver seção
+> "Módulo de Cenas". Antes:
 > `patchnotes-versao-sistema` (`pn-01`…`pn-04` concluídas, `pn-05` aberta — falta publicar no R2 real e
 > enviar as tags): o sistema passa a ter versão (`1.4.0`, fonte única no `package.json` da raiz) exibida
 > na topbar e página pública `/patchnotes` com notas em Markdown lidas do R2 (ver "Versão e patchnotes"
@@ -814,6 +817,11 @@ campanha) e `m9-12` (o mesmo painel no Painel do espectador) concluídas, specs 
 Antes:
 
 **Módulo de Cenas — 5/6, falta só `m7-26` (passe responsivo dedicado do módulo inteiro).**
+Há também a task complementar `m7-27-investigacao-jogador-visao-esquadrao` concluída, spec em
+`done/`: o jogador alterna Esquadrão/Rolagens com Esquadrão inicial; a prévia do mestre mostra a
+Investigação em leitura no recorte do alvo. Ocultação, revogação e reconexão foram observadas ao vivo
+com três jogadores sintéticos. Ela amplia o painel após `m7-25`, sem alterar a contagem das seis
+tasks originais do milestone.
 `m7-21` (contrato + schema), `m7-22` (backend + tempo real), `m7-23` (hub + "Nova cena" tipada),
 `m7-24` (painel de cena sem iniciativa) e `m7-25` (coluna Documentos da Investigação, ver cabeçalho
 deste arquivo) concluídas — specs em `done/`. **Deploy: `m7-22` e `m7-23` sobem juntas** (os

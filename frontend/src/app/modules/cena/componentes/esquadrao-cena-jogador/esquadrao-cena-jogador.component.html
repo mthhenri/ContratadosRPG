@@ -1,0 +1,82 @@
+<app-cartao titulo="Esquadrão" class="esquadrao-cena">
+    <app-icone cartaoIndice nome="agente" />
+    @if (equipe().length === 0) {
+        <app-estado-vazio
+            icone="agente"
+            titulo="Nenhum agente disponível."
+            linhaApoio="Os agentes visíveis da equipe aparecem aqui."
+            tamanho="compacto"
+        />
+    } @else {
+        <ul class="esquadrao-cena__lista">
+            @for (item of equipe(); track item.membro.usuarioId) {
+                <li class="esquadrao-cena__membro">
+                    <strong class="esquadrao-cena__membro-nome">{{ item.membro.nome }}</strong>
+                    @for (ficha of item.fichas; track ficha.id) {
+                        <div
+                            class="esquadrao-cena__ficha"
+                            [class.esquadrao-cena__ficha--teaser]="ficha.tipo === 'teaser'"
+                        >
+                            <span
+                                class="esquadrao-cena__avatar"
+                                aria-hidden="true"
+                                [style.--cor-ficha]="ficha.cor"
+                            >
+                                @if (ficha.imagemUrl; as imagemUrl) {
+                                    <img [src]="imagemUrl" alt="" />
+                                }
+                            </span>
+                            <span class="esquadrao-cena__corpo">
+                                <strong class="esquadrao-cena__nome">{{ ficha.nome }}</strong>
+                                <span class="esquadrao-cena__classe">{{ ficha.classeTexto }}</span>
+                                @if (ficha.tipo === "completa") {
+                                    <span class="esquadrao-cena__vitais">
+                                        Vida {{ ficha.vidaAtual }}/{{ ficha.vidaMaxima ?? "—" }} ·
+                                        Energia {{ ficha.energiaAtual }}/{{
+                                            ficha.energiaMaxima ?? "—"
+                                        }}
+                                    </span>
+                                }
+                                @if (condicoesAtivas(ficha.condicoes); as condicoes) {
+                                    @if (condicoes.length) {
+                                        <span
+                                            class="esquadrao-cena__condicoes"
+                                            aria-label="Condições"
+                                        >
+                                            @for (condicao of condicoes; track condicao.chave) {
+                                                <app-chip variante="sutil">{{
+                                                    condicao.rotulo
+                                                }}</app-chip>
+                                            }
+                                        </span>
+                                    }
+                                }
+                                @if (
+                                    ficha.tipo === "completa" &&
+                                    item.membro.usuarioId !== usuarioObservadorId()
+                                ) {
+                                    <button
+                                        app-botao
+                                        class="esquadrao-cena__abrir"
+                                        variante="secundario"
+                                        estilo="texto"
+                                        tamanho="medio"
+                                        type="button"
+                                        [attr.aria-label]="'Ver ficha de ' + ficha.nome"
+                                        (click)="abrirFicha.emit(ficha.id)"
+                                    >
+                                        Ver ficha
+                                    </button>
+                                } @else if (item.membro.usuarioId === usuarioObservadorId()) {
+                                    <span class="esquadrao-cena__indicacao"
+                                        >Sua ficha está no painel principal</span
+                                    >
+                                }
+                            </span>
+                        </div>
+                    }
+                </li>
+            }
+        </ul>
+    }
+</app-cartao>

@@ -113,17 +113,52 @@
         }
 
         <div class="cena-jogador__linha">
-            @if (!janelaHistorico.estaAbertaCampanha(dados.campanhaId)) {
             <div class="cena-jogador__rolagens">
-                <app-historico-rolagens-sidebar
-                    [fixo]="true"
-                    titulo="Rolagens"
-                    [itens]="dados.rolagensFeed()"
-                    [carregando]="dados.carregandoRolagens()"
-                    [campanhaIdJanela]="dados.campanhaId"
-                />
+                @if (dados.ehInvestigacao()) {
+                <app-segmentado
+                    rotulo="Painel lateral da Investigação"
+                    [fluido]="true"
+                    class="cena-jogador__seletor"
+                >
+                    <button
+                        app-segmentado-item
+                        type="button"
+                        [ativo]="painelLateral() === 'esquadrao'"
+                        (click)="painelLateral.set('esquadrao')"
+                    >
+                        Esquadrão
+                    </button>
+                    <button
+                        app-segmentado-item
+                        type="button"
+                        [ativo]="painelLateral() === 'rolagens'"
+                        (click)="painelLateral.set('rolagens')"
+                    >
+                        Rolagens
+                    </button>
+                </app-segmentado>
+                <div class="cena-jogador__esquadrao" [hidden]="painelLateral() !== 'esquadrao'">
+                    <app-esquadrao-cena-jogador
+                        [membros]="dados.membrosDaCampanha()"
+                        [fichas]="dados.fichasCampanha()"
+                        [usuarioObservadorId]="dados.usuarioAtivoId()"
+                        (abrirFicha)="abrirFichaDoEsquadrao($event)"
+                    />
+                </div>
+                }
+                <div
+                    class="cena-jogador__historico"
+                    [hidden]="(dados.ehInvestigacao() && painelLateral() !== 'rolagens') || janelaHistorico.estaAbertaCampanha(dados.campanhaId)"
+                >
+                    <app-historico-rolagens-sidebar
+                        [fixo]="true"
+                        titulo="Rolagens"
+                        [itens]="dados.rolagensFeed()"
+                        [carregando]="dados.carregandoRolagens()"
+                        [campanhaIdJanela]="dados.campanhaId"
+                    />
+                </div>
             </div>
-            }
 
             <section class="cena-jogador__palco" aria-label="Minha ficha">
                 @if (semFicha()) {

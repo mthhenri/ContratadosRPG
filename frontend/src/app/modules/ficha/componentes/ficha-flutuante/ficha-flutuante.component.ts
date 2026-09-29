@@ -73,6 +73,8 @@ export class FichaFlutuante {
 
   private geometriaAntesDeMaximizar: FichaFlutuanteGeometria | null = null;
   private redimensionando = false;
+  private aberturaPendente: ReturnType<typeof setTimeout> | null = null;
+  private alvoPendente: FichaFlutuanteAlvo | null = null;
   private origemRedimensionamento = {
     ponteiroX: 0,
     ponteiroY: 0,
@@ -117,6 +119,9 @@ export class FichaFlutuante {
    * (mesmo `fichaId`+`tipo`) é barato — só reaproveita a instância já viva.
    */
   abrir(novoAlvo: FichaFlutuanteAlvo): void {
+    if (this.aberturaPendente !== null) clearTimeout(this.aberturaPendente);
+    this.aberturaPendente = null;
+    this.alvoPendente = null;
     const atual = this.alvo();
     const mesmaFicha = atual?.fichaId === novoAlvo.fichaId && atual?.tipo === novoAlvo.tipo;
     if (!this.aberto() && this.ehMestre() && !this.ehMobile()) {
@@ -139,7 +144,13 @@ export class FichaFlutuante {
       return;
     }
     this.alvo.set(null);
-    setTimeout(() => this.alvo.set(novoAlvo));
+    this.alvoPendente = novoAlvo;
+    if (this.aberturaPendente !== null) clearTimeout(this.aberturaPendente);
+    this.aberturaPendente = setTimeout(() => {
+      this.aberturaPendente = null;
+      this.alvoPendente = null;
+      if (this.aberto()) this.alvo.set(novoAlvo);
+    });
   }
 
   protected aoMinimizadoChange(minimizado: boolean): void {
@@ -147,10 +158,20 @@ export class FichaFlutuante {
   }
 
   protected fechar(): void {
+    if (this.aberturaPendente !== null) clearTimeout(this.aberturaPendente);
+    this.aberturaPendente = null;
+    this.alvoPendente = null;
     this.aberto.set(false);
     this.maximizada.set(false);
     this.geometriaAntesDeMaximizar = null;
     this.alvo.set(null);
+  }
+
+  /** Uma invalidação do recorte fecha também a troca de alvo ainda pendente. */
+  fecharSeAlvo(fichaId: number): void {
+    if (this.alvo()?.fichaId === fichaId || this.alvoPendente?.fichaId === fichaId) {
+      this.fechar();
+    }
   }
 
   protected alternarMaximizacao(): void {

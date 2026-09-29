@@ -98,6 +98,8 @@ export class EncontroPainelDadosService {
   private readonly documentosDaCena = signal<readonly CenaDocumentoResumoDto[]>([]);
   private readonly carregandoDocumentosInterno = signal(true);
   private geracaoDocumentos = 0;
+  private geracaoFichas = 0;
+  private geracaoMembros = 0;
 
   /** A cena da tela — `null` só enquanto carrega. */
   readonly cena = this.cenaAtual.asReadonly();
@@ -394,6 +396,9 @@ export class EncontroPainelDadosService {
     // visão não está (ou deixa de poder estar) na sala da ficha. O GET no próprio recorte decide o
     // que aparece; a ficha que ficou oculta some da grade sem recarregar.
     merge(
+      this.tempoRealService.acessoRevogado$.pipe(
+        filter((evento) => this.salasFichaAtivas.has(evento.fichaId)),
+      ),
       this.tempoRealService.fichaCriada$.pipe(filter((ficha) => ficha.campanhaId === this.campanhaId)),
       this.tempoRealService.fichaVisibilidadeAlterada$.pipe(
         filter((evento) => evento.campanhaId === this.campanhaId),
@@ -407,6 +412,29 @@ export class EncontroPainelDadosService {
     )
       .pipe(takeUntilDestroyed())
       .subscribe({ next: () => this.recarregarFichas() });
+
+    merge(
+      this.tempoRealService.acessoRevogado$.pipe(
+        filter((evento) => this.salasFichaAtivas.has(evento.fichaId)),
+      ),
+      this.tempoRealService.fichaCriada$.pipe(
+        filter((ficha) => ficha.campanhaId === this.campanhaId),
+      ),
+      this.tempoRealService.membroEntrou$.pipe(
+        filter((evento) => evento.campanhaId === this.campanhaId),
+      ),
+      this.tempoRealService.fichaVisibilidadeAlterada$.pipe(
+        filter((evento) => evento.campanhaId === this.campanhaId),
+      ),
+      this.tempoRealService.fichaRemovidaDaCampanha$.pipe(
+        filter((evento) => evento.campanhaId === this.campanhaId),
+      ),
+      this.tempoRealService.fichaRecortesAlterados$.pipe(
+        filter((evento) => evento.campanhaId === this.campanhaId && evento.membros),
+      ),
+    )
+      .pipe(takeUntilDestroyed())
+      .subscribe({ next: () => this.recarregarMembros() });
 
     // Nome da campanha — só precisa vir uma vez, não a cada `carregar()` (a rota troca de encontro,
     // não de campanha).
@@ -448,12 +476,8 @@ export class EncontroPainelDadosService {
       .listarPorCampanha(this.campanhaId)
       .subscribe({ next: (encontros) => this.encontrosDaCampanhaInterno.set(encontros) });
 
-    this.fichaService
-      .listarFichas(this.campanhaId)
-      .subscribe({ next: (fichas) => this.fichasDaCampanha.set(fichas) });
-    this.campanhaService
-      .listarMembros(this.campanhaId)
-      .subscribe({ next: (membros) => this.membrosInterno.set(membros) });
+    this.recarregarFichas();
+    this.recarregarMembros();
   }
 
   /**
@@ -495,9 +519,21 @@ export class EncontroPainelDadosService {
 
   /** Refaz só a listagem de fichas — o resumo alterado chega pelo mesmo recorte da carga (§14). */
   private recarregarFichas(): void {
+    const geracao = ++this.geracaoFichas;
     this.fichaService
       .listarFichas(this.campanhaId)
-      .subscribe({ next: (fichas) => this.fichasDaCampanha.set(fichas) });
+      .subscribe({ next: (fichas) => {
+        if (geracao === this.geracaoFichas) this.fichasDaCampanha.set(fichas);
+      } });
+  }
+
+  private recarregarMembros(): void {
+    const geracao = ++this.geracaoMembros;
+    this.campanhaService.listarMembros(this.campanhaId).subscribe({
+      next: (membros) => {
+        if (geracao === this.geracaoMembros) this.membrosInterno.set(membros);
+      },
+    });
   }
 
   /** Busca inicial do feed. A permissão e o recorte de privadas pertencem ao backend. */

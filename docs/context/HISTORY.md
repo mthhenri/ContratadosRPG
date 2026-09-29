@@ -1,5 +1,41 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-29 — m7-27: Esquadrão na Investigação e prévia do jogador concluídos
+
+A task complementar M7 saiu do backlog para execução e terminou em
+`docs/specs/done/m7-27-investigacao-jogador-visao-esquadrao.spec.md`. O jogador agora abre a
+Investigação com Esquadrão selecionado e alterna para o histórico de Rolagens na coluna lateral;
+documentos e própria ficha permanecem no palco. O roster reusa `montarEquipeExibicao` e o recorte
+autorizado de membros/fichas: colega sem concessão mostra só carteirinha, colega com concessão pode
+abrir a ficha flutuante, e ficha oculta de terceiro não deixa cartão. A prévia do mestre recebeu rota
+própria em leitura, alimentada por projeções do jogador-alvo e endpoints seguros da cena/documento;
+a ficha alheia abre em modal sem buscar pelo privilégio do mestre.
+
+Ao vivo, uma campanha sintética com mestre e três jogadores cobriu concessão, revogação com janelas
+abertas, ocultação, dono da ficha oculta, jogador sem ficha, documento e reconexão real de Socket.IO.
+Campanha e contas sintéticas foram excluídas logicamente pelas rotas normais após a verificação.
+Jogador e prévia foram inspecionados pessoalmente em 1920×1080, 1366×768, 960×1080 e 360×800,
+sem erro de página nem overflow. A comparação com o painel de cena e o Esquadrão da campanha levou
+ao ajuste dos alvos de toque do seletor e da ação de ficha para 44 px no mobile. Na revogação, ambas
+as janelas fecharam e o colega voltou à carteirinha sem vitais; na ocultação, sumiu da sessão e da
+prévia, mas permaneceu para o dono. A prévia fez apenas requisições às projeções autorizadas.
+
+Gates: suíte completa do frontend 185 arquivos/2.628 testes passou; build passou com aviso já
+existente de orçamento do bundle inicial; lint teve 0 erros e 24.569 avisos de estilo; TypeScript e
+`git diff --check` passaram. A auditoria geral de ficha oculta recebeu a linha da Investigação,
+mantendo abertas as decisões e consumidores externos a esta task.
+
+## 2026-09-29 — m7-27: visão de esquadrão na Investigação especificada no backlog
+
+O autor escolheu o POC A (alternância Rolagens/Esquadrão), com Esquadrão inicialmente aberto, e
+incluiu a Investigação em somente leitura na prévia de jogador do mestre. O protótipo comparativo
+foi registrado em `docs/design/propostas/investigacao-jogador-esquadrao.html`; a spec detalhada
+voltou ao backlog como `m7-27-investigacao-jogador-visao-esquadrao.spec.md`, task complementar do
+módulo M7 posterior a `m7-25`. O guarda-chuva `m7-cenas` e o estado atual em `CONTEXT.md` apontam
+para ela sem alterar a contagem das seis tasks originais. Um plano de implementação permanece em
+`docs/superpowers/plans/2026-09-29-m7-27-investigacao-jogador-esquadrao.md`. Nenhum código de
+produto foi alterado; a spec só vai a `active/` quando a execução começar.
+
 ## 2026-09-29 — patchnotes-versao-sistema (fecho): validado em produção
 
 Depois do workflow publicar as notas no R2 e do trigger do Cloud Build criar uma revisão nova do Cloud Run

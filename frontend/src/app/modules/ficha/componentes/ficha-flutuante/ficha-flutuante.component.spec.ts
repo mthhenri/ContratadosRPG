@@ -129,6 +129,22 @@ describe('FichaFlutuante', () => {
     expect(elemento.querySelector('app-ficha-flutuante-conteudo')).not.toBeNull();
   });
 
+  it('fecha o alvo revogado mesmo durante a troca diferida de ficha', () => {
+    const { fixture } = montar(false);
+    vi.useFakeTimers();
+    try {
+      fixture.componentInstance.abrir(alvoA);
+      fixture.componentInstance.abrir(alvoB);
+      fixture.componentInstance.fecharSeAlvo(11);
+      vi.runAllTimers();
+      fixture.detectChanges();
+      expect((fixture.nativeElement as HTMLElement).querySelector('.painel-flutuante__janela'))
+        .toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('abre a ficha do mestre na geometria ampla do desktop', () => {
     const larguraOriginal = window.innerWidth;
     const alturaOriginal = window.innerHeight;

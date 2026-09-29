@@ -118,6 +118,11 @@ esperar a M9. `m7-24` segue direto depois. `m7-25` só começa quando a M9 tiver
 de documento + revelar/ocultar (`m9-02`) e o leitor de documento (`m9-04`) prontos — a busca
 (`m9-03`) e a biblioteca do jogador (`m9-05`) não a bloqueiam. `m7-26` fecha o milestone.
 
+**Extensão posterior do módulo:** `m7-27-investigacao-jogador-visao-esquadrao`, concluída
+([spec](../done/m7-27-investigacao-jogador-visao-esquadrao.spec.md)), adiciona Esquadrão ao painel
+de Investigação do jogador e à prévia somente leitura do mestre.
+Nasceu depois da quebra original `m7-21`…`m7-26` e não altera o aceite dessas seis tasks.
+
 ## Critérios de aceite do módulo
 
 - Criar uma cena exige escolher um dos cinco tipos; o hub mostra esse tipo como chip em toda cena

@@ -34,6 +34,56 @@
         min-height: 480px;
     }
 
+    &__rolagens {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-8);
+    }
+
+    &__seletor {
+        flex: none;
+
+        @include bp.mobile {
+            button[app-segmentado-item] {
+                min-height: 44px;
+            }
+        }
+    }
+
+    &__esquadrao {
+        min-height: 0;
+        overflow-y: auto;
+
+        &[hidden] {
+            display: none;
+        }
+    }
+
+    &__historico {
+        position: relative;
+        flex: 1;
+        min-height: 160px;
+
+        &[hidden] {
+            display: none;
+        }
+    }
+
+    @include bp.tablet {
+        &__rolagens {
+            order: 1;
+            height: auto;
+            min-height: 0;
+        }
+        &__palco {
+            order: 2;
+        }
+        &__historico {
+            height: 320px;
+            flex: none;
+        }
+    }
+
     // Documentos apresentados (m7-25) — cartões da biblioteca, mesma receita do `documento-cartao`
     // usada na Biblioteca e no painel do mestre.
     &__documentos {

@@ -501,15 +501,12 @@ describe('CampanhaPreviaJogador', () => {
   });
 
   describe('Cenas (antiga Iniciativa, m7-23)', () => {
-    it('fica desabilitada mesmo com combate em andamento, sem abrir leitura nem a rota do mestre', () => {
-      const { fixture, raiz } = montar({ previaResposta: previa({ encontroAtivo }) });
+    it('abre a Investigação em leitura pelo recorte do alvo, sem ativar a rota do mestre', () => {
+      const { raiz } = montar({ previaResposta: previa({ encontroAtivo }) });
 
       const item = itemColuna(raiz, 'Cenas');
-      expect(item.tagName).toBe('BUTTON');
-      expect(item.disabled).toBe(true);
-      item.click();
-      fixture.detectChanges();
-
+      expect(item.tagName).toBe('A');
+      expect(item.getAttribute('href')).toBe(`/campanhas/${CAMPANHA_ID}/previa/${ALVO_ID}/investigacao`);
       expect(raiz.querySelector('app-iniciativa-leitura')).toBeNull();
     });
 

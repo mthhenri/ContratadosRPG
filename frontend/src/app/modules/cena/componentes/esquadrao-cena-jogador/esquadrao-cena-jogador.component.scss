@@ -1,0 +1,95 @@
+@use "tema/breakpoints" as bp;
+
+.esquadrao-cena {
+    display: block;
+
+    &__lista {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-8);
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    &__membro {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-8);
+        min-width: 0;
+        padding: var(--space-8);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-control);
+        background: var(--surface-2);
+    }
+
+    &__membro-nome,
+    &__nome {
+        font: 700 12px var(--font-mono);
+        color: var(--text);
+        overflow-wrap: anywhere;
+    }
+
+    &__ficha {
+        display: flex;
+        align-items: center;
+        gap: var(--space-8);
+        min-width: 0;
+        padding: var(--space-8);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-control);
+        background: var(--surface);
+
+        &--teaser {
+            border-style: dashed;
+        }
+    }
+
+    &__avatar {
+        display: block;
+        flex: none;
+        width: 52px;
+        height: 52px;
+        overflow: hidden;
+        border: 1px solid var(--cor-ficha, var(--border-strong));
+        border-radius: var(--radius-card);
+        background: color-mix(in srgb, var(--cor-ficha, var(--border-strong)) 14%, var(--surface));
+
+        img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+    }
+
+    &__corpo {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-4);
+        min-width: 0;
+    }
+
+    &__classe,
+    &__vitais,
+    &__indicacao {
+        font: 400 10px var(--font-mono);
+        color: var(--text-mute);
+    }
+
+    &__condicoes {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-4);
+    }
+
+    &__abrir {
+        min-height: 44px;
+    }
+
+    @include bp.mobile {
+        &__membro {
+            padding: var(--space-8);
+        }
+    }
+}

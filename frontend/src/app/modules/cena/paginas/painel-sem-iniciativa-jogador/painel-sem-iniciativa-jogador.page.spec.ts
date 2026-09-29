@@ -45,6 +45,19 @@ describe('PainelCenaSemIniciativaJogador', () => {
     expect(texto(elemento.querySelector('.cena-jogador__cabecalho app-chip'))).toBe('Em cena');
   });
 
+  it('abre Esquadrão inicialmente e alterna para Rolagens sem desmontar o histórico', () => {
+    const { fixture } = montar();
+    const raiz = fixture.nativeElement as HTMLElement;
+    const [esquadrao, rolagens] = Array.from(raiz.querySelectorAll<HTMLButtonElement>('button[app-segmentado-item]'));
+    expect(esquadrao.getAttribute('aria-pressed')).toBe('true');
+    expect(raiz.querySelector<HTMLElement>('.cena-jogador__historico')?.hidden).toBe(true);
+    rolagens.click();
+    fixture.detectChanges();
+    expect(rolagens.getAttribute('aria-pressed')).toBe('true');
+    expect(raiz.querySelector<HTMLElement>('.cena-jogador__historico')?.hidden).toBe(false);
+    expect(raiz.querySelector('app-historico-rolagens-sidebar')).not.toBeNull();
+  });
+
   it('não tem controles de cena — só as Ferramentas', () => {
     const elemento = montar().fixture.nativeElement as HTMLElement;
 

@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>POC visual · Esquadrão na Investigação</title>
+  <style>
+    /* Protótipo descartável: valores transcritos dos tokens do tema, sem efeito no produto. */
+    :root {
+      --bg: #0a0c0f; --surface: #13161b; --surface-2: #1a1e24;
+      --border: rgba(255,255,255,.07); --border-strong: rgba(255,255,255,.12);
+      --text: #e6e8eb; --text-dim: #969ba3; --text-mute: #656a72;
+      --accent: #d53030; --accent-dim: color-mix(in srgb, var(--accent) 12%, transparent);
+      --accent-border: color-mix(in srgb, var(--accent) 40%, transparent);
+      --vida: #d53030; --energy: #4c8dd0; --warning: #d9a441;
+      --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+      --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+      --radius-card: 6px; --radius-control: 4px;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font-sans); }
+    button { font: inherit; cursor: pointer; }
+    button:focus-visible { outline: 2px solid var(--accent-border); outline-offset: 2px; }
+    .proposta { max-width: 1580px; margin: auto; padding: 24px; }
+    .proposta__kicker, .rotulo, .secao, .painel__topo, .carteirinha__dono, .topbar,
+    .cabecalho, .documento, .segmentado, .feed, .ficha, .rail, .flutuante, .nota { font-family: var(--font-mono); }
+    .proposta__kicker { color: var(--accent); font-size: 11px; text-transform: uppercase; letter-spacing: .12em; }
+    h1 { font: 700 24px var(--font-mono); margin: 8px 0; }
+    .proposta__intro { color: var(--text-dim); font-size: 14px; margin: 0 0 18px; }
+    .escolhas { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+    .escolhas button { background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-control); color: var(--text-dim); padding: 10px 14px; font: 600 11px var(--font-mono); text-transform: uppercase; }
+    .escolhas button[aria-pressed="true"] { background: var(--accent-dim); border-color: var(--accent-border); color: var(--text); }
+    .nota { padding: 12px 14px; margin-bottom: 18px; border-left: 2px solid var(--accent); background: var(--surface); font-size: 12px; line-height: 1.55; color: var(--text-dim); }
+    .nota strong { color: var(--text); }
+    .previews { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 22px; align-items: start; }
+    .preview__legenda { display: flex; align-items: center; gap: 10px; margin: 0 0 8px; color: var(--text-mute); font: 600 11px var(--font-mono); text-transform: uppercase; letter-spacing: .1em; }
+    .preview__legenda::after { content: ''; height: 1px; background: var(--border); flex: 1; }
+    .janela { border: 1px solid var(--border-strong); border-radius: var(--radius-card); overflow: hidden; background: var(--bg); }
+    .janela--desktop { min-height: 720px; }
+    .janela--mobile { position: relative; width: 360px; height: 800px; overflow-y: auto; }
+    .topbar { height: 46px; padding: 0 16px; display: flex; align-items: center; gap: 12px; background: var(--surface); border-bottom: 1px solid var(--border); color: var(--text-dim); font-size: 10px; text-transform: uppercase; letter-spacing: .08em; }
+    .topbar__marca { color: var(--text); font-weight: 700; margin-right: auto; }
+    .topbar__marca b { color: var(--accent); }
+    .topbar__atual { color: var(--text); border-bottom: 2px solid var(--accent); padding: 16px 0 13px; }
+    .topbar__usuario { border: 1px solid var(--border-strong); border-radius: var(--radius-control); padding: 6px 8px; }
+    .tela { display: flex; min-height: 674px; }
+    .rail { width: 58px; flex: none; border-right: 1px solid var(--border); background: var(--surface); padding: 16px 10px; display: flex; flex-direction: column; align-items: center; gap: 12px; color: var(--text-mute); }
+    .rail__icone { width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid var(--border); border-radius: var(--radius-control); font-size: 15px; }
+    .conteudo { min-width: 0; flex: 1; padding: 20px; }
+    .cabecalho { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; min-width: 0; }
+    .cabecalho__voltar { width: 28px; height: 28px; display: grid; place-items: center; border: 1px solid var(--border-strong); border-radius: var(--radius-control); color: var(--text-dim); }
+    .cabecalho__indice { display: grid; place-items: center; width: 22px; height: 22px; border: 1px solid var(--accent); color: var(--accent); border-radius: 3px; font-size: 11px; font-weight: 700; }
+    .cabecalho__titulo { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 18px; font-weight: 700; }
+    .cabecalho__apoio { color: var(--text-mute); font-size: 11px; white-space: nowrap; }
+    .chip { color: var(--text-dim); border: 1px solid var(--border-strong); border-radius: 3px; padding: 4px 6px; font: 600 9px var(--font-mono); text-transform: uppercase; white-space: nowrap; }
+    .cabecalho__regua, .secao__regua { height: 1px; background: var(--border); flex: 1; min-width: 8px; }
+    .secao { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; text-transform: uppercase; letter-spacing: .12em; font-size: 11px; font-weight: 600; }
+    .documentos { margin-bottom: 18px; }
+    .documentos__lista { display: flex; gap: 8px; }
+    .documento { min-width: 0; flex: 1; display: flex; align-items: center; gap: 9px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-control); padding: 11px; text-align: left; color: var(--text); }
+    .documento__icone { color: var(--accent); font-size: 17px; }
+    .documento__texto { display: grid; gap: 3px; min-width: 0; }
+    .documento__titulo { font-size: 11px; font-weight: 600; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .documento__tipo { color: var(--text-mute); font-size: 9px; text-transform: uppercase; }
+    .linha { display: flex; gap: 16px; min-width: 0; }
+    .painel { width: 32%; min-width: 250px; max-width: 370px; flex: none; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-card); padding: 12px; align-self: flex-start; }
+    .painel__topo { color: var(--text); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 12px; }
+    .segmentado { display: flex; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-control); padding: 3px; gap: 3px; margin-bottom: 12px; }
+    .segmentado button { flex: 1; min-width: 0; padding: 7px 4px; color: var(--text-dim); border: 0; border-radius: 3px; background: transparent; font-size: 10px; font-weight: 600; white-space: nowrap; }
+    .segmentado button[aria-pressed="true"] { background: var(--accent-dim); color: var(--text); box-shadow: inset 0 0 0 1px var(--accent-border); }
+    .feed { display: grid; gap: 8px; }
+    .feed__item { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-control); padding: 10px; display: grid; gap: 6px; font-size: 10px; }
+    .feed__item strong { font-size: 11px; color: var(--text); }
+    .feed__item span { color: var(--text-mute); }
+    .feed__numero { color: var(--accent) !important; font-size: 16px; font-weight: 700; }
+    .esquadrao { display: grid; gap: 8px; }
+    .carteirinha { min-width: 0; display: flex; align-items: center; gap: 9px; padding: 9px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-control); }
+    .carteirinha--acesso { border-color: var(--accent-border); }
+    .carteirinha__avatar { width: 48px; height: 48px; flex: none; display: grid; place-items: center; background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-card); color: var(--text-dim); font: 700 17px var(--font-mono); }
+    .carteirinha__corpo { display: grid; gap: 4px; min-width: 0; }
+    .carteirinha__dono { font-size: 10px; font-weight: 700; color: var(--text-dim); }
+    .carteirinha__nome { font: 700 11px var(--font-mono); color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .carteirinha__detalhe { color: var(--text-mute); font: 10px var(--font-mono); }
+    .carteirinha__selo { width: fit-content; color: var(--warning); border: 1px solid color-mix(in srgb, var(--warning) 40%, transparent); background: color-mix(in srgb, var(--warning) 12%, transparent); border-radius: 3px; padding: 2px 4px; font: 700 8px var(--font-mono); text-transform: uppercase; }
+    .carteirinha__acao { margin-left: auto; flex: none; border: 1px solid var(--border-strong); background: var(--surface); color: var(--text-dim); border-radius: var(--radius-control); padding: 6px; font: 600 9px var(--font-mono); }
+    .ficha { min-width: 0; flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-card); padding: 16px; }
+    .ficha__topo { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+    .ficha__retrato { width: 64px; height: 64px; flex: none; display: grid; place-items: center; border: 1px solid var(--accent-border); border-radius: var(--radius-card); background: var(--accent-dim); color: var(--accent); font-size: 23px; }
+    .ficha__nome { font-weight: 700; font-size: 14px; }
+    .ficha__classe { color: var(--text-mute); font-size: 10px; margin-top: 4px; }
+    .ficha__barras { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+    .barra { background: var(--surface-2); padding: 10px; border-radius: var(--radius-control); border: 1px solid var(--border); }
+    .barra__rotulo { color: var(--text-dim); font: 600 9px var(--font-mono); text-transform: uppercase; }
+    .barra__numero { float: right; color: var(--text); font: 700 10px var(--font-mono); }
+    .barra__trilho { height: 4px; margin-top: 9px; background: var(--border-strong); border-radius: 2px; overflow: hidden; }
+    .barra__trilho::before { content: ''; display: block; height: 100%; width: 72%; background: var(--vida); }
+    .barra--energia .barra__trilho::before { width: 58%; background: var(--energy); }
+    .ficha__abas { display: flex; gap: 8px; border-bottom: 1px solid var(--border); margin-bottom: 13px; padding-bottom: 8px; color: var(--text-mute); font: 600 9px var(--font-mono); text-transform: uppercase; }
+    .ficha__abas strong { color: var(--accent); }
+    .ficha__grade { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .ficha__stat { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-control); padding: 11px; display: grid; gap: 8px; }
+    .ficha__stat small { color: var(--text-mute); font-size: 9px; text-transform: uppercase; }
+    .ficha__stat b { font-size: 18px; }
+    .secao--espaco { margin-top: 18px; }
+    .flutuante { position: absolute; right: 13px; top: 172px; width: 280px; z-index: 2; background: var(--surface); border: 1px solid var(--accent-border); border-radius: var(--radius-card); padding: 13px; box-shadow: 0 12px 36px color-mix(in srgb, var(--bg) 80%, transparent); }
+    .flutuante__topo { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+    .flutuante__fechar { background: transparent; border: 0; color: var(--text-dim); }
+    .flutuante__gatilho { position: absolute; right: 20px; top: 113px; padding: 8px 10px; border: 1px solid var(--accent-border); background: var(--accent-dim); border-radius: var(--radius-control); color: var(--text); font: 600 10px var(--font-mono); }
+    .palco-relativo { position: relative; min-width: 0; flex: 1; }
+    .palco-relativo .ficha { min-height: 390px; }
+    .palco-empilhado { min-width: 0; flex: 1; }
+    .mobile-corpo { padding: 12px; }
+    .mobile-corpo .cabecalho { flex-wrap: wrap; gap: 7px; margin-bottom: 16px; }
+    .mobile-corpo .cabecalho__titulo { font-size: 14px; flex: 1; }
+    .mobile-corpo .cabecalho__apoio { display: none; }
+    .mobile-corpo .documentos__lista { flex-direction: column; }
+    .mobile-corpo .documento { width: 100%; }
+    .mobile-corpo .ficha { padding: 12px; }
+    .mobile-corpo .ficha__barras { grid-template-columns: 1fr; }
+    .mobile-corpo .ficha__grade { grid-template-columns: repeat(2, 1fr); }
+    .mobile-corpo .painel { width: 100%; min-width: 0; max-width: none; }
+    .mobile-corpo .flutuante { position: absolute; top: 275px; left: 0; right: auto; bottom: auto; width: 360px; max-height: 490px; overflow-y: auto; border-radius: var(--radius-card) var(--radius-card) 0 0; }
+    .mobile-corpo .flutuante__gatilho { position: static; width: 100%; margin-bottom: 12px; padding: 11px; }
+    .mobile-corpo .ficha__topo { margin-bottom: 10px; }
+    .mobile-corpo .ficha__retrato { width: 48px; height: 48px; }
+    .mobile-corpo .ficha__stat { padding: 8px; }
+    .mobile-corpo .ficha__stat b { font-size: 15px; }
+    .mobile-corpo .secao--espaco { margin-top: 16px; }
+    .janela--mobile .topbar > span:not(.topbar__marca):not(.topbar__usuario) { display: none; }
+    .mobile-rodape { position: sticky; bottom: 0; display: flex; padding: 8px 10px; border-top: 1px solid var(--border); background: var(--surface); gap: 8px; font: 600 10px var(--font-mono); text-transform: uppercase; }
+    .mobile-rodape span { flex: 1; text-align: center; padding: 8px; color: var(--text-dim); }
+    .mobile-rodape span:first-child { color: var(--accent); }
+    .vazio { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-card); padding: 24px 14px; text-align: center; color: var(--text-dim); font: 11px var(--font-mono); }
+    .vazio strong { display: block; color: var(--text); margin-bottom: 6px; }
+    .etiqueta-poc { color: var(--text-mute); font: 10px var(--font-mono); margin: 12px 0 0; }
+    @media (max-width: 1150px) { .previews { grid-template-columns: 1fr; } .preview--desktop { overflow-x: auto; } .janela--desktop { min-width: 760px; } }
+    @media (max-width: 420px) { .proposta { padding: 12px 0; } .proposta > h1, .proposta__intro, .proposta__kicker, .escolhas, .nota, .preview__legenda, .etiqueta-poc { margin-left: 12px; margin-right: 12px; } .preview--desktop { display: none; } .janela { border-left: 0; border-right: 0; border-radius: 0; } .janela--mobile { width: 100%; } }
+  </style>
+</head>
+<body>
+  <main class="proposta">
+    <div class="proposta__kicker">Investigação · proposta para discussão</div>
+    <h1>Esquadrão na visão do jogador</h1>
+    <p class="proposta__intro">Três composições para decidir. Dados e controles são ilustrativos; nenhuma opção está aprovada ou implementada.</p>
+    <nav class="escolhas" aria-label="Composição">
+      <button type="button" data-opcao="lateral" aria-pressed="true">A · Alternar na lateral</button>
+      <button type="button" data-opcao="palco" aria-pressed="false">B · Seção no palco</button>
+      <button type="button" data-opcao="flutuante" aria-pressed="false">C · Painel flutuante</button>
+    </nav>
+    <div id="nota" class="nota"></div>
+    <div class="previews">
+      <section class="preview preview--desktop" aria-label="Prévia desktop">
+        <div class="preview__legenda">Desktop · composição geral</div>
+        <div class="janela janela--desktop" id="desktop"></div>
+      </section>
+      <section class="preview" aria-label="Prévia mobile">
+        <div class="preview__legenda">Mobile · 360 × 800</div>
+        <div class="janela janela--mobile" id="mobile"></div>
+      </section>
+    </div>
+    <p class="etiqueta-poc">Cenário: você vê a própria ficha; Lia tem carteirinha sem acesso; a ficha de Caio pode ser aberta; uma ficha oculta não ocupa espaço.</p>
+  </main>
+  <script>
+    const notas = {
+      lateral: '<strong>A · Alternar na lateral.</strong> Reaproveita a coluna de Rolagens e o seletor do Esquadrão da campanha. No celular, o seletor aparece após os documentos; a equipe pode ser vista antes da ficha sem sobrepor nada.',
+      palco: '<strong>B · Seção no palco.</strong> O esquadrão fica sempre visível entre documentos e ficha. Facilita acompanhar condições, mas empurra a ficha e as rolagens para baixo, sobretudo em 360 px.',
+      flutuante: '<strong>C · Painel flutuante.</strong> A cena conserva sua composição atual até a abertura. O painel cobre parte da ficha no desktop e parte do conteúdo no celular; precisa de uma solução de fechamento e foco.'
+    };
+    const topbar = '<div class="topbar"><span class="topbar__marca"><b>◆</b> CONTRATADOS RPG</span><span class="topbar__atual">Cenas</span><span>Campanha</span><span class="topbar__usuario">Jogador</span></div>';
+    const rail = '<aside class="rail"><span class="rail__icone">▦</span><span class="rail__icone">▤</span><span class="rail__icone">◫</span><span class="rail__icone">⚙</span></aside>';
+    const cabecalho = '<header class="cabecalho"><span class="cabecalho__voltar">←</span><span class="cabecalho__indice">//</span><strong class="cabecalho__titulo">Investigação · Sinais no Subsolo</strong><span class="cabecalho__apoio">Operação Helix</span><span class="chip">Em andamento</span><span class="cabecalho__regua"></span></header>';
+    const documentos = '<section class="documentos"><div class="secao">Documentos apresentados<span class="secao__regua"></span></div><div class="documentos__lista"><button class="documento" type="button"><span class="documento__icone">▤</span><span class="documento__texto"><span class="documento__titulo">Relatório de acesso — Setor 7</span><span class="documento__tipo">Texto · apresentado</span></span></button><button class="documento" type="button"><span class="documento__icone">▧</span><span class="documento__texto"><span class="documento__titulo">Registro de câmera 03</span><span class="documento__tipo">Imagem · apresentado</span></span></button></div></section>';
+    const feed = '<div class="feed"><div class="feed__item"><strong>Alex · Investigação</strong><span>Percepção + 4</span><span class="feed__numero">18</span></div><div class="feed__item"><strong>Caio · Conhecimento</strong><span>Intelecto + 3</span><span class="feed__numero">14</span></div><div class="feed__item"><strong>Lia · Furtividade</strong><span>Agilidade + 2</span><span class="feed__numero">12</span></div></div>';
+    const esquadrao = '<div class="esquadrao"><div class="carteirinha"><span class="carteirinha__avatar">L</span><span class="carteirinha__corpo"><span class="carteirinha__dono">Lia · jogadora</span><span class="carteirinha__nome">Lia Voss</span><span class="carteirinha__detalhe">Combatente · sem acesso completo</span><span class="carteirinha__selo">Machucado</span></span></div><div class="carteirinha carteirinha--acesso"><span class="carteirinha__avatar">C</span><span class="carteirinha__corpo"><span class="carteirinha__dono">Caio · jogador</span><span class="carteirinha__nome">Caio Almeida</span><span class="carteirinha__detalhe">Vida 17/24 · Energia 8/12</span></span><button class="carteirinha__acao" type="button" aria-label="Ver ficha de Caio">Ver ficha ↗</button></div><div class="carteirinha"><span class="carteirinha__avatar">A</span><span class="carteirinha__corpo"><span class="carteirinha__dono">Você</span><span class="carteirinha__nome">Alex Mercier</span><span class="carteirinha__detalhe">Ficha no palco</span></span></div></div>';
+    const ficha = '<section class="ficha" aria-label="Minha ficha"><div class="ficha__topo"><span class="ficha__retrato">A</span><span><div class="ficha__nome">Alex Mercier</div><div class="ficha__classe">Combatente · Nível 4 · Sua ficha</div></span></div><div class="ficha__barras"><div class="barra"><span class="barra__rotulo">Vida</span><span class="barra__numero">21 / 29</span><div class="barra__trilho"></div></div><div class="barra barra--energia"><span class="barra__rotulo">Energia</span><span class="barra__numero">7 / 12</span><div class="barra__trilho"></div></div></div><div class="ficha__abas"><strong>Agente</strong><span>Atributos</span><span>Inventário</span><span>Rolagens</span></div><div class="ficha__grade"><div class="ficha__stat"><small>Força</small><b>6</b></div><div class="ficha__stat"><small>Agilidade</small><b>5</b></div><div class="ficha__stat"><small>Intelecto</small><b>4</b></div><div class="ficha__stat"><small>Presença</small><b>3</b></div><div class="ficha__stat"><small>Vigor</small><b>5</b></div><div class="ficha__stat"><small>Percepção</small><b>7</b></div></div></section>';
+    function segmento(ativo) { return '<div class="segmentado" role="group" aria-label="Rolagens ou Esquadrão"><button aria-pressed="' + (ativo === 'rolagens') + '">◈ Rolagens</button><button aria-pressed="' + (ativo === 'esquadrao') + '">◉ Esquadrão</button></div>'; }
+    function desktop(opcao) {
+      const lateral = opcao === 'lateral' ? '<aside class="painel">' + segmento('esquadrao') + esquadrao + '</aside>' : '<aside class="painel"><div class="painel__topo">Rolagens</div>' + feed + '</aside>';
+      const palco = opcao === 'palco' ? '<div class="palco-empilhado"><div class="secao">Esquadrão<span class="secao__regua"></span></div>' + esquadrao + '<div class="secao secao--espaco">Minha ficha<span class="secao__regua"></span></div>' + ficha + '</div>' : opcao === 'flutuante' ? '<div class="palco-relativo">' + ficha + '<button class="flutuante__gatilho" type="button">◉ Esquadrão · 3</button><div class="flutuante"><div class="flutuante__topo">Esquadrão <button class="flutuante__fechar" type="button">✕</button></div>' + esquadrao + '</div></div>' : ficha;
+      return topbar + '<div class="tela">' + rail + '<div class="conteudo">' + cabecalho + documentos + '<div class="linha">' + lateral + palco + '</div></div></div>';
+    }
+    function mobile(opcao) {
+      const equipe = opcao === 'lateral' ? '<div class="secao secao--espaco">Acompanhar a equipe<span class="secao__regua"></span></div><div class="painel">' + segmento('esquadrao') + esquadrao + '</div>' : opcao === 'palco' ? '<div class="secao secao--espaco">Esquadrão<span class="secao__regua"></span></div>' + esquadrao : '<button class="flutuante__gatilho" type="button">◉ Abrir Esquadrão · 3</button>';
+      const conteudo = opcao === 'palco' ? equipe + '<div class="secao secao--espaco">Minha ficha<span class="secao__regua"></span></div>' + ficha : opcao === 'lateral' ? equipe + '<div class="secao secao--espaco">Minha ficha<span class="secao__regua"></span></div>' + ficha : ficha + equipe;
+      const flutuante = opcao === 'flutuante' ? '<div class="flutuante"><div class="flutuante__topo">Esquadrão <button class="flutuante__fechar" type="button">✕</button></div>' + esquadrao + '</div>' : '';
+      return topbar + '<div class="mobile-corpo">' + cabecalho + documentos + conteudo + '<div class="secao secao--espaco">Rolagens<span class="secao__regua"></span></div>' + (opcao === 'lateral' ? '<div class="vazio"><strong>Rolagens na outra aba</strong>Alterne no seletor acima.</div>' : feed) + flutuante + '</div><div class="mobile-rodape"><span>Agente</span><span>Status</span><span>Rolar</span><span>Mais</span></div>';
+    }
+    function renderizar(opcao) {
+      document.getElementById('nota').innerHTML = notas[opcao];
+      document.getElementById('desktop').innerHTML = desktop(opcao);
+      document.getElementById('mobile').innerHTML = mobile(opcao);
+      document.querySelectorAll('[data-opcao]').forEach(botao => botao.setAttribute('aria-pressed', String(botao.dataset.opcao === opcao)));
+    }
+    document.querySelectorAll('[data-opcao]').forEach(botao => botao.addEventListener('click', () => renderizar(botao.dataset.opcao)));
+    renderizar('lateral');
+  </script>
+</body>
+</html>

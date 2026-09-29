@@ -161,6 +161,15 @@ export const routes: Routes = [
   // (`previaJogadorCampanhaGuard`, mesmo racional de `espectadorCampanhaGuard`: usa a própria
   // projeção como autoridade). Mesma convenção de precedência das rotas acima.
   {
+    path: 'campanhas/:id/previa/:usuarioAlvoId/investigacao',
+    canActivate: [autenticacaoGuard],
+    resolve: { previaJogador: previaJogadorCampanhaResolver },
+    loadComponent: () =>
+      import('./modules/cena/paginas/previa-investigacao-jogador/previa-investigacao-jogador.page').then(
+        (pagina) => pagina.PreviaInvestigacaoJogador,
+      ),
+  },
+  {
     path: 'campanhas/:id/previa/:usuarioAlvoId',
     canActivate: [autenticacaoGuard],
     resolve: { previaJogador: previaJogadorCampanhaResolver },

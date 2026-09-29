@@ -1,0 +1,188 @@
+<div class="previa-investigacao">
+    <header class="previa-investigacao__cabecalho">
+        <a
+            app-botao-icone
+            tamanho="padrao"
+            [routerLink]="['/campanhas', campanhaId, 'previa', usuarioAlvoId]"
+            aria-label="Voltar à prévia da campanha"
+            [appTooltip]="'Voltar à prévia da campanha'"
+        >
+            <app-icone nome="voltar" />
+        </a>
+        <span class="previa-investigacao__indice">//</span>
+        <h1 class="previa-investigacao__titulo">
+            Investigação · {{ cena()?.nome ?? 'Cena atual' }}
+        </h1>
+        @if (cena(); as cenaAtual) {
+        <app-chip variante="sutil">{{ rotuloStatusCena(cenaAtual.status) }}</app-chip>
+        }
+        <span class="previa-investigacao__regua"></span>
+    </header>
+
+    <div class="previa-investigacao__aviso" role="status">
+        <app-icone nome="olho" />
+        Prévia de {{ nomeAlvo() }} · somente leitura
+    </div>
+
+    @if (carregandoCena()) {
+    <app-esqueleto
+        class="previa-investigacao__esqueleto"
+        role="status"
+        aria-label="Carregando Investigação"
+    />
+    } @else if (falhaCena()) {
+    <app-estado-vazio icone="alerta" titulo="Não foi possível carregar a Investigação.">
+        <button
+            estadoVazioAcao
+            app-botao
+            variante="secundario"
+            estilo="contorno"
+            tamanho="medio"
+            (click)="carregarCena()"
+        >
+            Tentar novamente
+        </button>
+    </app-estado-vazio>
+    } @else if (!ehInvestigacao()) {
+    <app-estado-vazio
+        icone="agente"
+        titulo="Nenhuma Investigação ativa."
+        linhaApoio="A prévia mostra apenas a Investigação em andamento."
+    >
+        <a
+            estadoVazioAcao
+            app-botao
+            variante="secundario"
+            estilo="contorno"
+            tamanho="medio"
+            [routerLink]="['/campanhas', campanhaId, 'previa', usuarioAlvoId]"
+            >Voltar à prévia</a
+        >
+    </app-estado-vazio>
+    } @else if (cena(); as cenaAtual) {
+    <app-documentos-cena-espectador
+        class="previa-investigacao__documentos"
+        [campanhaId]="campanhaId"
+        [cenaId]="cenaAtual.id"
+    />
+    <div class="previa-investigacao__linha">
+        <aside class="previa-investigacao__lateral" aria-label="Painel da Investigação">
+            <app-segmentado rotulo="Painel lateral da Investigação" [fluido]="true">
+                <button
+                    app-segmentado-item
+                    type="button"
+                    [ativo]="painelLateral() === 'esquadrao'"
+                    (click)="painelLateral.set('esquadrao')"
+                >
+                    Esquadrão
+                </button>
+                <button
+                    app-segmentado-item
+                    type="button"
+                    [ativo]="painelLateral() === 'rolagens'"
+                    (click)="painelLateral.set('rolagens')"
+                >
+                    Rolagens
+                </button>
+            </app-segmentado>
+            <div [hidden]="painelLateral() !== 'esquadrao'">
+                @if (previa(); as dados) {
+                <app-esquadrao-cena-jogador
+                    [membros]="dados.membros"
+                    [fichas]="dados.fichas"
+                    [usuarioObservadorId]="usuarioAlvoId"
+                    (abrirFicha)="abrirFicha($event)"
+                />
+                } @else {
+                <app-esqueleto class="previa-investigacao__esqueleto" />
+                }
+            </div>
+            <div class="previa-investigacao__rolagens" [hidden]="painelLateral() !== 'rolagens'">
+                @if (previa(); as dados) { @if (dados.rolagens.length) {
+                <ul class="previa-investigacao__lista-rolagens">
+                    @for (rolagem of dados.rolagens; track rolagem.id) {
+                    <li
+                        app-cartao-rolagem
+                        [rolagem]="rolagem"
+                        [autor]="autorRolagem(rolagem)"
+                        [somenteLeitura]="true"
+                    ></li>
+                    }
+                </ul>
+                } @else {
+                <app-estado-vazio
+                    icone="d20"
+                    titulo="Nenhuma rolagem ainda."
+                    linhaApoio="As rolagens visíveis para este jogador aparecem aqui."
+                    tamanho="compacto"
+                />
+                } }
+            </div>
+        </aside>
+
+        <section class="previa-investigacao__palco" aria-label="Ficha do jogador">
+            @if (fichaPropriaId() === null) {
+            <app-estado-vazio
+                icone="ficha"
+                titulo="Este jogador não tem ficha nesta campanha."
+                linhaApoio="O esquadrão e os documentos continuam disponíveis."
+            />
+            } @else if (fichaPropria(); as ficha) {
+            <app-ficha-campanha-card
+                [fichaId]="ficha.id"
+                [nome]="ficha.nome"
+                [cor]="ficha.cor"
+                [imagemUrl]="ficha.imagemUrl"
+                [dados]="ficha.dados"
+                [ajustavel]="false"
+                [podeRolar]="false"
+                [ehMestre]="false"
+                [mostrarTopo]="false"
+            />
+            } @else {
+            <app-esqueleto
+                class="previa-investigacao__esqueleto"
+                role="status"
+                aria-label="Carregando ficha"
+            />
+            }
+        </section>
+    </div>
+    }
+</div>
+
+<app-modal
+    [aberto]="fichaModalId() !== null"
+    [titulo]="fichaModal()?.nome ?? 'Ficha'"
+    (fechou)="fecharFichaModal()"
+>
+    @if (fichaModal(); as ficha) {
+    <app-ficha-campanha-card
+        [fichaId]="ficha.id"
+        [nome]="ficha.nome"
+        [cor]="ficha.cor"
+        [imagemUrl]="ficha.imagemUrl"
+        [dados]="ficha.dados"
+        [ajustavel]="false"
+        [podeRolar]="false"
+        [ehMestre]="false"
+    />
+    } @else if (falhaFichaModal()) {
+    <app-estado-vazio icone="alerta" titulo="Não foi possível abrir a ficha." tamanho="compacto" />
+    <button
+        app-botao
+        variante="secundario"
+        estilo="contorno"
+        tamanho="medio"
+        (click)="abrirFicha(fichaModalId()!)"
+    >
+        Tentar novamente
+    </button>
+    } @else {
+    <app-esqueleto
+        class="previa-investigacao__esqueleto"
+        role="status"
+        aria-label="Carregando ficha"
+    />
+    }
+</app-modal>

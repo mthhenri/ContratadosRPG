@@ -33,6 +33,7 @@ export class CartaoRolagem {
   readonly rolagem = input.required<RolagemResumoDto>();
   readonly autor = input.required<string>();
   readonly tempo = input<string | null>(null);
+  readonly somenteLeitura = input(false);
 
   private readonly sessao = inject(SessaoService);
   private readonly rolagemService = inject(RolagemService);
@@ -41,7 +42,9 @@ export class CartaoRolagem {
   protected readonly privada = computed(
     () => this.rolagem().visibilidade === RolagemVisibilidadeEnum.PRIVADA,
   );
-  protected readonly ehAdmin = computed(() => this.sessao.usuario()?.tipo === TipoUsuarioEnum.ADMIN);
+  protected readonly ehAdmin = computed(
+    () => !this.somenteLeitura() && this.sessao.usuario()?.tipo === TipoUsuarioEnum.ADMIN,
+  );
 
   /** Pede confirmação e exclui. Quem lista a rolagem a tira da lista por `rolagemExcluida$`. */
   protected async excluir(): Promise<void> {
