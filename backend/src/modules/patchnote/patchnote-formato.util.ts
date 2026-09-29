@@ -17,6 +17,7 @@ import {
  * versao: 1.1.0
  * data: 2026-09-29
  * titulo: Cenas e Biblioteca de documentos
+ * commit: 641a8529…   (opcional: o commit em que a versão foi fechada — o workflow de versão cria a tag)
  * ---
  *
  * ## Novidades
@@ -71,6 +72,7 @@ export function interpretarPatchnote(texto: string): ResultadoLeituraPatchnote {
   const versao = campos.get('versao') ?? '';
   const data = campos.get('data') ?? '';
   const titulo = campos.get('titulo') ?? '';
+  const commit = campos.get('commit');
   const conteudoMarkdown = correspondencia[2].trim();
 
   const erros: string[] = [];
@@ -82,6 +84,9 @@ export function interpretarPatchnote(texto: string): ResultadoLeituraPatchnote {
   }
   if (titulo.length === 0 || titulo.length > PATCHNOTE_TITULO_MAXIMO) {
     erros.push(`"titulo" deve ter de 1 a ${PATCHNOTE_TITULO_MAXIMO} caracteres.`);
+  }
+  if (commit !== undefined && !/^[0-9a-f]{7,40}$/.test(commit)) {
+    erros.push(`"commit" deve ser um hash git de 7 a 40 caracteres hexadecimais (recebido: "${commit}").`);
   }
   if (conteudoMarkdown.length === 0 || conteudoMarkdown.length > PATCHNOTE_CONTEUDO_MAXIMO) {
     erros.push(`O texto da nota deve ter de 1 a ${PATCHNOTE_CONTEUDO_MAXIMO} caracteres.`);

@@ -3103,8 +3103,8 @@ o abrir de `/patchnotes` apaga; no mobile vira o item "Novidades" do menu do per
 Os **patchnotes** são públicos e sem tabela: `patchnotes/<versao>.md` (front matter `versao`/`data`/
 `titulo` + Markdown com abertura, grupos `# PARA OS PLAYERS`/`# PARA O MESTRE`, blocos `## <emoji> Funcionalidade`
 e `# RESUMO…` final; os blocos de balanço Novidades/Melhorias/Correções seguem aceitos) e `patchnotes/indice.json` no
-armazenamento — **o R2 é a única fonte de verdade**; `docs/patchnotes/` é rascunho local ignorado
-pelo git. O backend (`PatchnoteService`, sem repository) serve `GET /patchnote` e
+armazenamento — as notas são **versionadas** em `docs/patchnotes/` (front matter com `commit:` nas retroativas) e o **R2 é a
+cópia servida**, publicada pelo workflow `versao.yml`. O backend (`PatchnoteService`, sem repository) serve `GET /patchnote` e
 `GET /patchnote/:versao` (`@Public()`) com cache em memória de 24 h (o deploy o zera; uma correção
 de nota sem deploy espera o TTL). A página `/patchnotes[/:versao]` renderiza com
 `renderizarMarkdownSeguro` e, para versão inexistente (404) e falha (503), usa o

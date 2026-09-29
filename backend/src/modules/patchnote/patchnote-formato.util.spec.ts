@@ -56,6 +56,18 @@ describe('interpretarPatchnote', () => {
   });
 });
 
+describe('interpretarPatchnote — commit opcional (versão automática)', () => {
+  it('aceita e ignora o commit no conteúdo devolvido', () => {
+    const resultado = interpretarPatchnote(NOTA.replace('titulo: "Cenas e Biblioteca"', 'titulo: Cenas\ncommit: 641a8529cf9020f4beb7307d131bc8ada2fbca8a'));
+    expect('patchnote' in resultado && Object.keys(resultado.patchnote)).toEqual(['versao', 'data', 'titulo', 'conteudoMarkdown']);
+  });
+
+  it.each(['zzzzzzz', '641a85', 'HEAD'])('recusa o commit %j', (commit) => {
+    const resultado = interpretarPatchnote(NOTA.replace('titulo: "Cenas e Biblioteca"', `titulo: Cenas\ncommit: ${commit}`));
+    expect('erros' in resultado && resultado.erros.join(' ')).toContain('"commit"');
+  });
+});
+
 describe('interpretarIndicePatchnotes', () => {
   it('trata arquivo ausente como índice vazio', () => {
     expect(interpretarIndicePatchnotes(null)).toEqual([]);

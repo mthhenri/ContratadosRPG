@@ -1,0 +1,55 @@
+name: Versão e patchnotes
+
+# A cada push em `master`: publica as notas de docs/patchnotes/ no R2 (quando alguma nota ou a versão do
+# package.json mudou) e cria a tag vX.Y.Z de cada versão que ainda não tem — a vigente no commit do push, as
+# retroativas no `commit:` do front matter da nota. Lógica em scripts/ci/publicar-versao.mjs.
+# Pré-requisitos (uma vez): os cinco segredos ARMAZENAMENTO_R2_* do repositório e "Read and write permissions"
+# em Settings → Actions → General. Ver docs/DEPLOY.md, seção "Versão e patchnotes".
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+    inputs:
+      forcar:
+        description: 'Republicar todas as notas mesmo sem mudança'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+# Um por vez (o índice do R2 é lido, alterado e regravado); um push seguinte espera, não cancela.
+concurrency:
+  group: versao-patchnotes
+  cancel-in-progress: false
+
+jobs:
+  publicar:
+    name: Publicar notas e criar tags
+    runs-on: ubuntu-latest
+    env:
+      ARMAZENAMENTO_PROVEDOR: r2
+      ARMAZENAMENTO_R2_ACCOUNT_ID: ${{ secrets.ARMAZENAMENTO_R2_ACCOUNT_ID }}
+      ARMAZENAMENTO_R2_ACCESS_KEY_ID: ${{ secrets.ARMAZENAMENTO_R2_ACCESS_KEY_ID }}
+      ARMAZENAMENTO_R2_SECRET_ACCESS_KEY: ${{ secrets.ARMAZENAMENTO_R2_SECRET_ACCESS_KEY }}
+      ARMAZENAMENTO_R2_BUCKET: ${{ secrets.ARMAZENAMENTO_R2_BUCKET }}
+      ARMAZENAMENTO_R2_URL_PUBLICA: ${{ secrets.ARMAZENAMENTO_R2_URL_PUBLICA }}
+      GITHUB_EVENT_BEFORE: ${{ github.event.before }}
+    steps:
+      - name: Checkout (histórico e tags completos)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # postinstall compila o pacote shared, de que o script de publicação depende.
+      - name: Install dependencies
+        run: npm install
+
+      - name: Publicar notas e criar tags
+        run: node scripts/ci/publicar-versao.mjs ${{ inputs.forcar && '--forcar' || '' }}

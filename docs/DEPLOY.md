@@ -26,7 +26,8 @@ Cloudflare Pages           Render (Web Service)          Supabase
 - **Deploy nativo, sem Actions.** O Render (Web Service conectado ao Git) e a Cloudflare Pages
   (projeto conectado ao Git) reimplantam automaticamente a cada push em `master`. O único
   workflow do GitHub que resta é a **CI** (`.github/workflows/ci.yml`) — lint + testes em PR;
-  ela **não** dispara nem bloqueia deploy.
+  ela **não** dispara nem bloqueia deploy. O outro é o de **versão e patchnotes** (`versao.yml`,
+  seção abaixo): publica notas e cria tags, também sem tocar no deploy.
 - **Backend compilado.** O `shared` é compilado no `postinstall` (`npm install`), e o backend
   roda `nest build` → `node dist/main` (`npm run start:prod`). Nada de `ts-node` em produção.
 - **URL da API fixa no build.** A Cloudflare builda o Angular direto do Git, então a URL do
@@ -185,6 +186,29 @@ conecta ao Git e reimplanta no push.
    (`https://<seu-projeto>.pages.dev`, sem barra no fim). Se ajustar, o Render reinicia sozinho.
 
 ---
+
+## Versão e patchnotes (GitHub Actions)
+
+A cada push em `master`, o workflow `.github/workflows/versao.yml` roda `scripts/ci/publicar-versao.mjs`:
+
+1. confere que a versão do `package.json` da raiz tem nota em `docs/patchnotes/<versao>.md` (senão falha);
+2. se alguma nota ou a versão mudou, **publica todas as notas no R2** (`patchnotes/<versao>.md` +
+   `indice.json`) com `npm run patchnotes:publicar` — só depois disso vem a etapa seguinte;
+3. cria e envia a tag `vX.Y.Z` de cada versão que ainda não tem: a vigente no commit do push, as
+   retroativas no `commit:` do front matter da nota.
+
+**Configuração (uma vez), em GitHub → Settings:**
+
+- **Secrets and variables → Actions → Repository secrets:** `ARMAZENAMENTO_R2_ACCOUNT_ID`,
+  `ARMAZENAMENTO_R2_ACCESS_KEY_ID`, `ARMAZENAMENTO_R2_SECRET_ACCESS_KEY`, `ARMAZENAMENTO_R2_BUCKET` e
+  `ARMAZENAMENTO_R2_URL_PUBLICA` — os mesmos valores do backend no Render (seção 2). A chave precisa de
+  **escrita** no bucket (a do backend já grava avatares, então serve).
+- **Actions → General → Workflow permissions → Read and write** (o workflow cria tags). Se o repositório
+  tiver regra de proteção de tags, permita o `github-actions[bot]` criar `v*`.
+
+**Publicação manual / reserva:** *Actions → Versão e patchnotes → Run workflow* (a opção "Republicar
+todas as notas" força mesmo sem mudança). **Cuidado com o cache:** o backend guarda o índice por 24 h;
+se o Render subir *antes* de o workflow publicar, reinicie o serviço para a nota aparecer.
 
 ## 5. Pós-deploy
 

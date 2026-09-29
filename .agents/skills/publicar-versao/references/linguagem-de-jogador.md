@@ -41,6 +41,8 @@ Texto.
 Um parágrafo com os maiores impactos, para quem não quiser ler tudo.
 ```
 
+- `commit: <hash>` (opcional, no front matter) é o commit em que a versão foi fechada: só nas notas
+  **retroativas**, para o workflow criar a tag no lugar certo. A versão vigente não leva `commit:`.
 - `# Título` abre um **grupo** (público ou assunto). Os usuais são `PARA OS PLAYERS`, `PARA O MESTRE` e o
   `RESUMO…` final; um grupo só sai se não houver conteúdo para ele (ex.: versão só de correção).
 - `## Título` abre um **bloco de funcionalidade**, com um emoji no começo (é o estilo da casa).

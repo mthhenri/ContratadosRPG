@@ -1,5 +1,24 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-29 — patchnotes-versao-sistema (automação): merge em master publica as notas e cria as tags
+
+O push das tags a partir do ambiente do agente foi recusado (403 do proxy de egresso), e o autor pediu
+para automatizar. Decisão: as notas **voltam para o git** (`docs/patchnotes/` saiu do `.gitignore`) e o
+R2 passa a ser a cópia servida — troca consciente da regra anterior ("R2 como única fonte", publicação
+local). Workflow `.github/workflows/versao.yml` (push em `master` e disparo manual) roda
+`scripts/ci/publicar-versao.mjs`: confere que a versão do `package.json` tem nota, publica todas as notas
+no R2 se algo mudou e **só então** cria as tags. As retroativas (`v1.0.0`…`v1.3.0`) nascem do campo
+opcional `commit:` no front matter da nota (validado como hash hexadecimal); a vigente, do commit do push.
+Concorrência serializada (o índice do R2 é lido-alterado-regravado). Skill reescrita: sem tag local, o merge
+faz o resto.
+
+Verificado em clones descartáveis com remoto bare: primeiro push cria as cinco tags e publica; reexecução
+não faz nada; versão sem nota falha antes de publicar; achado só no teste: com clone sem tags o script não
+via as do remoto e o push era recusado — passou a fazer `git fetch --tags` antes de decidir. **Não
+testável aqui:** a execução no GitHub Actions em si. **Depende do autor:** cadastrar os 5 segredos
+`ARMAZENAMENTO_R2_*` e liberar "Read and write" em Actions (`docs/DEPLOY.md`); risco residual conhecido: se o
+Render subir antes de o workflow publicar, o índice vazio fica em cache por 24 h (reiniciar o serviço).
+
 ## 2026-09-29 — patchnotes-versao-sistema (revisão do autor): formato de escrita mais rico
 
 O autor enviou um modelo de patchnotes (públicos "Para os players" / "Para o mestre", seções por

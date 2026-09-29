@@ -1,86 +1,78 @@
 ---
 name: publicar-versao
 description: >
-  Fecha e publica uma versão do sistema: decidir o número (v1.2.0), escrever os patchnotes / notas
-  de versão / changelog em linguagem de jogador, atualizar a versão nos pacotes, criar a tag e
-  publicar a nota no R2. Use ao pedir "publicar versão", "lançar versão", "fechar release",
-  "subir versão", "escrever patchnotes", "atualizar a nota da versão", "bumpar a versão" ou
-  "a versão da topbar está errada" — mesmo sem a palavra "versão" se o pedido for contar aos
-  usuários o que mudou. Ação externa (push de tag, escrita no R2): sempre confirma com o autor.
+  Fecha e publica uma versão do sistema: decidir o número (v1.5.0), escrever os patchnotes / notas
+  de versão / changelog em linguagem de jogador, atualizar a versão nos pacotes e deixar o merge em
+  master criar a tag e publicar a nota no R2. Use ao pedir "publicar versão", "lançar versão",
+  "fechar release", "subir versão", "escrever patchnotes", "atualizar a nota da versão", "bumpar a
+  versão", "corrigir uma nota já publicada" ou "a versão da topbar está errada" — mesmo sem a
+  palavra "versão" se o pedido for contar aos usuários o que mudou. O que sai do repositório
+  (tag, R2) é feito pelo workflow após o merge: o agente só prepara e confirma com o autor.
 ---
 
-# Publicar versão — número, nota, tag, R2
+# Publicar versão — número, nota, merge
 
-> A decisão de produto vive em `docs/specs/done/patchnotes-versao-sistema.spec.md` (ou em `active/`
-> se a spec ainda estiver aberta) — em conflito, a spec vence e esta skill é corrigida. Esta skill
-> carrega a **ordem de execução**, o **checklist** e as **armadilhas**; não repete o formato nem
-> as decisões.
+> A decisão de produto vive em `docs/specs/done/patchnotes-versao-sistema.spec.md` (ou em `active/` se
+> ainda aberta) — em conflito, a spec vence e esta skill é corrigida. Aqui: **ordem de execução**,
+> **checklist** e **armadilhas**.
 
 ## Onde cada coisa vive
 
-- **Versão (fonte única):** `version` do `package.json` da raiz. `npm run versao:sincronizar`
-  alinha `shared`/`backend`/`frontend`, o `package-lock.json` e gera `shared/src/versao.ts`
-  (`VERSAO_SISTEMA`, exibida na topbar e em `GET /health`). Um teste de `shared` falha se divergir.
-- **Nota:** rascunho local em `docs/patchnotes/<versao>.md` (**ignorado pelo git**); a fonte de
-  verdade é o R2 (`patchnotes/<versao>.md` + `patchnotes/indice.json`).
-- **Publicação:** `npm run patchnotes:publicar -- [--dry-run] <arquivo.md>...`
-  (`backend/tools/patchnotes/publicar.ts`).
-- **Formato da nota e limites:** `backend/src/modules/patchnote/patchnote-formato.util.ts` e
-  `shared/src/validators/patchnote.validators.ts`.
+- **Versão (fonte única):** `version` do `package.json` da raiz. `npm run versao:sincronizar` alinha
+  `shared`/`backend`/`frontend`, o lock e gera `shared/src/versao.ts` (`VERSAO_SISTEMA`, na topbar e em
+  `GET /health`). Um teste de `shared` falha se divergir.
+- **Nota:** `docs/patchnotes/<versao>.md`, **versionada no git**; o R2 é a cópia servida ao público
+  (`patchnotes/<versao>.md` + `indice.json`). Formato: `references/linguagem-de-jogador.md`.
+- **Automação:** `.github/workflows/versao.yml` (+ `scripts/ci/publicar-versao.mjs`), a cada push em
+  `master`: publica as notas no R2 se alguma nota ou a versão mudou e cria a tag `vX.Y.Z` que falta —
+  a vigente no commit do push, as retroativas no `commit:` do front matter. Publica **antes** de taguear.
+- **Manual (reserva):** `npm run patchnotes:publicar -- [--dry-run] <arquivo.md>` com `ARMAZENAMENTO_R2_*`.
 
 ## Ordem de execução
 
-1. **Situar.** Árvore limpa? Branch certa? Última versão: `git describe --tags --abbrev=0 --match 'v*'`.
-   Tags retroativas: `v1.0.0` = `306a9714` (01/09/2026), `v1.1.0` = `641a8529`, `v1.2.0` = `09381c10`,
-   `v1.3.0` = `8a405ec0`; a `v1.4.0` é o commit da versão. Sem tag alcançável, pare e pergunte.
-2. **O que mudou.** `git log <última-tag>..HEAD --no-merges --format='%ad %s' --date=short` e, para o
-   porquê, `docs/context/HISTORY.md` (procure por data ou código da task — não leia o arquivo inteiro).
+1. **Situar.** Árvore limpa, branch certa. Última versão: `git describe --tags --abbrev=0 --match 'v*'`
+   (sem tag local: última nota em `docs/patchnotes/`).
+2. **O que mudou.** `git log <última-tag>..HEAD --no-merges --format='%ad %s' --date=short` e, para o porquê,
+   `docs/context/HISTORY.md` (por data ou código da task — não leia o arquivo inteiro).
 3. **Não acumule um mês numa versão só.** Publique a cada bloco coerente de entregas (na prática, semanal
-   ou por marco). Se o intervalo desde a última tag for grande, proponha **várias** versões retroativas
-   por fronteira natural de commits — como foi feito de `1.0.0` a `1.4.0` — em vez de um salto único.
-4. **Propor o número e pedir confirmação.** Funcionalidade nova visível → *minor*; só correção →
-   *patch*; quebra de uso existente → *major*. **Nunca suba o major sem o autor pedir.** Confirme
-   o número antes de escrever qualquer coisa.
-5. **Redigir a nota** em `docs/patchnotes/<versao>.md`, no formato de `references/linguagem-de-jogador.md`
-   (front matter, grupos Para os players / Para o mestre / Resumo, blocos por funcionalidade, tradução
-   técnico → jogador). Data = hoje.
+   ou por marco). Intervalo grande: proponha **várias** versões retroativas por fronteira de commits, cada
+   nota com `commit:` do último commit da fronteira.
+4. **Propor o número e pedir confirmação.** Funcionalidade nova visível → *minor*; só correção → *patch*;
+   quebra de uso existente → *major*. **Nunca suba o major sem o autor pedir.**
+5. **Redigir a nota** em `docs/patchnotes/<versao>.md` (grupos Para os players / Para o mestre / Resumo,
+   blocos por funcionalidade). Data = hoje. Datar cada item pelo commit para cair na versão certa.
 6. **Mostrar ao autor o texto e esperar aprovação.** Ele revisa a nota, não o commit.
-7. **Versão nos pacotes.** Edite `version` na raiz → `npm run versao:sincronizar` → confira
-   `git diff --stat` (4 `package.json`, lock, `shared/src/versao.ts`) → `npm run build --workspace=shared`
-   e `npm run test --workspace=shared`.
-8. **Commit e tag.** `chore(versao): vX.Y.Z` com o trailer de coautoria (`CLAUDE.md`); tag anotada
-   `git tag -a vX.Y.Z -m "vX.Y.Z"` **no commit da versão**; confira com `git show vX.Y.Z --stat`.
-9. **Confirmar antes de sair do repositório.** Peça o OK do autor para: `git push origin vX.Y.Z` e
-   para escrever no R2. Sem OK explícito para cada um, pare e relate.
-10. **Simular.** `npm run patchnotes:publicar -- --dry-run docs/patchnotes/<versao>.md` — leia a linha
-   `Destino:`. Ela precisa dizer `R2 (bucket …)`; `disco local` significa que `ARMAZENAMENTO_PROVEDOR`
-   está `local` e **nada** irá para produção.
-11. **Publicar** (mesmo comando sem `--dry-run`) com as variáveis `ARMAZENAMENTO_PROVEDOR=r2` e
-    `ARMAZENAMENTO_R2_*` no ambiente do comando. Credencial nunca vai para arquivo versionado, log
-    ou mensagem de commit; sem elas a ferramenta recusa rodar.
-12. **Conferir de verdade.** `GET <api>/patchnote/<versao>` e a página `/patchnotes/<versao>` (skill
-    `verify` no ambiente local). O índice tem que listar a versão em primeiro.
-13. **Registrar.** Bloco novo no topo de `docs/context/HISTORY.md` (versão, resumo, o que foi
-    conferido e o que ficou pendente) e, se houver, a linha de versão vigente em `CONTEXT.md`.
+7. **Versão nos pacotes.** Edite `version` na raiz → `npm run versao:sincronizar` → confira `git diff --stat`
+   (4 `package.json`, lock, `shared/src/versao.ts`) → `npm run build --workspace=shared` e
+   `npm run test --workspace=shared`.
+8. **Validar a nota.** `npm run patchnotes:publicar -- --dry-run docs/patchnotes/<versao>.md` (front matter,
+   data, limites) e `node scripts/ci/publicar-versao.mjs --dry-run` com `GITHUB_SHA=$(git rev-parse HEAD)`
+   — mostra se publicaria e quais tags criaria.
+9. **Commit** `chore(versao): vX.Y.Z` (nota + versão) com o trailer de coautoria (`CLAUDE.md`). **Sem tag
+   local**: a tag nasce no workflow, no commit que chegar ao `master`.
+10. **PR para `master`** (só quando o autor pedir). No merge, o workflow roda: conferir a execução em Actions,
+    `GET <api>/patchnote/<versao>` e a página `/patchnotes/<versao>`.
+11. **Registrar.** Bloco novo no topo de `docs/context/HISTORY.md` (versão, resumo, o que foi conferido).
 
 ## Checklist da nota (antes de mostrar ao autor)
 
 - [ ] Nenhum nome de arquivo, rota, tabela, migration, sigla (`P-0NN`, `I-0NN`, `m9-13`) nem termo técnico.
 - [ ] Cada item diz o que o jogador/mestre **passa a poder fazer** ou **deixa de sofrer**.
-- [ ] Explica em vez de só listar; vários commits do mesmo recurso viram **um** bloco; grupo ou bloco vazio não entra.
+- [ ] Explica em vez de só listar; vários commits do mesmo recurso viram **um** bloco; grupo vazio não entra.
 - [ ] Tem o parágrafo de abertura com o `**Período:**` e o `# RESUMO…` final.
-- [ ] Título ≤ 120 caracteres, descritivo (não "Atualização de setembro").
-- [ ] `versao` = a da raiz; `data` = `AAAA-MM-DD` real; front matter válido (`--dry-run` prova).
+- [ ] Título ≤ 120 caracteres, descritivo; `versao` = a da raiz; `data` real; `commit:` só em nota retroativa.
 
 ## Armadilhas de campo
 
-- **Cache de 24 h no backend.** Uma correção de nota *sem* deploy só aparece quando o cache vence;
-  nota nova junto de deploy aparece na hora (processo novo). Localmente, reinicie a API.
-- **`docs/patchnotes/` não é versionada.** Perdeu o rascunho? Ele não está perdido: a nota está no R2.
-  Para editar uma versão publicada, reconstrua o arquivo a partir de `GET /patchnote/<versao>`
-  (front matter + `conteudoMarkdown`) e republique — o mesmo arquivo **substitui** a versão.
-- **Caminhos do comando** valem a partir de onde você digitou (o script usa `INIT_CWD`).
-- **Publicar várias versões de uma vez** é permitido (`a.md b.md`); todas são validadas antes de
-  gravar qualquer uma, e o índice é gravado por último.
-- **Versão divergente** entre pacotes/`versao.ts`: rode `npm run versao:sincronizar`, nunca edite `versao.ts`.
-- **Tag no commit errado:** tag ainda não enviada se apaga e recria; depois do push, pergunte antes.
+- **Sem nota, sem versão.** Se o `package.json` sobe e falta `docs/patchnotes/<versao>.md`, o workflow falha
+  (`::error::`) antes de publicar ou taguear.
+- **Cache de 24 h no backend.** Nota corrigida sem deploy só aparece quando o cache vence; nota nova cai junto
+  do deploy, mas **se o Render subir antes do workflow publicar**, o índice vazio fica em cache por 24 h —
+  reinicie o serviço. Localmente, reinicie a API.
+- **Corrigir uma nota publicada:** edite o `.md`, PR, merge — o workflow republica (substitui a versão).
+- **Segredos e permissão:** sem os cinco `ARMAZENAMENTO_R2_*` em Actions (ou com "Read and write" desligado)
+  o workflow falha; credencial nunca em arquivo versionado, log ou commit.
+- **Tag retroativa** exige `commit:` na nota e o commit precisa existir no repositório; a tag já criada não é
+  movida pelo workflow (apagar/recriar é ação do autor).
+- **Versão divergente:** rode `npm run versao:sincronizar`, nunca edite `versao.ts`.
+- **Caminhos** de `patchnotes:publicar` valem a partir de onde você digitou (usa `INIT_CWD`).

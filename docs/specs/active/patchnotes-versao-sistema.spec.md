@@ -15,8 +15,10 @@ uma versão.
 
 1. **Patchnotes vivem no R2 como Markdown, sem tabela, e o R2 é a única fonte de verdade.**
    É conteúdo editorial, não relacional. Um arquivo por versão (`patchnotes/<versao>.md`) mais um
-   `patchnotes/indice.json` com a lista. A pasta local `docs/patchnotes/` é só rascunho/base de
-   envio: fica no `.gitignore` e nada nela é versionado (decisão do autor, 2026-09-29).
+   `patchnotes/indice.json` com a lista. **Revisto em 2026-09-29 (automação):** as notas passam a ser
+   **versionadas** em `docs/patchnotes/` e o R2 é a cópia servida, publicada pelo workflow
+   `versao.yml` a cada push em `master` — que também cria as tags. A regra anterior (pasta ignorada,
+   R2 como única fonte, publicação local) foi trocada por isso a pedido do autor.
 2. **Cache de 24 h no backend** (em memória, por processo). O deploy sobe uma revisão nova e
    esvazia o cache, então a nota publicada junto do deploy aparece na hora; só uma correção de nota
    *sem* deploy espera até 24 h. Para o navegador, `Cache-Control: public, max-age=300` — curto de
@@ -106,8 +108,8 @@ uma versão.
    ela (`git log` + `docs/context/HISTORY.md`); (b) propor o bump conforme a decisão 5 e **pedir
    confirmação do autor**; (c) redigir o patchnote no formato da decisão 3 — traduzindo o
    histórico técnico para linguagem de jogador; (d) atualizar `version` nos quatro `package.json`
-   (e o lock); (e) gravar o rascunho em `docs/patchnotes/<versao>.md` (ignorado pelo git); (f) commit da
-   mudança de versão e tag `v<versao>`;
+   (e o lock); (e) gravar a nota em `docs/patchnotes/<versao>.md` (versionada); (f) commit da
+   mudança de versão — a tag é criada pelo workflow no merge `v<versao>`;
    (g) publicar no R2 (script `patchnotes:publicar`, que sobe o `.md` e regenera o
    `indice.json`; roda **localmente**, com credencial de escrita nas variáveis do autor, porque o
    `.md` não está no git e portanto um passo do `cloudbuild.yaml` não o enxerga); (h) registrar em
@@ -122,8 +124,7 @@ uma versão.
 ## Critérios de Aceite
 
 1. `git grep -n '"version"' -- '*package.json'` mostra `1.4.0` nos quatro pacotes; as tags
-   `v1.0.0`…`v1.4.0` existem nas fronteiras da decisão 6; `git check-ignore docs/patchnotes/x.md` confirma
-   a pasta ignorada.
+   `v1.0.0`…`v1.4.0` existem nas fronteiras da decisão 6.
 2. `GET /health` devolve a versão; a interface mostra a mesma versão do `package.json`.
 3. `GET /patchnote` e `GET /patchnote/:versao` respondem **sem token**; segunda chamada dentro
    das 24 h não lê o R2 (teste com provedor espião).

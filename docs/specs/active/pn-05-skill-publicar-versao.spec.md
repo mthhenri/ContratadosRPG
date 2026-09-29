@@ -12,7 +12,8 @@ patchnotes retroativos reais: `v1.0.0` a `v1.4.0` (fronteiras na decisão 6 do g
 1. `backend/tools/patchnotes/publicar.ts` + `npm run patchnotes:publicar -- <arquivo.md>`: valida o front matter, grava `patchnotes/<versao>.md` e atualiza `patchnotes/indice.json` (lê o índice atual do provedor, insere/substitui a versão e regrava ordenado); recusa rodar em `r2` sem as variáveis `ARMAZENAMENTO_R2_*`.
 2. Skill `publicar-versao` nas duas cópias idênticas (`.claude/skills/` e `.agents/skills/`), no contrato comum de skills do `CLAUDE.md`: descoberta da última tag, proposta de bump com confirmação, redação em linguagem de jogador, `versao:sincronizar`, commit+tag, publicação e registro em `HISTORY.md`; push da tag e publicação no R2 sempre confirmados com o autor.
 3. Patchnotes `v1.0.0` a `v1.4.0` (início → `306a9714`; depois em blocos até o HEAD) redigidos em `docs/patchnotes/` (ignorada pelo git), revisados pelo autor e publicados.
-4. Tags `v1.0.0` a `v1.4.0` criadas.
+4. Tags `v1.0.0` a `v1.4.0`: criadas pelo workflow (item 5), a partir do `commit:` de cada nota retroativa e do commit do push para a vigente.
+5. Workflow `.github/workflows/versao.yml` + `scripts/ci/publicar-versao.mjs` (revisão do autor, 2026-09-29): a cada push em `master`, publica as notas de `docs/patchnotes/` (versionadas) no R2 quando algo mudou e cria as tags que faltam — publicar antes de taguear; falha se a versão do `package.json` não tem nota. Configuração e cuidados em `docs/DEPLOY.md`.
 
 ## Critérios de Aceite
 
