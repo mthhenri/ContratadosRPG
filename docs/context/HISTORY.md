@@ -1,5 +1,13 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-29 — patchnotes-versao-sistema (fecho): validado em produção
+
+Depois do workflow publicar as notas no R2 e do trigger do Cloud Build criar uma revisão nova do Cloud Run
+(zera o cache de 24 h por instância), o autor conferiu em produção: `/health` devolve a versão, `/patchnote`
+lista as cinco versões e a página `/patchnotes` carrega com o chip na topbar. A validação por uso da skill
+`publicar-versao` (pn-05) fica coberta por esse ciclo real. Specs `patchnotes-versao-sistema` e `pn-05`
+movidas para `docs/specs/done/`.
+
 ## 2026-09-29 — patchnotes-versao-sistema (automação): merge em master publica as notas e cria as tags
 
 O push das tags a partir do ambiente do agente foi recusado (403 do proxy de egresso), e o autor pediu
