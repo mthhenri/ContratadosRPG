@@ -53,10 +53,9 @@ uma versão.
    a partir do `package.json`; `environment` não duplica o número à mão.
 3. `GET /health` passa a devolver `{ status, versao }` (`versao` lida do `package.json` no build do
    backend). Permite ver o que está no ar e detectar front/back dessincronizados.
-4. Exibir a versão na interface conforme a proposta escolhida no POC visual (ver "Perguntas
-   abertas", item 1). Recomendação: chip na topbar ao lado da marca, com ponto de "versão nova"
+4. Exibir a versão na interface conforme a proposta **B** aprovada no POC visual: chip na topbar ao lado da marca, com ponto de "versão nova"
    (comparada com a última visita em `localStorage`), e item "Novidades" no menu do perfil no
-   mobile; o chip linka para `/patchnotes`. `design-fidelity` fixa o análogo aprovado.
+   mobile, onde a marca some da barra; o chip linka para `/patchnotes`. `design-fidelity` fixa o análogo aprovado.
 
 ### pn-02 — Armazenamento de texto no R2
 
@@ -81,8 +80,14 @@ uma versão.
 
 1. Rota pública (lista de versões + detalhe da versão), renderizando o Markdown com `marked`
    **e sanitizando o HTML** antes de exibir — o conteúdo vem de fora do bundle.
-2. Estados de carregando, vazio e erro com os primitivos de `shared/ui/` (biblioteca de
-   componentes é obrigatória; parar e perguntar se faltar algum).
+2. Estados, conforme o POC aprovado: **carregando** (esqueleto do primitivo de `shared/ui/`),
+   **versão inexistente** (404) e **falha ao carregar** (503). Os dois últimos reaproveitam o
+   documento de contenção da tela de Acesso negado (`modules/acesso-negado/`: cabeçalho
+   `// PROTOCOLO DE CONTENÇÃO` com código, faixa de classificação, bloco da Fundação, registro
+   expurgado, rodapé com botões), extraído para um componente compartilhado em vez de copiado. O
+   tom é SCP, mas cada estado diz numa frase direta o que houve e o que fazer ("Tentar
+   novamente", "Ver todas as versões"). Biblioteca de componentes é obrigatória; se faltar um
+   primitivo, parar e perguntar ao autor.
 3. Gate visual completo (`design-fidelity` + `verify`): `1920×1080` e `360×800`, todos os estados.
 
 ### pn-05 — Skill `publicar-versao`
@@ -143,13 +148,10 @@ uma versão.
 
 ## Perguntas abertas
 
-Fechadas em 2026-09-29: versão-base (`1.0.0` + `1.1.0`), fonte única no R2 com `docs/patchnotes/`
-ignorada, publicação local.
-
-1. **Onde exibir a versão** — escolher entre as três propostas do POC: A (rodapé global), B (chip
-   na topbar, recomendada), C (só no menu do perfil e no login).
-2. **Estados da página `/patchnotes`** no POC (carregando, versão inexistente, falha) — aprovar ou
-   ajustar junto com o layout.
+Nenhuma. Fechadas em 2026-09-29: versão-base (`1.0.0` + `1.1.0`), fonte única no R2 com
+`docs/patchnotes/` ignorada, publicação local, **posição B** (chip na topbar, item no menu do
+perfil no mobile), layout da página `/patchnotes` e os estados no formato de "Acesso negado".
+Próximo passo: quebrar em `pn-01`…`pn-05` (uma spec por task) antes de implementar.
 
 ## Riscos e Mitigação
 
