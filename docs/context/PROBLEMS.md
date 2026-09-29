@@ -47,10 +47,10 @@
 
 ### P-090 — Identidade de ficha oculta exposta no encontro/eventos e por concessão · `ABERTO` · permissões/tempo-real
 
-- **Sintoma:** B/espectador recebem nome/fichaId de agente oculto no encontro; evento amplo de visibilidade envia fichaId; concessão permite listar/abrir oculta de terceiro.
+- **Sintoma:** B/espectador recebem nome/fichaId de agente oculto no encontro; concessão permite listar/abrir oculta de terceiro. (Eventos amplos de campanha — FO-02 — corrigidos em `fix-ficha-oculta-eventos-campanha`, 2026-09-29.)
 - **Causa:** recorte de encontro preserva identidade; broadcasts não recortam ocultação; leitura/listagem aceitam concessão sem `oculta`, diferente da carteirinha.
 - **Contorno:** nenhum garante ausência da identidade; esconder números não satisfaz o contrato.
-- **Correção:** backlog `fix-ficha-oculta-identidade-encontro`, `fix-ficha-oculta-eventos-campanha`, `fix-ficha-oculta-concessao-e-leitura`; a última exige decidir precedência da concessão histórica antes da implementação.
+- **Correção:** backlog `fix-ficha-oculta-identidade-encontro`, `fix-ficha-oculta-concessao-e-leitura`; a última exige decidir precedência da concessão histórica antes da implementação.
 - **Desde:** confirmado em 2026-09-29 por REST/WS e código; [evidências e limites](../auditorias/ficha-oculta-todos-consumidores.md). Auditoria ainda aberta, sem correção nesta tarefa.
 
 ### P-089 — Caderno flutuante cobre a coluna de ações na tela dividida · `CONTORNADO` · frontend/caderno

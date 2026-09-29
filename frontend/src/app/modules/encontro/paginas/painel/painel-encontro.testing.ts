@@ -295,6 +295,14 @@ export function configurarPainel(opcoes: OpcoesDoPainel = {}) {
   const cenaAlterada$ = new Subject<CenaAlteradaDto>();
   const cenaDocumentoAlterado$ = new Subject<{ campanhaId: number; cenaId: number }>();
   const fichaAlterada$ = new Subject<FichaAlteradaDto>();
+  const fichaCriada$ = new Subject<{ campanhaId: number }>();
+  const fichaVisibilidadeAlterada$ = new Subject<{ campanhaId: number }>();
+  const fichaRemovidaDaCampanha$ = new Subject<{ campanhaId: number }>();
+  const fichaRecortesAlterados$ = new Subject<{
+    campanhaId: number;
+    fichas: boolean;
+    membros: boolean;
+  }>();
   const rolagemExcluida$ = new Subject<RolagemExcluidaDto>();
   const reconexao$ = new Subject<void>();
   const tempoReal = {
@@ -311,6 +319,10 @@ export function configurarPainel(opcoes: OpcoesDoPainel = {}) {
     cenaAlterada$,
     cenaDocumentoAlterado$,
     fichaAlterada$,
+    fichaCriada$,
+    fichaVisibilidadeAlterada$,
+    fichaRemovidaDaCampanha$,
+    fichaRecortesAlterados$,
     encontroIniciativaPedido$,
     rolagemRegistrada$,
     rolagemExcluida$,
@@ -471,6 +483,10 @@ export function configurarPainel(opcoes: OpcoesDoPainel = {}) {
     cenaAlterada$,
     cenaDocumentoAlterado$,
     fichaAlterada$,
+    fichaCriada$,
+    fichaVisibilidadeAlterada$,
+    fichaRemovidaDaCampanha$,
+    fichaRecortesAlterados$,
     tempoReal,
     fichaService,
     campanhaService,

@@ -435,7 +435,7 @@ describe('CampanhaPreviaJogador', () => {
 
       for (const disparar of [
         () => membroEntrou$.next({ campanhaId: CAMPANHA_ID, usuarioId: 99 }),
-        () => fichaRemovidaDaCampanha$.next({ fichaId: 5, campanhaId: CAMPANHA_ID }),
+        () => fichaRemovidaDaCampanha$.next({ campanhaId: CAMPANHA_ID }),
         () => fichaRecortesAlterados$.next({ campanhaId: CAMPANHA_ID, fichas: true, membros: true }),
       ]) {
         campanhaProjecaoService.recuperarPreviaJogador.mockClear();

@@ -294,6 +294,31 @@ describe('EncontroPainelDadosService', () => {
       expect(cenaService.recuperarCena).toHaveBeenCalledWith(CENA_ID);
     });
 
+    // fix-ficha-oculta-eventos-campanha: os invalidadores chegam sem `fichaId`; a grade refaz o GET
+    // no próprio recorte e a ficha que ficou oculta some sem recarregar a tela.
+    it('invalidadores de ficha da campanha refazem a listagem; outra campanha e só membros não', () => {
+      const {
+        fichaService,
+        fichaCriada$,
+        fichaVisibilidadeAlterada$,
+        fichaRemovidaDaCampanha$,
+        fichaRecortesAlterados$,
+      } = montar();
+      fichaService.listarFichas.mockClear();
+
+      fichaVisibilidadeAlterada$.next({ campanhaId: CAMPANHA_ID });
+      fichaRemovidaDaCampanha$.next({ campanhaId: CAMPANHA_ID });
+      fichaCriada$.next({ campanhaId: CAMPANHA_ID });
+      fichaRecortesAlterados$.next({ campanhaId: CAMPANHA_ID, fichas: true, membros: false });
+      expect(fichaService.listarFichas).toHaveBeenCalledTimes(4);
+      expect(fichaService.listarFichas).toHaveBeenCalledWith(CAMPANHA_ID);
+
+      fichaService.listarFichas.mockClear();
+      fichaVisibilidadeAlterada$.next({ campanhaId: CAMPANHA_ID + 1 });
+      fichaRecortesAlterados$.next({ campanhaId: CAMPANHA_ID, fichas: false, membros: true });
+      expect(fichaService.listarFichas).not.toHaveBeenCalled();
+    });
+
     it('montar o painel depois de uma reconexão já ocorrida não duplica a carga inicial (P-083)', () => {
       const { cenaService } = montar();
 

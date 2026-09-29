@@ -1889,8 +1889,8 @@ describe('FichaService', () => {
         usuarioDono,
       );
 
+      // fix-ficha-oculta-eventos-campanha: o invalidador não identifica a ficha para a sala ampla.
       expect(campanhaGateway.emitirFichaVisibilidadeAlterada).toHaveBeenCalledWith({
-        fichaId: 5,
         campanhaId: 3,
       });
     });
@@ -2356,7 +2356,6 @@ describe('FichaService', () => {
       expect(fichaRepositorio.atribuirCampanha).toHaveBeenCalledWith({ id: 5, campanhaId: null });
       expect(campanhaGateway.emitirFichaCriada).not.toHaveBeenCalled();
       expect(campanhaGateway.emitirFichaRemovidaDaCampanha).toHaveBeenCalledWith({
-        fichaId: 5,
         campanhaId: 3,
       });
       expect(resultado).toEqual({ id: 5, campanhaId: null });
@@ -2399,10 +2398,56 @@ describe('FichaService', () => {
       await service.atribuirCampanha({ id: 5, campanhaId: 9 }, usuarioDono);
 
       expect(campanhaGateway.emitirFichaRemovidaDaCampanha).toHaveBeenCalledWith({
-        fichaId: 5,
         campanhaId: 3,
       });
       expect(campanhaGateway.emitirFichaCriada).toHaveBeenCalledWith(fichaMovida);
+    });
+
+    it('vincular ficha já oculta não emite o resumo — só o invalidador sem identidade na sala nova', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue({ ...fichaSolta, oculta: true });
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+      fichaRepositorio.atribuirCampanha.mockResolvedValue({
+        id: 5,
+        campanhaId: 3,
+        usuarioId: usuarioDono.sub,
+        nome: 'Agente Oculto',
+        dados: criarDados(),
+      });
+
+      await service.atribuirCampanha({ id: 5, campanhaId: 3 }, usuarioDono);
+
+      expect(campanhaGateway.emitirFichaCriada).not.toHaveBeenCalled();
+      expect(campanhaGateway.emitirFichaRecortesAlterados).toHaveBeenCalledWith({
+        campanhaId: 3,
+        fichas: true,
+        membros: true,
+      });
+    });
+
+    it('mover ficha oculta avisa as duas campanhas sem nenhum identificador da ficha', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue({ ...fichaPersistida, oculta: true });
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+      fichaRepositorio.atribuirCampanha.mockResolvedValue({
+        id: 5,
+        campanhaId: 9,
+        usuarioId: usuarioDono.sub,
+        nome: 'Agente Oculto',
+        dados: criarDados(),
+      });
+
+      await service.atribuirCampanha({ id: 5, campanhaId: 9 }, usuarioDono);
+
+      expect(campanhaGateway.emitirFichaCriada).not.toHaveBeenCalled();
+      expect(campanhaGateway.emitirFichaRemovidaDaCampanha).toHaveBeenCalledWith({ campanhaId: 3 });
+      expect(campanhaGateway.emitirFichaRecortesAlterados).toHaveBeenCalledWith({
+        campanhaId: 9,
+        fichas: true,
+        membros: true,
+      });
     });
 
     it('lança ResourceNotFoundException("Membro") quando o dono não é membro da campanha-alvo', async () => {
@@ -2485,8 +2530,14 @@ describe('FichaService', () => {
         usuarioId: criaturaSolta.usuarioId,
       });
       expect(resultado).toEqual({ id: 5, campanhaId: 3 });
-      // Criatura é invisível por padrão (§14) — o mesmo motivo de `criarFichaCriatura`.
+      // Criatura é invisível por padrão (§14) — o mesmo motivo de `criarFichaCriatura`. O mestre
+      // (outras abas) se atualiza pelo invalidador sem identidade, só de fichas.
       expect(campanhaGateway.emitirFichaCriada).not.toHaveBeenCalled();
+      expect(campanhaGateway.emitirFichaRecortesAlterados).toHaveBeenCalledWith({
+        campanhaId: 3,
+        fichas: true,
+        membros: false,
+      });
     });
 
     it('lança UnauthorizedAccessException ao atribuir uma criatura a uma campanha onde o dono é só membro comum', async () => {

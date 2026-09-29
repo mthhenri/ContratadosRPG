@@ -546,11 +546,11 @@ export interface FichaSalaSairDto {
 
 /**
  * Evento de tempo real que invalida a listagem autorizada de fichas de uma campanha. O payload é
- * deliberadamente mínimo: não revela nem o novo estado de visibilidade nem dados da ficha a quem
- * está na sala ampla `campanha:<id>`.
+ * deliberadamente mínimo: não revela o novo estado de visibilidade, dados da ficha nem **qual**
+ * ficha mudou (fix-ficha-oculta-eventos-campanha — o `fichaId` identificaria a ficha oculta de
+ * terceiro para toda a sala ampla `campanha:<id>`). Cada cliente refaz o GET no próprio recorte.
  */
 export interface FichaVisibilidadeAlteradaDto {
-  readonly fichaId: number;
   readonly campanhaId: number;
 }
 
@@ -568,11 +568,11 @@ export interface FichaCampanhaRecortesAlteradosDto {
 /**
  * Evento de tempo real: uma ficha saiu de uma campanha (voltou ao acervo solto ou foi movida para
  * outra) — `campanhaId` é a campanha que ela **deixou**, a sala que recebe o evento. Payload
- * mínimo de propósito (nenhum dado da ficha), então vale para qualquer tipo, inclusive
- * criatura/NPC, que não têm `ficha:criada` justamente por causa do recorte de visibilidade.
+ * mínimo de propósito (nenhum dado da ficha, nem o `fichaId` — fix-ficha-oculta-eventos-campanha:
+ * a ficha que sai pode ser oculta ou criatura não revelada), então vale para qualquer tipo. O
+ * cliente refaz o GET autorizado e descobre no próprio recorte o que deixou de existir.
  */
 export interface FichaCampanhaRemovidaDto {
-  readonly fichaId: number;
   readonly campanhaId: number;
 }
 

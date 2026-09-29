@@ -40,10 +40,10 @@ description: >
 
 | Emissor pós-mutação | Evento e sala | Consumidor frontend |
 |---|---|---|
-| `FichaService.criarFicha`/atribuir | `ficha:criada` → `campanha:<id>` (resumo) | `campanha/detalhe` atualiza lista |
-| `FichaService.atribuirCampanha` (saída de campanha: desatribuir ou mover) | `ficha:removida-da-campanha` → `campanha:<id>` que a ficha deixou (só ids, qualquer tipo) | `campanha/detalhe` e `previa-jogador` refazem o recorte |
+| `FichaService.criarFicha`/atribuir (`emitirFichaEntrouNaCampanha`) | `ficha:criada` → `campanha:<id>` (resumo) só para JOGADOR visível; oculta/criatura/NPC → `ficha:recortes-alterados` sem identidade | `campanha/detalhe`, `previa-jogador` e grade da cena sem iniciativa refazem o recorte |
+| `FichaService.atribuirCampanha` (saída de campanha: desatribuir ou mover) | `ficha:removida-da-campanha` → `campanha:<id>` que a ficha deixou (só `campanhaId`, qualquer tipo) | `campanha/detalhe`, `previa-jogador` e grade da cena sem iniciativa refazem o recorte |
 | `FichaService.alterarFicha` e ajustes | `ficha:alterada` → `ficha:<id>` (sem campos privados) | `ficha/paginas/visualizar` e `visualizar-criatura` refazem a ficha; `campanha/detalhe` refaz o resumo correspondente |
-| Alteração de visibilidade | `ficha:visibilidade-alterada` → `campanha:<id>` | `campanha/detalhe` refaz o recorte autorizado |
+| Alteração de visibilidade | `ficha:visibilidade-alterada` → `campanha:<id>` (só `campanhaId`) | `campanha/detalhe`, `previa-jogador` e grade da cena sem iniciativa refazem o recorte autorizado |
 | `FichaService.revogarAcesso` | `ficha:acesso-revogado` → `ficha:<id>` | páginas de visualização redirecionam o revogado |
 | `CampanhaService.entrarCampanha` | `membro:entrou` → `campanha:<id>` | `campanha/detalhe` refaz membros/fichas |
 | Estado ou inventário de campanha | `campanha:estado-alterado` / `campanha:inventario-alterado` → `campanha:<id>` | `campanha/detalhe` atualiza estado ou refaz inventário |

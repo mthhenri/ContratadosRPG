@@ -1,5 +1,55 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-29 — fix-ficha-oculta-eventos-campanha: eventos da sala ampla sem identidade de ficha oculta
+
+Origem: FO-02 da auditoria de ficha oculta. A sala `campanha:<id>` mistura quem não lê a ficha, e
+três caminhos entregavam identidade de ficha oculta a terceiros: `ficha:visibilidade-alterada` e
+`ficha:removida-da-campanha` levavam `fichaId`, e vincular uma ficha já oculta chamava
+`emitirFichaCriada` com o resumo completo (nome, dono, Vida/Energia).
+
+Decisão: **invalidador sem identidade**, não emissão por observador — nenhum consumidor usava o
+`fichaId` (todos só refaziam o GET). `FichaVisibilidadeAlteradaDto` e `FichaCampanhaRemovidaDto`
+perderam o `fichaId` (só `campanhaId`; contratos OpenAPI regenerados). A decisão do que trafega
+na entrada de ficha foi para a service (`FichaService.emitirFichaEntrouNaCampanha`, usado por
+`criarFicha` e `atribuirCampanha`): JOGADOR visível → `ficha:criada` como antes; ficha oculta ou
+criatura/NPC → `ficha:recortes-alterados` `{ campanhaId, fichas: true, membros: <é jogador> }`. O
+estado usado é o lido antes da mutação (atribuir não muda tipo/ocultação). Efeito colateral
+deliberado: atribuir criatura a uma campanha agora avisa as outras abas do mestre (antes, nada).
+O gateway só transporta. `ficha:recortes-alterados` continua sem `fichaId`; a inferência residual
+é "alguma ficha desta campanha mudou", sem qual — a mesma já aceita para as flags.
+
+Frontend: a grade da cena sem iniciativa (`EncontroPainelDadosService`) só refazia a lista em
+`ficha:alterada` das salas de ficha que ela tinha ingressado — quem entra, sai ou muda de
+visibilidade não passa por lá. Passou a assinar também `ficha:criada`, `ficha:visibilidade-alterada`,
+`ficha:removida-da-campanha` e `ficha:recortes-alterados` com `fichas: true` da campanha, refazendo
+o GET autorizado. Detalhe e prévia já refaziam o recorte nesses eventos; só os dublês de teste
+mudaram de payload. Reconexão já refazia a carga nas três telas (`reconexao$`), sem mudança.
+
+Testes: backend focado `campanha.gateway.spec.ts` + `ficha.service.spec.ts` — 255 passaram
+(gateway agora afirma destinatário exato — só `campanha:<id>`, nunca a sala do espectador — e
+payload exato sem `fichaId`; service ganhou vínculo de oculta, movimentação de oculta e criatura
+com invalidador). Frontend focado (painel, painel sem iniciativa mestre, detalhe, prévia) — 119
+passaram. Suítes completas: shared 773/773; backend 814 passaram e 1 falha em
+`openapi.document.spec.ts`; frontend 2557 passaram e 2 falhas em `encontro-painel-dados.service.spec.ts`
+("trocar de cena limpa o foco…", "resposta antiga de foco…"). As três falhas são de trabalho
+**concorrente não commitado** de outra sessão (`fix-documentos-investigacao-selecao-e-leitura`: testes
+e DTOs de cena novos que não existem em HEAD nem nos hunks desta tarefa); esta tarefa commitou só os
+próprios hunks. `npm run lint`: 0 erros (avisos preexistentes).
+
+Verificação ao vivo (skill `verify`, API 3100/SPA 4300 do autor, contas novas `evt_oculta_*`/
+`ui_oculta_*`): cliente Socket.IO real de mestre, dono, outro jogador e espectador na campanha,
+percorrendo criar visível → ocultar → Vida na oculta → desocultar → criar solta e ocultar → vincular
+oculta → mover oculta para outra campanha → retirar visível. B recebeu em todos os passos da oculta
+só `{ campanhaId }` / flags — **0 eventos com `fichaId`, `id` ou nome**; S não recebeu nenhum
+`ficha:*`; M/A receberam os mesmos invalidadores e o GET de M listou a oculta vinculada, o de B não.
+Visual (Playwright, `1920×1080` e `360×800`, análogo = as próprias telas existentes, sem mudança de
+layout): B no Esquadrão do detalhe viu o card do agente de A sumir ao ocultar e voltar ao desocultar;
+o mestre na grade da cena de investigação viu a ficha oculta aparecer ao ser vinculada e sumir ao ser
+retirada — tudo sem recarregar (sentinela `window.__sentinela` preservada) e sem overflow horizontal.
+**Não observado ao vivo:** reconexão (exigiria derrubar o backend compartilhado do autor; coberta pelos
+testes existentes de `reconexao$`). Fora do escopo e intocados: rolagem pública de oculto (D-01),
+identidade no encontro (FO-01) e concessão (FO-03); P-090 segue aberto por eles.
+
 ## 2026-09-29 — jogador-acesso-somente-cena-atual: o jogador só lê a cena ativa
 
 Decisão do autor: o jogador deixa de ter o histórico de cenas previsto na m7-22 — lê **só a cena

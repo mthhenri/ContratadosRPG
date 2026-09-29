@@ -55,7 +55,7 @@ Correção encaminhada: [fix-ficha-oculta-identidade-encontro](../specs/backlog/
 
 `emitirFichaCriada` 365–388 não avalia `oculta`. `atribuirCampanha` 1245–1247 chama-o para JOGADOR ao vincular uma ficha já oculta, enviando nome, dono e recursos para todos os jogadores. `emitirFichaRemovidaDaCampanha` 335–338 envia fichaId mesmo se sempre esteve oculta. Um resumo enviado e depois descartado na UI continua sendo exposição de payload.
 
-Correção encaminhada: [fix-ficha-oculta-eventos-campanha](../specs/backlog/fix-ficha-oculta-eventos-campanha.spec.md).
+Correção encaminhada: [fix-ficha-oculta-eventos-campanha](../specs/done/fix-ficha-oculta-eventos-campanha.spec.md) — **corrigido em 2026-09-29**: invalidadores sem `fichaId` e vínculo de oculta sem resumo, observado com sockets reais M/A/B/S (ver `HISTORY.md`).
 
 ## FO-03 — Concessão anterior supera ocultação em leitura e listagem
 

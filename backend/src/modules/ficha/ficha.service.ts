@@ -201,7 +201,8 @@ export class FichaService {
       dados: this.aplicarPresetIniciativa(this.aplicarSnapshotDeMaximos(dto.dados)),
     });
 
-    this.campanhaGateway.emitirFichaCriada(fichaCriada);
+    // A ficha nasce sempre visível (`oculta` só muda por `alterarFicha`).
+    this.emitirFichaEntrouNaCampanha(fichaCriada, { tipo: TipoFichaEnum.JOGADOR, oculta: false });
     return fichaCriada;
   }
 
@@ -512,7 +513,6 @@ export class FichaService {
       fichaEncontrada.oculta !== fichaAlterada.oculta
     ) {
       this.campanhaGateway.emitirFichaVisibilidadeAlterada({
-        fichaId: fichaAlterada.id,
         campanhaId: fichaAlterada.campanhaId,
       });
     }
@@ -983,7 +983,6 @@ export class FichaService {
     this.emitirRecortesAlterados(fichaEncontrada, fichaAlterada, TipoFichaEnum.CRIATURA);
     if (fichaEncontrada.oculta !== fichaAlterada.oculta) {
       this.campanhaGateway.emitirFichaVisibilidadeAlterada({
-        fichaId: fichaAlterada.id,
         // Criatura sempre pertence a uma campanha (sem "avulsa" — entregável 2); `campanhaId`
         // chega `number | null` no tipo do repositório (agnóstico de tipo de ficha), mas nunca
         // é `null` em runtime aqui.
@@ -992,6 +991,34 @@ export class FichaService {
     }
 
     return this.paraCriaturaAlterada(fichaAlterada);
+  }
+
+  /**
+   * Avisa a sala ampla `campanha:<id>` que uma ficha passou a pertencer à campanha (criação ou
+   * atribuição). A decisão de **o que** trafega é daqui, não do gateway
+   * (fix-ficha-oculta-eventos-campanha): só uma ficha de JOGADOR **não oculta** — a que todo membro
+   * já vê no Esquadrão — vai como resumo em `ficha:criada`. Ficha oculta e criatura/NPC (invisível
+   * por padrão, §14) viram só o invalidador sem identidade `ficha:recortes-alterados`: mestre e
+   * dono refazem o GET e a encontram no próprio recorte, e o terceiro refaz e não acha nada. Resta
+   * a inferência de que "alguma ficha mudou" — mesma já aceita para as flags desse evento.
+   */
+  private emitirFichaEntrouNaCampanha(
+    ficha: FichaCriadaDto,
+    visibilidade: { readonly tipo: TipoFichaEnum; readonly oculta: boolean },
+  ): void {
+    if (ficha.campanhaId === null) {
+      return;
+    }
+    const ehJogador = visibilidade.tipo === TipoFichaEnum.JOGADOR;
+    if (ehJogador && !visibilidade.oculta) {
+      this.campanhaGateway.emitirFichaCriada(ficha);
+      return;
+    }
+    this.campanhaGateway.emitirFichaRecortesAlterados({
+      campanhaId: ficha.campanhaId,
+      fichas: true,
+      membros: ehJogador,
+    });
   }
 
   /**
@@ -1202,11 +1229,12 @@ export class FichaService {
    * desatribuem (`validarPermissaoEdicao`, mesma regra de edição — §14); atribuir a uma campanha
    * (`campanhaId !== null`) exige que o **dono da ficha** seja membro dela (`validarMembroAlvo`,
    * mesma checagem da concessão de acesso — m3-04); `campanhaId: null` desatribui sem checagem
-   * extra. Ao entrar numa campanha nova, emite `ficha:criada` (resumo) na sala dela — os membros
-   * conectados veem a ficha aparecer, mesmo evento de `criarFicha` (m3-05); ao sair de uma
-   * campanha (desatribuir ou mover para outra), emite `ficha:removida-da-campanha` (só os ids) na
-   * sala que ela deixou, para qualquer tipo de ficha — os membros conectados veem a ficha sumir
-   * do Esquadrão sem recarregar. `ResourceNotFoundException` se a ficha não
+   * extra. Ao entrar numa campanha nova, avisa a sala dela por `emitirFichaEntrouNaCampanha` — o
+   * mesmo caminho de `criarFicha` (m3-05): resumo em `ficha:criada` só para JOGADOR visível,
+   * invalidador sem identidade para oculta/criatura/NPC; ao sair de uma
+   * campanha (desatribuir ou mover para outra), emite `ficha:removida-da-campanha` (só o
+   * `campanhaId`, sem `fichaId`) na sala que ela deixou, para qualquer tipo de ficha — os membros
+   * conectados refazem o recorte e a ficha some do Esquadrão sem recarregar. `ResourceNotFoundException` se a ficha não
    * existir; `UnauthorizedAccessException` se o autor não puder editá-la ou o dono não for membro
    * (JOGADOR) ou mestre (CRIATURA/NPC) da campanha-alvo.
    *
@@ -1214,7 +1242,8 @@ export class FichaService {
    * (§14); atribuí-la exige a mesma trava, senão um jogador membro-comum bastaria para "adotar"
    * uma Ameaça alheia. **Sem emitir `ficha:criada`** para os dois tipos: o evento monta o resumo
    * na forma de jogador e transmite para a sala `campanha:<id>` inteira sem checar permissão — a
-   * mesma razão já documentada em `criarFichaCriatura` (invisível por padrão, §14).
+   * mesma razão já documentada em `criarFichaCriatura` (invisível por padrão, §14); vai só o
+   * invalidador `ficha:recortes-alterados`.
    */
   async atribuirCampanha(
     dto: FichaCampanhaInternoAtribuirDto,
@@ -1243,12 +1272,15 @@ export class FichaService {
     }
 
     const fichaAtribuida = await this.fichaRepositorio.atribuirCampanha(dto);
-    if (dto.campanhaId !== null && dto.campanhaId !== fichaEncontrada.campanhaId && ehJogador) {
-      this.campanhaGateway.emitirFichaCriada(fichaAtribuida);
+    if (dto.campanhaId !== null && dto.campanhaId !== fichaEncontrada.campanhaId) {
+      // Atribuir não muda tipo nem ocultação: a decisão usa o estado lido antes da mutação.
+      this.emitirFichaEntrouNaCampanha(fichaAtribuida, {
+        tipo: fichaEncontrada.tipo ?? TipoFichaEnum.JOGADOR,
+        oculta: fichaEncontrada.oculta,
+      });
     }
     if (fichaEncontrada.campanhaId !== null && dto.campanhaId !== fichaEncontrada.campanhaId) {
       this.campanhaGateway.emitirFichaRemovidaDaCampanha({
-        fichaId: fichaAtribuida.id,
         campanhaId: fichaEncontrada.campanhaId,
       });
     }

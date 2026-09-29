@@ -533,28 +533,26 @@ describe('CampanhaGateway', () => {
 
       gateway.emitirFichaRecortesAlterados(evento);
 
-      expect(paraSala).toHaveBeenCalledWith('campanha:3');
-      expect(emitir).toHaveBeenCalledWith('ficha:recortes-alterados', evento);
+      expect(paraSala.mock.calls).toEqual([['campanha:3']]);
+      expect(emitir.mock.calls).toEqual([
+        ['ficha:recortes-alterados', { campanhaId: 3, fichas: true, membros: false }],
+      ]);
     });
 
-    it('emite ficha:visibilidade-alterada na sala da campanha com payload mínimo', () => {
-      gateway.emitirFichaVisibilidadeAlterada({ fichaId: 5, campanhaId: 3 });
+    // fix-ficha-oculta-eventos-campanha: destinatário = só a sala cheia (nunca a do espectador) e
+    // payload **exato** sem identidade — um `fichaId` aqui identificaria a ficha oculta de terceiro.
+    it('emite ficha:visibilidade-alterada só na sala cheia da campanha, sem identificar a ficha', () => {
+      gateway.emitirFichaVisibilidadeAlterada({ campanhaId: 3 });
 
-      expect(paraSala).toHaveBeenCalledWith('campanha:3');
-      expect(emitir).toHaveBeenCalledWith('ficha:visibilidade-alterada', {
-        fichaId: 5,
-        campanhaId: 3,
-      });
+      expect(paraSala.mock.calls).toEqual([['campanha:3']]);
+      expect(emitir.mock.calls).toEqual([['ficha:visibilidade-alterada', { campanhaId: 3 }]]);
     });
 
-    it('emite ficha:removida-da-campanha na sala da campanha que a ficha deixou, só com os ids', () => {
-      gateway.emitirFichaRemovidaDaCampanha({ fichaId: 5, campanhaId: 3 });
+    it('emite ficha:removida-da-campanha só na sala que a ficha deixou, sem identificar a ficha', () => {
+      gateway.emitirFichaRemovidaDaCampanha({ campanhaId: 3 });
 
-      expect(paraSala).toHaveBeenCalledWith('campanha:3');
-      expect(emitir).toHaveBeenCalledWith('ficha:removida-da-campanha', {
-        fichaId: 5,
-        campanhaId: 3,
-      });
+      expect(paraSala.mock.calls).toEqual([['campanha:3']]);
+      expect(emitir.mock.calls).toEqual([['ficha:removida-da-campanha', { campanhaId: 3 }]]);
     });
 
     it('omite historia do broadcast de ficha:alterada — sala mista, sem distinção por socket (m3-50)', () => {

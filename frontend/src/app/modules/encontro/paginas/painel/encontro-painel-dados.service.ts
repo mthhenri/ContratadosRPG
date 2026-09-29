@@ -1,7 +1,7 @@
 import { DestroyRef, Injectable, computed, effect, inject, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
-import { EMPTY, Observable, Subject, catchError, filter, finalize, switchMap, tap } from 'rxjs';
+import { EMPTY, Observable, Subject, catchError, filter, finalize, merge, switchMap, tap } from 'rxjs';
 
 import type { CenaDocumentoResumoDto, CenaRecuperadaDto } from '@contratados-rpg/shared/dtos/cena';
 import type {
@@ -382,6 +382,24 @@ export class EncontroPainelDadosService {
         filter((ficha) => this.salasFichaAtivas.has(ficha.id)),
         takeUntilDestroyed(),
       )
+      .subscribe({ next: () => this.recarregarFichas() });
+    // Entrada, saída e (des)ocultação de ficha (fix-ficha-oculta-eventos-campanha): chegam só como
+    // invalidadores da campanha, sem `fichaId` — `ficha:alterada` não serve, porque quem perde a
+    // visão não está (ou deixa de poder estar) na sala da ficha. O GET no próprio recorte decide o
+    // que aparece; a ficha que ficou oculta some da grade sem recarregar.
+    merge(
+      this.tempoRealService.fichaCriada$.pipe(filter((ficha) => ficha.campanhaId === this.campanhaId)),
+      this.tempoRealService.fichaVisibilidadeAlterada$.pipe(
+        filter((evento) => evento.campanhaId === this.campanhaId),
+      ),
+      this.tempoRealService.fichaRemovidaDaCampanha$.pipe(
+        filter((evento) => evento.campanhaId === this.campanhaId),
+      ),
+      this.tempoRealService.fichaRecortesAlterados$.pipe(
+        filter((evento) => evento.campanhaId === this.campanhaId && evento.fichas),
+      ),
+    )
+      .pipe(takeUntilDestroyed())
       .subscribe({ next: () => this.recarregarFichas() });
 
     // Nome da campanha — só precisa vir uma vez, não a cada `carregar()` (a rota troca de encontro,

@@ -330,8 +330,9 @@ export class CampanhaGateway implements OnGatewayConnection, OnGatewayDisconnect
 
   /**
    * Avisa a campanha que uma ficha saiu dela (`ficha:removida-da-campanha`) — o cliente refaz o GET
-   * autorizado e a ficha some do Esquadrão. Payload só com os ids: vale para qualquer tipo de
-   * ficha, sem carregar dado da ficha para a sala ampla.
+   * autorizado e a ficha some do Esquadrão. Payload só com o `campanhaId` (sem `fichaId`, que
+   * identificaria uma ficha oculta ou criatura não revelada — fix-ficha-oculta-eventos-campanha):
+   * vale para qualquer tipo de ficha, sem carregar identidade para a sala ampla.
    */
   emitirFichaRemovidaDaCampanha(evento: FichaCampanhaRemovidaDto): void {
     this.servidor
@@ -341,7 +342,8 @@ export class CampanhaGateway implements OnGatewayConnection, OnGatewayDisconnect
 
   /**
    * Invalida o recorte de fichas de toda a campanha após uma mudança real de visibilidade. O
-   * cliente refaz o GET autorizado; o evento não informa se a ficha foi ocultada ou exibida.
+   * cliente refaz o GET autorizado; o evento não informa se a ficha foi ocultada ou exibida, nem
+   * qual ficha foi (sem `fichaId` — fix-ficha-oculta-eventos-campanha).
    */
   emitirFichaVisibilidadeAlterada(evento: FichaVisibilidadeAlteradaDto): void {
     this.servidor
@@ -350,8 +352,11 @@ export class CampanhaGateway implements OnGatewayConnection, OnGatewayDisconnect
   }
 
   /**
-   * Emite `ficha:criada` na sala `campanha:<id>` (§9). Chamado por `FichaService.criarFicha` após a
-   * ficha ser persistida — os membros conectados à campanha veem a nova ficha aparecer.
+   * Emite `ficha:criada` na sala `campanha:<id>` (§9). Chamado pela `FichaService` após a ficha
+   * ser persistida ou atribuída — os membros conectados à campanha veem a nova ficha aparecer.
+   * **Só para ficha de JOGADOR visível**: a service decide (`emitirFichaEntrouNaCampanha`) e troca
+   * ficha oculta ou criatura/NPC pelo invalidador sem identidade `ficha:recortes-alterados`; o
+   * gateway só transporta o que recebe (fix-ficha-oculta-eventos-campanha).
    *
    * O payload é só o **resumo** (`FichaResumoDto` — o mesmo recorte da listagem, §10.4), **nunca o
    * `dados`**: a sala `campanha:<id>` inclui qualquer membro, mas a visualização do documento da ficha

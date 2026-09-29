@@ -474,7 +474,7 @@ describe('CampanhaDetalheDadosService', () => {
     });
     fichaService.listarFichas.mockClear();
 
-    fichaRemovidaDaCampanha$.next({ fichaId: 5, campanhaId: CAMPANHA_ID });
+    fichaRemovidaDaCampanha$.next({ campanhaId: CAMPANHA_ID });
 
     expect(fichaService.listarFichas).toHaveBeenCalledWith(CAMPANHA_ID);
   });

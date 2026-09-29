@@ -292,6 +292,11 @@ Idênticos ao padrão de referência do autor (ver `CONVENTIONS.md`):
     Evento: `ficha:alterada`.
   - `campanha:<id>` — mestre/jogador. Eventos: `ficha:criada`, `ficha:removida-da-campanha`, `membro:entrou`,
     `campanha:membro-papel-alterado`, `campanha:inventario-alterado`, `caderno-esquadrao:*`.
+    A sala mistura quem não lê a ficha: nenhum evento de ficha nela identifica ficha oculta ou
+    criatura/NPC. `ficha:criada` (resumo) só sai para ficha de jogador visível; entrada de ficha
+    oculta/criatura, saída e mudança de visibilidade vão como invalidadores só com `campanhaId`
+    (`ficha:recortes-alterados`, `ficha:removida-da-campanha`, `ficha:visibilidade-alterada`) e
+    cada cliente refaz o GET no próprio recorte.
   - `campanha:<id>:espectador` (m8-02) — só `ESPECTADOR`, sala própria e separada da de
     mestre/jogador. Recebe só o que é explicitamente encaminhado às duas salas (hoje, só
     `rolagem:registrada` pública) — nunca os eventos de ficha/inventário/caderno/gestão de membro

@@ -2,7 +2,7 @@
 
 > **Auditoria de ficha oculta em andamento:** [matriz e evidências](../auditorias/ficha-oculta-todos-consumidores.md).
 > Spec em `active/`, exclusivamente investigativa. Três divergências confirmadas viraram specs
-> de correção em backlog (encontro, eventos, concessão/leitura); nenhum código corrigido.
+> de correção; a de eventos (FO-02) está feita, encontro e concessão/leitura seguem em backlog.
 > Faltam cenários ao vivo após restabelecer a API: revogação/reconexão, prévias, leitor/cache e
 > observação em 1920×1080/360×800. Decisões de rolagem pública, médias e concessão no relatório.
 
@@ -2313,8 +2313,11 @@ moram na página porque no painel do jogador o toggle está **fora** do card (co
 enquanto o teste de atributo e o dano continuam sendo rolados de dentro dele.
 O controle relacional de visibilidade da ficha completa pede confirmação antes de persistir: fica
 compacto junto ao avatar no desktop e migra para o menu de ações no mobile. Mudanças reais de
-`oculta` em ficha vinculada emitem `ficha:visibilidade-alterada` na sala da campanha; o detalhe
-refaz o recorte REST autorizado, fazendo a ficha sumir ou reaparecer para jogadores sem F5.
+`oculta` em ficha vinculada emitem `ficha:visibilidade-alterada` na sala da campanha — só com
+`campanhaId`, como `ficha:removida-da-campanha`; vincular ficha já oculta (ou criatura) não emite o
+resumo `ficha:criada`, só o invalidador `ficha:recortes-alterados` (`FichaService.
+emitirFichaEntrouNaCampanha`). Detalhe, prévia e a grade da cena sem iniciativa refazem o recorte
+REST autorizado, fazendo a ficha sumir ou reaparecer sem F5.
 Na visualização completa, o menu de dono/mestre oferece **Remover da campanha** somente para ficha
 vinculada; a desatribuição é direta e retorna ao acervo após o backend confirmar.
 

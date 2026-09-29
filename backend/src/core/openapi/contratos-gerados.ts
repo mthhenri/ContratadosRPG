@@ -4432,19 +4432,15 @@ export const schemasContratosPublicos = {
     "FichaVisibilidadeAlteradaDto": {
         "type": "object",
         "properties": {
-            "fichaId": {
-                "type": "number"
-            },
             "campanhaId": {
                 "type": "number"
             }
         },
         "required": [
-            "fichaId",
             "campanhaId"
         ],
         "additionalProperties": false,
-        "description": "Evento de tempo real que invalida a listagem autorizada de fichas de uma campanha. O payload é\ndeliberadamente mínimo: não revela nem o novo estado de visibilidade nem dados da ficha a quem\nestá na sala ampla `campanha:<id>`."
+        "description": "Evento de tempo real que invalida a listagem autorizada de fichas de uma campanha. O payload é\ndeliberadamente mínimo: não revela o novo estado de visibilidade, dados da ficha nem **qual**\nficha mudou (fix-ficha-oculta-eventos-campanha — o `fichaId` identificaria a ficha oculta de\nterceiro para toda a sala ampla `campanha:<id>`). Cada cliente refaz o GET no próprio recorte."
     },
     "FichaCampanhaRecortesAlteradosDto": {
         "type": "object",
@@ -4470,19 +4466,15 @@ export const schemasContratosPublicos = {
     "FichaCampanhaRemovidaDto": {
         "type": "object",
         "properties": {
-            "fichaId": {
-                "type": "number"
-            },
             "campanhaId": {
                 "type": "number"
             }
         },
         "required": [
-            "fichaId",
             "campanhaId"
         ],
         "additionalProperties": false,
-        "description": "Evento de tempo real: uma ficha saiu de uma campanha (voltou ao acervo solto ou foi movida para\noutra) — `campanhaId` é a campanha que ela **deixou**, a sala que recebe o evento. Payload\nmínimo de propósito (nenhum dado da ficha), então vale para qualquer tipo, inclusive\ncriatura/NPC, que não têm `ficha:criada` justamente por causa do recorte de visibilidade."
+        "description": "Evento de tempo real: uma ficha saiu de uma campanha (voltou ao acervo solto ou foi movida para\noutra) — `campanhaId` é a campanha que ela **deixou**, a sala que recebe o evento. Payload\nmínimo de propósito (nenhum dado da ficha, nem o `fichaId` — fix-ficha-oculta-eventos-campanha:\na ficha que sai pode ser oculta ou criatura não revelada), então vale para qualquer tipo. O\ncliente refaz o GET autorizado e descobre no próprio recorte o que deixou de existir."
     },
     "FichaAcessosListarDto": {
         "type": "object",
