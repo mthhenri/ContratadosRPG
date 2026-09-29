@@ -31,31 +31,35 @@ description: >
 ## Ordem de execução
 
 1. **Situar.** Árvore limpa? Branch certa? Última versão: `git describe --tags --abbrev=0 --match 'v*'`.
-   Versões históricas: `v1.0.0` = `306a9714` (fim de 01/09/2026). Sem tag alcançável, pare e pergunte.
+   Tags retroativas: `v1.0.0` = `306a9714` (01/09/2026), `v1.1.0` = `641a8529`, `v1.2.0` = `09381c10`,
+   `v1.3.0` = `8a405ec0`; a `v1.4.0` é o commit da versão. Sem tag alcançável, pare e pergunte.
 2. **O que mudou.** `git log <última-tag>..HEAD --no-merges --format='%ad %s' --date=short` e, para o
    porquê, `docs/context/HISTORY.md` (procure por data ou código da task — não leia o arquivo inteiro).
-3. **Propor o número e pedir confirmação.** Funcionalidade nova visível → *minor*; só correção →
+3. **Não acumule um mês numa versão só.** Publique a cada bloco coerente de entregas (na prática, semanal
+   ou por marco). Se o intervalo desde a última tag for grande, proponha **várias** versões retroativas
+   por fronteira natural de commits — como foi feito de `1.0.0` a `1.4.0` — em vez de um salto único.
+4. **Propor o número e pedir confirmação.** Funcionalidade nova visível → *minor*; só correção →
    *patch*; quebra de uso existente → *major*. **Nunca suba o major sem o autor pedir.** Confirme
    o número antes de escrever qualquer coisa.
-4. **Redigir a nota** em `docs/patchnotes/<versao>.md`, no formato de `references/linguagem-de-jogador.md`
+5. **Redigir a nota** em `docs/patchnotes/<versao>.md`, no formato de `references/linguagem-de-jogador.md`
    (front matter, blocos Novidades/Melhorias/Correções, tradução técnico → jogador). Data = hoje.
-5. **Mostrar ao autor o texto e esperar aprovação.** Ele revisa a nota, não o commit.
-6. **Versão nos pacotes.** Edite `version` na raiz → `npm run versao:sincronizar` → confira
+6. **Mostrar ao autor o texto e esperar aprovação.** Ele revisa a nota, não o commit.
+7. **Versão nos pacotes.** Edite `version` na raiz → `npm run versao:sincronizar` → confira
    `git diff --stat` (4 `package.json`, lock, `shared/src/versao.ts`) → `npm run build --workspace=shared`
    e `npm run test --workspace=shared`.
-7. **Commit e tag.** `chore(versao): vX.Y.Z` com o trailer de coautoria (`CLAUDE.md`); tag anotada
+8. **Commit e tag.** `chore(versao): vX.Y.Z` com o trailer de coautoria (`CLAUDE.md`); tag anotada
    `git tag -a vX.Y.Z -m "vX.Y.Z"` **no commit da versão**; confira com `git show vX.Y.Z --stat`.
-8. **Confirmar antes de sair do repositório.** Peça o OK do autor para: `git push origin vX.Y.Z` e
+9. **Confirmar antes de sair do repositório.** Peça o OK do autor para: `git push origin vX.Y.Z` e
    para escrever no R2. Sem OK explícito para cada um, pare e relate.
-9. **Simular.** `npm run patchnotes:publicar -- --dry-run docs/patchnotes/<versao>.md` — leia a linha
+10. **Simular.** `npm run patchnotes:publicar -- --dry-run docs/patchnotes/<versao>.md` — leia a linha
    `Destino:`. Ela precisa dizer `R2 (bucket …)`; `disco local` significa que `ARMAZENAMENTO_PROVEDOR`
    está `local` e **nada** irá para produção.
-10. **Publicar** (mesmo comando sem `--dry-run`) com as variáveis `ARMAZENAMENTO_PROVEDOR=r2` e
+11. **Publicar** (mesmo comando sem `--dry-run`) com as variáveis `ARMAZENAMENTO_PROVEDOR=r2` e
     `ARMAZENAMENTO_R2_*` no ambiente do comando. Credencial nunca vai para arquivo versionado, log
     ou mensagem de commit; sem elas a ferramenta recusa rodar.
-11. **Conferir de verdade.** `GET <api>/patchnote/<versao>` e a página `/patchnotes/<versao>` (skill
+12. **Conferir de verdade.** `GET <api>/patchnote/<versao>` e a página `/patchnotes/<versao>` (skill
     `verify` no ambiente local). O índice tem que listar a versão em primeiro.
-12. **Registrar.** Bloco novo no topo de `docs/context/HISTORY.md` (versão, resumo, o que foi
+13. **Registrar.** Bloco novo no topo de `docs/context/HISTORY.md` (versão, resumo, o que foi
     conferido e o que ficou pendente) e, se houver, a linha de versão vigente em `CONTEXT.md`.
 
 ## Checklist da nota (antes de mostrar ao autor)

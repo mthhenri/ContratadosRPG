@@ -1,5 +1,26 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-29 — patchnotes-versao-sistema (revisão do autor): de `1.1.0` para cinco versões
+
+O autor apontou que ir de `1.0.0` a `1.1.0` depois de quase um mês era incoerente e pediu mais
+bumps ou mais de um patch. Em vez de um salto único, setembro foi dividido em **quatro versões por
+blocos coerentes de entregas**, guiadas pelas datas e pelos commits (cadência quase semanal):
+`1.1.0` (02–08/09, espectador, prévia de jogador e tela de campanha do mestre), `1.2.0` (09–17/09,
+ficha de criatura, aba Esquadrão, montador de rolagem), `1.3.0` (18–25/09, Iniciativa nova, janelas
+soltas, editor de texto) e `1.4.0` (26–29/09, Cenas e Biblioteca). A versão vigente passou a
+`1.4.0` (`npm run versao:sincronizar`); as tags são marcadores retroativos nos commits `641a8529`,
+`09381c10`, `8a405ec0` e no HEAD — os pacotes só carregam a versão no HEAD. As fronteiras foram
+validadas por ancestralidade (cada versão contém o que promete e nada da seguinte).
+
+**Erro achado na revisão das notas.** A `v1.0.0` listava "Espectadores" e "NPC", mas o papel de
+espectador foi construído em 03/09 (`m8-01`…`m8-05`) e o NPC (`m4-05`…`m4-10`) segue no backlog;
+o commit de 18/08 que mencionava espectador era só spec. Ambos saíram da `v1.0.0`; espectador
+entra na `v1.1.0`. Correções foram datadas pelo commit de cada `P-0NN` para cair na versão certa.
+
+Verificado: `versao.spec` verde, `patchnotes:publicar` (dry-run e real, destino local), API e página
+com as cinco versões (`1920×1080` e `360×800`, sem overflow; a lista vira faixa com rolagem interna
+no celular). Segue pendente, como antes, a publicação no R2 real e o push das tags.
+
 ## 2026-09-29 — patchnotes-versao-sistema (pn-01…pn-04, pn-05 parcial): versão do sistema e patchnotes públicos
 
 Origem: pedido do autor de mostrar a versão do sistema e ter uma área pública de patchnotes, com uma

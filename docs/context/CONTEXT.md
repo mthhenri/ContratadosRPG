@@ -24,7 +24,7 @@
 
 > **Última revisão:** 2026-09-29 · **Última decisão registrada:**
 > `patchnotes-versao-sistema` (`pn-01`…`pn-04` concluídas, `pn-05` aberta — falta publicar no R2 real e
-> enviar as tags): o sistema passa a ter versão (`1.1.0`, fonte única no `package.json` da raiz) exibida
+> enviar as tags): o sistema passa a ter versão (`1.4.0`, fonte única no `package.json` da raiz) exibida
 > na topbar e página pública `/patchnotes` com notas em Markdown lidas do R2 (ver "Versão e patchnotes"
 > na seção 4). Antes: `m9-13-criar-documentos-biblioteca-flutuante` concluída (spec em `done/`): no painel flutuante o
 > mestre também cria ("Novo documento", o dialog da página) e edita (texto, imagem, conflito 409)
@@ -3091,12 +3091,14 @@ de view aplica o atributo do TEMPLATE DO CONSUMIDOR, não o do componente).
 
 ### Versão e patchnotes — `shared/versao`, `backend/patchnote`, `frontend/patchnotes` (pn-01…pn-05)
 
-A **versão do sistema** tem fonte única: o `version` do `package.json` da raiz (hoje `1.1.0`).
+A **versão do sistema** tem fonte única: o `version` do `package.json` da raiz (hoje `1.4.0`).
 `npm run versao:sincronizar` alinha os três workspaces e o lock e gera `shared/src/versao.ts`
 (`VERSAO_SISTEMA`); um teste de `shared` falha se algo divergir. Ela aparece na topbar (chip ao lado
 da marca, com ponto enquanto a última versão vista neste navegador for outra — `VersaoService`, que
 o abrir de `/patchnotes` apaga; no mobile vira o item "Novidades" do menu do perfil) e em
-`GET /health`. Versões históricas: `v1.0.0` = fim de 01/09/2026 (`306a9714`), `v1.1.0` = 02–29/09.
+`GET /health`. Versões históricas (tags retroativas, uma por bloco de entregas): `v1.0.0` = fim de 01/09/2026 (`306a9714`),
+`v1.1.0` = até 08/09 (`641a8529`), `v1.2.0` = até 17/09 (`09381c10`), `v1.3.0` = até 25/09 (`8a405ec0`),
+`v1.4.0` = 26–29/09 (o HEAD que carrega a versão).
 
 Os **patchnotes** são públicos e sem tabela: `patchnotes/<versao>.md` (front matter `versao`/`data`/
 `titulo` + Markdown em blocos Novidades/Melhorias/Correções) e `patchnotes/indice.json` no

@@ -32,14 +32,15 @@ uma versão.
 5. **SemVer:** funcionalidade nova visível ao usuário sobe o *minor* (`1.0.0 → 1.1.0`); só
    correção sobe o *patch*; mudança que quebre o uso existente (ex.: fluxo de sessão refeito) sobe
    o *major*. Quem decide o major é o autor, nunca o agente.
-6. **Versão-base `1.0.0`** (o sistema já teve sessão real e está em uso). O histórico vira **dois
-   patchnotes retroativos**:
-   - **v1.0.0** — do início do projeto (02/07/2026) até o último commit de 01/09/2026
-     (`306a9714`, "evita overflow na barra de energia"). Tag `v1.0.0` nesse commit.
-   - **v1.1.0** — de 02/09/2026 até o momento do fechamento (hoje, 29/09/2026). É minor porque só
-     traz funcionalidade nova compatível (Cenas, Biblioteca de documentos, painel do espectador
-     refeito, janelas soltas, montador de rolagem, ficha de criatura redesenhada) e correções.
-     Tag `v1.1.0` no HEAD do fechamento.
+6. **Versão-base `1.0.0` e cadência semanal.** O sistema já teve sessão real e está em uso: o
+   histórico vira **cinco patchnotes retroativos**, um por bloco coerente de entregas — um único
+   `1.1.0` para um mês inteiro seria um salto incoerente (revisão do autor, 2026-09-29). Cada fronteira
+   é um commit; a tag é um marcador retroativo (só o HEAD carrega a versão nos `package.json`):
+   - **v1.0.0** — início (02/07) até `306a9714` (fim de 01/09).
+   - **v1.1.0** — 02–08/09, até `641a8529`: papel de espectador, prévia de jogador, tela de campanha do mestre.
+   - **v1.2.0** — 09–17/09, até `09381c10`: ficha de criatura, aba Esquadrão, montador de rolagem.
+   - **v1.3.0** — 18–25/09, até `8a405ec0`: Iniciativa nova, janelas soltas, editor de texto.
+   - **v1.4.0** — 26–29/09, o HEAD: Cenas e Biblioteca de documentos. É a versão vigente.
 7. **Área pública.** `/patchnotes` (lista + detalhe) sem login, como as calculadoras/simulação;
    os endpoints do backend usam `@Public()`.
 
@@ -47,8 +48,8 @@ uma versão.
 
 ### pn-01 — Versão como fonte única
 
-1. Fixar o `version` da raiz e dos três workspaces em `1.1.0` (versão vigente após o fechamento
-   dos dois patchnotes retroativos) e criar as tags `v1.0.0` (commit `306a9714`) e `v1.1.0`.
+1. Fixar o `version` da raiz e dos três workspaces em `1.4.0` (versão vigente após o fechamento
+   dos cinco patchnotes retroativos) e criar as tags `v1.0.0`…`v1.4.0` nas fronteiras da decisão 6.
 2. Constante `VERSAO_SISTEMA` em `shared/src/versao.ts`, gerada por `npm run versao:sincronizar`
    a partir do `version` do `package.json` da raiz (que também alinha os três workspaces) e
    consumida por backend e frontend; um teste em `shared` falha se ela ou algum `package.json`
@@ -120,8 +121,8 @@ uma versão.
 
 ## Critérios de Aceite
 
-1. `git grep -n '"version"' -- '*package.json'` mostra `1.1.0` nos quatro pacotes; as tags
-   `v1.0.0` (em `306a9714`) e `v1.1.0` existem; `git check-ignore docs/patchnotes/x.md` confirma
+1. `git grep -n '"version"' -- '*package.json'` mostra `1.4.0` nos quatro pacotes; as tags
+   `v1.0.0`…`v1.4.0` existem nas fronteiras da decisão 6; `git check-ignore docs/patchnotes/x.md` confirma
    a pasta ignorada.
 2. `GET /health` devolve a versão; a interface mostra a mesma versão do `package.json`.
 3. `GET /patchnote` e `GET /patchnote/:versao` respondem **sem token**; segunda chamada dentro
@@ -131,7 +132,7 @@ uma versão.
    sem novos avisos; `diff -r .claude/skills .agents/skills` vazio.
 6. Gate visual da `pn-04` e do ponto de exibição da versão registrado no fecho (análogo, viewports,
    estados).
-7. A skill foi exercitada publicando `v1.0.0` e `v1.1.0`, com as duas notas lidas na página pública real.
+7. A skill foi exercitada publicando `v1.0.0`…`v1.4.0`, com as cinco notas lidas na página pública real.
 
 ## Fora de Escopo
 

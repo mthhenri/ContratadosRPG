@@ -1,6 +1,6 @@
 {
   "name": "@contratados-rpg/shared",
-  "version": "1.1.0",
+  "version": "1.4.0",
   "description": "DTOs, enums, interfaces genéricas, validators e motor de regras do jogo — compartilhado entre backend e frontend.",
   "private": true,
   "license": "UNLICENSED",
