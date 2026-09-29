@@ -7,9 +7,11 @@ import { rascunhoDocumentoPainelGuard } from '../documento/rascunho-documento.gu
  *
  * **Sem guarda de papel** (mesmo racional da antiga `encontro.routes.ts`, m7-06): mestre e jogador
  * entram pelas mesmas rotas e as telas bifurcam por papel; quem barra é o backend, que recorta cada
- * payload por usuário — inclusive a cena `PLANEJADA`, que ele recusa ao jogador (m7-22).
+ * payload por usuário — inclusive a cena `PLANEJADA` (m7-22) e, ao jogador, qualquer cena que não
+ * seja a `ATIVA` (`jogador-acesso-somente-cena-atual`).
  *
- * - `''` — o hub: cena ativa, planejadas (só mestre) e histórico.
+ * - `''` — o hub: para o mestre, cena ativa, planejadas e histórico; para o jogador, o resolvedor
+ *   que entra na cena atual ou mostra "Nenhuma cena no momento".
  * - `':cenaId'` — o painel de uma cena. `PainelCenaShell` decide pelo tipo (com iniciativa → o
  *   painel de Iniciativa; sem → o painel da m7-24) e pelo papel.
  */

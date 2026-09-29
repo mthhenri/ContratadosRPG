@@ -124,14 +124,48 @@ describe('EncontroPainelDadosService', () => {
       expect(dados.carregando()).toBe(false);
     });
 
-    it('cena recusada pelo backend (planejada para o jogador, 403) devolve ao hub', () => {
+    it('cena recusada pelo backend (planejada ou encerrada para o jogador, 403) devolve ao hub sem deixar o endereço no histórico', () => {
       const { cenaService } = configurarPainel({ usuarioId: USUARIO_JOGADOR });
       cenaService.recuperarCena.mockReturnValue(throwError(() => new Error('403')) as never);
       const navegar = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
       const dados = TestBed.inject(EncontroPainelDadosService);
 
-      expect(navegar).toHaveBeenCalledWith(['/campanhas', CAMPANHA_ID, 'cenas']);
+      expect(navegar).toHaveBeenCalledWith(['/campanhas', CAMPANHA_ID, 'cenas'], {
+        replaceUrl: true,
+      });
       expect(dados.encontro()).toBeNull();
+      expect(dados.cena()).toBeNull();
+    });
+
+    it('resposta atrasada de uma carga anterior é descartada — vale só a última', () => {
+      const { cenaService, reconexao$ } = configurarPainel({ usuarioId: USUARIO_JOGADOR });
+      const primeira$ = new Subject<Parameters<EncontroPainelDadosService['definirCena']>[0]>();
+      const segunda$ = new Subject<Parameters<EncontroPainelDadosService['definirCena']>[0]>();
+      cenaService.recuperarCena
+        .mockReturnValueOnce(primeira$ as never)
+        .mockReturnValueOnce(segunda$ as never);
+      const dados = TestBed.inject(EncontroPainelDadosService);
+
+      reconexao$.next();
+      segunda$.next({
+        id: CENA_ID,
+        campanhaId: CAMPANHA_ID,
+        nome: 'Atual',
+        tipo: CenaTipoEnum.COMBATE,
+        status: CenaStatusEnum.ATIVA,
+        encontro: null,
+      });
+      primeira$.next({
+        id: CENA_ID,
+        campanhaId: CAMPANHA_ID,
+        nome: 'Antiga',
+        tipo: CenaTipoEnum.COMBATE,
+        status: CenaStatusEnum.ATIVA,
+        encontro: null,
+      });
+
+      expect(dados.cena()?.nome).toBe('Atual');
+      expect(dados.carregando()).toBe(false);
     });
 
     it('reconhece a cena planejada — só ela bloqueia pedir iniciativa e iniciar', () => {
@@ -407,6 +441,78 @@ describe('EncontroPainelDadosService', () => {
       cenaAlterada$.next({ campanhaId: CAMPANHA_ID, cena: resumo });
       expect(dados.cena()?.status).toBe(CenaStatusEnum.ATIVA);
       expect(dados.cenaPlanejada()).toBe(false);
+    });
+
+    describe('encerramento da cena desta tela', () => {
+      const encerrada = {
+        id: CENA_ID,
+        nome: 'Contenção no Setor 12',
+        tipo: CenaTipoEnum.COMBATE,
+        status: CenaStatusEnum.ENCERRADA,
+        temEncontro: true,
+      };
+
+      it('jogador: descarta cena, encontro e documentos e volta ao hub, que resolve a atual', () => {
+        const { cenaAlterada$ } = configurarPainel({ usuarioId: USUARIO_JOGADOR });
+        const navegar = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+        const dados = TestBed.inject(EncontroPainelDadosService);
+        expect(dados.encontro()).not.toBeNull();
+
+        cenaAlterada$.next({ campanhaId: CAMPANHA_ID, cena: encerrada });
+
+        expect(dados.cena()).toBeNull();
+        expect(dados.encontro()).toBeNull();
+        expect(dados.documentosCena()).toEqual([]);
+        expect(dados.carregando()).toBe(true);
+        expect(navegar).toHaveBeenCalledWith(['/campanhas', CAMPANHA_ID, 'cenas'], {
+          replaceUrl: true,
+        });
+      });
+
+      it('mestre: permanece na tela e só marca a cena como encerrada', () => {
+        const { cenaAlterada$ } = configurarPainel({ usuarioId: USUARIO_MESTRE });
+        const navegar = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+        const dados = TestBed.inject(EncontroPainelDadosService);
+
+        cenaAlterada$.next({ campanhaId: CAMPANHA_ID, cena: encerrada });
+
+        expect(dados.cena()?.status).toBe(CenaStatusEnum.ENCERRADA);
+        expect(dados.encontro()).not.toBeNull();
+        expect(navegar).not.toHaveBeenCalled();
+      });
+
+      it('papel ainda desconhecido: o evento só dispara o refetch autorizado', () => {
+        const { cenaAlterada$, cenaService } = configurarPainel({
+          usuarioId: USUARIO_JOGADOR,
+          membrosPendentes: true,
+        });
+        const navegar = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+        TestBed.inject(EncontroPainelDadosService);
+        cenaService.recuperarCena.mockReturnValue(throwError(() => new Error('403')) as never);
+
+        cenaAlterada$.next({ campanhaId: CAMPANHA_ID, cena: encerrada });
+
+        expect(cenaService.recuperarCena).toHaveBeenCalledTimes(2);
+        expect(navegar).toHaveBeenCalledWith(['/campanhas', CAMPANHA_ID, 'cenas'], {
+          replaceUrl: true,
+        });
+      });
+
+      it('reconexão depois de a cena ter sido encerrada durante a queda: o refetch recusado devolve ao hub', () => {
+        const { reconexao$, cenaService } = configurarPainel({ usuarioId: USUARIO_JOGADOR });
+        const navegar = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+        const dados = TestBed.inject(EncontroPainelDadosService);
+        cenaService.recuperarCena.mockReturnValue(throwError(() => new Error('403')) as never);
+
+        reconexao$.next();
+
+        expect(navegar).toHaveBeenCalledWith(['/campanhas', CAMPANHA_ID, 'cenas'], {
+          replaceUrl: true,
+        });
+        // O que já estava na tela não é reaproveitado como se ainda fosse a cena atual.
+        expect(dados.cena()).toBeNull();
+        expect(dados.encontro()).toBeNull();
+      });
     });
 
     it('acrescenta rolagens públicas recebidas ao vivo, sem duplicar a mesma', () => {

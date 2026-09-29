@@ -223,10 +223,78 @@ describe('EncontroService', () => {
       expect(encontroRepositorio.listarPorCampanha).toHaveBeenNthCalledWith(1, {
         campanhaId: 5,
         incluirCenaPlanejada: false,
+        incluirCenaEncerrada: false,
       });
       expect(encontroRepositorio.listarPorCampanha).toHaveBeenNthCalledWith(2, {
         campanhaId: 5,
         incluirCenaPlanejada: true,
+        incluirCenaEncerrada: true,
+      });
+    });
+  });
+
+  describe('encontro legado de cena encerrada (jogador-acesso-somente-cena-atual)', () => {
+    beforeEach(() => {
+      encontroRepositorio.recuperarPorId.mockResolvedValue(
+        criarEncontroLinha({ cenaStatus: CenaStatusEnum.ENCERRADA, status: EncontroStatusEnum.ENCERRADO }),
+      );
+    });
+
+    it('GET do encontro recusa o jogador (403) e atende o mestre', async () => {
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.JOGADOR });
+      await expect(service.recuperarEncontro({ id: 50 }, jogador)).rejects.toThrow(
+        UnauthorizedAccessException,
+      );
+      // Recusado antes de montar: nem o log do combate encerrado é lido.
+      expect(encontroRepositorio.listarEventos).not.toHaveBeenCalled();
+      expect(fichaService.listarFichas).not.toHaveBeenCalled();
+
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.MESTRE });
+      await expect(service.recuperarEncontro({ id: 50 }, mestre)).resolves.toMatchObject({ id: 50 });
+    });
+
+    it('o espectador mantém a leitura do histórico (política da m7-22, spec própria)', async () => {
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.ESPECTADOR });
+      await expect(service.recuperarEncontro({ id: 50 }, jogador)).resolves.toMatchObject({ id: 50 });
+    });
+
+    it('broadcast do encerramento não entrega o estado encerrado ao jogador', async () => {
+      (
+        campanhaRepositorio.recuperarMembro as Mock<(dto: { usuarioId: number }) => Promise<unknown>>
+      ).mockImplementation((dto) =>
+        Promise.resolve({
+          papel:
+            dto.usuarioId === mestre.sub
+              ? TipoCampanhaMembroPapelEnum.MESTRE
+              : TipoCampanhaMembroPapelEnum.JOGADOR,
+        }),
+      );
+
+      await service.emitirEncontroAlterado({ id: 50 });
+
+      const montarParaUsuario = campanhaGateway.emitirEncontroAlterado.mock.calls[0][1] as (
+        usuario: JwtPayload,
+      ) => Promise<unknown>;
+      await expect(montarParaUsuario(jogador)).rejects.toThrow(UnauthorizedAccessException);
+      await expect(montarParaUsuario(mestre)).resolves.toMatchObject({ id: 50 });
+    });
+
+    it('listagem do jogador omite os encontros de cenas encerradas; a do espectador não', async () => {
+      encontroRepositorio.listarPorCampanha.mockResolvedValue([]);
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.JOGADOR });
+      await service.listarPorCampanha({ campanhaId: 5 }, jogador);
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.ESPECTADOR });
+      await service.listarPorCampanha({ campanhaId: 5 }, jogador);
+
+      expect(encontroRepositorio.listarPorCampanha).toHaveBeenNthCalledWith(1, {
+        campanhaId: 5,
+        incluirCenaPlanejada: false,
+        incluirCenaEncerrada: false,
+      });
+      expect(encontroRepositorio.listarPorCampanha).toHaveBeenNthCalledWith(2, {
+        campanhaId: 5,
+        incluirCenaPlanejada: false,
+        incluirCenaEncerrada: true,
       });
     });
   });

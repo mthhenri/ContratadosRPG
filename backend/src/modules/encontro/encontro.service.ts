@@ -49,6 +49,7 @@ import { CampanhaGateway } from '../../core/gateway/campanha.gateway';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
 import { CampanhaRepository } from '../campanha/campanha.repository';
 import { FichaService } from '../ficha/ficha.service';
+import { recorteCenasDoPapel, validarCenaVisivelAoPapel } from '../cena/cena-visibilidade';
 import { EncontroRepository } from './encontro.repository';
 import { montarCombatenteResumo } from './encontro-combatente.mapper';
 import { ocultarNaoRevelados } from './encontro-revelacao';
@@ -96,30 +97,35 @@ export class EncontroService {
   // `CenaService`, na mesma transação da cena (a invariante "uma ativa por campanha" é dela).
 
   /**
-   * Recupera o estado completo do encontro. Exige ser **membro** da campanha — e, enquanto a
-   * cena-mãe estiver `PLANEJADA`, ser o **mestre** (trava anti-vazamento, m7-22).
+   * Recupera o estado completo do encontro. Exige ser **membro** da campanha e poder ler a
+   * cena-mãe (`cena-visibilidade.ts`): planejada só o mestre; encerrada nunca o jogador — o
+   * encontro legado não é um caminho alternativo para o histórico que a própria cena recusa.
    */
   async recuperarEncontro(
     dto: EncontroRecuperarDto,
     usuarioAtivo: JwtPayload,
   ): Promise<EncontroRecuperadoDto> {
     const encontroEncontrado = await this.recuperarEncontroObrigatorio(dto.id);
-    await this.validarMembro(encontroEncontrado.campanhaId, usuarioAtivo);
+    const membro = await this.validarMembro(encontroEncontrado.campanhaId, usuarioAtivo);
+    // Recusa antes de montar: o log e os combatentes de uma cena vedada nem chegam a ser lidos.
+    validarCenaVisivelAoPapel(membro.papel, encontroEncontrado.cenaStatus);
     return this.montarEstadoParaUsuario(await this.montarEstado(encontroEncontrado), usuarioAtivo);
   }
 
   /**
-   * Encontros da campanha (corrente + histórico). Exige ser **membro**; só o mestre vê os
-   * encontros de cenas `PLANEJADA` (m7-22).
+   * Encontros da campanha. Exige ser **membro**; o recorte é o mesmo da listagem de cenas
+   * (`recorteCenasDoPapel`): o mestre vê todos, o jogador só o da cena ativa.
    */
   async listarPorCampanha(
     dto: { campanhaId: number },
     usuarioAtivo: JwtPayload,
   ): Promise<EncontroResumoDto[]> {
     const membro = await this.validarMembro(dto.campanhaId, usuarioAtivo);
+    const recorte = recorteCenasDoPapel(membro.papel);
     return this.encontroRepositorio.listarPorCampanha({
       campanhaId: dto.campanhaId,
-      incluirCenaPlanejada: membro.papel === TipoCampanhaMembroPapelEnum.MESTRE,
+      incluirCenaPlanejada: recorte.incluirPlanejadas,
+      incluirCenaEncerrada: recorte.incluirEncerradas,
     });
   }
 
@@ -289,7 +295,7 @@ export class EncontroService {
 
     const membro = await this.validarMembro(encontroEncontrado.campanhaId, usuarioAtivo);
     if (membro.papel !== TipoCampanhaMembroPapelEnum.MESTRE) {
-      this.validarCenaVisivel(encontroEncontrado);
+      validarCenaVisivelAoPapel(membro.papel, encontroEncontrado.cenaStatus);
       await this.validarCombatenteDoJogador(combatenteEncontrado, usuarioAtivo);
     }
 
@@ -754,7 +760,7 @@ export class EncontroService {
     if (membro.papel === TipoCampanhaMembroPapelEnum.MESTRE) {
       return;
     }
-    this.validarCenaVisivel(encontro);
+    validarCenaVisivelAoPapel(membro.papel, encontro.cenaStatus);
 
     const turnoAtual = ordemRodada[encontro.turnoIndice];
     if (
@@ -951,17 +957,6 @@ export class EncontroService {
     }
   }
 
-  /**
-   * Trava anti-vazamento (m7-22, decisão #7 do milestone): o encontro de uma cena `PLANEJADA` é
-   * exclusivo do mestre. Quem chama já sabe que o usuário **não** é mestre; a recusa é de acesso
-   * (403), nunca um payload vazio.
-   */
-  private validarCenaVisivel(encontro: { cenaStatus: CenaStatusEnum }): void {
-    if (encontro.cenaStatus === CenaStatusEnum.PLANEJADA) {
-      throw new UnauthorizedAccessException();
-    }
-  }
-
   /** Encontro encerrado é histórico imutável. */
   private validarEncontroMutavel(encontro: EncontroLinhaDto): void {
     if (encontro.status === EncontroStatusEnum.ENCERRADO) {
@@ -1084,9 +1079,11 @@ export class EncontroService {
    * nunca vê ficha), então o conjunto sai vazio direto, sem chamar a service — não é uma segunda
    * regra, é o mesmo fato já conhecido, só evitando a exceção.
    *
-   * **Trava anti-vazamento (m7-22).** Encontro de cena `PLANEJADA` recusa (403) quem não é mestre —
-   * na leitura REST e no broadcast: o gateway descarta o socket cujo recorte estoura, então o
-   * `encontro:alterado` de uma cena em preparo só chega ao mestre.
+   * **Trava anti-vazamento (m7-22 + `jogador-acesso-somente-cena-atual`).** Encontro de cena que o
+   * papel não lê (`validarCenaVisivelAoPapel`: planejada para quem não é mestre, encerrada para o
+   * jogador) recusa (403) — na leitura REST e no broadcast: o gateway descarta o socket cujo recorte
+   * estoura, então o `encontro:alterado` de uma cena em preparo só chega ao mestre e o da cena que
+   * acabou de encerrar não chega ao jogador (ele refaz a leitura pelo `cena:alterada`).
    */
   private async montarEstadoParaUsuario(
     montagem: MontagemEncontro,
@@ -1097,7 +1094,7 @@ export class EncontroService {
     if (membro.papel === TipoCampanhaMembroPapelEnum.MESTRE) {
       return estado;
     }
-    this.validarCenaVisivel(montagem);
+    validarCenaVisivelAoPapel(membro.papel, montagem.cenaStatus);
     const fichasVisiveis =
       membro.papel === TipoCampanhaMembroPapelEnum.ESPECTADOR
         ? []

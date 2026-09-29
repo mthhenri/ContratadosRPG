@@ -1,7 +1,7 @@
 import { DestroyRef, Injectable, computed, effect, inject, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Observable, filter, finalize } from 'rxjs';
+import { EMPTY, Observable, Subject, catchError, filter, finalize, switchMap, tap } from 'rxjs';
 
 import type { CenaDocumentoResumoDto, CenaRecuperadaDto } from '@contratados-rpg/shared/dtos/cena';
 import type {
@@ -47,9 +47,12 @@ import {
  * para `/campanhas/:campanhaId/cenas/:cenaId`), nunca `providedIn: 'root'`.
  *
  * **A tela é de uma cena (m7-23).** O `:cenaId` da rota diz qual; o encontro exibido é o dela
- * (`CenaRecuperadaDto.encontro`, já no recorte de quem pediu). O backend recusa ao jogador a cena
- * `PLANEJADA` (trava anti-vazamento, m7-22) — nesse caso, e em qualquer falha de carga, a tela
- * devolve o usuário ao hub de cenas em vez de mostrar um palco vazio.
+ * (`CenaRecuperadaDto.encontro`, já no recorte de quem pediu). O backend recusa ao jogador toda cena
+ * que não seja a `ATIVA` (m7-22 + `jogador-acesso-somente-cena-atual`) — nesse caso (link antigo,
+ * favorito, F5, reconexão depois de perder o evento) e em qualquer falha de carga, a tela devolve o
+ * usuário ao hub (`replaceUrl`), que resolve a cena atual ou o vazio. Quando a cena desta tela deixa
+ * de ser a ativa, o jogador não fica olhando o que sobrou dela: o conteúdo é descartado na hora e
+ * ele volta ao hub — o `cena:alterada` é só o sinal, nunca um payload renderizado como histórico.
  *
  * **Nenhuma regra vive aqui.** A ordem da rodada e a intercalação de Cadência chegam prontas do
  * backend (`ordemRodada`, `shared/regras/encontro`); o que o serviço deriva é só apresentação — de
@@ -177,6 +180,12 @@ export class EncontroPainelDadosService {
     () => this.documentosCena().find((documento) => documento.emFoco) ?? null,
   );
 
+  /**
+   * Pedidos de carga da cena, por id. `switchMap`: trocar de cena (ou reconectar) no meio de uma
+   * carga descarta a resposta antiga — ela nunca pinta a tela da cena seguinte.
+   */
+  private readonly cargaCena$ = new Subject<number>();
+
   /** Salas `ficha:<id>` em que esta tela entrou — só as da grade de agentes da cena sem iniciativa. */
   private readonly salasFichaAtivas = new Set<number>();
   /**
@@ -248,6 +257,30 @@ export class EncontroPainelDadosService {
 
     this.carregarRolagens();
 
+    this.cargaCena$
+      .pipe(
+        switchMap((cenaId) =>
+          this.cenaService.recuperarCena(cenaId).pipe(
+            tap({
+              next: (recuperada) => {
+                this.definirCena(recuperada);
+                this.carregandoEncontro.set(false);
+              },
+              // Cena que o backend recusa (403 — planejada para quem não é mestre, qualquer uma
+              // que não seja a ativa para o jogador) ou inexistente (404): nada do que estava na
+              // tela sobrevive (a recusa pode vir de um refetch após reconexão) e volta ao hub.
+              error: () => {
+                this.invalidarCena();
+                this.voltarAoHub();
+              },
+            }),
+            catchError(() => EMPTY),
+          ),
+        ),
+        takeUntilDestroyed(),
+      )
+      .subscribe();
+
     // `paramMap` (e não o `snapshot`) porque ir de uma cena a outra troca só o parâmetro: o
     // Angular reusa o componente, e um `snapshot` lido no construtor ficaria congelado no primeiro
     // valor. Emite de imediato, então também faz a carga inicial.
@@ -285,10 +318,23 @@ export class EncontroPainelDadosService {
         takeUntilDestroyed(),
       )
       .subscribe({
-        next: ({ cena }) =>
-          this.cenaAtual.update((atual) =>
-            atual ? { ...atual, nome: cena.nome, tipo: cena.tipo, status: cena.status } : atual,
-          ),
+        next: ({ cena }) => {
+          if (this.ehMestre() || cena.status === CenaStatusEnum.ATIVA) {
+            this.cenaAtual.update((atual) =>
+              atual ? { ...atual, nome: cena.nome, tipo: cena.tipo, status: cena.status } : atual,
+            );
+            return;
+          }
+          // Papel ainda desconhecido: o refetch autorizado decide (o mestre recebe a cena; o
+          // jogador, o 403 que o devolve ao hub).
+          if (this.membros() === null) {
+            this.carregar();
+            return;
+          }
+          // Jogador: a cena desta tela deixou de ser a atual — nada dela fica na tela.
+          this.invalidarCena();
+          this.voltarAoHub();
+        },
       });
 
     // Coluna Documentos (m7-25): dataless como `campanha:inventario-alterado` — refaz o `GET` já no
@@ -372,14 +418,7 @@ export class EncontroPainelDadosService {
       return;
     }
     this.carregandoEncontro.set(true);
-    this.cenaService
-      .recuperarCena(cenaId)
-      .pipe(finalize(() => this.carregandoEncontro.set(false)))
-      .subscribe({
-        next: (recuperada) => this.definirCena(recuperada),
-        // Cena planejada para quem não é mestre (403) ou inexistente (404): de volta ao hub.
-        error: () => void this.roteador.navigate(['/campanhas', this.campanhaId, 'cenas']),
-      });
+    this.cargaCena$.next(cenaId);
 
     this.encontroService
       .listarPorCampanha(this.campanhaId)
@@ -391,6 +430,25 @@ export class EncontroPainelDadosService {
     this.campanhaService
       .listarMembros(this.campanhaId)
       .subscribe({ next: (membros) => this.membrosInterno.set(membros) });
+  }
+
+  /**
+   * Descarta tudo o que a tela mostra da cena — encontro, log, documentos e a própria cena (que
+   * desmonta o painel sem iniciativa e, com ele, o modal de leitura aberto).
+   */
+  private invalidarCena(): void {
+    this.carregandoEncontro.set(true);
+    this.cenaAtual.set(null);
+    this.encontroAtual.set(null);
+    this.documentosDaCena.set([]);
+  }
+
+  /**
+   * Ao hub, que resolve a cena atual (jogador) ou lista as cenas (mestre). `replaceUrl`: o endereço
+   * recusado não fica no histórico do navegador para o "voltar" reabri-lo.
+   */
+  private voltarAoHub(): void {
+    void this.roteador.navigate(['/campanhas', this.campanhaId, 'cenas'], { replaceUrl: true });
   }
 
   /** Ingressa nas salas das fichas exibidas e sai das que deixaram de aparecer. */
@@ -485,7 +543,15 @@ export class EncontroPainelDadosService {
     this.cenaService
       .listarDocumentos(cenaId)
       .pipe(finalize(() => this.carregandoDocumentosInterno.set(false)))
-      .subscribe({ next: (itens) => this.documentosDaCena.set(itens), error: () => undefined });
+      .subscribe({
+        // Resposta de uma cena que a tela já deixou (troca de cena, encerramento) é descartada.
+        next: (itens) => {
+          if (this.cenaAtual()?.id === cenaId) {
+            this.documentosDaCena.set(itens);
+          }
+        },
+        error: () => undefined,
+      });
   }
 
   /** Anexa um documento da biblioteca à coluna Documentos desta cena. */

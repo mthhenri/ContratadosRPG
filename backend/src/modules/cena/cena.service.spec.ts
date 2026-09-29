@@ -461,16 +461,66 @@ describe('CenaService', () => {
       expect(cena.encontro).toBeNull();
     });
 
-    it('listagem: planejadas só para o mestre', async () => {
+    it('listagem: o mestre recebe tudo; o jogador só a ativa; o espectador mantém o histórico (m7-22)', async () => {
       campanhaRepositorio.recuperarMembro.mockResolvedValue(membroComPapel(TipoCampanhaMembroPapelEnum.JOGADOR));
       await service.listarPorCampanha({ campanhaId: 5 }, jogador);
       campanhaRepositorio.recuperarMembro.mockResolvedValue(membroComPapel(TipoCampanhaMembroPapelEnum.MESTRE));
       await service.listarPorCampanha({ campanhaId: 5 }, mestre);
+      campanhaRepositorio.recuperarMembro.mockResolvedValue(membroComPapel(TipoCampanhaMembroPapelEnum.ESPECTADOR));
+      await service.listarPorCampanha({ campanhaId: 5 }, jogador);
 
       expect(cenaRepositorio.listarPorCampanha.mock.calls.map(([dto]) => dto)).toEqual([
-        { campanhaId: 5, incluirPlanejadas: false },
-        { campanhaId: 5, incluirPlanejadas: true },
+        { campanhaId: 5, incluirPlanejadas: false, incluirEncerradas: false },
+        { campanhaId: 5, incluirPlanejadas: true, incluirEncerradas: true },
+        { campanhaId: 5, incluirPlanejadas: false, incluirEncerradas: true },
       ]);
+    });
+  });
+
+  describe('jogador acessa somente a cena atual', () => {
+    it.each([
+      [TipoCampanhaMembroPapelEnum.MESTRE, CenaStatusEnum.PLANEJADA, true],
+      [TipoCampanhaMembroPapelEnum.MESTRE, CenaStatusEnum.ATIVA, true],
+      [TipoCampanhaMembroPapelEnum.MESTRE, CenaStatusEnum.ENCERRADA, true],
+      [TipoCampanhaMembroPapelEnum.JOGADOR, CenaStatusEnum.PLANEJADA, false],
+      [TipoCampanhaMembroPapelEnum.JOGADOR, CenaStatusEnum.ATIVA, true],
+      [TipoCampanhaMembroPapelEnum.JOGADOR, CenaStatusEnum.ENCERRADA, false],
+      [TipoCampanhaMembroPapelEnum.ESPECTADOR, CenaStatusEnum.PLANEJADA, false],
+      [TipoCampanhaMembroPapelEnum.ESPECTADOR, CenaStatusEnum.ATIVA, true],
+      [TipoCampanhaMembroPapelEnum.ESPECTADOR, CenaStatusEnum.ENCERRADA, true],
+    ])('%s lendo cena %s → permitido: %s', async (papel, status, permitido) => {
+      campanhaRepositorio.recuperarMembro.mockResolvedValue(membroComPapel(papel));
+      cenaRepositorio.recuperarPorId.mockResolvedValue(criarCenaLinha({ status }));
+
+      const leitura = service.recuperarCena({ id: 900 }, jogador);
+
+      if (permitido) {
+        await expect(leitura).resolves.toMatchObject({ id: 900, status });
+      } else {
+        await expect(leitura).rejects.toThrow(UnauthorizedAccessException);
+        expect(encontroService.recuperarEncontro).not.toHaveBeenCalled();
+      }
+    });
+
+    it('URL direta de cena encerrada: 403 ao jogador, sem tocar no encontro legado', async () => {
+      campanhaRepositorio.recuperarMembro.mockResolvedValue(membroComPapel(TipoCampanhaMembroPapelEnum.JOGADOR));
+      cenaRepositorio.recuperarPorId.mockResolvedValue(criarCenaLinha({ status: CenaStatusEnum.ENCERRADA }));
+
+      await expect(service.recuperarCena({ id: 900 }, jogador)).rejects.toThrow(UnauthorizedAccessException);
+      expect(encontroService.recuperarEncontro).not.toHaveBeenCalled();
+    });
+
+    it('cena de outra campanha: 403 (não é membro dela), mesmo ativa', async () => {
+      campanhaRepositorio.recuperarMembro.mockResolvedValue(null);
+      cenaRepositorio.recuperarPorId.mockResolvedValue(
+        criarCenaLinha({ campanhaId: 77, status: CenaStatusEnum.ATIVA }),
+      );
+
+      await expect(service.recuperarCena({ id: 900 }, jogador)).rejects.toThrow(UnauthorizedAccessException);
+      await expect(service.listarPorCampanha({ campanhaId: 77 }, jogador)).rejects.toThrow(
+        UnauthorizedAccessException,
+      );
+      expect(campanhaRepositorio.recuperarMembro).toHaveBeenCalledWith({ campanhaId: 77, usuarioId: 2 });
     });
   });
 });

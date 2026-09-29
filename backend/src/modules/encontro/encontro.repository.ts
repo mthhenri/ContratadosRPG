@@ -135,12 +135,14 @@ export class EncontroRepository extends BaseRepository {
 
   /**
    * Encontros de uma campanha (corrente + histórico), mais recente primeiro. Sem
-   * `incluirCenaPlanejada`, os encontros de cena `PLANEJADA` ficam de fora — é o recorte de quem não
-   * é mestre (trava anti-vazamento, m7-22).
+   * `incluirCenaPlanejada`, os encontros de cena `PLANEJADA` ficam de fora; sem
+   * `incluirCenaEncerrada`, os de cena `ENCERRADA` — o recorte de cada papel vem de
+   * `recorteCenasDoPapel` (`cena-visibilidade.ts`), o mesmo da listagem de cenas.
    */
   async listarPorCampanha(dto: {
     campanhaId: number;
     incluirCenaPlanejada: boolean;
+    incluirCenaEncerrada: boolean;
   }): Promise<EncontroResumoDto[]> {
     return this.executarConsulta<EncontroResumoDto>(
       `SELECT encontro.id, encontro.campanha_id AS "campanhaId", encontro.cena_id AS "cenaId",
@@ -154,11 +156,14 @@ export class EncontroRepository extends BaseRepository {
        ${this.juncaoStatus()}
        WHERE encontro.campanha_id = :campanhaId AND encontro.is_deleted = false
          AND (:incluirCenaPlanejada::boolean OR tipo_cena_status.codigo <> :statusCenaPlanejada)
+         AND (:incluirCenaEncerrada::boolean OR tipo_cena_status.codigo <> :statusCenaEncerrada)
        ORDER BY encontro.created_date DESC`,
       {
         campanhaId: dto.campanhaId,
         incluirCenaPlanejada: dto.incluirCenaPlanejada,
+        incluirCenaEncerrada: dto.incluirCenaEncerrada,
         statusCenaPlanejada: CenaStatusEnum.PLANEJADA,
+        statusCenaEncerrada: CenaStatusEnum.ENCERRADA,
       },
     );
   }

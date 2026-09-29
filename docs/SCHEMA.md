@@ -472,6 +472,11 @@ recorte do jogador/espectador (o gateway descarta o socket) e `encontro:iniciati
 emitido. A cena tem o próprio evento, `cena:alterada` (`CenaAlteradaDto`, resumo), que vai à sala do
 mestre enquanto a cena está `PLANEJADA` e à sala cheia + espectador depois de aberta.
 
+**Jogador só na cena atual (2026-09-29).** Para o jogador, cena `ENCERRADA` recebe a mesma trava:
+`GET cena/:id`, `GET cena/:id/documento`, `GET encontro/:id` e o recorte do `encontro:alterado`
+recusam; as listagens de cenas e encontros a omitem. O espectador mantém a leitura do histórico.
+Política única em `backend/src/modules/cena/cena-visibilidade.ts`.
+
 ---
 
 ## Forma dos documentos JSONB (`ficha.dados`)

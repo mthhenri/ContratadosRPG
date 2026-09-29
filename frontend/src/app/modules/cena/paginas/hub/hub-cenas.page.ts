@@ -1,4 +1,4 @@
-import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, computed, effect, inject, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NgTemplateOutlet } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -27,16 +27,22 @@ import { rotuloTipoCena } from '../../rotulos-cena';
 
 /**
  * Hub de cenas da campanha (m7-23) — `/campanhas/:campanhaId/cenas`, a porta de entrada que
- * substitui a antiga tela "Iniciativa" sem encontro. Três blocos, na ordem em que o backend já
- * devolve a lista (m7-22): a cena **ativa** em destaque, as **planejadas** na ordem manual (só o
- * mestre as vê — o backend nem as envia ao jogador) e o **histórico** de encerradas.
+ * substitui a antiga tela "Iniciativa" sem encontro.
  *
- * Mesma rota para mestre e jogador, como a casca da Iniciativa: o papel sai dos membros + sessão e
- * só decide que controles aparecem. Quem barra é o backend (§14, trava anti-vazamento).
+ * **Mestre:** três blocos, na ordem em que o backend já devolve a lista (m7-22): a cena **ativa**
+ * em destaque, as **planejadas** na ordem manual e o **histórico** de encerradas.
  *
- * **Tempo real:** qualquer `cena:alterada` da campanha refaz a listagem — é ela que traz a ordem
- * das planejadas, que o evento não carrega, e o recorte do jogador continua sendo do backend. Assim
- * o jogador vê a cena nova surgir e a antiga ir para o histórico ao vivo quando o mestre abre outra.
+ * **Jogador** (`jogador-acesso-somente-cena-atual`): o hub não é uma lista, é o resolvedor da cena
+ * atual. O backend só lhe devolve a `ATIVA`; havendo uma, a tela entra nela (`replaceUrl`, para o
+ * "voltar" do navegador não cair de novo aqui); sem nenhuma, mostra "Nenhuma cena no momento". Não
+ * há ciclo: o hub só navega para a cena que o backend acabou de listar como ativa, e o painel só
+ * devolve ao hub quando o backend recusa a cena ou ela deixa de ser a ativa.
+ *
+ * O papel sai dos membros + sessão e só decide o que aparece. Quem barra é o backend (§14).
+ *
+ * **Tempo real:** qualquer `cena:alterada` da campanha (e a reconexão) refaz a listagem — é ela
+ * que traz a ordem das planejadas, que o evento não carrega, e o recorte do jogador continua sendo
+ * do backend. O evento é só o sinal: o jogador no vazio entra sozinho na cena que o mestre abrir.
  */
 @Component({
   selector: 'app-hub-cenas',
@@ -108,6 +114,14 @@ export class HubCenas {
     this.cenas().filter((cena) => cena.status === CenaStatusEnum.ENCERRADA),
   );
 
+  /**
+   * Jogador com uma cena ativa: a tela está a caminho dela — segue no esqueleto em vez de piscar um
+   * cartão que ele não usaria.
+   */
+  protected readonly resolvendoCenaAtual = computed(
+    () => !this.carregando() && !this.ehMestre() && this.ativa() !== null,
+  );
+
   protected readonly rotuloTipoCena = rotuloTipoCena;
 
   constructor() {
@@ -158,6 +172,20 @@ export class HubCenas {
       .listarPorCampanha(this.campanhaId)
       .pipe(finalize(() => this.carregandoCenas.set(false)))
       .subscribe({ next: (cenas) => this.cenas.set(cenas) });
+
+    // Jogador: entra na cena atual assim que ela é conhecida — na carga, ou quando o mestre abre
+    // uma enquanto ele espera no vazio (`cena:alterada`/reconexão refazem a lista acima).
+    effect(() => {
+      const ativa = this.resolvendoCenaAtual() ? this.ativa() : null;
+      if (ativa) {
+        untracked(
+          () =>
+            void this.roteador.navigate(['/campanhas', this.campanhaId, 'cenas', ativa.id], {
+              replaceUrl: true,
+            }),
+        );
+      }
+    });
   }
 
   protected abrirNovaCena(): void {

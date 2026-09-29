@@ -103,12 +103,14 @@ export class CenaRepository extends BaseRepository {
 
   /**
    * Cenas da campanha: a ativa primeiro, depois as planejadas na `ordem` manual do mestre e por fim
-   * as encerradas, a mais recente primeiro. Sem `incluirPlanejadas`, as `PLANEJADA` ficam de fora
-   * — é o recorte de quem não é mestre (trava anti-vazamento).
+   * as encerradas, a mais recente primeiro. Sem `incluirPlanejadas`, as `PLANEJADA` ficam de fora;
+   * sem `incluirEncerradas`, as `ENCERRADA` — o recorte de cada papel vem de `recorteCenasDoPapel`
+   * (`cena-visibilidade.ts`), nunca decidido aqui.
    */
   async listarPorCampanha(dto: {
     campanhaId: number;
     incluirPlanejadas: boolean;
+    incluirEncerradas: boolean;
   }): Promise<CenaResumoDto[]> {
     return this.executarConsulta<CenaResumoDto>(
       `SELECT cena.id, cena.nome, tipo_cena.codigo AS tipo, tipo_cena_status.codigo AS status,
@@ -118,6 +120,7 @@ export class CenaRepository extends BaseRepository {
        WHERE cena.campanha_id = :campanhaId
          AND cena.is_deleted = false
          AND (:incluirPlanejadas::boolean OR tipo_cena_status.codigo <> :statusPlanejada)
+         AND (:incluirEncerradas::boolean OR tipo_cena_status.codigo <> :statusEncerrada)
        ORDER BY CASE tipo_cena_status.codigo
                   WHEN :statusAtiva THEN 0
                   WHEN :statusPlanejada THEN 1
@@ -129,8 +132,10 @@ export class CenaRepository extends BaseRepository {
       {
         campanhaId: dto.campanhaId,
         incluirPlanejadas: dto.incluirPlanejadas,
+        incluirEncerradas: dto.incluirEncerradas,
         statusAtiva: CenaStatusEnum.ATIVA,
         statusPlanejada: CenaStatusEnum.PLANEJADA,
+        statusEncerrada: CenaStatusEnum.ENCERRADA,
       },
     );
   }

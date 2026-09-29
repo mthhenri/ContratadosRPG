@@ -8,7 +8,9 @@ import type {
 } from '@contratados-rpg/shared/dtos/cena';
 import type { DocumentoRecuperadoDto } from "@contratados-rpg/shared/dtos/documento";
 import type { CenaLinhaDto } from '@contratados-rpg/shared/dtos/cena';
-import { CenaStatusEnum, CenaTipoEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
+import {
+  CenaStatusEnum, CenaTipoEnum, TipoCampanhaMembroPapelEnum,
+} from "@contratados-rpg/shared/enums";
 import { BusinessException, ResourceNotFoundException, UnauthorizedAccessException } from '../../core/exceptions';
 import { CampanhaGateway } from '../../core/gateway/campanha.gateway';
 import { TransacaoService } from '../../database/transacao.service';
@@ -16,6 +18,7 @@ import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
 import { CampanhaRepository } from '../campanha/campanha.repository';
 import { DocumentoService } from '../documento/documento.service';
 import { CenaDocumentoRepository } from './cena-documento.repository';
+import { validarCenaVisivelAoPapel } from './cena-visibilidade';
 import { CenaRepository } from './cena.repository';
 
 /**
@@ -43,16 +46,18 @@ export class CenaDocumentoService {
     private readonly campanhaGateway: CampanhaGateway,
   ) {}
 
-  /** A coluna Documentos da cena — mestre vê tudo; jogador/espectador, só o revelado. */
+  /**
+   * A coluna Documentos da cena — mestre vê tudo; jogador/espectador, só o revelado, e só de uma
+   * cena que o papel lê (`validarCenaVisivelAoPapel`: o jogador, só a `ATIVA`).
+   */
   async listar(
     dto: { cenaId: number },
     usuarioAtivo: JwtPayload,
   ): Promise<CenaDocumentoResumoDto[]> {
     const cena = await this.recuperarCenaObrigatoria(dto.cenaId);
-    const ehMestre = await this.ehMestre(cena.campanhaId, usuarioAtivo);
-    if (!ehMestre && cena.status === CenaStatusEnum.PLANEJADA) {
-      throw new UnauthorizedAccessException();
-    }
+    const papel = await this.recuperarPapel(cena.campanhaId, usuarioAtivo);
+    validarCenaVisivelAoPapel(papel, cena.status);
+    const ehMestre = papel === TipoCampanhaMembroPapelEnum.MESTRE;
     const linhas = await this.cenaDocumentoRepositorio.listarPorCena({
       cenaId: dto.cenaId,
       apenasRevelados: !ehMestre,
@@ -231,7 +236,11 @@ export class CenaDocumentoService {
     return cena;
   }
 
-  private async ehMestre(campanhaId: number, usuarioAtivo: JwtPayload): Promise<boolean> {
+  /** Exige ser membro da campanha; devolve o papel. */
+  private async recuperarPapel(
+    campanhaId: number,
+    usuarioAtivo: JwtPayload,
+  ): Promise<TipoCampanhaMembroPapelEnum> {
     const membro = await this.campanhaRepositorio.recuperarMembro({
       campanhaId,
       usuarioId: usuarioAtivo.sub,
@@ -239,11 +248,11 @@ export class CenaDocumentoService {
     if (!membro) {
       throw new UnauthorizedAccessException();
     }
-    return membro.papel === TipoCampanhaMembroPapelEnum.MESTRE;
+    return membro.papel;
   }
 
   private async validarMestre(campanhaId: number, usuarioAtivo: JwtPayload): Promise<void> {
-    if (!(await this.ehMestre(campanhaId, usuarioAtivo))) {
+    if ((await this.recuperarPapel(campanhaId, usuarioAtivo)) !== TipoCampanhaMembroPapelEnum.MESTRE) {
       throw new UnauthorizedAccessException();
     }
   }

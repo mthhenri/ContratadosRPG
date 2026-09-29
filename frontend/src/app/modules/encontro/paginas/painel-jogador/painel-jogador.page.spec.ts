@@ -230,12 +230,12 @@ describe('PainelEncontroJogador', () => {
       expect(elemento.querySelector('app-trilha-turnos')).not.toBeNull();
     });
 
-    it('o voltar do cabeçalho leva ao hub de cenas (m7-23)', () => {
+    it('o voltar do cabeçalho leva à campanha — o hub só traria o jogador de volta a esta cena', () => {
       const elemento = montar().fixture.nativeElement as HTMLElement;
       const voltar = elemento.querySelector('.iniciativa-jogador__cabecalho a');
 
-      expect(voltar?.getAttribute('aria-label')).toBe('Voltar às cenas');
-      expect(voltar?.getAttribute('href')).toBe(`/campanhas/${CAMPANHA_ID}/cenas`);
+      expect(voltar?.getAttribute('aria-label')).toBe('Voltar à campanha');
+      expect(voltar?.getAttribute('href')).toBe(`/campanhas/${CAMPANHA_ID}`);
     });
 
     it('cena sem encontro: mantém a casca e o palco vira um estado vazio', () => {

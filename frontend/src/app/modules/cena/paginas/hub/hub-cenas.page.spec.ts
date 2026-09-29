@@ -20,10 +20,11 @@ import { CenaService } from '../../cena.service';
 import { HubCenas } from './hub-cenas.page';
 
 /**
- * Prova o hub de cenas (m7-23): os três blocos na ordem que o backend devolve, o tipo como chip em
- * toda cena, os controles de condução só para o mestre (abrir, reordenar, encerrar, "Nova cena") e
- * o tempo real — qualquer `cena:alterada` da campanha refaz a lista, e o recorte do jogador
- * continua sendo do backend (o dublê de jogador simplesmente não devolve planejadas).
+ * Prova o hub de cenas (m7-23): para o mestre, os três blocos na ordem que o backend devolve, o tipo
+ * como chip em toda cena e os controles de condução (abrir, reordenar, encerrar, "Nova cena"); para o
+ * jogador, o resolvedor da cena atual (`jogador-acesso-somente-cena-atual`) — entra na ativa ou mostra
+ * o vazio. E o tempo real: qualquer `cena:alterada` da campanha refaz a lista; o recorte do jogador
+ * continua sendo do backend (o dublê de jogador só devolve a ativa, como o backend).
  */
 describe('HubCenas', () => {
   const CAMPANHA_ID = 9;
@@ -264,31 +265,40 @@ describe('HubCenas', () => {
     });
   });
 
-  describe('jogador', () => {
-    /** O backend não envia planejadas a quem não é mestre (m7-22) — o dublê espelha isso. */
-    const listaDoJogador = [ativa, encerrada];
+  describe('jogador — somente a cena atual', () => {
+    it('com uma cena ativa, entra nela sem mostrar lista, histórico nem controles', () => {
+      const { raiz, navegar } = montar({ usuarioId: JOGADOR, cenas: [ativa] });
 
-    it('vê a cena ativa e o histórico, sem planejadas nem controles de condução', () => {
-      const { raiz } = montar({ usuarioId: JOGADOR, cenas: listaDoJogador });
-
-      expect(nomes(bloco(raiz, 'Cena em andamento'))).toEqual(['Contenção no Setor 12']);
-      expect(nomes(bloco(raiz, 'Cenas encerradas'))).toEqual(['Emboscada no Setor 4']);
+      expect(navegar).toHaveBeenCalledWith(['/campanhas', CAMPANHA_ID, 'cenas', ativa.id], {
+        replaceUrl: true,
+      });
+      expect(navegar).toHaveBeenCalledTimes(1);
+      // A caminho da cena: segue no esqueleto, sem piscar o cartão.
+      expect(raiz.querySelector('.hub-cenas__esqueleto')).not.toBeNull();
+      expect(bloco(raiz, 'Cena em andamento')).toBeNull();
+      expect(bloco(raiz, 'Cenas encerradas')).toBeNull();
       expect(bloco(raiz, 'Cenas planejadas')).toBeNull();
       expect(botao(raiz, 'Nova cena')).toBeUndefined();
-      expect(botao(raiz, 'Encerrar')).toBeUndefined();
-      expect(botao(raiz, 'Abrir')).toBeUndefined();
     });
 
-    it('sem cena ativa, espera o mestre', () => {
-      const { raiz } = montar({ usuarioId: JOGADOR, cenas: [encerrada] });
+    it('sem cena ativa, mostra "Nenhuma cena no momento" e não navega', () => {
+      const { raiz, navegar } = montar({ usuarioId: JOGADOR, cenas: [] });
 
-      expect(texto(bloco(raiz, 'Cena em andamento'))).toContain(
-        'Quando o mestre abrir uma cena, ela aparece aqui.',
-      );
+      expect(texto(raiz.querySelector('app-estado-vazio'))).toContain('Nenhuma cena no momento.');
+      expect(raiz.querySelector('.cena-cartao')).toBeNull();
+      expect(navegar).not.toHaveBeenCalled();
+    });
+
+    it('mesmo que uma encerrada chegasse na lista, ela não é mostrada ao jogador', () => {
+      const { raiz, navegar } = montar({ usuarioId: JOGADOR, cenas: [encerrada] });
+
+      expect(raiz.querySelector('.cena-cartao')).toBeNull();
+      expect(texto(raiz.querySelector('app-estado-vazio'))).toContain('Nenhuma cena no momento.');
+      expect(navegar).not.toHaveBeenCalled();
     });
 
     it('`?nova=1` não abre o dialog para quem não é mestre', () => {
-      const { raiz } = montar({ usuarioId: JOGADOR, cenas: listaDoJogador, nova: true });
+      const { raiz } = montar({ usuarioId: JOGADOR, cenas: [], nova: true });
 
       expect(raiz.querySelector('app-cena-criar-dialog')).toBeNull();
     });
@@ -304,11 +314,39 @@ describe('HubCenas', () => {
       expect(tempoReal.sairSalaCampanha).toHaveBeenCalledWith(CAMPANHA_ID);
     });
 
-    it('o mestre abre outra cena: o jogador vê a nova surgir e a antiga ir para o histórico', () => {
-      const { raiz, fixture, cenaService, cenaAlterada$ } = montar({
+    it('o mestre abre uma cena com o jogador no vazio: ele entra nela ao vivo', () => {
+      const { fixture, cenaService, cenaAlterada$, navegar } = montar({
         usuarioId: JOGADOR,
-        cenas: [ativa],
+        cenas: [],
       });
+      const novaAtiva = cena(2, 'Galpão 7', CenaStatusEnum.ATIVA, CenaTipoEnum.INVESTIGACAO);
+      cenaService.listarPorCampanha.mockReturnValue(of([novaAtiva]));
+
+      cenaAlterada$.next({ campanhaId: CAMPANHA_ID, cena: novaAtiva });
+      fixture.detectChanges();
+
+      expect(navegar).toHaveBeenCalledWith(['/campanhas', CAMPANHA_ID, 'cenas', 2], {
+        replaceUrl: true,
+      });
+    });
+
+    it('reconexão depois de perder o evento: a releitura leva o jogador à cena aberta', () => {
+      const { fixture, cenaService, reconexao$, navegar } = montar({
+        usuarioId: JOGADOR,
+        cenas: [],
+      });
+      cenaService.listarPorCampanha.mockReturnValue(of([ativa]));
+
+      reconexao$.next();
+      fixture.detectChanges();
+
+      expect(navegar).toHaveBeenCalledWith(['/campanhas', CAMPANHA_ID, 'cenas', ativa.id], {
+        replaceUrl: true,
+      });
+    });
+
+    it('o mestre abre outra cena: o mestre vê a nova surgir e a antiga ir para o histórico', () => {
+      const { raiz, fixture, cenaService, cenaAlterada$, navegar } = montar({ cenas: [ativa] });
       const novaAtiva = cena(2, 'Galpão 7', CenaStatusEnum.ATIVA, CenaTipoEnum.INVESTIGACAO);
       const antiga = { ...ativa, status: CenaStatusEnum.ENCERRADA };
       cenaService.listarPorCampanha.mockReturnValue(of([novaAtiva, antiga]));
@@ -319,6 +357,7 @@ describe('HubCenas', () => {
 
       expect(nomes(bloco(raiz, 'Cena em andamento'))).toEqual(['Galpão 7']);
       expect(nomes(bloco(raiz, 'Cenas encerradas'))).toEqual(['Contenção no Setor 12']);
+      expect(navegar).not.toHaveBeenCalled();
     });
 
     it('ignora a `cena:alterada` de outra campanha', () => {

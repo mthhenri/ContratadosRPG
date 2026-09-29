@@ -1,6 +1,7 @@
 <!-- Hub de cenas (m7-23): a casca da Iniciativa sem a coluna de ações — cabeçalho da tela, a cena em
-     andamento em destaque, as planejadas (só o mestre) e o histórico. Cada cartão leva ao painel da
-     cena; os controles de condução (abrir, reordenar, encerrar) ficam ao lado do cartão. -->
+     andamento em destaque, as planejadas e o histórico (só o mestre). Cada cartão leva ao painel da
+     cena; os controles de condução (abrir, reordenar, encerrar) ficam ao lado do cartão. O jogador
+     nunca vê a lista: entra na cena atual ou vê o vazio (jogador-acesso-somente-cena-atual). -->
 <div class="hub-cenas">
     <div class="hub-cenas__conteudo">
         <header class="hub-cenas__cabecalho">
@@ -35,13 +36,20 @@
             }
         </header>
 
-        @if (carregando()) {
+        @if (carregando() || resolvendoCenaAtual()) {
         <div class="hub-cenas__esqueleto" role="status" aria-label="Carregando as cenas">
             <app-esqueleto class="hub-cenas__esqueleto-ativa" />
             @for (i of [0, 1, 2]; track i) {
             <app-esqueleto class="hub-cenas__esqueleto-linha" />
             }
         </div>
+        } @else if (!ehMestre()) {
+        <!-- Jogador sem cena ativa — mesma receita do "Nenhum combate em andamento." da Iniciativa. -->
+        <app-estado-vazio
+            icone="combate"
+            titulo="Nenhuma cena no momento."
+            linhaApoio="Quando o mestre abrir uma cena, esta tela leva você até ela."
+        />
         } @else {
         <section class="hub-cenas__bloco" aria-label="Cena em andamento">
             <header class="hub-cenas__secao">
@@ -58,7 +66,6 @@
                         *ngTemplateOutlet="conteudoCartao; context: { $implicit: cena }"
                     />
                 </a>
-                @if (ehMestre()) {
                 <button
                     app-botao
                     variante="secundario"
@@ -71,23 +78,17 @@
                 >
                     Encerrar
                 </button>
-                }
             </div>
             } @else {
             <app-estado-vazio
                 tamanho="compacto"
                 icone="combate"
                 titulo="Nenhuma cena em andamento."
-                [linhaApoio]="
-                    ehMestre()
-                        ? 'Abra uma cena planejada ou crie uma nova.'
-                        : 'Quando o mestre abrir uma cena, ela aparece aqui.'
-                "
+                linhaApoio="Abra uma cena planejada ou crie uma nova."
             />
             }
         </section>
 
-        @if (ehMestre()) {
         <section class="hub-cenas__bloco" aria-label="Cenas planejadas">
             <header class="hub-cenas__secao">
                 <h2 class="hub-cenas__secao-titulo">Planejadas</h2>
@@ -153,7 +154,7 @@
             />
             }
         </section>
-        } @if (encerradas().length) {
+        @if (encerradas().length) {
         <section class="hub-cenas__bloco" aria-label="Cenas encerradas">
             <header class="hub-cenas__secao">
                 <h2 class="hub-cenas__secao-titulo">Encerradas</h2>

@@ -34,12 +34,13 @@
 
     <div class="cena-jogador__conteudo">
         <header class="cena-jogador__cabecalho">
+            <!-- Jogador: o hub só o traria de volta a esta mesma cena (jogador-acesso-somente-cena-atual). -->
             <a
                 app-botao-icone
                 tamanho="padrao"
-                [routerLink]="['/campanhas', dados.campanhaId, 'cenas']"
-                aria-label="Voltar às cenas"
-                [appTooltip]="'Voltar às cenas'"
+                [routerLink]="['/campanhas', dados.campanhaId]"
+                aria-label="Voltar à campanha"
+                [appTooltip]="'Voltar à campanha'"
             >
                 <app-icone nome="voltar" />
             </a>

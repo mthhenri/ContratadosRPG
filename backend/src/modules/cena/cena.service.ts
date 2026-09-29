@@ -31,6 +31,7 @@ import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
 import { CampanhaRepository } from '../campanha/campanha.repository';
 import { EncontroRepository } from '../encontro/encontro.repository';
 import { EncontroService } from '../encontro/encontro.service';
+import { recorteCenasDoPapel, validarCenaVisivelAoPapel } from './cena-visibilidade';
 import { CenaRepository } from './cena.repository';
 
 /**
@@ -47,8 +48,9 @@ import { CenaRepository } from './cena.repository';
  * nunca existe cena `ENCERRADA` com encontro aberto, nem encontro `ENCERRADO` em cena `ATIVA`.
  *
  * **Trava anti-vazamento (decisão #7).** Cena `PLANEJADA` é exclusiva do mestre: `GET` recusa (403)
- * quem não é mestre, a listagem a omite e o `cena:alterada` só vai à sala do mestre. O encontro dela
- * tem a mesma trava no `EncontroService`.
+ * quem não é mestre, a listagem a omite e o `cena:alterada` só vai à sala do mestre. O jogador lê só
+ * a cena `ATIVA` (`jogador-acesso-somente-cena-atual`). A política vive em `cena-visibilidade.ts`,
+ * a mesma que o `EncontroService` e a `CenaDocumentoService` aplicam.
  *
  * **Emissão depois de confirmar (§9).** Toda escrita roda dentro da transação; `cena:alterada` e
  * `encontro:alterado` saem só depois do commit.
@@ -224,6 +226,7 @@ export class CenaService {
     const cenas = await this.cenaRepositorio.listarPorCampanha({
       campanhaId: dto.campanhaId,
       incluirPlanejadas: true,
+      incluirEncerradas: true,
     });
     const planejadas = cenas.filter((cena) => cena.status === CenaStatusEnum.PLANEJADA);
     const idsPlanejados = new Set(planejadas.map((cena) => cena.id));
@@ -245,6 +248,7 @@ export class CenaService {
     const cenasReordenadas = await this.cenaRepositorio.listarPorCampanha({
       campanhaId: dto.campanhaId,
       incluirPlanejadas: true,
+      incluirEncerradas: true,
     });
     for (const cena of cenasReordenadas.filter((cenaListada) => idsPlanejados.has(cenaListada.id))) {
       this.campanhaGateway.emitirCenaAlterada({ campanhaId: dto.campanhaId, cena });
@@ -253,18 +257,14 @@ export class CenaService {
   }
 
   /**
-   * Estado completo da cena, com o encontro dela no recorte de quem pediu. Exige ser membro — e,
-   * com a cena `PLANEJADA`, ser o mestre: a recusa é de acesso (403), nunca um payload vazio.
+   * Estado completo da cena, com o encontro dela no recorte de quem pediu. Exige ser membro e poder
+   * ler a cena (`validarCenaVisivelAoPapel`): planejada só o mestre; o jogador só a `ATIVA`. A
+   * recusa é de acesso (403), nunca um payload vazio — o cliente com URL antiga não recebe nada.
    */
   async recuperarCena(dto: CenaRecuperarDto, usuarioAtivo: JwtPayload): Promise<CenaRecuperadaDto> {
     const cenaEncontrada = await this.recuperarCenaObrigatoria(dto.id);
     const membro = await this.validarMembro(cenaEncontrada.campanhaId, usuarioAtivo);
-    if (
-      membro.papel !== TipoCampanhaMembroPapelEnum.MESTRE &&
-      cenaEncontrada.status === CenaStatusEnum.PLANEJADA
-    ) {
-      throw new UnauthorizedAccessException();
-    }
+    validarCenaVisivelAoPapel(membro.papel, cenaEncontrada.status);
 
     return {
       id: cenaEncontrada.id,
@@ -280,8 +280,9 @@ export class CenaService {
   }
 
   /**
-   * Cenas da campanha. O mestre recebe todas; jogador e espectador, só a `ATIVA` e as
-   * `ENCERRADA` (histórico) — decisão da m7-22 para o ponto em aberto do milestone.
+   * Cenas da campanha, no recorte do papel (`recorteCenasDoPapel`): o mestre recebe todas; o
+   * jogador, só a `ATIVA` (nenhum histórico nem planejada); o espectador, a `ATIVA` e as
+   * `ENCERRADA` (política da m7-22, de spec própria).
    */
   async listarPorCampanha(
     dto: { campanhaId: number },
@@ -290,7 +291,7 @@ export class CenaService {
     const membro = await this.validarMembro(dto.campanhaId, usuarioAtivo);
     return this.cenaRepositorio.listarPorCampanha({
       campanhaId: dto.campanhaId,
-      incluirPlanejadas: membro.papel === TipoCampanhaMembroPapelEnum.MESTRE,
+      ...recorteCenasDoPapel(membro.papel),
     });
   }
 

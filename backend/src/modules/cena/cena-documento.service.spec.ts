@@ -168,6 +168,29 @@ describe('CenaDocumentoService', () => {
         UnauthorizedAccessException,
       );
     });
+
+    it('jogador não lê os documentos de uma cena encerrada; o mestre continua lendo', async () => {
+      cenaRepositorio.recuperarPorId.mockResolvedValue(criarCenaLinha({ status: CenaStatusEnum.ENCERRADA }));
+      campanhaRepositorio.recuperarMembro.mockResolvedValue(
+        membroComPapel(TipoCampanhaMembroPapelEnum.JOGADOR),
+      );
+      await expect(service.listar({ cenaId: 900 }, jogador)).rejects.toBeInstanceOf(
+        UnauthorizedAccessException,
+      );
+      expect(cenaDocumentoRepositorio.listarPorCena).not.toHaveBeenCalled();
+
+      campanhaRepositorio.recuperarMembro.mockResolvedValue(
+        membroComPapel(TipoCampanhaMembroPapelEnum.MESTRE),
+      );
+      await expect(service.listar({ cenaId: 900 }, mestre)).resolves.toHaveLength(1);
+    });
+
+    it('não membro (outra campanha) é recusado', async () => {
+      campanhaRepositorio.recuperarMembro.mockResolvedValue(null);
+      await expect(service.listar({ cenaId: 900 }, jogador)).rejects.toBeInstanceOf(
+        UnauthorizedAccessException,
+      );
+    });
   });
 
   describe('anexar', () => {

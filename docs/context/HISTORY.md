@@ -1,5 +1,57 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-29 — jogador-acesso-somente-cena-atual: o jogador só lê a cena ativa
+
+Decisão do autor: o jogador deixa de ter o histórico de cenas previsto na m7-22 — lê **só a cena
+`ATIVA`** da própria campanha; o mestre mantém planejadas, atual e histórico; o espectador não foi
+ampliado nem restringido (continua `ATIVA` + `ENCERRADA`, política de spec própria). A regra vive
+num único lugar, `backend/src/modules/cena/cena-visibilidade.ts` (`cenaVisivelAoPapel`,
+`validarCenaVisivelAoPapel`, `recorteCenasDoPapel`), consumido por `CenaService` (recuperar/listar),
+`CenaDocumentoService.listar` e `EncontroService` (GET — validado **antes** de ler o log —,
+listagem, atribuir iniciativa, avanço de turno e o recorte do `encontro:alterado`); o antigo
+`EncontroService.validarCenaVisivel` privado saiu. SQL: `listarPorCampanha` de cena e de encontro
+ganharam o filtro `incluirEncerradas`/`incluirCenaEncerrada` (reordenar cenas do mestre passa `true`).
+
+Frontend: o `HubCenas` do jogador virou resolvedor — com cena ativa navega a ela com `replaceUrl`
+(esqueleto enquanto isso), sem ela mostra o estado vazio canônico "Nenhuma cena no momento."
+(`app-estado-vazio`, análogo: estado vazio da Iniciativa) e entra sozinho quando a `cena:alterada`
+ou a reconexão trazem uma. Planejadas/encerradas/“Nova cena” ficam só no ramo do mestre. No
+`EncontroPainelDadosService` a carga da cena passou a um `switchMap` (resposta atrasada
+descartada), a recusa (403/404, inclusive no refetch pós-reconexão) invalida cena/encontro/
+documentos antes de voltar ao hub com `replaceUrl`, e a `cena:alterada` de encerramento faz o
+mesmo para o jogador (mestre só atualiza o status; papel ainda desconhecido → refetch autorizado).
+Resposta de documentos de uma cena que a tela já deixou é ignorada. O voltar dos painéis do
+jogador aponta à campanha — ao hub só o traria de volta à mesma cena. Sem laço de navegação: o hub
+só navega para a cena listada como ativa, o painel só volta ao hub em recusa ou encerramento.
+
+Auditoria de legados: `/iniciativa/:encontroId` resolve pela cena dona e cai no hub em 403; a
+prévia do mestre como jogador (`CampanhaPreviaJogadorDadosService`) não abre Cenas e o encontro
+ativo do alvo (`recuperarEncontroAtivoParaAlvo`) já só usa a cena ativa — coincide com a conta real.
+**Evidência fora do escopo, não alterada por inferência:** o feed geral de rolagens da campanha
+continua mostrando rolagens avulsas feitas durante encontros passados (eram públicas quando
+feitas; nome/cor da ficha, sem vínculo com a cena); e documentos da Biblioteca revelados numa cena
+encerrada seguem revelados pela política da Biblioteca. Se o autor quiser recortá-los pela cena,
+cada um pede spec própria (rolagem precisaria de vínculo a encontro/cena no feed; Biblioteca,
+de uma política de revelação por cena).
+
+Testes: backend 804/804 (novos em `cena.service.spec` — matriz papel × status, URL direta de
+encerrada e de outra campanha; `cena-documento.service.spec`; `encontro.service.spec` — GET 403
+sem ler eventos, espectador mantido, broadcast recusado, recorte de listagem). Frontend: suíte
+completa 2548/2549 — a falha era o teste do voltar do jogador, desatualizado pela mudança
+intencional; corrigido e reexecutado com os specs afetados
+(hub do jogador: resolução, estado vazio, encerrada nunca exibida, `?nova=1` ignorado, entrada ao
+vivo/reconexão; painel: 403 com `replaceUrl`, `switchMap`, encerramento jogador/mestre/papel
+desconhecido, reconexão recusada; voltar do jogador → campanha). Lint backend/frontend sem erros
+(1 erro de `no-unsafe-return` no teste novo corrigido no gate; os warnings são preexistentes).
+
+Verificado ao vivo (skill `verify`, app já em execução, contas mestre/jogador novas, 1920×1080 e
+360×800): REST do jogador — cena encerrada, encontro dela, documentos dela e planejada → 403;
+listas de cenas/encontros vazias; mestre → 200. Hub sem cena → estado vazio, sem nomes antigos,
+sem overflow; URL direta e F5 de cena encerrada → hub, uma navegação só; mestre abre cena → jogador
+entra sozinho; hub com ativa → resolve para ela; mestre encerra com o jogador dentro → hub vazio
+sem recarregar a página, nome da cena some, "voltar" do navegador não a reabre. Comparado ao
+estado vazio da Iniciativa: mesmo primitivo, moldura tracejada, ícone e hierarquia.
+
 ## 2026-09-29 — Cena atual e documentos de Investigação do espectador
 
 Implementadas `fix-espectador-cenas-sem-iniciativa` e `espectador-documentos-cena`, com o

@@ -2653,11 +2653,20 @@ mesma operação). `POST campanha/:id/encontro` e `POST encontro/:id/encerrar` m
 nenhuma tela os chama — o frontend cria e encerra pelos endpoints de cena (`CenaService` do
 frontend, `modules/cena/`). **Trava anti-vazamento:** encontro de cena `PLANEJADA` é só do mestre — `GET` 403,
 listagem omite, broadcast descarta o recorte de jogador/espectador; iniciar e pedir iniciativa
-exigem a cena aberta.
+exigem a cena aberta. **Jogador só na cena atual** (`jogador-acesso-somente-cena-atual`): o jogador
+lê apenas a cena `ATIVA` — `GET cena/:id`, `GET cena/:id/documento`, `GET encontro/:id` (antes de
+ler o log) e o broadcast recusam a `ENCERRADA`, e as listagens de cenas/encontros a omitem. A
+política única por papel é `backend/src/modules/cena/cena-visibilidade.ts` (mestre: tudo;
+jogador: `ATIVA`; espectador: `ATIVA` + `ENCERRADA`, sem ampliação).
 
 **Hub e painel de cena (`m7-23`, `frontend/src/app/modules/cena/`).** `/campanhas/:campanhaId/cenas`
-é o `HubCenas`: cena ativa em destaque, planejadas na ordem manual (setas; só o mestre, e o backend
-nem as envia ao jogador), encerradas; "Nova cena" (`CenaCriarDialog`: nome + tipo obrigatório,
+é o `HubCenas`. Para o **jogador** o hub é só um resolvedor: com cena ativa navega a ela
+(`replaceUrl`, esqueleto enquanto isso); sem, mostra "Nenhuma cena no momento." e entra sozinho
+quando a `cena:alterada`/reconexão trouxer uma. No painel, o voltar do jogador vai à campanha, e
+encerramento da cena (evento) ou 403 no refetch (F5, link antigo, reconexão) descarta
+cena/encontro/documentos e volta ao hub; a carga da cena é um `switchMap` (resposta atrasada
+descartada). Para o **mestre**: cena ativa em destaque, planejadas na ordem manual (setas),
+encerradas; "Nova cena" (`CenaCriarDialog`: nome + tipo obrigatório,
 "Planejar"/"Abrir agora", confirmação quando já há cena ativa), "Abrir" e "Encerrar". Qualquer
 `cena:alterada` da campanha refaz a listagem. `/campanhas/:campanhaId/cenas/:cenaId` é o
 `PainelCenaShell`: `cenaTemIniciativa(tipo)` → o painel de Iniciativa abaixo; senão, o painel sem
