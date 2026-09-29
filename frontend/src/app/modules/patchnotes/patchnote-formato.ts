@@ -1,10 +1,25 @@
 /**
- * Apresentação de um patchnote (pn-04): separa o Markdown da nota em introdução + blocos de
- * `## Título` e formata a data. Funções puras — a renderização segura de cada trecho fica com
+ * Apresentação de um patchnote (pn-04): separa o Markdown da nota em introdução, grupos e blocos e
+ * formata a data. Funções puras — a renderização segura de cada trecho fica com
  * `renderizarMarkdownSeguro`, na página.
+ *
+ * Estrutura aceita (tudo opcional além do texto):
+ *
+ * ```
+ * Texto de abertura da versão.
+ *
+ * # PARA OS PLAYERS            ← grupo (um público ou um assunto); `# RESUMO` também é um grupo
+ * ## 🎬 Cenas                  ← bloco de funcionalidade, com texto e listas
+ * ## Novidades                 ← ou um dos três blocos "de balanço" (com cor própria)
+ * ```
+ *
+ * Nota só com `##` (sem `#`) vira um grupo único sem título — o formato original continua valendo.
  */
 
-/** Tom visual do bloco, decidido pelo título (`Novidades`, `Melhorias`, `Correções`). */
+/**
+ * Tom visual do bloco. `novidades`/`melhorias`/`correcoes` são os blocos de balanço, decididos pelo
+ * título; qualquer outro título é uma funcionalidade (`neutro`), exibida como título de seção.
+ */
 export type PatchnoteBlocoTom = 'novidades' | 'melhorias' | 'correcoes' | 'neutro';
 
 export interface PatchnoteBloco {
@@ -13,10 +28,18 @@ export interface PatchnoteBloco {
   readonly markdown: string;
 }
 
-export interface PatchnoteEstruturado {
-  /** Texto antes do primeiro `##` — o resumo da versão. Vazio quando a nota começa por um bloco. */
+export interface PatchnoteGrupo {
+  /** Título do `# …`; `null` no grupo implícito de uma nota escrita só com `##`. */
+  readonly titulo: string | null;
+  /** Texto entre o `# …` e o primeiro `##` do grupo (num `# RESUMO`, é o conteúdo todo). */
   readonly introducao: string;
   readonly blocos: readonly PatchnoteBloco[];
+}
+
+export interface PatchnoteEstruturado {
+  /** Texto antes do primeiro título — o resumo de abertura da versão. Vazio quando não há. */
+  readonly introducao: string;
+  readonly grupos: readonly PatchnoteGrupo[];
 }
 
 const TONS_POR_TITULO: Readonly<Record<string, PatchnoteBlocoTom>> = {
@@ -33,35 +56,57 @@ function normalizarTitulo(titulo: string): string {
     .toLowerCase();
 }
 
+interface GrupoEmConstrucao {
+  titulo: string | null;
+  introducao: string[];
+  blocos: { titulo: string; linhas: string[] }[];
+}
+
 /**
- * Divide a nota nos títulos `## …`. Um `##` dentro de bloco de código cercado não abre bloco, e os
- * títulos de outro nível (`#`, `###`) continuam sendo texto do bloco em que estão.
+ * Divide a nota nos títulos `# …` (grupos) e `## …` (blocos). Título dentro de bloco de código
+ * cercado não abre nada, e os de nível mais fundo (`###`) continuam sendo texto do bloco.
  */
 export function estruturarPatchnote(markdown: string): PatchnoteEstruturado {
-  const introducao: string[] = [];
-  const blocos: { titulo: string; linhas: string[] }[] = [];
+  const abertura: string[] = [];
+  const grupos: GrupoEmConstrucao[] = [];
   let dentroDeCodigo = false;
 
   for (const linha of markdown.replace(/\r\n?/g, '\n').split('\n')) {
     if (/^\s*(```|~~~)/.test(linha)) {
       dentroDeCodigo = !dentroDeCodigo;
     }
-    const titulo = dentroDeCodigo ? null : linha.match(/^##\s+(.+?)\s*#*\s*$/);
-    if (titulo) {
-      blocos.push({ titulo: titulo[1], linhas: [] });
-    } else if (blocos.length > 0) {
-      blocos[blocos.length - 1].linhas.push(linha);
+    const grupo = dentroDeCodigo ? null : linha.match(/^#\s+(.+?)\s*#*\s*$/);
+    const bloco = dentroDeCodigo ? null : linha.match(/^##\s+(.+?)\s*#*\s*$/);
+
+    if (grupo) {
+      grupos.push({ titulo: grupo[1], introducao: [], blocos: [] });
+    } else if (bloco) {
+      if (grupos.length === 0) {
+        grupos.push({ titulo: null, introducao: [], blocos: [] });
+      }
+      grupos[grupos.length - 1].blocos.push({ titulo: bloco[1], linhas: [] });
+    } else if (grupos.length === 0) {
+      abertura.push(linha);
     } else {
-      introducao.push(linha);
+      const atual = grupos[grupos.length - 1];
+      if (atual.blocos.length > 0) {
+        atual.blocos[atual.blocos.length - 1].linhas.push(linha);
+      } else {
+        atual.introducao.push(linha);
+      }
     }
   }
 
   return {
-    introducao: introducao.join('\n').trim(),
-    blocos: blocos.map(({ titulo, linhas }) => ({
-      titulo,
-      tom: TONS_POR_TITULO[normalizarTitulo(titulo)] ?? 'neutro',
-      markdown: linhas.join('\n').trim(),
+    introducao: abertura.join('\n').trim(),
+    grupos: grupos.map((grupo) => ({
+      titulo: grupo.titulo,
+      introducao: grupo.introducao.join('\n').trim(),
+      blocos: grupo.blocos.map(({ titulo, linhas }) => ({
+        titulo,
+        tom: TONS_POR_TITULO[normalizarTitulo(titulo)] ?? 'neutro',
+        markdown: linhas.join('\n').trim(),
+      })),
     })),
   };
 }

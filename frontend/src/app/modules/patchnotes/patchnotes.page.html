@@ -113,10 +113,22 @@
                 }
             </header>
 
-            @for (bloco of conteudo()?.blocos; track $index) {
-            <section class="patchnotes__bloco" [attr.data-tom]="bloco.tom">
-                <h3 class="patchnotes__bloco-titulo">{{ bloco.titulo }}</h3>
-                <div class="patchnotes__markdown" [innerHTML]="bloco.html"></div>
+            @for (grupo of conteudo()?.grupos; track $index) {
+            <section class="patchnotes__grupo">
+                @if (grupo.titulo) {
+                <h3 class="patchnotes__grupo-titulo">{{ grupo.titulo }}</h3>
+                } @if (grupo.introducao) {
+                <div class="patchnotes__markdown" [innerHTML]="grupo.introducao"></div>
+                } @for (bloco of grupo.blocos; track $index) {
+                <section
+                    class="patchnotes__bloco"
+                    [class.patchnotes__bloco--funcionalidade]="bloco.tom === 'neutro'"
+                    [attr.data-tom]="bloco.tom"
+                >
+                    <h4 class="patchnotes__bloco-titulo">{{ bloco.titulo }}</h4>
+                    <div class="patchnotes__markdown" [innerHTML]="bloco.html"></div>
+                </section>
+                }
             </section>
             } @if (versaoAnterior(); as anterior) {
             <footer class="patchnotes__nota-rodape">

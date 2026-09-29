@@ -21,12 +21,12 @@ uma versão.
    esvazia o cache, então a nota publicada junto do deploy aparece na hora; só uma correção de nota
    *sem* deploy espera até 24 h. Para o navegador, `Cache-Control: public, max-age=300` — curto de
    propósito, para não replicar o atraso de 24 h no cliente.
-3. **Nível de detalhe mediano, macro, em português de jogador.** Cada nota tem um título
-   curto e três seções fixas, todas opcionais quando vazias: **Novidades**, **Melhorias**,
-   **Correções**. Cada item é uma frase sobre o que o usuário passa a poder fazer ou deixa de
-   sofrer — sem nome de arquivo, endpoint, migration ou termo interno. Exemplo:
-   *"Mestres agora podem revelar documentos a toda a mesa com um clique."*, não *"Endpoint
-   `documento/revelar` adicionado"*.
+3. **Formato de escrita (revisto em 2026-09-29, a partir de um modelo do autor).** Em linguagem de
+   jogador, sem "tecniquês", mas **explicando em vez de só listar**: abertura com o `**Período:**`,
+   grupos `# PARA OS PLAYERS` / `# PARA O MESTRE`, um bloco `## <emoji> Funcionalidade` para cada
+   entrega (texto e listas) e um `# RESUMO DO QUE MAIS MUDA NA MESA` final. Os blocos de balanço
+   `## Novidades`/`## Melhorias`/`## Correções` continuam aceitos (com cor própria), e a nota escrita só
+   com `##` também. Substitui o formato inicial de três seções fixas de itens curtos.
 4. **A versão tem uma única fonte:** o `version` do `package.json` da raiz. Os três workspaces
    acompanham a mesma versão (o projeto é um produto só). Nada de `version.txt` paralelo.
 5. **SemVer:** funcionalidade nova visível ao usuário sobe o *minor* (`1.0.0 → 1.1.0`); só

@@ -42,7 +42,8 @@ description: >
    *patch*; quebra de uso existente → *major*. **Nunca suba o major sem o autor pedir.** Confirme
    o número antes de escrever qualquer coisa.
 5. **Redigir a nota** em `docs/patchnotes/<versao>.md`, no formato de `references/linguagem-de-jogador.md`
-   (front matter, blocos Novidades/Melhorias/Correções, tradução técnico → jogador). Data = hoje.
+   (front matter, grupos Para os players / Para o mestre / Resumo, blocos por funcionalidade, tradução
+   técnico → jogador). Data = hoje.
 6. **Mostrar ao autor o texto e esperar aprovação.** Ele revisa a nota, não o commit.
 7. **Versão nos pacotes.** Edite `version` na raiz → `npm run versao:sincronizar` → confira
    `git diff --stat` (4 `package.json`, lock, `shared/src/versao.ts`) → `npm run build --workspace=shared`
@@ -66,7 +67,8 @@ description: >
 
 - [ ] Nenhum nome de arquivo, rota, tabela, migration, sigla (`P-0NN`, `I-0NN`, `m9-13`) nem termo técnico.
 - [ ] Cada item diz o que o jogador/mestre **passa a poder fazer** ou **deixa de sofrer**.
-- [ ] Nível macro: de 3 a 12 itens por bloco; itens parecidos viram um só. Bloco vazio não entra.
+- [ ] Explica em vez de só listar; vários commits do mesmo recurso viram **um** bloco; grupo ou bloco vazio não entra.
+- [ ] Tem o parágrafo de abertura com o `**Período:**` e o `# RESUMO…` final.
 - [ ] Título ≤ 120 caracteres, descritivo (não "Atualização de setembro").
 - [ ] `versao` = a da raiz; `data` = `AAAA-MM-DD` real; front matter válido (`--dry-run` prova).
 

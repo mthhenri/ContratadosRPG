@@ -5,51 +5,73 @@ import {
 } from './patchnote-formato';
 
 describe('estruturarPatchnote', () => {
-  it('separa a introdução dos blocos e dá tom pelo título, ignorando acento e caixa', () => {
+  it('nota só com ## vira um grupo único sem título, com tom pelo título (acento e caixa ignorados)', () => {
     const estrutura = estruturarPatchnote(
       'Resumo da versão.\n\n## Novidades\n\n- A\n- B\n\n## MELHORIAS\n\n- C\n\n## Correções\n\n- D\n\n## Outros\n\n- E',
     );
 
     expect(estrutura.introducao).toBe('Resumo da versão.');
-    expect(estrutura.blocos.map((bloco) => [bloco.titulo, bloco.tom])).toEqual([
+    expect(estrutura.grupos).toHaveLength(1);
+    expect(estrutura.grupos[0].titulo).toBeNull();
+    expect(estrutura.grupos[0].blocos.map((bloco) => [bloco.titulo, bloco.tom])).toEqual([
       ['Novidades', 'novidades'],
       ['MELHORIAS', 'melhorias'],
       ['Correções', 'correcoes'],
       ['Outros', 'neutro'],
     ]);
-    expect(estrutura.blocos[0].markdown).toBe('- A\n- B');
+    expect(estrutura.grupos[0].blocos[0].markdown).toBe('- A\n- B');
   });
 
-  it('aceita nota que começa direto por um bloco, sem introdução', () => {
-    const estrutura = estruturarPatchnote('## Novidades\n\n- A');
-    expect(estrutura.introducao).toBe('');
-    expect(estrutura.blocos).toHaveLength(1);
+  it('separa grupos por # e blocos de funcionalidade por ##', () => {
+    const estrutura = estruturarPatchnote(
+      'Abertura.\n\n# PARA OS PLAYERS\n\nTexto do grupo.\n\n## 🎬 Cenas\n\nParágrafo.\n\n## 🔒 Fichas\n\n- item\n\n# PARA O MESTRE\n\n## 📚 Biblioteca\n\nTexto.\n\n# RESUMO\n\nSó um parágrafo.',
+    );
+
+    expect(estrutura.introducao).toBe('Abertura.');
+    expect(estrutura.grupos.map((grupo) => grupo.titulo)).toEqual([
+      'PARA OS PLAYERS',
+      'PARA O MESTRE',
+      'RESUMO',
+    ]);
+    expect(estrutura.grupos[0].introducao).toBe('Texto do grupo.');
+    expect(estrutura.grupos[0].blocos.map((bloco) => [bloco.titulo, bloco.tom])).toEqual([
+      ['🎬 Cenas', 'neutro'],
+      ['🔒 Fichas', 'neutro'],
+    ]);
+    expect(estrutura.grupos[1].blocos[0].markdown).toBe('Texto.');
+    expect(estrutura.grupos[2]).toEqual({ titulo: 'RESUMO', introducao: 'Só um parágrafo.', blocos: [] });
   });
 
-  it('nota sem nenhum ## vira só introdução', () => {
+  it('aceita blocos de balanço dentro de um grupo', () => {
+    const estrutura = estruturarPatchnote('# PARA OS PLAYERS\n\n## Novidades\n\n- A');
+    expect(estrutura.grupos[0].blocos[0].tom).toBe('novidades');
+  });
+
+  it('nota sem nenhum título vira só introdução', () => {
     expect(estruturarPatchnote('Só texto.\n\nOutro parágrafo.')).toEqual({
       introducao: 'Só texto.\n\nOutro parágrafo.',
-      blocos: [],
+      grupos: [],
     });
   });
 
-  it('não abre bloco com ## dentro de código cercado nem com ### ou #', () => {
+  it('não abre grupo nem bloco com # ou ## dentro de código cercado, nem com ###', () => {
     const estrutura = estruturarPatchnote(
-      '## Novidades\n\n```\n## isto não é bloco\n```\n\n### Sub\n\n# Topo\n\ntexto',
+      '## Novidades\n\n```\n# isto não é grupo\n## nem bloco\n```\n\n### Sub\n\ntexto',
     );
 
-    expect(estrutura.blocos).toHaveLength(1);
-    expect(estrutura.blocos[0].markdown).toContain('## isto não é bloco');
-    expect(estrutura.blocos[0].markdown).toContain('### Sub');
+    expect(estrutura.grupos).toHaveLength(1);
+    expect(estrutura.grupos[0].blocos).toHaveLength(1);
+    expect(estrutura.grupos[0].blocos[0].markdown).toContain('## nem bloco');
+    expect(estrutura.grupos[0].blocos[0].markdown).toContain('### Sub');
   });
 
-  it('tolera CRLF e ## de fechamento', () => {
+  it('tolera CRLF e # de fechamento', () => {
     const estrutura = estruturarPatchnote('## Novidades ##\r\n\r\n- A\r\n');
-    expect(estrutura.blocos[0]).toEqual({ titulo: 'Novidades', tom: 'novidades', markdown: '- A' });
+    expect(estrutura.grupos[0].blocos[0]).toEqual({ titulo: 'Novidades', tom: 'novidades', markdown: '- A' });
   });
 
   it('bloco vazio continua existindo, com markdown vazio', () => {
-    expect(estruturarPatchnote('## Correções').blocos[0].markdown).toBe('');
+    expect(estruturarPatchnote('## Correções').grupos[0].blocos[0].markdown).toBe('');
   });
 });
 

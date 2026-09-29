@@ -96,21 +96,25 @@ export class PatchnotesPage {
     return itens[itens.findIndex((item) => item.versao === exibida) + 1] ?? null;
   });
 
-  /** Introdução e blocos da nota exibida, já renderizados e sanitizados. */
+  /** Introdução, grupos e blocos da nota exibida, já renderizados e sanitizados. */
   protected readonly conteudo = computed(() => {
     const nota = this.nota();
     if (!nota) {
       return null;
     }
+    const renderizar = (markdown: string): string =>
+      markdown ? renderizarMarkdownSeguro(markdown, this.sanitizer) : '';
     const estrutura = estruturarPatchnote(nota.conteudoMarkdown);
     return {
-      introducao: estrutura.introducao
-        ? renderizarMarkdownSeguro(estrutura.introducao, this.sanitizer)
-        : '',
-      blocos: estrutura.blocos.map((bloco) => ({
-        titulo: bloco.titulo,
-        tom: bloco.tom,
-        html: renderizarMarkdownSeguro(bloco.markdown, this.sanitizer),
+      introducao: renderizar(estrutura.introducao),
+      grupos: estrutura.grupos.map((grupo) => ({
+        titulo: grupo.titulo,
+        introducao: renderizar(grupo.introducao),
+        blocos: grupo.blocos.map((bloco) => ({
+          titulo: bloco.titulo,
+          tom: bloco.tom,
+          html: renderizar(bloco.markdown),
+        })),
       })),
     };
   });

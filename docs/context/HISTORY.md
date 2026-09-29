@@ -1,5 +1,25 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-29 — patchnotes-versao-sistema (revisão do autor): formato de escrita mais rico
+
+O autor enviou um modelo de patchnotes (públicos "Para os players" / "Para o mestre", seções por
+funcionalidade com emoji, texto explicativo e resumo final) e pediu algo similar. O formato inicial
+(três blocos fixos de itens curtos) foi substituído: as cinco notas (`v1.0.0`…`v1.4.0`) foram
+reescritas nesse estilo, usando o texto do autor como base e distribuindo cada item **pela data do
+commit** na versão certa (ex.: a nova Iniciativa e o editor de texto na `1.3.0`, Cenas e Biblioteca na
+`1.4.0`; o material de desempenho foi dividido entre as duas).
+
+**Página.** `estruturarPatchnote` passou a devolver grupos (`# Título`) com blocos (`## Título`);
+blocos de balanço (Novidades/Melhorias/Correções) mantêm o rótulo colorido e os demais viram
+funcionalidades com título de seção legível; notas antigas (só `##`) seguem valendo como um grupo sem
+título. Sem mudança no backend nem no contrato: o conteúdo é Markdown. Skill (duas cópias), decisão 3 da
+spec, `DESIGN.md` e `CONTEXT.md` atualizados.
+
+Verificado: `patchnotes` 33 testes (grupos, funcionalidades, resumo, compatibilidade); `patchnotes:publicar`
+das cinco notas (destino local); página `1.4.0` e `1.1.0` em `1920×1080` e `360×800`, sem overflow. Achado
+só na verificação: parágrafo depois de lista ficava colado nela (margem corrigida). Segue pendente a
+publicação no R2 real e o push das tags.
+
 ## 2026-09-29 — patchnotes-versao-sistema (revisão do autor): de `1.1.0` para cinco versões
 
 O autor apontou que ir de `1.0.0` a `1.1.0` depois de quase um mês era incoerente e pediu mais

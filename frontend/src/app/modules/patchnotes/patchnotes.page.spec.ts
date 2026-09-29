@@ -92,6 +92,61 @@ describe('PatchnotesPage', () => {
     expect(blocos[0].querySelector('li strong')?.textContent).toBe('Cenas.');
   });
 
+  it('renderiza grupos por público, blocos de funcionalidade e resumo final', async () => {
+    await abrir('/patchnotes/1.1.0');
+    await responderIndice();
+    await responderNota(
+      nota(
+        '1.1.0',
+        [
+          'Este foi um update grande.',
+          '',
+          '# PARA OS PLAYERS',
+          '',
+          '## 🎬 Cenas substituem a Iniciativa',
+          '',
+          'Agora uma campanha pode ter **várias cenas**.',
+          '',
+          '- Investigação',
+          '- Resistência',
+          '',
+          '## Novidades',
+          '',
+          '- Um item de balanço.',
+          '',
+          '# PARA O MESTRE',
+          '',
+          '## 📚 Biblioteca',
+          '',
+          'O mestre revela documentos.',
+          '',
+          '# RESUMO',
+          '',
+          'O maior impacto são as **Cenas**.',
+        ].join('\n'),
+      ),
+    );
+
+    const grupos = Array.from(raiz().querySelectorAll('.patchnotes__grupo'));
+    expect(grupos.map((grupo) => grupo.querySelector('.patchnotes__grupo-titulo')?.textContent)).toEqual([
+      'PARA OS PLAYERS',
+      'PARA O MESTRE',
+      'RESUMO',
+    ]);
+    expect(raiz().querySelector('.patchnotes__markdown--introducao')?.textContent).toContain(
+      'Este foi um update grande.',
+    );
+
+    const funcionalidade = grupos[0].querySelector('.patchnotes__bloco--funcionalidade')!;
+    expect(funcionalidade.querySelector('.patchnotes__bloco-titulo')?.textContent).toContain('🎬 Cenas');
+    expect(funcionalidade.querySelector('strong')?.textContent).toBe('várias cenas');
+    expect(funcionalidade.querySelectorAll('li')).toHaveLength(2);
+    expect(grupos[0].querySelector('.patchnotes__bloco[data-tom="novidades"]')).not.toBeNull();
+    expect(grupos[0].querySelector('.patchnotes__bloco[data-tom="novidades"].patchnotes__bloco--funcionalidade')).toBeNull();
+    expect(grupos[2].querySelector('.patchnotes__markdown strong')?.textContent).toBe('Cenas');
+    expect(grupos[2].querySelector('.patchnotes__bloco')).toBeNull();
+  });
+
   it('lista as versões, marca a aberta e não põe "Atual" numa versão antiga', async () => {
     await abrir('/patchnotes/1.0.0');
     await responderIndice();

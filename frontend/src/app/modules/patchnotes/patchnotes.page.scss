@@ -171,6 +171,37 @@
         color: var(--text);
     }
 
+    // Grupo (um público ou assunto: "Para os players", "Resumo"): título mono com filete, como o
+    // cabeçalho do documento de contenção, e os blocos empilhados abaixo.
+    &__grupo {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    &__grupo-titulo {
+        display: flex;
+        align-items: center;
+        gap: var(--space-12);
+        margin: 0;
+        font: 700 13px var(--font-mono);
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        color: var(--text);
+
+        &::before {
+            content: "//";
+            color: var(--accent);
+        }
+
+        &::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+    }
+
     &__bloco {
         display: flex;
         flex-direction: column;
@@ -187,6 +218,19 @@
 
         &[data-tom="correcoes"] {
             --cor-bloco: var(--warning);
+        }
+    }
+
+    // Bloco de funcionalidade (qualquer título fora Novidades/Melhorias/Correções): título de seção
+    // legível, não o rótulo miúdo dos blocos de balanço.
+    &__bloco--funcionalidade &__bloco-titulo {
+        font: 600 15px/1.35 var(--font-sans);
+        text-transform: none;
+        letter-spacing: 0;
+        color: var(--text);
+
+        &::before {
+            display: none;
         }
     }
 
@@ -233,7 +277,7 @@
                 display: flex;
                 flex-direction: column;
                 gap: 9px;
-                margin: 0;
+                margin: 0 0 var(--space-8);
                 padding: 0 0 0 var(--space-16);
             }
 

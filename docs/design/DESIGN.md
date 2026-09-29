@@ -438,8 +438,11 @@ Chip de versão (`app-botao` `secundario`/`contorno`, tamanho compacto na classe
 lado da marca, com ponto `--accent` enquanto há versão que este navegador ainda não viu; some no
 mobile (`bp.mobile`), onde vira o item "Novidades" (com o mesmo ponto) dentro do menu do perfil.
 Ambos levam a `/patchnotes`. Página `/patchnotes`: lista de versões à esquerda (faixa horizontal no
-mobile, por *container query* de `720px`), nota à direita em cartão com blocos Novidades
-(`--positive`), Melhorias (`--energy`) e Correções (`--warning`).
+mobile, por *container query* de `720px`), nota à direita em cartão. A nota tem **grupos** (`# Título`
+→ título mono `// PARA OS PLAYERS` com filete) e **blocos** (`## Título`): os blocos de balanço Novidades
+(`--positive`), Melhorias (`--energy`) e Correções (`--warning`) usam o rótulo miúdo com quadradinho
+colorido; qualquer outro título é uma **funcionalidade**, com título de seção em sans 15px e o texto
+abaixo. O Markdown é renderizado por `renderizarMarkdownSeguro`.
 
 ### Biblioteca de documentos (`m9-04`)
 

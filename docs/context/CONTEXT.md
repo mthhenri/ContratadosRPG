@@ -3101,7 +3101,8 @@ o abrir de `/patchnotes` apaga; no mobile vira o item "Novidades" do menu do per
 `v1.4.0` = 26–29/09 (o HEAD que carrega a versão).
 
 Os **patchnotes** são públicos e sem tabela: `patchnotes/<versao>.md` (front matter `versao`/`data`/
-`titulo` + Markdown em blocos Novidades/Melhorias/Correções) e `patchnotes/indice.json` no
+`titulo` + Markdown com abertura, grupos `# PARA OS PLAYERS`/`# PARA O MESTRE`, blocos `## <emoji> Funcionalidade`
+e `# RESUMO…` final; os blocos de balanço Novidades/Melhorias/Correções seguem aceitos) e `patchnotes/indice.json` no
 armazenamento — **o R2 é a única fonte de verdade**; `docs/patchnotes/` é rascunho local ignorado
 pelo git. O backend (`PatchnoteService`, sem repository) serve `GET /patchnote` e
 `GET /patchnote/:versao` (`@Public()`) com cache em memória de 24 h (o deploy o zera; uma correção
