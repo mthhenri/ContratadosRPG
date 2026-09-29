@@ -1,0 +1,388 @@
+@use "tema/breakpoints" as bp;
+
+// Página pública /patchnotes (pn-04). Análogo aprovado: POC "Versão e Patchnotes" (lista à esquerda,
+// nota à direita) sobre o padrão de cartão/cabeçalho mono do produto. Só tokens; o estado de erro é
+// o documento de contenção compartilhado.
+.patchnotes {
+    container-type: inline-size;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-16);
+    width: 100%;
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 32px clamp(16px, 4vw, 32px) 48px;
+
+    // Documento de contenção centralizado na coluna, como na tela de Acesso negado.
+    &__contencao {
+        display: grid;
+        place-items: center;
+        padding-top: var(--space-16);
+    }
+
+    &__cabecalho {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    &__eyebrow,
+    &__rotulo {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        color: var(--text-mute);
+    }
+
+    &__titulo {
+        margin: 0;
+        font: 600 clamp(20px, 3vw, 24px) var(--font-mono);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--text);
+    }
+
+    &__apresentacao {
+        margin: 0;
+        max-width: 60ch;
+        font-size: 14px;
+        color: var(--text-dim);
+    }
+
+    &__corpo {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: var(--space-16);
+        align-items: start;
+    }
+
+    // Lista de versões: faixa horizontal no mobile, coluna fixa quando cabe.
+    &__versoes {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-8);
+        min-width: 0;
+    }
+
+    &__lista {
+        display: flex;
+        gap: var(--space-8);
+        overflow-x: auto;
+        padding-bottom: var(--space-4);
+    }
+
+    &__item {
+        display: flex;
+        flex: none;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 112px;
+        padding: 9px var(--space-12);
+        text-decoration: none;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-control);
+
+        b {
+            font: 700 13px var(--font-mono);
+            color: var(--text);
+        }
+
+        span {
+            font: 500 11px var(--font-mono);
+            color: var(--text-mute);
+        }
+
+        &:hover {
+            background: var(--surface-2);
+        }
+
+        &--ativo {
+            background: var(--surface-2);
+            border-color: var(--border-strong);
+
+            b::after {
+                content: "";
+                display: inline-block;
+                width: 6px;
+                height: 6px;
+                margin-left: var(--space-8);
+                vertical-align: middle;
+                background: var(--accent);
+                border-radius: 50%;
+            }
+        }
+
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+    }
+
+    &__nota {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        min-width: 0;
+        padding: 24px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-card);
+
+        @include bp.mobile {
+            padding: var(--space-16);
+        }
+    }
+
+    &__nota-cabecalho {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-8);
+        padding-bottom: var(--space-16);
+        border-bottom: 1px solid var(--border);
+    }
+
+    &__nota-versao {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--space-8) var(--space-12);
+
+        b {
+            font: 700 32px/1 var(--font-mono);
+            letter-spacing: 0.02em;
+            color: var(--text);
+
+            @include bp.mobile {
+                font-size: 26px;
+            }
+        }
+
+        time {
+            font: 500 12px var(--font-mono);
+            color: var(--text-mute);
+        }
+    }
+
+    &__nota-titulo {
+        margin: 0;
+        font: 600 16px/1.35 var(--font-sans);
+        color: var(--text);
+    }
+
+    // Grupo (um público ou assunto: "Para os players", "Resumo"): título mono com filete, como o
+    // cabeçalho do documento de contenção, e os blocos empilhados abaixo.
+    &__grupo {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    &__grupo-titulo {
+        display: flex;
+        align-items: center;
+        gap: var(--space-12);
+        margin: 0;
+        font: 700 13px var(--font-mono);
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        color: var(--text);
+
+        &::before {
+            content: "//";
+            color: var(--accent);
+        }
+
+        &::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+    }
+
+    &__bloco {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        --cor-bloco: var(--text-mute);
+
+        &[data-tom="novidades"] {
+            --cor-bloco: var(--positive);
+        }
+
+        &[data-tom="melhorias"] {
+            --cor-bloco: var(--energy);
+        }
+
+        &[data-tom="correcoes"] {
+            --cor-bloco: var(--warning);
+        }
+    }
+
+    // Bloco de funcionalidade (qualquer título fora Novidades/Melhorias/Correções): título de seção
+    // legível, não o rótulo miúdo dos blocos de balanço.
+    &__bloco--funcionalidade &__bloco-titulo {
+        font: 600 15px/1.35 var(--font-sans);
+        text-transform: none;
+        letter-spacing: 0;
+        color: var(--text);
+
+        &::before {
+            display: none;
+        }
+    }
+
+    &__bloco-titulo {
+        display: flex;
+        align-items: center;
+        gap: var(--space-8);
+        margin: 0;
+        font: 700 11px var(--font-mono);
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        color: var(--text-dim);
+
+        &::before {
+            content: "";
+            width: 8px;
+            height: 8px;
+            background: var(--cor-bloco);
+            border-radius: var(--radius-tight);
+        }
+    }
+
+    // Markdown injetado via [innerHTML]: os nós não recebem o atributo de escopo do componente,
+    // então o estilo entra por ::ng-deep, restrito a este contêiner.
+    &__markdown {
+        max-width: 66ch;
+        font-size: 14px;
+        line-height: 1.55;
+        color: var(--text-dim);
+
+        ::ng-deep {
+            p {
+                margin: 0 0 var(--space-8);
+            }
+
+            p:last-child,
+            ul:last-child,
+            ol:last-child {
+                margin-bottom: 0;
+            }
+
+            ul,
+            ol {
+                display: flex;
+                flex-direction: column;
+                gap: 9px;
+                margin: 0 0 var(--space-8);
+                padding: 0 0 0 var(--space-16);
+            }
+
+            ul {
+                list-style: none;
+            }
+
+            ul > li {
+                position: relative;
+
+                &::before {
+                    content: "";
+                    position: absolute;
+                    top: 0.62em;
+                    left: calc(-1 * var(--space-16) + 2px);
+                    width: 5px;
+                    height: 5px;
+                    background: var(--text-mute);
+                    border-radius: 1px;
+                }
+            }
+
+            strong {
+                font-weight: 600;
+                color: var(--text);
+            }
+
+            a {
+                color: var(--accent);
+            }
+
+            code {
+                padding: 1px 4px;
+                font-family: var(--font-mono);
+                font-size: 12.5px;
+                background: var(--surface-2);
+                border-radius: var(--radius-tight);
+            }
+        }
+
+        &--introducao {
+            font-size: 14px;
+        }
+    }
+
+    &__nota-rodape {
+        display: flex;
+        justify-content: space-between;
+        gap: var(--space-12);
+        padding-top: var(--space-12);
+        border-top: 1px solid var(--border);
+
+        // O padding do botão-link recuava o texto; alinha ao filete da coluna de conteúdo.
+        a {
+            margin-left: calc(-1 * var(--space-12));
+        }
+    }
+
+    &__carregando {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: var(--space-16) 0;
+    }
+
+    &__esqueleto-titulo {
+        display: block;
+        width: 40%;
+        height: 28px;
+    }
+
+    &__esqueleto-linha {
+        display: block;
+        width: 100%;
+        height: 10px;
+
+        &--media {
+            width: 85%;
+        }
+
+        &--curta {
+            width: 60%;
+        }
+    }
+
+    // Duas colunas quando a página comporta: lista fixa à esquerda, nota à direita. Container query
+    // (e não a largura do viewport): vale igual com a tela dividida ao lado de outro painel.
+    @container (min-width: 720px) {
+        &__corpo {
+            grid-template-columns: 220px minmax(0, 1fr);
+            gap: 24px;
+        }
+
+        &__versoes {
+            position: sticky;
+            top: var(--space-16);
+        }
+
+        &__lista {
+            flex-direction: column;
+            overflow: visible;
+        }
+
+        &__item {
+            min-width: 0;
+        }
+    }
+}

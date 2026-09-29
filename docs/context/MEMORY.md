@@ -55,6 +55,7 @@ Estas são as fontes da verdade. Em conflito entre código e documento, **o docu
 | Enums (string, valor = nome, SCREAMING_SNAKE_CASE) | `shared/src/enums/` |
 | `StandardResponse`, `PaginatedResult` | `shared/src/interfaces/` |
 | Validadores (constantes puras) | `shared/src/validators/` |
+| Versão do sistema (`VERSAO_SISTEMA`) e contrato/limites dos patchnotes | `shared/src/versao.ts` (**gerado** por `scripts/sincronizar-versao.mjs` — não edite), `shared/src/dtos/patchnote/`, `shared/src/validators/patchnote.validators.ts` |
 
 `regras/` é a **única** exceção sancionada ao "sem lógica de negócio no shared". Frontend e backend
 consomem os dois o mesmo motor — nunca reimplemente uma fórmula de um lado só.
@@ -76,6 +77,8 @@ consomem os dois o mesmo motor — nunca reimplemente uma fórmula de um lado s�
 | **Gateway WebSocket** (broadcast-only) | `backend/src/core/gateway/` — `CampanhaGateway`, `WsIoAdapter` |
 | Resincronização da Iniciativa quando a ficha muda fora do `EncontroService` (ficha flutuante etc.) | `CampanhaGateway.emitirFichaAlterada` chama `EncontroService.sincronizarFichaAlterada` |
 | **Armazenamento de blob** (avatar da ficha, local/R2) | `backend/src/core/armazenamento/` — `ArmazenamentoProvedor`, `ArmazenamentoLocalProvedor`/`ArmazenamentoR2Provedor`, toggle via `ConfigService.obterConfiguracaoArmazenamento()` |
+| Patchnotes públicos (`GET /patchnote[/:versao]`, cache 24 h) e o formato do arquivo `.md`/`indice.json` | `backend/src/modules/patchnote/` (`patchnote-formato.util.ts` é compartilhado com o script); leitura/gravação de texto em `ArmazenamentoProvedor.lerTexto`/`salvarTexto` |
+| Publicar patchnotes no armazenamento (R2/local) | `backend/tools/patchnotes/publicar.ts` — `npm run patchnotes:publicar`; fluxo completo na skill `publicar-versao` |
 | Conexão Knex em runtime | `backend/src/database/` |
 | Reset e seed de desenvolvimento | `backend/tools/database/` + [`docs/DEVELOPMENT.md`](../DEVELOPMENT.md) |
 | **Migrations** | `backend/src/database/migrations/` — `0001`…`0018`, nome numerado |
@@ -129,6 +132,10 @@ Fluxo obrigatório: **controller (burro) → service (regra) → repository (só
 | Conteúdo novo dentro de uma aba da coluna Status (`ficha-visualizacao`) mais alto que a coluna Identidade/Atributos | a coluna Status trava a própria altura (`contain: size; overflow: hidden`, acima de `bp.$bp-tablet` — comentário em `ficha-visualizacao.component.scss` `&--status`); conteúdo mais alto que isso **some cortado sem barra de rolagem nenhuma**, não estoura visível. Precisa de teto + `overflow-y: auto` + `appOverflowFade` **próprios** (achado ao vivo na `ui-35`, mesmo padrão de `.ficha-rol__lista`/`.ficha-extras__painel`) |
 | **Tokens e tema em runtime** | `frontend/src/styles/tema/` — `_tokens.scss`, `_base.scss`, `_breakpoints.scss`, `_glow.scss` (mixins `simples`/`duplo` do realce por `text-shadow`, ui-22) |
 | Rotas raiz | `frontend/src/app/app.routes.ts` · config em `app.config.ts` |
+| Página pública de patchnotes (`/patchnotes[/:versao]`) | `frontend/src/app/modules/patchnotes/` — `matcher` único em `patchnotes.routes.ts` |
+| Versão exibida e ponto de "versão nova" | `frontend/src/app/core/services/versao.service.ts`; chip e item do menu em `frontend/src/app/shared/layout/` |
+| Documento de contenção (Acesso negado, 404/503 dos patchnotes) | `frontend/src/app/shared/documento-contencao/` — `ViewEncapsulation.None`, classes `contencao__*` |
+| Rota nova da API no dev-server (proxy) | `frontend/proxy.conf.json` — rota de app **plural** exige regex de fronteira (`^/patchnote(?:$|[/?])`) |
 
 O espelho canônico do tema é `docs/design/tema/`; `frontend/src/styles/tema/` é a cópia viva. Ao
 mudar um token, mantenha os dois alinhados.
@@ -179,6 +186,8 @@ A lista completa está no [`CLAUDE.md`](../../CLAUDE.md) ("Development Commands"
 | Reconciliar apenas as fixtures locais | `npm run db:seed:dev` |
 | API (`:3100`) | `npm run backend:dev` |
 | Gerar contrato OpenAPI após mudar DTO/endpoint público | `npm run openapi:gerar-contratos --workspace=backend` |
+| Alinhar a versão do sistema após mudar o `version` da raiz | `npm run versao:sincronizar` |
+| Publicar uma versão (número, nota, tag, R2) | skill `publicar-versao`; comando `npm run patchnotes:publicar -- [--dry-run] <arquivo.md>` |
 | SPA (`:4300`) | `npm run frontend:dev` |
 | **Testar o motor de regras** — antes de tocar em qualquer fórmula | `npm run test --workspace=shared` |
 

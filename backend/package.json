@@ -1,6 +1,6 @@
 {
   "name": "backend",
-  "version": "0.0.1",
+  "version": "1.4.0",
   "description": "",
   "author": "",
   "private": true,
@@ -16,6 +16,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "openapi:gerar-contratos": "ts-node tools/gerar-openapi-contratos.ts",
+    "patchnotes:publicar": "ts-node tools/patchnotes/publicar.ts",
     "db:migrate": "knex migrate:latest --knexfile knexfile.ts",
     "db:rollback": "knex migrate:rollback --knexfile knexfile.ts",
     "db:seed:dev": "ts-node tools/database/seed-dev.ts",

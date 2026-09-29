@@ -1,5 +1,123 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-29 — patchnotes-versao-sistema (automação): merge em master publica as notas e cria as tags
+
+O push das tags a partir do ambiente do agente foi recusado (403 do proxy de egresso), e o autor pediu
+para automatizar. Decisão: as notas **voltam para o git** (`docs/patchnotes/` saiu do `.gitignore`) e o
+R2 passa a ser a cópia servida — troca consciente da regra anterior ("R2 como única fonte", publicação
+local). Workflow `.github/workflows/versao.yml` (push em `master` e disparo manual) roda
+`scripts/ci/publicar-versao.mjs`: confere que a versão do `package.json` tem nota, publica todas as notas
+no R2 se algo mudou e **só então** cria as tags. As retroativas (`v1.0.0`…`v1.3.0`) nascem do campo
+opcional `commit:` no front matter da nota (validado como hash hexadecimal); a vigente, do commit do push.
+Concorrência serializada (o índice do R2 é lido-alterado-regravado). Skill reescrita: sem tag local, o merge
+faz o resto.
+
+Verificado em clones descartáveis com remoto bare: primeiro push cria as cinco tags e publica; reexecução
+não faz nada; versão sem nota falha antes de publicar; achado só no teste: com clone sem tags o script não
+via as do remoto e o push era recusado — passou a fazer `git fetch --tags` antes de decidir. **Não
+testável aqui:** a execução no GitHub Actions em si. **Depende do autor:** cadastrar os 5 segredos
+`ARMAZENAMENTO_R2_*` e liberar "Read and write" em Actions (`docs/DEPLOY.md`); risco residual conhecido: o cache
+de 24 h é por instância do Cloud Run; se a revisão nova receber tráfego antes de o workflow publicar, guarda o
+índice antigo (forçar nova revisão pelo trigger do Cloud Build). **Correção no mesmo dia:** a primeira versão
+deste texto e da seção do `DEPLOY.md` citava o Render como destino do backend — o backend roda no Cloud Run
+desde 01/09/2026 (o `DEPLOY.md` segue desatualizado, pendência já registrada no `CONTEXT.md`); os valores dos
+segredos vêm do Secret Manager, não do Render.
+
+## 2026-09-29 — patchnotes-versao-sistema (revisão do autor): formato de escrita mais rico
+
+O autor enviou um modelo de patchnotes (públicos "Para os players" / "Para o mestre", seções por
+funcionalidade com emoji, texto explicativo e resumo final) e pediu algo similar. O formato inicial
+(três blocos fixos de itens curtos) foi substituído: as cinco notas (`v1.0.0`…`v1.4.0`) foram
+reescritas nesse estilo, usando o texto do autor como base e distribuindo cada item **pela data do
+commit** na versão certa (ex.: a nova Iniciativa e o editor de texto na `1.3.0`, Cenas e Biblioteca na
+`1.4.0`; o material de desempenho foi dividido entre as duas).
+
+**Página.** `estruturarPatchnote` passou a devolver grupos (`# Título`) com blocos (`## Título`);
+blocos de balanço (Novidades/Melhorias/Correções) mantêm o rótulo colorido e os demais viram
+funcionalidades com título de seção legível; notas antigas (só `##`) seguem valendo como um grupo sem
+título. Sem mudança no backend nem no contrato: o conteúdo é Markdown. Skill (duas cópias), decisão 3 da
+spec, `DESIGN.md` e `CONTEXT.md` atualizados.
+
+Verificado: `patchnotes` 33 testes (grupos, funcionalidades, resumo, compatibilidade); `patchnotes:publicar`
+das cinco notas (destino local); página `1.4.0` e `1.1.0` em `1920×1080` e `360×800`, sem overflow. Achado
+só na verificação: parágrafo depois de lista ficava colado nela (margem corrigida). Segue pendente a
+publicação no R2 real e o push das tags.
+
+## 2026-09-29 — patchnotes-versao-sistema (revisão do autor): de `1.1.0` para cinco versões
+
+O autor apontou que ir de `1.0.0` a `1.1.0` depois de quase um mês era incoerente e pediu mais
+bumps ou mais de um patch. Em vez de um salto único, setembro foi dividido em **quatro versões por
+blocos coerentes de entregas**, guiadas pelas datas e pelos commits (cadência quase semanal):
+`1.1.0` (02–08/09, espectador, prévia de jogador e tela de campanha do mestre), `1.2.0` (09–17/09,
+ficha de criatura, aba Esquadrão, montador de rolagem), `1.3.0` (18–25/09, Iniciativa nova, janelas
+soltas, editor de texto) e `1.4.0` (26–29/09, Cenas e Biblioteca). A versão vigente passou a
+`1.4.0` (`npm run versao:sincronizar`); as tags são marcadores retroativos nos commits `641a8529`,
+`09381c10`, `8a405ec0` e no HEAD — os pacotes só carregam a versão no HEAD. As fronteiras foram
+validadas por ancestralidade (cada versão contém o que promete e nada da seguinte).
+
+**Erro achado na revisão das notas.** A `v1.0.0` listava "Espectadores" e "NPC", mas o papel de
+espectador foi construído em 03/09 (`m8-01`…`m8-05`) e o NPC (`m4-05`…`m4-10`) segue no backlog;
+o commit de 18/08 que mencionava espectador era só spec. Ambos saíram da `v1.0.0`; espectador
+entra na `v1.1.0`. Correções foram datadas pelo commit de cada `P-0NN` para cair na versão certa.
+
+Verificado: `versao.spec` verde, `patchnotes:publicar` (dry-run e real, destino local), API e página
+com as cinco versões (`1920×1080` e `360×800`, sem overflow; a lista vira faixa com rolagem interna
+no celular). Segue pendente, como antes, a publicação no R2 real e o push das tags.
+
+## 2026-09-29 — patchnotes-versao-sistema (pn-01…pn-04, pn-05 parcial): versão do sistema e patchnotes públicos
+
+Origem: pedido do autor de mostrar a versão do sistema e ter uma área pública de patchnotes, com uma
+skill para publicar versões. O `version` do projeto era `0.0.1` (placeholder incorreto) embora o
+sistema já estivesse em uso: a versão-base passou a `1.0.0` (fim de 01/09/2026, `306a9714`) e o
+trabalho de 02 a 29/09 (Cenas, Biblioteca, painel do espectador…) a `1.1.0`, minor porque só traz
+funcionalidade compatível. Decisões do autor: patchnotes em Markdown no R2 **sem tabela**, R2 como
+**única fonte de verdade** (`docs/patchnotes/` ignorada pelo git, só rascunho), cache de 24 h,
+nível macro em linguagem de jogador, versão na topbar (POC visual aprovado: chip ao lado da marca,
+item "Novidades" no menu do perfil no mobile) e estados 404/503 no formato de "Acesso negado".
+
+**O que mudou.** `pn-01`: `version` da raiz é a fonte única; `npm run versao:sincronizar` alinha
+os 3 workspaces, o lock e gera `shared/src/versao.ts` (`VERSAO_SISTEMA`); teste em `shared` falha se
+algo divergir; `GET /health` devolve `versao`; `VersaoService` + chip na topbar com ponto de "versão
+nova" (`localStorage`, tolerante a falha). O SHA do commit, previsto na primeira versão da spec,
+ficou de fora. `pn-02`: `ArmazenamentoProvedor` ganha `lerTexto`/`salvarTexto` (local e R2) e a
+pasta `patchnotes/`, com `construirChaveTexto` recusando nome que escape da pasta. `pn-03`: módulo
+`patchnote` (sem repository), `GET /patchnote` e `GET /patchnote/:versao`, públicos, com cache em
+memória de 24 h que guarda a **promessa** (requisições simultâneas dividem uma leitura; falha nunca
+fica em cache) e conferência da versão no índice antes de ler o arquivo. `pn-04`: página
+`/patchnotes` (lista + nota em blocos Novidades/Melhorias/Correções, `renderizarMarkdownSeguro`),
+`DocumentoContencao` extraído de `AcessoNegadoPage` e reaproveitado nos estados 404/503. `pn-05`:
+`npm run patchnotes:publicar` (`--dry-run`; notas antes do índice; valida tudo antes de gravar) e a
+skill `publicar-versao` (duas cópias idênticas).
+
+**Testes.** `shared` 796 (0 erros de lint); `backend` 905 + 1 ignorado (49 arquivos), 0 erros de lint; `frontend`
+2.613 em 183 arquivos, build ok. Provado: o teste de versão falha ao divergir um `package.json`;
+sanitização (`<script>`, `<img onerror>`, `javascript:`) não chega ao DOM; nota sem front matter é
+recusada; a ferramenta recusa rodar em `r2` sem as variáveis.
+
+**Ao vivo (skill `verify`, Postgres nativo + API + `ng serve`).** Rotas públicas respondem sem token
+e as demais seguem 401; versão inválida/inexistente/`../` → 404. Páginas em `1920×1080`, `960×1080` e
+`360×800` — nota, 404, 503, carregando, vazio, chip com/sem ponto, menu do perfil no mobile, tema
+claro — sem overflow. **"Acesso negado" antes/depois da extração comparado pixel a pixel:**
+0 px de diferença no desktop e no mobile, 21 px (máx. 3/255) na tela dividida.
+
+**Achados só na verificação.** (1) O `proxy.conf.json` do dev-server não conhecia a rota nova: um
+prefixo simples `/patchnote` capturaria a página `/patchnotes`, então entrou como regex de fronteira
+(mesmo padrão de `/ficha` e `/documento`). (2) Duas entradas de rota (`''` e `':versao'`) recriavam
+a página no redirecionamento da raiz e recarregavam o índice — virou uma entrada só, com `matcher`.
+(3) O chip usa `app-botao` (`variante="secundario"` `estilo="contorno"`) com tamanho na classe do
+consumidor, como `topbar__item`: `app-chip` não é clicável.
+
+**Desvios registrados.** API no singular (`/patchnote`), como o resto do projeto; `PatchnoteRecuperarDto`
+usa `versao` (chave natural, sem id) — única exceção à regra `{ id: number }`; selo "Atual" usa a
+severidade `primario` do `app-chip` (o POC o mostrava em verde, que o primitivo não oferece);
+`renderizarMarkdownSeguro`, sem uso, saiu de `modules/pagina-caderno/` para `shared/markdown/`.
+
+**Pendente (a tarefa segue aberta).** `pn-05` só fecha com a publicação no **R2 real** e o push das
+tags `v1.0.0`/`v1.1.0`, ações externas que exigem credencial e confirmação do autor. As duas notas
+já foram publicadas e verificadas no armazenamento **local**; o texto delas aguarda revisão do
+autor. Falhas preexistentes fora do escopo: orçamento do bundle inicial (`P-004`, 551,92 → 554,47 kB)
+e os erros de `tsc` em specs do backend (já registrados em `PROBLEMS.md`).
+
 ## 2026-09-29 — ajuste-ficha-busca-habilidade-icones: escopo da busca em ícones + ícone d20 no mobile
 
 Pedido direto do autor (sem spec). No seletor "Adicionar do sistema" (`FichaHabilidadeSeletor`, usado

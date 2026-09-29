@@ -305,7 +305,10 @@ npm run backend:dev       # API em http://localhost:3100
 npm run frontend:dev      # SPA em http://localhost:4300
 npm run test --workspace=shared
 npm run test --workspace=backend
+npm run versao:sincronizar   # alinha a versão do sistema (fonte: package.json da raiz)
 ```
+
+Para **publicar uma versão** (número, patchnotes, tag, R2), use a skill `publicar-versao`.
 
 Para verificação manual da aplicação real, consulte
 `.agents/skills/verify/SKILL.md`. Testes e lint não substituem essa verificação

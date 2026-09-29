@@ -1,6 +1,6 @@
 {
   "name": "@contratados-rpg/shared",
-  "version": "0.0.1",
+  "version": "1.4.0",
   "description": "DTOs, enums, interfaces genéricas, validators e motor de regras do jogo — compartilhado entre backend e frontend.",
   "private": true,
   "license": "UNLICENSED",
@@ -47,6 +47,10 @@
     "./dtos/documento": {
       "types": "./dist/dtos/documento/index.d.ts",
       "default": "./dist/dtos/documento/index.js"
+    },
+    "./dtos/patchnote": {
+      "types": "./dist/dtos/patchnote/index.d.ts",
+      "default": "./dist/dtos/patchnote/index.js"
     },
     "./dtos/pagina-caderno": {
       "types": "./dist/dtos/pagina-caderno/index.d.ts",

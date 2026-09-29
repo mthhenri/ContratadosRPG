@@ -1,6 +1,6 @@
 {
   "name": "contratados-rpg",
-  "version": "0.0.1",
+  "version": "1.4.0",
   "description": "Site completo do RPG \"Contratados\" (SCP Foundation RPG v4).",
   "private": true,
   "license": "UNLICENSED",
@@ -26,7 +26,9 @@
     "db:migrate": "npm run db:migrate --workspace=backend",
     "db:rollback": "npm run db:rollback --workspace=backend",
     "db:seed:dev": "npm run db:seed:dev --workspace=backend",
-    "db:reset:dev": "npm run db:reset:dev --workspace=backend"
+    "db:reset:dev": "npm run db:reset:dev --workspace=backend",
+    "versao:sincronizar": "node scripts/sincronizar-versao.mjs",
+    "patchnotes:publicar": "npm run patchnotes:publicar --workspace=backend --"
   },
   "devDependencies": {
     "concurrently": "^10.0.3"

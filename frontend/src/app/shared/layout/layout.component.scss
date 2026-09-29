@@ -60,6 +60,32 @@
         color: var(--accent);
     }
 
+    // Chip de versão (pn-01): link compacto para /patchnotes ao lado da marca. Só o tamanho é
+    // do consumidor (padrão de `&__item`); identidade e cor vêm do primitivo `app-botao`.
+    // Some no mobile (≤560px), onde a versão passa a morar no menu do perfil.
+    &__versao {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 2px 7px;
+        font-size: 10.5px;
+        letter-spacing: 0.04em;
+        text-transform: none;
+        white-space: nowrap;
+
+        @include bp.mobile {
+            display: none;
+        }
+    }
+
+    // Ponto "há versão que você ainda não viu" — mesmo desenho no chip e no item do menu.
+    &__versao-ponto {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--accent);
+    }
+
     // Slot de contexto (ui-21): em qual campanha/ficha o usuário está — o único lugar da topbar
     // que dizia "onde você está" era o item ativo da nav (nunca a entidade). Vive entre a marca e
     // a nav — no desktop esse espaço já estava vazio; some por completo (`@if` no template, não
@@ -290,6 +316,25 @@
                 color: var(--accent);
             }
         }
+    }
+
+    // Novidades/versão — só existe no menu no mobile: no desktop o chip da barra faz o mesmo papel.
+    &__perfil-versao {
+        display: none;
+
+        @include bp.mobile {
+            display: flex;
+        }
+    }
+
+    &__perfil-versao-numero {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-left: auto;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--text-mute);
     }
 
     // Tema — duas montagens do MESMO componente: a da barra (desktop) e a de dentro do menu de perfil

@@ -39,7 +39,7 @@ describe('AcessoNegadoPage', () => {
     expect(MENSAGENS_ACESSO_NEGADO).toHaveLength(32);
     expect(MENSAGENS_ACESSO_NEGADO.every((mensagem) => mensagem.length >= 100)).toBe(true);
     expect(encontrada).toBeDefined();
-    expect(raiz.querySelector('.acesso-negado__mensagem')?.textContent).toContain('█');
+    expect(raiz.querySelector('.contencao__mensagem')?.textContent).toContain('█');
     expect(FRAGMENTOS_MENSAGEM_EXPURGADOS).toHaveLength(8);
     fixture.detectChanges();
     expect(raiz.textContent).toContain(encontrada!);
@@ -52,7 +52,7 @@ describe('AcessoNegadoPage', () => {
   });
 
   it('renderiza um registro variável sem expor o Lorem Ipsum', () => {
-    const registro = raiz.querySelector('.acesso-negado__censura')?.textContent?.trim() ?? '';
+    const registro = raiz.querySelector('.contencao__censura')?.textContent?.trim() ?? '';
 
     expect(registro).toMatch(/^([█\s.,;:!?—-])+$/u);
     expect(registro).toContain(' ');
@@ -60,6 +60,6 @@ describe('AcessoNegadoPage', () => {
     expect(registro.toLowerCase()).not.toContain('lorem');
 
     fixture.detectChanges();
-    expect(raiz.querySelector('.acesso-negado__censura')?.textContent?.trim()).toBe(registro);
+    expect(raiz.querySelector('.contencao__censura')?.textContent?.trim()).toBe(registro);
   });
 });

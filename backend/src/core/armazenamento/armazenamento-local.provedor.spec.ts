@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { readFile, rm } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -79,5 +80,63 @@ describe('ArmazenamentoLocalProvedor (m3-62)', () => {
     await expect(
       provedor.excluirImagem({ caminho: '/uploads/agentes/inexistente.png' }),
     ).resolves.toBeUndefined();
+  });
+
+  describe('texto (pn-02)', () => {
+    const nomesCriados: string[] = [];
+
+    afterEach(async () => {
+      await Promise.all(
+        nomesCriados
+          .splice(0)
+          .map((nome) => rm(resolve(diretorioUploads, 'patchnotes', nome), { force: true })),
+      );
+    });
+
+    function nomeUnico(extensao: string): string {
+      const nome = `teste-${randomUUID()}.${extensao}`;
+      nomesCriados.push(nome);
+      return nome;
+    }
+
+    it('grava e lê o texto de volta, com acentos preservados', async () => {
+      const nomeArquivo = nomeUnico('md');
+
+      await provedor.salvarTexto({
+        pasta: ArmazenamentoPastaEnum.PATCHNOTES,
+        nomeArquivo,
+        conteudo: '# Correções e novidades',
+        mimetype: 'text/markdown',
+      });
+
+      expect(
+        await provedor.lerTexto({ pasta: ArmazenamentoPastaEnum.PATCHNOTES, nomeArquivo }),
+      ).toBe('# Correções e novidades');
+    });
+
+    it('substitui o conteúdo de um arquivo existente', async () => {
+      const nomeArquivo = nomeUnico('json');
+      const alvo = { pasta: ArmazenamentoPastaEnum.PATCHNOTES, nomeArquivo };
+
+      await provedor.salvarTexto({ ...alvo, conteudo: '[1]', mimetype: 'application/json' });
+      await provedor.salvarTexto({ ...alvo, conteudo: '[2]', mimetype: 'application/json' });
+
+      expect(await provedor.lerTexto(alvo)).toBe('[2]');
+    });
+
+    it('devolve null para arquivo inexistente', async () => {
+      expect(
+        await provedor.lerTexto({
+          pasta: ArmazenamentoPastaEnum.PATCHNOTES,
+          nomeArquivo: `nao-existe-${randomUUID()}.md`,
+        }),
+      ).toBeNull();
+    });
+
+    it('recusa nome que escapa da pasta', async () => {
+      await expect(
+        provedor.lerTexto({ pasta: ArmazenamentoPastaEnum.PATCHNOTES, nomeArquivo: '../x.md' }),
+      ).rejects.toThrow('inválido');
+    });
   });
 });

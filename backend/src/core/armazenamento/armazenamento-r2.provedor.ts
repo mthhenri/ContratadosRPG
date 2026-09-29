@@ -1,11 +1,18 @@
-import { DeleteObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import {
+  DeleteObjectCommand,
+  GetObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from '@aws-sdk/client-s3';
 import type { ConfiguracaoArmazenamento } from '../../config/config.service';
-import { construirChaveImagem } from './armazenamento-chave.util';
+import { construirChaveImagem, construirChaveTexto } from './armazenamento-chave.util';
 import type {
   ArmazenamentoImagemExcluir,
   ArmazenamentoImagemSalva,
   ArmazenamentoImagemSalvar,
   ArmazenamentoProvedor,
+  ArmazenamentoTextoLer,
+  ArmazenamentoTextoSalvar,
 } from './armazenamento-provedor.interface';
 
 /** Recorte de `ConfiguracaoArmazenamento` com `provedor: 'r2'` — só os campos que este provedor usa. */
@@ -48,5 +55,33 @@ export class ArmazenamentoR2Provedor implements ArmazenamentoProvedor {
   async excluirImagem(dto: ArmazenamentoImagemExcluir): Promise<void> {
     const chave = dto.caminho.replace(`${this.configuracao.r2UrlPublica}/`, '');
     await this.clienteS3.send(new DeleteObjectCommand({ Bucket: this.configuracao.r2Bucket, Key: chave }));
+  }
+
+  /** Lê via `GetObject`; chave inexistente (`NoSuchKey`/404) vira `null` — qualquer outro erro sobe. */
+  async lerTexto(dto: ArmazenamentoTextoLer): Promise<string | null> {
+    const chave = construirChaveTexto(dto.pasta, dto.nomeArquivo);
+    try {
+      const resposta = await this.clienteS3.send(
+        new GetObjectCommand({ Bucket: this.configuracao.r2Bucket, Key: chave }),
+      );
+      return (await resposta.Body?.transformToString('utf-8')) ?? null;
+    } catch (erro) {
+      const { name, $metadata } = erro as { name?: string; $metadata?: { httpStatusCode?: number } };
+      if (name === 'NoSuchKey' || $metadata?.httpStatusCode === 404) {
+        return null;
+      }
+      throw erro;
+    }
+  }
+
+  async salvarTexto(dto: ArmazenamentoTextoSalvar): Promise<void> {
+    await this.clienteS3.send(
+      new PutObjectCommand({
+        Bucket: this.configuracao.r2Bucket,
+        Key: construirChaveTexto(dto.pasta, dto.nomeArquivo),
+        Body: dto.conteudo,
+        ContentType: `${dto.mimetype}; charset=utf-8`,
+      }),
+    );
   }
 }

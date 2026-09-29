@@ -1,9 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '../../config/config.module';
 import { ConfigService } from '../../config/config.service';
-import { ArmazenamentoLocalProvedor } from './armazenamento-local.provedor';
 import type { ArmazenamentoProvedor } from './armazenamento-provedor.interface';
-import { ArmazenamentoR2Provedor } from './armazenamento-r2.provedor';
+import { criarArmazenamentoProvedor } from './armazenamento-provedor.factory';
 
 /** Token de injeção do `ArmazenamentoProvedor` ativo — a implementação concreta é resolvida em runtime. */
 export const ARMAZENAMENTO_PROVEDOR = Symbol('ARMAZENAMENTO_PROVEDOR');
@@ -20,12 +19,8 @@ export const ARMAZENAMENTO_PROVEDOR = Symbol('ARMAZENAMENTO_PROVEDOR');
   providers: [
     {
       provide: ARMAZENAMENTO_PROVEDOR,
-      useFactory: (configService: ConfigService): ArmazenamentoProvedor => {
-        const configuracao = configService.obterConfiguracaoArmazenamento();
-        return configuracao.provedor === 'r2'
-          ? new ArmazenamentoR2Provedor(configuracao)
-          : new ArmazenamentoLocalProvedor();
-      },
+      useFactory: (configService: ConfigService): ArmazenamentoProvedor =>
+        criarArmazenamentoProvedor(configService.obterConfiguracaoArmazenamento()),
       inject: [ConfigService],
     },
   ],

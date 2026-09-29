@@ -68,6 +68,8 @@ interface FichaRepositorioDublado {
 interface ArmazenamentoProvedorDublado {
   salvarImagem: ReturnType<typeof vi.fn>;
   excluirImagem: ReturnType<typeof vi.fn>;
+  lerTexto: ReturnType<typeof vi.fn>;
+  salvarTexto: ReturnType<typeof vi.fn>;
 }
 
 interface CampanhaRepositorioDublado {
@@ -325,7 +327,12 @@ describe('FichaService', () => {
       expulsarUsuarioDaFicha: vi.fn().mockResolvedValue(undefined),
       emitirInventarioAlterado: vi.fn(),
     };
-    armazenamentoProvedor = { salvarImagem: vi.fn(), excluirImagem: vi.fn() };
+    armazenamentoProvedor = {
+      salvarImagem: vi.fn(),
+      excluirImagem: vi.fn(),
+      lerTexto: vi.fn(),
+      salvarTexto: vi.fn(),
+    };
     service = new FichaService(
       fichaRepositorio as unknown as FichaRepository,
       campanhaRepositorio as unknown as CampanhaRepository,

@@ -6,3 +6,5 @@
  * interfaces, validators, regras) nascem nas tasks/milestones que os consomem.
  */
 export const SHARED_PACKAGE_NAME = '@contratados-rpg/shared';
+
+export * from './versao';

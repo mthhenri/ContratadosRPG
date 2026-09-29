@@ -13,6 +13,12 @@ vi.mock('@aws-sdk/client-s3', () => ({
       Object.assign(this as object, entrada as object);
     }
   },
+  GetObjectCommand: class {
+    constructor(entrada: unknown) {
+      construtoresComandoRecebidos.push(entrada);
+      Object.assign(this as object, entrada as object);
+    }
+  },
   DeleteObjectCommand: class {
     constructor(entrada: unknown) {
       construtoresComandoRecebidos.push(entrada);
@@ -90,5 +96,74 @@ describe('ArmazenamentoR2Provedor (m3-62)', () => {
     const comando = construtoresComandoRecebidos[0] as { Bucket: string; Key: string };
     expect(comando.Bucket).toBe('bucket-fichas');
     expect(comando.Key).toBe('agentes/abc-123.png');
+  });
+
+  describe('texto (pn-02)', () => {
+    it('lê o arquivo via GetObjectCommand na chave <pasta>/<nome> e devolve o texto', async () => {
+      enviarMock.mockResolvedValue({ Body: { transformToString: () => Promise.resolve('# Notas') } });
+      const provedor = new ArmazenamentoR2Provedor(configuracaoR2);
+
+      const texto = await provedor.lerTexto({
+        pasta: ArmazenamentoPastaEnum.PATCHNOTES,
+        nomeArquivo: '1.1.0.md',
+      });
+
+      expect(texto).toBe('# Notas');
+      expect(construtoresComandoRecebidos[0]).toEqual({
+        Bucket: 'bucket-fichas',
+        Key: 'patchnotes/1.1.0.md',
+      });
+    });
+
+    it('devolve null quando a chave não existe (NoSuchKey ou 404)', async () => {
+      const provedor = new ArmazenamentoR2Provedor(configuracaoR2);
+      const alvo = { pasta: ArmazenamentoPastaEnum.PATCHNOTES, nomeArquivo: 'indice.json' };
+
+      enviarMock.mockRejectedValueOnce(Object.assign(new Error('x'), { name: 'NoSuchKey' }));
+      expect(await provedor.lerTexto(alvo)).toBeNull();
+
+      enviarMock.mockRejectedValueOnce(
+        Object.assign(new Error('x'), { name: 'Outro', $metadata: { httpStatusCode: 404 } }),
+      );
+      expect(await provedor.lerTexto(alvo)).toBeNull();
+    });
+
+    it('propaga qualquer outra falha de leitura (credencial, rede) em vez de fingir arquivo ausente', async () => {
+      enviarMock.mockRejectedValueOnce(
+        Object.assign(new Error('negado'), { name: 'AccessDenied', $metadata: { httpStatusCode: 403 } }),
+      );
+      const provedor = new ArmazenamentoR2Provedor(configuracaoR2);
+
+      await expect(
+        provedor.lerTexto({ pasta: ArmazenamentoPastaEnum.PATCHNOTES, nomeArquivo: 'indice.json' }),
+      ).rejects.toThrow('negado');
+    });
+
+    it('grava via PutObjectCommand com o tipo de mídia em UTF-8', async () => {
+      const provedor = new ArmazenamentoR2Provedor(configuracaoR2);
+
+      await provedor.salvarTexto({
+        pasta: ArmazenamentoPastaEnum.PATCHNOTES,
+        nomeArquivo: 'indice.json',
+        conteudo: '[]',
+        mimetype: 'application/json',
+      });
+
+      expect(construtoresComandoRecebidos[0]).toEqual({
+        Bucket: 'bucket-fichas',
+        Key: 'patchnotes/indice.json',
+        Body: '[]',
+        ContentType: 'application/json; charset=utf-8',
+      });
+    });
+
+    it('recusa nome de arquivo que escapa da pasta, sem tocar o bucket', async () => {
+      const provedor = new ArmazenamentoR2Provedor(configuracaoR2);
+
+      await expect(
+        provedor.lerTexto({ pasta: ArmazenamentoPastaEnum.PATCHNOTES, nomeArquivo: '../agentes/x.png' }),
+      ).rejects.toThrow('inválido');
+      expect(enviarMock).not.toHaveBeenCalled();
+    });
   });
 });

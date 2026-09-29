@@ -18,13 +18,15 @@ import { CenaModule } from './modules/cena/cena.module';
 import { RolagemModule } from './modules/rolagem/rolagem.module';
 import { PaginaCadernoModule } from './modules/pagina-caderno/pagina-caderno.module';
 import { DocumentoModule } from './modules/documento/documento.module';
+import { PatchnoteModule } from './modules/patchnote/patchnote.module';
 
 /**
  * Módulo raiz da aplicação. Registra a infraestrutura genérica (`core/`) global, o
  * `HealthController` (endpoint operacional `GET /health`) e os módulos de negócio
  * `autenticacao` (registro/login), `usuario` (perfil e troca de senha), `campanha` (CRUD de
  * campanha, m2-04), `ficha` (CRUD da ficha de jogador com permissões e validação via motor de
- * regras, m3-03) e `rolagem` (persistência das rolagens disparadas a partir de uma ficha, m3-27).
+ * regras, m3-03) e `rolagem` (persistência das rolagens disparadas a partir de uma ficha, m3-27) e `patchnote`
+ * (notas de versão públicas lidas do armazenamento, pn-03).
  * O `GatewayModule` provê o gateway de tempo real broadcast-only (§9, m3-05). O `JwtAuthGuard`
  * global (`APP_GUARD`) exige JWT em todas as rotas, exceto as `@Public()`.
  */
@@ -42,6 +44,7 @@ import { DocumentoModule } from './modules/documento/documento.module';
     CenaModule,
     PaginaCadernoModule,
     DocumentoModule,
+    PatchnoteModule,
     GatewayModule,
   ],
   controllers: [HealthController],

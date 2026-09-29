@@ -1,11 +1,13 @@
-import { mkdir, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
-import { construirChaveImagem } from './armazenamento-chave.util';
+import { construirChaveImagem, construirChaveTexto } from './armazenamento-chave.util';
 import type {
   ArmazenamentoImagemExcluir,
   ArmazenamentoImagemSalva,
   ArmazenamentoImagemSalvar,
   ArmazenamentoProvedor,
+  ArmazenamentoTextoLer,
+  ArmazenamentoTextoSalvar,
 } from './armazenamento-provedor.interface';
 
 const PREFIXO_PUBLICO = '/uploads';
@@ -29,5 +31,26 @@ export class ArmazenamentoLocalProvedor implements ArmazenamentoProvedor {
   async excluirImagem(dto: ArmazenamentoImagemExcluir): Promise<void> {
     const chave = dto.caminho.replace(`${PREFIXO_PUBLICO}/`, '');
     await rm(join(this.diretorioUploads, chave), { force: true });
+  }
+
+  async lerTexto(dto: ArmazenamentoTextoLer): Promise<string | null> {
+    const chave = construirChaveTexto(dto.pasta, dto.nomeArquivo);
+    try {
+      return await readFile(join(this.diretorioUploads, chave), 'utf8');
+    } catch (erro) {
+      if ((erro as NodeJS.ErrnoException).code === 'ENOENT') {
+        return null;
+      }
+      throw erro;
+    }
+  }
+
+  async salvarTexto(dto: ArmazenamentoTextoSalvar): Promise<void> {
+    const caminhoAbsoluto = join(
+      this.diretorioUploads,
+      construirChaveTexto(dto.pasta, dto.nomeArquivo),
+    );
+    await mkdir(dirname(caminhoAbsoluto), { recursive: true });
+    await writeFile(caminhoAbsoluto, dto.conteudo, 'utf8');
   }
 }

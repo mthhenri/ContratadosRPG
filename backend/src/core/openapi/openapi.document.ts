@@ -27,6 +27,7 @@ const DESCRICOES_TAG: Readonly<Record<string, string>> = {
     "Encontros": "Encontros de combate, combatentes, turnos, recursos e condições.",
     "Cenas": "Cenas da campanha: criação tipada, preparo, abertura, encerramento e ordem.",
     "Documentos": "Biblioteca de documentos da campanha: texto e imagem, ordem e revelação à mesa.",
+    "Patchnotes": "Notas de versão públicas do sistema, lidas do armazenamento (sem login).",
 };
 
 type Schema = SchemaObject | ReferenceObject;

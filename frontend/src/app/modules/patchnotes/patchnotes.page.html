@@ -1,0 +1,158 @@
+<main class="patchnotes">
+    @if (falhaIndice() || estadoNota() === 'falha') {
+    <div class="patchnotes__contencao">
+        <app-documento-contencao
+            codigo="503"
+            classificacao="CLASSE-██ // ARQUIVO EM QUARENTENA"
+            setor="ÍNDICE DE REVISÕES"
+            rotulo="ARQUIVO INACESSÍVEL"
+            titulo="Falha na recuperação"
+            mensagem="Não foi possível carregar as notas agora. O arquivo central não respondeu e o documento foi recolhido antes da abertura. Tente de novo em instantes; se persistir, avise a administração."
+            registro="CONEXÃO COM O ARQUIVO: ████████ // ███ ██ TENTATIVAS"
+            [avisos]="avisosFalha"
+            rodape="DOCUMENTO █████ SINAL █████ INTERROMPIDO"
+        >
+            <button
+                app-botao
+                acoes
+                type="button"
+                variante="primario"
+                class="contencao__acao"
+                (click)="tentarNovamente()"
+            >
+                Tentar novamente
+            </button>
+            <a
+                app-botao
+                acoes
+                variante="secundario"
+                estilo="contorno"
+                class="contencao__acao contencao__acao--neutra"
+                routerLink="/campanhas"
+            >
+                Voltar ao painel
+            </a>
+        </app-documento-contencao>
+    </div>
+    } @else if (estadoNota() === 'inexistente') {
+    <div class="patchnotes__contencao">
+        <app-documento-contencao
+            codigo="404"
+            classificacao="CLASSE-██ // ÍNDICE DE REVISÕES"
+            setor="ÍNDICE DE REVISÕES"
+            rotulo="REVISÃO NÃO CATALOGADA"
+            titulo="Versão inexistente"
+            mensagem="Não existe nota para esta versão. Ela pode ter sido expurgada do índice, nunca ter sido lançada ou estar retida sob protocolo administrativo. Escolha uma das versões catalogadas."
+            registro="REVISÃO SOLICITADA: v█.█.█ // ██████ ██ ARQUIVO CENTRAL"
+            [avisos]="avisosInexistente"
+            rodape="DOCUMENTO █████ REVISÃO █████ REDACTED"
+        >
+            <a app-botao acoes variante="primario" class="contencao__acao" routerLink="/patchnotes">
+                <app-icone nome="voltar" />
+                Ver todas as versões
+            </a>
+        </app-documento-contencao>
+    </div>
+    } @else {
+    <header class="patchnotes__cabecalho">
+        <span class="patchnotes__eyebrow">// Patchnotes</span>
+        <h1 class="patchnotes__titulo">Novidades do sistema</h1>
+        <p class="patchnotes__apresentacao">
+            O que mudou no ContratadosRPG, do jeito que você percebe na mesa.
+        </p>
+    </header>
+
+    @if (indice() === null) {
+    <div class="patchnotes__carregando" role="status" aria-label="Carregando patchnotes">
+        <app-esqueleto class="patchnotes__esqueleto-titulo" />
+        <app-esqueleto class="patchnotes__esqueleto-linha" />
+        <app-esqueleto class="patchnotes__esqueleto-linha patchnotes__esqueleto-linha--media" />
+        <app-esqueleto class="patchnotes__esqueleto-linha patchnotes__esqueleto-linha--curta" />
+    </div>
+    } @else if (indice()!.length === 0) {
+    <app-estado-vazio
+        icone="anotacoes"
+        titulo="Ainda não há notas de versão."
+        linhaApoio="Assim que a primeira for publicada, ela aparece aqui."
+    />
+    } @else {
+    <div class="patchnotes__corpo">
+        <nav class="patchnotes__versoes" aria-label="Versões">
+            <span class="patchnotes__rotulo">Versões</span>
+            <div class="patchnotes__lista">
+                @for (item of indice(); track item.versao) {
+                <a
+                    class="patchnotes__item"
+                    [routerLink]="['/patchnotes', item.versao]"
+                    routerLinkActive="patchnotes__item--ativo"
+                    ariaCurrentWhenActive="page"
+                >
+                    <b>v{{ item.versao }}</b>
+                    <span>{{ formatarDataCurta(item.data) }}</span>
+                </a>
+                }
+            </div>
+        </nav>
+
+        @if (nota(); as notaAtual) {
+        <article class="patchnotes__nota" [attr.aria-label]="'Versão ' + notaAtual.versao">
+            <header class="patchnotes__nota-cabecalho">
+                <div class="patchnotes__nota-versao">
+                    <b>v{{ notaAtual.versao }}</b>
+                    @if (notaAtual.versao === versaoAtual()) {
+                    <app-chip severidade="primario">Atual</app-chip>
+                    }
+                    <time [attr.datetime]="notaAtual.data">{{ formatarData(notaAtual.data) }}</time>
+                </div>
+                <h2 class="patchnotes__nota-titulo">{{ notaAtual.titulo }}</h2>
+                @if (conteudo()?.introducao) {
+                <div
+                    class="patchnotes__markdown patchnotes__markdown--introducao"
+                    [innerHTML]="conteudo()?.introducao"
+                ></div>
+                }
+            </header>
+
+            @for (grupo of conteudo()?.grupos; track $index) {
+            <section class="patchnotes__grupo">
+                @if (grupo.titulo) {
+                <h3 class="patchnotes__grupo-titulo">{{ grupo.titulo }}</h3>
+                } @if (grupo.introducao) {
+                <div class="patchnotes__markdown" [innerHTML]="grupo.introducao"></div>
+                } @for (bloco of grupo.blocos; track $index) {
+                <section
+                    class="patchnotes__bloco"
+                    [class.patchnotes__bloco--funcionalidade]="bloco.tom === 'neutro'"
+                    [attr.data-tom]="bloco.tom"
+                >
+                    <h4 class="patchnotes__bloco-titulo">{{ bloco.titulo }}</h4>
+                    <div class="patchnotes__markdown" [innerHTML]="bloco.html"></div>
+                </section>
+                }
+            </section>
+            } @if (versaoAnterior(); as anterior) {
+            <footer class="patchnotes__nota-rodape">
+                <a
+                    app-botao
+                    variante="secundario"
+                    estilo="link"
+                    tamanho="pequeno"
+                    [routerLink]="['/patchnotes', anterior.versao]"
+                >
+                    <app-icone nome="voltar" />
+                    v{{ anterior.versao }} (anterior)
+                </a>
+            </footer>
+            }
+        </article>
+        } @else {
+        <div class="patchnotes__carregando" role="status" aria-label="Carregando nota">
+            <app-esqueleto class="patchnotes__esqueleto-titulo" />
+            <app-esqueleto class="patchnotes__esqueleto-linha" />
+            <app-esqueleto class="patchnotes__esqueleto-linha patchnotes__esqueleto-linha--media" />
+            <app-esqueleto class="patchnotes__esqueleto-linha patchnotes__esqueleto-linha--curta" />
+        </div>
+        }
+    </div>
+    } }
+</main>

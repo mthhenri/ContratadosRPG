@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { Icone } from '../../shared/icone/icone.component';
-import { Marca } from '../../shared/marca/marca.component';
+import { DocumentoContencao } from '../../shared/documento-contencao/documento-contencao.component';
 import { Botao } from '../../shared/ui/botao/botao.component';
 
 export const MENSAGENS_ACESSO_NEGADO = [
@@ -74,12 +74,19 @@ function selecionarAleatorio<T>(itens: readonly T[]): T {
 /** Destino genérico de uma tentativa autenticada sem a classificação exigida. */
 @Component({
   selector: 'app-acesso-negado-page',
-  imports: [RouterLink, Icone, Marca, Botao],
+  imports: [RouterLink, Icone, DocumentoContencao, Botao],
   templateUrl: './acesso-negado.page.html',
   styleUrl: './acesso-negado.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AcessoNegadoPage {
+  protected readonly paragrafos = [
+    'Sua credencial atual não possui a classificação necessária. A ████████, a ██████ e a ███████████ do ███████ permanecem protegidas.',
+  ];
+  protected readonly avisos = [
+    'Tentativas adicionais poderão ser registradas para análise pela administração do sistema.',
+    'Dentre as medidas tomadas pode haver: █████, ███████████, ███████████, ██████████ ou ███████ ██ ███████ █ █████ █████.',
+  ];
   protected readonly mensagemSelecionada = `${selecionarAleatorio(MENSAGENS_ACESSO_NEGADO)} ${selecionarAleatorio(FRAGMENTOS_MENSAGEM_EXPURGADOS)}`;
   protected readonly registroExpurgadoSelecionado = expurgarTexto(
     selecionarAleatorio(MOLDES_REGISTRO_EXPURGADO),

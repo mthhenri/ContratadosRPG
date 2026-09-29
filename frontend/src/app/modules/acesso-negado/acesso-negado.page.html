@@ -1,55 +1,19 @@
 <main class="acesso-negado">
-    <article class="acesso-negado__documento" aria-labelledby="acesso-negado-titulo">
-        <header class="acesso-negado__cabecalho">
-            <span class="acesso-negado__indice" aria-hidden="true">//</span>
-            <span class="acesso-negado__protocolo">PROTOCOLO DE CONTENÇÃO</span>
-            <span class="acesso-negado__regua" aria-hidden="true"></span>
-            <span class="acesso-negado__codigo">403</span>
-        </header>
-
-        <div class="acesso-negado__classificacao">CLASSE-██ // CONFIDENCIAL</div>
-
-        <section class="acesso-negado__conteudo">
-            <div class="acesso-negado__fundacao">
-                <app-marca class="acesso-negado__marca" />
-                <div>
-                    <span>FUNDAÇÃO // ARQUIVO CENTRAL</span>
-                    <strong>CONTROLE DE ACESSO INSTITUCIONAL</strong>
-                </div>
-            </div>
-
-            <p class="acesso-negado__rotulo">AUTORIZAÇÃO INSUFICIENTE</p>
-            <h1 id="acesso-negado-titulo">Acesso restrito</h1>
-            <p class="acesso-negado__mensagem">{{ mensagemSelecionada }}</p>
-            <p>
-                Sua credencial atual não possui a classificação necessária. A ████████, a ██████ e a
-                ███████████ do ███████ permanecem protegidas.
-            </p>
-
-            <div class="acesso-negado__registro" aria-label="Trecho confidencial censurado">
-                <span>REGISTRO:</span>
-                <span class="acesso-negado__censura" aria-hidden="true">
-                    {{ registroExpurgadoSelecionado }}
-                </span>
-                <strong>[████ DADOS EXPURGADOS ████]</strong>
-            </div>
-
-            <p class="acesso-negado__aviso">
-                Tentativas adicionais poderão ser registradas para análise pela administração do
-                sistema.
-            </p>
-            <p class="acesso-negado__aviso">
-                Dentre as medidas tomadas pode haver: █████, ███████████, ███████████, ██████████ ou
-                ███████ ██ ███████ █ █████ █████.
-            </p>
-        </section>
-
-        <footer class="acesso-negado__rodape">
-            <span>DOCUMENTO █████ ████████████ REDACTED █████</span>
-            <a app-botao variante="primario" class="acesso-negado__retorno" routerLink="/campanhas">
-                <app-icone nome="voltar" />
-                Retornar ao painel
-            </a>
-        </footer>
-    </article>
+    <app-documento-contencao
+        codigo="403"
+        classificacao="CLASSE-██ // CONFIDENCIAL"
+        setor="CONTROLE DE ACESSO INSTITUCIONAL"
+        rotulo="AUTORIZAÇÃO INSUFICIENTE"
+        titulo="Acesso restrito"
+        [mensagem]="mensagemSelecionada"
+        [paragrafos]="paragrafos"
+        [registro]="registroExpurgadoSelecionado"
+        [avisos]="avisos"
+        rodape="DOCUMENTO █████ ████████████ REDACTED █████"
+    >
+        <a app-botao acoes variante="primario" class="contencao__acao" routerLink="/campanhas">
+            <app-icone nome="voltar" />
+            Retornar ao painel
+        </a>
+    </app-documento-contencao>
 </main>
