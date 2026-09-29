@@ -1,0 +1,143 @@
+<!-- Biblioteca em painel flutuante (m9-11): a casca do Caderno (sem gatilho próprio — abre pelo item
+     da coluna de ações) com o corpo da página. Só leitura e busca; o mestre também Revela/Oculta. -->
+<app-painel-flutuante
+    #painel="appPainelFlutuante"
+    id="biblioteca"
+    [titulo]="'Biblioteca · ' + campanhaNome()"
+    kicker="Arquivo da campanha"
+    [aberto]="aberto()"
+    [mobile]="ehMobile()"
+    [maximizada]="maximizada()"
+    [largura]="ehMobile() ? null : tamanho().largura"
+    [altura]="ehMobile() ? null : tamanho().altura"
+    [posicaoInicial]="posicaoInicial"
+    [pisoX]="220"
+    [ignorarMinimizadoPersistido]="true"
+    (fechar)="fechar()"
+>
+    <ng-container painelAcoesExtras>
+        <button
+            app-botao-icone
+            type="button"
+            aria-label="Abrir página da Biblioteca"
+            appTooltip="Abrir página da Biblioteca"
+            (pointerdown)="$event.stopPropagation()"
+            (click)="abrirPagina()"
+        >
+            <app-icone nome="biblioteca" />
+        </button>
+        @if (!ehMobile()) {
+            <button
+                app-botao-icone
+                type="button"
+                [attr.aria-label]="
+                    maximizada() ? 'Restaurar tamanho da biblioteca' : 'Maximizar biblioteca'
+                "
+                [appTooltip]="maximizada() ? 'Restaurar tamanho' : 'Maximizar'"
+                (pointerdown)="$event.stopPropagation()"
+                (click)="alternarMaximizacao()"
+            >
+                <span aria-hidden="true">{{ maximizada() ? "❐" : "□" }}</span>
+            </button>
+        }
+    </ng-container>
+
+    @if (iniciado()) {
+        <div class="biblioteca-flutuante__conteudo">
+            @if (store.erroLista()) {
+                <app-estado-vazio
+                    icone="alerta"
+                    titulo="Não foi possível carregar a biblioteca."
+                    linhaApoio="Confira a conexão e tente de novo."
+                >
+                    <button
+                        estadoVazioAcao
+                        app-botao
+                        variante="secundario"
+                        estilo="contorno"
+                        tamanho="pequeno"
+                        class="biblioteca-flutuante__acao"
+                        type="button"
+                        (click)="store.tentarNovamente()"
+                    >
+                        <app-icone nome="atualizar" />
+                        Tentar novamente
+                    </button>
+                </app-estado-vazio>
+            } @else {
+                <app-biblioteca-corpo
+                    [emPainel]="true"
+                    [campanhaId]="campanhaId()"
+                    [documentos]="store.documentos()"
+                    [carregandoLista]="store.carregandoLista()"
+                    [abertoId]="store.abertoId()"
+                    [documento]="store.aberto()"
+                    [mostrarEstado]="ehMestre()"
+                    [vazioTitulo]="
+                        ehMestre() ? 'Nenhum documento ainda.' : 'Nenhum documento revelado ainda.'
+                    "
+                    [vazioApoio]="
+                        ehMestre()
+                            ? 'Crie documentos na página da Biblioteca, aberta pelo botão no topo deste painel.'
+                            : 'O que o mestre revelar aparece aqui ao vivo.'
+                    "
+                    [painelVazioApoio]="
+                        ehMestre()
+                            ? 'Escolha um documento na lista para ler ou revelar à mesa.'
+                            : 'Escolha um documento na lista para ler.'
+                    "
+                    (selecionar)="store.selecionar($event)"
+                    (abrir)="store.abrirDocumento($event)"
+                    (fecharDocumento)="store.fecharDocumento()"
+                >
+                    <!-- Mestre: só Revelar/Ocultar — Editar, Remover, ordem e imagem ficam na página. -->
+                    @if (ehMestre()) {
+                        <div bibliotecaAcoesDocumento class="biblioteca-flutuante__acoes">
+                            @if (store.aberto(); as documento) {
+                                <button
+                                    app-botao
+                                    [variante]="documento.revelado ? 'secundario' : 'primario'"
+                                    tamanho="pequeno"
+                                    class="biblioteca-flutuante__acao"
+                                    type="button"
+                                    [disabled]="
+                                        store.emOperacao() || (!documento.revelado && !podeRevelar())
+                                    "
+                                    (click)="store.alternarRevelacao()"
+                                >
+                                    <app-icone [nome]="documento.revelado ? 'olho-fechado' : 'olho'" />
+                                    {{ documento.revelado ? "Ocultar" : "Revelar" }}
+                                </button>
+                            }
+                        </div>
+                    }
+                    <!-- Sempre projetado: um `@if` em volta ocuparia o slot mesmo falso e o corpo
+                         perderia o leitor padrão. -->
+                    <div bibliotecaCorpoDocumento class="biblioteca-flutuante__documento-corpo">
+                        @if (store.aberto(); as documento) {
+                            @if (ehMestre() && !documento.revelado && !podeRevelar()) {
+                                <p class="biblioteca-flutuante__nota">
+                                    Envie a imagem na página da Biblioteca para poder revelar este
+                                    documento.
+                                </p>
+                            }
+                            <app-leitor-documento
+                                class="biblioteca-flutuante__leitor"
+                                [documento]="documento"
+                            />
+                        }
+                    </div>
+                </app-biblioteca-corpo>
+            }
+        </div>
+    }
+
+    @if (!ehMobile() && !maximizada()) {
+        <span
+            painelRedimensionar
+            class="biblioteca-flutuante__redimensionar"
+            aria-hidden="true"
+            (pointerdown)="iniciarRedimensionamento($event)"
+        ></span>
+    }
+</app-painel-flutuante>

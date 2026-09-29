@@ -12,6 +12,16 @@ import { DocumentoAlteracaoEnum } from '@contratados-rpg/shared/enums';
 import { TempoRealService } from '../../core/services/tempo-real.service';
 import { NotificacaoService } from '../../shared/ui/notificacao/notificacao.service';
 import { DocumentoService } from './documento.service';
+import { DocumentoRevelacaoService } from './documento-revelacao.service';
+
+/** Como a store é iniciada — a forma mestre só existe no painel flutuante (m9-11). */
+export interface BibliotecaLeituraOpcoes {
+  /**
+   * Lista inteira (o backend já inclui os ocultos para o mestre): o aberto **não** fecha quando é
+   * ocultado — só `REMOVIDO` fecha com o aviso — e Revelar/Ocultar fica disponível.
+   */
+  readonly mestre?: boolean;
+}
 
 /**
  * Estado da Biblioteca em leitura (m9-05) — o que a página do jogador e a do espectador têm em
@@ -30,13 +40,24 @@ import { DocumentoService } from './documento.service';
  *
  * **Presença de leitura (m9-09):** a store informa ao gateway o documento aberto — ao abrir, ao
  * fechar (`null`), ao destruir a página (`null`) e de novo a cada reconexão, porque o backend perde
- * o estado do socket antigo. Só o mestre recebe quem está lendo; a exibição é da `m9-10`.
+ * o estado do socket antigo. Só o mestre recebe quem está lendo; a exibição é da `m9-10`. O painel
+ * flutuante (m9-11) também conta como leitura, enquanto está na tela: fechá-lo pausa a presença
+ * (`pausarLeitura`) sem esquecer o aberto, e reabri-lo a retoma.
+ *
+ * **Forma mestre (m9-11, só o painel flutuante):** a mesma lista e o mesmo tempo real, com a lista
+ * inteira e sem fechar o aberto no `OCULTADO` — ver {@link BibliotecaLeituraOpcoes}. A página do
+ * mestre continua com o estado próprio (edição, upload, ordem), fora desta store.
+ *
+ * **Sala da campanha:** `entrarSalaCampanha`/`sairSalaCampanha` contam referência no
+ * `TempoRealService`, então uma store dentro de uma tela que já está na sala (o painel flutuante)
+ * não tira a tela dela ao ser destruída.
  */
 @Injectable()
 export class BibliotecaLeituraStore {
   private readonly documentoService = inject(DocumentoService);
   private readonly tempoRealService = inject(TempoRealService);
   private readonly notificacaoService = inject(NotificacaoService);
+  private readonly documentoRevelacaoService = inject(DocumentoRevelacaoService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly documentos = signal<readonly DocumentoResumoDto[]>([]);
@@ -44,15 +65,23 @@ export class BibliotecaLeituraStore {
   /** O documento escolhido — decide a vista do celular antes mesmo de ele carregar. */
   readonly abertoId = signal<number | null>(null);
   readonly aberto = signal<DocumentoRecuperadoDto | null>(null);
+  /** A carga inicial da lista falhou — o painel mostra o erro com "Tentar novamente". */
+  readonly erroLista = signal(false);
+  /** Revelar/Ocultar em voo (forma mestre) — trava o botão para não repetir a mutação. */
+  readonly emOperacao = signal(false);
 
   /** Pedidos de recarga da lista (evento). */
   private readonly recarregar$ = new Subject<void>();
   /** A campanha desta página — `null` até `iniciar`; a presença só é informada depois dele. */
   private campanhaId: number | null = null;
+  private mestre = false;
+  /** `false` com o painel fechado: a presença informa `null` sem esquecer o aberto. */
+  private leituraAtiva = true;
 
   /** Carrega a lista e entra na sala da campanha; sai dela quando a página é destruída. */
-  iniciar(campanhaId: number): void {
+  iniciar(campanhaId: number, opcoes: BibliotecaLeituraOpcoes = {}): void {
     this.campanhaId = campanhaId;
+    this.mestre = opcoes.mestre ?? false;
     this.tempoRealService.conectar();
     this.tempoRealService.entrarSalaCampanha(campanhaId);
     this.destroyRef.onDestroy(() => {
@@ -63,7 +92,7 @@ export class BibliotecaLeituraStore {
     // `reconexao$` (P-083): o backend perdeu a presença do socket antigo — informa o aberto de novo.
     this.tempoRealService.reconexao$
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => this.tempoRealService.informarLeitura(campanhaId, this.abertoId()));
+      .subscribe(() => this.informarLeitura(this.abertoId()));
 
     merge(
       this.recarregar$,
@@ -81,13 +110,60 @@ export class BibliotecaLeituraStore {
       )
       .subscribe({ next: (documentos) => this.aplicarLista(documentos) });
 
-    this.documentoService
-      .listar(campanhaId)
+    this.carregarLista();
+  }
+
+  /** "Tentar novamente" do erro de carga. */
+  tentarNovamente(): void {
+    if (this.campanhaId !== null && this.erroLista()) {
+      this.carregarLista();
+    }
+  }
+
+  /** Painel fechado: o aberto deixa de contar como leitura, mas continua escolhido. */
+  pausarLeitura(): void {
+    if (this.leituraAtiva) {
+      this.leituraAtiva = false;
+      this.informarLeitura(null);
+    }
+  }
+
+  /** Painel de novo na tela: volta a informar o aberto. */
+  retomarLeitura(): void {
+    if (!this.leituraAtiva) {
+      this.leituraAtiva = true;
+      this.informarLeitura(this.abertoId());
+    }
+  }
+
+  /**
+   * Revelar/Ocultar o aberto (forma mestre) — a regra é a do `DocumentoRevelacaoService`, a mesma
+   * da página; aqui só a versão nova é aplicada ao aberto e ao resumo, para o próximo evento não
+   * recarregar à toa.
+   */
+  alternarRevelacao(): void {
+    const documento = this.aberto();
+    if (!this.mestre || !documento || this.emOperacao()) {
+      return;
+    }
+    this.emOperacao.set(true);
+    this.documentoRevelacaoService
+      .alternar(documento)
       .pipe(
-        finalize(() => this.carregandoLista.set(false)),
+        finalize(() => this.emOperacao.set(false)),
         takeUntilDestroyed(this.destroyRef),
       )
-      .subscribe({ next: (documentos) => this.documentos.set(documentos) });
+      .subscribe({
+        next: (resposta) => {
+          const alteracao = { revelado: resposta.revelado, updatedDate: resposta.updatedDate };
+          this.aberto.update((aberto) =>
+            aberto && aberto.id === resposta.id ? { ...aberto, ...alteracao } : aberto,
+          );
+          this.documentos.update((documentos) =>
+            documentos.map((item) => (item.id === resposta.id ? { ...item, ...alteracao } : item)),
+          );
+        },
+      });
   }
 
   /** A lista alterna entre o documento aberto e o painel vazio. */
@@ -114,6 +190,25 @@ export class BibliotecaLeituraStore {
     if (estavaAberto) {
       this.informarLeitura(null);
     }
+  }
+
+  private carregarLista(): void {
+    const campanhaId = this.campanhaId;
+    if (campanhaId === null) {
+      return;
+    }
+    this.erroLista.set(false);
+    this.carregandoLista.set(true);
+    this.documentoService
+      .listar(campanhaId)
+      .pipe(
+        finalize(() => this.carregandoLista.set(false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: (documentos) => this.documentos.set(documentos),
+        error: () => this.erroLista.set(true),
+      });
   }
 
   /** `silencioso`: troca o conteúdo sem passar pelo esqueleto (versão nova do mesmo documento). */
@@ -150,6 +245,7 @@ export class BibliotecaLeituraStore {
    */
   private aplicarLista(documentos: readonly DocumentoResumoDto[]): void {
     this.documentos.set(documentos);
+    this.erroLista.set(false);
     const abertoId = this.abertoId();
     if (abertoId === null) {
       return;
@@ -166,19 +262,21 @@ export class BibliotecaLeituraStore {
   }
 
   private aoAlterarDocumento(evento: DocumentoBibliotecaAlteradaDto): void {
-    if (
-      evento.documentoId !== null &&
-      evento.documentoId === this.abertoId() &&
-      (evento.alteracao === DocumentoAlteracaoEnum.OCULTADO ||
-        evento.alteracao === DocumentoAlteracaoEnum.REMOVIDO)
-    ) {
+    // O mestre continua vendo o oculto: para ele, só a remoção tira o documento da frente.
+    const fecha =
+      evento.alteracao === DocumentoAlteracaoEnum.REMOVIDO ||
+      (!this.mestre && evento.alteracao === DocumentoAlteracaoEnum.OCULTADO);
+    if (evento.documentoId !== null && evento.documentoId === this.abertoId() && fecha) {
       this.fecharIndisponivel();
     }
   }
 
   private informarLeitura(documentoId: number | null): void {
     if (this.campanhaId !== null) {
-      this.tempoRealService.informarLeitura(this.campanhaId, documentoId);
+      this.tempoRealService.informarLeitura(
+        this.campanhaId,
+        this.leituraAtiva ? documentoId : null,
+      );
     }
   }
 

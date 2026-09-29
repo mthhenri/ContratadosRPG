@@ -1,0 +1,216 @@
+// Corpo da Biblioteca (m9-04, extraído do `BibliotecaLayout` na m9-11): lista | documento aberto.
+// O host é o `.biblioteca__corpo`. Análogo: a composição lista | conteúdo do Caderno, que vira duas
+// vistas com um "voltar" quando falta largura. Só tokens (#29).
+
+@use "tema/breakpoints" as bp;
+@use "../../../encontro/paginas/casca-iniciativa" as casca;
+
+// Divisor de seção da lista (`__secao*`) — o mesmo da casca da página, que vive no layout.
+@include casca.casca("biblioteca");
+
+// Largura mínima da janela do painel para lista | documento lado a lado; abaixo, uma vista por vez.
+$painel-vista-unica: 800px;
+
+// Uma vista por vez: a lista, ou o documento aberto com o "voltar". `$qualificador` restringe o host
+// (o painel usa a regra sob `@container`, e só ele).
+@mixin vista-unica($qualificador: "") {
+    $host: ":host";
+    @if $qualificador != "" {
+        $host: ":host(#{$qualificador})";
+    }
+    $com-documento: ":host(#{$qualificador}.biblioteca__corpo--documento)";
+    $sem-documento: ":host(#{$qualificador}:not(.biblioteca__corpo--documento))";
+
+    #{$host} {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    #{$host} .biblioteca__lista {
+        width: auto;
+    }
+
+    #{$com-documento} .biblioteca__lista {
+        display: none;
+    }
+
+    #{$host} .biblioteca__painel {
+        padding: var(--space-12);
+    }
+
+    #{$sem-documento} .biblioteca__painel {
+        display: none;
+    }
+
+    // "Voltar" à lista só existe aqui, onde lista e documento são vistas separadas.
+    #{$host} .biblioteca__voltar {
+        display: inline-flex;
+        min-height: bp.$alvo-toque;
+    }
+}
+
+// Lista | documento.
+:host {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-20);
+}
+
+.biblioteca {
+    &__lista {
+        flex: none;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-12);
+        width: 360px;
+
+        // O respiro entre divisor, busca e lista é o `gap` da coluna, não a margem do divisor.
+        > .biblioteca__secao {
+            margin-bottom: 0;
+        }
+    }
+
+    // Documento aberto: a caixa do cartão (superfície, borda, raio), com o leitor ou o editor dentro.
+    &__painel {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-16);
+        padding: var(--space-16);
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-card);
+
+        // Sem documento aberto, o estado vazio fala sozinho — sem a caixa em volta dele.
+        &--vazio {
+            padding: 0;
+            background: none;
+            border: 0;
+        }
+    }
+
+    &__voltar {
+        display: none;
+        align-self: flex-start;
+    }
+
+    &__documento-cabecalho {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-12);
+        padding-bottom: var(--space-12);
+        border-bottom: 1px solid var(--border);
+    }
+
+    &__documento-identidade {
+        min-width: 0;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px 10px;
+    }
+
+    // Ícone e título andam juntos — o chip é que desce de linha quando falta espaço.
+    &__documento-nome {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    &__documento-tipo {
+        flex: none;
+        color: var(--accent);
+    }
+
+    &__documento-titulo {
+        margin: 0;
+        min-width: 0;
+        font-family: var(--font-mono);
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--text);
+        overflow-wrap: anywhere;
+    }
+
+    &__leitor {
+        min-height: 0;
+    }
+
+    // "Lendo agora" (m9-10): linha própria abaixo do título e do chip de estado, no tom do rótulo do
+    // tipo do cartão (mono 10px caixa-alta, `--text-mute`); os nomes em chips neutros de contorno.
+    &__leitores {
+        flex-basis: 100%;
+        min-width: 0;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px 10px;
+    }
+
+    &__leitores-rotulo {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-mute);
+    }
+
+    &__leitores-lista {
+        min-width: 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    &__esqueleto-painel {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-12);
+    }
+
+    &__esqueleto-titulo {
+        height: 32px;
+    }
+
+    &__esqueleto-corpo {
+        height: 280px;
+    }
+}
+
+// Painel flutuante (m9-11): o corpo ocupa a janela e cada coluna rola por dentro — a lista não some
+// ao rolar um documento longo.
+:host(.biblioteca__corpo--painel) {
+    align-items: stretch;
+}
+
+:host(.biblioteca__corpo--painel) .biblioteca__lista,
+:host(.biblioteca__corpo--painel) .biblioteca__painel {
+    min-height: 0;
+    overflow-y: auto;
+}
+
+@include bp.mobile {
+    @include vista-unica;
+}
+
+// A janela do painel é um container (`app-painel-flutuante`): estreitá-la troca para a vista única
+// mesmo sem o viewport mudar. A coluna visível ocupa a altura da janela.
+@container (max-width: #{$painel-vista-unica - 1px}) {
+    @include vista-unica(".biblioteca__corpo--painel");
+
+    :host(.biblioteca__corpo--painel) .biblioteca__lista {
+        flex: 1;
+    }
+}

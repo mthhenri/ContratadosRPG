@@ -31,6 +31,7 @@ import { resolverFichaParaAbrir } from '../../../encontro/encontro-leitura.util'
 import { EncontroPainelDadosService } from '../../../encontro/paginas/painel/encontro-painel-dados.service';
 import { FichaFlutuante } from '../../../ficha/componentes/ficha-flutuante/ficha-flutuante.component';
 import { CadernoFlutuante } from '../../../pagina-caderno/caderno-flutuante.component';
+import { BibliotecaFlutuante } from '../../../documento/componentes/biblioteca-flutuante/biblioteca-flutuante.component';
 import { CenaService } from '../../cena.service';
 import { rotuloStatusCena, rotuloTipoCena } from '../../rotulos-cena';
 
@@ -63,6 +64,7 @@ import { rotuloStatusCena, rotuloTipoCena } from '../../rotulos-cena';
     LeitorDocumento,
     CalculadoraFlutuante,
     CadernoFlutuante,
+    BibliotecaFlutuante,
     HistoricoRolagensSidebar,
     EspectadorFichaCard,
     FichaFlutuante,
@@ -82,6 +84,9 @@ export class PainelCenaSemIniciativaMestre {
   private readonly cadernoRef = viewChild<CadernoFlutuante>('caderno');
   /** Caderno aberto (mesmo minimizado) — marca o item "Caderno" da coluna de ações. */
   protected readonly cadernoAberto = computed(() => this.cadernoRef()?.aberto() ?? false);
+  private readonly bibliotecaRef = viewChild<BibliotecaFlutuante>('biblioteca');
+  /** Biblioteca aberta (mesmo minimizada) — marca o item "Biblioteca" da coluna (m9-11). */
+  protected readonly bibliotecaAberta = computed(() => this.bibliotecaRef()?.aberto() ?? false);
   /** Janela da calculadora aberta — marca o item "Calculadora" da coluna de ações. */
   protected readonly calculadoraAberta = signal(false);
 
@@ -240,6 +245,11 @@ export class PainelCenaSemIniciativaMestre {
 
   protected alternarCaderno(): void {
     this.cadernoRef()?.alternar();
+  }
+
+  /** Alterna a Biblioteca flutuante (m9-11) — `alternar()` restaura se estiver minimizada. */
+  protected alternarBiblioteca(): void {
+    this.bibliotecaRef()?.alternar();
   }
 
   /**

@@ -29,6 +29,21 @@
 
 ## Ativos
 
+### P-089 — Caderno flutuante cobre a coluna de ações na tela dividida · `CONTORNADO` · frontend/caderno
+
+- **Sintoma:** em `960×1080` (e em qualquer viewport até ~1200px de largura), abrir o Caderno pela
+  coluna de ações de uma tela com `app-coluna-acoes` põe a janela em `x: 0` com 960px de largura —
+  ela cobre a coluna inteira, inclusive o item "Caderno" que a fecharia. Medido ao vivo na ficha
+  completa durante a `m9-11` (janela `{ x: 0, width: 960 }`, item em `x: 8`).
+- **Causa:** `CadernoFlutuanteStore.alterarTamanho` limita a largura só ao viewport; o `pisoX` do
+  `app-painel-flutuante` vale só na primeira posição, e `limitarPosicaoAoViewport` puxa a janela para
+  `x: 0` para caber.
+- **Contorno:** fechar pelo "×" ou por `Escape`, ou redimensionar pelo canto.
+- **Correção:** a mesma da `BibliotecaFlutuante` (`m9-11`): fora do maximizado, limitar a largura a
+  `viewport − 240px` (a faixa da coluna) quando ainda sobra o mínimo. Vale conferir também a
+  `CalculadoraFlutuante` e o `LeitorDocumentos`.
+- **Desde:** `campanha-detalhe-mestre-coluna-acoes` (o Caderno passou a abrir pela coluna).
+
 ### P-088 — Upload de avatar sem arquivo responde 500 · `ABERTO` · backend/ficha
 
 - **Sintoma:** `POST /ficha/:id/imagem` (e o equivalente do avulso do encontro,

@@ -92,14 +92,16 @@
     >
         Cenas
     </a>
-    <a
+    <!-- m9-11: abre o painel flutuante; a página fica no botão do próprio painel. -->
+    <button
         app-coluna-acoes-item
         icone="biblioteca"
         appTooltip="Biblioteca"
-        [routerLink]="['/campanhas', campanhaAtual.id, 'documentos']"
+        [pressionado]="bibliotecaAberta()"
+        (click)="alternarBiblioteca()"
     >
         Biblioteca
-    </a>
+    </button>
     <button
         app-coluna-acoes-item
         icone="convite"
@@ -388,6 +390,13 @@
     (abrirFicha)="abrirAnotacoesFicha($event)"
 />
 }
+<!-- Biblioteca (m9-11): sem gatilho próprio; a store só inicia na primeira abertura. -->
+<app-biblioteca-flutuante
+    #biblioteca
+    [campanhaId]="campanhaAtual.id"
+    [campanhaNome]="campanhaAtual.nome"
+    [ehMestre]="true"
+/>
 
 <!--
   Menu de ações (kebab) de um cartão do Esquadrão — raiz do template, fora do grid (que tem

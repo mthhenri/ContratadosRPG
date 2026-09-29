@@ -12,6 +12,7 @@ import type { IconeNome } from '../../../../shared/icone/icone.component';
 import { CampanhaDetalheDadosService } from '../detalhe/campanha-detalhe-dados.service';
 import { CalculadoraFlutuante } from '../../../../shared/calculadora-flutuante/calculadora-flutuante.component';
 import { CadernoFlutuante } from '../../../pagina-caderno/caderno-flutuante.component';
+import { BibliotecaFlutuante } from '../../../documento/componentes/biblioteca-flutuante/biblioteca-flutuante.component';
 import { FichaFlutuante } from '../../../ficha/componentes/ficha-flutuante/ficha-flutuante.component';
 import { EspectadorFichaCard, type EspectadorFichaCardDados } from '../../componentes/espectador-ficha-card/espectador-ficha-card.component';
 import { CriaturaEsquadraoCard, type CriaturaEsquadraoCardDados } from '../../componentes/criatura-esquadrao-card/criatura-esquadrao-card.component';
@@ -73,6 +74,7 @@ const ATRIBUTOS_NEUTROS: FichaAtributosDto = { destreza: 0, forca: 0, luta: 0, p
     FichaFlutuante,
     CalculadoraFlutuante,
     CadernoFlutuante,
+    BibliotecaFlutuante,
     Botao,
     BotaoIcone,
     EstadoVazio,
@@ -142,6 +144,9 @@ export class CampanhaDetalheMestre {
   private readonly cadernoRef = viewChild<CadernoFlutuante>('caderno');
   /** Caderno aberto (mesmo minimizado) — marca o item "Caderno" da coluna de ações. */
   protected readonly cadernoAberto = computed(() => this.cadernoRef()?.aberto() ?? false);
+  private readonly bibliotecaRef = viewChild<BibliotecaFlutuante>('biblioteca');
+  /** Biblioteca aberta (mesmo minimizada) — marca o item "Biblioteca" da coluna (m9-11). */
+  protected readonly bibliotecaAberta = computed(() => this.bibliotecaRef()?.aberto() ?? false);
   private readonly calculadoraRef = viewChild<CalculadoraFlutuante>('calculadora');
 
   protected readonly calculadoraAberta = signal(false);
@@ -200,6 +205,11 @@ export class CampanhaDetalheMestre {
    *  `CadernoFlutuante.alternar()` também restaura em vez de fechar quando minimizado. */
   protected alternarCaderno(): void {
     this.cadernoRef()?.alternar();
+  }
+
+  /** Alterna a Biblioteca flutuante (m9-11) — `alternar()` restaura se estiver minimizada. */
+  protected alternarBiblioteca(): void {
+    this.bibliotecaRef()?.alternar();
   }
 
   /** Placeholders desta task — o conteúdo das dialogs chega nas próximas tasks da série. */

@@ -1,0 +1,81 @@
+@use "tema/breakpoints" as bp;
+
+// Biblioteca em painel flutuante (m9-11). Moldura, cabeçalho, minimizar e fechar são de
+// `app-painel-flutuante` (ui-17); a lista e o documento, do `BibliotecaCorpo`. Aqui só o respiro do
+// conteúdo, as ações do mestre (mesma receita de `biblioteca-mestre.page.scss`) e a alça de
+// redimensionar (a do Caderno). Só tokens (#29).
+
+:host {
+    display: contents;
+}
+
+.biblioteca-flutuante {
+    &__conteudo {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        padding: var(--space-16);
+
+        @include bp.mobile {
+            padding: var(--space-12);
+        }
+    }
+
+    &__acoes {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-8);
+
+        &:empty {
+            display: none;
+        }
+    }
+
+    &__acao {
+        flex: none;
+
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+    }
+
+    // O corpo do documento projetado no painel: o mesmo respiro entre nota e leitor da página.
+    &__documento-corpo {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-16);
+    }
+
+    &__nota {
+        margin: 0;
+        font-size: 12px;
+        color: var(--text-dim);
+    }
+
+    &__leitor {
+        min-height: 0;
+    }
+
+    &__redimensionar {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        width: 20px;
+        height: 20px;
+        cursor: nwse-resize;
+        touch-action: none;
+
+        &::after {
+            content: "";
+            position: absolute;
+            right: 4px;
+            bottom: 4px;
+            width: 8px;
+            height: 8px;
+            border-right: 1px solid var(--accent);
+            border-bottom: 1px solid var(--accent);
+        }
+    }
+}

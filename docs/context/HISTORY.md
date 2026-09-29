@@ -1,5 +1,83 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-29 — m9-11: Biblioteca em painel flutuante (cenas, ficha completa e tela da campanha)
+
+A Biblioteca abre também como painel flutuante, do jeito do Caderno e da Calculadora: uma ferramenta
+que fica aberta enquanto se joga. No painel só se lê e busca; o mestre vê os ocultos e alterna
+Revelar/Ocultar. Criar, editar, reordenar, remover e trocar imagem continuam na página, aberta pelo
+botão "Abrir página da Biblioteca" do próprio painel.
+
+**Corpo separado da casca.** O miolo do `BibliotecaLayout` (lista com busca | documento aberto, as
+duas vistas do celular) virou o `BibliotecaCorpo`, cujo host **é** o `.biblioteca__corpo` — nenhum nó
+novo entre a casca e a lista. O layout ficou só com a casca, repassa inputs/outputs e reprojeta os
+dois slots de documento (`ng-container ngProjectAs`). Armadilha de projeção encontrada no caminho, duas
+vezes: um `ng-container` reprojetado — ou um `@if` falso em volta de um elemento com o seletor do slot
+— **ocupa** o slot mesmo vazio, e o fallback do `ng-content` não aparece. Por isso o leitor padrão
+passou a ser fallback do próprio layout, e o painel projeta o corpo do documento sempre (a nota da
+imagem é que fica sob `@if`). A página foi capturada **antes** da extração no `ng serve` do autor
+(código antigo) e **depois** num stack isolado, nas três visões × quatro viewports × lista/documento
+aberto (24 capturas): comparação pixel a pixel com 0 diferença, exceto 8px do contorno do botão
+"voltar" em algumas capturas de lista — o mesmo ruído aparece comparando o código antigo com ele
+mesmo (transição de borda), então não é da extração.
+
+**Estado.** `BibliotecaLeituraStore` ganhou a **forma mestre** (`iniciar(id, { mestre: true })`: a
+lista já vem inteira do backend; o aberto não fecha no `OCULTADO`, só no `REMOVIDO`), o
+`erroLista`/`tentarNovamente` e `pausarLeitura`/`retomarLeitura` — fechar o painel informa `null`
+sem esquecer o aberto; reabrir informa de novo (decisão da dependência `m9-10`: abrir pelo painel
+**conta** como leitura, igual à página). Nenhuma terceira cópia do tratamento de
+`documentoAlterado$`/`reconexao$`. Sala: `entrarSalaCampanha`/`sairSalaCampanha` já contam referência
+no `TempoRealService`, então a store do painel entra na sala só na primeira abertura e, ao morrer com
+a tela, não a tira da sala. **Revelar/Ocultar** saiu da `BibliotecaMestre` para o
+`DocumentoRevelacaoService` (`documento-revelacao.service.ts`: trava `podeRevelarDocumento`, chamada
+e toast) — a página e a store consomem a mesma função; aplicar a versão nova fica com cada dono do
+próprio estado.
+
+**Painel.** `BibliotecaFlutuante` (`componentes/biblioteca-flutuante/`), casca do `CadernoFlutuante`:
+`app-painel-flutuante` `id="biblioteca"`, título `Biblioteca · <campanha>`, kicker "Arquivo da
+campanha", sem gatilho (`alternar()` restaura se minimizado), maximizar, redimensionar pelo canto
+(mínimo 440×480, tamanho em `contratados-rpg:biblioteca-geometria:v1`), folha cheia no celular. Inputs
+`campanhaId`, `campanhaNome`, `ehMestre`; a store só é iniciada na primeira abertura. O botão para a
+página usa o glifo `biblioteca` (o `abrir-externo` já é o "Abrir em janela" do Caderno). Dois ajustes
+saíram do corte visual: (1) a posição inicial foi para `{ x: 320, y: 112 }`, em cascata com o Caderno
+— na mesma posição e no mesmo tamanho, um escondia o outro por inteiro; (2) na tela dividida
+(`960×1080`) a janela de 960px cobria a coluna de ações e o item que a fecha — fora do maximizado a
+largura agora é limitada a `viewport − 240px`, e o corpo troca para a vista única abaixo de **800px
+de janela** (`@container`), para não espremer o documento ao lado da lista. O Caderno tem o mesmo
+defeito da tela dividida, fora do escopo: `PROBLEMS.md` `P-089`.
+
+**Telas.** Item "Biblioteca" (`[pressionado]` = painel aberto) junto de Calculadora/Caderno em
+`painel-sem-iniciativa-mestre`/`-jogador` e `painel-mestre`/`painel-jogador` (encontro) — nos dois
+do jogador também no atalho de cabeçalho do celular; na ficha completa, logo depois de Caderno e com
+a mesma condição (`campanhaId() !== null`), também no "⋯"; em `detalhe-mestre`/`detalhe-jogador` o
+item existente (coluna e "⋯") passou a abrir o painel — na prévia, continua desabilitado e o painel
+nem é montado. Cada tela ganhou só o item, a montagem e um `alternarBiblioteca()` de uma linha.
+Espectador: sem mudança; ele não alcança a ficha completa (`GET /ficha/:id` 403, e o acesso de
+visualização não pode ser concedido a espectador, `m8-02`).
+
+**Testes:** store (10 novos: forma mestre com OCULTADO/REMOVIDO, Revelar/Ocultar com a versão e o
+toast, trava do `IMAGEM`, forma leitura sem revelar, pausa/retomada, erro e "Tentar novamente", sala
+saindo uma vez só) e `BibliotecaFlutuante` (5: nada pedido antes de abrir, alternar/pausar/reabrir
+sem nova carga, botão para a página, ações por papel). Specs das telas hospedeiras atualizadas (o
+item da campanha não tem mais `href` e chama `alternar()`; listas de itens com "Biblioteca").
+Frontend: suíte completa **176 arquivos / 2515 testes** verdes; `ng build` limpo; lint sem erros
+(os warnings de aspas são preexistentes; os de `max-len` introduzidos foram corrigidos).
+
+**Verificação ao vivo** (skill `verify`; o `ng serve` do autor em 4300 não recompilava, então stack
+isolado em 3101/4301; a migration `0035` da `m7-25` estava pendente no banco local e foi aplicada):
+cena sem iniciativa (mestre e jogador), cena com iniciativa (mestre e jogador), ficha completa (jogador
+e mestre) e tela da campanha (mestre e jogador) em `1920×1080` e `360×800`, mais `960×1080` e
+`1366×768`: aberto, documento aberto, busca, maximizado/restaurado, minimizado (o item continua
+pressionado e reabre), empilhado com o Caderno, vazio (campanha sem documentos, mestre e jogador),
+erro de carga com "Tentar novamente", nenhuma requisição de documento antes de abrir, sem overflow.
+Dois usuários: o mestre revela pelo painel → o documento entra ao vivo na lista do jogador sem abrir;
+o jogador abre, o mestre oculta → o do jogador fecha com "Este documento não está mais disponível." e
+o do mestre continua aberto com o chip "Oculto"; imagem sem arquivo trava o Revelar com a nota.
+Fechar o painel na tela da campanha e o mestre alternar Na Base/Em Missão: a tela do jogador
+atualizou (continua na sala). O botão "Abrir página da Biblioteca" leva a
+`/campanhas/:id/documentos` sem deixar o painel por cima; na prévia o item está desabilitado.
+Comparado com o `CadernoFlutuante` (casca, cabeçalho, botões, alça) e com a página da Biblioteca
+(corpo): mesmo produto, mesma densidade, mesmos controles.
+
 ## 2026-09-28 — m9-10: presença de leitura na Biblioteca do mestre (chip "N lendo" e "Lendo agora")
 
 O mestre passa a ver, ao vivo, quem está com cada documento aberto — consumindo o

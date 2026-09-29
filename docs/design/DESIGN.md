@@ -320,7 +320,8 @@ renderizada (`obterElemento()`) para o consumidor medir o próprio redimensionam
 `moverPara()`/`obterPosicaoAtual()` para quem maximiza também precisar mover a janela. A janela
 some com `[hidden]`, não `@if`, ao minimizar — o iframe do leitor de documentos preserva página,
 zoom e rolagem do PDF em vez de recarregar ao restaurar, e a mesma escolha beneficia de graça
-qualquer conteúdo futuro que se importe com o próprio estado interno.
+qualquer conteúdo futuro que se importe com o próprio estado interno. A Biblioteca flutuante
+(`BibliotecaFlutuante`, `m9-11`) é o quarto consumidor — ver "Biblioteca de documentos".
 
 `app-coluna-acoes` (`shared/ui/coluna-acoes/`, `campanha-detalhe-mestre-coluna-acoes.spec.md`) é uma
 quarta forma, mais próxima do painel lateral de 500px que do painel flutuante: participa do fluxo
@@ -472,7 +473,10 @@ os controles do mestre.
   em `app-biblioteca-layout` (`modules/documento/componentes/`), usado pelas três visões. O que é
   só do mestre entra por projeção (`[bibliotecaAcao]`, `[bibliotecaAcoesDocumento]`,
   `[bibliotecaCorpoDocumento]`) e por input (`mostrarEstado` liga os chips, `ordenavel` as setas).
-  O cartão é o `button[app-documento-cartao]`, o mesmo na lista e na busca.
+  O cartão é o `button[app-documento-cartao]`, o mesmo na lista e na busca. Desde a `m9-11`, a
+  lista e o documento aberto são o `app-biblioteca-corpo` (o host **é** o `.biblioteca__corpo`, sem
+  nó novo — a página ficou idêntica pixel a pixel nas três visões e nos quatro viewports), que o
+  layout monta reprojetando os dois slots de documento, e o painel flutuante monta direto.
 - **Visão da mesa (jogador e espectador, `m9-05`):** a mesma biblioteca **menos** os controles —
   sem "Novo documento", sem chip de estado (para a mesa, tudo é revelado), sem setas e sem ações no
   documento aberto; o cartão ocupa a coluna inteira. Vazio: "Nenhum documento revelado ainda." /
@@ -501,6 +505,27 @@ os controles do mestre.
   10px caixa-alta, `--text-mute`, ícone `olho-membros`) e um `app-chip` `secundario` `contorno` por
   nome, o espectador com "(espectador)"; some quando ninguém lê. Sem `aria-live` — presença muda o
   tempo todo e seria ruído. Jogador e espectador não recebem o dado nem o indicador.
+- **Forma flutuante (`m9-11`):** a Biblioteca também abre em `app-painel-flutuante` (`id=
+  "biblioteca"`), na casca do Caderno — sem gatilho próprio, pelo item "Biblioteca" (`icone=
+  "biblioteca"`, `[pressionado]` enquanto aberto, mesmo minimizado) da coluna de ações das cenas
+  (com e sem iniciativa), da ficha completa (categoria "Ficha", logo depois de Caderno, só com
+  campanha) e da tela da campanha, onde o item deixou de navegar; nos menus "⋯" e nos atalhos de
+  cabeçalho do celular, junto de Calculadora/Caderno. Título `Biblioteca · <campanha>`, kicker
+  "Arquivo da campanha". Posição inicial `{ x: 320, y: 112 }`, em cascata com o Caderno (`{ 280, 72
+  }`): abertos juntos, os dois cabeçalhos ficam à vista. Tamanho padrão 960×680, mínimo 440×480,
+  e fora do maximizado a janela nunca cobre a faixa da coluna de ações (240px): na tela dividida
+  ela fica com 720px em vez de cobrir o item que a fecha. O corpo é o mesmo da página; dentro da
+  janela, lista e documento rolam cada um por dentro, e abaixo de **800px de janela**
+  (`@container`, a janela é o container) vira as duas vistas do celular — no celular, folha cheia.
+  **No painel só se lê e busca**; o mestre vê os ocultos com o chip de estado e tem **só
+  `Revelar`/`Ocultar`** (mesmo `app-botao` `pequeno`, mesma trava do `IMAGEM` sem arquivo com a
+  nota "Envie a imagem na página da Biblioteca…", mesmo toast) — e o aberto **não** fecha quando ele
+  mesmo oculta. Criar, editar, remover, reordenar e enviar imagem ficam **só na página**, aberta pelo
+  `app-botao-icone` "Abrir página da Biblioteca" do cabeçalho (glifo `biblioteca`, distinto do
+  `abrir-externo` do "Abrir em janela" do Caderno). Estados próprios: vazio do mestre "Nenhum
+  documento ainda." / "Crie documentos na página da Biblioteca, aberta pelo botão no topo deste
+  painel." (o do jogador é o da mesa) e erro de carga (`app-estado-vazio` `alerta` + "Tentar
+  novamente", `secundario` `contorno` `pequeno`). Sem presença "N lendo" no painel (só na página).
 
 ### Acabamento do botão (`ui-19`)
 

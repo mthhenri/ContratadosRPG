@@ -96,14 +96,16 @@
     >
         Cenas
     </a>
-    <a
+    <!-- m9-11: abre o painel flutuante; a página fica no botão do próprio painel. -->
+    <button
         app-coluna-acoes-item
         icone="biblioteca"
         appTooltip="Biblioteca"
-        [routerLink]="['/campanhas', campanhaAtual.id, 'documentos']"
+        [pressionado]="bibliotecaAberta()"
+        (click)="alternarBiblioteca()"
     >
         Biblioteca
-    </a>
+    </button>
     }
     <div class="coluna-acoes__categoria">Ficha</div>
     <button
@@ -236,6 +238,15 @@
                     [membros]="dados.membros()"
                     (abrirFicha)="abrirAnotacoesFicha($event)"
                 />
+                } @if (!somenteLeitura()) {
+                <!-- Biblioteca (m9-11): fora da prévia (o recorte seria o do mestre); a store só
+                     inicia na primeira abertura. -->
+                <app-biblioteca-flutuante
+                    #biblioteca
+                    [campanhaId]="campanhaAtual.id"
+                    [campanhaNome]="campanhaAtual.nome"
+                    [ehMestre]="false"
+                />
                 }
                 <!-- Menu "⋯" de ações de ficha do jogador — visível só no mobile: no desktop/tablet
              as mesmas ações moram em `app-coluna-acoes`, mas ela vira barra fixa no rodapé do
@@ -310,16 +321,16 @@
                             <app-icone nome="combate" />
                             <span>Cenas</span>
                         </a>
-                        <a
+                        <button
                             app-botao
                             class="detalhe__cabecalho-menu-item"
+                            type="button"
                             role="menuitem"
-                            [routerLink]="['/campanhas', campanhaAtual.id, 'documentos']"
-                            (click)="fecharMenu()"
+                            (click)="alternarBiblioteca(); fecharMenu()"
                         >
                             <app-icone nome="biblioteca" />
                             <span>Biblioteca</span>
-                        </a>
+                        </button>
                         }
                         <button
                             app-botao

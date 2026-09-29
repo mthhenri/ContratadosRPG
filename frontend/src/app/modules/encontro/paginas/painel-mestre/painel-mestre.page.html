@@ -155,6 +155,15 @@
         >
             Caderno
         </button>
+        <button
+            app-coluna-acoes-item
+            icone="biblioteca"
+            appTooltip="Biblioteca"
+            [pressionado]="bibliotecaAberta()"
+            (click)="alternarBiblioteca()"
+        >
+            Biblioteca
+        </button>
     </app-coluna-acoes>
 
     <div class="iniciativa-mestre__conteudo">
@@ -523,6 +532,13 @@
     (ocultaAlterada)="alterarVisibilidadeRolagemAvulso(avulso.id, $event)"
 />
 }
+<!-- Biblioteca (m9-11): sem gatilho próprio, como o Caderno; a store só inicia na primeira abertura. -->
+<app-biblioteca-flutuante
+    #biblioteca
+    [campanhaId]="dados.campanhaId"
+    [campanhaNome]="dados.campanhaNome()"
+    [ehMestre]="true"
+/>
 
 <!-- A rolagem do avulso usa a mesma carta central das fichas. O serviço sozinho mantém o estado;
      esta instância é quem torna o resultado visível nesta tela, mesmo com o histórico recolhido. -->

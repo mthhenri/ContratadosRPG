@@ -78,7 +78,7 @@ describe('PainelEncontroJogador', () => {
       expect(elemento.querySelector('app-resumo-combatente')).toBeNull();
     });
 
-    it('a coluna de ações só tem Ferramentas: Calculadora e Caderno', () => {
+    it('a coluna de ações só tem Ferramentas: Calculadora, Caderno e Biblioteca (m9-11)', () => {
       const elemento = montar().fixture.nativeElement as HTMLElement;
       const rotulos = Array.from(
         elemento.querySelectorAll('app-coluna-acoes .coluna-acoes__item'),
@@ -87,7 +87,7 @@ describe('PainelEncontroJogador', () => {
         elemento.querySelectorAll('app-coluna-acoes .coluna-acoes__categoria'),
       ).map((categoria) => texto(categoria));
 
-      expect(rotulos).toEqual(['Calculadora', 'Caderno']);
+      expect(rotulos).toEqual(['Calculadora', 'Caderno', 'Biblioteca']);
       expect(categorias).toEqual(['Ferramentas']);
     });
 
@@ -106,6 +106,7 @@ describe('PainelEncontroJogador', () => {
       expect(ferramentas.map((botao) => botao.getAttribute('aria-label'))).toEqual([
         'Calculadora',
         'Caderno',
+        'Biblioteca',
       ]);
 
       // Os botões do cabeçalho abrem as mesmas janelas da coluna de ações.
@@ -206,7 +207,7 @@ describe('PainelEncontroJogador', () => {
       expect(elemento.querySelector('.iniciativa-jogador__esqueleto-identidade')).not.toBeNull();
       expect(elemento.querySelector('.iniciativa-jogador__esqueleto-conteudo')).not.toBeNull();
       // A coluna de ações e o cabeçalho são os reais: não dependem do encontro.
-      expect(elemento.querySelectorAll('app-coluna-acoes .coluna-acoes__item')).toHaveLength(2);
+      expect(elemento.querySelectorAll('app-coluna-acoes .coluna-acoes__item')).toHaveLength(3);
       expect(elemento.querySelector('.iniciativa-jogador__vazio')).toBeNull();
       expect(elemento.querySelector('app-trilha-turnos')).toBeNull();
     });

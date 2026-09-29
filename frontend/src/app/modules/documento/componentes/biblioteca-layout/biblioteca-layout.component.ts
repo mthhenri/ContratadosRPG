@@ -1,4 +1,4 @@
-import { Component, computed, input, output, signal } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import type {
@@ -7,29 +7,19 @@ import type {
 } from '@contratados-rpg/shared/dtos/documento';
 
 import { Icone } from '../../../../shared/icone/icone.component';
-import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
-import { Chip } from '../../../../shared/ui/chip/chip.component';
-import { Esqueleto } from '../../../../shared/ui/esqueleto/esqueleto.component';
-import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
-import {
-  NENHUM_LEITOR,
-  leitoresDoDocumento,
-  type DocumentoLeitoresPorDocumento,
-} from '../../documento-leitores';
-import { iconeTipoDocumento } from '../../documento-tipo';
-import { BuscaDocumentos } from '../busca-documentos/busca-documentos.component';
+import { NENHUM_LEITOR, type DocumentoLeitoresPorDocumento } from '../../documento-leitores';
+import { BibliotecaCorpo } from '../biblioteca-corpo/biblioteca-corpo.component';
 import { LeitorDocumento } from '../leitor-documento/leitor-documento.component';
-import {
-  ListaDocumentos,
-  type DocumentoMovimento,
-} from '../lista-documentos/lista-documentos.component';
+import type { DocumentoMovimento } from '../lista-documentos/lista-documentos.component';
 
 /**
  * Estrutura comum da Biblioteca (m9-05) — a composição da página do mestre da `m9-04`, agora
  * usada pelas três visões (mestre, jogador, espectador): a casca do hub de cenas (cabeçalho com
- * voltar, `//`, "Biblioteca", nome da campanha), a coluna da lista com a busca no topo e o painel
- * do documento aberto. No celular, uma vista por vez: a lista, ou o documento com um "voltar".
+ * voltar, `//`, "Biblioteca", nome da campanha) em volta do corpo — a lista com a busca no topo e o
+ * painel do documento aberto, que desde a `m9-11` é o `BibliotecaCorpo`, o mesmo do painel
+ * flutuante. Os inputs e outputs do corpo só atravessam esta casca, e os dois slots de documento
+ * são reprojetados nele.
  *
  * Só apresenta — o estado (lista, documento aberto, tempo real) é da página. O que muda por papel
  * entra por input (`mostrarEstado`, `ordenavel`, os textos dos vazios) e por projeção:
@@ -39,18 +29,7 @@ import {
  */
 @Component({
   selector: 'app-biblioteca-layout',
-  imports: [
-    RouterLink,
-    Icone,
-    Botao,
-    BotaoIcone,
-    Chip,
-    Esqueleto,
-    EstadoVazio,
-    BuscaDocumentos,
-    LeitorDocumento,
-    ListaDocumentos,
-  ],
+  imports: [RouterLink, Icone, BotaoIcone, BibliotecaCorpo, LeitorDocumento],
   templateUrl: './biblioteca-layout.component.html',
   styleUrl: './biblioteca-layout.component.scss',
 })
@@ -89,29 +68,4 @@ export class BibliotecaLayout {
   readonly mover = output<DocumentoMovimento>();
   /** "Voltar" do celular: a página fecha o documento (o mestre pergunta antes, se há rascunho). */
   readonly fecharDocumento = output<void>();
-
-  protected readonly buscaAtiva = signal(false);
-  protected readonly totalBusca = signal<number | null>(null);
-
-  protected readonly iconeTipo = iconeTipoDocumento;
-
-  protected readonly leitoresAberto = computed(() =>
-    leitoresDoDocumento(this.leitoresPorDocumento(), this.abertoId()),
-  );
-
-  /** A busca só some com a biblioteca carregada e vazia — buscar no nada não ajuda ninguém. */
-  protected readonly mostrarBusca = computed(
-    () => this.buscaAtiva() || this.carregandoLista() || this.documentos().length > 0,
-  );
-  protected readonly contagem = computed(() => {
-    if (this.buscaAtiva()) {
-      return this.totalBusca();
-    }
-    return this.carregandoLista() ? null : this.documentos().length;
-  });
-  /** Sem nenhum documento, o estado vazio da lista basta: o painel nem aparece. */
-  protected readonly mostrarPainel = computed(
-    () =>
-      this.abertoId() !== null || (!this.carregandoLista() && this.documentos().length > 0),
-  );
 }

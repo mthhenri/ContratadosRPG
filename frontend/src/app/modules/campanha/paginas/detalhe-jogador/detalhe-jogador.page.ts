@@ -47,6 +47,7 @@ import {
 } from '../../campanha-equipe.util';
 import { confirmarRemocaoDaCampanha } from '../../../ficha/ficha-confirmacoes';
 import { CadernoFlutuante } from '../../../pagina-caderno/caderno-flutuante.component';
+import { BibliotecaFlutuante } from '../../../documento/componentes/biblioteca-flutuante/biblioteca-flutuante.component';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { Cartao } from '../../../../shared/ui/cartao/cartao.component';
@@ -91,6 +92,7 @@ const PX_PREVIEW_AVATAR = 300;
     BandejaDados,
     CalculadoraFlutuante,
     CadernoFlutuante,
+    BibliotecaFlutuante,
     FichaCampanhaCard,
     FichaEsqueleto,
     FichaRolagensPainel,
@@ -157,6 +159,9 @@ export class CampanhaDetalheJogador {
   private readonly cadernoRef = viewChild<CadernoFlutuante>('caderno');
   /** Caderno aberto (mesmo minimizado) — marca o item "Caderno" da coluna de ações. */
   protected readonly cadernoAberto = computed(() => this.cadernoRef()?.aberto() ?? false);
+  private readonly bibliotecaRef = viewChild<BibliotecaFlutuante>('biblioteca');
+  /** Biblioteca aberta (mesmo minimizada) — marca o item "Biblioteca" da coluna (m9-11). */
+  protected readonly bibliotecaAberta = computed(() => this.bibliotecaRef()?.aberto() ?? false);
   private readonly calculadoraRef = viewChild<CalculadoraFlutuante>('calculadora');
 
   /** Texto da missão (descrição da campanha) começa oculto; o botão "i" do cabeçalho o alterna. */
@@ -573,6 +578,11 @@ export class CampanhaDetalheJogador {
   /** Alterna a janela do caderno — mesmo racional de `alternarCalculadora()` acima. */
   protected alternarCaderno(): void {
     this.cadernoRef()?.alternar();
+  }
+
+  /** Alterna a Biblioteca flutuante (m9-11) — `alternar()` restaura se estiver minimizada. */
+  protected alternarBiblioteca(): void {
+    this.bibliotecaRef()?.alternar();
   }
 
   /** Abre o assistente de criação de ficha, disparado do próprio detalhe. */

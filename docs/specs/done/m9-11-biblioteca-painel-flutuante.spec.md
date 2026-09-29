@@ -235,5 +235,39 @@ editar, reordenar, remover e trocar imagem continuam **só na página**.
 
 ## Fecho
 
-(preencher na conclusão: análogo usado, viewports/estados observados, comparação visual, correções
-durante a inspeção, comandos e resultados, pendências)
+**Concluída em 2026-09-29.** Relato completo em `HISTORY.md` ("m9-11").
+
+- **Análogos usados:** casca = `CadernoFlutuante` (sem gatilho, `alternar()` que restaura o
+  minimizado, maximizar/redimensionar, folha cheia, `painelAcoesExtras`), com o `LeitorDocumentos`
+  como segunda referência; conteúdo = a própria Biblioteca (`BibliotecaCorpo`, extraído do
+  `BibliotecaLayout`, com `ListaDocumentos`/`DocumentoCartao`/`BuscaDocumentos`/`LeitorDocumento`);
+  item = os itens Calculadora/Caderno de cada tela.
+- **Recortes registrados:** corpo = `BibliotecaCorpo` (`componentes/biblioteca-corpo/`, host =
+  `.biblioteca__corpo`); estado = `BibliotecaLeituraStore` parametrizada (`{ mestre }`) + pausa de
+  presença + erro de carga; Revelar/Ocultar = `DocumentoRevelacaoService` (única implementação,
+  página e painel); abrir pelo painel **conta como leitura** (dependência `m9-10`). Kicker confirmado
+  no corte: "Arquivo da campanha". Glifo do botão para a página: `biblioteca` (glifo existente,
+  distinto do `abrir-externo`).
+- **Página idêntica:** 24 capturas antes/depois (3 visões × 4 viewports × lista/documento), 0 pixel
+  diferente além do ruído do botão "voltar", que também aparece comparando o código antigo com ele
+  mesmo.
+- **Viewports/estados observados:** `1920×1080` e `360×800` em cena sem iniciativa, cena com
+  iniciativa, ficha completa e tela da campanha, como mestre e como jogador; `960×1080` e `1366×768`
+  na ficha e na campanha. Aberto, documento aberto, busca, vazio (mestre e jogador), erro de carga,
+  maximizado, minimizado, empilhado com o Caderno, revelar/ocultar ao vivo com dois usuários, trava
+  do `IMAGEM`, prévia desabilitada, botão para a página, sala mantida depois de fechar o painel,
+  nenhuma requisição de documento antes da primeira abertura.
+- **Correções durante a inspeção:** posição inicial em cascata com o Caderno (`{ 320, 112 }`) — na
+  mesma posição um escondia o outro; largura limitada a `viewport − 240px` fora do maximizado e vista
+  única abaixo de 800px de janela — na tela dividida a janela cobria a coluna e o item que a fecha;
+  corpo do documento sempre projetado — um `@if` falso ocupava o slot e o jogador ficava sem leitor
+  (achado pelo teste).
+- **Comandos:** `npm run test --workspace=frontend` → 176 arquivos / 2515 testes verdes;
+  `ng build --configuration development` → limpo; `npm run lint --workspace=frontend` → 0 erros
+  (warnings de aspas preexistentes; `max-len` introduzidos corrigidos).
+- **Espectador pela ficha completa:** não alcançável (`GET /ficha/:id` 403; acesso de visualização
+  não pode ser concedido a espectador, `m8-02`).
+- **Pendências/fora do escopo:** o Caderno cobre a coluna de ações na tela dividida — registrado em
+  `PROBLEMS.md` `P-089`. Presença "N lendo" não aparece no painel do mestre (só na página); se um
+  clique no item da ficha completa acontecer antes de os membros carregarem, o painel nasce na forma
+  leitura (janela de milissegundos, não observada).

@@ -1,5 +1,6 @@
 import { ApplicationRef } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { ActivatedRoute, Router, provideRouter } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Subject, of, throwError } from 'rxjs';
@@ -14,6 +15,7 @@ import type { FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 
 import { CampanhaDetalheJogador } from './detalhe-jogador.page';
+import { BibliotecaFlutuante } from '../../../documento/componentes/biblioteca-flutuante/biblioteca-flutuante.component';
 import { CampanhaDetalheDadosService } from '../detalhe/campanha-detalhe-dados.service';
 import { CampanhaService } from '../../campanha.service';
 import { SessaoService } from '../../../../core/services/sessao.service';
@@ -991,12 +993,18 @@ describe('CampanhaDetalheJogador', () => {
     ).toBe(false);
   });
 
-  it('o item "Biblioteca" (m9-05) da coluna leva à biblioteca da campanha', () => {
-    const { raiz } = montar({ usuarioId: 2, membros: membrosDois(), fichas });
-    const naColuna = Array.from(raiz.querySelectorAll('[app-coluna-acoes-item]')).find(
+  it('o item "Biblioteca" da coluna abre o painel flutuante (m9-11) em vez de navegar', () => {
+    const { raiz, fixture } = montar({ usuarioId: 2, membros: membrosDois(), fichas });
+    const naColuna = Array.from(raiz.querySelectorAll<HTMLElement>('[app-coluna-acoes-item]')).find(
       (el) => el.textContent?.trim() === 'Biblioteca',
     );
-    expect(naColuna?.getAttribute('href')).toBe(`/campanhas/${CAMPANHA_ID}/documentos`);
+    expect(naColuna?.getAttribute('href')).toBeNull();
+    const painel = fixture.debugElement.query(By.directive(BibliotecaFlutuante))
+      .componentInstance as BibliotecaFlutuante;
+    expect(painel.ehMestre()).toBe(false);
+    const alternar = vi.spyOn(painel, 'alternar').mockImplementation(() => undefined);
+    naColuna!.click();
+    expect(alternar).toHaveBeenCalledTimes(1);
   });
 
   it('aba "Rolagens" funde o painel de rolar com o Histórico completo no mesmo container, sem aba/painel de Sessão', () => {

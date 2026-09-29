@@ -43,6 +43,15 @@
         >
             Caderno
         </button>
+        <button
+            app-coluna-acoes-item
+            icone="biblioteca"
+            appTooltip="Biblioteca"
+            [pressionado]="bibliotecaAberta()"
+            (click)="alternarBiblioteca()"
+        >
+            Biblioteca
+        </button>
         } @if (podeGerenciar()) {
         <div class="coluna-acoes__categoria">Gestão</div>
         <button
@@ -230,6 +239,16 @@
                             <app-icone nome="caderno" />
                             <span>Caderno</span>
                         </button>
+                        <button
+                            app-botao
+                            class="ficha-pagina__menu-item"
+                            type="button"
+                            role="menuitem"
+                            (click)="alternarBiblioteca(); fecharMenu()"
+                        >
+                            <app-icone nome="biblioteca" />
+                            <span>Biblioteca</span>
+                        </button>
                         } @if (podeGerenciar()) {
                         <button
                             app-botao
@@ -355,6 +374,14 @@
     [usuarioAtivoId]="usuarioAtivoId()"
     [ehMestre]="ehMestre()"
     [membros]="membros()"
+/>
+} @if (campanhaId(); as campanhaAtualId) {
+<!-- Biblioteca (m9-11): a store só inicia na primeira abertura, sem requisição antes disso. -->
+<app-biblioteca-flutuante
+    #biblioteca
+    [campanhaId]="campanhaAtualId"
+    [campanhaNome]="campanhaNome() ?? ''"
+    [ehMestre]="ehMestre()"
 />
 } @if (dialogAcesso()) {
 <app-modal [aberto]="true" titulo="Acesso de visualização" (fechou)="fecharAcesso()">

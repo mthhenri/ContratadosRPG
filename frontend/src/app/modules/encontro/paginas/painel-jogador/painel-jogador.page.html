@@ -23,6 +23,15 @@
         >
             Caderno
         </button>
+        <button
+            app-coluna-acoes-item
+            icone="biblioteca"
+            appTooltip="Biblioteca"
+            [pressionado]="bibliotecaAberta()"
+            (click)="alternarBiblioteca()"
+        >
+            Biblioteca
+        </button>
     </app-coluna-acoes>
 
     <div class="iniciativa-jogador__conteudo">
@@ -60,6 +69,16 @@
                     (click)="alternarCaderno()"
                 >
                     <app-icone nome="caderno" />
+                </button>
+                <button
+                    app-botao-icone
+                    tamanho="padrao"
+                    type="button"
+                    aria-label="Biblioteca"
+                    [appTooltip]="'Biblioteca'"
+                    (click)="alternarBiblioteca()"
+                >
+                    <app-icone nome="biblioteca" />
                 </button>
             </div>
             <h1 class="iniciativa-jogador__titulo">
@@ -270,6 +289,13 @@
     (abrirFicha)="abrirFichaFlutuanteDeAnotacoes($event)"
 />
 }
+<!-- Biblioteca (m9-11): sem gatilho próprio, como o Caderno; a store só inicia na primeira abertura. -->
+<app-biblioteca-flutuante
+    #biblioteca
+    [campanhaId]="dados.campanhaId"
+    [campanhaNome]="dados.campanhaNome()"
+    [ehMestre]="false"
+/>
 
 <!-- Janela de ficha do combatente clicado na grade de leitura (ou do "Ver ficha" do Caderno): uma só
      instância, aberta imperativamente por `abrirFichaFlutuante`. -->

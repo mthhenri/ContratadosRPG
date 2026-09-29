@@ -36,6 +36,7 @@ import { BibliotecaLayout } from '../../componentes/biblioteca-layout/biblioteca
 import { DocumentoCriarDialog } from '../../componentes/documento-criar-dialog/documento-criar-dialog.component';
 import { LeitorDocumento } from '../../componentes/leitor-documento/leitor-documento.component';
 import { DocumentoService } from '../../documento.service';
+import { DocumentoRevelacaoService, podeRevelarDocumento } from '../../documento-revelacao.service';
 import type { TelaComRascunhoDocumento } from '../../rascunho-documento.guard';
 
 /** O teto do upload em MB, para as mensagens — derivado da constante de `shared`, não repetido. */
@@ -94,6 +95,7 @@ export class BibliotecaMestre implements TelaComRascunhoDocumento {
   private readonly rotaAtiva = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
   private readonly leitoresStore = inject(BibliotecaLeitoresStore);
+  private readonly documentoRevelacaoService = inject(DocumentoRevelacaoService);
 
   /** Os membros que a casca já carregou para decidir o papel — nomes da presença de leitura. */
   readonly membros = input<readonly CampanhaMembroResumoDto[]>([]);
@@ -159,11 +161,8 @@ export class BibliotecaMestre implements TelaComRascunhoDocumento {
   protected readonly erroTitulo = computed(() =>
     this.editando() && !this.tituloEditado().trim() ? 'Dê um título ao documento.' : '',
   );
-  /** Um `IMAGEM` sem arquivo não pode ser revelado (o backend recusa): o botão nasce travado. */
-  protected readonly podeRevelar = computed(() => {
-    const documento = this.aberto();
-    return !!documento && (documento.tipo === TipoDocumentoEnum.TEXTO || !!documento.imagemUrl);
-  });
+  /** Um `IMAGEM` sem arquivo não pode ser revelado (`podeRevelarDocumento`, a trava do painel). */
+  protected readonly podeRevelar = computed(() => podeRevelarDocumento(this.aberto()));
 
   constructor() {
     this.destroyRef.onDestroy(() => {
@@ -335,27 +334,18 @@ export class BibliotecaMestre implements TelaComRascunhoDocumento {
 
   // ── Documento aberto ───────────────────────────────────────────────────────
 
+  /** A regra (trava, chamada e toast) é a do `DocumentoRevelacaoService`, a mesma do painel. */
   protected alternarRevelacao(): void {
     const documento = this.aberto();
-    if (!documento || this.bloqueado() || (!documento.revelado && !this.podeRevelar())) {
+    if (!documento || this.bloqueado()) {
       return;
     }
-    const chamada = documento.revelado
-      ? this.documentoService.ocultar(documento.id)
-      : this.documentoService.revelar(documento.id);
-    this.executar<{ id: number; revelado: boolean; updatedDate: string }>(chamada, (resposta) => {
+    this.executar(this.documentoRevelacaoService.alternar(documento), (resposta) =>
       this.aplicarNoAberto(resposta.id, {
         revelado: resposta.revelado,
         updatedDate: resposta.updatedDate,
-      });
-      this.notificacaoService.notificar({
-        severidade: 'sucesso',
-        resumo: resposta.revelado ? 'Revelado para a mesa' : 'Oculto',
-        detalhe: resposta.revelado
-          ? `${documento.titulo} já aparece para os jogadores.`
-          : `${documento.titulo} saiu da vista dos jogadores.`,
-      });
-    });
+      }),
+    );
   }
 
   protected async remover(): Promise<void> {

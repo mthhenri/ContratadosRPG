@@ -38,6 +38,7 @@ import { lerParamRota } from '../../ler-param-rota';
 import { mesclarFicha } from '../../mesclar-ficha';
 import { RolagemService } from '../../rolagem.service';
 import { CadernoFlutuante } from '../../../pagina-caderno/caderno-flutuante.component';
+import { BibliotecaFlutuante } from '../../../documento/componentes/biblioteca-flutuante/biblioteca-flutuante.component';
 
 import { FichaEsqueleto } from '../../componentes/ficha-esqueleto/ficha-esqueleto.component';
 import {
@@ -90,6 +91,7 @@ const ITENS_POR_PAGINA_HISTORICO = 20;
     CalculadoraFlutuante,
     HistoricoRolagensSidebar,
     CadernoFlutuante,
+    BibliotecaFlutuante,
     ColunaAcoes,
     ColunaAcoesItem,
     Tooltip,
@@ -107,6 +109,9 @@ export class FichaVisualizar {
   private readonly cadernoRef = viewChild(CadernoFlutuante);
   /** Caderno aberto (mesmo minimizado) — marca o item "Caderno" da coluna de ações. */
   protected readonly cadernoAberto = computed(() => this.cadernoRef()?.aberto() ?? false);
+  private readonly bibliotecaRef = viewChild<BibliotecaFlutuante>('biblioteca');
+  /** Biblioteca aberta (mesmo minimizada) — marca o item "Biblioteca" da coluna (m9-11). */
+  protected readonly bibliotecaAberta = computed(() => this.bibliotecaRef()?.aberto() ?? false);
   private readonly fichaService = inject(FichaService);
   private readonly confirmacaoService = inject(ConfirmacaoService);
   /** Handlers `ajustar*` (m2-20) — reusados por `CampanhaDetalhe` na visão do jogador. */
@@ -568,6 +573,11 @@ export class FichaVisualizar {
       return;
     }
     this.cadernoRef()?.alternar();
+  }
+
+  /** Alterna a Biblioteca flutuante (m9-11) — `alternar()` restaura se estiver minimizada. */
+  protected alternarBiblioteca(): void {
+    this.bibliotecaRef()?.alternar();
   }
 
   /** Fecha a dialog de exclusão — inócuo enquanto a exclusão está em voo. */

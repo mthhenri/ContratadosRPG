@@ -839,6 +839,7 @@ describe('PainelEncontroMestre', () => {
         'Encerrar combate',
         'Calculadora',
         'Caderno',
+        'Biblioteca',
       ]);
       const categorias = Array.from(
         elemento.querySelectorAll('app-coluna-acoes .coluna-acoes__categoria'),

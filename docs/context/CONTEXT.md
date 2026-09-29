@@ -14,8 +14,16 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-28 · **Última decisão registrada:**
-> `m7-25-painel-investigacao` concluída (spec em `done/`) — **`m7-cenas` em 5/6, falta só `m7-26`**
+> **Última revisão:** 2026-09-29 · **Última decisão registrada:**
+> `m9-11-biblioteca-painel-flutuante` concluída (spec em `done/`): a Biblioteca abre também como
+> painel flutuante (`BibliotecaFlutuante`, casca do Caderno) nas quatro telas de cena, na ficha
+> completa (com campanha) e na tela da campanha, onde o item "Biblioteca" deixou de navegar (a página
+> fica no botão "Abrir página da Biblioteca" do painel). No painel só se lê e busca; o mestre vê os
+> ocultos e alterna Revelar/Ocultar. Corpo da página extraído para `BibliotecaCorpo` (página idêntica
+> pixel a pixel); `BibliotecaLeituraStore` ganhou a forma mestre, a pausa da presença e o erro de
+> carga; Revelar/Ocultar virou `DocumentoRevelacaoService`, único para página e painel. Detalhes em
+> "Biblioteca de documentos" (seção 4) e em `DESIGN.md`.
+> Antes: `m7-25-painel-investigacao` concluída (spec em `done/`) — **`m7-cenas` em 5/6, falta só `m7-26`**
 > (passe responsivo do módulo): o painel de cena sem iniciativa (`m7-24`) ganhou a coluna Documentos
 > da Investigação, consumindo a biblioteca da M9 (`m9-02`/`m9-04`) sem duplicar o estado de
 > visibilidade — "apresentar" chama `DocumentoService.revelarDocumento`, nunca o repository dela.
@@ -781,7 +789,8 @@ guarda-chuva. Fontes: [requests-correcoes](../specs/done/requests-correcoes.spec
 Markdown como rascunho), `m9-09` (presença de leitura — contrato, backend e envio do cliente;
 `documento:leitura`/`documento:leitores` gravados na §9 do `SYSTEM.SPEC.md` com aprovação do autor)
 e `m9-10` (presença na tela do mestre — chip "N lendo" no cartão e "Lendo agora" no documento
-aberto) concluídas, specs em `done/`. Resta a `m9-11` (Biblioteca em painel flutuante), no backlog.
+aberto) e `m9-11` (Biblioteca em painel flutuante nas cenas, na ficha completa e na tela da
+campanha) concluídas, specs em `done/`. Nenhuma task da Biblioteca no backlog.
 Antes:
 
 **Módulo de Cenas — 5/6, falta só `m7-26` (passe responsivo dedicado do módulo inteiro).**
@@ -2856,6 +2865,26 @@ aviso inline some ao salvar/cancelar/trocar. Normalização e validação comum 
 `frontend/src/app/shared/markdown/importar-markdown.ts` (1 MB, vazio e limite de caracteres
 recebido do consumidor, recusa sem truncar). Leitura pendente é invalidada ao trocar/reiniciar a
 edição e destruir a página. Sem upload do arquivo ou mudança de backend.
+
+**Painel flutuante (`m9-11`):** `BibliotecaFlutuante` (`componentes/biblioteca-flutuante/`) sobre
+`app-painel-flutuante` `id="biblioteca"`, montado — sem gatilho próprio, com `alternar()` pelo item
+da coluna de ações/menu "⋯"/atalho de cabeçalho — em `painel-sem-iniciativa-mestre`/`-jogador`,
+`painel-mestre`/`painel-jogador` (encontro), `visualizar.page` (só com `campanhaId`) e
+`detalhe-mestre`/`detalhe-jogador` (fora da prévia; o item de lá abre o painel em vez de navegar).
+Inputs `campanhaId`, `campanhaNome`, `ehMestre` (o papel vem da tela, sem `listarMembros`). Provê a
+própria `BibliotecaLeituraStore` e só a inicia na **primeira abertura** — tela que nunca abre não faz
+requisição de documento; fechar só pausa a presença (`pausarLeitura`/`retomarLeitura`, informa `null`
+sem esquecer o aberto), e a store morre com a tela. A store ganhou a **forma mestre**
+(`iniciar(id, { mestre: true })`: o aberto não fecha no `OCULTADO`, só no `REMOVIDO`) e o
+`erroLista`/`tentarNovamente`. `entrarSalaCampanha`/`sairSalaCampanha` contam referência no
+`TempoRealService`, então a store do painel não tira a tela da sala (verificado ao vivo). Revelar/
+Ocultar vive em `documento-revelacao.service.ts` (`DocumentoRevelacaoService.alternar` + a trava
+`podeRevelarDocumento`), consumido pela `BibliotecaMestre` e pela store. O miolo lista | documento é o
+`BibliotecaCorpo` (`componentes/biblioteca-corpo/`, host = `.biblioteca__corpo`), montado pelo
+`BibliotecaLayout` (reprojeta os slots de documento; o leitor padrão é o fallback do próprio layout,
+porque o `ng-container` reprojetado sempre ocupa o slot do corpo) e pelo painel (`emPainel`: colunas
+rolando por dentro e vista única por `@container` abaixo de 800px de janela). O espectador não
+alcança a ficha completa (403; acesso não pode ser concedido a ele, `m8-02`) e continua sem painel.
 
 `emitirRolagemRegistrada` (m3-27/`m3-77`) usa **duas salas mutuamente exclusivas**, nunca as duas:
 com campanha, só `campanha:<id>` (como sempre); ficha solta (`campanhaId === null`, m3-28), só

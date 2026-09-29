@@ -26,6 +26,7 @@ import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.com
 import { SessaoService } from '../../../../core/services/sessao.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { CadernoFlutuante } from '../../../pagina-caderno/caderno-flutuante.component';
+import { BibliotecaFlutuante } from '../../../documento/componentes/biblioteca-flutuante/biblioteca-flutuante.component';
 import { FichaCampanhaCard } from '../../../ficha/componentes/ficha-campanha-card/ficha-campanha-card.component';
 import { FichaFlutuante } from '../../../ficha/componentes/ficha-flutuante/ficha-flutuante.component';
 import { FichaEdicaoService } from '../../../ficha/ficha-edicao.service';
@@ -82,6 +83,7 @@ const ATRIBUTOS_NEUTROS: FichaAtributosDto = {
     CalculadoraFlutuante,
     HistoricoRolagensSidebar,
     CadernoFlutuante,
+    BibliotecaFlutuante,
     CartaoCombatente,
     AcaoJogador,
     TrilhaTurnos,
@@ -127,6 +129,9 @@ export class PainelEncontroJogador {
   private readonly cadernoRef = viewChild<CadernoFlutuante>('caderno');
   /** Caderno aberto (mesmo minimizado) — marca o item "Caderno" da coluna de ações. */
   protected readonly cadernoAberto = computed(() => this.cadernoRef()?.aberto() ?? false);
+  private readonly bibliotecaRef = viewChild<BibliotecaFlutuante>('biblioteca');
+  /** Biblioteca aberta (mesmo minimizada) — marca o item "Biblioteca" da coluna (m9-11). */
+  protected readonly bibliotecaAberta = computed(() => this.bibliotecaRef()?.aberto() ?? false);
   /** Janela da calculadora aberta — marca o item "Calculadora" da coluna de ações. */
   protected readonly calculadoraAberta = signal(false);
 
@@ -299,6 +304,11 @@ export class PainelEncontroJogador {
   /** Alterna a janela do caderno — mesmo racional de `alternarCalculadora()`. */
   protected alternarCaderno(): void {
     this.cadernoRef()?.alternar();
+  }
+
+  /** Alterna a Biblioteca flutuante (m9-11) — `alternar()` restaura se estiver minimizada. */
+  protected alternarBiblioteca(): void {
+    this.bibliotecaRef()?.alternar();
   }
 
   /**

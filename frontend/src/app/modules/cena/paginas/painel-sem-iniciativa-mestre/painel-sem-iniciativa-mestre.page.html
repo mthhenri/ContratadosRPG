@@ -62,6 +62,15 @@
         >
             Caderno
         </button>
+        <button
+            app-coluna-acoes-item
+            icone="biblioteca"
+            appTooltip="Biblioteca"
+            [pressionado]="bibliotecaAberta()"
+            (click)="alternarBiblioteca()"
+        >
+            Biblioteca
+        </button>
         }
     </app-coluna-acoes>
 
@@ -287,5 +296,12 @@
     (abrirFicha)="abrirFichaFlutuanteDeAnotacoes($event)"
 />
 }
+<!-- Biblioteca (m9-11): sem gatilho próprio, como o Caderno; a store só inicia na primeira abertura. -->
+<app-biblioteca-flutuante
+    #biblioteca
+    [campanhaId]="dados.campanhaId"
+    [campanhaNome]="dados.campanhaNome()"
+    [ehMestre]="true"
+/>
 <!-- Janela de ficha do agente clicado: uma só instância, aberta imperativamente. -->
 <app-ficha-flutuante #fichaFlutuante [ehMestre]="true" />

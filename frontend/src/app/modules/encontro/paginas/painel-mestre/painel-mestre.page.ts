@@ -35,6 +35,7 @@ import { ColunaAcoesItem } from '../../../../shared/ui/coluna-acoes/coluna-acoes
 import { Esqueleto } from '../../../../shared/ui/esqueleto/esqueleto.component';
 import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
 import { CadernoFlutuante } from '../../../pagina-caderno/caderno-flutuante.component';
+import { BibliotecaFlutuante } from '../../../documento/componentes/biblioteca-flutuante/biblioteca-flutuante.component';
 import { FichaFlutuante } from '../../../ficha/componentes/ficha-flutuante/ficha-flutuante.component';
 import { nomeCadencia } from '../../../ficha/rotulos-criatura';
 import { CenaService } from '../../../cena/cena.service';
@@ -105,6 +106,7 @@ const ATRIBUTOS_NEUTROS: FichaAtributosDto = {
     CalculadoraFlutuante,
     HistoricoRolagensSidebar,
     CadernoFlutuante,
+    BibliotecaFlutuante,
     CartaoCombatente,
     ConducaoTurno,
     ResumoCombatente,
@@ -148,6 +150,9 @@ export class PainelEncontroMestre {
   private readonly cadernoRef = viewChild<CadernoFlutuante>('caderno');
   /** Caderno aberto (mesmo minimizado) — marca o item "Caderno" da coluna de ações. */
   protected readonly cadernoAberto = computed(() => this.cadernoRef()?.aberto() ?? false);
+  private readonly bibliotecaRef = viewChild<BibliotecaFlutuante>('biblioteca');
+  /** Biblioteca aberta (mesmo minimizada) — marca o item "Biblioteca" da coluna (m9-11). */
+  protected readonly bibliotecaAberta = computed(() => this.bibliotecaRef()?.aberto() ?? false);
 
   /** Janela da calculadora aberta — marca o item "Calculadora" da coluna de ações. */
   protected readonly calculadoraAberta = signal(false);
@@ -239,6 +244,11 @@ export class PainelEncontroMestre {
   /** Alterna a janela do caderno — mesmo racional de `alternarCalculadora()`. */
   protected alternarCaderno(): void {
     this.cadernoRef()?.alternar();
+  }
+
+  /** Alterna a Biblioteca flutuante (m9-11) — `alternar()` restaura se estiver minimizada. */
+  protected alternarBiblioteca(): void {
+    this.bibliotecaRef()?.alternar();
   }
 
   // ── Montagem ───────────────────────────────────────────────────────────────

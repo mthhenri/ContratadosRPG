@@ -17,6 +17,7 @@ import { CampanhaMembroResumoDto, CampanhaRecuperadaDto } from '@contratados-rpg
 import type { FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
 
 import { CampanhaDetalheMestre } from './detalhe-mestre.page';
+import { BibliotecaFlutuante } from '../../../documento/componentes/biblioteca-flutuante/biblioteca-flutuante.component';
 import { EspectadorFichaCard } from '../../componentes/espectador-ficha-card/espectador-ficha-card.component';
 import { CriaturaEsquadraoCard } from '../../componentes/criatura-esquadrao-card/criatura-esquadrao-card.component';
 import { CampanhaDetalheDadosService } from '../detalhe/campanha-detalhe-dados.service';
@@ -261,7 +262,7 @@ describe('CampanhaDetalheMestre', () => {
   });
 
   it('renderiza a coluna de ações com Membros, Cenas, Biblioteca, Convites, Editar, Excluir, Calculadora, Caderno', () => {
-    const { raiz } = montar();
+    const { raiz, fixture } = montar();
     const rotulos = Array.from(raiz.querySelectorAll('[app-coluna-acoes-item]')).map((el) =>
       el.textContent?.trim(),
     );
@@ -282,11 +283,16 @@ describe('CampanhaDetalheMestre', () => {
       (el) => el.textContent?.trim() === 'Cenas',
     );
     expect(cenas?.getAttribute('href')).toMatch(/^\/campanhas\/\d+\/cenas$/);
-    // "Biblioteca" (m9-04) leva à biblioteca de documentos da campanha.
-    const biblioteca = Array.from(raiz.querySelectorAll('[app-coluna-acoes-item]')).find(
+    // "Biblioteca" (m9-11) abre o painel flutuante em vez de navegar — a página fica no botão dele.
+    const biblioteca = Array.from(raiz.querySelectorAll<HTMLElement>('[app-coluna-acoes-item]')).find(
       (el) => el.textContent?.trim() === 'Biblioteca',
     );
-    expect(biblioteca?.getAttribute('href')).toMatch(/^\/campanhas\/\d+\/documentos$/);
+    expect(biblioteca?.getAttribute('href')).toBeNull();
+    const painel = fixture.debugElement.query(By.directive(BibliotecaFlutuante))
+      .componentInstance as BibliotecaFlutuante;
+    const alternar = vi.spyOn(painel, 'alternar').mockImplementation(() => undefined);
+    biblioteca!.click();
+    expect(alternar).toHaveBeenCalledTimes(1);
   });
 
   // === P-086: clicar Na Base/Em Missão aplica a resposta do PUT direto — sem GET de campanha/
