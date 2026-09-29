@@ -150,6 +150,8 @@
     }
 
     // === Busca ===
+    // Desktop: campo e escopo (três ícones) na mesma caixa. Mobile: a caixa vira só um agrupador —
+    // o campo ganha a borda e o escopo desce para uma barra própria, itens dividindo a largura.
     &__busca {
         display: flex;
         align-items: center;
@@ -158,11 +160,19 @@
         background: var(--surface-2);
         border: 1px solid var(--border-strong);
         border-radius: var(--radius-control);
-        padding: 0 11px;
+        padding: 0 4px 0 11px;
 
         &:focus-within {
             border-color: var(--accent);
         }
+    }
+
+    &__busca-entrada {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }
 
     &__busca-icone {
@@ -172,6 +182,7 @@
 
     &__busca-campo {
         flex: 1;
+        min-width: 0;
         font-family: var(--font-sans);
         font-size: 13px;
         color: var(--text);
@@ -188,10 +199,70 @@
         }
     }
 
-    // Escopo da busca (I-028): mesma identidade de `app-segmentado` já usada pelo Leitor de
-    // Documentos/Caderno — largura do conteúdo, colado logo abaixo do campo de busca.
+    // Escopo da busca (I-028): `app-segmentado` só de ícones no fim do campo (rótulo oculto, a dica
+    // vem do tooltip/aria-label); sem moldura própria, a caixa do campo já a contém.
     &__busca-escopo {
-        margin: 0 16px 12px;
+        flex: none;
+        padding: 0;
+        border: 0;
+        background: transparent;
+    }
+
+    &__escopo-item {
+        padding: 0 8px;
+
+        app-icone {
+            font-size: 15px;
+        }
+    }
+
+    &__escopo-rotulo {
+        display: none;
+    }
+
+    @include bp.mobile {
+        &__busca {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 8px;
+            padding: 0;
+            background: transparent;
+            border: 0;
+
+            &:focus-within {
+                border-color: transparent;
+            }
+        }
+
+        &__busca-entrada {
+            flex: none;
+            padding: 0 11px;
+            background: var(--surface-2);
+            border: 1px solid var(--border-strong);
+            border-radius: var(--radius-control);
+
+            &:focus-within {
+                border-color: var(--accent);
+            }
+        }
+
+        &__busca-escopo {
+            display: flex;
+            width: 100%;
+            padding: 2px;
+            background: var(--surface-2);
+            border: 1px solid var(--border-strong);
+        }
+
+        &__escopo-item {
+            flex: 1;
+            min-height: bp.$alvo-toque;
+            padding: 0 6px;
+        }
+
+        &__escopo-rotulo {
+            display: inline;
+        }
     }
 
     // === Lista (2 colunas + fade nas bordas roláveis) ===
