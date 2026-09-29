@@ -149,6 +149,25 @@ descarta, Revelar/Editar 44px, voltar à lista e IMAGEM com upload. A única rol
 faixa de formatação do editor, que rola por desenho. Comparado com a página (edição) e com a própria
 janela da `m9-11` (casca, densidade, estados): os controles são os mesmos primitivos.
 
+## 2026-09-29 — Auditoria de ficha oculta: evidências e specs posteriores
+
+Executada a parte estática e uma primeira rodada REST/WS da spec exclusivamente investigativa,
+movida para `active/`. [Relatório e matriz](../auditorias/ficha-oculta-todos-consumidores.md)
+cobrem campanha/membros, acervo, agregados, cenas/encontro, prévias, leitura/flutuante/avatar,
+inventários, rolagens, busca/cadernos e eventos. Confirmados nome/id de oculta no encontro para
+B/espectador, fichaId no evento amplo de visibilidade e concessão que permite listar/abrir a
+oculta de terceiro. Criadas três specs de correção em backlog; concessão exige formalizar
+precedência sobre política histórica. Rolagem pública e médias são decisões pendentes.
+
+5 arquivos / 280 testes existentes do backend passaram; primeira tentativa bloqueada por
+filesystem, repetição autorizada passou. Cenário local sintético por REST com quatro contas,
+campanha 4, ficha 12, encontro 2: leituras M/A/B/S e socket B nas transições. Nenhum código,
+contrato, schema, estilo ou teste alterado; dados preexistentes preservados. A API deixou de
+responder na extensão dos cenários (timeout de socket e `fetch failed`); login no browser não
+concluiu. Não reiniciados os serviços do usuário. Faltam revogação/reconexão, prévias dinâmicas
+e inspeção autenticada em 1920×1080/360×800. Auditoria permanece aberta; P-090 registra os
+defeitos confirmados, sem descrevê-los como corrigidos.
+
 ## 2026-09-29 — m9-12: Biblioteca em painel flutuante também no Painel do espectador
 
 Pedido do autor logo depois da `m9-11`, que deixara o espectador fora. Decisão do autor: **só o

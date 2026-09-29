@@ -45,6 +45,14 @@
   mesma dúvida vale para o `salvar()` sem mudança, que hoje grava uma versão só pela quebra.
 - **Desde:** `m9-04`; encontrado na `m9-13` (2026-09-29).
 
+### P-090 — Identidade de ficha oculta exposta no encontro/eventos e por concessão · `ABERTO` · permissões/tempo-real
+
+- **Sintoma:** B/espectador recebem nome/fichaId de agente oculto no encontro; evento amplo de visibilidade envia fichaId; concessão permite listar/abrir oculta de terceiro.
+- **Causa:** recorte de encontro preserva identidade; broadcasts não recortam ocultação; leitura/listagem aceitam concessão sem `oculta`, diferente da carteirinha.
+- **Contorno:** nenhum garante ausência da identidade; esconder números não satisfaz o contrato.
+- **Correção:** backlog `fix-ficha-oculta-identidade-encontro`, `fix-ficha-oculta-eventos-campanha`, `fix-ficha-oculta-concessao-e-leitura`; a última exige decidir precedência da concessão histórica antes da implementação.
+- **Desde:** confirmado em 2026-09-29 por REST/WS e código; [evidências e limites](../auditorias/ficha-oculta-todos-consumidores.md). Auditoria ainda aberta, sem correção nesta tarefa.
+
 ### P-089 — Caderno flutuante cobre a coluna de ações na tela dividida · `CONTORNADO` · frontend/caderno
 
 - **Sintoma:** em `960×1080` (e em qualquer viewport até ~1200px de largura), abrir o Caderno pela

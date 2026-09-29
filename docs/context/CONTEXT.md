@@ -1,5 +1,11 @@
 # CONTEXT.md — Painel do Projeto
 
+> **Auditoria de ficha oculta em andamento:** [matriz e evidências](../auditorias/ficha-oculta-todos-consumidores.md).
+> Spec em `active/`, exclusivamente investigativa. Três divergências confirmadas viraram specs
+> de correção em backlog (encontro, eventos, concessão/leitura); nenhum código corrigido.
+> Faltam cenários ao vivo após restabelecer a API: revogação/reconexão, prévias, leitor/cache e
+> observação em 1920×1080/360×800. Decisões de rolagem pública, médias e concessão no relatório.
+
 > **Requests — revisão de 2026-09-26 fechada:** as seis tasks do guarda-chuva
 > [requests-correcoes](../specs/done/requests-correcoes.spec.md) (`p-082`…`p-086` +
 > `requests-inventario-sob-demanda`) estão concluídas, specs em `done/`; `P-082`…`P-086` fechados

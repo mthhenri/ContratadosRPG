@@ -1,5 +1,9 @@
 # MEMORY.md — Mapa do Sistema
 
+Mapa de consumidores REST/WS de ficha oculta, achados e retomada:
+[auditoria](../auditorias/ficha-oculta-todos-consumidores.md),
+[spec investigativa ativa](../specs/active/auditoria-ficha-oculta-todos-consumidores.spec.md).
+
 > **O que este arquivo é:** um índice de **localização**. Ele responde *"onde fica X?"* e
 > *"o que eu preciso ler antes de mexer em Y?"*.
 >
