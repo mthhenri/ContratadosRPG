@@ -23,7 +23,10 @@
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
 > **Última revisão:** 2026-09-29 · **Última decisão registrada:**
-> `m9-13-criar-documentos-biblioteca-flutuante` concluída (spec em `done/`): no painel flutuante o
+> `patchnotes-versao-sistema` (`pn-01`…`pn-04` concluídas, `pn-05` aberta — falta publicar no R2 real e
+> enviar as tags): o sistema passa a ter versão (`1.1.0`, fonte única no `package.json` da raiz) exibida
+> na topbar e página pública `/patchnotes` com notas em Markdown lidas do R2 (ver "Versão e patchnotes"
+> na seção 4). Antes: `m9-13-criar-documentos-biblioteca-flutuante` concluída (spec em `done/`): no painel flutuante o
 > mestre também cria ("Novo documento", o dialog da página) e edita (texto, imagem, conflito 409)
 > sem sair da cena, ficha ou campanha. A edição saiu da página para `DocumentoEdicao`, a mesma nos
 > dois lugares; o rascunho do painel pergunta antes de trocar, fechar e sair da tela
@@ -3085,6 +3088,26 @@ Angular) em vez do foco real de DOM, perdendo passos em setas rápidas; e `.abas
 conteúdo **projetado** pelo consumidor, precisa de `:host ::ng-deep` para o colapso mobile
 alcançá-lo — um seletor simples no `.scss` do `Aba` nunca bate no `<span>` de fora (encapsulamento
 de view aplica o atributo do TEMPLATE DO CONSUMIDOR, não o do componente).
+
+### Versão e patchnotes — `shared/versao`, `backend/patchnote`, `frontend/patchnotes` (pn-01…pn-05)
+
+A **versão do sistema** tem fonte única: o `version` do `package.json` da raiz (hoje `1.1.0`).
+`npm run versao:sincronizar` alinha os três workspaces e o lock e gera `shared/src/versao.ts`
+(`VERSAO_SISTEMA`); um teste de `shared` falha se algo divergir. Ela aparece na topbar (chip ao lado
+da marca, com ponto enquanto a última versão vista neste navegador for outra — `VersaoService`, que
+o abrir de `/patchnotes` apaga; no mobile vira o item "Novidades" do menu do perfil) e em
+`GET /health`. Versões históricas: `v1.0.0` = fim de 01/09/2026 (`306a9714`), `v1.1.0` = 02–29/09.
+
+Os **patchnotes** são públicos e sem tabela: `patchnotes/<versao>.md` (front matter `versao`/`data`/
+`titulo` + Markdown em blocos Novidades/Melhorias/Correções) e `patchnotes/indice.json` no
+armazenamento — **o R2 é a única fonte de verdade**; `docs/patchnotes/` é rascunho local ignorado
+pelo git. O backend (`PatchnoteService`, sem repository) serve `GET /patchnote` e
+`GET /patchnote/:versao` (`@Public()`) com cache em memória de 24 h (o deploy o zera; uma correção
+de nota sem deploy espera o TTL). A página `/patchnotes[/:versao]` renderiza com
+`renderizarMarkdownSeguro` e, para versão inexistente (404) e falha (503), usa o
+`DocumentoContencao` compartilhado com a tela de Acesso negado. **Publicar** é ação externa: skill
+`publicar-versao` + `npm run patchnotes:publicar` (local, com credencial de escrita do R2 no ambiente
+do comando; `--dry-run` mostra o destino). `pn-05` segue aberta até a publicação no R2 real.
 
 ### Tema — `frontend/tema`
 

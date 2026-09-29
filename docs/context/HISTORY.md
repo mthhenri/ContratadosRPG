@@ -1,5 +1,59 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-29 — patchnotes-versao-sistema (pn-01…pn-04, pn-05 parcial): versão do sistema e patchnotes públicos
+
+Origem: pedido do autor de mostrar a versão do sistema e ter uma área pública de patchnotes, com uma
+skill para publicar versões. O `version` do projeto era `0.0.1` (placeholder incorreto) embora o
+sistema já estivesse em uso: a versão-base passou a `1.0.0` (fim de 01/09/2026, `306a9714`) e o
+trabalho de 02 a 29/09 (Cenas, Biblioteca, painel do espectador…) a `1.1.0`, minor porque só traz
+funcionalidade compatível. Decisões do autor: patchnotes em Markdown no R2 **sem tabela**, R2 como
+**única fonte de verdade** (`docs/patchnotes/` ignorada pelo git, só rascunho), cache de 24 h,
+nível macro em linguagem de jogador, versão na topbar (POC visual aprovado: chip ao lado da marca,
+item "Novidades" no menu do perfil no mobile) e estados 404/503 no formato de "Acesso negado".
+
+**O que mudou.** `pn-01`: `version` da raiz é a fonte única; `npm run versao:sincronizar` alinha
+os 3 workspaces, o lock e gera `shared/src/versao.ts` (`VERSAO_SISTEMA`); teste em `shared` falha se
+algo divergir; `GET /health` devolve `versao`; `VersaoService` + chip na topbar com ponto de "versão
+nova" (`localStorage`, tolerante a falha). O SHA do commit, previsto na primeira versão da spec,
+ficou de fora. `pn-02`: `ArmazenamentoProvedor` ganha `lerTexto`/`salvarTexto` (local e R2) e a
+pasta `patchnotes/`, com `construirChaveTexto` recusando nome que escape da pasta. `pn-03`: módulo
+`patchnote` (sem repository), `GET /patchnote` e `GET /patchnote/:versao`, públicos, com cache em
+memória de 24 h que guarda a **promessa** (requisições simultâneas dividem uma leitura; falha nunca
+fica em cache) e conferência da versão no índice antes de ler o arquivo. `pn-04`: página
+`/patchnotes` (lista + nota em blocos Novidades/Melhorias/Correções, `renderizarMarkdownSeguro`),
+`DocumentoContencao` extraído de `AcessoNegadoPage` e reaproveitado nos estados 404/503. `pn-05`:
+`npm run patchnotes:publicar` (`--dry-run`; notas antes do índice; valida tudo antes de gravar) e a
+skill `publicar-versao` (duas cópias idênticas).
+
+**Testes.** `shared` 796 (0 erros de lint); `backend` 905 + 1 ignorado (49 arquivos), 0 erros de lint; `frontend`
+2.613 em 183 arquivos, build ok. Provado: o teste de versão falha ao divergir um `package.json`;
+sanitização (`<script>`, `<img onerror>`, `javascript:`) não chega ao DOM; nota sem front matter é
+recusada; a ferramenta recusa rodar em `r2` sem as variáveis.
+
+**Ao vivo (skill `verify`, Postgres nativo + API + `ng serve`).** Rotas públicas respondem sem token
+e as demais seguem 401; versão inválida/inexistente/`../` → 404. Páginas em `1920×1080`, `960×1080` e
+`360×800` — nota, 404, 503, carregando, vazio, chip com/sem ponto, menu do perfil no mobile, tema
+claro — sem overflow. **"Acesso negado" antes/depois da extração comparado pixel a pixel:**
+0 px de diferença no desktop e no mobile, 21 px (máx. 3/255) na tela dividida.
+
+**Achados só na verificação.** (1) O `proxy.conf.json` do dev-server não conhecia a rota nova: um
+prefixo simples `/patchnote` capturaria a página `/patchnotes`, então entrou como regex de fronteira
+(mesmo padrão de `/ficha` e `/documento`). (2) Duas entradas de rota (`''` e `':versao'`) recriavam
+a página no redirecionamento da raiz e recarregavam o índice — virou uma entrada só, com `matcher`.
+(3) O chip usa `app-botao` (`variante="secundario"` `estilo="contorno"`) com tamanho na classe do
+consumidor, como `topbar__item`: `app-chip` não é clicável.
+
+**Desvios registrados.** API no singular (`/patchnote`), como o resto do projeto; `PatchnoteRecuperarDto`
+usa `versao` (chave natural, sem id) — única exceção à regra `{ id: number }`; selo "Atual" usa a
+severidade `primario` do `app-chip` (o POC o mostrava em verde, que o primitivo não oferece);
+`renderizarMarkdownSeguro`, sem uso, saiu de `modules/pagina-caderno/` para `shared/markdown/`.
+
+**Pendente (a tarefa segue aberta).** `pn-05` só fecha com a publicação no **R2 real** e o push das
+tags `v1.0.0`/`v1.1.0`, ações externas que exigem credencial e confirmação do autor. As duas notas
+já foram publicadas e verificadas no armazenamento **local**; o texto delas aguarda revisão do
+autor. Falhas preexistentes fora do escopo: orçamento do bundle inicial (`P-004`, 551,92 → 554,47 kB)
+e os erros de `tsc` em specs do backend (já registrados em `PROBLEMS.md`).
+
 ## 2026-09-29 — fix-ficha-oculta-identidade-encontro: agente oculto some do encontro de terceiros
 
 Origem: FO-01 da auditoria de ficha oculta (`P-090`). Jogador sem acesso e espectador recebiam,

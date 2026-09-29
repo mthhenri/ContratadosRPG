@@ -420,6 +420,27 @@ fixos de cada consumidor ficam no fluxo normal, e a região que deve preencher o
 o seu próprio `flex: 1; min-height: 0`. Esse contrato mantém caderno, leitor e futuros utilitários
 com a altura íntegra sem obrigar calculadoras ou conteúdos naturalmente compactos a crescer.
 
+### Documento de contenção (`app-documento-contencao`, pn-04)
+
+A moldura "Terminal de Contenção" das telas de recusa e erro — cabeçalho `// PROTOCOLO DE CONTENÇÃO`
+com o código, faixa de classificação, bloco da Fundação, mensagem, registro expurgado, avisos e
+rodapé com ações — é um componente compartilhado (`shared/documento-contencao/`), usado pela tela de
+Acesso negado (`403`) e pelos estados 404 (versão inexistente) e 503 (falha ao carregar) dos
+patchnotes. Só apresenta: textos por input, ações projetadas em `[acoes]` (`app-botao`; a de ênfase
+leva `contencao__acao`, a secundária soma `contencao__acao--neutra`). Não traz `<main>` nem
+posicionamento (cada tela centraliza a sua) e usa `ViewEncapsulation.None` para as classes
+`contencao__*` alcançarem os botões projetados. Tom SCP no enquadramento, mas sempre com uma frase
+direta do que houve e do que fazer.
+
+### Versão do sistema na topbar (pn-01)
+
+Chip de versão (`app-botao` `secundario`/`contorno`, tamanho compacto na classe `topbar__versao`) ao
+lado da marca, com ponto `--accent` enquanto há versão que este navegador ainda não viu; some no
+mobile (`bp.mobile`), onde vira o item "Novidades" (com o mesmo ponto) dentro do menu do perfil.
+Ambos levam a `/patchnotes`. Página `/patchnotes`: lista de versões à esquerda (faixa horizontal no
+mobile, por *container query* de `720px`), nota à direita em cartão com blocos Novidades
+(`--positive`), Melhorias (`--energy`) e Correções (`--warning`).
+
 ### Biblioteca de documentos (`m9-04`)
 
 A página **Biblioteca** (`/campanhas/:id/documentos`; o rótulo não é "Documentos" porque esse é o

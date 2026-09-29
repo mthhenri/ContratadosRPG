@@ -69,8 +69,9 @@ uma versão.
 
 ### pn-03 — Backend `patchnotes`
 
-1. Módulo `patchnotes` (controller fino → service; **sem repository**, não há SQL):
-   `GET /patchnotes` (índice, mais recente primeiro) e `GET /patchnotes/:versao` (nota completa).
+1. Módulo `patchnote` (controller fino → service; **sem repository**, não há SQL):
+   `GET /patchnote` (índice, mais recente primeiro) e `GET /patchnote/:versao` (nota completa) — API
+   no singular como o resto do projeto; a página pública é `/patchnotes`.
    Ambos `@Public()`, `@DocumentarController`.
 2. Cache em memória de 24 h para o índice e para cada nota; versão inexistente ou fora do padrão
    SemVer responde `ResourceNotFoundException` — a `:versao` é validada antes de virar chave do
@@ -123,7 +124,7 @@ uma versão.
    `v1.0.0` (em `306a9714`) e `v1.1.0` existem; `git check-ignore docs/patchnotes/x.md` confirma
    a pasta ignorada.
 2. `GET /health` devolve a versão; a interface mostra a mesma versão do `package.json`.
-3. `GET /patchnotes` e `GET /patchnotes/:versao` respondem **sem token**; segunda chamada dentro
+3. `GET /patchnote` e `GET /patchnote/:versao` respondem **sem token**; segunda chamada dentro
    das 24 h não lê o R2 (teste com provedor espião).
 4. Markdown com `<script>` ou `onerror=` numa nota **não** executa na página.
 5. `npm run test --workspace=shared`, `--workspace=backend` e o do frontend verdes; lint e build
