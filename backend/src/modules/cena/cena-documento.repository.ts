@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import type { Knex } from 'knex';
 import type {
   CenaDocumentoInternoCriarDto,
+  CenaDocumentoFocoInternoDefinirDto,
   CenaDocumentoLinhaDto,
   CenaDocumentoOrdemInternoAlterarDto,
 } from '@contratados-rpg/shared/dtos/cena';
@@ -116,13 +117,22 @@ export class CenaDocumentoRepository extends BaseRepository {
   }
 
   /**
-   * Marca `em_foco` no item indicado e desmarca os demais da mesma cena, numa única operação —
-   * nunca deixa dois itens em foco na mesma cena entre as duas escritas.
+   * Executado dentro da transação da service. Serializa as trocas pela cena e libera o índice
+   * único parcial antes de marcar o novo foco, independentemente da ordem física dos vínculos.
    */
-  async definirFoco(dto: { cenaId: number; id: number }): Promise<void> {
+  async definirFoco(dto: CenaDocumentoFocoInternoDefinirDto): Promise<void> {
+    await this.executarConsulta<{ id: number }>(
+      `SELECT id FROM cena WHERE id = :cenaId AND is_deleted = false FOR UPDATE`,
+      { cenaId: dto.cenaId },
+    );
+    await this.executarComando(
+      `UPDATE cena_documento SET em_foco = false
+       WHERE cena_id = :cenaId AND is_deleted = false AND em_foco = true`,
+      { cenaId: dto.cenaId },
+    );
     await this.executarComando(
       `UPDATE cena_documento
-       SET em_foco = (cena_documento.id = :id)
+       SET em_foco = COALESCE(cena_documento.id = :id, false)
        WHERE cena_id = :cenaId AND is_deleted = false`,
       { cenaId: dto.cenaId, id: dto.id },
     );

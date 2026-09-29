@@ -543,6 +543,13 @@ os controles do mestre.
   (`app-estado-vazio` `alerta` + "Tentar novamente", `secundario` `contorno` `pequeno`). Sem
   presença "N lendo" no painel (só na página).
 
+Na Investigação, o cartão em foco também alterna: o segundo clique limpa o leitor do palco e
+mantém a grade de Agentes. Essa seleção continua independente da Biblioteca flutuante e da
+abertura voluntária da mesa. Falha de recuperação do leitor usa `app-estado-vazio` compacto
+com ícone `alerta` e `app-botao` secundário/contorno/pequeno "Tentar novamente", com alvo de
+44px no celular; nenhuma variação local de controle. O leitor do mestre permanece acima dos
+agentes, conforme a `m7-25`.
+
 ### Acabamento do botão (`ui-19`)
 
 `app-botao` cobre 8 severidades × 4 estilos e ~20 consumidores; esta task fechou três lacunas

@@ -43,6 +43,45 @@ describe('EncontroPainelDadosService', () => {
   };
 
   describe('carga e papel', () => {
+    it("trocar de cena limpa o foco anterior enquanto a nova lista está pendente", () => {
+      const { dados, cenaService } = montar({ cenaTipo: CenaTipoEnum.INVESTIGACAO });
+      const item = { documentoId: 40, titulo: "A", tipo: TipoDocumentoEnum.TEXTO,
+        revelado: true, ordem: 1, emFoco: true };
+      cenaService.focarDocumento.mockReturnValueOnce(of([item]));
+      dados.focarDocumento(40);
+      expect(dados.documentoEmFoco()?.documentoId).toBe(40);
+      const pendente = new Subject<typeof item[]>();
+      cenaService.listarDocumentos.mockReturnValueOnce(pendente);
+      dados.definirCena({ ...dados.cena()!, id: CENA_ID + 1, encontro: null });
+      expect(dados.documentosCena()).toEqual([]);
+      expect(dados.documentoEmFoco()).toBeNull();
+    });
+
+    it("resposta antiga de foco não restaura documento removido por evento posterior", () => {
+      const { dados, cenaService, cenaDocumentoAlterado$ } = montar({
+        cenaTipo: CenaTipoEnum.INVESTIGACAO });
+      const item = { documentoId: 40, titulo: "A", tipo: TipoDocumentoEnum.TEXTO,
+        revelado: true, ordem: 1, emFoco: true };
+      const pendente = new Subject<typeof item[]>();
+      cenaService.focarDocumento.mockReturnValueOnce(pendente);
+      dados.focarDocumento(40);
+      cenaService.listarDocumentos.mockReturnValue(of([]));
+      cenaDocumentoAlterado$.next({ campanhaId: CAMPANHA_ID, cenaId: CENA_ID });
+      pendente.next([item]);
+      expect(dados.documentosCena()).toEqual([]);
+    });
+
+    it("falha de mutação recupera a lista que sua geração invalidou", () => {
+      const { dados, cenaService, cenaDocumentoAlterado$ } = montar({
+        cenaTipo: CenaTipoEnum.INVESTIGACAO });
+      const pendente = new Subject<never[]>();
+      cenaService.listarDocumentos.mockReturnValueOnce(pendente).mockReturnValue(of([]));
+      cenaDocumentoAlterado$.next({ campanhaId: CAMPANHA_ID, cenaId: CENA_ID });
+      cenaService.limparFocoDocumento.mockReturnValueOnce(throwError(() => new Error("Falha")));
+      dados.limparFocoDocumento();
+      pendente.complete();
+      expect(dados.carregandoDocumentos()).toBe(false);
+    });
     it('carrega a cena da rota com o encontro dela, as fichas, os membros e o nome da campanha', () => {
       const { dados, cenaService, encontroService, fichaService, campanhaService } = montar();
 

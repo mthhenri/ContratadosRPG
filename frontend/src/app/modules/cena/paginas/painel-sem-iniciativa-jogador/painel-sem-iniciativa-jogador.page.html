@@ -213,11 +213,29 @@
 
 @if (dados.ehInvestigacao()) {
 <app-modal
-    [aberto]="carregandoDocumentoModal() || documentoAbertoModal() !== null"
-    [titulo]="documentoAbertoModal()?.titulo ?? 'Carregando…'"
+    [aberto]="leitura.documentoId() !== null"
+    [titulo]="documentoAbertoModal()?.titulo ?? (leitura.erro() ? 'Documento' : 'Carregando…')"
     (fechou)="fecharDocumento()"
 >
-    @if (documentoAbertoModal(); as documento) {
+    @if (leitura.erro()) {
+    <app-estado-vazio
+        tamanho="compacto"
+        icone="alerta"
+        titulo="Não foi possível abrir o documento."
+    >
+        <button
+            estadoVazioAcao
+            app-botao
+            variante="secundario"
+            estilo="contorno"
+            tamanho="pequeno"
+            class="cena-jogador__tentar-leitura"
+            (click)="leitura.tentarNovamente()"
+        >
+            Tentar novamente
+        </button>
+    </app-estado-vazio>
+    } @else if (documentoAbertoModal(); as documento) {
     <app-leitor-documento [documento]="documento" />
     } @else {
     <app-esqueleto class="cena-jogador__esqueleto-documento-modal" />

@@ -2,7 +2,7 @@ import { Component, computed, effect, inject, signal, untracked, viewChild } fro
 import { RouterLink } from '@angular/router';
 
 import type { CenaDocumentoResumoDto } from '@contratados-rpg/shared/dtos/cena';
-import type { DocumentoRecuperadoDto, DocumentoResumoDto } from '@contratados-rpg/shared/dtos/documento';
+import type { DocumentoResumoDto } from '@contratados-rpg/shared/dtos/documento';
 import type { FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
 import { CenaStatusEnum, TipoFichaEnum } from '@contratados-rpg/shared/enums';
 
@@ -12,6 +12,7 @@ import { HistoricoRolagensJanelaService } from '../../../../shared/historico-rol
 import { Icone } from '../../../../shared/icone/icone.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
+import { Botao } from "../../../../shared/ui/botao/botao.component";
 import { Chip } from '../../../../shared/ui/chip/chip.component';
 import { ColunaAcoes } from '../../../../shared/ui/coluna-acoes/coluna-acoes.component';
 import { ColunaAcoesItem } from '../../../../shared/ui/coluna-acoes/coluna-acoes-item.component';
@@ -33,6 +34,7 @@ import { FichaFlutuante } from '../../../ficha/componentes/ficha-flutuante/ficha
 import { CadernoFlutuante } from '../../../pagina-caderno/caderno-flutuante.component';
 import { BibliotecaFlutuante } from '../../../documento/componentes/biblioteca-flutuante/biblioteca-flutuante.component';
 import { CenaService } from '../../cena.service';
+import { CenaDocumentoLeituraService } from "../../cena-documento-leitura.service";
 import { rotuloStatusCena, rotuloTipoCena } from '../../rotulos-cena';
 
 /**
@@ -54,6 +56,7 @@ import { rotuloStatusCena, rotuloTipoCena } from '../../rotulos-cena';
     Icone,
     Tooltip,
     BotaoIcone,
+    Botao,
     Chip,
     ColunaAcoes,
     ColunaAcoesItem,
@@ -71,8 +74,10 @@ import { rotuloStatusCena, rotuloTipoCena } from '../../rotulos-cena';
   ],
   templateUrl: './painel-sem-iniciativa-mestre.page.html',
   styleUrl: './painel-sem-iniciativa-mestre.page.scss',
+  providers: [CenaDocumentoLeituraService],
 })
 export class PainelCenaSemIniciativaMestre {
+  protected readonly leitura = inject(CenaDocumentoLeituraService);
   protected readonly dados = inject(EncontroPainelDadosService);
   protected readonly janelaHistorico = inject(HistoricoRolagensJanelaService);
   private readonly cenaService = inject(CenaService);
@@ -120,8 +125,8 @@ export class PainelCenaSemIniciativaMestre {
   // ── Coluna Documentos — Investigação (m7-25) ───────────────────────────────
 
   /** O documento completo do foco atual, para o `app-leitor-documento` do palco. */
-  protected readonly documentoFoco = signal<DocumentoRecuperadoDto | null>(null);
-  protected readonly carregandoDocumentoFoco = signal(false);
+  protected readonly documentoFoco = this.leitura.documento;
+  protected readonly carregandoDocumentoFoco = this.leitura.carregando;
   protected readonly modalAnexarAberto = signal(false);
   protected readonly bibliotecaCarregando = signal(false);
   private readonly bibliotecaDocumentos = signal<readonly DocumentoResumoDto[]>([]);
@@ -133,29 +138,23 @@ export class PainelCenaSemIniciativaMestre {
   });
 
   constructor() {
+    this.leitura.iniciar(this.dados.campanhaId, true);
     // Busca o documento completo (conteúdo/imagem) sempre que o foco do palco muda — a coluna só
     // carrega o resumo (`CenaDocumentoResumoDto`); o leitor precisa do corpo inteiro.
     effect(() => {
       const foco = this.dados.documentoEmFoco();
-      untracked(() => this.carregarDocumentoFoco(foco?.documentoId ?? null));
+      const cenaId = this.dados.cena()?.id;
+      untracked(() => this.carregarDocumentoFoco(
+        cenaId === undefined ? null : foco?.documentoId ?? null));
     });
   }
 
   private carregarDocumentoFoco(documentoId: number | null): void {
     if (documentoId === null) {
-      this.documentoFoco.set(null);
+      this.leitura.fechar();
       return;
     }
-    this.carregandoDocumentoFoco.set(true);
-    this.documentoService
-      .recuperar(documentoId)
-      .subscribe({
-        next: (documento) => {
-          this.documentoFoco.set(documento);
-          this.carregandoDocumentoFoco.set(false);
-        },
-        error: () => this.carregandoDocumentoFoco.set(false),
-      });
+    this.leitura.abrir(documentoId);
   }
 
   /** Clicar o cartão na coluna abre o documento no palco — não revela nada. */
@@ -163,7 +162,11 @@ export class PainelCenaSemIniciativaMestre {
     if (this.dados.emOperacao()) {
       return;
     }
-    this.dados.focarDocumento(documento.documentoId);
+    if (documento.emFoco) {
+      this.dados.limparFocoDocumento();
+    } else {
+      this.dados.focarDocumento(documento.documentoId);
+    }
   }
 
   /** "Apresentar" — revela o documento à mesa (M9) e o mantém em foco no palco. */

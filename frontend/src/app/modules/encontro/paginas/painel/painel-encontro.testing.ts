@@ -294,6 +294,9 @@ export function configurarPainel(opcoes: OpcoesDoPainel = {}) {
   const encontroPendente$ = new Subject<EncontroRecuperadoDto>();
   const cenaAlterada$ = new Subject<CenaAlteradaDto>();
   const cenaDocumentoAlterado$ = new Subject<{ campanhaId: number; cenaId: number }>();
+  const documentoAlterado$ = new Subject<{
+    campanhaId: number; documentoId: number | null; alteracao: string;
+  }>();
   const fichaAlterada$ = new Subject<FichaAlteradaDto>();
   const fichaCriada$ = new Subject<{ campanhaId: number }>();
   const fichaVisibilidadeAlterada$ = new Subject<{ campanhaId: number }>();
@@ -318,6 +321,7 @@ export function configurarPainel(opcoes: OpcoesDoPainel = {}) {
     encontroAlterado$,
     cenaAlterada$,
     cenaDocumentoAlterado$,
+    documentoAlterado$,
     fichaAlterada$,
     fichaCriada$,
     fichaVisibilidadeAlterada$,
@@ -363,6 +367,7 @@ export function configurarPainel(opcoes: OpcoesDoPainel = {}) {
     removerDocumento: vi.fn((): Observable<CenaDocumentoResumoDto[]> => of([])),
     reordenarDocumentos: vi.fn((): Observable<CenaDocumentoResumoDto[]> => of([])),
     focarDocumento: vi.fn((): Observable<CenaDocumentoResumoDto[]> => of([])),
+    limparFocoDocumento: vi.fn((): Observable<CenaDocumentoResumoDto[]> => of([])),
     apresentarDocumento: vi.fn((): Observable<CenaDocumentoResumoDto[]> => of([])),
   };
   const encontroService = {
@@ -482,6 +487,7 @@ export function configurarPainel(opcoes: OpcoesDoPainel = {}) {
     documentoService,
     cenaAlterada$,
     cenaDocumentoAlterado$,
+    documentoAlterado$,
     fichaAlterada$,
     fichaCriada$,
     fichaVisibilidadeAlterada$,

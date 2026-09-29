@@ -1,6 +1,7 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import type {
   CenaDocumentoAnexarDto,
+  CenaDocumentoFocoLimparDto,
   CenaDocumentoReordenarDto,
   CenaDocumentoResumoDto,
   CenaEspectadorDocumentosListarDto,
@@ -183,7 +184,9 @@ export class CenaDocumentoService {
   ): Promise<CenaDocumentoResumoDto[]> {
     const cena = await this.validarMestreENaoEncerrada(dto.cenaId, usuarioAtivo);
     const existente = await this.recuperarVinculoObrigatorio(dto.cenaId, dto.documentoId);
-    await this.cenaDocumentoRepositorio.definirFoco({ cenaId: cena.id, id: existente.id });
+    await this.transacaoService.executar(() =>
+      this.cenaDocumentoRepositorio.definirFoco({ cenaId: cena.id, id: existente.id }),
+    );
     const linhas = await this.cenaDocumentoRepositorio.listarPorCena({
       cenaId: cena.id,
       apenasRevelados: false,
@@ -199,8 +202,26 @@ export class CenaDocumentoService {
     const cena = await this.validarMestreENaoEncerrada(dto.cenaId, usuarioAtivo);
     const existente = await this.recuperarVinculoObrigatorio(dto.cenaId, dto.documentoId);
     await this.documentoService.revelarDocumento({ id: dto.documentoId }, usuarioAtivo);
-    await this.cenaDocumentoRepositorio.definirFoco({ cenaId: cena.id, id: existente.id });
+    await this.transacaoService.executar(() =>
+      this.cenaDocumentoRepositorio.definirFoco({ cenaId: cena.id, id: existente.id }),
+    );
     return this.listarEEmitir(cena);
+  }
+
+  /** Desseleciona o documento no palco — não revela, não remove e não emite. */
+  async limparFoco(
+    dto: CenaDocumentoFocoLimparDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<CenaDocumentoResumoDto[]> {
+    const cena = await this.validarMestreENaoEncerrada(dto.cenaId, usuarioAtivo);
+    await this.transacaoService.executar(() =>
+      this.cenaDocumentoRepositorio.definirFoco({ cenaId: cena.id, id: null }),
+    );
+    const linhas = await this.cenaDocumentoRepositorio.listarPorCena({
+      cenaId: cena.id,
+      apenasRevelados: false,
+    });
+    return linhas.map(this.paraResumo);
   }
 
   // ── Apoio ──────────────────────────────────────────────────────────────────

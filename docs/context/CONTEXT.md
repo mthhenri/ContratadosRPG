@@ -2710,7 +2710,8 @@ documento está revelado continua sendo `documento.revelado`, e "apresentar" cha
 `DocumentoService.revelarDocumento` (nunca o repository dela). `CenaDocumentoService`:
 `listar` (mestre vê tudo; jogador/espectador só o revelado; cena `PLANEJADA` nega quem não é
 mestre), `anexar`/`remover`/`reordenar` (mestre-only, cena `ENCERRADA` é só leitura), `focar` (abre
-no palco do mestre — não emite, não sincroniza entre dispositivos dele) e `apresentar` (revela +
+no palco do mestre — não emite, não sincroniza entre dispositivos dele), `limparFoco`
+(`DELETE cena/:id/documento/foco`, mesmas permissões, sem revelar/remover/emissão) e `apresentar` (revela +
 marca em foco). `CampanhaGateway.emitirCenaDocumentoAlterado` — dataless (`{ campanhaId, cenaId }`,
 molde de `campanha:inventario-alterado`) para as três salas; quem recebe refaz o `GET`.
 `EncontroPainelDadosService.documentosCena`/`ehInvestigacao`/`documentoEmFoco` carregam só quando
@@ -2721,7 +2722,15 @@ documento" na categoria "Cena" (modal listando a biblioteca via `DocumentoServic
 já anexado) e `app-leitor-documento` (M9) no palco acima da grade de Agentes quando há foco (busca
 o documento completo por `DocumentoService.recuperar`). No jogador: seção "Documentos apresentados"
 (a mesma lista, já recortada pelo backend) — clicar abre o leitor num modal, nada automático.
-Espectador tratado como o jogador (mesma visão).
+O segundo clique no focado limpa o palco, mantendo a grade de agentes e a Biblioteca intactas.
+`CenaDocumentoLeituraService` (`modules/cena/`, provido por painel) concentra as cargas canceláveis,
+erro com retry e atualização de texto/imagem por `documento:alterado`/reconexão: fechar, trocar
+documento ou cena e perder acesso invalidam a recuperação pendente. A listagem acompanha os eventos
+da Biblioteca e protege GETs/respostas de escrita por geração; troca de cena limpa o foco anterior
+antes de publicar a nova identidade. Foco usa transação e bloqueio da cena, liberando o índice
+único parcial antes de marcar outro vínculo. O espectador usa a projeção dedicada e
+`DocumentosCenaEspectador`, com a mesma abertura voluntária, independente do foco do mestre.
+Evidências da correção em `docs/reviews/fix-documentos-investigacao/VERIFICACAO.md`.
 
 Tela de Iniciativa (painel de uma cena com iniciativa) com
 duas visões em páginas separadas (`ui-39`): `PainelCenaShell` (antes `PainelEncontroShell`) resolve o papel

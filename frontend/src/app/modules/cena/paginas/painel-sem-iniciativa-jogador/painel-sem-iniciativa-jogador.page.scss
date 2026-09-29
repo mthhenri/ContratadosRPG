@@ -54,6 +54,12 @@
         height: 220px;
     }
 
+    &__tentar-leitura {
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+    }
+
     // Acima do tablet as Rolagens são uma coluna ao lado da ficha, que pode ser bem mais alta que a
     // janela: a coluna acompanha a rolagem da página (`sticky`) com a altura da janela.
     @media (min-width: #{bp.$bp-tablet + 1px}) {

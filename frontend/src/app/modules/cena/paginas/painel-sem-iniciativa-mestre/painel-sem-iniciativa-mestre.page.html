@@ -197,9 +197,27 @@
             <div class="cena-mestre__palco">
                 @if (dados.ehInvestigacao() && dados.documentoEmFoco()) {
                 <section class="cena-mestre__foco" aria-label="Documento em foco">
-                    @if (carregandoDocumentoFoco() || !documentoFoco()) {
+                    @if (leitura.erro()) {
+                    <app-estado-vazio
+                        tamanho="compacto"
+                        icone="alerta"
+                        titulo="Não foi possível abrir o documento."
+                    >
+                        <button
+                            estadoVazioAcao
+                            app-botao
+                            variante="secundario"
+                            estilo="contorno"
+                            tamanho="pequeno"
+                            class="cena-mestre__tentar-leitura"
+                            (click)="leitura.tentarNovamente()"
+                        >
+                            Tentar novamente
+                        </button>
+                    </app-estado-vazio>
+                    } @else if (carregandoDocumentoFoco()) {
                     <app-esqueleto class="cena-mestre__esqueleto-foco" />
-                    } @else {
+                    } @else if (documentoFoco()) {
                     <app-leitor-documento [documento]="documentoFoco()!" />
                     }
                 </section>
@@ -210,8 +228,8 @@
                         <span class="cena-mestre__secao-regua"></span>
                         @if (!dados.carregando()) {
                         <span class="cena-mestre__secao-meta">
-                            {{ agentes().length }} {{ agentes().length === 1 ? 'agente' :
-                            'agentes' }}
+                            {{ agentes().length }} {{ agentes().length === 1 ? 'agente' : 'agentes'
+                            }}
                         </span>
                         }
                     </header>
@@ -249,11 +267,7 @@
 </div>
 
 @if (dados.ehInvestigacao()) {
-<app-modal
-    [aberto]="modalAnexarAberto()"
-    titulo="Anexar documento"
-    (fechou)="fecharModalAnexar()"
->
+<app-modal [aberto]="modalAnexarAberto()" titulo="Anexar documento" (fechou)="fecharModalAnexar()">
     @if (bibliotecaCarregando()) {
     <app-esqueleto class="cena-mestre__esqueleto-documento" />
     } @else if (bibliotecaDisponivel().length) {

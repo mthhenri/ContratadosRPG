@@ -125,6 +125,13 @@ export class CenaService {
       .pipe(map((resposta) => resposta.dados as CenaDocumentoResumoDto[]));
   }
 
+  /** Limpa o foco persistido sem alterar a Biblioteca ou apresentar à mesa. */
+  limparFocoDocumento(cenaId: number): Observable<CenaDocumentoResumoDto[]> {
+    return this.httpClient
+      .delete<StandardResponse<CenaDocumentoResumoDto[]>>(`${this.base}/${cenaId}/documento/foco`)
+      .pipe(map((resposta) => resposta.dados as CenaDocumentoResumoDto[]));
+  }
+
   /** Revela o documento à mesa e o marca em foco — a ação "Apresentar". */
   apresentarDocumento(cenaId: number, documentoId: number): Observable<CenaDocumentoResumoDto[]> {
     return this.httpClient

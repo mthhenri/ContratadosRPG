@@ -993,6 +993,19 @@ export const schemasContratosPublicos = {
         "additionalProperties": false,
         "description": "Saída da projeção do painel de espectador (decisão de produto #5, `fichas`/`membros` estendidos\nna m8-07) — identidade segura + feed paginado de rolagens exclusivamente `PUBLICA` + o painel de\njogadores da campanha. Legível por `ESPECTADOR` e por `MESTRE` em modo de prévia (o payload é\nidêntico nos dois casos — privilégio de mestre nunca vaza aqui)."
     },
+    "CampanhaAcessoAlteradoDto": {
+        "type": "object",
+        "properties": {
+            "campanhaId": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "campanhaId"
+        ],
+        "additionalProperties": false,
+        "description": "Invalida o recorte em todas as conexões do membro afetado, sem expor dados de gestão."
+    },
     "CampanhaPreviaJogadorRecuperarDto": {
         "type": "object",
         "properties": {
@@ -1541,6 +1554,19 @@ export const schemasContratosPublicos = {
         ],
         "additionalProperties": false,
         "description": "Entrada de \"focar no palco\" — só o mestre; não revela nem chega à mesa."
+    },
+    "CenaDocumentoFocoLimparDto": {
+        "type": "object",
+        "properties": {
+            "cenaId": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "cenaId"
+        ],
+        "additionalProperties": false,
+        "description": "Limpa a seleção do palco do mestre sem alterar os documentos da biblioteca."
     },
     "CenaDocumentoApresentarDto": {
         "type": "object",
@@ -6901,6 +6927,14 @@ export const operacoesContratosPublicos = {
         "tag": "Cenas",
         "publica": false,
         "requestSchema": "CenaDocumentoReordenarDto",
+        "responseSchema": "CenaDocumentoResumoDto[]"
+    },
+    "CenaController_limparFocoDocumento": {
+        "controller": "CenaController",
+        "metodo": "delete",
+        "caminho": "/cena/:id/documento/foco",
+        "tag": "Cenas",
+        "publica": false,
         "responseSchema": "CenaDocumentoResumoDto[]"
     },
     "CenaController_removerDocumento": {

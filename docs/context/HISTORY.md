@@ -1,5 +1,47 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-29 — fix-documentos-investigacao-selecao-e-leitura: foco alternável e leitores consistentes
+
+O segundo clique no documento focado da Investigação agora limpa o foco persistido e o leitor,
+mantendo os agentes e a Biblioteca. `DELETE cena/:id/documento/foco` usa contrato explícito
+shared, autorização do mestre e a trava de cena encerrada; não revela, remove nem emite.
+A troca de foco passou a usar transação e bloqueio da cena, limpando antes o índice único
+parcial: o UPDATE anterior podia falhar quando o novo vínculo aparecia antes do foco antigo
+na ordem física do banco. PostgreSQL real validou B→A→B→A→null→null.
+
+As duas páginas sem iniciativa tinham subscriptions independentes capazes de reaplicar
+conteúdo antigo depois de trocar ou fechar. A responsabilidade saiu para
+`CenaDocumentoLeituraService`, provido por painel: recuperação cancelável, erro com retry,
+atualização autorizada de conteúdo/imagem por `documento:alterado` e reconexão, fechamento
+por remoção/ocultação da mesa e invalidação ao mudar de cena. A seleção da Biblioteca permanece
+independente, e focar/apresentar não abre leitor alheio. O service de dados continua dono da
+listagem da cena; somente o leitor foi extraído, evitando duplicar essa carga nas páginas.
+
+A revisão independente identificou outras duas corridas: `definirCena` mantinha a lista/foco
+da cena anterior enquanto buscava a nova, e uma resposta atrasada de escrita podia substituir
+uma listagem posterior à remoção/ocultação. Regressões reproduziram ambas antes da correção:
+a troca limpa a lista antes da identidade, GETs comparam geração/cena e escritas capturam a
+geração de origem, relendo se houve invalidação posterior. Falha da operação também recupera
+a lista para não prender o esqueleto. Revisão final confirmou a resolução.
+
+Gates finais: **773 shared, 815 backend e 2566 frontend passaram**; o opt-in PostgreSQL da
+suíte comum foi exercitado separadamente (módulo cena com **64 testes verdes**). Builds dos
+três workspaces e lint sem erros; permanecem avisos de convenção/jsdom e o aviso do bundle
+inicial de 551,92kB (budget inalterado). Contratos OpenAPI regenerados a partir dos fontes
+atuais, preservando a sessão concorrente de ficha oculta. HTML/SCSS formatados, diff completo
+revisado, sem hardcodes visuais novos. A primeira integração encontrou o contrato antes da
+regeneração e testes novos mirando o modal da ficha, resolvidos antes dos gates finais.
+
+`verify` contra PostgreSQL/NestJS/Angular reais, mestre e jogador em contextos separados,
+**1920×1080/360×800**: A→B→A→desseleção→reabrir, foco oculto, apresentação voluntária,
+resposta HTTP retida, fechamento durante carga, HTTP 500/retry, Markdown e PNG alterados,
+ocultação/remoção, reordenação com Biblioteca flutuante e reconexão real dos sockets
+(conteúdo e permissão alterados durante a queda). O agente principal inspecionou pessoalmente
+a UI e a comparou com Investigação/Biblioteca: mesma casca, densidade, controles e estados,
+sem overflow; retry mobile ≥44px e agente preservado após desselecionar. Cenário temporário
+limpo via soft delete, sem mudar as fixtures existentes. Spec em `done/`, sem pendência
+obrigatória; [matriz e capturas](../reviews/fix-documentos-investigacao/VERIFICACAO.md).
+
 ## 2026-09-29 — fix-ficha-oculta-eventos-campanha: eventos da sala ampla sem identidade de ficha oculta
 
 Origem: FO-02 da auditoria de ficha oculta. A sala `campanha:<id>` mistura quem não lê a ficha, e

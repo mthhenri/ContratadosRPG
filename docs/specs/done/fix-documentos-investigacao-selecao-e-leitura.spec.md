@@ -29,4 +29,17 @@ Relato do autor em 2026-09-29: documento aparece acima dos agentes, troca não a
 
 ## Referências e escopo
 
-SYSTEM.SPEC, CONVENTIONS, DESIGN, m7-25 e m9-07. Análogos: painel de Investigação atual e Biblioteca (toggle de seleção), respeitando suas semânticas distintas. Primitivos shared/ui completos; nenhuma nova biblioteca visual. Não estender documentos para cenas de combate nesta tarefa. Spec aberta; análise estática não equivale a correção nem teste ao vivo.
+SYSTEM.SPEC, CONVENTIONS, DESIGN, m7-25 e m9-07. Análogos: painel de Investigação atual e Biblioteca (toggle de seleção), respeitando suas semânticas distintas. Primitivos shared/ui completos; nenhuma nova biblioteca visual. Não estender documentos para cenas de combate nesta tarefa.
+
+## Fecho — 2026-09-29
+
+Implementada e verificada contra aplicação real com mestre/jogador em sessões separadas,
+1920×1080 e 360×800. Limpeza explícita por `DELETE cena/:id/documento/foco`, mestre-only,
+cena não encerrada; foco em transação, com liberação anterior do índice único parcial.
+Leitura cancelável por painel, atualização autorizada por eventos/reconexão, erro recuperável
+e listagem protegida por geração. Segundo clique limpa foco sem afetar a Biblioteca ou agentes.
+
+773 testes shared, 815 backend e 2566 frontend passaram; teste opt-in de foco também exercitado
+contra PostgreSQL real. Builds e lint sem erros. Roteiro completo e comparação visual pessoal
+em [VERIFICACAO.md](../../reviews/fix-documentos-investigacao/VERIFICACAO.md), com capturas e
+limites dos avisos preexistentes. Nenhuma pendência obrigatória desta spec.

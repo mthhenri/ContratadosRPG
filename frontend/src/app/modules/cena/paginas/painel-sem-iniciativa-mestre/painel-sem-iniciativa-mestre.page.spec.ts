@@ -311,6 +311,18 @@ describe('PainelCenaSemIniciativaMestre', () => {
       expect(cenaService.apresentarDocumento).toHaveBeenCalledWith(CENA_ID, 40);
     });
 
+    it("segundo clique no focado limpa o foco sem remover agentes", () => {
+      const montado = montarInvestigacao();
+      comDocumentos(montado, [{ documentoId: 40, titulo: "A", tipo: TipoDocumentoEnum.TEXTO,
+        revelado: false, ordem: 1, emFoco: true }]);
+      const elemento = montado.fixture.nativeElement as HTMLElement;
+      elemento.querySelector<HTMLButtonElement>("[app-documento-cartao]")!.click();
+      montado.fixture.detectChanges();
+      expect(montado.cenaService.limparFocoDocumento).toHaveBeenCalledWith(CENA_ID);
+      expect(elemento.querySelector("app-leitor-documento")).toBeNull();
+      expect(elemento.querySelector("app-espectador-ficha-card")).not.toBeNull();
+    });
+
     it('remover tira o documento da coluna sem afetar a biblioteca', () => {
       const montado = montarInvestigacao();
       const { fixture, cenaService } = montado;

@@ -61,3 +61,9 @@ export interface CenaDocumentoOrdemInternoAlterarDto {
   readonly id: number;
   readonly ordem: number;
 }
+
+/** Troca o vínculo em foco; `null` limpa explicitamente a seleção da cena. */
+export interface CenaDocumentoFocoInternoDefinirDto {
+    readonly cenaId: number;
+    readonly id: number | null;
+}

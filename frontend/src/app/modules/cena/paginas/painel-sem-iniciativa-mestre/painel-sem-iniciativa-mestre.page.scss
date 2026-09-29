@@ -103,4 +103,10 @@
         display: block;
         height: 220px;
     }
+
+    &__tentar-leitura {
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+    }
 }

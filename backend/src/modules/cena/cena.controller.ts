@@ -132,6 +132,14 @@ export class CenaController {
     return this.cenaDocumentoService.reordenar({ ...dto, cenaId: id }, usuarioAtivo);
   }
 
+  @Delete("cena/:id/documento/foco")
+  limparFocoDocumento(
+    @Param("id", ParseIntPipe) id: number,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<CenaDocumentoResumoDto[]> {
+    return this.cenaDocumentoService.limparFoco({ cenaId: id }, usuarioAtivo);
+  }
+
   @Delete('cena/:id/documento/:documentoId')
   removerDocumento(
     @Param('id', ParseIntPipe) id: number,

@@ -97,6 +97,7 @@ export class EncontroPainelDadosService {
   private readonly emOperacaoInterno = signal(false);
   private readonly documentosDaCena = signal<readonly CenaDocumentoResumoDto[]>([]);
   private readonly carregandoDocumentosInterno = signal(true);
+  private geracaoDocumentos = 0;
 
   /** A cena da tela — `null` só enquanto carrega. */
   readonly cena = this.cenaAtual.asReadonly();
@@ -363,6 +364,11 @@ export class EncontroPainelDadosService {
         },
       });
 
+    this.tempoRealService.documentoAlterado$
+      .pipe(filter(evento => evento.campanhaId === this.campanhaId),
+        takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.carregarDocumentos());
+
     // Fichas ao vivo na grade da cena sem iniciativa (m7-24) — o mecanismo do Esquadrão
     // (`CampanhaDetalheDadosService.sincronizarSalasFicha`): entra nas salas `ficha:<id>` das
     // fichas exibidas, sai das que deixaram de aparecer e, a cada `ficha:alterada` de uma delas,
@@ -455,6 +461,7 @@ export class EncontroPainelDadosService {
    * desmonta o painel sem iniciativa e, com ele, o modal de leitura aberto).
    */
   private invalidarCena(): void {
+    this.geracaoDocumentos++;
     this.carregandoEncontro.set(true);
     this.cenaAtual.set(null);
     this.encontroAtual.set(null);
@@ -541,6 +548,10 @@ export class EncontroPainelDadosService {
   /** Troca a cena e o encontro dela de uma vez — carga e respostas de abrir/encerrar a cena. */
   definirCena(recuperada: CenaRecuperadaDto): void {
     const { encontro, ...cena } = recuperada;
+    if (this.cenaAtual()?.id !== cena.id) {
+      this.geracaoDocumentos++;
+      this.documentosDaCena.set([]);
+    }
     this.cenaAtual.set(cena);
     this.encontroAtual.set(encontro);
     if (cena.tipo === CenaTipoEnum.INVESTIGACAO) {
@@ -553,23 +564,61 @@ export class EncontroPainelDadosService {
 
   /** Busca a coluna Documentos da cena de Investigação. */
   private carregarDocumentos(): void {
-    const cenaId = this.cenaIdDaRota();
-    if (cenaId === null) {
+    const geracao = ++this.geracaoDocumentos;
+    const cenaId = this.cena()?.id;
+    if (cenaId === undefined || !this.ehInvestigacao()) {
       return;
     }
     this.carregandoDocumentosInterno.set(true);
     this.cenaService
       .listarDocumentos(cenaId)
-      .pipe(finalize(() => this.carregandoDocumentosInterno.set(false)))
+      .pipe(finalize(() => {
+        if (geracao === this.geracaoDocumentos) {
+          this.carregandoDocumentosInterno.set(false);
+        }
+      }))
       .subscribe({
         // Resposta de uma cena que a tela já deixou (troca de cena, encerramento) é descartada.
         next: (itens) => {
-          if (this.cenaAtual()?.id === cenaId) {
+          if (this.cenaAtual()?.id === cenaId && geracao === this.geracaoDocumentos) {
             this.documentosDaCena.set(itens);
           }
         },
         error: () => undefined,
       });
+  }
+
+  /** Uma invalidação posterior à escrita exige reler em vez de adotar seu retrato antigo. */
+  private executarDocumentosCena(
+    cenaId: number, operacao: Observable<CenaDocumentoResumoDto[]>,
+  ): void {
+    const geracao = ++this.geracaoDocumentos;
+    const operacaoComRecuperacao = operacao.pipe(catchError(() => {
+      if (this.cena()?.id === cenaId) {
+        this.carregarDocumentos();
+      }
+      return EMPTY;
+    }));
+    this.executar(operacaoComRecuperacao, itens => {
+      if (this.cena()?.id !== cenaId) {
+        return;
+      }
+      if (geracao !== this.geracaoDocumentos) {
+        this.carregarDocumentos();
+        return;
+      }
+      this.carregandoDocumentosInterno.set(false);
+      this.documentosDaCena.set(itens);
+    });
+  }
+
+  /** Limpa somente o foco persistido do mestre, mantendo a Biblioteca intacta. */
+  limparFocoDocumento(): void {
+    const cenaId = this.cena()?.id;
+    if (cenaId === undefined || this.emOperacao()) {
+      return;
+    }
+    this.executarDocumentosCena(cenaId, this.cenaService.limparFocoDocumento(cenaId));
   }
 
   /** Anexa um documento da biblioteca à coluna Documentos desta cena. */
@@ -578,9 +627,7 @@ export class EncontroPainelDadosService {
     if (cenaId === undefined || this.emOperacao()) {
       return;
     }
-    this.executar(this.cenaService.anexarDocumento(cenaId, documentoId), (itens) =>
-      this.documentosDaCena.set(itens),
-    );
+    this.executarDocumentosCena(cenaId, this.cenaService.anexarDocumento(cenaId, documentoId));
   }
 
   /** Remove o vínculo do documento com a cena — nunca afeta a biblioteca. */
@@ -589,9 +636,7 @@ export class EncontroPainelDadosService {
     if (cenaId === undefined || this.emOperacao()) {
       return;
     }
-    this.executar(this.cenaService.removerDocumento(cenaId, documentoId), (itens) =>
-      this.documentosDaCena.set(itens),
-    );
+    this.executarDocumentosCena(cenaId, this.cenaService.removerDocumento(cenaId, documentoId));
   }
 
   /** Reordena a coluna Documentos — `ordem` leva os `documentoId` de todos os itens da cena. */
@@ -600,9 +645,7 @@ export class EncontroPainelDadosService {
     if (cenaId === undefined || this.emOperacao()) {
       return;
     }
-    this.executar(this.cenaService.reordenarDocumentos(cenaId, ordem), (itens) =>
-      this.documentosDaCena.set(itens),
-    );
+    this.executarDocumentosCena(cenaId, this.cenaService.reordenarDocumentos(cenaId, ordem));
   }
 
   /** Abre o documento no palco do mestre — não revela. */
@@ -611,9 +654,7 @@ export class EncontroPainelDadosService {
     if (cenaId === undefined || this.emOperacao()) {
       return;
     }
-    this.executar(this.cenaService.focarDocumento(cenaId, documentoId), (itens) =>
-      this.documentosDaCena.set(itens),
-    );
+    this.executarDocumentosCena(cenaId, this.cenaService.focarDocumento(cenaId, documentoId));
   }
 
   /** Revela o documento à mesa e o marca em foco — a ação "Apresentar". */
@@ -622,9 +663,7 @@ export class EncontroPainelDadosService {
     if (cenaId === undefined || this.emOperacao()) {
       return;
     }
-    this.executar(this.cenaService.apresentarDocumento(cenaId, documentoId), (itens) =>
-      this.documentosDaCena.set(itens),
-    );
+    this.executarDocumentosCena(cenaId, this.cenaService.apresentarDocumento(cenaId, documentoId));
   }
 
   /** `true` quando é a vez deste combatente. */

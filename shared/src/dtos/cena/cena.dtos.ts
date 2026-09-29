@@ -143,6 +143,11 @@ export interface CenaDocumentoFocarDto {
   readonly documentoId: number;
 }
 
+/** Limpa a seleção do palco do mestre sem alterar os documentos da biblioteca. */
+export interface CenaDocumentoFocoLimparDto {
+    readonly cenaId: number;
+}
+
 /** Entrada de "apresentar" — revela o documento (M9) e o marca em foco no palco. */
 export interface CenaDocumentoApresentarDto {
   readonly documentoId: number;

@@ -276,6 +276,7 @@ describe('CenaDocumentoService', () => {
     it('define o foco e não emite (não muda o que a mesa vê)', async () => {
       await service.focar({ cenaId: 900, documentoId: 40 }, mestre);
       expect(cenaDocumentoRepositorio.definirFoco).toHaveBeenCalledWith({ cenaId: 900, id: 700 });
+      expect(transacaoService.executar).toHaveBeenCalledOnce();
       expect(campanhaGateway.emitirCenaDocumentoAlterado).not.toHaveBeenCalled();
     });
   });
@@ -283,12 +284,53 @@ describe('CenaDocumentoService', () => {
   describe('apresentar', () => {
     it('revela o documento (M9) e o marca em foco, emitindo o evento da cena', async () => {
       await service.apresentar({ cenaId: 900, documentoId: 40 }, mestre);
+      expect(transacaoService.executar).toHaveBeenCalledOnce();
       expect(documentoService.revelarDocumento).toHaveBeenCalledWith({ id: 40 }, mestre);
       expect(cenaDocumentoRepositorio.definirFoco).toHaveBeenCalledWith({ cenaId: 900, id: 700 });
       expect(campanhaGateway.emitirCenaDocumentoAlterado).toHaveBeenCalledWith({
         campanhaId: 5,
         cenaId: 900,
       });
+    });
+  });
+
+  describe("limparFoco", () => {
+    it("persiste foco vazio, devolve o estado e não revela nem emite", async () => {
+      const resultado = await service.limparFoco({ cenaId: 900 }, mestre);
+      expect(cenaDocumentoRepositorio.definirFoco).toHaveBeenCalledWith({ cenaId: 900, id: null });
+      expect(transacaoService.executar).toHaveBeenCalledOnce();
+      expect(resultado[0].emFoco).toBe(false);
+      expect(documentoService.revelarDocumento).not.toHaveBeenCalled();
+      expect(campanhaGateway.emitirCenaDocumentoAlterado).not.toHaveBeenCalled();
+    });
+
+    it.each([TipoCampanhaMembroPapelEnum.JOGADOR, TipoCampanhaMembroPapelEnum.ESPECTADOR])(
+      "recusa limpeza pelo papel %s antes da persistência", async (papel) => {
+        campanhaRepositorio.recuperarMembro.mockResolvedValue(membroComPapel(papel));
+        await expect(service.limparFoco({ cenaId: 900 }, jogador))
+          .rejects.toBeInstanceOf(UnauthorizedAccessException);
+        expect(cenaDocumentoRepositorio.definirFoco).not.toHaveBeenCalled();
+      },
+    );
+
+    it("recusa cena encerrada", async () => {
+      cenaRepositorio.recuperarPorId.mockResolvedValue(criarCenaLinha({ status: CenaStatusEnum.ENCERRADA }));
+      await expect(service.limparFoco({ cenaId: 900 }, mestre)).rejects.toBeInstanceOf(BusinessException);
+      expect(cenaDocumentoRepositorio.definirFoco).not.toHaveBeenCalled();
+    });
+
+    it("recusa não membro", async () => {
+      campanhaRepositorio.recuperarMembro.mockResolvedValue(null);
+      await expect(service.limparFoco({ cenaId: 900 }, jogador))
+        .rejects.toBeInstanceOf(UnauthorizedAccessException);
+      expect(cenaDocumentoRepositorio.definirFoco).not.toHaveBeenCalled();
+    });
+
+    it("falha de persistência não devolve uma lista de sucesso", async () => {
+      cenaDocumentoRepositorio.definirFoco.mockRejectedValueOnce(new Error("falha"));
+      await expect(service.limparFoco({ cenaId: 900 }, mestre)).rejects.toThrow("falha");
+      expect(cenaDocumentoRepositorio.listarPorCena).not.toHaveBeenCalled();
+      expect(campanhaGateway.emitirCenaDocumentoAlterado).not.toHaveBeenCalled();
     });
   });
 });

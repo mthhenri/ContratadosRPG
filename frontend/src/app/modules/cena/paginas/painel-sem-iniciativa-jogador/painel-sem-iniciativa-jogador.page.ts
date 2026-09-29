@@ -3,7 +3,6 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 
 import type { CenaDocumentoResumoDto } from '@contratados-rpg/shared/dtos/cena';
-import type { DocumentoRecuperadoDto } from '@contratados-rpg/shared/dtos/documento';
 import type { FichaRecuperadaDto } from '@contratados-rpg/shared/dtos/ficha';
 import { TipoFichaEnum } from '@contratados-rpg/shared/enums';
 
@@ -15,6 +14,8 @@ import { HistoricoRolagensJanelaService } from '../../../../shared/historico-rol
 import { Icone } from '../../../../shared/icone/icone.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
+import { Botao } from "../../../../shared/ui/botao/botao.component";
+import { CenaDocumentoLeituraService } from "../../cena-documento-leitura.service";
 import { Chip } from '../../../../shared/ui/chip/chip.component';
 import { ColunaAcoes } from '../../../../shared/ui/coluna-acoes/coluna-acoes.component';
 import { ColunaAcoesItem } from '../../../../shared/ui/coluna-acoes/coluna-acoes-item.component';
@@ -23,7 +24,6 @@ import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.com
 import { Modal } from '../../../../shared/ui/modal/modal.component';
 import { DocumentoCartao } from '../../../documento/componentes/documento-cartao/documento-cartao.component';
 import { LeitorDocumento } from '../../../documento/componentes/leitor-documento/leitor-documento.component';
-import { DocumentoService } from '../../../documento/documento.service';
 import { resolverFichaParaAbrir } from '../../../encontro/encontro-leitura.util';
 import { EncontroPainelDadosService } from '../../../encontro/paginas/painel/encontro-painel-dados.service';
 import { FichaCampanhaCard } from '../../../ficha/componentes/ficha-campanha-card/ficha-campanha-card.component';
@@ -51,6 +51,7 @@ import { rotuloStatusCena, rotuloTipoCena } from '../../rotulos-cena';
     Icone,
     Tooltip,
     BotaoIcone,
+    Botao,
     Chip,
     ColunaAcoes,
     ColunaAcoesItem,
@@ -71,14 +72,14 @@ import { rotuloStatusCena, rotuloTipoCena } from '../../rotulos-cena';
   styleUrl: './painel-sem-iniciativa-jogador.page.scss',
   // A própria ficha fica aberta no palco e as rolagens dela entram no feed (m3-27): as instâncias
   // são da página, presas a uma ficha só — mesmo padrão do `PainelEncontroJogador`.
-  providers: [FichaRolagemRegistroService, FichaEdicaoService],
+  providers: [FichaRolagemRegistroService, FichaEdicaoService, CenaDocumentoLeituraService],
 })
 export class PainelCenaSemIniciativaJogador {
+  protected readonly leitura = inject(CenaDocumentoLeituraService);
   protected readonly dados = inject(EncontroPainelDadosService);
   protected readonly janelaHistorico = inject(HistoricoRolagensJanelaService);
   private readonly fichaService = inject(FichaService);
   private readonly sessaoService = inject(SessaoService);
-  private readonly documentoService = inject(DocumentoService);
   private readonly rolagemRegistro = inject(FichaRolagemRegistroService);
   protected readonly fichaEdicao = inject(FichaEdicaoService);
 
@@ -122,6 +123,20 @@ export class PainelCenaSemIniciativaJogador {
   protected readonly comFicha = computed(() => !this.dados.carregando() && this.meuFichaId() !== null);
 
   constructor() {
+    this.leitura.iniciar(this.dados.campanhaId, false);
+    let cenaAnterior: number | undefined;
+    effect(() => {
+      const cenaId = this.dados.cena()?.id;
+      const documentos = this.dados.documentosCena();
+      untracked(() => {
+        const documentoId = this.leitura.documentoId();
+        if (cenaId !== cenaAnterior
+          || (documentoId !== null && !documentos.some(item => item.documentoId === documentoId))) {
+          this.leitura.fechar();
+        }
+        cenaAnterior = cenaId;
+      });
+    });
     this.fichaEdicao.inicializar(this.meuFichaDados, () => this.meuFichaId()!);
     this.rolagemRegistro.inicializar(() => this.meuFichaId());
     this.rolagemRegistro.registrada$
@@ -170,23 +185,14 @@ export class PainelCenaSemIniciativaJogador {
 
   // ── Documentos apresentados — Investigação (m7-25) ─────────────────────────
 
-  protected readonly documentoAbertoModal = signal<DocumentoRecuperadoDto | null>(null);
-  protected readonly carregandoDocumentoModal = signal(false);
+  protected readonly documentoAbertoModal = this.leitura.documento;
 
   /** Abre o documento já apresentado num modal de leitura — nada disso abre sozinho (§spec). */
   protected abrirDocumento(documento: CenaDocumentoResumoDto): void {
-    this.carregandoDocumentoModal.set(true);
-    this.documentoAbertoModal.set(null);
-    this.documentoService.recuperar(documento.documentoId).subscribe({
-      next: (recuperado) => {
-        this.documentoAbertoModal.set(recuperado);
-        this.carregandoDocumentoModal.set(false);
-      },
-      error: () => this.carregandoDocumentoModal.set(false),
-    });
+    this.leitura.abrir(documento.documentoId);
   }
 
   protected fecharDocumento(): void {
-    this.documentoAbertoModal.set(null);
+    this.leitura.fechar();
   }
 }
