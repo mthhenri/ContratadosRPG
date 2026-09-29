@@ -1,6 +1,6 @@
-// Biblioteca do mestre (m9-04) — só o que é do mestre: a ação do cabeçalho, as ações e a edição do
-// documento aberto. A casca, a lista, o painel e as duas vistas do celular são da estrutura comum,
-// `app-biblioteca-layout` (m9-05). Só tokens (#29).
+// Biblioteca do mestre (m9-04) — só o que é do mestre: a ação do cabeçalho e as ações do documento
+// aberto; a edição tem o SCSS próprio (`DocumentoEdicao`, m9-13). A casca, a lista, o painel e as
+// duas vistas do celular são da estrutura comum, `app-biblioteca-layout` (m9-05). Só tokens (#29).
 
 @use "tema/breakpoints" as bp;
 
@@ -39,110 +39,5 @@
 
     &__leitor {
         min-height: 0;
-    }
-
-    &__edicao {
-        display: flex;
-        flex-direction: column;
-        gap: var(--space-16);
-    }
-
-    // No mobile, com o editor focado, a barra dele vira `position: fixed` sobre o fim da tela
-    // (`editor-markdown.component.scss`) — diferente do Caderno e das anotações da ficha, aqui o
-    // rodapé Cancelar/Salvar vem *depois* do editor no fluxo da página (não dentro de um container
-    // com altura própria), então a barra o cobria sem essa reserva (m9-06, achado ao vivo: o botão
-    // Salvar ficava parcialmente atrás da barra mesmo rolando até o fim da página).
-    &__edicao--editor-focado &__edicao-acoes {
-        @include bp.mobile {
-            padding-bottom: 64px;
-        }
-    }
-
-    &__conteudo-edicao,
-    &__imagem-edicao {
-        display: flex;
-        flex-direction: column;
-        gap: var(--space-8);
-    }
-
-    // Mesmo rótulo e mesma dica do `app-campo` padrão — o editor Markdown e o seletor de arquivo não
-    // são controles nativos, então não entram num `<label>`.
-    &__rotulo {
-        font-family: var(--font-mono);
-        font-size: 10px;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: var(--text-mute);
-    }
-
-    &__dica {
-        font: 10px var(--font-sans);
-        color: var(--text-mute);
-    }
-
-    &__editor {
-        min-height: 320px;
-        max-height: 60dvh;
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
-
-        @include bp.mobile {
-            min-height: 240px;
-            max-height: none;
-        }
-    }
-
-    &__upload {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: var(--space-8) var(--space-12);
-    }
-
-    &__aviso-importacao {
-        margin: 0;
-        font-family: var(--font-mono);
-        font-size: 11px;
-        color: var(--text-dim);
-        overflow-wrap: anywhere;
-    }
-
-    &__erro {
-        margin: 0;
-        font-family: var(--font-mono);
-        font-size: 11px;
-        color: var(--erro);
-    }
-
-    // Conflito de versão — o aviso contextual em `--warning`, como o chip `aviso` em tom sutil.
-    &__conflito {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: var(--space-8) var(--space-12);
-        padding: var(--space-12);
-        background: color-mix(in srgb, var(--warning) 12%, transparent);
-        border: 1px solid color-mix(in srgb, var(--warning) 40%, transparent);
-        border-radius: var(--radius-control);
-    }
-
-    &__conflito-icone {
-        flex: none;
-        color: var(--warning);
-    }
-
-    &__conflito-texto {
-        flex: 1;
-        min-width: 200px;
-        margin: 0;
-        font-size: 12px;
-        line-height: 1.5;
-        color: var(--text);
-    }
-
-    &__edicao-acoes {
-        display: flex;
-        justify-content: flex-end;
-        gap: var(--space-8);
     }
 }

@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   computed,
   inject,
   input,
@@ -8,6 +9,13 @@ import {
   viewChild,
 } from '@angular/core';
 import { Router } from '@angular/router';
+
+import type {
+  DocumentoAlteradoDto,
+  DocumentoCriadoDto,
+  DocumentoImagemAlteradaDto,
+  DocumentoRecuperadoDto,
+} from '@contratados-rpg/shared/dtos/documento';
 
 import { Icone } from '../../../../shared/icone/icone.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
@@ -20,7 +28,13 @@ import {
 } from '../../../../shared/ui/painel-flutuante/painel-flutuante.component';
 import { BibliotecaLeituraStore } from '../../biblioteca-leitura.store';
 import { podeRevelarDocumento } from '../../documento-revelacao.service';
+import {
+  RascunhoDocumentoRegistro,
+  type TelaComRascunhoDocumento,
+} from '../../rascunho-documento.guard';
 import { BibliotecaCorpo } from '../biblioteca-corpo/biblioteca-corpo.component';
+import { DocumentoCriarDialog } from '../documento-criar-dialog/documento-criar-dialog.component';
+import { DocumentoEdicao } from '../documento-edicao/documento-edicao.component';
 import { LeitorDocumento } from '../leitor-documento/leitor-documento.component';
 
 /** Tamanho da janela — posição e minimizado são de `app-painel-flutuante` (`id="biblioteca"`). */
@@ -54,8 +68,15 @@ const BREAKPOINT_MOBILE = 560;
  * painel (e com a tela que o hospeda): fechar só pausa a presença de leitura, e reabrir mostra o
  * mesmo aberto.
  *
- * O mestre lê qualquer documento e alterna Revelar/Ocultar; criar, editar, reordenar, remover e
- * trocar imagem ficam na página, aberta pelo botão "Abrir página da Biblioteca" do cabeçalho.
+ * O mestre lê qualquer documento, alterna Revelar/Ocultar e — desde a m9-13 — cria e edita sem sair
+ * da tela: o "Novo documento" é o `DocumentoCriarDialog` da página, e a edição (texto, imagem,
+ * conflito) é a `DocumentoEdicao`, a mesma da página; o estado de edição fica na store. Reordenar e
+ * remover continuam só na página, aberta pelo botão "Abrir página da Biblioteca" do cabeçalho.
+ *
+ * **Rascunho:** trocar ou fechar o documento, criar outro e fechar o painel pedem o mesmo
+ * "Descartar alterações?" da página; sair da tela hospedeira também (`rascunhoDocumentoPainelGuard`
+ * nas rotas, pelo {@link RascunhoDocumentoRegistro}), e fechar a aba avisa pelo `beforeunload`.
+ * Minimizar e maximizar não mexem na edição — a janela minimizada só fica escondida.
  */
 @Component({
   selector: 'app-biblioteca-flutuante',
@@ -68,6 +89,8 @@ const BREAKPOINT_MOBILE = 560;
     PainelFlutuante,
     BibliotecaCorpo,
     LeitorDocumento,
+    DocumentoCriarDialog,
+    DocumentoEdicao,
   ],
   providers: [BibliotecaLeituraStore],
   templateUrl: './biblioteca-flutuante.component.html',
@@ -78,9 +101,10 @@ const BREAKPOINT_MOBILE = 560;
     '(window:pointerup)': 'encerrarInteracao()',
     '(window:pointercancel)': 'encerrarInteracao()',
     '(window:resize)': 'aoRedimensionarViewport()',
+    '(window:beforeunload)': 'avisarRascunhoAoFechar($event)',
   },
 })
-export class BibliotecaFlutuante {
+export class BibliotecaFlutuante implements TelaComRascunhoDocumento {
   readonly campanhaId = input.required<number>();
   readonly campanhaNome = input.required<string>();
   /** O papel vem da tela hospedeira, que já o conhece — o painel não lista membros de novo. */
@@ -110,12 +134,25 @@ export class BibliotecaFlutuante {
   protected readonly posicaoInicial: PainelFlutuantePosicao = { x: 320, y: 112 };
 
   protected readonly podeRevelar = computed(() => podeRevelarDocumento(this.store.aberto()));
+  /** Dialog "Novo documento" aberto (só o mestre). */
+  protected readonly criando = signal(false);
+  /** A edição aberta — o rascunho vive nela. */
+  private readonly edicao = viewChild(DocumentoEdicao);
 
   protected readonly painelRef = viewChild<PainelFlutuante>('painel');
   private tamanhoAntesDeMaximizar: BibliotecaTamanho | null = null;
   private posicaoAntesDeMaximizar: PainelFlutuantePosicao | null = null;
   private redimensionando = false;
   private origemRedimensionamento = { ponteiroX: 0, ponteiroY: 0, tamanho: TAMANHO_PADRAO };
+
+  constructor() {
+    inject(DestroyRef).onDestroy(inject(RascunhoDocumentoRegistro).registrar(this));
+  }
+
+  /** Guarda da tela hospedeira (`rascunhoDocumentoPainelGuard`): o rascunho do painel pergunta. */
+  podeSair(): boolean | Promise<boolean> {
+    return this.haRascunho() ? this.confirmarDescarte() : true;
+  }
 
   /** Abre a janela — chamado pelo item "Biblioteca" da coluna de ações (ou do menu "⋯"). */
   abrir(): void {
@@ -145,20 +182,100 @@ export class BibliotecaFlutuante {
     }
   }
 
+  /** Fechar tira a edição da tela: com rascunho, pergunta antes; confirmado, a edição acaba. */
   protected fechar(): void {
-    this.maximizada.set(false);
-    this.tamanhoAntesDeMaximizar = null;
-    this.posicaoAntesDeMaximizar = null;
-    this.abertoInterno.set(false);
-    this.store.pausarLeitura();
+    this.depoisDeDescartar(() => {
+      this.store.encerrarEdicao();
+      this.maximizada.set(false);
+      this.tamanhoAntesDeMaximizar = null;
+      this.posicaoAntesDeMaximizar = null;
+      this.abertoInterno.set(false);
+      this.store.pausarLeitura();
+    });
   }
 
-  /** A página tem a gestão (criar, editar, ordem, imagem); a tela hospedeira sai com o painel. */
+  /**
+   * A página tem o resto da gestão (ordem, remover); a tela hospedeira sai com o painel — com
+   * rascunho, a guarda da rota pergunta antes.
+   */
   protected abrirPagina(): void {
     void this.roteador.navigate([
       ...(this.paginaRota() ?? ['/campanhas', this.campanhaId(), 'documentos']),
     ]);
   }
+
+  // ── Documentos (a confirmação de descarte vem antes de a store trocar o aberto) ─────────
+
+  protected selecionar(id: number): void {
+    this.depoisDeDescartar(() => this.store.selecionar(id));
+  }
+
+  protected abrirDocumento(id: number): void {
+    if (id !== this.store.abertoId()) {
+      this.depoisDeDescartar(() => this.store.abrirDocumento(id));
+    }
+  }
+
+  protected fecharDocumento(): void {
+    this.depoisDeDescartar(() => this.store.fecharDocumento());
+  }
+
+  /** Com edição não salva, pergunta antes: o documento criado abre no lugar dela. */
+  protected abrirNovoDocumento(): void {
+    this.depoisDeDescartar(() => {
+      this.store.encerrarEdicao();
+      this.criando.set(true);
+    });
+  }
+
+  protected aoCriarDocumento(documento: DocumentoCriadoDto): void {
+    this.criando.set(false);
+    this.store.acrescentarCriado(documento);
+  }
+
+  protected aoSalvarDocumento(documento: DocumentoAlteradoDto): void {
+    this.store.adotarAberto(documento);
+    this.store.encerrarEdicao();
+  }
+
+  protected aoEnviarImagem(resposta: DocumentoImagemAlteradaDto): void {
+    this.store.aplicarNoAberto(resposta.id, {
+      imagemUrl: resposta.imagemUrl,
+      updatedDate: resposta.updatedDate,
+    });
+  }
+
+  protected aoRecarregarVersao(documento: DocumentoRecuperadoDto): void {
+    this.store.adotarAberto(documento);
+  }
+
+  /** Fechar/recarregar a aba com edição não salva no painel: o aviso nativo do navegador. */
+  protected avisarRascunhoAoFechar(evento: BeforeUnloadEvent): void {
+    if (this.haRascunho()) {
+      evento.preventDefault();
+    }
+  }
+
+  private haRascunho(): boolean {
+    return this.store.editando() && (this.edicao()?.haRascunho() ?? false);
+  }
+
+  private confirmarDescarte(): Promise<boolean> {
+    return this.edicao()?.confirmarDescarte() ?? Promise.resolve(true);
+  }
+
+  /** Sem rascunho, na hora (sem esperar um tique); com rascunho, só se o descarte for aceito. */
+  private depoisDeDescartar(acao: () => void): void {
+    if (!this.haRascunho()) {
+      acao();
+      return;
+    }
+    void this.confirmarDescarte().then((confirmado) => {
+      if (confirmado) acao();
+    });
+  }
+
+  // ── Janela ──────────────────────────────────────────────────────────────────
 
   protected alternarMaximizacao(): void {
     if (this.ehMobile()) return;

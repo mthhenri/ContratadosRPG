@@ -1,0 +1,137 @@
+// Edição de um documento no próprio lugar (m9-04, extraída da página do mestre na m9-13). O host é o
+// `.biblioteca__edicao`; a mesma receita na página e no painel flutuante. Só tokens (#29).
+
+@use "tema/breakpoints" as bp;
+
+:host {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-16);
+}
+
+// No mobile, com o editor focado, a barra dele vira `position: fixed` sobre o fim da tela
+// (`editor-markdown.component.scss`) — o rodapé Cancelar/Salvar vem *depois* do editor no fluxo (não
+// dentro de um container com altura própria), então a barra o cobria sem essa reserva (m9-06, achado
+// ao vivo: o botão Salvar ficava parcialmente atrás da barra mesmo rolando até o fim).
+:host(.biblioteca__edicao--editor-focado) .biblioteca__edicao-acoes {
+    @include bp.mobile {
+        padding-bottom: 64px;
+    }
+}
+
+// Painel flutuante (m9-13): a edição ocupa o que sobra da janela e o editor estica nela — o rodapé
+// fica no fim da janela, não abaixo da dobra. Numa janela baixa, o mínimo do editor faz a coluna
+// rolar.
+:host(.biblioteca__edicao--painel) {
+    flex: 1;
+    min-height: 0;
+
+    .biblioteca__conteudo-edicao {
+        flex: 1;
+        min-height: 0;
+    }
+
+    .biblioteca__editor {
+        flex: 1;
+        min-height: 200px;
+        max-height: none;
+    }
+}
+
+.biblioteca {
+    &__acao {
+        flex: none;
+
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+    }
+
+    &__conteudo-edicao,
+    &__imagem-edicao {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-8);
+    }
+
+    // Mesmo rótulo e mesma dica do `app-campo` padrão — o editor Markdown e o seletor de arquivo não
+    // são controles nativos, então não entram num `<label>`.
+    &__rotulo {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-mute);
+    }
+
+    &__dica {
+        font: 10px var(--font-sans);
+        color: var(--text-mute);
+    }
+
+    &__editor {
+        min-height: 320px;
+        max-height: 60dvh;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+
+        @include bp.mobile {
+            min-height: 240px;
+            max-height: none;
+        }
+    }
+
+    &__upload {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--space-8) var(--space-12);
+    }
+
+    &__aviso-importacao {
+        margin: 0;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--text-dim);
+        overflow-wrap: anywhere;
+    }
+
+    &__erro {
+        margin: 0;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--erro);
+    }
+
+    // Conflito de versão — o aviso contextual em `--warning`, como o chip `aviso` em tom sutil.
+    &__conflito {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--space-8) var(--space-12);
+        padding: var(--space-12);
+        background: color-mix(in srgb, var(--warning) 12%, transparent);
+        border: 1px solid color-mix(in srgb, var(--warning) 40%, transparent);
+        border-radius: var(--radius-control);
+    }
+
+    &__conflito-icone {
+        flex: none;
+        color: var(--warning);
+    }
+
+    &__conflito-texto {
+        flex: 1;
+        min-width: 200px;
+        margin: 0;
+        font-size: 12px;
+        line-height: 1.5;
+        color: var(--text);
+    }
+
+    &__edicao-acoes {
+        display: flex;
+        justify-content: flex-end;
+        gap: var(--space-8);
+    }
+}

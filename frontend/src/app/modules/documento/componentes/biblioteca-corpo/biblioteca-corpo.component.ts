@@ -36,6 +36,8 @@ import {
  * Só apresenta — o estado é de quem monta. O que muda por papel entra por input e por projeção:
  * - `[bibliotecaAcoesDocumento]`: as ações no cabeçalho do documento aberto (mestre);
  * - `[bibliotecaCorpoDocumento]`: o corpo do documento aberto — sem projeção, o `LeitorDocumento`.
+ * - `[bibliotecaAcaoLista]`: uma ação no fim do divisor da lista (m9-13, o "Novo documento" do
+ *   painel; a página tem a dela no cabeçalho da casca).
  */
 @Component({
   selector: 'app-biblioteca-corpo',

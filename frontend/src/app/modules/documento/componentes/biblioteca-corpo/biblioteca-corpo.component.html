@@ -10,6 +10,8 @@
         @if (contagem() !== null) {
             <span class="biblioteca__secao-meta">{{ contagem() }}</span>
         }
+        <!-- m9-13: a ação da lista de quem monta (o "Novo documento" do painel do mestre). -->
+        <ng-content select="[bibliotecaAcaoLista]" />
     </header>
 
     @if (mostrarBusca()) {

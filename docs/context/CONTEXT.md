@@ -15,7 +15,12 @@
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
 > **Última revisão:** 2026-09-29 · **Última decisão registrada:**
-> `m9-12-biblioteca-painel-flutuante-espectador` concluída (spec em `done/`): no Painel do
+> `m9-13-criar-documentos-biblioteca-flutuante` concluída (spec em `done/`): no painel flutuante o
+> mestre também cria ("Novo documento", o dialog da página) e edita (texto, imagem, conflito 409)
+> sem sair da cena, ficha ou campanha. A edição saiu da página para `DocumentoEdicao`, a mesma nos
+> dois lugares; o rascunho do painel pergunta antes de trocar, fechar e sair da tela
+> (`rascunhoDocumentoPainelGuard` nas rotas hospedeiras). Remover e ordem seguem só na página.
+> Antes: `m9-12-biblioteca-painel-flutuante-espectador` concluída (spec em `done/`): no Painel do
 > espectador, o item "Biblioteca" também abre o painel flutuante (forma leitura), e o botão "Abrir
 > página da Biblioteca" leva à página do espectador (input `paginaRota` do `BibliotecaFlutuante`). A
 > Iniciativa do espectador ficou de fora (decisão do autor). Antes:
@@ -2891,6 +2896,24 @@ porque o `ng-container` reprojetado sempre ocupa o slot do corpo) e pelo painel 
 rolando por dentro e vista única por `@container` abaixo de 800px de janela). O espectador não
 alcança a ficha completa (403; acesso não pode ser concedido a ele, `m8-02`); a Iniciativa dele
 (sem coluna de ações) segue sem o painel.
+
+**Criar e editar no painel (`m9-13`):** a edição no próprio lugar (título, editor + importar
+Markdown, escolher/trocar imagem com a validação de `shared`, aviso 409 com "Recarregar", rodapé
+Cancelar/Salvar) saiu da `BibliotecaMestre` para `DocumentoEdicao`
+(`componentes/documento-edicao/`, host = `.biblioteca__edicao`), montada pela página e pelo painel
+(`emPainel`: o editor estica até o rodapé da janela). Ela guarda o rascunho e faz `alterar`/
+`enviarImagem`/`recuperar`; quem monta só adota `salvo`/`imagemEnviada`/`versaoRecarregada`/
+`encerrada` e pergunta o descarte por `confirmarDescarte()`. No painel, o "Novo documento" (slot
+`[bibliotecaAcaoLista]` do `BibliotecaCorpo`, no fim do divisor da lista) abre o
+`DocumentoCriarDialog` **fora** da janela (o `Escape` do dialog não fecha o painel); o criado entra
+por `BibliotecaLeituraStore.acrescentarCriado` já em edição. A store, na forma mestre, só sabe *que*
+há edição (`editando`): com ela, não recarrega versão nova do aberto (vale o 409) nem fecha o aberto
+por uma lista anterior à criação, e Revelar/Ocultar trava. Trocar/fechar documento, criar outro e
+fechar o painel perguntam antes (sem rascunho, agem na hora); minimizar/maximizar não mexem na
+edição. Sair da tela hospedeira pergunta pelo `RascunhoDocumentoRegistro` (o painel se registra ao
+nascer) e o `rascunhoDocumentoPainelGuard`, posto nas rotas `campanhas/:id`,
+`campanhas/:campanhaId/cenas/:cenaId`, `campanhas/:campanhaId/ficha/:id` e `fichas/:id`; fechar a
+aba avisa pelo `beforeunload`.
 
 `emitirRolagemRegistrada` (m3-27/`m3-77`) usa **duas salas mutuamente exclusivas**, nunca as duas:
 com campanha, só `campanha:<id>` (como sempre); ficha solta (`campanhaId === null`, m3-28), só

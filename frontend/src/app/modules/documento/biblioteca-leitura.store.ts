@@ -4,6 +4,7 @@ import { Subject, filter, finalize, merge, switchMap, tap } from 'rxjs';
 
 import type {
   DocumentoBibliotecaAlteradaDto,
+  DocumentoCriadoDto,
   DocumentoRecuperadoDto,
   DocumentoResumoDto,
 } from '@contratados-rpg/shared/dtos/documento';
@@ -48,6 +49,13 @@ export interface BibliotecaLeituraOpcoes {
  * inteira e sem fechar o aberto no `OCULTADO` — ver {@link BibliotecaLeituraOpcoes}. A página do
  * mestre continua com o estado próprio (edição, upload, ordem), fora desta store.
  *
+ * **Edição no painel (m9-13, forma mestre):** a store só sabe *que* há edição (`editando`) — o
+ * rascunho, o salvar e o upload são da `DocumentoEdicao`, a mesma da página. Com edição aberta, uma
+ * versão nova do aberto não é recarregada (vale o 409 no salvar, como na página) e Revelar/Ocultar
+ * trava; o que a edição devolve entra por {@link acrescentarCriado}, {@link adotarAberto} e
+ * {@link aplicarNoAberto}. Trocar ou fechar o documento encerra a edição — confirmar o descarte é
+ * de quem monta, antes de chamar.
+ *
  * **Sala da campanha:** `entrarSalaCampanha`/`sairSalaCampanha` contam referência no
  * `TempoRealService`, então uma store dentro de uma tela que já está na sala (o painel flutuante)
  * não tira a tela dela ao ser destruída.
@@ -69,6 +77,8 @@ export class BibliotecaLeituraStore {
   readonly erroLista = signal(false);
   /** Revelar/Ocultar em voo (forma mestre) — trava o botão para não repetir a mutação. */
   readonly emOperacao = signal(false);
+  /** Edição do aberto em curso (forma mestre, m9-13). */
+  readonly editando = signal(false);
 
   /** Pedidos de recarga da lista (evento). */
   private readonly recarregar$ = new Subject<void>();
@@ -143,7 +153,7 @@ export class BibliotecaLeituraStore {
    */
   alternarRevelacao(): void {
     const documento = this.aberto();
-    if (!this.mestre || !documento || this.emOperacao()) {
+    if (!this.mestre || !documento || this.emOperacao() || this.editando()) {
       return;
     }
     this.emOperacao.set(true);
@@ -154,16 +164,73 @@ export class BibliotecaLeituraStore {
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe({
-        next: (resposta) => {
-          const alteracao = { revelado: resposta.revelado, updatedDate: resposta.updatedDate };
-          this.aberto.update((aberto) =>
-            aberto && aberto.id === resposta.id ? { ...aberto, ...alteracao } : aberto,
-          );
-          this.documentos.update((documentos) =>
-            documentos.map((item) => (item.id === resposta.id ? { ...item, ...alteracao } : item)),
-          );
-        },
+        next: (resposta) =>
+          this.aplicarNoAberto(resposta.id, {
+            revelado: resposta.revelado,
+            updatedDate: resposta.updatedDate,
+          }),
       });
+  }
+
+  /** Editar o aberto (forma mestre). */
+  iniciarEdicao(): void {
+    if (this.mestre && this.aberto()) {
+      this.editando.set(true);
+    }
+  }
+
+  encerrarEdicao(): void {
+    this.editando.set(false);
+  }
+
+  /**
+   * Criado pelo "Novo documento" (forma mestre): entra na lista (oculto, no fim) e abre já em
+   * edição — o `IMAGEM`, pedindo o arquivo. O próximo evento traz a lista do backend.
+   */
+  acrescentarCriado(documento: DocumentoCriadoDto): void {
+    if (!this.mestre) {
+      return;
+    }
+    this.documentos.update((documentos) => [
+      ...documentos.filter((item) => item.id !== documento.id),
+      documento,
+    ]);
+    if (documento.id !== this.abertoId()) {
+      this.abertoId.set(documento.id);
+      this.informarLeitura(documento.id);
+    }
+    this.aberto.set(documento);
+    this.editando.set(true);
+  }
+
+  /** Versão inteira devolvida pela edição (salvar, "Recarregar"): vale no aberto e no resumo. */
+  adotarAberto(documento: DocumentoRecuperadoDto): void {
+    if (this.abertoId() === documento.id) {
+      this.aberto.set(documento);
+    }
+    this.aplicarNoAberto(documento.id, {
+      titulo: documento.titulo,
+      updatedDate: documento.updatedDate,
+    });
+  }
+
+  /**
+   * Resposta de uma escrita do próprio mestre (revelar, ocultar, imagem): adota a versão nova no
+   * aberto e no resumo — senão o próximo evento recarregaria à toa e a edição levaria o próprio
+   * 409.
+   */
+  aplicarNoAberto(
+    id: number,
+    alteracao: Partial<
+      Pick<DocumentoRecuperadoDto, 'titulo' | 'revelado' | 'imagemUrl' | 'updatedDate'>
+    >,
+  ): void {
+    this.aberto.update((aberto) =>
+      aberto && aberto.id === id ? { ...aberto, ...alteracao } : aberto,
+    );
+    this.documentos.update((documentos) =>
+      documentos.map((item) => (item.id === id ? { ...item, ...alteracao } : item)),
+    );
   }
 
   /** A lista alterna entre o documento aberto e o painel vazio. */
@@ -185,6 +252,7 @@ export class BibliotecaLeituraStore {
   /** "Voltar" do celular: fecha o documento e mostra a lista. */
   fecharDocumento(): void {
     const estavaAberto = this.abertoId() !== null;
+    this.editando.set(false);
     this.abertoId.set(null);
     this.aberto.set(null);
     if (estavaAberto) {
@@ -216,6 +284,7 @@ export class BibliotecaLeituraStore {
     const trocou = id !== this.abertoId();
     this.abertoId.set(id);
     if (trocou) {
+      this.editando.set(false);
       this.informarLeitura(id);
     }
     if (!silencioso) {
@@ -240,8 +309,9 @@ export class BibliotecaLeituraStore {
   }
 
   /**
-   * Nova lista. O aberto saiu dela? Fecha com o aviso. A versão dele mudou? Recarrega em silêncio.
-   * Enquanto o aberto ainda carrega, a resposta do `recuperar` é que manda.
+   * Nova lista. O aberto saiu dela? Fecha com o aviso. A versão dele mudou? Recarrega em silêncio —
+   * menos com edição em curso, em que vale o 409 no salvar. Enquanto o aberto ainda carrega, a
+   * resposta do `recuperar` é que manda.
    */
   private aplicarLista(documentos: readonly DocumentoResumoDto[]): void {
     this.documentos.set(documentos);
@@ -252,11 +322,15 @@ export class BibliotecaLeituraStore {
     }
     const resumo = documentos.find((item) => item.id === abertoId);
     if (!resumo) {
-      this.fecharIndisponivel();
+      // Editando o que acabou de criar, uma lista pedida antes da criação pode chegar depois dela
+      // (eco antes do REST): a remoção de verdade chega pelo `REMOVIDO`, que fecha do mesmo jeito.
+      if (!(this.mestre && this.editando())) {
+        this.fecharIndisponivel();
+      }
       return;
     }
     const aberto = this.aberto();
-    if (aberto && resumo.updatedDate !== aberto.updatedDate) {
+    if (aberto && !this.editando() && resumo.updatedDate !== aberto.updatedDate) {
       this.carregar(abertoId, true);
     }
   }

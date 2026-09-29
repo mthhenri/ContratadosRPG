@@ -1,5 +1,69 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-29 — m9-13: criar e editar documentos na Biblioteca flutuante
+
+Pedido do autor: o mestre cria um documento utilizável sem sair da cena, ficha ou campanha onde
+abriu a Biblioteca flutuante. A task amplia de propósito a `m9-11`, que deixara criar/editar/upload
+só na página.
+
+**Extração antes de crescer o painel.** A edição no próprio lugar da `BibliotecaMestre` (título,
+editor e importar Markdown, escolher/trocar imagem com as constantes de `shared`, aviso 409 com
+"Recarregar", rodapé Cancelar/Salvar) virou o `DocumentoEdicao` (`componentes/documento-edicao/`,
+host = `.biblioteca__edicao`, mesmas classes BEM). Ele guarda o rascunho e faz as chamadas; quem
+monta adota `salvo`/`imagemEnviada`/`versaoRecarregada`/`encerrada` e pergunta o descarte por
+`confirmarDescarte()`. A página encolheu (654 → 422 linhas no `.ts`) e os **41 testes dela
+passaram sem nenhuma alteração** depois da extração. Criação é o `DocumentoCriarDialog` de sempre,
+Revelar/Ocultar o `DocumentoRevelacaoService` da `m9-11`: nada de criação, upload, validação,
+conflito ou revelação foi duplicado.
+
+**No painel.** "Novo documento" (só mestre, também com a lista vazia) no fim do divisor da lista —
+slot novo `[bibliotecaAcaoLista]` do `BibliotecaCorpo`, vazio na página. O dialog é montado fora da
+janela: dentro dela, o `Escape` do dialog subiria até o `app-painel-flutuante` e fecharia o painel
+junto. O criado entra pela store (`acrescentarCriado`) já em edição — `IMAGEM` pedindo o arquivo — e
+"Editar" ao lado de Revelar/Ocultar reabre a edição. A `BibliotecaLeituraStore` (forma mestre)
+ganhou só o estado `editando` e a adoção de versões (`adotarAberto`, `aplicarNoAberto`, que
+`alternarRevelacao` passou a usar): com edição, não recarrega versão nova do aberto (vale o 409, como
+na página), Revelar/Ocultar trava e uma lista pedida antes da criação não fecha o criado (o eco pode
+chegar antes do REST). Trocar/fechar o documento, criar outro e fechar o painel passam por
+`depoisDeDescartar`, que age na hora sem rascunho e só depois do "Descartar" com rascunho.
+Minimizar não descarta (a janela só fica `hidden`). Sair da tela: o painel se registra no
+`RascunhoDocumentoRegistro` e o `rascunhoDocumentoPainelGuard` foi posto nas quatro rotas que o
+hospedam (`campanhas/:id`, cenas `:cenaId`, ficha `:id` com e sem campanha); `beforeunload` para a
+aba. Remover e ordem continuam só na página.
+
+**Achado na verificação, corrigido antes do fecho:** na janela de 680px o rodapé Cancelar/Salvar
+nascia cortado na borda de baixo (editor com a altura da página). `DocumentoEdicao` ganhou
+`emPainel`: no painel, o editor estica até o rodapé ficar no fim da janela (mínimo 200px; numa
+janela baixa a coluna rola). **Achado preexistente, registrado como `P-091`:** Editar → Cancelar sem
+mexer pede "Descartar alterações?" quando o Markdown salvo não termina em `\n` (o editor sempre
+devolve com a quebra) — mesma lógica da página desde a `m9-04`, visto nos dois lugares.
+
+**Testes:** `BibliotecaFlutuante` 12 (6 novos: lista vazia + cancelar sem criar, TEXTO criado →
+editar → salvar com a versão criada, IMAGEM pedindo arquivo, rascunho ao trocar e fechar, minimizar
+sem descartar, registro da guarda); `BibliotecaLeituraStore` 7 novos (criado em edição, forma leitura
+inerte, lista anterior à criação, sem recarga com edição, trava e `REMOVIDO`, trocar/fechar encerram,
+adoção de versão). Suíte do frontend **176 arquivos / 2529 testes**; `ng build` sem erro (só o aviso
+de budget do `P-004`); lint 0 erros, sem `max-len` novo. Backend inalterado: a matriz de permissões
+da `DocumentoService` (criar/alterar/imagem → 403 para jogador, espectador e não membro) passou —
+`src/modules/documento` 103/103.
+
+**Ao vivo** (stack isolado 3101/4301, cenário novo por REST, mestre e jogador em sessões separadas,
+na tela da campanha). `1920×1080`: "Novo documento" com a lista; título vazio mostra "Dê um título
+ao documento."; Cancelar não cria; duplo clique em Criar cria **um**; criação com 500 forçado deixa o
+dialog aberto com o título e "Criar" de novo cria; TEXTO abre em edição, digitar → minimizar →
+restaurar e maximizar mantêm o texto; com rascunho, trocar de documento, fechar pelo "×" e "Abrir
+página da Biblioteca" (guarda da rota) pedem "Descartar alterações?", e "Continuar editando" fica na
+campanha com o editor; Salvar volta ao leitor com o texto; alteração por outra sessão → Salvar dá o
+aviso 409 com o rascunho preservado e "Recarregar" traz a versão de fora; Revelar aparece ao vivo
+para o jogador, que continuou lendo a carta aberta, e o oculto recém-criado nunca apareceu para ele;
+IMAGEM: GIF recusado no cliente, 400 forçado vira "Arquivo de imagem corrompido", PNG válido envia e
+libera Revelar; IMAGEM sem arquivo fica com Revelar desabilitado e a nota. Sem overflow na página nem
+na janela. `360×800`: folha cheia, "Novo documento" 44px de alvo, vista única (lista some ao
+editar), com o editor focado o Salvar fica acima da barra fixa do editor (clicável), minimizar não
+descarta, Revelar/Editar 44px, voltar à lista e IMAGEM com upload. A única rolagem horizontal é a
+faixa de formatação do editor, que rola por desenho. Comparado com a página (edição) e com a própria
+janela da `m9-11` (casca, densidade, estados): os controles são os mesmos primitivos.
+
 ## 2026-09-29 — m9-12: Biblioteca em painel flutuante também no Painel do espectador
 
 Pedido do autor logo depois da `m9-11`, que deixara o espectador fora. Decisão do autor: **só o

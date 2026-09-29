@@ -1,46 +1,34 @@
 import { Component, DestroyRef, computed, inject, input, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
-import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { Observable, Subject, filter, finalize, merge, switchMap, tap } from 'rxjs';
 
 import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
 import type {
+  DocumentoAlteradoDto,
   DocumentoBibliotecaAlteradaDto,
   DocumentoCriadoDto,
+  DocumentoImagemAlteradaDto,
   DocumentoRecuperadoDto,
   DocumentoResumoDto,
 } from '@contratados-rpg/shared/dtos/documento';
-import { DocumentoAlteracaoEnum, TipoDocumentoEnum } from '@contratados-rpg/shared/enums';
-import type { StandardResponse } from '@contratados-rpg/shared/interfaces';
-import {
-  DOCUMENTO_CONTEUDO_MAXIMO,
-  DOCUMENTO_IMAGEM_MIMES_PERMITIDOS,
-  DOCUMENTO_IMAGEM_TAMANHO_MAXIMO_BYTES,
-  DOCUMENTO_TITULO_MAXIMO,
-} from '@contratados-rpg/shared/validators';
+import { DocumentoAlteracaoEnum } from '@contratados-rpg/shared/enums';
 
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { TopbarContextoService } from '../../../../core/services/topbar-contexto.service';
-import { normalizarMarkdownImportado, possuiFrontMatterYaml, validarArquivoMarkdown, type FalhaImportacaoMarkdown } from '../../../../shared/markdown/importar-markdown';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
-import { Campo } from '../../../../shared/ui/campo/campo.component';
 import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
-import { EditorMarkdown } from '../../../../shared/ui/editor-markdown/editor-markdown.component';
 import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
 import { CampanhaService } from '../../../campanha/campanha.service';
 import { BibliotecaLeitoresStore } from '../../biblioteca-leitores.store';
 import { BibliotecaLayout } from '../../componentes/biblioteca-layout/biblioteca-layout.component';
 import { DocumentoCriarDialog } from '../../componentes/documento-criar-dialog/documento-criar-dialog.component';
+import { DocumentoEdicao } from '../../componentes/documento-edicao/documento-edicao.component';
 import { LeitorDocumento } from '../../componentes/leitor-documento/leitor-documento.component';
 import { DocumentoService } from '../../documento.service';
 import { DocumentoRevelacaoService, podeRevelarDocumento } from '../../documento-revelacao.service';
 import type { TelaComRascunhoDocumento } from '../../rascunho-documento.guard';
-
-/** O teto do upload em MB, para as mensagens — derivado da constante de `shared`, não repetido. */
-const TAMANHO_MAXIMO_IMAGEM_MB = DOCUMENTO_IMAGEM_TAMANHO_MAXIMO_BYTES / (1024 * 1024);
 
 /**
  * Biblioteca do mestre (m9-04) — todos os documentos da campanha, revelados e ocultos: criar, ler e
@@ -49,7 +37,8 @@ const TAMANHO_MAXIMO_IMAGEM_MB = DOCUMENTO_IMAGEM_TAMANHO_MAXIMO_BYTES / (1024 *
  * A composição (casca, lista com busca, painel e as duas vistas do celular) é a estrutura comum da
  * Biblioteca, `BibliotecaLayout` (m9-05), a mesma da visão da mesa; aqui entra só o que é do
  * mestre: chips de estado, setas de ordem, "Novo documento", as ações e a edição do documento
- * aberto.
+ * aberto. A edição em si (título, texto, imagem, conflito) é a `DocumentoEdicao`, a mesma do painel
+ * flutuante (m9-13); a página decide quando ela abre e adota o que ela devolve.
  *
  * **Salvar explícito, sem autosave:** com o documento já revelado, cada digitação salva chegaria à
  * mesa. A edição guarda a versão otimista (`updatedDate`) de onde partiu; toda escrita do próprio
@@ -69,13 +58,11 @@ const TAMANHO_MAXIMO_IMAGEM_MB = DOCUMENTO_IMAGEM_TAMANHO_MAXIMO_BYTES / (1024 *
 @Component({
   selector: 'app-biblioteca-mestre',
   imports: [
-    ReactiveFormsModule,
     Icone,
     Botao,
-    Campo,
-    EditorMarkdown,
     BibliotecaLayout,
     DocumentoCriarDialog,
+    DocumentoEdicao,
     LeitorDocumento,
   ],
   templateUrl: './biblioteca-mestre.page.html',
@@ -102,11 +89,6 @@ export class BibliotecaMestre implements TelaComRascunhoDocumento {
 
   protected readonly campanhaId = Number(this.rotaAtiva.snapshot.paramMap.get('campanhaId'));
 
-  protected readonly tituloMaximo = DOCUMENTO_TITULO_MAXIMO;
-  protected readonly conteudoMaximo = DOCUMENTO_CONTEUDO_MAXIMO;
-  protected readonly mimesAceitos = DOCUMENTO_IMAGEM_MIMES_PERMITIDOS.join(',');
-  protected readonly tamanhoMaximoImagemMb = TAMANHO_MAXIMO_IMAGEM_MB;
-
   protected readonly documentos = signal<readonly DocumentoResumoDto[]>([]);
   protected readonly leitoresPorDocumento = this.leitoresStore.leitoresPorDocumento;
   protected readonly carregandoLista = signal(true);
@@ -122,56 +104,20 @@ export class BibliotecaMestre implements TelaComRascunhoDocumento {
   protected readonly carregandoAberto = signal(false);
 
   protected readonly editando = signal(false);
-  protected readonly tituloEdicao = new FormControl('', {
-    nonNullable: true,
-    validators: [Validators.required, Validators.maxLength(DOCUMENTO_TITULO_MAXIMO)],
-  });
-  /** Espelho do título em edição, para o contador e o erro. */
-  protected readonly tituloEditado = signal('');
-  /** O rascunho do texto como o editor o propagou (debounced — ver `confirmarValor()`). */
-  protected readonly conteudoEdicao = signal('');
-  /**
-   * No mobile, com o editor focado, a barra dele vira `position: fixed` sobre o rodapé
-   * Cancelar/Salvar — diferente do Caderno/anotações da ficha, aqui o rodapé vem depois do editor
-   * no fluxo da página, não dentro de um container com altura própria. Reserva o espaço da barra
-   * pra ele continuar alcançável (m9-06, `biblioteca-mestre.page.scss`).
-   */
-  protected readonly editorFocado = signal(false);
-  /** O salvar voltou 409: outra sessão alterou o documento depois que a edição começou. */
-  protected readonly conflito = signal(false);
-  protected readonly salvando = signal(false);
-  protected readonly erroImagem = signal<string | null>(null);
-  protected readonly enviandoImagem = signal(false);
-  protected readonly avisoImportacao = signal<{ texto: string; erro: boolean } | null>(null);
-  protected readonly importandoMarkdown = signal(false);
-  /** Invalida uma leitura local pendente ao sair ou reiniciar a edição. */
-  private sequenciaEdicao = 0;
-
   /** O id que este mestre remove: o eco `REMOVIDO` dele não é "removido em outra sessão". */
   private removendoId: number | null = null;
 
-  private readonly editor = viewChild<EditorMarkdown>('editor');
+  /** A edição aberta — o rascunho vive nela. */
+  private readonly edicao = viewChild(DocumentoEdicao);
 
   /** Pedidos de recarga da lista (depois de uma escrita, reconexão). */
   private readonly recarregar$ = new Subject<void>();
 
-  protected readonly abertoEhTexto = computed(
-    () => this.aberto()?.tipo === TipoDocumentoEnum.TEXTO,
-  );
-  protected readonly erroTitulo = computed(() =>
-    this.editando() && !this.tituloEditado().trim() ? 'Dê um título ao documento.' : '',
-  );
   /** Um `IMAGEM` sem arquivo não pode ser revelado (`podeRevelarDocumento`, a trava do painel). */
   protected readonly podeRevelar = computed(() => podeRevelarDocumento(this.aberto()));
 
   constructor() {
-    this.destroyRef.onDestroy(() => {
-      this.sequenciaEdicao++;
-      this.topbarContexto.limpar();
-    });
-    this.tituloEdicao.valueChanges
-      .pipe(takeUntilDestroyed())
-      .subscribe((titulo) => this.tituloEditado.set(titulo));
+    this.destroyRef.onDestroy(() => this.topbarContexto.limpar());
 
     this.campanhaService.recuperarCampanha(this.campanhaId).subscribe({
       next: (campanha) => {
@@ -227,35 +173,15 @@ export class BibliotecaMestre implements TelaComRascunhoDocumento {
     }
   }
 
-  /**
-   * Há edição com algo diferente do salvo? Lê o texto do editor **agora** (`confirmarValor()`) —
-   * o `valorChange` é debounced e perderia as últimas teclas (P-081).
-   */
+  /** Há edição com algo diferente do salvo? A `DocumentoEdicao` lê o editor agora (P-081). */
   private haRascunho(): boolean {
-    const documento = this.aberto();
-    if (!this.editando() || !documento) {
-      return false;
-    }
-    const titulo = this.tituloEdicao.value;
-    const conteudo = this.editor()?.confirmarValor() ?? this.conteudoEdicao();
-    return (
-      titulo !== documento.titulo ||
-      (documento.tipo === TipoDocumentoEnum.TEXTO && conteudo !== (documento.conteudoMarkdown ?? ''))
-    );
+    return this.editando() && (this.edicao()?.haRascunho() ?? false);
   }
 
   /** "Descartar alterações?" — só pergunta quando há mesmo o que perder. */
   private async confirmarDescarte(): Promise<boolean> {
-    if (!this.haRascunho()) {
-      return true;
-    }
-    return this.confirmacaoService.confirmar({
-      titulo: 'Descartar alterações?',
-      mensagem: `As alterações em ${this.aberto()?.titulo ?? ''} ainda não foram salvas.`,
-      entidade: this.aberto()?.titulo,
-      rotuloConfirmar: 'Descartar',
-      rotuloCancelar: 'Continuar editando',
-    });
+    const edicao = this.edicao();
+    return !this.editando() || !edicao ? true : edicao.confirmarDescarte();
   }
 
   // ── Lista ───────────────────────────────────────────────────────────────────
@@ -378,192 +304,39 @@ export class BibliotecaMestre implements TelaComRascunhoDocumento {
   }
 
   protected iniciarEdicao(): void {
-    const documento = this.aberto();
-    if (!documento) {
-      return;
+    if (this.aberto()) {
+      this.editando.set(true);
     }
-    this.sequenciaEdicao++;
-    this.avisoImportacao.set(null);
-    this.importandoMarkdown.set(false);
-    this.tituloEdicao.reset(documento.titulo);
-    this.tituloEditado.set(documento.titulo);
-    this.conteudoEdicao.set(documento.conteudoMarkdown ?? '');
-    this.conflito.set(false);
-    this.erroImagem.set(null);
-    this.editorFocado.set(false);
-    this.editando.set(true);
   }
 
-  protected async cancelarEdicao(): Promise<void> {
-    if (await this.confirmarDescarte()) {
+  /** Salvo pela edição: adota a versão devolvida no aberto e no resumo, e fecha a edição. */
+  protected aoSalvarDocumento(alterado: DocumentoAlteradoDto): void {
+    if (this.abertoId() === alterado.id) {
+      this.aberto.set(alterado);
       this.sairDaEdicao();
     }
+    this.documentos.update((documentos) =>
+      documentos.map((item) =>
+        item.id === alterado.id
+          ? { ...item, titulo: alterado.titulo, updatedDate: alterado.updatedDate }
+          : item,
+      ),
+    );
   }
 
-  /** Salvar lê o texto do editor **antes** de enviar (`confirmarValor()`, P-081). */
-  protected salvar(): void {
-    const documento = this.aberto();
-    if (!documento || this.salvando() || this.conflito()) {
-      return;
-    }
-    const titulo = this.tituloEdicao.value.trim();
-    const conteudoMarkdown =
-      documento.tipo === TipoDocumentoEnum.TEXTO
-        ? (this.editor()?.confirmarValor() ?? this.conteudoEdicao())
-        : null;
-    if (!titulo || this.tituloEdicao.invalid) {
-      return;
-    }
-    if (
-      titulo === documento.titulo &&
-      (conteudoMarkdown ?? null) === (documento.conteudoMarkdown ?? null)
-    ) {
-      this.sairDaEdicao();
-      return;
-    }
-    this.salvando.set(true);
-    this.documentoService
-      .alterar({ id: documento.id, titulo, conteudoMarkdown, updatedDate: documento.updatedDate })
-      .pipe(finalize(() => this.salvando.set(false)))
-      .subscribe({
-        next: (alterado) => {
-          if (this.abertoId() === alterado.id) {
-            this.aberto.set(alterado);
-            this.sairDaEdicao();
-          }
-          this.documentos.update((documentos) =>
-            documentos.map((item) =>
-              item.id === alterado.id
-                ? { ...item, titulo: alterado.titulo, updatedDate: alterado.updatedDate }
-                : item,
-            ),
-          );
-          this.notificacaoService.notificar({
-            severidade: 'sucesso',
-            resumo: 'Documento salvo',
-            detalhe: alterado.revelado
-              ? `${alterado.titulo} — a mesa já vê esta versão.`
-              : alterado.titulo,
-          });
-        },
-        error: (erro: unknown) => {
-          if (erro instanceof HttpErrorResponse && erro.status === HttpStatusCode.Conflict) {
-            this.conflito.set(true);
-          }
-        },
-      });
-  }
-
-  /**
-   * "Recarregar" do aviso de conflito — o mestre pediu: traz a versão atual e reabre a edição sobre
-   * ela, descartando o rascunho.
-   */
-  protected recarregarVersao(): void {
-    const id = this.abertoId();
-    if (id === null) {
-      return;
-    }
-    this.documentoService.recuperar(id).subscribe({
-      next: (documento) => {
-        if (this.abertoId() !== documento.id) {
-          return;
-        }
-        this.aberto.set(documento);
-        this.iniciarEdicao();
-      },
+  /** Imagem enviada pela edição: a URL e a versão novas valem para o aberto e o resumo. */
+  protected aoEnviarImagem(resposta: DocumentoImagemAlteradaDto): void {
+    this.aplicarNoAberto(resposta.id, {
+      imagemUrl: resposta.imagemUrl,
+      updatedDate: resposta.updatedDate,
     });
   }
 
-  /** Importa somente texto local para o rascunho; persistência continua exclusiva de Salvar. */
-  protected async aoSelecionarMarkdown(evento: Event): Promise<void> {
-    const entrada = evento.target as HTMLInputElement;
-    const arquivo = entrada.files?.[0] ?? null;
-    entrada.value = '';
-    if (!arquivo || !this.editando() || !this.abertoEhTexto() || this.importandoMarkdown()) return;
-    const sequencia = this.sequenciaEdicao;
-    this.avisoImportacao.set(null);
-    const falhaArquivo = validarArquivoMarkdown(arquivo, DOCUMENTO_CONTEUDO_MAXIMO);
-    if (falhaArquivo) {
-      this.definirFalhaImportacao(falhaArquivo);
-      return;
+  /** "Recarregar" do conflito: a edição recomeça sobre a versão atual, que o aberto adota. */
+  protected aoRecarregarVersao(documento: DocumentoRecuperadoDto): void {
+    if (this.abertoId() === documento.id) {
+      this.aberto.set(documento);
     }
-    this.importandoMarkdown.set(true);
-    try {
-      const texto = await arquivo.text();
-      if (sequencia !== this.sequenciaEdicao) return;
-      const conteudoMarkdown = normalizarMarkdownImportado(texto);
-      const falhaConteudo = validarArquivoMarkdown(arquivo, DOCUMENTO_CONTEUDO_MAXIMO, conteudoMarkdown);
-      if (falhaConteudo) {
-        this.definirFalhaImportacao(falhaConteudo);
-        return;
-      }
-      const conteudoAtual = this.editor()?.confirmarValor() ?? this.conteudoEdicao();
-      if (conteudoAtual.trim()) {
-        const confirmado = await this.confirmacaoService.confirmar({
-          titulo: 'Substituir o conteúdo?',
-          mensagem: 'O texto atual do documento será trocado pelo conteúdo do arquivo. Nada é salvo até clicar em Salvar.',
-          rotuloConfirmar: 'Substituir',
-          rotuloCancelar: 'Cancelar',
-        });
-        if (!confirmado || sequencia !== this.sequenciaEdicao) return;
-      }
-      this.conteudoEdicao.set(conteudoMarkdown);
-      this.avisoImportacao.set({
-        texto: `Importado de "${arquivo.name}".${possuiFrontMatterYaml(texto) ? ' Front matter removido.' : ''} Salve para gravar.`,
-        erro: false,
-      });
-    } catch {
-      if (sequencia === this.sequenciaEdicao) {
-        this.avisoImportacao.set({ texto: 'Não foi possível ler o arquivo. Tente novamente.', erro: true });
-      }
-    } finally {
-      if (sequencia === this.sequenciaEdicao) this.importandoMarkdown.set(false);
-    }
-  }
-
-  private definirFalhaImportacao(falha: FalhaImportacaoMarkdown): void {
-    const textos = {
-      EXTENSAO: 'Formato inválido: envie um arquivo .md',
-      TAMANHO: `Arquivo maior que o limite do documento (${DOCUMENTO_CONTEUDO_MAXIMO.toLocaleString('pt-BR')} caracteres)`,
-      VAZIO: 'O arquivo não tem conteúdo',
-    } as const;
-    this.avisoImportacao.set({ texto: textos[falha], erro: true });
-  }
-
-  /** Arquivo escolhido: valida tipo e tamanho aqui (constantes de `shared`) antes de enviar. */
-  protected aoSelecionarImagem(evento: Event): void {
-    const entrada = evento.target as HTMLInputElement;
-    const arquivo = entrada.files?.[0] ?? null;
-    entrada.value = '';
-    const documento = this.aberto();
-    if (!arquivo || !documento || this.enviandoImagem()) {
-      return;
-    }
-    if (!DOCUMENTO_IMAGEM_MIMES_PERMITIDOS.includes(arquivo.type)) {
-      this.erroImagem.set('Formato inválido: use JPEG, PNG ou WEBP.');
-      return;
-    }
-    if (arquivo.size > DOCUMENTO_IMAGEM_TAMANHO_MAXIMO_BYTES) {
-      this.erroImagem.set(`Imagem maior que o limite permitido (${TAMANHO_MAXIMO_IMAGEM_MB} MB).`);
-      return;
-    }
-    this.erroImagem.set(null);
-    this.enviandoImagem.set(true);
-    this.documentoService
-      .enviarImagem(documento.id, arquivo)
-      .pipe(finalize(() => this.enviandoImagem.set(false)))
-      .subscribe({
-        next: (resposta) =>
-          this.aplicarNoAberto(resposta.id, {
-            imagemUrl: resposta.imagemUrl,
-            updatedDate: resposta.updatedDate,
-          }),
-        error: (erro: unknown) => {
-          const resposta =
-            erro instanceof HttpErrorResponse ? (erro.error as StandardResponse | null) : null;
-          this.erroImagem.set(resposta?.mensagem ?? 'Não foi possível enviar a imagem.');
-        },
-      });
   }
 
   // ── Internos ────────────────────────────────────────────────────────────────
@@ -589,13 +362,8 @@ export class BibliotecaMestre implements TelaComRascunhoDocumento {
       });
   }
 
-  private sairDaEdicao(): void {
-    this.sequenciaEdicao++;
-    this.avisoImportacao.set(null);
-    this.importandoMarkdown.set(false);
+  protected sairDaEdicao(): void {
     this.editando.set(false);
-    this.conflito.set(false);
-    this.erroImagem.set(null);
   }
 
   /** Resposta de uma escrita do próprio mestre: adota a versão nova no aberto e no resumo. */

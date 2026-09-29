@@ -1,0 +1,143 @@
+<!-- Edição no próprio lugar (m9-04, extraída na m9-13): título, texto ou imagem, conflito e o rodapé
+     Cancelar/Salvar. O host é o `.biblioteca__edicao`. -->
+<app-campo rotulo="Título" [dica]="tituloEditado().length + '/' + tituloMaximo" [erro]="erroTitulo()">
+    <input
+        class="campo__controle"
+        type="text"
+        [formControl]="tituloEdicao"
+        [attr.maxlength]="tituloMaximo"
+        autocomplete="off"
+        required
+    />
+</app-campo>
+
+@if (ehTexto()) {
+    <div class="biblioteca__conteudo-edicao">
+        <span class="biblioteca__rotulo">Conteúdo</span>
+        <app-editor-markdown
+            #editor
+            class="biblioteca__editor"
+            [valor]="conteudoEdicao()"
+            [rotulo]="'Conteúdo do documento'"
+            (valorChange)="conteudoEdicao.set($event)"
+            (focadoChange)="editorFocado.set($event)"
+        />
+        <div class="biblioteca__upload">
+            <button
+                app-botao
+                variante="secundario"
+                tamanho="pequeno"
+                class="biblioteca__acao"
+                type="button"
+                [carregando]="importandoMarkdown()"
+                [disabled]="salvando()"
+                (click)="entradaMarkdown.click()"
+            >
+                <app-icone nome="importar" />
+                Importar Markdown
+            </button>
+            <input
+                #entradaMarkdown
+                type="file"
+                hidden
+                tabindex="-1"
+                accept=".md,.markdown,text/markdown"
+                (change)="aoSelecionarMarkdown($event)"
+            />
+            <span class="biblioteca__dica">
+                {{ conteudoEdicao().length }}/{{ conteudoMaximo }} caracteres
+            </span>
+        </div>
+        @if (avisoImportacao(); as aviso) {
+            <p
+                class="biblioteca__aviso-importacao"
+                [class.biblioteca__erro]="aviso.erro"
+                role="status"
+            >
+                {{ aviso.texto }}
+            </p>
+        }
+    </div>
+} @else {
+    <div class="biblioteca__imagem-edicao">
+        <span class="biblioteca__rotulo">Imagem</span>
+        @if (documento().imagemUrl) {
+            <app-leitor-documento [documento]="documento()" />
+        }
+        <div class="biblioteca__upload">
+            <button
+                app-botao
+                [variante]="documento().imagemUrl ? 'secundario' : 'primario'"
+                tamanho="pequeno"
+                class="biblioteca__acao"
+                type="button"
+                [carregando]="enviandoImagem()"
+                (click)="entradaImagem.click()"
+            >
+                <app-icone nome="imagem" />
+                {{ documento().imagemUrl ? "Trocar imagem" : "Escolher imagem" }}
+            </button>
+            <input
+                #entradaImagem
+                type="file"
+                hidden
+                tabindex="-1"
+                [accept]="mimesAceitos"
+                (change)="aoSelecionarImagem($event)"
+            />
+            <span class="biblioteca__dica">
+                JPEG, PNG ou WEBP, até {{ tamanhoMaximoImagemMb }} MB.
+            </span>
+        </div>
+        @if (erroImagem(); as mensagem) {
+            <p class="biblioteca__erro" role="alert">{{ mensagem }}</p>
+        }
+    </div>
+}
+
+@if (conflito()) {
+    <div class="biblioteca__conflito" role="alert">
+        <app-icone nome="alerta" class="biblioteca__conflito-icone" />
+        <p class="biblioteca__conflito-texto">
+            Este documento foi alterado em outra sessão. Seu rascunho continua aqui — copie o que
+            quiser guardar; "Recarregar" traz a versão atual e descarta o rascunho.
+        </p>
+        <button
+            app-botao
+            variante="aviso"
+            estilo="contorno"
+            tamanho="pequeno"
+            class="biblioteca__acao"
+            type="button"
+            (click)="recarregarVersao()"
+        >
+            <app-icone nome="atualizar" />
+            Recarregar
+        </button>
+    </div>
+}
+
+<footer class="biblioteca__edicao-acoes">
+    <button
+        app-botao
+        variante="secundario"
+        tamanho="pequeno"
+        class="biblioteca__acao"
+        type="button"
+        (click)="cancelar()"
+    >
+        Cancelar
+    </button>
+    <button
+        app-botao
+        variante="primario"
+        tamanho="pequeno"
+        class="biblioteca__acao"
+        type="button"
+        [carregando]="salvando()"
+        [disabled]="conflito() || enviandoImagem() || importandoMarkdown()"
+        (click)="salvar()"
+    >
+        Salvar
+    </button>
+</footer>

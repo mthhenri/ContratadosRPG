@@ -1,5 +1,7 @@
 import { Routes } from '@angular/router';
 
+import { rascunhoDocumentoPainelGuard } from '../documento/rascunho-documento.guard';
+
 /**
  * Rotas privadas do **acervo** de fichas (m3-28), montadas sob `/fichas` pelo `app.routes.ts`
  * atrás do `autenticacaoGuard`. Cada tela é standalone e carregada de forma lazy
@@ -42,6 +44,8 @@ export const fichaAcervoRoutes: Routes = [
   },
   {
     path: ':id',
+    // Rascunho na Biblioteca flutuante do mestre (m9-13).
+    canDeactivate: [rascunhoDocumentoPainelGuard],
     loadComponent: () =>
       import('./paginas/visualizar/visualizar.page').then((modulo) => modulo.FichaVisualizar),
   },

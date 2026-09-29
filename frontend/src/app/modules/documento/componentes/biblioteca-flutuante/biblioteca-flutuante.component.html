@@ -1,5 +1,6 @@
 <!-- Biblioteca em painel flutuante (m9-11): a casca do Caderno (sem gatilho próprio — abre pelo item
-     da coluna de ações) com o corpo da página. Só leitura e busca; o mestre também Revela/Oculta. -->
+     da coluna de ações) com o corpo da página. Leitura e busca; o mestre também Revela/Oculta, cria
+     e edita (m9-13). -->
 <app-painel-flutuante
     #painel="appPainelFlutuante"
     id="biblioteca"
@@ -78,53 +79,100 @@
                     "
                     [vazioApoio]="
                         ehMestre()
-                            ? 'Crie documentos na página da Biblioteca, aberta pelo botão no topo deste painel.'
+                            ? 'Crie cartas, relatórios e imagens para revelar à mesa na hora certa.'
                             : 'O que o mestre revelar aparece aqui ao vivo.'
                     "
                     [painelVazioApoio]="
                         ehMestre()
-                            ? 'Escolha um documento na lista para ler ou revelar à mesa.'
+                            ? 'Escolha um documento na lista para ler, editar ou revelar à mesa.'
                             : 'Escolha um documento na lista para ler.'
                     "
-                    (selecionar)="store.selecionar($event)"
-                    (abrir)="store.abrirDocumento($event)"
-                    (fecharDocumento)="store.fecharDocumento()"
+                    (selecionar)="selecionar($event)"
+                    (abrir)="abrirDocumento($event)"
+                    (fecharDocumento)="fecharDocumento()"
                 >
-                    <!-- Mestre: só Revelar/Ocultar — Editar, Remover, ordem e imagem ficam na página. -->
+                    @if (ehMestre()) {
+                        <button
+                            bibliotecaAcaoLista
+                            app-botao
+                            variante="primario"
+                            tamanho="pequeno"
+                            class="biblioteca-flutuante__acao"
+                            type="button"
+                            [disabled]="store.emOperacao()"
+                            (click)="abrirNovoDocumento()"
+                        >
+                            <app-icone nome="mais" />
+                            Novo documento
+                        </button>
+                    }
+                    <!-- Mestre: Revelar/Ocultar e Editar; com edição aberta, o rodapé dela traz
+                         Cancelar/Salvar. Remover e ordem ficam na página. -->
                     @if (ehMestre()) {
                         <div bibliotecaAcoesDocumento class="biblioteca-flutuante__acoes">
                             @if (store.aberto(); as documento) {
-                                <button
-                                    app-botao
-                                    [variante]="documento.revelado ? 'secundario' : 'primario'"
-                                    tamanho="pequeno"
-                                    class="biblioteca-flutuante__acao"
-                                    type="button"
-                                    [disabled]="
-                                        store.emOperacao() || (!documento.revelado && !podeRevelar())
-                                    "
-                                    (click)="store.alternarRevelacao()"
-                                >
-                                    <app-icone [nome]="documento.revelado ? 'olho-fechado' : 'olho'" />
-                                    {{ documento.revelado ? "Ocultar" : "Revelar" }}
-                                </button>
+                                @if (!store.editando()) {
+                                    <button
+                                        app-botao
+                                        [variante]="documento.revelado ? 'secundario' : 'primario'"
+                                        tamanho="pequeno"
+                                        class="biblioteca-flutuante__acao"
+                                        type="button"
+                                        [disabled]="
+                                            store.emOperacao() ||
+                                            (!documento.revelado && !podeRevelar())
+                                        "
+                                        (click)="store.alternarRevelacao()"
+                                    >
+                                        <app-icone
+                                            [nome]="documento.revelado ? 'olho-fechado' : 'olho'"
+                                        />
+                                        {{ documento.revelado ? "Ocultar" : "Revelar" }}
+                                    </button>
+                                    <button
+                                        app-botao
+                                        variante="secundario"
+                                        tamanho="pequeno"
+                                        class="biblioteca-flutuante__acao"
+                                        type="button"
+                                        [disabled]="store.emOperacao()"
+                                        (click)="store.iniciarEdicao()"
+                                    >
+                                        <app-icone nome="editar" />
+                                        Editar
+                                    </button>
+                                }
                             }
                         </div>
                     }
                     <!-- Sempre projetado: um `@if` em volta ocuparia o slot mesmo falso e o corpo
                          perderia o leitor padrão. -->
-                    <div bibliotecaCorpoDocumento class="biblioteca-flutuante__documento-corpo">
+                    <div
+                        bibliotecaCorpoDocumento
+                        class="biblioteca-flutuante__documento-corpo"
+                        [class.biblioteca-flutuante__documento-corpo--edicao]="store.editando()"
+                    >
                         @if (store.aberto(); as documento) {
-                            @if (ehMestre() && !documento.revelado && !podeRevelar()) {
-                                <p class="biblioteca-flutuante__nota">
-                                    Envie a imagem na página da Biblioteca para poder revelar este
-                                    documento.
-                                </p>
+                            @if (store.editando()) {
+                                <app-documento-edicao
+                                    [documento]="documento"
+                                    [emPainel]="true"
+                                    (salvo)="aoSalvarDocumento($event)"
+                                    (imagemEnviada)="aoEnviarImagem($event)"
+                                    (versaoRecarregada)="aoRecarregarVersao($event)"
+                                    (encerrada)="store.encerrarEdicao()"
+                                />
+                            } @else {
+                                @if (ehMestre() && !documento.revelado && !podeRevelar()) {
+                                    <p class="biblioteca-flutuante__nota">
+                                        Envie a imagem para poder revelar este documento.
+                                    </p>
+                                }
+                                <app-leitor-documento
+                                    class="biblioteca-flutuante__leitor"
+                                    [documento]="documento"
+                                />
                             }
-                            <app-leitor-documento
-                                class="biblioteca-flutuante__leitor"
-                                [documento]="documento"
-                            />
                         }
                     </div>
                 </app-biblioteca-corpo>
@@ -141,3 +189,12 @@
         ></span>
     }
 </app-painel-flutuante>
+
+<!-- Fora da janela: o Escape do dialog não sobe até o painel, que fecharia junto. -->
+@if (criando()) {
+    <app-documento-criar-dialog
+        [campanhaId]="campanhaId()"
+        (criado)="aoCriarDocumento($event)"
+        (fechou)="criando.set(false)"
+    />
+}

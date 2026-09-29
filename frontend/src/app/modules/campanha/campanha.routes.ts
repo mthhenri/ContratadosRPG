@@ -1,5 +1,7 @@
 import { Routes } from '@angular/router';
 
+import { rascunhoDocumentoPainelGuard } from '../documento/rascunho-documento.guard';
+
 /**
  * Rotas privadas do módulo `campanha` (m2-07), montadas sob `/campanhas` pelo `app.routes.ts`
  * atrás do `autenticacaoGuard` (m2-06). Cada tela é standalone e carregada de forma lazy
@@ -15,6 +17,8 @@ export const campanhaRoutes: Routes = [
   },
   {
     path: ':id',
+    // Rascunho na Biblioteca flutuante do mestre (m9-13).
+    canDeactivate: [rascunhoDocumentoPainelGuard],
     loadComponent: () =>
       import('./paginas/detalhe/detalhe-shell.page').then((modulo) => modulo.CampanhaDetalheShell),
   },

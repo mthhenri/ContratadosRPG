@@ -1,5 +1,7 @@
 import { Routes } from '@angular/router';
 
+import { rascunhoDocumentoPainelGuard } from '../documento/rascunho-documento.guard';
+
 /**
  * Rotas do módulo `cena` (m7-23), montadas sob `/campanhas/:campanhaId/cenas` pelo `app.routes.ts`.
  *
@@ -18,6 +20,8 @@ export const cenaRoutes: Routes = [
   },
   {
     path: ':cenaId',
+    // Rascunho na Biblioteca flutuante do mestre (m9-13).
+    canDeactivate: [rascunhoDocumentoPainelGuard],
     loadComponent: () =>
       import('./paginas/painel/painel-cena-shell.page').then((modulo) => modulo.PainelCenaShell),
   },

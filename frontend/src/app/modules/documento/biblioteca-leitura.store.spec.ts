@@ -345,4 +345,100 @@ describe('BibliotecaLeituraStore — painel flutuante (m9-11)', () => {
     expect(tempoReal.entrarSalaCampanha).toHaveBeenCalledTimes(1);
     expect(tempoReal.sairSalaCampanha).toHaveBeenCalledTimes(1);
   });
+
+  // ── Edição no painel (m9-13) ─────────────────────────────────────────────
+
+  const criado = (id: number) => ({
+    ...resumo(id, { titulo: 'Diário' }),
+    conteudoMarkdown: '',
+    createdDate: V1,
+  });
+
+  it('mestre: o criado entra no fim da lista e abre já em edição, informando a leitura', () => {
+    const { store, tempoReal, documentoService } = montar({ mestre: true });
+
+    store.acrescentarCriado(criado(4));
+
+    expect(store.documentos().map((item) => item.id)).toEqual([1, 2, 3, 4]);
+    expect(store.abertoId()).toBe(4);
+    expect(store.aberto()?.titulo).toBe('Diário');
+    expect(store.editando()).toBe(true);
+    expect(documentoService.recuperar).not.toHaveBeenCalled();
+    expect(tempoReal.informarLeitura).toHaveBeenLastCalledWith(CAMPANHA_ID, 4);
+  });
+
+  it('leitura: acrescentarCriado e iniciarEdicao não fazem nada', () => {
+    const { store } = montar();
+    store.acrescentarCriado(criado(4));
+    store.selecionar(1);
+    store.iniciarEdicao();
+
+    expect(store.documentos()).toHaveLength(3);
+    expect(store.editando()).toBe(false);
+  });
+
+  it('mestre: uma lista anterior à criação não fecha o criado em edição', () => {
+    const { store, evento, notificar } = montar({ mestre: true });
+    store.acrescentarCriado(criado(4));
+
+    evento(DocumentoAlteracaoEnum.ALTERADO, 1);
+
+    expect(store.abertoId()).toBe(4);
+    expect(store.editando()).toBe(true);
+    expect(notificar).not.toHaveBeenCalled();
+  });
+
+  it('mestre: com edição, a versão nova do aberto não é recarregada (vale o 409 no salvar)', () => {
+    const { store, documentoService, evento, alterarLista } = montar({ mestre: true });
+    store.selecionar(1);
+    store.iniciarEdicao();
+    documentoService.recuperar.mockClear();
+
+    alterarLista([resumo(1, { updatedDate: V2 }), resumo(2), resumo(3)]);
+    evento(DocumentoAlteracaoEnum.ALTERADO, 1);
+
+    expect(documentoService.recuperar).not.toHaveBeenCalled();
+    expect(store.aberto()?.updatedDate).toBe(V1);
+  });
+
+  it('mestre: com edição, Revelar/Ocultar trava; REMOVIDO fecha e encerra a edição', () => {
+    const { store, documentoService, evento, alterarLista } = montar({ mestre: true });
+    store.selecionar(1);
+    store.iniciarEdicao();
+
+    store.alternarRevelacao();
+    expect(documentoService.revelar).not.toHaveBeenCalled();
+
+    alterarLista([resumo(2), resumo(3)]);
+    evento(DocumentoAlteracaoEnum.REMOVIDO, 1);
+    expect(store.abertoId()).toBeNull();
+    expect(store.editando()).toBe(false);
+  });
+
+  it('mestre: trocar ou fechar o documento encerra a edição', () => {
+    const { store } = montar({ mestre: true });
+    store.selecionar(1);
+    store.iniciarEdicao();
+    store.abrirDocumento(2);
+    expect(store.editando()).toBe(false);
+
+    store.iniciarEdicao();
+    store.fecharDocumento();
+    expect(store.editando()).toBe(false);
+  });
+
+  it('mestre: adotarAberto e aplicarNoAberto levam a versão ao aberto e ao resumo', () => {
+    const { store } = montar({ mestre: true });
+    store.selecionar(1);
+
+    store.adotarAberto({ ...store.aberto()!, titulo: 'Carta', updatedDate: V2 });
+    expect(store.aberto()).toEqual(expect.objectContaining({ titulo: 'Carta', updatedDate: V2 }));
+    expect(store.documentos()[0]).toEqual(
+      expect.objectContaining({ titulo: 'Carta', updatedDate: V2 }),
+    );
+
+    store.aplicarNoAberto(1, { imagemUrl: '/uploads/documentos/a.png', updatedDate: V1 });
+    expect(store.aberto()?.imagemUrl).toBe('/uploads/documentos/a.png');
+    expect(store.documentos()[0].updatedDate).toBe(V1);
+  });
 });

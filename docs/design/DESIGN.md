@@ -519,15 +519,22 @@ os controles do mestre.
   ela fica com 720px em vez de cobrir o item que a fecha. O corpo é o mesmo da página; dentro da
   janela, lista e documento rolam cada um por dentro, e abaixo de **800px de janela**
   (`@container`, a janela é o container) vira as duas vistas do celular — no celular, folha cheia.
-  **No painel só se lê e busca**; o mestre vê os ocultos com o chip de estado e tem **só
-  `Revelar`/`Ocultar`** (mesmo `app-botao` `pequeno`, mesma trava do `IMAGEM` sem arquivo com a
-  nota "Envie a imagem na página da Biblioteca…", mesmo toast) — e o aberto **não** fecha quando ele
-  mesmo oculta. Criar, editar, remover, reordenar e enviar imagem ficam **só na página**, aberta pelo
+  Jogador e espectador só leem e buscam. O mestre vê os ocultos com o chip de estado, alterna
+  `Revelar`/`Ocultar` (mesmo `app-botao` `pequeno`, mesma trava do `IMAGEM` sem arquivo com a nota
+  "Envie a imagem para poder revelar este documento.", mesmo toast) — e o aberto **não** fecha
+  quando ele mesmo oculta — e, desde a `m9-13`, **cria e edita no painel**: "Novo documento"
+  (`app-botao` `primario` `pequeno` + `mais`, a receita do cabeçalho da página) no fim do divisor
+  "Documentos" da lista, também com a lista vazia; abre o mesmo dialog da página, fora da janela.
+  O criado abre já em edição; "Editar" (`secundario` `pequeno`, ao lado de Revelar/Ocultar) reabre
+  a edição, que é o mesmo componente da página (`DocumentoEdicao`) — só que, na janela, o editor
+  estica até o rodapé Cancelar/Salvar ficar no fim dela, sem rolar. Com rascunho, trocar/fechar o
+  documento, criar outro, fechar o painel e sair da tela pedem o "Descartar alterações?" da página;
+  minimizar e maximizar não descartam. Remover e reordenar ficam **só na página**, aberta pelo
   `app-botao-icone` "Abrir página da Biblioteca" do cabeçalho (glifo `biblioteca`, distinto do
   `abrir-externo` do "Abrir em janela" do Caderno). Estados próprios: vazio do mestre "Nenhum
-  documento ainda." / "Crie documentos na página da Biblioteca, aberta pelo botão no topo deste
-  painel." (o do jogador é o da mesa) e erro de carga (`app-estado-vazio` `alerta` + "Tentar
-  novamente", `secundario` `contorno` `pequeno`). Sem presença "N lendo" no painel (só na página).
+  documento ainda." com o apoio da página (o do jogador é o da mesa) e erro de carga
+  (`app-estado-vazio` `alerta` + "Tentar novamente", `secundario` `contorno` `pequeno`). Sem
+  presença "N lendo" no painel (só na página).
 
 ### Acabamento do botão (`ui-19`)
 

@@ -29,6 +29,22 @@
 
 ## Ativos
 
+### P-091 — Editar e cancelar sem mexer pede "Descartar alterações?" em texto gravado por fora do editor · `CONTORNADO` · frontend/documento
+
+- **Sintoma:** na Biblioteca do mestre (página e painel flutuante), abrir um documento `TEXTO` cujo
+  Markdown foi gravado sem quebra de linha final — pela API, pelo cenário de dev, por "Recarregar"
+  depois de uma alteração assim — e clicar Editar → Cancelar sem digitar nada pede "Descartar
+  alterações?". Visto ao vivo na `m9-13`: o editor devolve `"Linha um.\n"`, o documento tem
+  `"Linha um."`.
+- **Causa:** `DocumentoEdicao.haRascunho()` (lógica herdada da `BibliotecaMestre`, `m9-04`) compara o
+  `confirmarValor()` do `EditorMarkdown` com o `conteudoMarkdown` salvo sem normalizar; a
+  serialização do Milkdown sempre termina com `\n`. Texto salvo pelo próprio editor já tem a quebra
+  e não dispara.
+- **Contorno:** confirmar "Descartar" (nada se perde) ou salvar uma vez pelo editor.
+- **Correção:** comparar ignorando a quebra final (ou normalizar ao iniciar a edição), com teste; a
+  mesma dúvida vale para o `salvar()` sem mudança, que hoje grava uma versão só pela quebra.
+- **Desde:** `m9-04`; encontrado na `m9-13` (2026-09-29).
+
 ### P-089 — Caderno flutuante cobre a coluna de ações na tela dividida · `CONTORNADO` · frontend/caderno
 
 - **Sintoma:** em `960×1080` (e em qualquer viewport até ~1200px de largura), abrir o Caderno pela
