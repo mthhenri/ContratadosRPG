@@ -16,6 +16,7 @@ import { TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
 import { LoadingService } from '../../core/services/loading.service';
 import { SessaoService } from '../../core/services/sessao.service';
 import { TopbarContextoService } from '../../core/services/topbar-contexto.service';
+import { VersaoService } from '../../core/services/versao.service';
 import { ConfiguracoesTema } from '../configuracoes-tema/configuracoes-tema.component';
 import { Icone } from '../icone/icone.component';
 import { Marca } from '../marca/marca.component';
@@ -54,6 +55,7 @@ export class Layout {
   protected readonly loadingService = inject(LoadingService);
   protected readonly sessaoService = inject(SessaoService);
   protected readonly topbarContexto = inject(TopbarContextoService);
+  protected readonly versaoService = inject(VersaoService);
   private readonly injector = inject(Injector);
   private readonly router = inject(Router);
   private readonly urlAtual = toSignal(

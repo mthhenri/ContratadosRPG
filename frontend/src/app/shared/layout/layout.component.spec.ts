@@ -3,10 +3,12 @@ import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
+import { VERSAO_SISTEMA } from '@contratados-rpg/shared';
 import { TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
 
 import { TemaService } from '../../core/services/tema.service';
 import { TopbarContextoService } from '../../core/services/topbar-contexto.service';
+import { VersaoService } from '../../core/services/versao.service';
 import { LeitorDocumentosService } from '../leitor-documentos/leitor-documentos.service';
 import { Layout } from './layout.component';
 
@@ -306,6 +308,83 @@ describe('Layout — chrome da topbar (ui-21)', () => {
         .dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })),
     ).not.toThrow();
     fixture.detectChanges();
+    expect(raiz.querySelector('.topbar__perfil-menu')).toBeNull();
+  });
+});
+
+/**
+ * Versão do sistema na topbar (pn-01): chip ao lado da marca (com ponto quando há versão nova) e o
+ * item "Novidades" dentro do menu do perfil (que só aparece no mobile, por CSS). Ambos levam a
+ * `/patchnotes` e valem também deslogado — a página é pública.
+ */
+describe('Layout — versão do sistema (pn-01)', () => {
+  async function montar(autenticado: boolean) {
+    localStorage.clear();
+    if (autenticado) {
+      localStorage.setItem(
+        'contratados-rpg.sessao',
+        JSON.stringify({
+          token: 'token',
+          id: 1,
+          login: 'agente',
+          nome: 'Agente Teste',
+          tipo: TipoUsuarioEnum.NORMAL,
+        }),
+      );
+    }
+    TestBed.configureTestingModule({
+      imports: [Layout],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([{ path: 'patchnotes', children: [] }])],
+    });
+    await TestBed.compileComponents();
+    const fixture = TestBed.createComponent(Layout);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    return { fixture, raiz: fixture.nativeElement as HTMLElement };
+  }
+
+  afterEach(() => {
+    localStorage.clear();
+    document.documentElement.removeAttribute('style');
+  });
+
+  it('mostra o chip com a versão e o link para os patchnotes, mesmo deslogado', async () => {
+    const { raiz } = await montar(false);
+    const chip = raiz.querySelector<HTMLAnchorElement>('.topbar__versao')!;
+
+    expect(chip.textContent?.trim()).toBe(`v${VERSAO_SISTEMA}`);
+    expect(chip.getAttribute('href')).toBe('/patchnotes');
+    expect(chip.getAttribute('aria-label')).toContain(VERSAO_SISTEMA);
+  });
+
+  it('acende o ponto enquanto a versão atual não foi vista e apaga ao marcá-la', async () => {
+    const { fixture, raiz } = await montar(false);
+    expect(raiz.querySelector('.topbar__versao .topbar__versao-ponto')).not.toBeNull();
+
+    TestBed.inject(VersaoService).marcarVista();
+    fixture.detectChanges();
+
+    expect(raiz.querySelector('.topbar__versao .topbar__versao-ponto')).toBeNull();
+  });
+
+  it('põe "Novidades" com a versão no menu do perfil', async () => {
+    const { fixture, raiz } = await montar(true);
+    raiz.querySelector<HTMLButtonElement>('.topbar__perfil-gatilho')!.click();
+    fixture.detectChanges();
+
+    const item = raiz.querySelector<HTMLAnchorElement>('.topbar__perfil-menu .topbar__perfil-versao')!;
+    expect(item.getAttribute('href')).toBe('/patchnotes');
+    expect(item.textContent).toContain('Novidades');
+    expect(item.textContent).toContain(`v${VERSAO_SISTEMA}`);
+  });
+
+  it('fecha o menu do perfil ao seguir para as novidades', async () => {
+    const { fixture, raiz } = await montar(true);
+    raiz.querySelector<HTMLButtonElement>('.topbar__perfil-gatilho')!.click();
+    fixture.detectChanges();
+    raiz.querySelector<HTMLAnchorElement>('.topbar__perfil-versao')!.click();
+    fixture.detectChanges();
+
     expect(raiz.querySelector('.topbar__perfil-menu')).toBeNull();
   });
 });

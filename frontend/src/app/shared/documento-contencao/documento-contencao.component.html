@@ -1,0 +1,46 @@
+<article class="contencao" [attr.aria-labelledby]="idTitulo">
+    <header class="contencao__cabecalho">
+        <span class="contencao__indice" aria-hidden="true">//</span>
+        <span class="contencao__protocolo">PROTOCOLO DE CONTENÇÃO</span>
+        <span class="contencao__regua" aria-hidden="true"></span>
+        <span class="contencao__codigo">{{ codigo() }}</span>
+    </header>
+
+    <div class="contencao__classificacao">{{ classificacao() }}</div>
+
+    <section class="contencao__conteudo">
+        <div class="contencao__fundacao">
+            <app-marca class="contencao__marca" />
+            <div>
+                <span>FUNDAÇÃO // ARQUIVO CENTRAL</span>
+                <strong>{{ setor() }}</strong>
+            </div>
+        </div>
+
+        <p class="contencao__rotulo">{{ rotulo() }}</p>
+        <h1 class="contencao__titulo" [id]="idTitulo">{{ titulo() }}</h1>
+        <p class="contencao__mensagem">{{ mensagem() }}</p>
+        @for (paragrafo of paragrafos(); track $index) {
+            <p>{{ paragrafo }}</p>
+        }
+
+        @if (registro(); as textoRegistro) {
+            <div class="contencao__registro" aria-label="Trecho confidencial censurado">
+                <span>REGISTRO:</span>
+                <span class="contencao__censura" aria-hidden="true">{{ textoRegistro }}</span>
+                <strong>[████ DADOS EXPURGADOS ████]</strong>
+            </div>
+        }
+
+        @for (aviso of avisos(); track $index) {
+            <p class="contencao__aviso">{{ aviso }}</p>
+        }
+    </section>
+
+    <footer class="contencao__rodape">
+        <span>{{ rodape() }}</span>
+        <div class="contencao__acoes">
+            <ng-content select="[acoes]" />
+        </div>
+    </footer>
+</article>

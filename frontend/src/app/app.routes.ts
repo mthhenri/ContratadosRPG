@@ -59,6 +59,12 @@ export const routes: Routes = [
     loadChildren: () =>
       import('./modules/simulacao/simulacao.routes').then((modulo) => modulo.simulacaoRoutes),
   },
+  // Notas de versão públicas, sem login (pn-04). O chip de versão da topbar leva para cá.
+  {
+    path: 'patchnotes',
+    loadChildren: () =>
+      import('./modules/patchnotes/patchnotes.routes').then((modulo) => modulo.patchnotesRoutes),
+  },
   // Rotas públicas de autenticação (login/registro) — m2-06.
   {
     path: '',

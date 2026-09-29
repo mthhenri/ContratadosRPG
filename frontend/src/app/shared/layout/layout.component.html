@@ -10,6 +10,20 @@
         <app-marca class="topbar__logo" />
         <span class="topbar__marca">Contratados<span class="topbar__marca-sufixo">RPG</span></span>
 
+        <a
+            app-botao
+            class="topbar__versao"
+            variante="secundario"
+            estilo="contorno"
+            routerLink="/patchnotes"
+            [attr.aria-label]="'Novidades da versão ' + versaoService.versao"
+        >
+            @if (versaoService.versaoNova()) {
+                <span class="topbar__versao-ponto" aria-hidden="true"></span>
+            }
+            v{{ versaoService.versao }}
+        </a>
+
         @if (topbarContexto.contexto(); as contexto) {
             <span class="topbar__contexto">
                 <span class="topbar__contexto-separador" aria-hidden="true">//</span>
@@ -117,6 +131,24 @@
                             >
                                 <app-icone nome="agente" />
                                 <span>Perfil</span>
+                            </a>
+                            <!-- No mobile o chip de versão sai da barra (falta espaço) — a versão e o caminho
+                 para as novidades moram aqui dentro. -->
+                            <a
+                                app-botao
+                                class="topbar__perfil-item topbar__perfil-versao"
+                                routerLink="/patchnotes"
+                                role="menuitem"
+                                (click)="fecharPerfil()"
+                            >
+                                <app-icone nome="anotacoes" />
+                                <span>Novidades</span>
+                                <span class="topbar__perfil-versao-numero">
+                                    @if (versaoService.versaoNova()) {
+                                        <span class="topbar__versao-ponto" aria-hidden="true"></span>
+                                    }
+                                    v{{ versaoService.versao }}
+                                </span>
                             </a>
                             <!-- No mobile o Tema mora aqui dentro (libera a largura da topbar); no desktop ele fica
                  na barra, ao lado do perfil. -->

@@ -62,6 +62,14 @@
     "secure": false,
     "changeOrigin": true
   },
+  // Patchnotes públicos (pn-03): `GET /patchnote` e `GET /patchnote/:versao`. Regex com o mesmo
+  // boundary de /ficha e /documento — a página é "/patchnotes" (plural), que um prefixo simples
+  // "/patchnote" capturaria por engano e serviria JSON no lugar da tela.
+  "^/patchnote(?:$|[/?])": {
+    "target": "http://localhost:3100",
+    "secure": false,
+    "changeOrigin": true
+  },
   "/usuario": {
     "target": "http://localhost:3100",
     "secure": false,
