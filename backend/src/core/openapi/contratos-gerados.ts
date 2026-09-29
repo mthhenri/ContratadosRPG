@@ -5732,6 +5732,66 @@ export const schemasContratosPublicos = {
         "additionalProperties": false,
         "description": "Item normalizado que pode representar uma página ou anotações de ficha."
     },
+    "PatchnoteResumoDto": {
+        "type": "object",
+        "properties": {
+            "versao": {
+                "type": "string"
+            },
+            "data": {
+                "type": "string",
+                "description": "Data de publicação da versão, `AAAA-MM-DD`."
+            },
+            "titulo": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "versao",
+            "data",
+            "titulo"
+        ],
+        "additionalProperties": false,
+        "description": "Item do índice de versões — só o que a lista precisa, sem o texto da nota."
+    },
+    "PatchnoteRecuperarDto": {
+        "type": "object",
+        "properties": {
+            "versao": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "versao"
+        ],
+        "additionalProperties": false,
+        "description": "Entrada da recuperação de uma nota. Exceção declarada à regra `{ id: number }`: o patchnote não\ntem linha nem id, e a versão (`X.Y.Z`) é a chave natural — quem chega pela URL já a fornece."
+    },
+    "PatchnoteRecuperadoDto": {
+        "type": "object",
+        "properties": {
+            "versao": {
+                "type": "string"
+            },
+            "data": {
+                "type": "string"
+            },
+            "titulo": {
+                "type": "string"
+            },
+            "conteudoMarkdown": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "versao",
+            "data",
+            "titulo",
+            "conteudoMarkdown"
+        ],
+        "additionalProperties": false,
+        "description": "Saída da recuperação — a nota completa, com o Markdown para o leitor renderizar."
+    },
     "RolagemRegistrarDto": {
         "type": "object",
         "properties": {
@@ -7465,6 +7525,22 @@ export const operacoesContratosPublicos = {
         "tag": "Caderno",
         "publica": false,
         "responseSchema": "PaginatedResult<BuscaCampanhaResultadoDto>"
+    },
+    "PatchnoteController_listar": {
+        "controller": "PatchnoteController",
+        "metodo": "get",
+        "caminho": "/patchnote",
+        "tag": "Patchnotes",
+        "publica": true,
+        "responseSchema": "PatchnoteResumoDto[]"
+    },
+    "PatchnoteController_recuperar": {
+        "controller": "PatchnoteController",
+        "metodo": "get",
+        "caminho": "/patchnote/:versao",
+        "tag": "Patchnotes",
+        "publica": true,
+        "responseSchema": "PatchnoteRecuperadoDto"
     },
     "RolagemController_registrar": {
         "controller": "RolagemController",

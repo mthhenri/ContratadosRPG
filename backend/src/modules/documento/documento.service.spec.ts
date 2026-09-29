@@ -80,7 +80,12 @@ describe('DocumentoService', () => {
   let documentoRepositorio: DocumentoRepositorioDublado;
   let campanhaRepositorio: { recuperarMembro: Mock<CampanhaRepository['recuperarMembro']> };
   let transacaoService: { executar: Mock<(operacao: () => Promise<unknown>) => Promise<unknown>> };
-  let armazenamentoProvedor: { salvarImagem: Mock; excluirImagem: Mock };
+  let armazenamentoProvedor: {
+    salvarImagem: Mock;
+    excluirImagem: Mock;
+    lerTexto: Mock;
+    salvarTexto: Mock;
+  };
   let campanhaGateway: {
     emitirDocumentoAlterado: Mock<(evento: DocumentoBibliotecaAlteradaDto, visivelParaMesa: boolean) => void>;
     emitirDocumentoLeitores: Mock<(retrato: DocumentoLeitoresDto) => void>;
@@ -159,6 +164,8 @@ describe('DocumentoService', () => {
     armazenamentoProvedor = {
       salvarImagem: vi.fn().mockResolvedValue({ caminho: '/uploads/documentos/nova.png' }),
       excluirImagem: vi.fn().mockResolvedValue(undefined),
+      lerTexto: vi.fn(),
+      salvarTexto: vi.fn(),
     };
     campanhaGateway = {
       emitirDocumentoAlterado: vi.fn(),

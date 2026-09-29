@@ -107,6 +107,8 @@ describe('EncontroService', () => {
   let armazenamentoProvedor: {
     salvarImagem: ReturnType<typeof vi.fn>;
     excluirImagem: ReturnType<typeof vi.fn>;
+    lerTexto: ReturnType<typeof vi.fn>;
+    salvarTexto: ReturnType<typeof vi.fn>;
   };
   let service: EncontroService;
 
@@ -135,7 +137,12 @@ describe('EncontroService', () => {
       listarFichasParaAlvo: vi.fn().mockResolvedValue([]),
     };
     campanhaGateway = { emitirEncontroAlterado: vi.fn() };
-    armazenamentoProvedor = { salvarImagem: vi.fn(), excluirImagem: vi.fn() };
+    armazenamentoProvedor = {
+      salvarImagem: vi.fn(),
+      excluirImagem: vi.fn(),
+      lerTexto: vi.fn(),
+      salvarTexto: vi.fn(),
+    };
     service = new EncontroService(
       encontroRepositorio as unknown as EncontroRepository,
       campanhaRepositorio as unknown as CampanhaRepository,
