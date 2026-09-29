@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { Knex } from 'knex';
+import { TipoFichaEnum } from '@contratados-rpg/shared/enums';
 import { FichaRepository } from './ficha.repository';
 
 describe('FichaRepository', () => {
@@ -124,5 +125,19 @@ describe('FichaRepository', () => {
 
     const [, parametros] = raw.mock.calls[0] as [string, Record<string, unknown>];
     expect(parametros['imagemFoco']).toBeNull();
+  });
+
+  it('listarVisiveisParaUsuario suspende só a concessão de ficha JOGADOR oculta — posse continua (fix-ficha-oculta-concessao-e-leitura)', async () => {
+    const raw = vi.fn().mockResolvedValue({ rows: [] });
+    const repositorio = new FichaRepository({ raw } as unknown as Knex);
+
+    await repositorio.listarVisiveisParaUsuario({ campanhaId: 3, usuarioId: 42 });
+
+    const [sql, parametros] = raw.mock.calls[0] as [string, Record<string, unknown>];
+    expect(sql).toContain('ficha.usuario_id = :usuarioId');
+    const ramoConcessao = sql.slice(sql.indexOf('OR ('), sql.indexOf('ORDER BY'));
+    expect(ramoConcessao).toContain('FROM usuario_ficha_acesso');
+    expect(ramoConcessao).toContain('AND NOT (COALESCE(ficha.oculta, false) AND tipo_ficha.codigo = :tipoJogador)');
+    expect(parametros).toEqual({ campanhaId: 3, usuarioId: 42, tipoJogador: TipoFichaEnum.JOGADOR });
   });
 });

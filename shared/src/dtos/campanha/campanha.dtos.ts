@@ -49,7 +49,8 @@ export interface CampanhaListarDto {
  * (`MESTRE`/`JOGADOR`), enriquecido para o painel de controle (m2-18): estatísticas agregadas
  * e o recorte de ficha crítica/própria respeitam a mesma regra de visibilidade §14 usada em
  * `FichaRepository.listarVisiveisParaUsuario` (mestre vê todas as fichas da campanha; jogador só
- * as próprias + as concedidas via `usuario_ficha_acesso`).
+ * as próprias + as concedidas via `usuario_ficha_acesso`, concessão suspensa em ficha de jogador
+ * oculta).
  */
 export interface CampanhaResumoDto {
   readonly id: number;

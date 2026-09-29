@@ -1,9 +1,10 @@
-import { Component, computed, effect, inject, input, signal } from '@angular/core';
+import { Component, DestroyRef, computed, effect, inject, input, signal } from '@angular/core';
 
 import { TipoFichaEnum } from '@contratados-rpg/shared/enums';
 import type { FichaCriaturaRecuperadaDto, FichaRecuperadaDto } from '@contratados-rpg/shared/dtos/ficha';
 
 import { SessaoService } from '../../../../core/services/sessao.service';
+import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { CriaturaVisualizacao } from '../criatura-visualizacao/criatura-visualizacao.component';
 import { FichaCampanhaCard } from '../ficha-campanha-card/ficha-campanha-card.component';
 import { FichaEdicaoCriaturaService } from '../../ficha-edicao-criatura.service';
@@ -38,6 +39,8 @@ export class FichaFlutuanteConteudo {
   protected readonly fichaEdicao = inject(FichaEdicaoService);
   protected readonly fichaEdicaoCriatura = inject(FichaEdicaoCriaturaService);
   private readonly fichaRolagemRegistro = inject(FichaRolagemRegistroService);
+  private readonly tempoRealService = inject(TempoRealService);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly alvo = input.required<FichaFlutuanteAlvo>();
   readonly ehMestre = input.required<boolean>();
@@ -66,6 +69,13 @@ export class FichaFlutuanteConteudo {
     effect(() => {
       const alvoAtual = this.alvo();
       this.fichaRolagemRegistro.inicializar(() => alvoAtual.fichaId);
+      // Sala da ficha aberta enquanto esta instância viver (fix-ficha-oculta-concessao-e-leitura):
+      // é por ela que `ficha:acesso-revogado` fecha a janela (`FichaFlutuante`) — nem todo
+      // hospedeiro ingressa (o painel de Iniciativa não assina fichas). Referência contada no
+      // `TempoRealService`, então não derruba a sala que o hospedeiro também usa.
+      this.tempoRealService.conectar();
+      this.tempoRealService.entrarSalaFicha(alvoAtual.fichaId);
+      this.destroyRef.onDestroy(() => this.tempoRealService.sairSalaFicha(alvoAtual.fichaId));
 
       if (alvoAtual.tipo === TipoFichaEnum.JOGADOR) {
         this.fichaEdicao.inicializar(this.fichaJogador, () => alvoAtual.fichaId);

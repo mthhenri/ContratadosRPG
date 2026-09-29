@@ -65,7 +65,7 @@ Causas: `listarVisiveisParaUsuario` 219–227 usa dono OU concessão sem `oculta
 
 A matriz histórica §14 permite concessão; o pedido novo exige ausência. A implementação dessa mudança deve resolver formalmente a precedência antes de corrigir. Não generalizar para criaturas/NPCs nem para ficha avulsa.
 
-Correção encaminhada, com decisão anterior à implementação: [fix-ficha-oculta-concessao-e-leitura](../specs/backlog/fix-ficha-oculta-concessao-e-leitura.spec.md).
+Correção encaminhada, com decisão anterior à implementação: [fix-ficha-oculta-concessao-e-leitura](../specs/done/fix-ficha-oculta-concessao-e-leitura.spec.md) — **corrigido em 2026-09-29**. Decisão do autor: a ocultação **suspende** a concessão (gravada, sem efeito, volta ao exibir), só para ficha de JOGADOR em campanha; registrada em SYSTEM.SPEC §14. Árbitro, listagem, agregado de campanhas, prévias, sala `ficha:<id>` e leitores abertos (coluna do detalhe, ficha flutuante, janela de histórico) observados com REST/WS e Playwright (ver `HISTORY.md`).
 
 ## Decisões e hipóteses pendentes
 

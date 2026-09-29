@@ -318,6 +318,7 @@ export function configurarPainel(opcoes: OpcoesDoPainel = {}) {
     conectado: () => true,
     reconexao: () => 0,
     reconexao$: reconexao$.asObservable(),
+    acessoRevogado$: new Subject<{ fichaId: number; usuarioId: number }>().asObservable(),
     encontroAlterado$,
     cenaAlterada$,
     cenaDocumentoAlterado$,

@@ -209,7 +209,9 @@ rotas, resolvendo `campanhaId` do payload quando a URL não o traz).
 ## usuario_ficha_acesso (M3)
 
 Concessão de **visualização** de uma ficha a outro membro da campanha.
-Dono e mestre não precisam de linha (permissão implícita por papel/posse).
+Dono e mestre não precisam de linha (permissão implícita por papel/posse). Numa ficha de
+`JOGADOR` com `ficha.oculta = true`, a linha continua ativa mas **sem efeito** até a ficha ser
+exibida de novo — ocultar nunca faz soft delete da concessão (SYSTEM.SPEC §14).
 
 ```sql
 CREATE TABLE usuario_ficha_acesso (

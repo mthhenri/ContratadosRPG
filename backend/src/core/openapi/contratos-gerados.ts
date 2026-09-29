@@ -129,7 +129,7 @@ export const schemasContratosPublicos = {
             "alteradoEm"
         ],
         "additionalProperties": false,
-        "description": "Item de listagem — a campanha de que o usuário é membro, com o `papel` dele nela\n(`MESTRE`/`JOGADOR`), enriquecido para o painel de controle (m2-18): estatísticas agregadas\ne o recorte de ficha crítica/própria respeitam a mesma regra de visibilidade §14 usada em\n`FichaRepository.listarVisiveisParaUsuario` (mestre vê todas as fichas da campanha; jogador só\nas próprias + as concedidas via `usuario_ficha_acesso`)."
+        "description": "Item de listagem — a campanha de que o usuário é membro, com o `papel` dele nela\n(`MESTRE`/`JOGADOR`), enriquecido para o painel de controle (m2-18): estatísticas agregadas\ne o recorte de ficha crítica/própria respeitam a mesma regra de visibilidade §14 usada em\n`FichaRepository.listarVisiveisParaUsuario` (mestre vê todas as fichas da campanha; jogador só\nas próprias + as concedidas via `usuario_ficha_acesso`, concessão suspensa em ficha de jogador\noculta)."
     },
     "CampanhaRecuperarDto": {
         "type": "object",

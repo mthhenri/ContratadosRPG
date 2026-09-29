@@ -1,8 +1,13 @@
-import { ChangeDetectionStrategy, Component, ElementRef, computed, input, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, input, signal, viewChild } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { filter } from 'rxjs';
 
+import { SessaoService } from '../../../../core/services/sessao.service';
+import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
+import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
 import { PainelFlutuante } from '../../../../shared/ui/painel-flutuante/painel-flutuante.component';
 import { FichaFlutuanteConteudo } from './ficha-flutuante-conteudo.component';
 import {
@@ -40,6 +45,10 @@ const BREAKPOINT_MOBILE = 560;
   },
 })
 export class FichaFlutuante {
+  private readonly tempoRealService = inject(TempoRealService);
+  private readonly sessaoService = inject(SessaoService);
+  private readonly notificacaoService = inject(NotificacaoService);
+
   readonly ehMestre = input.required<boolean>();
 
   protected readonly aberto = signal(false);
@@ -69,6 +78,36 @@ export class FichaFlutuante {
     ponteiroY: 0,
     geometria: GEOMETRIA_INICIAL_FICHA_FLUTUANTE,
   };
+
+  constructor() {
+    // Revogar ou ocultar tira a leitura por concessão (fix-ficha-oculta-concessao-e-leitura): a
+    // janela fecha como a página completa expulsa (`VisualizarPage.expulsar`). O evento chega pela
+    // sala `ficha:<id>` que a tela hospedeira já ingressou; dono e mestre nunca perdem por aqui.
+    this.tempoRealService.acessoRevogado$
+      .pipe(
+        filter((evento) => {
+          const usuarioId = this.sessaoService.usuario()?.id;
+          const alvoAtual = this.alvo();
+          return (
+            alvoAtual?.fichaId === evento.fichaId &&
+            evento.usuarioId === usuarioId &&
+            alvoAtual.usuarioIdDono !== usuarioId &&
+            !this.ehMestre()
+          );
+        }),
+        takeUntilDestroyed(),
+      )
+      .subscribe({
+        next: () => {
+          this.fechar();
+          this.notificacaoService.notificar({
+            severidade: 'aviso',
+            resumo: 'Acesso revogado',
+            detalhe: 'Seu acesso a esta ficha foi revogado.',
+          });
+        },
+      });
+  }
 
   /**
    * Abre a ficha de `novoAlvo`. Se já houver uma ficha **diferente** aberta, fecha e reabre num

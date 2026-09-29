@@ -289,7 +289,9 @@ Idênticos ao padrão de referência do autor (ver `CONVENTIONS.md`):
 - **Handshake autenticado:** JWT validado na conexão com o mesmo mecanismo do Passport.
 - **Salas:**
   - `ficha:<id>` — entrar exige a mesma permissão de visualização do REST (§14).
-    Evento: `ficha:alterada`.
+    Eventos: `ficha:alterada`, `ficha:acesso-revogado`. Quem perde a leitura (revogação, ou
+    ocultação de ficha de jogador que suspende a concessão) recebe `ficha:acesso-revogado` e é
+    retirado da sala **antes** de o documento alterado ser emitido.
   - `campanha:<id>` — mestre/jogador. Eventos: `ficha:criada`, `ficha:removida-da-campanha`, `membro:entrou`,
     `campanha:membro-papel-alterado`, `campanha:inventario-alterado`, `caderno-esquadrao:*`.
     A sala mistura quem não lê a ficha: nenhum evento de ficha nela identifica ficha oculta ou
@@ -534,7 +536,7 @@ usuario_ficha_acesso        ficha_id FK, usuario_id FK
 
 | Ação | Dono da ficha | Mestre da campanha | Outro membro (`JOGADOR`) | `ESPECTADOR` |
 |---|---|---|---|---|
-| Ver ficha | ✅ | ✅ | só com linha em `usuario_ficha_acesso` | ❌ (sempre, mesmo com concessão) |
+| Ver ficha | ✅ | ✅ | só com linha em `usuario_ficha_acesso` (suspensa se a ficha de jogador estiver oculta) | ❌ (sempre, mesmo com concessão) |
 | Editar ficha | ✅ | ✅ | ❌ | ❌ |
 | Criar ficha de jogador | ✅ (a própria) | ✅ | — | ❌ |
 | Criar criatura/NPC | ❌ | ✅ | — | ❌ |
@@ -548,6 +550,13 @@ usuario_ficha_acesso        ficha_id FK, usuario_id FK
 
 - Criatura e NPC usam o **mesmo mecanismo** de ficha: dono = mestre; invisíveis aos
   jogadores por padrão; reveláveis via `usuario_ficha_acesso`. Sem caso especial.
+- **Ocultação prevalece sobre concessão** (fix-ficha-oculta-concessao-e-leitura): uma ficha de
+  `JOGADOR` vinculada a campanha e marcada `oculta` some para todo terceiro — listagem, leitura
+  direta, prévia do mestre, histórico, agregados da lista de campanhas e sala `ficha:<id>` —
+  mesmo que ele tenha concessão. A concessão **não é apagada**: fica gravada e suspensa, volta a
+  valer sozinha quando a ficha é exibida de novo, e uma concessão feita durante a ocultação só
+  passa a valer depois dela. Dono e mestre mantêm leitura e gestão. Não se aplica a criatura/NPC
+  (nelas a concessão é a própria revelação) nem a ficha solta, sem campanha.
 - Jogador entra na campanha informando `codigo_convite`; entra com papel `JOGADOR`. Desde o m8-01/
   m8-02, o mesmo campo (`codigoConvite`) aceita também `codigo_convite_espectador` — o servidor
   resolve qual dos dois bateu e concede `JOGADOR` ou `ESPECTADOR` (o cliente nunca escolhe o papel).

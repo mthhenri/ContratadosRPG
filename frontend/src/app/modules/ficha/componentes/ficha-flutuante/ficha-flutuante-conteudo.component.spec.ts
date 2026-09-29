@@ -16,6 +16,7 @@ import {
 import type { FichaCriaturaRecuperadaDto, FichaRecuperadaDto } from '@contratados-rpg/shared/dtos/ficha';
 
 import { SessaoService } from '../../../../core/services/sessao.service';
+import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { FichaCampanhaCard } from '../ficha-campanha-card/ficha-campanha-card.component';
 import { FichaService } from '../../ficha.service';
 import { FichaFlutuanteConteudo } from './ficha-flutuante-conteudo.component';
@@ -102,6 +103,7 @@ describe('FichaFlutuanteConteudo', () => {
   ) {
     const recuperarFicha = vi.fn(() => of(fichaJogador));
     const recuperarFichaCriatura = vi.fn(() => of(fichaCriatura));
+    const tempoReal = { conectar: vi.fn(), entrarSalaFicha: vi.fn(), sairSalaFicha: vi.fn() };
     TestBed.configureTestingModule({
       providers: [
         {
@@ -109,6 +111,7 @@ describe('FichaFlutuanteConteudo', () => {
           useValue: { recuperarFicha, recuperarFichaCriatura },
         },
         { provide: SessaoService, useValue: { usuario: () => ({ id: usuarioLogadoId }), autenticado: () => false } },
+        { provide: TempoRealService, useValue: tempoReal },
       ],
     });
 
@@ -116,8 +119,18 @@ describe('FichaFlutuanteConteudo', () => {
     fixture.componentRef.setInput('alvo', alvo);
     fixture.componentRef.setInput('ehMestre', ehMestre);
     fixture.detectChanges();
-    return { fixture, recuperarFicha, recuperarFichaCriatura };
+    return { fixture, recuperarFicha, recuperarFichaCriatura, tempoReal };
   }
+
+  it('ocupa a sala `ficha:<id>` da ficha aberta enquanto vive (revogação chega mesmo sem o hospedeiro assinar)', () => {
+    const { fixture, tempoReal } = montar({ fichaId: 10, tipo: TipoFichaEnum.JOGADOR, usuarioIdDono: 3 }, false);
+    expect(tempoReal.entrarSalaFicha).toHaveBeenCalledWith(10);
+    expect(tempoReal.sairSalaFicha).not.toHaveBeenCalled();
+
+    fixture.destroy();
+
+    expect(tempoReal.sairSalaFicha).toHaveBeenCalledWith(10);
+  });
 
   it('busca `recuperarFicha` e desenha `app-ficha-campanha-card` pro alvo JOGADOR', () => {
     const { fixture, recuperarFicha, recuperarFichaCriatura } = montar(

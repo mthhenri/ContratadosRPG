@@ -506,6 +506,10 @@ export class FichaService {
       ...dto,
       dados: preservarCamposPrivados(fichaEncontrada.dados, dto.dados),
     });
+    if (!fichaEncontrada.oculta && fichaAlterada.oculta) {
+      // O retorno de `alterarFicha` não traz `tipo` (sem o `JOIN`); ele não muda nesta rota.
+      await this.expulsarConcessionariosSuspensos({ ...fichaAlterada, tipo: fichaEncontrada.tipo });
+    }
     this.campanhaGateway.emitirFichaAlterada(fichaAlterada);
     this.emitirRecortesAlterados(fichaEncontrada, fichaAlterada);
     if (
@@ -1372,7 +1376,8 @@ export class FichaService {
 
   /**
    * Garante permissão de **visualização** da ficha (§14): dono (posse), mestre da campanha (papel)
-   * ou membro com concessão ativa em `usuario_ficha_acesso`. Do contrário lança
+   * ou membro com concessão ativa em `usuario_ficha_acesso` — suspensa enquanto a ficha de
+   * `JOGADOR` da campanha estiver oculta (`concessaoSuspensaPorOcultacao`). Do contrário lança
    * `UnauthorizedAccessException`. Devolve `true` quando quem pediu é **só-visualizador**
    * (nem dono, nem mestre) — usado por `recuperarFicha` para decidir se omite
    * `CAMPOS_PRIVADOS_FICHA` (m3-50).
@@ -1418,6 +1423,9 @@ export class FichaService {
       if (membroEncontrado?.papel === TipoCampanhaMembroPapelEnum.MESTRE) {
         return false;
       }
+      if (this.concessaoSuspensaPorOcultacao(ficha)) {
+        throw new UnauthorizedAccessException();
+      }
     } else if (ficha.usuarioId === usuarioId) {
       return false;
     }
@@ -1430,6 +1438,50 @@ export class FichaService {
       throw new UnauthorizedAccessException();
     }
     return true;
+  }
+
+  /**
+   * Precedência da ocultação sobre a concessão (§14, fix-ficha-oculta-concessao-e-leitura): uma
+   * ficha de `JOGADOR` vinculada a campanha e marcada `oculta` não é lida por concessão — a linha
+   * de `usuario_ficha_acesso` continua gravada, só fica **suspensa** até a ficha ser exibida de
+   * novo. Dono e mestre são decididos antes deste teste. Criatura/NPC não entram: nelas a própria
+   * concessão é a revelação. Ficha solta também não: sem campanha, não há esquadrão do qual ocultar.
+   * Mesmo predicado das consultas `FichaRepository.listarVisiveisParaUsuario` e
+   * `CampanhaRepository.listarPorUsuario` (SQL não chama a service).
+   */
+  private concessaoSuspensaPorOcultacao(ficha: FichaRecuperadaDto): boolean {
+    return (
+      ficha.campanhaId !== null &&
+      ficha.oculta &&
+      (ficha.tipo ?? TipoFichaEnum.JOGADOR) === TipoFichaEnum.JOGADOR
+    );
+  }
+
+  /**
+   * Ao ocultar, quem só lia pela concessão perde a leitura na hora: mesmo caminho de
+   * `revogarAcesso` (`ficha:acesso-revogado` + saída da sala `ficha:<id>`), sem apagar a concessão.
+   * Cada concessionário é reavaliado por `avaliarVisibilidadePara` sobre o estado já gravado — a
+   * mesma decisão do REST, nunca uma lista paralela de quem perde. Roda **antes** de
+   * `emitirFichaAlterada`, para o documento recém-ocultado não chegar a quem acabou de perdê-lo.
+   */
+  private async expulsarConcessionariosSuspensos(ficha: FichaRecuperadaDto): Promise<void> {
+    if (!this.concessaoSuspensaPorOcultacao(ficha)) {
+      return;
+    }
+    const acessos = await this.fichaRepositorio.listarAcessos({ fichaId: ficha.id });
+    for (const acesso of acessos) {
+      const mantemLeitura = await this.avaliarVisibilidadePara(ficha, acesso.usuarioId).then(
+        () => true,
+        (erro: unknown) => {
+          if (erro instanceof UnauthorizedAccessException) return false;
+          throw erro;
+        },
+      );
+      if (mantemLeitura) continue;
+      const acessoSuspenso: FichaAcessoRevogadoDto = { fichaId: ficha.id, usuarioId: acesso.usuarioId };
+      this.campanhaGateway.emitirAcessoRevogado(acessoSuspenso);
+      await this.campanhaGateway.expulsarUsuarioDaFicha(acessoSuspenso);
+    }
   }
 
   /**

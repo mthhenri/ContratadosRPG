@@ -245,6 +245,7 @@ describe('CampanhaDetalheJogador', () => {
 
     const fichaAlterada$ = new Subject<unknown>();
     const reconexao$ = new Subject<void>();
+    const acessoRevogado$ = new Subject<{ fichaId: number; usuarioId: number }>();
     const tempoRealService = {
       conectar: vi.fn(),
       entrarSalaCampanha: vi.fn(),
@@ -268,6 +269,7 @@ describe('CampanhaDetalheJogador', () => {
       presencaEsquadraoCaderno$: new Subject().asObservable(),
       reconexao: () => 0,
       reconexao$: reconexao$.asObservable(),
+      acessoRevogado$: acessoRevogado$.asObservable(),
       conectado: () => true,
     };
 
@@ -307,6 +309,7 @@ describe('CampanhaDetalheJogador', () => {
       confirmacaoService,
       navegar,
       reconexao$,
+      acessoRevogado$,
     };
   }
 
@@ -452,6 +455,33 @@ describe('CampanhaDetalheJogador', () => {
     expect(fichaService.recuperarFicha).toHaveBeenCalledWith(3);
     expect(componente['fichaExibidaId']()).toBe(3);
     expect(componente['podeAjustarFichaExibida']()).toBe(false);
+  });
+
+  it('acesso revogado ou suspenso por ocultação tira a ficha do colega da coluna e volta à própria', () => {
+    const { fixture, raiz, acessoRevogado$ } = montar({
+      usuarioId: 2,
+      membros: membrosTres(),
+      fichas: fichasComColegaJogador(),
+    });
+    const componente = fixture.componentInstance;
+    const botaoKane = Array.from(raiz.querySelectorAll<HTMLButtonElement>('.detalhe__equipe-ficha')).find(
+      (botao) => botao.textContent?.includes('Kane'),
+    );
+    botaoKane?.click();
+    fixture.detectChanges();
+    expect(componente['fichaExibidaId']()).toBe(3);
+
+    // Evento de outro usuário ou de outra ficha não mexe na coluna.
+    acessoRevogado$.next({ fichaId: 3, usuarioId: 99 });
+    acessoRevogado$.next({ fichaId: 4, usuarioId: 2 });
+    fixture.detectChanges();
+    expect(componente['fichaExibidaId']()).toBe(3);
+
+    acessoRevogado$.next({ fichaId: 3, usuarioId: 2 });
+    fixture.detectChanges();
+
+    expect(componente['fichaExibidaId']()).toBe(4);
+    expect(componente['fichaExibidaDados']()?.id).toBe(4);
   });
 
   // === P-082: escrita vinculada à origem e leitura imune a resposta antiga

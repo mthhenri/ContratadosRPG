@@ -26,6 +26,7 @@ import type {
   FichaVitalidadeInternoAlterarDto,
   FichaVisiveisInternoListarDto,
 } from '@contratados-rpg/shared/dtos/ficha';
+import { TipoFichaEnum } from '@contratados-rpg/shared/enums';
 import { BaseRepository } from '../../core/base/base.repository';
 import { KNEX_CONNECTION } from '../../database/database.provider';
 
@@ -207,7 +208,9 @@ export class FichaRepository extends BaseRepository {
   /**
    * Lista as fichas da campanha **visíveis** a um membro comum (§14): as do próprio dono ou as
    * concedidas por `usuario_ficha_acesso`. Mesmo recorte resumido de `listarPorCampanha`; a
-   * concessão é conferida por `EXISTS` sobre `usuario_ficha_acesso` (ativo). Ordena por nome.
+   * concessão é conferida por `EXISTS` sobre `usuario_ficha_acesso` (ativo) e fica suspensa numa
+   * ficha de `JOGADOR` oculta (mesmo predicado de `FichaService.concessaoSuspensaPorOcultacao`;
+   * a campanha já é garantida pelo `WHERE`). Ordena por nome.
    */
   async listarVisiveisParaUsuario(dto: FichaVisiveisInternoListarDto): Promise<FichaResumoInternoDto[]> {
     return this.executarConsulta<FichaResumoInternoDto>(
@@ -218,15 +221,18 @@ export class FichaRepository extends BaseRepository {
        WHERE ficha.campanha_id = :campanhaId AND ficha.is_deleted = false
          AND (
            ficha.usuario_id = :usuarioId
-           OR EXISTS (
-             SELECT 1 FROM usuario_ficha_acesso
-             WHERE usuario_ficha_acesso.ficha_id = ficha.id
-               AND usuario_ficha_acesso.usuario_id = :usuarioId
-               AND usuario_ficha_acesso.is_deleted = false
+           OR (
+             EXISTS (
+               SELECT 1 FROM usuario_ficha_acesso
+               WHERE usuario_ficha_acesso.ficha_id = ficha.id
+                 AND usuario_ficha_acesso.usuario_id = :usuarioId
+                 AND usuario_ficha_acesso.is_deleted = false
+             )
+             AND NOT (COALESCE(ficha.oculta, false) AND tipo_ficha.codigo = :tipoJogador)
            )
          )
        ORDER BY ficha.nome ASC`,
-      { campanhaId: dto.campanhaId, usuarioId: dto.usuarioId },
+      { campanhaId: dto.campanhaId, usuarioId: dto.usuarioId, tipoJogador: TipoFichaEnum.JOGADOR },
     );
   }
 

@@ -199,6 +199,7 @@ describe('CampanhaPreviaJogador', () => {
       sairSalaFicha: vi.fn(),
       rolagemRegistrada$: rolagemRegistrada$.asObservable(),
       rolagemExcluida$: new Subject().asObservable(),
+      acessoRevogado$: new Subject().asObservable(),
       fichaCriada$: new Subject().asObservable(),
       membroEntrou$: membroEntrou$.asObservable(),
       fichaVisibilidadeAlterada$: new Subject().asObservable(),

@@ -22,4 +22,4 @@ Rolagens públicas, biblioteca, histórico de cenas e censura de texto livre. N�
 
 ## Dependências
 
-Contrato do autor na auditoria; SYSTEM.SPEC §14; skill tempo-real. Resolver a precedência de concessão em [fix-ficha-oculta-concessao-e-leitura](fix-ficha-oculta-concessao-e-leitura.spec.md) antes de validar o cenário com concessão anterior. A remoção de oculta sem concessão já é requisito aprovado; não depende de D-01/D-02.
+Contrato do autor na auditoria; SYSTEM.SPEC §14; skill tempo-real. Resolver a precedência de concessão em [fix-ficha-oculta-concessao-e-leitura](../done/fix-ficha-oculta-concessao-e-leitura.spec.md) antes de validar o cenário com concessão anterior. A remoção de oculta sem concessão já é requisito aprovado; não depende de D-01/D-02.

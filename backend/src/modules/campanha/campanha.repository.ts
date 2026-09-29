@@ -33,7 +33,7 @@ import type {
   CampanhaResumoDto,
 } from '@contratados-rpg/shared/dtos/campanha';
 import type { UsuarioRecuperarDto } from '@contratados-rpg/shared/dtos/usuario';
-import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
+import { TipoCampanhaMembroPapelEnum, TipoFichaEnum } from '@contratados-rpg/shared/enums';
 import { BaseRepository } from '../../core/base/base.repository';
 import { KNEX_CONNECTION } from '../../database/database.provider';
 
@@ -114,7 +114,8 @@ export class CampanhaRepository extends BaseRepository {
    *
    * - `membros_agregado`: `COUNT` de `campanha_membro` ativo da campanha → `totalMembros`.
    * - `fichas_agregado`: fichas **visíveis ao usuário atual** (mestre vê todas; jogador só as
-   *   próprias + as concedidas via `usuario_ficha_acesso` — mesmo critério de
+   *   próprias + as concedidas via `usuario_ficha_acesso`, concessão suspensa em ficha de
+   *   `JOGADOR` oculta — mesmo critério de
    *   `FichaRepository.listarVisiveisParaUsuario`, replicado aqui porque isto é agregação, não
    *   listagem) → `totalFichas`, `temFichaCritica` (`BOOL_OR` de Vida atual ≤ 0) e
    *   `fichaCriticaNome` (`MIN(nome) FILTER`, equivalente a "primeira ordenada por nome" já que
@@ -178,11 +179,22 @@ export class CampanhaRepository extends BaseRepository {
            AND (
              tipo_campanha_membro_papel.codigo = :papelMestre
              OR ficha.usuario_id = campanha_membro.usuario_id
-             OR EXISTS (
-               SELECT 1 FROM usuario_ficha_acesso
-               WHERE usuario_ficha_acesso.ficha_id = ficha.id
-                 AND usuario_ficha_acesso.usuario_id = campanha_membro.usuario_id
-                 AND usuario_ficha_acesso.is_deleted = false
+             OR (
+               EXISTS (
+                 SELECT 1 FROM usuario_ficha_acesso
+                 WHERE usuario_ficha_acesso.ficha_id = ficha.id
+                   AND usuario_ficha_acesso.usuario_id = campanha_membro.usuario_id
+                   AND usuario_ficha_acesso.is_deleted = false
+               )
+               AND NOT (
+                 COALESCE(ficha.oculta, false)
+                 AND EXISTS (
+                   SELECT 1 FROM tipo_ficha
+                   WHERE tipo_ficha.id = ficha.tipo_ficha_id
+                     AND tipo_ficha.codigo = :tipoJogador
+                     AND tipo_ficha.is_deleted = false
+                 )
+               )
              )
            )
        ) fichas_agregado ON true
@@ -203,6 +215,7 @@ export class CampanhaRepository extends BaseRepository {
         usuarioId: dto.usuarioId,
         papelMestre: TipoCampanhaMembroPapelEnum.MESTRE,
         papelJogador: TipoCampanhaMembroPapelEnum.JOGADOR,
+        tipoJogador: TipoFichaEnum.JOGADOR,
       },
     );
   }

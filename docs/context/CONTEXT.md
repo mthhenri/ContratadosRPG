@@ -2,9 +2,10 @@
 
 > **Auditoria de ficha oculta em andamento:** [matriz e evidências](../auditorias/ficha-oculta-todos-consumidores.md).
 > Spec em `active/`, exclusivamente investigativa. Três divergências confirmadas viraram specs
-> de correção; a de eventos (FO-02) está feita, encontro e concessão/leitura seguem em backlog.
-> Faltam cenários ao vivo após restabelecer a API: revogação/reconexão, prévias, leitor/cache e
-> observação em 1920×1080/360×800. Decisões de rolagem pública, médias e concessão no relatório.
+> de correção; eventos (FO-02) e concessão/leitura (FO-03) estão feitas, identidade no encontro
+> (FO-01, `P-090`) segue em backlog. Regra decidida: ocultar ficha de jogador **suspende** a
+> concessão (SYSTEM.SPEC §14). Seguem abertas as decisões de rolagem pública (D-01) e médias (D-02)
+> e a hipótese de URL de avatar já conhecida (H-02).
 
 > **Requests — revisão de 2026-09-26 fechada:** as seis tasks do guarda-chuva
 > [requests-correcoes](../specs/done/requests-correcoes.spec.md) (`p-082`…`p-086` +

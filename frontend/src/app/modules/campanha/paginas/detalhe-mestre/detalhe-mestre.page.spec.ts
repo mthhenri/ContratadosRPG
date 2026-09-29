@@ -191,6 +191,7 @@ describe('CampanhaDetalheMestre', () => {
       fichaRemovidaDaCampanha$: new Subject().asObservable(),
       rolagemRegistrada$: new Subject().asObservable(),
       rolagemExcluida$: new Subject().asObservable(),
+      acessoRevogado$: new Subject().asObservable(),
       estadoAlterado$: estadoAlterado$.asObservable(),
       inventarioAlterado$: new Subject().asObservable(),
       paginaEsquadraoCriada$: new Subject().asObservable(),

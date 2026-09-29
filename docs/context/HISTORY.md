@@ -1,5 +1,62 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-29 — fix-ficha-oculta-concessao-e-leitura: ocultar suspende a concessão
+
+Origem: FO-03 da auditoria de ficha oculta. Uma ficha de jogador oculta com concessão ativa
+aparecia para o concessionário na listagem, no GET direto, nas prévias, no histórico e na sala
+`ficha:<id>`, enquanto a carteirinha de membros já a escondia. A spec exigia uma decisão de
+política antes do código. **Decisão do autor:** a ocultação **suspende** a concessão. A linha de
+`usuario_ficha_acesso` fica gravada e sem efeito, volta a valer ao exibir a ficha, e uma
+concessão feita durante a ocultação só vale depois dela. O escopo é só ficha de `JOGADOR` em
+campanha: criatura/NPC (onde a concessão é a revelação) e ficha solta ficam como estavam.
+Registrada em SYSTEM.SPEC §14 (matriz + regra fundamental), §9 (sala `ficha:<id>`) e `SCHEMA.md`.
+
+Backend: o árbitro `FichaService.avaliarVisibilidadePara` nega a concessão depois de decidir
+dono/mestre (`concessaoSuspensaPorOcultacao`). O mesmo predicado entrou nas duas consultas que não
+passam pela service: `FichaRepository.listarVisiveisParaUsuario` (lista, prévia, fichas visíveis
+do encontro) e o agregado de `CampanhaRepository.listarPorUsuario` (total, ficha crítica, última
+alteração). Todos os outros consumidores já passavam por esses três pontos (GET direto, criatura,
+histórico por ficha, prévia direta, `ficha:entrar` e reconexão). Ao ocultar, `alterarFicha`
+reavalia cada concessionário pelo árbitro sobre o estado gravado e, a quem perdeu, faz o mesmo
+caminho da revogação (`ficha:acesso-revogado` + saída da sala), **antes** de `emitirFichaAlterada`,
+para o documento recém-ocultado não chegar a quem o perdeu. Nada é revogado no banco.
+
+Frontend: só a página completa (`VisualizarPage`) reagia a `ficha:acesso-revogado`. Três leitores
+abertos também passaram a reagir. A coluna "Ver ficha" do detalhe do jogador volta à própria
+ficha; na prévia usa o id do alvo. A ficha flutuante fecha com o mesmo toast de `VisualizarPage`,
+e seu conteúdo passou a entrar na sala da ficha aberta, porque o painel de Iniciativa não ingressa
+em salas de ficha. A janela de histórico cai no estado negado, com o título neutralizado, e
+descarta a página que ainda estava em voo. Respostas atrasadas na coluna já eram descartadas
+pela trava de id existente (P-082). Isso vale também para a revogação explícita, que antes deixava
+esses leitores abertos. Não houve mudança de layout nem controle novo; os estados usados são os já
+existentes.
+
+Testes: backend 827 (+1 skip): árbitro (concessionário negado sem consultar nem apagar a concessão,
+tipo ausente = JOGADOR, dono/mestre mantidos, volta ao exibir, criatura e ficha solta
+inalteradas, prévia calculada como o alvo), expulsão em ordem `revogado → expulso → alterada`, sem
+expulsar mestre com concessão legada nem em edição de ficha já oculta, e SQL das duas consultas.
+Shared 773. Frontend 2572: três leitores novos com eventos de outro usuário/ficha ignorados, dono
+e mestre nunca fechados; dublês de `TempoRealService` de oito telas hospedeiras ganharam
+`acessoRevogado$`. Lint: 0 erros (avisos preexistentes); um erro de lint do próprio spec foi
+corrigido. `tsc` do backend acusa erros de tipo preexistentes em specs fora do escopo e numa
+linha antiga de `ficha.service.spec.ts`; os que esta tarefa introduziu foram corrigidos. O
+OpenAPI foi regenerado (só a descrição de `CampanhaResumoDto`).
+
+Verificação ao vivo (skill `verify`, API 3100/SPA 4300 do autor, contas novas `verifica_oculta_*`
+e `ui_oculta_*`): **35/35** checagens REST/WS com M, A, B, C e S. Com B no socket da ficha,
+ocultar entregou `ficha:acesso-revogado` e **nenhum** `ficha:alterada`, nem na edição seguinte. Na
+ficha oculta, lista, GET, histórico, total de campanhas, membros, números do encontro,
+`ficha:entrar` no mesmo socket e num socket novo (reconexão), e prévia M→B em lista e ficha direta
+negam ou excluem. Dono e mestre continuam lendo, a prévia M→A também, S sempre nega e a concessão
+de B continua listada. Uma concessão dada a C durante a ocultação só vale ao exibir. Desocultar
+devolve tudo a B e a C, e uma revogação explícita não volta ao ocultar/desocultar. Playwright
+em `1920×1080` e `360×800` (**26/26**). Análogos: `VisualizarPage.expulsar` (toast), a própria
+coluna do jogador e o estado negado existente da janela. Os três leitores trocam de estado sem
+recarregar, sem overflow e sem erro de página. Inspeção das capturas pegou o título "Ficha de
+<nome>" que sobrava no cabeçalho da janela negada, e ele foi neutralizado. **Fora do escopo e
+visível nas capturas:** o cartão "Não revelado" do combate ainda mostra o nome (FO-01, `P-090`) e a
+rolagem pública leva o nome da ficha (D-01).
+
 ## 2026-09-29 — fix-documentos-investigacao-selecao-e-leitura: foco alternável e leitores consistentes
 
 O segundo clique no documento focado da Investigação agora limpa o foco persistido e o leitor,

@@ -66,6 +66,17 @@
 
 ## Abertas
 
+### I-040 — Tela de acessos mostrar concessão suspensa pela ocultação · frontend/ficha
+
+- **Ideia:** na lista "Acesso de visualização" do dono/mestre, marcar como "suspensa" a concessão
+  de uma ficha de jogador oculta, em vez de listá-la igual a uma concessão efetiva.
+- **Origem:** `fix-ficha-oculta-concessao-e-leitura` (2026-09-29) — a concessão passou a ficar
+  gravada e sem efeito enquanto a ficha está oculta; a spec não pedia mudança na tela de acessos.
+- **Por quê:** hoje o dono vê "B tem acesso" enquanto B, na prática, não lê nada; pode achar que
+  revogar é necessário ou que a ocultação não funcionou.
+- **Custo aparente:** baixo — selo/nota no item quando `ficha.oculta`, sem mudança de contrato
+  (o front já sabe se a ficha exibida está oculta).
+
 ### I-039 — Salas e presença compartilhadas entre instâncias do backend · tempo real/infra
 
 - **Ideia:** se o backend passar a rodar em mais de uma instância, trocar o estado de tempo real

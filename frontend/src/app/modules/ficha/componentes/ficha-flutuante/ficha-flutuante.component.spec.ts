@@ -1,10 +1,12 @@
 import { TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { Subject, of } from 'rxjs';
 
 import { ClasseEnum, TipoFichaEnum } from '@contratados-rpg/shared/enums';
-import type { FichaRecuperadaDto } from '@contratados-rpg/shared/dtos/ficha';
+import type { FichaAcessoRevogadoDto, FichaRecuperadaDto } from '@contratados-rpg/shared/dtos/ficha';
 
 import { SessaoService } from '../../../../core/services/sessao.service';
+import { TempoRealService } from '../../../../core/services/tempo-real.service';
+import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
 import { FichaService } from '../../ficha.service';
 import { FichaFlutuante } from './ficha-flutuante.component';
 import type { FichaFlutuanteAlvo } from './ficha-flutuante.model';
@@ -39,26 +41,78 @@ describe('FichaFlutuante', () => {
     },
   } as unknown as FichaRecuperadaDto;
 
-  function montar() {
+  function montar(ehMestre = true) {
     // `app-painel-flutuante` persiste posição/minimizado em `localStorage` por `[id]`
     // ("ficha-flutuante") — sem isso, um teste anterior que minimiza vazaria o estado para o
     // próximo (P-058).
     localStorage.clear();
     const recuperarFicha = vi.fn(() => of(fichaJogador));
+    const acessoRevogado$ = new Subject<FichaAcessoRevogadoDto>();
+    const notificar = vi.fn();
     TestBed.configureTestingModule({
       providers: [
         { provide: FichaService, useValue: { recuperarFicha } },
+        {
+          provide: TempoRealService,
+          useValue: {
+            conectar: vi.fn(),
+            entrarSalaFicha: vi.fn(),
+            sairSalaFicha: vi.fn(),
+            acessoRevogado$: acessoRevogado$.asObservable(),
+          },
+        },
+        { provide: NotificacaoService, useValue: { notificar } },
         { provide: SessaoService, useValue: { usuario: () => ({ id: 7 }), autenticado: () => false } },
       ],
     });
     const fixture = TestBed.createComponent(FichaFlutuante);
-    fixture.componentRef.setInput('ehMestre', true);
+    fixture.componentRef.setInput('ehMestre', ehMestre);
     fixture.detectChanges();
-    return { fixture, recuperarFicha };
+    return { fixture, recuperarFicha, acessoRevogado$, notificar };
   }
 
   const alvoA: FichaFlutuanteAlvo = { fichaId: 10, tipo: TipoFichaEnum.JOGADOR, usuarioIdDono: 7 };
   const alvoB: FichaFlutuanteAlvo = { fichaId: 11, tipo: TipoFichaEnum.JOGADOR, usuarioIdDono: 7 };
+
+  it('fecha e avisa quando a leitura por concessão é revogada ou suspensa por ocultação', () => {
+    const { fixture, acessoRevogado$, notificar } = montar(false);
+    const alvoColega: FichaFlutuanteAlvo = { fichaId: 10, tipo: TipoFichaEnum.JOGADOR, usuarioIdDono: 3 };
+    fixture.componentInstance.abrir(alvoColega);
+    fixture.detectChanges();
+    const janela = () =>
+      (fixture.nativeElement as HTMLElement).querySelector('.painel-flutuante__janela');
+
+    acessoRevogado$.next({ fichaId: 10, usuarioId: 99 });
+    acessoRevogado$.next({ fichaId: 11, usuarioId: 7 });
+    fixture.detectChanges();
+    expect(janela()).not.toBeNull();
+
+    acessoRevogado$.next({ fichaId: 10, usuarioId: 7 });
+    fixture.detectChanges();
+
+    expect(janela()).toBeNull();
+    expect(notificar).toHaveBeenCalledWith(expect.objectContaining({ resumo: 'Acesso revogado' }));
+  });
+
+  it('o mestre nunca é fechado pelo evento de revogação', () => {
+    const { fixture, acessoRevogado$, notificar } = montar(true);
+    fixture.componentInstance.abrir({ fichaId: 10, tipo: TipoFichaEnum.JOGADOR, usuarioIdDono: 3 });
+    fixture.detectChanges();
+    acessoRevogado$.next({ fichaId: 10, usuarioId: 7 });
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).querySelector('.painel-flutuante__janela')).not.toBeNull();
+    expect(notificar).not.toHaveBeenCalled();
+  });
+
+  it('o dono da ficha aberta nunca é fechado pelo evento de revogação', () => {
+    const { fixture, acessoRevogado$, notificar } = montar(false);
+    fixture.componentInstance.abrir(alvoA);
+    fixture.detectChanges();
+    acessoRevogado$.next({ fichaId: 10, usuarioId: 7 });
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).querySelector('.painel-flutuante__janela')).not.toBeNull();
+    expect(notificar).not.toHaveBeenCalled();
+  });
 
   it('fica fechada até `abrir()` ser chamado', () => {
     const { fixture } = montar();

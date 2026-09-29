@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { Knex } from 'knex';
-import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
+import { TipoCampanhaMembroPapelEnum, TipoFichaEnum } from '@contratados-rpg/shared/enums';
 import { CampanhaRepository } from './campanha.repository';
 
 describe('CampanhaRepository', () => {
@@ -150,5 +150,19 @@ describe('CampanhaRepository', () => {
     expect(sql).toContain('WHERE campanha_id = :campanhaId AND usuario_id = :usuarioId AND is_deleted = false');
     expect(parametros).toEqual({ campanhaId: 3, usuarioId: 42, papel: TipoCampanhaMembroPapelEnum.ESPECTADOR });
     expect(resultado).toEqual({ campanhaId: 3, usuarioId: 42, papel: TipoCampanhaMembroPapelEnum.ESPECTADOR });
+  });
+
+  it('listarPorUsuario suspende a concessão de ficha JOGADOR oculta no agregado (fix-ficha-oculta-concessao-e-leitura)', async () => {
+    const raw = vi.fn().mockResolvedValue({ rows: [] });
+    const repositorio = new CampanhaRepository({ raw } as unknown as Knex);
+
+    await repositorio.listarPorUsuario({ usuarioId: 42 });
+
+    const [sql, parametros] = raw.mock.calls[0] as [string, Record<string, unknown>];
+    const ramoConcessao = sql.slice(sql.indexOf('FROM usuario_ficha_acesso'), sql.indexOf(') fichas_agregado'));
+    expect(ramoConcessao).toContain('AND NOT (');
+    expect(ramoConcessao).toContain('COALESCE(ficha.oculta, false)');
+    expect(ramoConcessao).toContain('tipo_ficha.codigo = :tipoJogador');
+    expect(parametros['tipoJogador']).toBe(TipoFichaEnum.JOGADOR);
   });
 });

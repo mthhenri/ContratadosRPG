@@ -289,7 +289,7 @@ describe('FichaService', () => {
       recuperarAcesso: vi.fn(),
       concederAcesso: vi.fn(),
       revogarAcesso: vi.fn(),
-      listarAcessos: vi.fn(),
+      listarAcessos: vi.fn().mockResolvedValue([]),
       alterarFicha: vi.fn(),
       alterarVitalidade: vi.fn(),
       alterarImagem: vi.fn(),
@@ -1562,6 +1562,109 @@ describe('FichaService', () => {
       );
     });
 
+    describe('ficha de JOGADOR oculta suspende a concessão (fix-ficha-oculta-concessao-e-leitura)', () => {
+      const fichaOculta: FichaRecuperadaDto = {
+        ...fichaPersistida,
+        oculta: true,
+        tipo: TipoFichaEnum.JOGADOR,
+      };
+
+      it('nega o concessionário sem consultar nem apagar a concessão', async () => {
+        fichaRepositorio.recuperarPorId.mockResolvedValue(fichaOculta);
+        campanhaRepositorio.recuperarMembro.mockResolvedValue({
+          papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+        });
+        fichaRepositorio.recuperarAcesso.mockResolvedValue({ id: 1 });
+
+        await expect(service.recuperarFicha({ id: 5 }, usuarioMembro)).rejects.toThrow(
+          UnauthorizedAccessException,
+        );
+        expect(fichaRepositorio.recuperarAcesso).not.toHaveBeenCalled();
+        expect(fichaRepositorio.revogarAcesso).not.toHaveBeenCalled();
+      });
+
+      it('trata tipo ausente como JOGADOR', async () => {
+        fichaRepositorio.recuperarPorId.mockResolvedValue({ ...fichaOculta, tipo: undefined });
+        campanhaRepositorio.recuperarMembro.mockResolvedValue({
+          papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+        });
+        fichaRepositorio.recuperarAcesso.mockResolvedValue({ id: 1 });
+
+        await expect(service.recuperarFicha({ id: 5 }, usuarioMembro)).rejects.toThrow(
+          UnauthorizedAccessException,
+        );
+      });
+
+      it('mantém a leitura completa do dono e do mestre', async () => {
+        fichaRepositorio.recuperarPorId.mockResolvedValue(fichaOculta);
+        campanhaRepositorio.recuperarMembro.mockResolvedValue({
+          papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+        });
+        expect(await service.recuperarFicha({ id: 5 }, usuarioDono)).toBe(fichaOculta);
+
+        campanhaRepositorio.recuperarMembro.mockResolvedValue({
+          papel: TipoCampanhaMembroPapelEnum.MESTRE,
+        });
+        expect(await service.recuperarFicha({ id: 5 }, usuarioMestre)).toBe(fichaOculta);
+      });
+
+      it('a concessão volta a valer quando a ficha é exibida de novo', async () => {
+        fichaRepositorio.recuperarPorId.mockResolvedValue({ ...fichaOculta, oculta: false });
+        campanhaRepositorio.recuperarMembro.mockResolvedValue({
+          papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+        });
+        fichaRepositorio.recuperarAcesso.mockResolvedValue({ id: 1 });
+
+        const resultado = await service.recuperarFicha({ id: 5 }, usuarioMembro);
+
+        expect(resultado.id).toBe(5);
+      });
+
+      it('não altera criatura/NPC: nelas a concessão é a própria revelação', async () => {
+        fichaRepositorio.recuperarPorId.mockResolvedValue({
+          ...fichaOculta,
+          usuarioId: usuarioMestre.sub,
+          tipo: TipoFichaEnum.CRIATURA,
+        });
+        campanhaRepositorio.recuperarMembro.mockResolvedValue({
+          papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+        });
+        fichaRepositorio.recuperarAcesso.mockResolvedValue({ id: 1 });
+
+        const resultado = await service.recuperarFicha({ id: 5 }, usuarioMembro);
+
+        expect(resultado.id).toBe(5);
+      });
+
+      it('não altera ficha solta: sem campanha, a concessão explícita continua valendo', async () => {
+        fichaRepositorio.recuperarPorId.mockResolvedValue({ ...fichaOculta, campanhaId: null });
+        fichaRepositorio.recuperarAcesso.mockResolvedValue({ id: 1 });
+
+        const resultado = await service.recuperarFicha({ id: 5 }, usuarioMembro);
+
+        expect(resultado.id).toBe(5);
+      });
+
+      it('prévia do mestre calcula como o alvo: concessionário não recebe a oculta', async () => {
+        fichaRepositorio.recuperarPorId.mockResolvedValue(fichaOculta);
+        campanhaRepositorio.recuperarMembro.mockImplementation((dto: { usuarioId: number }) =>
+          Promise.resolve(
+            dto.usuarioId === usuarioMestre.sub
+              ? { papel: TipoCampanhaMembroPapelEnum.MESTRE }
+              : { papel: TipoCampanhaMembroPapelEnum.JOGADOR },
+          ),
+        );
+        fichaRepositorio.recuperarAcesso.mockResolvedValue({ id: 1 });
+
+        await expect(
+          service.recuperarFichaParaAlvo({ fichaId: 5, usuarioAlvoId: usuarioMembro.sub }, usuarioMestre),
+        ).rejects.toThrow(UnauthorizedAccessException);
+        await expect(
+          service.recuperarFichaParaAlvo({ fichaId: 5, usuarioAlvoId: usuarioDono.sub }, usuarioMestre),
+        ).resolves.toBe(fichaOculta);
+      });
+    });
+
     describe('ficha solta no acervo (m3-28 — campanhaId null)', () => {
       const fichaSolta: FichaRecuperadaDto = { ...fichaPersistida, campanhaId: null };
 
@@ -1728,6 +1831,84 @@ describe('FichaService', () => {
   });
 
   describe('alterarFicha', () => {
+    describe('ocultar suspende concessões e expulsa os leitores (fix-ficha-oculta-concessao-e-leitura)', () => {
+      const fichaVisivel: FichaRecuperadaDto = { ...fichaPersistida, tipo: TipoFichaEnum.JOGADOR };
+
+      beforeEach(() => {
+        campanhaRepositorio.recuperarMembro.mockImplementation((dto: { usuarioId: number }) =>
+          Promise.resolve(
+            dto.usuarioId === usuarioMestre.sub
+              ? { papel: TipoCampanhaMembroPapelEnum.MESTRE }
+              : { papel: TipoCampanhaMembroPapelEnum.JOGADOR },
+          ),
+        );
+        fichaRepositorio.listarAcessos.mockResolvedValue([
+          { usuarioId: usuarioMembro.sub, nome: 'Agente Novato' },
+          // Linha legada de concessão ao mestre: ele continua lendo pelo papel, não é expulso.
+          { usuarioId: usuarioMestre.sub, nome: 'Mestre' },
+        ]);
+      });
+
+      it('expulsa só quem perdeu a leitura, antes de emitir o documento alterado, sem revogar', async () => {
+        fichaRepositorio.recuperarPorId.mockResolvedValue(fichaVisivel);
+        fichaRepositorio.alterarFicha.mockResolvedValue({ ...fichaPersistida, oculta: true });
+        const ordem: string[] = [];
+        campanhaGateway.emitirAcessoRevogado.mockImplementation(() => ordem.push('revogado'));
+        campanhaGateway.expulsarUsuarioDaFicha.mockImplementation(() => {
+          ordem.push('expulso');
+        });
+        campanhaGateway.emitirFichaAlterada.mockImplementation(() => ordem.push('alterada'));
+
+        await service.alterarFicha(
+          { id: 5, nome: fichaPersistida.nome, oculta: true, dados: criarDados() },
+          usuarioDono,
+        );
+
+        const acessoSuspenso = { fichaId: 5, usuarioId: usuarioMembro.sub };
+        expect(campanhaGateway.emitirAcessoRevogado).toHaveBeenCalledTimes(1);
+        expect(campanhaGateway.emitirAcessoRevogado).toHaveBeenCalledWith(acessoSuspenso);
+        expect(campanhaGateway.expulsarUsuarioDaFicha).toHaveBeenCalledTimes(1);
+        expect(campanhaGateway.expulsarUsuarioDaFicha).toHaveBeenCalledWith(acessoSuspenso);
+        expect(ordem).toEqual(['revogado', 'expulso', 'alterada']);
+        expect(fichaRepositorio.revogarAcesso).not.toHaveBeenCalled();
+      });
+
+      it('não expulsa ninguém ao exibir de novo nem numa edição de ficha já oculta', async () => {
+        fichaRepositorio.recuperarPorId.mockResolvedValue({ ...fichaVisivel, oculta: true });
+        fichaRepositorio.alterarFicha.mockResolvedValue({ ...fichaPersistida, oculta: false });
+        await service.alterarFicha(
+          { id: 5, nome: fichaPersistida.nome, oculta: false, dados: criarDados() },
+          usuarioDono,
+        );
+
+        fichaRepositorio.alterarFicha.mockResolvedValue({ ...fichaPersistida, oculta: true });
+        await service.alterarFicha(
+          { id: 5, nome: 'Outro nome', oculta: true, dados: criarDados() },
+          usuarioDono,
+        );
+
+        expect(fichaRepositorio.listarAcessos).not.toHaveBeenCalled();
+        expect(campanhaGateway.emitirAcessoRevogado).not.toHaveBeenCalled();
+        expect(campanhaGateway.expulsarUsuarioDaFicha).not.toHaveBeenCalled();
+      });
+
+      it('não expulsa concessionário de ficha solta ao ocultar', async () => {
+        fichaRepositorio.recuperarPorId.mockResolvedValue({ ...fichaVisivel, campanhaId: null });
+        fichaRepositorio.alterarFicha.mockResolvedValue({
+          ...fichaPersistida,
+          campanhaId: null,
+          oculta: true,
+        });
+
+        await service.alterarFicha(
+          { id: 5, nome: fichaPersistida.nome, oculta: true, dados: criarDados() },
+          usuarioDono,
+        );
+
+        expect(campanhaGateway.emitirAcessoRevogado).not.toHaveBeenCalled();
+      });
+    });
+
     it('não invalida listas quando só dinheiro ou anotações mudam', async () => {
       const dadosAlterados = criarDados({ dinheiro: 123, anotacoes: 'Pista nova' });
       fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);

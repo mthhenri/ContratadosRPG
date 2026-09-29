@@ -5,6 +5,7 @@ import { filter, map } from "rxjs";
 
 import type { RolagemResumoDto } from "@contratados-rpg/shared/dtos/rolagem";
 
+import { SessaoService } from "../../../../core/services/sessao.service";
 import { TempoRealService } from "../../../../core/services/tempo-real.service";
 import { HistoricoRolagensSidebar } from "../../../../shared/historico-rolagens-sidebar/historico-rolagens-sidebar.component";
 import { JanelaExternaCabecalho } from "../../../../shared/ui/janela-externa-cabecalho/janela-externa-cabecalho.component";
@@ -25,6 +26,7 @@ export class HistoricoRolagensJanela {
   private readonly fichaService = inject(FichaService);
   private readonly rolagemService = inject(RolagemService);
   private readonly tempoRealService = inject(TempoRealService);
+  private readonly sessaoService = inject(SessaoService);
   private readonly destroyRef = inject(DestroyRef);
 
   protected readonly fichaId = Number(this.rota.snapshot.paramMap.get("fichaId"));
@@ -81,6 +83,25 @@ export class HistoricoRolagensJanela {
         next: (rolagem) =>
           this.itens.update((atuais) => atuais.filter((item) => item.id !== rolagem.id)),
       });
+    // Revogar ou ocultar tira a leitura por concessão (fix-ficha-oculta-concessao-e-leitura): a
+    // janela cai no mesmo estado negado de um GET recusado, sem manter o histórico já carregado.
+    this.tempoRealService.acessoRevogado$
+      .pipe(
+        filter(
+          (evento) =>
+            evento.fichaId === this.fichaId &&
+            evento.usuarioId === this.sessaoService.usuario()?.id,
+        ),
+        takeUntilDestroyed(),
+      )
+      .subscribe({
+        next: () => {
+          this.acessoNegado.set(true);
+          this.contexto.set("Ficha");
+          this.itens.set([]);
+          this.temMais.set(false);
+        },
+      });
     // `reconexao$` (P-083): só reconexões futuras à montagem, nunca uma já ocorrida antes de
     // abrir a janela.
     this.tempoRealService.reconexao$
@@ -95,6 +116,11 @@ export class HistoricoRolagensJanela {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (resultado) => {
+          // Página em voo quando a leitura foi retirada: não repovoa a janela negada.
+          if (this.acessoNegado()) {
+            carregamento.set(false);
+            return;
+          }
           this.itens.update((atuais) =>
             pagina === 1 ? resultado.itens : [...atuais, ...resultado.itens],
           );

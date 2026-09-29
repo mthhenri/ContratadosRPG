@@ -494,6 +494,26 @@ export class CampanhaDetalheJogador {
             : this.absorverFichaExibidaRemota(fichaAlterada),
       });
 
+    // Revogar ou ocultar tira a leitura por concessão (fix-ficha-oculta-concessao-e-leitura): a
+    // ficha alheia exibida sai da coluna na hora, e o efeito de semeadura acima volta para a
+    // própria ficha. `usuarioAtivoId` é o do alvo na prévia, então ela acompanha o jogador.
+    // Resposta em voo da ficha que saiu é descartada pela trava de id dos fetches.
+    this.tempoRealService.acessoRevogado$
+      .pipe(
+        filter(
+          (evento) =>
+            evento.fichaId === this.fichaExibidaId() &&
+            evento.usuarioId === this.dados.usuarioAtivoId(),
+        ),
+        takeUntilDestroyed(),
+      )
+      .subscribe({
+        next: () => {
+          this.fichaExibidaId.set(null);
+          this.fichaExibidaDados.set(null);
+        },
+      });
+
     // Ressincronização ao reconectar (P-084): a lista de fichas (`dados.fichas()`) já refaz por
     // conta do `CampanhaDetalheDadosService`; falta o documento completo da ficha exibida, que
     // fica embutido aqui e não refetchava nunca ao reconectar. `reconexao$` (P-083) — só
