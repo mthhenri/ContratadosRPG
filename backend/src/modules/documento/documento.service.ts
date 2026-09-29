@@ -14,6 +14,7 @@ import type {
   DocumentoOcultarDto,
   DocumentoRecuperadoDto,
   DocumentoRecuperarDto,
+  DocumentoReveladoInternoRecuperarDto,
   DocumentoRemoverDto,
   DocumentoReordenarDto,
   DocumentoResumoDto,
@@ -194,6 +195,17 @@ export class DocumentoService {
     usuarioAtivo: JwtPayload,
   ): Promise<DocumentoRecuperadoDto> {
     const { documento } = await this.recuperarLegivel(dto.id, usuarioAtivo);
+    return documento;
+  }
+
+  /** Projeção interna após autorização: somente revelado na campanha, sem privilégio de mestre. */
+  async recuperarDocumentoRevelado(
+    dto: DocumentoReveladoInternoRecuperarDto,
+  ): Promise<DocumentoRecuperadoDto> {
+    const documento = await this.documentoRepositorio.recuperarPorId({ id: dto.id });
+    if (!documento || !documento.revelado || documento.campanhaId !== dto.campanhaId) {
+      throw new ResourceNotFoundException("Documento");
+    }
     return documento;
   }
 

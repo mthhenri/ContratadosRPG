@@ -11,6 +11,31 @@
 @include casca.esqueleto-laterais("iniciativa-espectador");
 
 .iniciativa-espectador {
+    // O cartão de agente tem avatar lateral; a grade compacta de combatentes não comporta
+    // suas duas barras no desktop. Mesma expansão por auto-fit do Painel do espectador.
+    &__agentes {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+        gap: var(--space-8);
+        align-items: start;
+    }
+    &__documentos {
+        flex: 0 1 262px;
+        min-width: 0;
+        @include bp.tablet {
+            flex: auto;
+            width: 100%;
+        }
+    }
+
+    &__linha--sem-iniciativa {
+        @media (min-width: bp.$bp-tablet + 1px) {
+            flex-wrap: wrap;
+            .iniciativa-espectador__palco {
+                flex-basis: 400px;
+            }
+        }
+    }
     &__linha--sem-rolagens &__todos {
         align-self: stretch;
     }

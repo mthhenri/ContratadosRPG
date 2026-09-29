@@ -43,6 +43,7 @@ interface SocketDublado {
   readonly disconnect: ReturnType<typeof vi.fn>;
   readonly toSala: ReturnType<typeof vi.fn>;
   readonly emitirParaSala: ReturnType<typeof vi.fn>;
+  readonly emit: ReturnType<typeof vi.fn>;
 }
 
 /**
@@ -60,6 +61,7 @@ function criarSocket(
   const leave = vi.fn();
   const disconnect = vi.fn();
   const emitirParaSala = vi.fn();
+  const emit = vi.fn();
   const toSala = vi.fn(() => ({ emit: emitirParaSala }));
   const cliente = {
     id: 'socket-1',
@@ -70,8 +72,9 @@ function criarSocket(
     leave,
     disconnect,
     to: toSala,
+    emit,
   } as unknown as Socket;
-  return { cliente, join, leave, disconnect, toSala, emitirParaSala };
+  return { cliente, join, leave, disconnect, toSala, emitirParaSala, emit };
 }
 
 describe('CampanhaGateway', () => {
@@ -319,6 +322,45 @@ describe('CampanhaGateway', () => {
   });
 
   describe('recalibração pós-permissão', () => {
+    it.each([null, TipoCampanhaMembroPapelEnum.ESPECTADOR, TipoCampanhaMembroPapelEnum.MESTRE])(
+      "avisa somente os sockets afetados após recalibrar para %s, sem payload de gestão",
+      async (papel) => {
+        const socketAlvo = criarSocket({ usuario });
+        const socketOutraSessao = criarSocket({ usuario });
+        const socketOutro = criarSocket({ usuario: { ...usuario, sub: 99 } });
+        const fetchSockets = vi.fn().mockResolvedValue([
+          socketAlvo.cliente, socketOutraSessao.cliente, socketOutro.cliente,
+        ]);
+        const emitirParaSala = vi.fn();
+        (gateway as unknown as { servidor: Server }).servidor = {
+          in: vi.fn(() => ({ fetchSockets })),
+          to: vi.fn(() => ({ emit: emitirParaSala })),
+        } as unknown as Server;
+
+        await gateway.recalibrarSalasCampanhaUsuario({
+          campanhaId: 3, usuarioId: usuario.sub, papel,
+        });
+
+        for (const socket of [socketAlvo, socketOutraSessao]) {
+          expect(socket.emit).toHaveBeenCalledExactlyOnceWith(
+            "campanha:acesso-alterado", { campanhaId: 3 },
+          );
+          expect(socket.leave.mock.invocationCallOrder.at(-1)).toBeLessThan(
+            socket.emit.mock.invocationCallOrder[0],
+          );
+          if (papel === null) {
+            expect(socket.join).not.toHaveBeenCalled();
+          } else {
+            expect(socket.join.mock.invocationCallOrder.at(-1)).toBeLessThan(
+              socket.emit.mock.invocationCallOrder[0],
+            );
+          }
+        }
+        expect(socketOutro.emit).not.toHaveBeenCalled();
+        expect(socketOutro.leave).not.toHaveBeenCalled();
+        expect(emitirParaSala).not.toHaveBeenCalled();
+      },
+    );
     it('remove o usuário da ficha revogada depois de emitir o aviso', async () => {
       const socketAlvo = criarSocket({ usuario });
       const socketOutro = criarSocket({ usuario: { ...usuario, sub: 99 } });

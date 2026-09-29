@@ -2219,11 +2219,16 @@ partir de um link no tile "Convite de espectador". O mestre também tem a Prévi
 (`/campanhas/:id/previa/:usuarioAlvoId`, m8-04) — para um `JOGADOR` específico, monta a própria
 visão de jogador (`CampanhaDetalheJogador`) com os dados calculados com a identidade dele (nunca do
 mestre), em somente leitura: controles de edição e ações de ficha barrados, e nenhuma saída para
-tela com o privilégio do mestre (`previa-jogador-visao-real`). O espectador e a prévia também têm um gatilho "Ver Iniciativa"
-(`m8-05`), que só aparece com um encontro ativo na campanha e abre a mesma composição de leitura
-(`IniciativaLeitura`) da tela "Iniciativa" de jogador/mestre — ordem, turno, rodada, cartões e log
-da rodada, redigidos do mesmo jeito (NPC não revelado continua sem números para nenhum dos dois) e
-sem nenhum controle de condução. `m8-06` fechou o módulo com um gate de validação integrada — 4
+tela com o privilégio do mestre (`previa-jogador-visao-real`). O espectador e a prévia têm o acesso
+"Cena atual" na rota compatível `/campanhas/:id/espectador/iniciativa`: resolve cena ativa pela
+projeção própria, mesmo sem encontro. Com iniciativa preserva ordem/rodada/turnos; Investigação e
+Resistência mostram agentes autorizados e rolagens públicas. Só Investigação monta
+`DocumentosCenaEspectador`, com vínculos revelados ordenados, `DocumentoCartao` e `LeitorDocumento`
+em modal voluntário. Lista e leitura direta usam endpoints de projeção que aplicam o mesmo recorte
+ao mestre em prévia. Eventos e reconexão refazem consultas autorizadas; cancelamento e geração
+impedem respostas antigas. Ocultação, remoção, troca de cena e `campanha:acesso-alterado` encerram
+leitura indisponível. Nenhum controle de condução, edição ou presença de outros leitores aparece.
+`m8-06` fechou o módulo com um gate de validação integrada — 4
 contas reais (mestre, jogador com ficha, jogador dono de ficha nunca compartilhada, espectador)
 contra o backend de verdade via REST + Socket.IO cru, confirmando que as cinco tasks anteriores
 compõem corretamente entre contas (nenhum bug de backend achado) e corrigindo dois achados da

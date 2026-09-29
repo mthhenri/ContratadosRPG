@@ -16,7 +16,7 @@
             </a>
             <span class="iniciativa-espectador__indice">//</span>
             <h1 class="iniciativa-espectador__titulo">
-                {{ encontro() ? "Iniciativa · " + encontro()!.nome : "Iniciativa" }}
+                {{ cena() ? rotuloTipoCena(cena()!.tipo) + " · " + cena()!.nome : "Cena atual" }}
             </h1>
             @if (campanhaNome()) {
             <span class="iniciativa-espectador__campanha">{{ campanhaNome() }}</span>
@@ -26,6 +26,9 @@
             >
             }
             <span class="iniciativa-espectador__regua"></span>
+            @if (cena() && !temIniciativa()) {
+                <app-chip variante="sutil">{{ rotuloStatusCena(cena()!.status) }}</app-chip>
+            }
         </header>
 
         @if (carregando()) {
@@ -51,12 +54,53 @@
             </div>
 
             <div class="iniciativa-espectador__palco">
-                <div class="grade grade--compacta grade--palco">
+                <div class="iniciativa-espectador__agentes">
                     @for (i of [0, 1, 2, 3]; track i) {
                     <app-esqueleto class="iniciativa-espectador__esqueleto-combatente" />
                     }
                 </div>
             </div>
+        </div>
+        } @else if (falha()) {
+        <app-estado-vazio titulo="Não foi possível carregar a cena." />
+        <button
+            app-botao
+            variante="secundario"
+            estilo="contorno"
+            tamanho="medio"
+            (click)="recarregarCena()"
+        >
+            Tentar novamente
+        </button>
+        } @else if (!temIniciativa() && cena(); as cenaAtual) {
+        <div class="iniciativa-espectador__linha iniciativa-espectador__linha--sem-iniciativa">
+            @if (ehInvestigacao()) { @for (cenaDocumento of [cenaAtual]; track cenaDocumento.id) {
+            <app-documentos-cena-espectador
+                class="iniciativa-espectador__documentos"
+                [campanhaId]="campanhaId"
+                [cenaId]="cenaDocumento.id"
+            />
+            } } @if (!janelaHistorico.estaAbertaCampanha(campanhaId)) {
+            <div class="iniciativa-espectador__rolagens">
+                <app-historico-rolagens-sidebar
+                    [fixo]="true"
+                    titulo="Rolagens"
+                    [itens]="rolagens()"
+                    [carregando]="carregandoRolagens()"
+                    [campanhaIdJanela]="campanhaId"
+                    origemJanela="espectador"
+                />
+            </div>
+            }
+            <section class="iniciativa-espectador__palco" aria-label="Agentes">
+                <div class="iniciativa-espectador__agentes">
+                    @for (agente of agentes(); track agente.id) {
+                    <app-espectador-ficha-card [ficha]="agente" />
+                    } @empty {
+                    <app-estado-vazio tamanho="compacto" titulo="Nenhum agente disponível." />
+                    }
+                </div>
+            </section>
         </div>
         } @else if (encontro(); as encontroAtual) {
         <div
@@ -123,8 +167,8 @@
         <app-estado-vazio
             class="iniciativa-espectador__vazio"
             icone="combate"
-            titulo="Nenhum combate em andamento."
-            linhaApoio="Quando o mestre abrir um, esta tela acende sozinha."
+            titulo="Nenhuma cena em andamento."
+            linhaApoio="Quando o mestre abrir uma, esta tela acompanha automaticamente."
         />
         }
     </div>

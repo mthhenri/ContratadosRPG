@@ -4,6 +4,7 @@ import type {
   CenaCriadaDto,
   CenaCriarDto,
   CenaEncerrarDto,
+  CenaEspectadorAtivaRecuperarDto,
   CenaLinhaDto,
   CenaRecuperadaDto,
   CenaRecuperarDto,
@@ -294,6 +295,27 @@ export class CenaService {
   }
 
   // ── Apoio ──────────────────────────────────────────────────────────────────
+
+  /** Cena ativa no recorte espectador; a projeção chamadora já autorizou o papel da campanha. */
+  async recuperarCenaAtivaParaEspectador(
+    dto: CenaEspectadorAtivaRecuperarDto,
+  ): Promise<CenaRecuperadaDto | null> {
+    const cena = await this.cenaRepositorio.recuperarAtivaPorCampanha(dto);
+    if (!cena || cena.status !== CenaStatusEnum.ATIVA || cena.campanhaId !== dto.campanhaId) {
+      return null;
+    }
+    const encontro = cenaTemIniciativa(cena.tipo) && cena.encontroId !== null
+      ? await this.encontroService.recuperarEncontroAtivoParaEspectador(dto)
+      : null;
+    return {
+      id: cena.id,
+      campanhaId: cena.campanhaId,
+      nome: cena.nome,
+      tipo: cena.tipo,
+      status: cena.status,
+      encontro: encontro?.id === cena.encontroId && encontro?.cenaId === cena.id ? encontro : null,
+    };
+  }
 
   /**
    * Encerra a cena ativa da campanha, se houver, com o encontro dela — o primeiro passo de abrir ou

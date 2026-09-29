@@ -8,6 +8,8 @@ import type {
 } from '@contratados-rpg/shared/dtos/campanha';
 import type { FichaRecuperadaDto } from '@contratados-rpg/shared/dtos/ficha';
 import type { EncontroRecuperadoDto } from '@contratados-rpg/shared/dtos/encontro';
+import type { CenaRecuperadaDto, CenaDocumentoResumoDto } from '@contratados-rpg/shared/dtos/cena';
+import type { DocumentoRecuperadoDto } from '@contratados-rpg/shared/dtos/documento';
 
 import { environment } from '../../../environments/environment';
 
@@ -23,6 +25,29 @@ export class CampanhaProjecaoService {
   private readonly httpClient = inject(HttpClient);
 
   private readonly base = `${environment.apiBase}/campanha`;
+
+  /** Cena atual no recorte espectador, inclusive quando o mestre consulta a prévia. */
+  recuperarCenaAtivaPainelEspectador(id: number): Observable<CenaRecuperadaDto | null> {
+    return this.httpClient.get<StandardResponse<CenaRecuperadaDto | null>>(
+      `${this.base}/${id}/painel-espectador/cena-ativa`,
+    ).pipe(map((resposta) => resposta.dados));
+  }
+
+  /** Vínculos revelados da Investigação atual, na ordem da cena. */
+  listarDocumentosCenaEspectador(id: number, cenaId: number): Observable<CenaDocumentoResumoDto[]> {
+    return this.httpClient.get<StandardResponse<CenaDocumentoResumoDto[]>>(
+      `${this.base}/${id}/painel-espectador/cena/${cenaId}/documento`,
+    ).pipe(map((resposta) => resposta.dados as CenaDocumentoResumoDto[]));
+  }
+
+  /** Leitura autorizada pelo vínculo, sem privilégio de mestre na prévia. */
+  recuperarDocumentoCenaEspectador(
+    id: number, cenaId: number, documentoId: number,
+  ): Observable<DocumentoRecuperadoDto> {
+    return this.httpClient.get<StandardResponse<DocumentoRecuperadoDto>>(
+      `${this.base}/${id}/painel-espectador/cena/${cenaId}/documento/${documentoId}`,
+    ).pipe(map((resposta) => resposta.dados as DocumentoRecuperadoDto));
+  }
 
   /** Painel do espectador — identidade segura da campanha + feed paginado de rolagens `PUBLICA`. */
   recuperarPainelEspectador(

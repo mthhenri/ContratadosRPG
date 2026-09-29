@@ -3,9 +3,12 @@ import type {
   CenaDocumentoAnexarDto,
   CenaDocumentoReordenarDto,
   CenaDocumentoResumoDto,
+  CenaEspectadorDocumentosListarDto,
+  CenaEspectadorDocumentoRecuperarDto,
 } from '@contratados-rpg/shared/dtos/cena';
+import type { DocumentoRecuperadoDto } from "@contratados-rpg/shared/dtos/documento";
 import type { CenaLinhaDto } from '@contratados-rpg/shared/dtos/cena';
-import { CenaStatusEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
+import { CenaStatusEnum, CenaTipoEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import { BusinessException, ResourceNotFoundException, UnauthorizedAccessException } from '../../core/exceptions';
 import { CampanhaGateway } from '../../core/gateway/campanha.gateway';
 import { TransacaoService } from '../../database/transacao.service';
@@ -55,6 +58,45 @@ export class CenaDocumentoService {
       apenasRevelados: !ehMestre,
     });
     return linhas.map(this.paraResumo);
+  }
+
+  /** Documentos revelados da Investigação ativa; quem chama já autorizou espectador ou prévia. */
+  async listarDocumentosParaEspectador(
+    dto: CenaEspectadorDocumentosListarDto,
+  ): Promise<CenaDocumentoResumoDto[]> {
+    await this.validarInvestigacaoAtiva(dto);
+    const linhas = await this.cenaDocumentoRepositorio.listarPorCena({
+      cenaId: dto.cenaId, apenasRevelados: true,
+    });
+    return linhas.filter((linha) => linha.revelado)
+      .map((linha) => ({ ...this.paraResumo(linha), emFoco: false }));
+  }
+
+  /** Leitura direta exige vínculo ativo e documento ainda revelado, inclusive na prévia do mestre. */
+  async recuperarDocumentoParaEspectador(
+    dto: CenaEspectadorDocumentoRecuperarDto,
+  ): Promise<DocumentoRecuperadoDto> {
+    await this.validarInvestigacaoAtiva(dto);
+    const vinculo = await this.cenaDocumentoRepositorio.recuperarPorCenaEDocumento({
+      cenaId: dto.cenaId, documentoId: dto.documentoId,
+    });
+    if (!vinculo || !vinculo.revelado) {
+      throw new ResourceNotFoundException("Documento");
+    }
+    return this.documentoService.recuperarDocumentoRevelado({
+      id: dto.documentoId, campanhaId: dto.campanhaId,
+    });
+  }
+
+  /** Restringe a projeção nova à Investigação atual; não amplia acesso a histórico. */
+  private async validarInvestigacaoAtiva(dto: CenaEspectadorDocumentosListarDto): Promise<void> {
+    const cena = await this.recuperarCenaObrigatoria(dto.cenaId);
+    if (
+      cena.campanhaId !== dto.campanhaId || cena.status !== CenaStatusEnum.ATIVA
+      || cena.tipo !== CenaTipoEnum.INVESTIGACAO
+    ) {
+      throw new ResourceNotFoundException("Cena");
+    }
   }
 
   /** Anexa um documento da biblioteca da campanha à cena, no fim da fila. Idempotente. */

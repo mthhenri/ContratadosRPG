@@ -7,6 +7,9 @@ import type { CampanhaService } from '../campanha/campanha.service';
 import type { EncontroService } from '../encontro/encontro.service';
 import type { FichaService } from '../ficha/ficha.service';
 import type { RolagemRepository } from '../rolagem/rolagem.repository';
+import type { CenaService } from "../cena/cena.service";
+import type { CenaDocumentoService } from "../cena/cena-documento.service";
+import type { EncontroRecuperadoDto } from "@contratados-rpg/shared/dtos/encontro";
 import { CampanhaProjecaoService } from './campanha-projecao.service';
 
 interface CampanhaRepositorioDublado {
@@ -80,6 +83,14 @@ describe('CampanhaProjecaoService', () => {
       encontroServico as unknown as EncontroService,
       fichaServico as unknown as FichaService,
       rolagemRepositorio as unknown as RolagemRepository,
+      {
+        recuperarCenaAtivaParaEspectador: vi.fn(async (dto: { campanhaId: number }) => {
+          const encontro = await encontroServico.recuperarEncontroAtivoParaEspectador(dto) as
+            EncontroRecuperadoDto | null;
+          return encontro ? { id: 9, encontro } : null;
+        }),
+      } as unknown as CenaService,
+      {} as CenaDocumentoService,
     );
   });
 
@@ -104,6 +115,7 @@ describe('CampanhaProjecaoService', () => {
         campanha: { id: 3, nome: 'Contenção Alfa', descricao: 'Missão inaugural', naBase: true },
         rolagens: feed,
         encontroAtivo: null,
+        cenaAtiva: null,
         fichas: [],
         membros: [],
       });

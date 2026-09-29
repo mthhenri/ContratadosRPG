@@ -1,5 +1,38 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-29 — Cena atual e documentos de Investigação do espectador
+
+Implementadas `fix-espectador-cenas-sem-iniciativa` e `espectador-documentos-cena`, com o
+pré-requisito autorizado pelo autor. O acesso "Cena atual" preserva a URL espectadora existente,
+resolve a cena ativa sem depender de encontro e deriva iniciativa por shared. Investigação e
+Resistência apresentam agentes autorizados e rolagens públicas; cenas com iniciativa preservam
+o painel próprio de leitura.
+
+A Investigação ganhou componente extraído `DocumentosCenaEspectador`, lista de vínculos
+revelados e leitor voluntário em modal. Três endpoints próprios de projeção conferem papel,
+campanha, cena ativa, vínculo e revelação; mestre em prévia recebe o mesmo recorte. Eventos são
+sinais para refetch autorizado, sem aplicar payload privilegiado. Seleção/cargas têm cancelamento
+e geração; fechar ou trocar nunca reabre resposta antiga. A correção geral do leitor do mestre
+continua em sua spec, sem extrapolar este escopo.
+
+Verificação encontrou que retirar um socket das salas não encerrava conteúdo já carregado:
+`campanha:acesso-alterado` passou a notificar diretamente todas as conexões do usuário afetado,
+somente com campanhaId, após a mutação persistida. Página limpa conteúdo e cancela cargas em voo.
+Composição usa primitivos existentes; corrigidos ícone do índice, largura de cartões e grade de
+agentes, e anúncio acessível de carga. Principal comparou pessoalmente com os análogos de jogador
+e espectador em 1920×1080, 1366×768, 960×1080 e 360×800.
+
+Stack real, sessões separadas: texto/imagem, recusa de ocultos e mutações, apresentação sem
+abertura forçada, edição, ocultação, remoção, ordem, vazio, carga/erro/retry, fechamento durante
+carga, reconexão após evento perdido, revogação e troca de tipos/encerramento passaram sem F5 e
+sem erros JS. Shared 772/772; backend 804/804; frontend integrado 2542 aprovados e duas falhas
+na navegação do jogador alterada em paralelo (expectativas antigas de volta ao hub). Recorte
+frontend final 72/72; builds passaram; lint sem erros, orçamento inicial conhecido permanece.
+Specs encerradas com evidências em `docs/reviews/espectador-documentos-cena/RELATORIO.md`.
+Alterações das outras sessões preservadas; commit desta tarefa autorizado pelo autor.
+Antes de gravar, index exportado e testado isoladamente: backend 787/787, frontend 2541/2541
+e build backend passaram. Mudanças paralelas de navegação e auditoria ficaram fora do commit.
+
 ## 2026-09-29 — m9-13: criar e editar documentos na Biblioteca flutuante
 
 Pedido do autor: o mestre cria um documento utilizável sem sair da cena, ficha ou campanha onde

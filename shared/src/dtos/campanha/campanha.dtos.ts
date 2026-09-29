@@ -1,5 +1,6 @@
 import type { ArquetipoEnum, ClasseEnum, ItemCategoriaEnum, TipoCampanhaMembroPapelEnum } from '../../enums';
 import type { EncontroRecuperadoDto } from '../encontro';
+import type { CenaRecuperadaDto } from "../cena";
 import type { FichaResumoDto } from '../ficha';
 import type { RolagemResumoDto } from '../rolagem';
 import type { PaginatedResult } from '../../interfaces';
@@ -618,6 +619,8 @@ export interface CampanhaPainelEspectadorRecuperarDto {
  * idêntico nos dois casos — privilégio de mestre nunca vaza aqui).
  */
 export interface CampanhaPainelEspectadorDto {
+  /** Cena atual, inclusive sem iniciativa; nunca contém planejadas nem histórico. */
+  readonly cenaAtiva?: CenaRecuperadaDto | null;
   readonly campanha: CampanhaIdentidadeSeguraDto;
   readonly rolagens: PaginatedResult<RolagemResumoDto>;
   /**
@@ -640,6 +643,11 @@ export interface CampanhaPainelEspectadorDto {
    * de ficha aqui (isso já é feito por `fichas`).
    */
   readonly membros: readonly CampanhaMembroResumoDto[];
+}
+
+/** Invalida o recorte em todas as conexões do membro afetado, sem expor dados de gestão. */
+export interface CampanhaAcessoAlteradoDto {
+  readonly campanhaId: number;
 }
 
 /**

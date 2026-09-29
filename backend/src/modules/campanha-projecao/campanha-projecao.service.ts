@@ -9,6 +9,16 @@ import type {
 } from '@contratados-rpg/shared/dtos/campanha';
 import type { FichaRecuperadaDto } from '@contratados-rpg/shared/dtos/ficha';
 import type { EncontroRecuperadoDto } from '@contratados-rpg/shared/dtos/encontro';
+import type {
+  CenaRecuperadaDto,
+  CenaEspectadorAtivaRecuperarDto,
+  CenaEspectadorDocumentosListarDto,
+  CenaEspectadorDocumentoRecuperarDto,
+  CenaDocumentoResumoDto,
+} from "@contratados-rpg/shared/dtos/cena";
+import type { DocumentoRecuperadoDto } from "@contratados-rpg/shared/dtos/documento";
+import { CenaService } from "../cena/cena.service";
+import { CenaDocumentoService } from "../cena/cena-documento.service";
 import { ResourceNotFoundException, UnauthorizedAccessException } from '../../core/exceptions';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
 import { CampanhaRepository } from '../campanha/campanha.repository';
@@ -42,6 +52,8 @@ export class CampanhaProjecaoService {
     private readonly encontroService: EncontroService,
     private readonly fichaService: FichaService,
     private readonly rolagemRepositorio: RolagemRepository,
+    private readonly cenaService: CenaService,
+    private readonly cenaDocumentoService: CenaDocumentoService,
   ) {}
 
   /**
@@ -71,7 +83,7 @@ export class CampanhaProjecaoService {
     // m8-07: nunca `listarFichas`/`listarFichasParaAlvo` (matriz de visibilidade por dono) — o
     // espectador não possui ficha nenhuma na campanha, então o recorte é sempre "todo agente não
     // oculto", independente de quem pede (espectador real ou mestre em prévia).
-    const [fichas, membros, rolagens, encontroAtivo] = await Promise.all([
+    const [fichas, membros, rolagens, cenaAtiva] = await Promise.all([
       this.fichaService.listarFichasParaEspectador({ campanhaId: dto.campanhaId }),
       this.campanhaRepositorio.listarMembros({
         campanhaId: dto.campanhaId,
@@ -83,13 +95,57 @@ export class CampanhaProjecaoService {
         pagina: dto.pagina,
         itensPorPagina: dto.itensPorPagina,
       }),
-      this.encontroService.recuperarEncontroAtivoParaEspectador({ campanhaId: dto.campanhaId }),
+      this.cenaService.recuperarCenaAtivaParaEspectador({ campanhaId: dto.campanhaId }),
     ]);
 
     // `membros` só resolve o nome do dono de cada ficha acima (`usuarioId`) — mesma consulta que
     // `recuperarPreviaJogador` já usa pra Equipe, `usuarioAtivoEhMestre: false` sempre (nunca
     // amplia `acessoCompleto`, campo que este painel nem consome).
-    return { campanha: identidade, fichas, membros, rolagens, encontroAtivo };
+    return {
+      campanha: identidade, fichas, membros, rolagens, cenaAtiva,
+      encontroAtivo: cenaAtiva?.encontro ?? null,
+    };
+  }
+
+  /** Cena atual para espectador real e prévia do mestre, com o mesmo recorte. */
+  async recuperarCenaAtivaPainelEspectador(
+    dto: CenaEspectadorAtivaRecuperarDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<CenaRecuperadaDto | null> {
+    await this.validarAcessoPainelEspectador(dto, usuarioAtivo);
+    return this.cenaService.recuperarCenaAtivaParaEspectador(dto);
+  }
+
+  /** Lista somente os vínculos revelados da Investigação ativa. */
+  async listarDocumentosCenaPainelEspectador(
+    dto: CenaEspectadorDocumentosListarDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<CenaDocumentoResumoDto[]> {
+    await this.validarAcessoPainelEspectador(dto, usuarioAtivo);
+    return this.cenaDocumentoService.listarDocumentosParaEspectador(dto);
+  }
+
+  /** Leitura direta com vínculo e revelação conferidos pelos donos dos respectivos domínios. */
+  async recuperarDocumentoCenaPainelEspectador(
+    dto: CenaEspectadorDocumentoRecuperarDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<DocumentoRecuperadoDto> {
+    await this.validarAcessoPainelEspectador(dto, usuarioAtivo);
+    return this.cenaDocumentoService.recuperarDocumentoParaEspectador(dto);
+  }
+
+  /** Papel autorizado da projeção, sempre pelo árbitro de campanha. */
+  private async validarAcessoPainelEspectador(
+    dto: CenaEspectadorAtivaRecuperarDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<void> {
+    await this.recuperarIdentidadeSegura(dto.campanhaId);
+    const membro = await this.campanhaService.validarMembro({
+      campanhaId: dto.campanhaId, usuarioId: usuarioAtivo.sub,
+    });
+    if (!this.campanhaService.ehEspectador(membro.papel) && !this.campanhaService.ehMestre(membro.papel)) {
+      throw new UnauthorizedAccessException();
+    }
   }
 
   /**

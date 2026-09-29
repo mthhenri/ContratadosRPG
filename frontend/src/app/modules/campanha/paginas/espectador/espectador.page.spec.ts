@@ -194,7 +194,7 @@ describe('CampanhaEspectador', () => {
       ],
     });
     expect(raiz.querySelector('.espectador__preview-barra')).toBeNull();
-    expect(itensColuna(raiz).map((item) => item.textContent?.trim())).toEqual(['Iniciativa', 'Biblioteca', 'Rolagens']);
+    expect(itensColuna(raiz).map((item) => item.textContent?.trim())).toEqual(['Cena atual', 'Biblioteca', 'Rolagens']);
     // m9-12: "Biblioteca" abre o painel flutuante (forma leitura), cuja página é a do espectador.
     const biblioteca = itensColuna(raiz)[1];
     expect(biblioteca.getAttribute('href')).toBeNull();
@@ -223,10 +223,9 @@ describe('CampanhaEspectador', () => {
     const [sair, iniciativa, biblioteca] = itensColuna(raiz);
     expect(sair.textContent).toContain('Sair da prévia');
     expect(sair.getAttribute('href')).toBe(`/campanhas/${CAMPANHA_ID}`);
-    expect(iniciativa.tagName).toBe('BUTTON');
-    expect(iniciativa.textContent).toContain('Iniciativa');
-    expect((iniciativa as HTMLButtonElement).disabled).toBe(true);
-    expect(iniciativa.getAttribute('href')).toBeNull();
+    expect(iniciativa.tagName).toBe('A');
+    expect(iniciativa.textContent).toContain('Cena atual');
+    expect(iniciativa.getAttribute('href')).toBe(`/campanhas/${CAMPANHA_ID}/espectador/iniciativa`);
     expect(biblioteca.tagName).toBe('BUTTON');
     expect(biblioteca.textContent).toContain('Biblioteca');
     expect((biblioteca as HTMLButtonElement).disabled).toBe(true);
@@ -437,7 +436,7 @@ describe('CampanhaEspectador', () => {
       const { raiz } = montar({ painelRetorno: painel([]) });
 
       const iniciativa = raiz.querySelector('a[app-coluna-acoes-item]');
-      expect(iniciativa?.textContent).toContain('Iniciativa');
+      expect(iniciativa?.textContent).toContain('Cena atual');
       expect(iniciativa?.getAttribute('href')).toBe(`/campanhas/${CAMPANHA_ID}/espectador/iniciativa`);
       // Botão "Ver Iniciativa"/modal do header antigo não existem mais — a navegação é real.
       expect(raiz.querySelector('.espectador__ver-iniciativa')).toBeNull();

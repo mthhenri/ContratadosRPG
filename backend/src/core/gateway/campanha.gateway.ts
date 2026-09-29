@@ -11,6 +11,7 @@ import {
 } from '@nestjs/websockets';
 import type {
   CampanhaEstadoAlteradaDto,
+  CampanhaAcessoAlteradoDto,
   CampanhaInventarioAlteradoDto,
   CampanhaMembroEntradaDto,
   CampanhaMembroInternoRecuperadoDto,
@@ -444,6 +445,8 @@ export class CampanhaGateway implements OnGatewayConnection, OnGatewayDisconnect
    * Sai de todas as salas de papel e entra só nas do papel novo (nenhuma quando `papel` é `null`).
    * A presença de leitura desse usuário na campanha é limpa (m9-09): o recorte do que ele pode ler
    * pode ter mudado, e o cliente volta ao retrato quando informar de novo.
+   * Após recalibrar, avisa somente as conexões afetadas com `campanha:acesso-alterado`, inclusive
+   * na revogação: sair da sala não invalida sozinho o conteúdo que o cliente já carregou.
    * `RemoteSocket.join`/`leave` são síncronos (`void`) — só `fetchSockets` é assíncrono (P-077).
    */
   async recalibrarSalasCampanhaUsuario(dto: {
@@ -460,15 +463,18 @@ export class CampanhaGateway implements OnGatewayConnection, OnGatewayDisconnect
     for (const socket of sockets) {
       if ((socket.data as { usuario?: JwtPayload }).usuario?.sub !== dto.usuarioId) continue;
       salas.forEach((sala) => socket.leave(sala));
-      if (dto.papel === null) continue;
-      socket.join(
-        dto.papel === TipoCampanhaMembroPapelEnum.ESPECTADOR
-          ? this.salaCampanhaEspectador(dto.campanhaId)
-          : this.salaCampanha(dto.campanhaId),
-      );
-      if (dto.papel === TipoCampanhaMembroPapelEnum.MESTRE) {
-        socket.join(this.salaCampanhaMestre(dto.campanhaId));
+      if (dto.papel !== null) {
+        socket.join(
+          dto.papel === TipoCampanhaMembroPapelEnum.ESPECTADOR
+            ? this.salaCampanhaEspectador(dto.campanhaId)
+            : this.salaCampanha(dto.campanhaId),
+        );
+        if (dto.papel === TipoCampanhaMembroPapelEnum.MESTRE) {
+          socket.join(this.salaCampanhaMestre(dto.campanhaId));
+        }
       }
+      const evento: CampanhaAcessoAlteradoDto = { campanhaId: dto.campanhaId };
+      socket.emit("campanha:acesso-alterado", evento);
     }
     this.documentoLeituraService.removerLeituraUsuario({
       campanhaId: dto.campanhaId,

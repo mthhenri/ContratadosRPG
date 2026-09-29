@@ -75,6 +75,24 @@ export interface CenaRecuperadaDto {
   readonly encontro: EncontroRecuperadoDto | null;
 }
 
+/** Consulta interna da cena ativa no recorte comum do espectador e da prévia. */
+export interface CenaEspectadorAtivaRecuperarDto {
+  readonly campanhaId: number;
+}
+
+/** Documentos vinculados à Investigação ativa da campanha, no recorte espectador. */
+export interface CenaEspectadorDocumentosListarDto {
+  readonly campanhaId: number;
+  readonly cenaId: number;
+}
+
+/** Leitura de documento revelado vinculado à Investigação ativa. */
+export interface CenaEspectadorDocumentoRecuperarDto {
+  readonly campanhaId: number;
+  readonly cenaId: number;
+  readonly documentoId: number;
+}
+
 /**
  * Payload de broadcast (`cena:alterada`) — o resumo da cena após uma mutação já persistida,
  * emitido pela service **depois** de salvar (§9, broadcast-only). Cena `PLANEJADA` só chega à sala

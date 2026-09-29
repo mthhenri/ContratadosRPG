@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { CampanhaModule } from '../campanha/campanha.module';
+import { CenaModule } from "../cena/cena.module";
 import { EncontroModule } from '../encontro/encontro.module';
 import { FichaModule } from '../ficha/ficha.module';
 import { RolagemModule } from '../rolagem/rolagem.module';
@@ -14,7 +15,7 @@ import { CampanhaProjecaoService } from './campanha-projecao.service';
  * já importam `CampanhaModule`).
  */
 @Module({
-  imports: [CampanhaModule, EncontroModule, FichaModule, RolagemModule],
+  imports: [CampanhaModule, EncontroModule, FichaModule, RolagemModule, CenaModule],
   controllers: [CampanhaProjecaoController],
   providers: [CampanhaProjecaoService],
 })

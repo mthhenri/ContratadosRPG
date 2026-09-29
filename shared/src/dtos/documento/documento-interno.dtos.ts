@@ -102,3 +102,8 @@ export interface DocumentoLeituraDocumentoInternoRemoverDto {
   readonly campanhaId: number;
   readonly documentoId: number;
 }
+/** Recuperação interna após autorização da projeção; exige revelação e campanha coincidente. */
+export interface DocumentoReveladoInternoRecuperarDto {
+  readonly id: number;
+  readonly campanhaId: number;
+}

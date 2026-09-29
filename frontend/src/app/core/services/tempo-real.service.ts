@@ -3,6 +3,7 @@ import { Observable, Subject } from 'rxjs';
 import { io, Socket } from 'socket.io-client';
 
 import type {
+  CampanhaAcessoAlteradoDto,
   CampanhaEstadoAlteradaDto,
   CampanhaInventarioAlteradoDto,
   CampanhaMembroEntradaDto,
@@ -108,6 +109,7 @@ export class TempoRealService {
   private readonly fichaRecortesAlteradosSubject = new Subject<FichaCampanhaRecortesAlteradosDto>();
   private readonly fichaRemovidaDaCampanhaSubject = new Subject<FichaCampanhaRemovidaDto>();
   private readonly membroEntrouSubject = new Subject<CampanhaMembroEntradaDto>();
+  private readonly campanhaAcessoAlteradoSubject = new Subject<CampanhaAcessoAlteradoDto>();
   private readonly acessoRevogadoSubject = new Subject<FichaAcessoRevogadoDto>();
   private readonly rolagemRegistradaSubject = new Subject<RolagemResumoDto>();
   private readonly rolagemExcluidaSubject = new Subject<RolagemExcluidaDto>();
@@ -185,6 +187,8 @@ export class TempoRealService {
    * que não pode ver.
    */
   readonly cenaAlterada$: Observable<CenaAlteradaDto> = this.cenaAlteradaSubject.asObservable();
+  /** Só o usuário afetado recebe; clientes refazem seus GETs autorizados. */
+  readonly campanhaAcessoAlterado$ = this.campanhaAcessoAlteradoSubject.asObservable();
   /** `cena:documento-alterado` (m7-25) — dataless; quem recebe refaz o `GET` da coluna Documentos. */
   readonly cenaDocumentoAlterado$: Observable<CenaDocumentoAlteradoDto> =
     this.cenaDocumentoAlteradoSubject.asObservable();
@@ -316,6 +320,9 @@ export class TempoRealService {
     );
     this.socket.on('cena:alterada', (evento: CenaAlteradaDto) =>
       this.cenaAlteradaSubject.next(evento),
+    );
+    this.socket.on("campanha:acesso-alterado", (evento: CampanhaAcessoAlteradoDto) =>
+      this.campanhaAcessoAlteradoSubject.next(evento),
     );
     this.socket.on('cena:documento-alterado', (evento: CenaDocumentoAlteradoDto) =>
       this.cenaDocumentoAlteradoSubject.next(evento),

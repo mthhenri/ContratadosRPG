@@ -477,6 +477,13 @@ os controles do mestre.
   lista e o documento aberto são o `app-biblioteca-corpo` (o host **é** o `.biblioteca__corpo`, sem
   nó novo — a página ficou idêntica pixel a pixel nas três visões e nos quatro viewports), que o
   layout monta reprojetando os dois slots de documento, e o painel flutuante monta direto.
+- **Documentos da cena do espectador:** na Investigação ativa, coluna de vínculos revelados com
+  `DocumentoCartao`, índice biblioteca e `LeitorDocumento` em `Modal`, abertura voluntária. Usa
+  como análogos a lista/modal do jogador sem iniciativa e a casca própria espectadora. Desktop
+  mantém documentos, rolagens e agentes; tablet/mobile empilham, com cartões na largura disponível.
+  Carregamento decorativo em contêiner anunciado, vazio e erro com botão canônico de tentar
+  novamente. Não exibe presença ou controles de mestre. Evidências comparadas em
+  `docs/reviews/espectador-documentos-cena/`.
 - **Visão da mesa (jogador e espectador, `m9-05`):** a mesma biblioteca **menos** os controles —
   sem "Novo documento", sem chip de estado (para a mesa, tudo é revelado), sem setas e sem ações no
   documento aberto; o cartão ocupa a coluna inteira. Vazio: "Nenhum documento revelado ainda." /

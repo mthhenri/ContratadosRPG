@@ -4,8 +4,11 @@ import { provideRouter } from '@angular/router';
 import { Subject, of } from 'rxjs';
 import type { CampanhaPainelEspectadorDto } from '@contratados-rpg/shared/dtos/campanha';
 import type { EncontroRecuperadoDto } from '@contratados-rpg/shared/dtos/encontro';
+import type { CenaRecuperadaDto } from "@contratados-rpg/shared/dtos/cena";
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 import {
+  CenaTipoEnum,
+  CenaStatusEnum,
   CadenciaEnum,
   CombatenteOrigemEnum,
   EncontroEventoTipoEnum,
@@ -106,6 +109,7 @@ describe('PainelEncontroEspectador', () => {
       campanha: { id: CAMPANHA_ID, nome: 'Contenção Delta', descricao: null, naBase: false },
       rolagens: { itens: [], totalItens: 0, paginaAtual: 1, totalPaginas: 1 },
       encontroAtivo: encontro,
+      cenaAtiva: encontro ? { id: 900, campanhaId: CAMPANHA_ID, nome: encontro.nome, tipo: CenaTipoEnum.COMBATE, status: CenaStatusEnum.ATIVA, encontro } : null,
       fichas: [],
       membros: [],
     };
@@ -136,13 +140,18 @@ describe('PainelEncontroEspectador', () => {
   }) {
     const campanhaProjecaoService = {
       recuperarPainelEspectador: vi.fn(() => of(opts.painelRetorno ?? painel())),
-      recuperarEncontroAtivoPainelEspectador: vi.fn(() => of(null as EncontroRecuperadoDto | null)),
+      recuperarCenaAtivaPainelEspectador: vi.fn(() => of((opts.painelRetorno ?? painel()).cenaAtiva ?? null)),
+      listarDocumentosCenaEspectador: vi.fn(() => of([])),
+      recuperarDocumentoCenaEspectador: vi.fn(),
     };
     const rolagemService = {
       listarPorCampanha: vi.fn(() => of(opts.rolagensRetorno ?? [])),
     };
     const rolagemRegistrada$ = new Subject<RolagemResumoDto>();
     const encontroAlterado$ = new Subject<{ encontro: { campanhaId: number } }>();
+    const cenaAlterada$ = new Subject<{ campanhaId: number }>();
+    const reconexao$ = new Subject<void>();
+    const campanhaAcessoAlterado$ = new Subject<{ campanhaId: number }>();
     const tempoRealService = {
       conectar: vi.fn(),
       entrarSalaCampanha: vi.fn(),
@@ -150,6 +159,11 @@ describe('PainelEncontroEspectador', () => {
       rolagemRegistrada$: rolagemRegistrada$.asObservable(),
       rolagemExcluida$: new Subject().asObservable(),
       encontroAlterado$: encontroAlterado$.asObservable(),
+      cenaAlterada$: cenaAlterada$.asObservable(),
+      cenaDocumentoAlterado$: new Subject().asObservable(),
+      documentoAlterado$: new Subject().asObservable(),
+      reconexao$: reconexao$.asObservable(),
+      campanhaAcessoAlterado$: campanhaAcessoAlterado$.asObservable(),
     };
 
     TestBed.configureTestingModule({
@@ -181,8 +195,47 @@ describe('PainelEncontroEspectador', () => {
       tempoRealService,
       rolagemRegistrada$,
       encontroAlterado$,
+      cenaAlterada$, reconexao$, campanhaAcessoAlterado$,
     };
   }
+
+  it("abre Investigação sem encontro, sem trilha de turnos", () => {
+    const investigacao = { ...painel(null), cenaAtiva: {
+      id: 901, campanhaId: CAMPANHA_ID, nome: "Arquivo selado",
+      tipo: CenaTipoEnum.INVESTIGACAO, status: CenaStatusEnum.ATIVA, encontro: null,
+    } };
+    const { raiz } = montar({ painelRetorno: investigacao });
+    expect(raiz.textContent).toContain("Arquivo selado");
+    expect(raiz.querySelector("app-trilha-turnos")).toBeNull();
+    expect(raiz.querySelector("app-documentos-cena-espectador")).not.toBeNull();
+  });
+
+  it("cena:alterada refaz só a própria campanha e rejeita respostas antigas", () => {
+    const { fixture, raiz, campanhaProjecaoService, cenaAlterada$ } = montar({});
+    const antiga = new Subject<CenaRecuperadaDto | null>();
+    const atual = new Subject<CenaRecuperadaDto | null>();
+    campanhaProjecaoService.recuperarCenaAtivaPainelEspectador.mockReturnValueOnce(antiga);
+    campanhaProjecaoService.recuperarCenaAtivaPainelEspectador.mockReturnValueOnce(atual);
+    cenaAlterada$.next({ campanhaId: CAMPANHA_ID + 1 });
+    expect(campanhaProjecaoService.recuperarCenaAtivaPainelEspectador).not.toHaveBeenCalled();
+    cenaAlterada$.next({ campanhaId: CAMPANHA_ID });
+    cenaAlterada$.next({ campanhaId: CAMPANHA_ID });
+    atual.next(null);
+    antiga.next(painel().cenaAtiva!);
+    fixture.detectChanges();
+    expect(raiz.textContent).toContain("Nenhuma cena em andamento.");
+  });
+
+  it("reconexão refaz a projeção e remoção de acesso limpa a cena", () => {
+    const { fixture, raiz, campanhaProjecaoService, reconexao$, campanhaAcessoAlterado$ } = montar({});
+    reconexao$.next();
+    expect(campanhaProjecaoService.recuperarCenaAtivaPainelEspectador).toHaveBeenCalledTimes(1);
+    const carga = new Subject<CenaRecuperadaDto | null>();
+    campanhaProjecaoService.recuperarCenaAtivaPainelEspectador.mockReturnValue(carga);
+    campanhaAcessoAlterado$.next({ campanhaId: CAMPANHA_ID });
+    fixture.detectChanges();
+    expect(raiz.querySelector("app-trilha-turnos")).toBeNull();
+  });
 
   it('entra na sala de campanha e mostra o cabeçalho (título, campanha, status)', () => {
     const { raiz, tempoRealService } = montar({});
@@ -223,7 +276,7 @@ describe('PainelEncontroEspectador', () => {
   it('sem encontro ativo, mostra o estado vazio (mesmo texto do jogador)', () => {
     const { raiz } = montar({ painelRetorno: painel(null) });
     expect(raiz.querySelector('.iniciativa-espectador__vazio')).not.toBeNull();
-    expect(raiz.textContent).toContain('Nenhum combate em andamento.');
+    expect(raiz.textContent).toContain('Nenhuma cena em andamento.');
     expect(raiz.querySelector('app-trilha-turnos')).toBeNull();
   });
 
@@ -265,7 +318,7 @@ describe('PainelEncontroEspectador', () => {
           provide: CampanhaProjecaoService,
           useValue: {
             recuperarPainelEspectador: vi.fn(() => of(painel())),
-            recuperarEncontroAtivoPainelEspectador: vi.fn(() => of(null)),
+            recuperarCenaAtivaPainelEspectador: vi.fn(() => of(null)),
           },
         },
         { provide: RolagemService, useValue: { listarPorCampanha: vi.fn(() => of([])) } },
@@ -278,6 +331,9 @@ describe('PainelEncontroEspectador', () => {
             rolagemRegistrada$: new Subject<RolagemResumoDto>().asObservable(),
             rolagemExcluida$: new Subject().asObservable(),
             encontroAlterado$: new Subject<{ encontro: { campanhaId: number } }>().asObservable(),
+            cenaAlterada$: new Subject().asObservable(),
+            reconexao$: new Subject().asObservable(),
+            campanhaAcessoAlterado$: new Subject().asObservable(),
           },
         },
       ],
@@ -329,25 +385,25 @@ describe('PainelEncontroEspectador', () => {
   it('encontro:alterado da própria campanha busca o encontro redigido via REST', () => {
     const { fixture, campanhaProjecaoService, encontroAlterado$ } = montar({});
     const encontroRedigido: EncontroRecuperadoDto = { ...encontroAtivo, turnoIndice: 0 };
-    campanhaProjecaoService.recuperarEncontroAtivoPainelEspectador.mockReturnValue(
-      of(encontroRedigido),
+    campanhaProjecaoService.recuperarCenaAtivaPainelEspectador.mockReturnValue(
+      of({ ...painel().cenaAtiva!, encontro: encontroRedigido }),
     );
 
     encontroAlterado$.next({ encontro: { campanhaId: CAMPANHA_ID } });
     fixture.detectChanges();
 
-    expect(campanhaProjecaoService.recuperarEncontroAtivoPainelEspectador).toHaveBeenCalledWith(
+    expect(campanhaProjecaoService.recuperarCenaAtivaPainelEspectador).toHaveBeenCalledWith(
       CAMPANHA_ID,
     );
   });
 
   it('encontro:alterado de OUTRA campanha não dispara refetch', () => {
     const { fixture, campanhaProjecaoService, encontroAlterado$ } = montar({});
-    campanhaProjecaoService.recuperarEncontroAtivoPainelEspectador.mockClear();
+    campanhaProjecaoService.recuperarCenaAtivaPainelEspectador.mockClear();
 
     encontroAlterado$.next({ encontro: { campanhaId: CAMPANHA_ID + 1 } });
     fixture.detectChanges();
 
-    expect(campanhaProjecaoService.recuperarEncontroAtivoPainelEspectador).not.toHaveBeenCalled();
+    expect(campanhaProjecaoService.recuperarCenaAtivaPainelEspectador).not.toHaveBeenCalled();
   });
 });

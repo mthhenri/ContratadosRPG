@@ -15,26 +15,15 @@
         </a>
         }
         <div class="coluna-acoes__categoria">Espectador</div>
-        @if (ehMestrePreview()) {
-        <button
-            app-coluna-acoes-item
-            icone="combate"
-            appTooltip="Iniciativa indisponível na prévia"
-            [disabled]="true"
-        >
-            Iniciativa
-        </button>
-        } @else {
         <a
             app-coluna-acoes-item
             icone="combate"
-            appTooltip="Iniciativa"
+            appTooltip="Cena atual"
             [routerLink]="['/campanhas', id, 'espectador', 'iniciativa']"
         >
-            Iniciativa
+            Cena atual
         </a>
-        }
-        <!-- Biblioteca (m9-05): na prévia fica indisponível, como a Iniciativa — a rota responderia
+        <!-- Biblioteca (m9-05): na prévia fica indisponível — a rota responderia
              com o recorte do mestre, não o do espectador. Fora dela, abre o painel flutuante (m9-12);
              a página do espectador fica no botão do próprio painel. -->
         @if (ehMestrePreview()) {
@@ -193,8 +182,9 @@
                         (click)="janelaHistorico.abrirCampanha(id, 'espectador')"
                         aria-label="Abrir em janela"
                         [appTooltip]="'Abrir em janela'"
-                        ><app-icone nome="abrir-externo"
-                    /></button>
+                    >
+                        <app-icone nome="abrir-externo" />
+                    </button>
                     @if (!carregando()) {
                     <span class="espectador__secao-contagem" aria-hidden="true"
                         >{{ rolagens().length }}</span

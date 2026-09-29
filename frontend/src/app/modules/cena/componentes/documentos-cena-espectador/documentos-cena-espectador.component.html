@@ -1,0 +1,65 @@
+<app-cartao titulo="Documentos apresentados" [semCaixa]="true">
+    <app-icone cartaoIndice nome="biblioteca" />
+    @if (carregando()) {
+        <div role="status" aria-label="Carregando documentos">
+            <app-esqueleto class="documentos-cena__esqueleto" />
+        </div>
+    } @else if (falha()) {
+        <app-estado-vazio tamanho="compacto" titulo="Não foi possível carregar os documentos." />
+        <button
+            app-botao
+            variante="secundario"
+            estilo="contorno"
+            tamanho="medio"
+            (click)="recarregar()"
+        >
+            Tentar novamente
+        </button>
+    } @else if (!documentos().length) {
+        <app-estado-vazio
+            tamanho="compacto"
+            icone="biblioteca"
+            titulo="Nenhum documento apresentado."
+            linhaApoio="Os documentos revelados pelo mestre aparecem aqui."
+        />
+    } @else {
+        <ul class="documentos-cena__lista">
+            @for (item of documentos(); track item.documentoId) {
+                <li>
+                    <!-- eslint-disable-next-line @angular-eslint/template/elements-content -->
+                    <button
+                        app-documento-cartao
+                        [titulo]="item.titulo"
+                        [tipo]="item.tipo"
+                        [aberto]="selecionado() === item.documentoId"
+                        (click)="abrir(item.documentoId)"
+                    ></button>
+                </li>
+            }
+        </ul>
+    }
+</app-cartao>
+<app-modal
+    [aberto]="selecionado() !== null"
+    [titulo]="documento()?.titulo ?? 'Documento'"
+    (fechou)="fechar()"
+>
+    @if (documento(); as leitura) {
+        <app-leitor-documento [documento]="leitura" />
+    } @else if (falhaLeitura()) {
+        <app-estado-vazio tamanho="compacto" titulo="Não foi possível abrir o documento." />
+        <button
+            app-botao
+            variante="secundario"
+            estilo="contorno"
+            tamanho="medio"
+            (click)="abrir(selecionado()!)"
+        >
+            Tentar novamente
+        </button>
+    } @else {
+        <div role="status" aria-label="Carregando documento">
+            <app-esqueleto class="documentos-cena__esqueleto-leitor" />
+        </div>
+    }
+</app-modal>

@@ -1,7 +1,7 @@
 import { Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { filter, finalize } from 'rxjs';
+import { filter, finalize, merge, Subscription } from 'rxjs';
 
 import type { CampanhaPainelEspectadorDto } from '@contratados-rpg/shared/dtos/campanha';
 import type { EncontroRecuperadoDto } from '@contratados-rpg/shared/dtos/encontro';
@@ -30,27 +30,20 @@ import {
   type CombatenteVisualDto,
 } from '../../encontro-leitura.util';
 import { rotuloStatusEncontro } from '../../rotulos-encontro';
+import type { CenaRecuperadaDto } from "@contratados-rpg/shared/dtos/cena";
+import { CenaTipoEnum } from "@contratados-rpg/shared/enums";
+import { cenaTemIniciativa } from "@contratados-rpg/shared/regras/cena";
+import { rotuloStatusCena, rotuloTipoCena } from "../../../cena/rotulos-cena";
+import { DocumentosCenaEspectador } from "../../../cena/componentes/documentos-cena-espectador/documentos-cena-espectador.component";
+import { EspectadorFichaCard } from "../../../campanha/componentes/espectador-ficha-card/espectador-ficha-card.component";
+import { Botao } from "../../../../shared/ui/botao/botao.component";
+import { agruparFichasPorMembro, ordenarMembros } from "../../../campanha/campanha-equipe.util";
 
 /**
- * A tela "Iniciativa" — visão do espectador (corrige `P-073`). Mesma casca de
- * `PainelEncontroMestre`/`PainelEncontroJogador` (cabeçalho, trilha de turnos, Rolagens e o palco
- * com a grade de combatentes), mas **arquivo próprio e separado** dos dois — nunca compartilha
- * componente com eles, mesma separação que já existe entre mestre e jogador.
- *
- * **Sem `app-coluna-acoes` e sem condução.** O espectador não gerencia combate nem tem
- * Calculadora/Caderno nesta tela (o Painel do espectador já cobre isso); `app-trilha-turnos`
- * recebe `combatentes` sem `[comAcao]` e `app-cartao-combatente` sem `[ehMestre]`/`[podeAjustar]`
- * — os dois caem no default somente-leitura dos próprios componentes, a mesma composição que
- * `IniciativaLeitura` já usa hoje dentro do modal do Painel do espectador (nunca um segundo motor
- * de leitura da ordem).
- *
- * **Corrige o `P-073`.** A causa raiz do bug era esta tela reusar a rota/dados de
- * `PainelEncontroMestre` (`EncontroPainelDadosService`), que chama `listarMembros`/
- * `GET /ficha?campanhaId`/`GET /campanha/:id` — todos recusados (403) para o papel `ESPECTADOR`.
- * Esta página nunca chama esses endpoints: usa só `CampanhaProjecaoService`
- * (`recuperarPainelEspectador`/`recuperarEncontroAtivoPainelEspectador`, já redigidos pelo
- * backend para quem não vê ficha nenhuma) e `RolagemService.listarPorCampanha` (qualquer membro,
- * inclusive `ESPECTADOR` — o backend já filtra pra só `PUBLICA` de terceiros).
+ * Cena atual no recorte próprio do espectador, também usado pela prévia do mestre.
+ * A composição preserva a Iniciativa existente e acrescenta o palco de agentes e os
+ * documentos da Investigação sem consultar rotas de gestão, fichas completas ou cadernos.
+ * Análogos: PainelCenaSemIniciativaJogador e a casca própria PainelEncontroEspectador.
  */
 @Component({
   selector: 'app-painel-encontro-espectador',
@@ -65,6 +58,9 @@ import { rotuloStatusEncontro } from '../../rotulos-encontro';
     TrilhaTurnos,
     CartaoCombatente,
     HistoricoRolagensSidebar,
+    DocumentosCenaEspectador,
+    EspectadorFichaCard,
+    Botao,
   ],
   templateUrl: './painel-espectador.page.html',
   styleUrl: './painel-espectador.page.scss',
@@ -83,6 +79,31 @@ export class PainelEncontroEspectador {
   protected readonly rotuloStatusEncontro = rotuloStatusEncontro;
 
   protected readonly carregando = signal(true);
+  protected readonly falha = signal(false);
+  protected readonly cena = signal<CenaRecuperadaDto | null>(null);
+  protected readonly painel = signal<CampanhaPainelEspectadorDto | null>(null);
+  protected readonly temIniciativa = computed(() => {
+    const cena = this.cena();
+    return cena !== null && cenaTemIniciativa(cena.tipo);
+  });
+  protected readonly ehInvestigacao = computed(() => this.cena()?.tipo === CenaTipoEnum.INVESTIGACAO);
+  protected readonly rotuloTipoCena = rotuloTipoCena;
+  protected readonly rotuloStatusCena = rotuloStatusCena;
+  protected readonly agentes = computed(() => {
+    const painel = this.painel();
+    if (!painel) { return []; }
+    const porMembro = agruparFichasPorMembro(painel.fichas);
+    return ordenarMembros(painel.membros).flatMap((membro) =>
+      (porMembro.get(membro.usuarioId) ?? []).map((ficha) => ({
+        ...ficha, donoNome: membro.nome,
+      })),
+    );
+  });
+  private cargaCena?: Subscription;
+  private geracaoCena = 0;
+  private cargaPainel?: Subscription;
+  private cargaRolagens?: Subscription;
+  private geracaoPainel = 0;
   protected readonly campanhaNome = signal<string | null>(null);
   protected readonly encontro = signal<EncontroRecuperadoDto | null>(null);
   protected readonly emCombate = computed(
@@ -113,9 +134,9 @@ export class PainelEncontroEspectador {
       this.carregarPainel();
     }
 
-    this.rolagemService
+    this.cargaRolagens = this.rolagemService
       .listarPorCampanha(this.campanhaId)
-      .pipe(finalize(() => this.carregandoRolagens.set(false)))
+      .pipe(takeUntilDestroyed(), finalize(() => this.carregandoRolagens.set(false)))
       // Espectador real só recebe públicas; o mestre em prévia recebe também as privadas — a
       // prévia mostra o recorte do espectador, então só as públicas entram.
       .subscribe({
@@ -135,7 +156,8 @@ export class PainelEncontroEspectador {
     // Guarda contra duplicata do id mais recente, igual `espectador.page.ts`.
     this.tempoRealService.rolagemRegistrada$
       .pipe(
-        filter((rolagem) => rolagem.visibilidade === RolagemVisibilidadeEnum.PUBLICA),
+        filter((rolagem) => rolagem.campanhaId === this.campanhaId
+          && rolagem.visibilidade === RolagemVisibilidadeEnum.PUBLICA),
         takeUntilDestroyed(),
       )
       .subscribe({
@@ -153,25 +175,85 @@ export class PainelEncontroEspectador {
         filter((evento) => evento.encontro.campanhaId === this.campanhaId),
         takeUntilDestroyed(),
       )
-      .subscribe({ next: () => this.atualizarEncontro() });
+      .subscribe({ next: () => this.recarregarCena() });
+
+    merge(
+      this.tempoRealService.cenaAlterada$.pipe(
+        filter((evento) => evento.campanhaId === this.campanhaId),
+      ),
+      this.tempoRealService.reconexao$,
+    ).pipe(takeUntilDestroyed()).subscribe(() => {
+      this.recarregarCena();
+      this.carregarPainel(false);
+    });
+    this.tempoRealService.campanhaAcessoAlterado$
+      .pipe(filter((evento) => evento.campanhaId === this.campanhaId), takeUntilDestroyed())
+      .subscribe(() => {
+        ++this.geracaoPainel;
+        this.cargaPainel?.unsubscribe();
+        this.cargaRolagens?.unsubscribe();
+        this.aplicarCena(null);
+        this.painel.set(null);
+        this.rolagens.set([]);
+        this.recarregarCena();
+      });
   }
 
   private aplicarPainel(painel: CampanhaPainelEspectadorDto): void {
     this.campanhaNome.set(painel.campanha.nome);
-    this.encontro.set(painel.encontroAtivo);
+    this.painel.set(painel);
+    this.aplicarCena(painel.cenaAtiva ?? null);
     this.carregando.set(false);
   }
 
-  private carregarPainel(): void {
-    this.campanhaProjecaoService.recuperarPainelEspectador(this.campanhaId, 1, 20).subscribe({
-      next: (painel) => this.aplicarPainel(painel),
+  private carregarPainel(reconciliarCena = true): void {
+    const geracao = ++this.geracaoPainel;
+    this.cargaPainel?.unsubscribe();
+    this.cargaPainel = this.campanhaProjecaoService
+      .recuperarPainelEspectador(this.campanhaId, 1, 20)
+      .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (painel) => {
+        if (geracao !== this.geracaoPainel) { return; }
+        if (reconciliarCena) { this.aplicarPainel(painel); }
+        else {
+          this.painel.set(painel);
+          this.campanhaNome.set(painel.campanha.nome);
+          this.rolagens.set(painel.rolagens.itens);
+        }
+      },
+      error: () => {
+        this.aplicarCena(null);
+        this.carregando.set(false);
+        this.falha.set(true);
+      },
     });
   }
 
-  private atualizarEncontro(): void {
-    this.campanhaProjecaoService
-      .recuperarEncontroAtivoPainelEspectador(this.campanhaId)
-      .subscribe({ next: (encontro) => this.encontro.set(encontro) });
+  protected recarregarCena(): void {
+    const geracao = ++this.geracaoCena;
+    this.cargaCena?.unsubscribe();
+    this.falha.set(false);
+    this.cargaCena = this.campanhaProjecaoService
+      .recuperarCenaAtivaPainelEspectador(this.campanhaId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (cena) => {
+          if (geracao !== this.geracaoCena) { return; }
+          this.aplicarCena(cena);
+          this.carregando.set(false);
+        },
+        error: () => {
+          if (geracao !== this.geracaoCena) { return; }
+          this.aplicarCena(null);
+          this.carregando.set(false);
+          this.falha.set(true);
+        },
+      });
+  }
+
+  private aplicarCena(cena: CenaRecuperadaDto | null): void {
+    this.cena.set(cena);
+    this.encontro.set(cena && cenaTemIniciativa(cena.tipo) ? cena.encontro : null);
   }
 
   protected ehDaVez(combatente: CombatenteVisualDto): boolean {

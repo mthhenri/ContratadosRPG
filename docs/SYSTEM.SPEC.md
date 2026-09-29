@@ -550,11 +550,14 @@ usuario_ficha_acesso        ficha_id FK, usuario_id FK
   explicitamente o papel de um membro entre `JOGADOR`/`ESPECTADOR` — nunca a si mesmo, nunca o
   único mestre; promover um espectador a mestre exige primeiro torná-lo `JOGADOR`.
   `ESPECTADOR` nunca obtém ficha, nunca rola e nunca vê dado de gestão (código, membros), mesmo por
-  rota direta ou concessão em `usuario_ficha_acesso` — só a identidade segura da campanha e o feed
-  de rolagens `PUBLICA`, via projeção dedicada (painel do espectador) ou, para o mestre, em modo de
-  prévia. A sala de WebSocket do espectador (`campanha:<id>:espectador`) é separada da sala de
-  mestre/jogador — só recebe os eventos explicitamente encaminhados a ela (hoje, só rolagem
-  pública), nunca os de ficha/inventário/caderno/gestão de membro.
+  rota direta ou concessão em `usuario_ficha_acesso`. A projeção dedicada entrega identidade
+  segura, rolagens `PUBLICA`, agentes não ocultos e a cena ativa redigida. Na Investigação ativa,
+  lista e recupera somente documentos revelados vinculados àquela cena. A prévia do mestre usa
+  o mesmo recorte, inclusive na recuperação direta de documentos; abertura é voluntária e não
+  acompanha o foco do mestre. A sala `campanha:<id>:espectador` é separada da sala de mestre/jogador
+  e recebe somente eventos explicitamente encaminhados, nunca conteúdo privado ou gestão.
+  `campanha:acesso-alterado` contém apenas `campanhaId` e é enviado diretamente às conexões do
+  usuário afetado após recalibrar suas salas, inclusive na remoção; invalida a leitura em curso.
 - Uma campanha tem exatamente **um** mestre no v1 — inicialmente o criador, mas o papel é
   **transferível** pelo mestre atual a outro membro (o alvo vira `MESTRE` e o mestre atual é
   rebaixado a `JOGADOR`, **atomicamente**; a invariante de exatamente um mestre se mantém).

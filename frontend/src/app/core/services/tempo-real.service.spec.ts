@@ -380,6 +380,15 @@ describe('TempoRealService', () => {
     expect(recebidos).toEqual([evento]);
   });
 
+  it("repassa o aviso de alteração do próprio acesso sem conteúdo de gestão", () => {
+    const { servico } = criar(() => "jwt");
+    servico.conectar();
+    const recebidos: unknown[] = [];
+    servico.campanhaAcessoAlterado$.subscribe((evento) => recebidos.push(evento));
+    socketFake.disparar("campanha:acesso-alterado", { campanhaId: 9 });
+    expect(recebidos).toEqual([{ campanhaId: 9 }]);
+  });
+
   it('repassa o retrato de leitores da Biblioteca (m9-10) tal como chegou', () => {
     const { servico } = criar(() => 'jwt');
     servico.conectar();

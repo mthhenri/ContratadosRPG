@@ -953,6 +953,10 @@ export const schemasContratosPublicos = {
     "CampanhaPainelEspectadorDto": {
         "type": "object",
         "properties": {
+            "cenaAtiva": {
+                "$ref": "#/components/schemas/CenaRecuperadaDto",
+                "description": "Cena atual, inclusive sem iniciativa; nunca contém planejadas nem histórico."
+            },
             "campanha": {
                 "$ref": "#/components/schemas/CampanhaIdentidadeSeguraDto"
             },
@@ -1377,6 +1381,57 @@ export const schemasContratosPublicos = {
         ],
         "additionalProperties": false,
         "description": "Estado completo da cena. `encontro` é o estado do encontro dela **já no recorte de quem pediu**\n(revelação m7-06) — `null` quando o tipo não tem iniciativa (`cenaTemIniciativa`)."
+    },
+    "CenaEspectadorAtivaRecuperarDto": {
+        "type": "object",
+        "properties": {
+            "campanhaId": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "campanhaId"
+        ],
+        "additionalProperties": false,
+        "description": "Consulta interna da cena ativa no recorte comum do espectador e da prévia."
+    },
+    "CenaEspectadorDocumentosListarDto": {
+        "type": "object",
+        "properties": {
+            "campanhaId": {
+                "type": "number"
+            },
+            "cenaId": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "campanhaId",
+            "cenaId"
+        ],
+        "additionalProperties": false,
+        "description": "Documentos vinculados à Investigação ativa da campanha, no recorte espectador."
+    },
+    "CenaEspectadorDocumentoRecuperarDto": {
+        "type": "object",
+        "properties": {
+            "campanhaId": {
+                "type": "number"
+            },
+            "cenaId": {
+                "type": "number"
+            },
+            "documentoId": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "campanhaId",
+            "cenaId",
+            "documentoId"
+        ],
+        "additionalProperties": false,
+        "description": "Leitura de documento revelado vinculado à Investigação ativa."
     },
     "CenaAlteradaDto": {
         "type": "object",
@@ -2031,6 +2086,69 @@ export const schemasContratosPublicos = {
         ],
         "additionalProperties": false,
         "description": "Item da busca na biblioteca. `trecho` traz o termo entre `⟦ ⟧` (contrato do caderno).\n`revelado` deixa a tela do mestre distinguir o oculto sem outra consulta — para jogador e\nespectador é sempre `true`. A resposta é `PaginatedResult<DocumentoBuscaResultadoDto>`."
+    },
+    "DocumentoLeituraInformarDto": {
+        "type": "object",
+        "properties": {
+            "campanhaId": {
+                "type": "number"
+            },
+            "documentoId": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "campanhaId",
+            "documentoId"
+        ],
+        "additionalProperties": false,
+        "description": "Entrada de `documento:leitura` (`m9-09`, cliente → servidor pelo WebSocket): o documento que este\nsocket está lendo agora na biblioteca da campanha, ou `null` quando não está lendo nenhum.\nPresença efêmera, sem persistência (como a do Caderno do Esquadrão) — por isso não é REST."
+    },
+    "DocumentoLeitorDto": {
+        "type": "object",
+        "properties": {
+            "documentoId": {
+                "type": "number"
+            },
+            "usuarioId": {
+                "type": "number"
+            },
+            "papel": {
+                "type": "string",
+                "enum": [
+                    "MESTRE",
+                    "JOGADOR",
+                    "ESPECTADOR"
+                ]
+            }
+        },
+        "required": [
+            "documentoId",
+            "usuarioId",
+            "papel"
+        ],
+        "additionalProperties": false,
+        "description": "Um leitor de um documento no retrato de presença — value object do `DocumentoLeitoresDto`."
+    },
+    "DocumentoLeitoresDto": {
+        "type": "object",
+        "properties": {
+            "campanhaId": {
+                "type": "number"
+            },
+            "leitores": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/DocumentoLeitorDto"
+                }
+            }
+        },
+        "required": [
+            "campanhaId",
+            "leitores"
+        ],
+        "additionalProperties": false,
+        "description": "Payload de `documento:leitores` (`m9-09`), só para a sala do mestre: o **retrato completo** de\nquem está lendo cada documento da campanha, nunca um delta — o cliente substitui o que tem. Um\nusuário aparece uma vez por documento (várias abas no mesmo documento contam uma); o mestre\nnunca aparece."
     },
     "EncontroLinhaDto": {
         "type": "object",
@@ -6643,6 +6761,30 @@ export const operacoesContratosPublicos = {
         "tag": "Campanhas",
         "publica": false,
         "responseSchema": "CampanhaPainelEspectadorDto"
+    },
+    "CampanhaProjecaoController_recuperarCenaAtivaPainelEspectador": {
+        "controller": "CampanhaProjecaoController",
+        "metodo": "get",
+        "caminho": "/campanha/:id/painel-espectador/cena-ativa",
+        "tag": "Campanhas",
+        "publica": false,
+        "responseSchema": "CenaRecuperadaDto"
+    },
+    "CampanhaProjecaoController_listarDocumentosCenaPainelEspectador": {
+        "controller": "CampanhaProjecaoController",
+        "metodo": "get",
+        "caminho": "/campanha/:id/painel-espectador/cena/:cenaId/documento",
+        "tag": "Campanhas",
+        "publica": false,
+        "responseSchema": "CenaDocumentoResumoDto[]"
+    },
+    "CampanhaProjecaoController_recuperarDocumentoCenaPainelEspectador": {
+        "controller": "CampanhaProjecaoController",
+        "metodo": "get",
+        "caminho": "/campanha/:id/painel-espectador/cena/:cenaId/documento/:documentoId",
+        "tag": "Campanhas",
+        "publica": false,
+        "responseSchema": "DocumentoRecuperadoDto"
     },
     "CampanhaProjecaoController_recuperarEncontroAtivoPainelEspectador": {
         "controller": "CampanhaProjecaoController",

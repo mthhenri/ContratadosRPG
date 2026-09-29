@@ -5,6 +5,8 @@ import type {
 } from '@contratados-rpg/shared/dtos/campanha';
 import type { FichaRecuperadaDto } from '@contratados-rpg/shared/dtos/ficha';
 import type { EncontroRecuperadoDto } from '@contratados-rpg/shared/dtos/encontro';
+import type { CenaRecuperadaDto, CenaDocumentoResumoDto } from "@contratados-rpg/shared/dtos/cena";
+import type { DocumentoRecuperadoDto } from "@contratados-rpg/shared/dtos/documento";
 import { ActiveUser } from '../../core/decorators';
 import { DocumentarController } from '../../core/openapi';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
@@ -31,6 +33,42 @@ export class CampanhaProjecaoController {
     return this.campanhaProjecaoService.recuperarPainelEspectador(
       { campanhaId: id, pagina, itensPorPagina },
       usuarioAtivo,
+    );
+  }
+
+  /** Cena ativa independente de existir iniciativa. */
+  @Get("campanha/:id/painel-espectador/cena-ativa")
+  recuperarCenaAtivaPainelEspectador(
+    @Param("id", ParseIntPipe) id: number,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<CenaRecuperadaDto | null> {
+    return this.campanhaProjecaoService.recuperarCenaAtivaPainelEspectador(
+      { campanhaId: id }, usuarioAtivo,
+    );
+  }
+
+  /** Vínculos revelados da Investigação atual. */
+  @Get("campanha/:id/painel-espectador/cena/:cenaId/documento")
+  listarDocumentosCenaPainelEspectador(
+    @Param("id", ParseIntPipe) id: number,
+    @Param("cenaId", ParseIntPipe) cenaId: number,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<CenaDocumentoResumoDto[]> {
+    return this.campanhaProjecaoService.listarDocumentosCenaPainelEspectador(
+      { campanhaId: id, cenaId }, usuarioAtivo,
+    );
+  }
+
+  /** Documento revelado ainda vinculado à Investigação atual. */
+  @Get("campanha/:id/painel-espectador/cena/:cenaId/documento/:documentoId")
+  recuperarDocumentoCenaPainelEspectador(
+    @Param("id", ParseIntPipe) id: number,
+    @Param("cenaId", ParseIntPipe) cenaId: number,
+    @Param("documentoId", ParseIntPipe) documentoId: number,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<DocumentoRecuperadoDto> {
+    return this.campanhaProjecaoService.recuperarDocumentoCenaPainelEspectador(
+      { campanhaId: id, cenaId, documentoId }, usuarioAtivo,
     );
   }
 

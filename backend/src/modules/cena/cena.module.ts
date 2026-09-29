@@ -21,5 +21,6 @@ import { CenaService } from './cena.service';
   imports: [CampanhaModule, EncontroModule, DocumentoModule, forwardRef(() => GatewayModule)],
   controllers: [CenaController],
   providers: [CenaRepository, CenaService, CenaDocumentoRepository, CenaDocumentoService],
+  exports: [CenaService, CenaDocumentoService],
 })
 export class CenaModule {}
