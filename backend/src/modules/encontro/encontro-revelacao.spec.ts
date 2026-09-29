@@ -194,24 +194,154 @@ describe('ocultarNaoRevelados', () => {
     expect(oculto.arquetipo).toBe(ArquetipoEnum.LUTADOR);
   });
 
-  it('m7-16: some com a "carteirinha" do agente cuja ficha está oculta, igual a uma criatura', () => {
-    const agente = combatente(2, {
-      nome: 'Max Star',
-      donoNome: 'Sirius',
+  describe('fix-ficha-oculta-identidade-encontro: agente oculto de terceiro', () => {
+    const agenteOculto = combatente(2, {
+      nome: 'Agente Oculto Auditoria',
+      donoNome: 'Ana',
       classe: ClasseEnum.COMBATENTE,
       arquetipo: ArquetipoEnum.LUTADOR,
-      imagemUrl: '/uploads/agentes/max-star.webp',
+      imagemUrl: '/uploads/agentes/oculto.webp',
     });
-    // Nem em `fichaIdsVisiveis` nem em `fichaIdsIdentidadeVisivel` (ficha oculta pelo dono).
-    const [oculto] = ocultarNaoRevelados(
-      estado([agente]),
-      new Set<number>(),
-      new Set<number>(),
-    ).combatentes;
+    const criaturaNaoRevelada = combatente(3, {
+      tipoFicha: TipoFichaEnum.CRIATURA,
+      nome: 'SCP-1471-A',
+    });
+    const criaturaRevelada = combatente(4, { tipoFicha: TipoFichaEnum.CRIATURA, nome: 'SCP-049' });
+    const eventoDoOculto = {
+      id: 3,
+      tipo: EncontroEventoTipoEnum.DANO,
+      rodada: 2,
+      turno: 2,
+      texto: 'Agente Oculto Auditoria sofreu 4 de dano',
+      combatenteId: 2,
+      createdDate: '2026-08-18T00:00:02.000Z',
+    };
+    const comOrdem = (
+      combatentes: readonly EncontroCombatenteResumoDto[],
+      ordem: readonly number[],
+      turnoIndice: number,
+    ): EncontroRecuperadoDto => {
+      const ocorrencias = new Map<number, number>();
+      return {
+        ...estado(combatentes),
+        turnoIndice,
+        ordemRodada: ordem.map((combatenteId) => {
+          const ocorrencia = (ocorrencias.get(combatenteId) ?? 0) + 1;
+          ocorrencias.set(combatenteId, ocorrencia);
+          return { combatenteId, ocorrencia };
+        }),
+      };
+    };
+    // Observador B: abre a própria ficha (10) e a criatura revelada (40); vê a carteirinha dos
+    // agentes não ocultos. A ficha 20 está oculta e não é dele.
+    const recortarComoTerceiro = (base: EncontroRecuperadoDto) =>
+      ocultarNaoRevelados(base, new Set([10, 40]), new Set([10, 30, 40]));
 
-    expect(oculto.imagemUrl).toBeNull();
-    expect(oculto.donoNome).toBeNull();
-    expect(oculto.classe).toBeNull();
-    expect(oculto.arquetipo).toBeNull();
+    it('remove o combatente, os slots e os eventos dele sem deixar nome nem id', () => {
+      const base = {
+        ...comOrdem([combatente(1), agenteOculto, criaturaNaoRevelada], [1, 2, 3], 0),
+        eventos: [...estado([]).eventos, eventoDoOculto],
+      };
+      const recortado = recortarComoTerceiro(base);
+
+      expect(recortado.combatentes.map((item) => item.id)).toEqual([1, 3]);
+      expect(recortado.ordemRodada.map((slot) => slot.combatenteId)).toEqual([1, 3]);
+      expect(recortado.eventos.map((evento) => evento.id)).toEqual([1]);
+      const serializado = JSON.stringify(recortado);
+      expect(serializado).not.toContain('Agente Oculto Auditoria');
+      expect(serializado).not.toContain('oculto.webp');
+      expect(serializado).not.toContain('"fichaId":20');
+      expect(serializado).not.toContain('"combatenteId":2');
+    });
+
+    it('preserva criatura não revelada e revelada ao redor do agente removido', () => {
+      const recortado = recortarComoTerceiro(
+        comOrdem([criaturaRevelada, agenteOculto, criaturaNaoRevelada], [4, 2, 3], 0),
+      );
+      const [revelada, naoRevelada] = recortado.combatentes;
+
+      expect(revelada).toEqual(criaturaRevelada);
+      expect(naoRevelada.nome).toBe('SCP-1471-A');
+      expect(naoRevelada.revelado).toBe(false);
+      expect(naoRevelada.vidaMaxima).toBe(0);
+    });
+
+    it('mantém o agente oculto para quem pode abrir a ficha (dono, mestre, alvo da prévia)', () => {
+      const base = comOrdem([combatente(1), agenteOculto], [1, 2], 1);
+      const recortado = ocultarNaoRevelados(base, new Set([20]), new Set([10]));
+
+      expect(recortado.combatentes[1]).toEqual(agenteOculto);
+      expect(recortado.ordemRodada).toEqual(base.ordemRodada);
+      expect(recortado.turnoIndice).toBe(1);
+    });
+
+    it('espectador (nenhuma ficha aberta) também não recebe o agente oculto', () => {
+      const recortado = ocultarNaoRevelados(
+        comOrdem([combatente(1), agenteOculto], [1, 2], 0),
+        new Set<number>(),
+        new Set([10]),
+      );
+
+      expect(recortado.combatentes.map((item) => item.id)).toEqual([1]);
+      expect(recortado.ordemRodada.map((slot) => slot.combatenteId)).toEqual([1]);
+    });
+
+    it('turno do agente oculto aparece no próximo slot visível, sem alterar a ordem visível', () => {
+      const recortado = recortarComoTerceiro(
+        comOrdem([combatente(1), agenteOculto, criaturaNaoRevelada], [1, 2, 3], 1),
+      );
+
+      expect(recortado.turnoIndice).toBe(1);
+      expect(recortado.ordemRodada[recortado.turnoIndice].combatenteId).toBe(3);
+    });
+
+    it('turno do agente oculto que fecha a rodada aparece no último slot visível', () => {
+      const recortado = recortarComoTerceiro(
+        comOrdem([combatente(1), criaturaNaoRevelada, agenteOculto], [1, 3, 2], 2),
+      );
+
+      expect(recortado.turnoIndice).toBe(1);
+      expect(recortado.ordemRodada[recortado.turnoIndice].combatenteId).toBe(3);
+    });
+
+    it('reposiciona o turno de um visível quando slots do oculto ficam antes dele', () => {
+      // Cadência: o oculto tem dois slots intercalados antes da vez da criatura.
+      const recortado = recortarComoTerceiro(
+        comOrdem([combatente(1), agenteOculto, criaturaNaoRevelada], [2, 1, 2, 3], 3),
+      );
+
+      expect(recortado.ordemRodada).toEqual([
+        { combatenteId: 1, ocorrencia: 1 },
+        { combatenteId: 3, ocorrencia: 1 },
+      ]);
+      expect(recortado.turnoIndice).toBe(1);
+      expect(recortado.ordemRodada[recortado.turnoIndice].combatenteId).toBe(3);
+    });
+
+    it('não mexe no turno quando os slots do oculto vêm depois dele', () => {
+      const recortado = recortarComoTerceiro(
+        comOrdem([combatente(1), criaturaNaoRevelada, agenteOculto], [1, 3, 2], 1),
+      );
+
+      expect(recortado.turnoIndice).toBe(1);
+    });
+
+    it('com só o agente oculto na ordem, o turno fica em 0 com a ordem vazia', () => {
+      const recortado = recortarComoTerceiro(comOrdem([agenteOculto], [2], 0));
+
+      expect(recortado.combatentes).toEqual([]);
+      expect(recortado.ordemRodada).toEqual([]);
+      expect(recortado.turnoIndice).toBe(0);
+    });
+
+    it('em montagem (sem ordem calculada) o agente oculto também sai da lista', () => {
+      const recortado = recortarComoTerceiro({
+        ...comOrdem([combatente(1), agenteOculto], [], 0),
+        status: EncontroStatusEnum.MONTAGEM,
+      });
+
+      expect(recortado.combatentes.map((item) => item.id)).toEqual([1]);
+      expect(recortado.ordemRodada).toEqual([]);
+    });
   });
 });

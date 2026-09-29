@@ -47,7 +47,7 @@ Legenda: **observado** = resposta REST/socket real; **estático** = caminho comp
 
 Causa: `ocultarNaoRevelados` faz `map`, e `ocultarCombatente` mantém nome/id/cor/iniciativa/ordem mesmo sem identidade visível; só retira números e avatar. O retorno espalha o estado original, deixando ordem e índice originais. `encontro-revelacao.spec.ts:197` testa avatar/dono/classe ausentes, sem exigir ausência do combatente.
 
-Correção encaminhada: [fix-ficha-oculta-identidade-encontro](../specs/backlog/fix-ficha-oculta-identidade-encontro.spec.md).
+Correção encaminhada: [fix-ficha-oculta-identidade-encontro](../specs/done/fix-ficha-oculta-identidade-encontro.spec.md) — **corrigido em 2026-09-29**: o agente oculto de terceiro sai de combatentes, ordem, log e contagem; durante o turno dele a vez aparece no próximo visível (decisão do autor). Observado com REST/WS M/A/B/S, prévias e reconexão, e nas telas de B/espectador/dono em 1920×1080 e 360×800 (ver `HISTORY.md`).
 
 ## FO-02 — Eventos identificam ficha oculta para a sala ampla
 

@@ -557,6 +557,12 @@ usuario_ficha_acesso        ficha_id FK, usuario_id FK
   valer sozinha quando a ficha é exibida de novo, e uma concessão feita durante a ocultação só
   passa a valer depois dela. Dono e mestre mantêm leitura e gestão. Não se aplica a criatura/NPC
   (nelas a concessão é a própria revelação) nem a ficha solta, sem campanha.
+- **No encontro, o agente oculto some do recorte de terceiros** (fix-ficha-oculta-identidade-encontro):
+  jogador sem acesso, espectador e prévias sem dono não recebem o combatente, seus slots na ordem
+  nem seus eventos de log, e a contagem de combatentes da listagem não o inclui. Durante o turno
+  dele, a vez aparece no próximo combatente visível da rodada (no último visível, se ele fecha a
+  rodada); a ordem real conduzida pelo mestre não muda. Criatura/NPC não revelada continua na
+  ordem com nome e sem números.
 - Jogador entra na campanha informando `codigo_convite`; entra com papel `JOGADOR`. Desde o m8-01/
   m8-02, o mesmo campo (`codigoConvite`) aceita também `codigo_convite_espectador` — o servidor
   resolve qual dos dois bateu e concede `JOGADOR` ou `ESPECTADOR` (o cliente nunca escolhe o papel).

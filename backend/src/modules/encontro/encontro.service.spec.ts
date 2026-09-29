@@ -224,11 +224,15 @@ describe('EncontroService', () => {
         campanhaId: 5,
         incluirCenaPlanejada: false,
         incluirCenaEncerrada: false,
+        usuarioId: jogador.sub,
+        omitirAgentesOcultosDeTerceiro: true,
       });
       expect(encontroRepositorio.listarPorCampanha).toHaveBeenNthCalledWith(2, {
         campanhaId: 5,
         incluirCenaPlanejada: true,
         incluirCenaEncerrada: true,
+        usuarioId: mestre.sub,
+        omitirAgentesOcultosDeTerceiro: false,
       });
     });
   });
@@ -290,11 +294,15 @@ describe('EncontroService', () => {
         campanhaId: 5,
         incluirCenaPlanejada: false,
         incluirCenaEncerrada: false,
+        usuarioId: jogador.sub,
+        omitirAgentesOcultosDeTerceiro: true,
       });
       expect(encontroRepositorio.listarPorCampanha).toHaveBeenNthCalledWith(2, {
         campanhaId: 5,
         incluirCenaPlanejada: false,
         incluirCenaEncerrada: true,
+        usuarioId: jogador.sub,
+        omitirAgentesOcultosDeTerceiro: true,
       });
     });
   });

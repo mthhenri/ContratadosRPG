@@ -1,11 +1,12 @@
 # CONTEXT.md — Painel do Projeto
 
 > **Auditoria de ficha oculta em andamento:** [matriz e evidências](../auditorias/ficha-oculta-todos-consumidores.md).
-> Spec em `active/`, exclusivamente investigativa. Três divergências confirmadas viraram specs
-> de correção; eventos (FO-02) e concessão/leitura (FO-03) estão feitas, identidade no encontro
-> (FO-01, `P-090`) segue em backlog. Regra decidida: ocultar ficha de jogador **suspende** a
-> concessão (SYSTEM.SPEC §14). Seguem abertas as decisões de rolagem pública (D-01) e médias (D-02)
-> e a hipótese de URL de avatar já conhecida (H-02).
+> Spec em `active/`, exclusivamente investigativa. As três divergências confirmadas (eventos FO-02,
+> concessão/leitura FO-03, identidade no encontro FO-01) estão corrigidas. Regras decididas
+> (SYSTEM.SPEC §14): ocultar ficha de jogador **suspende** a concessão; no encontro, o agente
+> oculto some do recorte de terceiros e, durante o turno dele, a vez aparece no próximo visível.
+> Seguem abertas as decisões de rolagem pública (D-01) e médias (D-02) e a hipótese de URL de
+> avatar já conhecida (H-02).
 
 > **Requests — revisão de 2026-09-26 fechada:** as seis tasks do guarda-chuva
 > [requests-correcoes](../specs/done/requests-correcoes.spec.md) (`p-082`…`p-086` +

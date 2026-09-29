@@ -1,5 +1,63 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-29 — fix-ficha-oculta-identidade-encontro: agente oculto some do encontro de terceiros
+
+Origem: FO-01 da auditoria de ficha oculta (`P-090`). Jogador sem acesso e espectador recebiam,
+no encontro, o combatente ligado à ficha de `JOGADOR` oculta com nome, `fichaId`, cor e posição na
+ordem. O recorte de revelação (`ocultarNaoRevelados`) só zerava os números e a carteirinha. O
+contrato da auditoria exige ausência total, inclusive de identidade e marcadores.
+
+**Decisão do autor** sobre o ponto que a spec deixou aberto (turno do agente invisível): a vez
+aparece no **próximo** combatente visível da rodada, ou no último visível se o oculto fecha a
+rodada. Não há componente novo nem cartão genérico, e o observador não recebe sinal de que existe
+alguém agindo fora da sua vista. As alternativas descartadas foram "fica no anterior" (quem
+encerrou o turno continuaria vendo "sua vez") e "vez de ninguém" (campo novo no DTO e marcador da
+ficha oculta). Custo aceito: o dono do slot mostrado vê "sua vez" antes da hora, e se tentar
+encerrar o turno o backend recusa, porque a validação usa a ordem real.
+
+Backend: `encontro-revelacao.ts` remove o agente de ficha `JOGADOR` fora de `fichaIdsVisiveis`
+(que abre a ficha) **e** de `fichaIdsIdentidadeVisivel` (não oculta), ou seja, oculto e de outro
+dono. Saem o combatente, os slots dele em `ordemRodada` e os eventos dele no log, e o `turnoIndice` é
+reposicionado (`reposicionarTurno`). Dono, mestre e alvo dono da prévia continuam com o estado
+inteiro. Criatura/NPC não revelada e avulso ficam como antes, com nome e sem números. Sem remoção,
+o estado sai idêntico ao anterior. Como GET, `encontro:alterado` por usuário, prévias de
+jogador/espectador, a cena e a reconexão passam por `montarEstadoParaUsuario` /
+`recuperarEncontroAbertoRedigido`, o recorte vale em todos. A contagem `quantidadeCombatentes` de
+`GET campanha/:id/encontro` também denunciava o oculto: fora o mestre,
+`EncontroRepository.listarPorCampanha` não conta o agente oculto de outro dono. Nenhuma mudança de
+DTO, shared ou frontend: os consumidores (cartões, trilha, "Turno N/M", "Age agora", espectador)
+apenas apresentam o payload recortado. Regra registrada em SYSTEM.SPEC §14.
+
+Testes: `encontro-revelacao.spec.ts` ganhou 10 casos: ausência de nome/id/avatar no JSON
+serializado, criatura revelada e não revelada preservadas, dono mantém, espectador, turno do oculto
+no meio e no fim da rodada, Cadência com slots do oculto antes da vez, oculto depois da vez, só o
+oculto na ordem e montagem. O caso antigo, que só zerava a carteirinha do oculto, foi substituído.
+`encontro.service.spec.ts` confere o recorte da contagem por papel. Backend completo: 836 passam, 1
+skip. Lint: 0 erros (avisos preexistentes). O `tsc` do backend acusa 18 erros preexistentes em specs
+não tocados (`encontro-conducao.service.spec.ts`, `rolagem.service.spec.ts` etc.), nenhum nos
+arquivos desta tarefa.
+
+Verificação ao vivo (skill `verify`, API 3100/SPA 4300 do autor, contas novas
+`verifica_encontro_*`, campanha 3, ficha 12, encontro 1): **40/40** checagens REST/WS com M, A
+(dona da oculta), B (sem concessão) e S (espectador), mais criatura revelada a B, criatura não
+revelada e avulso. Na transição visível→oculta com sockets na sala, B e S receberam
+`encontro:alterado` sem nome, `fichaId` ou id do combatente, enquanto A e M continuaram com ele.
+Em montagem, GET de B, painel do espectador e prévias M→B e M→espectador saíram sem identidade e
+sem ids órfãos; M, A e a prévia M→A mantiveram. A listagem conta 5 para M e A e 4 para B e S. No
+combate (ordem real B, A, N, R, V), B vê 4 slots. No turno de A, M e A veem a vez de A, e B, S e
+prévia M→B veem "Turno 2/4" com a vez em N, pelo REST e pelo socket. O `turno/avancar` de B foi
+recusado. Dano em A não aparece no log de B e S. No turno real de N, B continua em 2/4, sem sinal
+extra. Um socket novo mais GET (reconexão) também sai sem identidade, e desocultar devolve o agente
+com 5 slots e o turno real. Playwright no turno oculto em `1920×1080` e `360×800`, telas de B
+(painel do jogador), S (Iniciativa do espectador) e A (dona): o nome oculto não aparece para B e S,
+a vez fica na criatura seguinte com "Turno 2/4", A vê "Sua vez" com 2/5, sem overflow e sem erro de
+página. Nenhum layout ou controle mudou; os estados exibidos são os já existentes.
+
+Fora do escopo e ainda aberto na auditoria: rolagem pública com nome da ficha (D-01), médias do
+esquadrão (D-02) e URL de avatar já conhecida (H-02). O campo `turno` dos eventos que sobram no log
+guarda a posição da ordem real. Ele não é exibido em nenhuma tela e não identifica ninguém, e
+remapeá-lo retroativamente entre rodadas não é possível.
+
 ## 2026-09-29 — fix-ficha-oculta-concessao-e-leitura: ocultar suspende a concessão
 
 Origem: FO-03 da auditoria de ficha oculta. Uma ficha de jogador oculta com concessão ativa

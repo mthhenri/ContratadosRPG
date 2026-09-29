@@ -114,7 +114,8 @@ export class EncontroService {
 
   /**
    * Encontros da campanha. Exige ser **membro**; o recorte é o mesmo da listagem de cenas
-   * (`recorteCenasDoPapel`): o mestre vê todos, o jogador só o da cena ativa.
+   * (`recorteCenasDoPapel`): o mestre vê todos, o jogador só o da cena ativa. Fora o mestre, a
+   * contagem de combatentes não inclui o agente oculto de outro dono (o mesmo recorte do estado).
    */
   async listarPorCampanha(
     dto: { campanhaId: number },
@@ -126,6 +127,8 @@ export class EncontroService {
       campanhaId: dto.campanhaId,
       incluirCenaPlanejada: recorte.incluirPlanejadas,
       incluirCenaEncerrada: recorte.incluirEncerradas,
+      usuarioId: usuarioAtivo.sub,
+      omitirAgentesOcultosDeTerceiro: membro.papel !== TipoCampanhaMembroPapelEnum.MESTRE,
     });
   }
 

@@ -16,7 +16,7 @@ import type {
   EncontroLinhaDto,
   EncontroResumoDto,
 } from '@contratados-rpg/shared/dtos/encontro';
-import { CenaStatusEnum, EncontroStatusEnum } from '@contratados-rpg/shared/enums';
+import { CenaStatusEnum, EncontroStatusEnum, TipoFichaEnum } from '@contratados-rpg/shared/enums';
 import { BaseRepository } from '../../core/base/base.repository';
 import { KNEX_CONNECTION } from '../../database/database.provider';
 
@@ -137,12 +137,18 @@ export class EncontroRepository extends BaseRepository {
    * Encontros de uma campanha (corrente + histórico), mais recente primeiro. Sem
    * `incluirCenaPlanejada`, os encontros de cena `PLANEJADA` ficam de fora; sem
    * `incluirCenaEncerrada`, os de cena `ENCERRADA` — o recorte de cada papel vem de
-   * `recorteCenasDoPapel` (`cena-visibilidade.ts`), o mesmo da listagem de cenas.
+   * `recorteCenasDoPapel` (`cena-visibilidade.ts`), o mesmo da listagem de cenas. Com
+   * `omitirAgentesOcultosDeTerceiro` (quem não é mestre), `quantidadeCombatentes` não conta o
+   * agente de ficha oculta de outro dono — o mesmo recorte que tira o combatente do estado
+   * (`encontro-revelacao.ts`, fix-ficha-oculta-identidade-encontro); senão a contagem o
+   * denunciaria.
    */
   async listarPorCampanha(dto: {
     campanhaId: number;
     incluirCenaPlanejada: boolean;
     incluirCenaEncerrada: boolean;
+    usuarioId: number;
+    omitirAgentesOcultosDeTerceiro: boolean;
   }): Promise<EncontroResumoDto[]> {
     return this.executarConsulta<EncontroResumoDto>(
       `SELECT encontro.id, encontro.campanha_id AS "campanhaId", encontro.cena_id AS "cenaId",
@@ -150,7 +156,21 @@ export class EncontroRepository extends BaseRepository {
               encontro.rodada_atual AS "rodadaAtual",
               (SELECT COUNT(*) FROM encontro_combatente
                 WHERE encontro_combatente.encontro_id = encontro.id
-                  AND encontro_combatente.is_deleted = false)::int AS "quantidadeCombatentes",
+                  AND encontro_combatente.is_deleted = false
+                  AND NOT (
+                    :omitirAgentesOcultosDeTerceiro::boolean
+                    AND EXISTS (
+                      SELECT 1 FROM ficha AS ficha_combatente
+                      JOIN tipo_ficha AS tipo_ficha_combatente
+                        ON tipo_ficha_combatente.id = ficha_combatente.tipo_ficha_id
+                       AND tipo_ficha_combatente.is_deleted = false
+                      WHERE ficha_combatente.id = encontro_combatente.ficha_id
+                        AND ficha_combatente.is_deleted = false
+                        AND COALESCE(ficha_combatente.oculta, false)
+                        AND tipo_ficha_combatente.codigo = :tipoJogador
+                        AND ficha_combatente.usuario_id <> :usuarioId
+                    )
+                  ))::int AS "quantidadeCombatentes",
               encontro.created_date AS "createdDate"
        FROM encontro
        ${this.juncaoStatus()}
@@ -164,6 +184,9 @@ export class EncontroRepository extends BaseRepository {
         incluirCenaEncerrada: dto.incluirCenaEncerrada,
         statusCenaPlanejada: CenaStatusEnum.PLANEJADA,
         statusCenaEncerrada: CenaStatusEnum.ENCERRADA,
+        usuarioId: dto.usuarioId,
+        omitirAgentesOcultosDeTerceiro: dto.omitirAgentesOcultosDeTerceiro,
+        tipoJogador: TipoFichaEnum.JOGADOR,
       },
     );
   }
