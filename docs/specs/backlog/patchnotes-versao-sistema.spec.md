@@ -13,8 +13,10 @@ uma versão.
 
 ## Decisões de produto fechadas
 
-1. **Patchnotes vivem no R2 como Markdown, sem tabela.** É conteúdo editorial, não relacional.
-   Um arquivo por versão (`patchnotes/<versao>.md`) mais um `patchnotes/indice.json` com a lista.
+1. **Patchnotes vivem no R2 como Markdown, sem tabela, e o R2 é a única fonte de verdade.**
+   É conteúdo editorial, não relacional. Um arquivo por versão (`patchnotes/<versao>.md`) mais um
+   `patchnotes/indice.json` com a lista. A pasta local `docs/patchnotes/` é só rascunho/base de
+   envio: fica no `.gitignore` e nada nela é versionado (decisão do autor, 2026-09-29).
 2. **Cache de 24 h no backend** (em memória, por processo). O deploy sobe uma revisão nova e
    esvazia o cache, então a nota publicada junto do deploy aparece na hora; só uma correção de nota
    *sem* deploy espera até 24 h. Para o navegador, `Cache-Control: public, max-age=300` — curto de
@@ -27,23 +29,34 @@ uma versão.
    `documento/revelar` adicionado"*.
 4. **A versão tem uma única fonte:** o `version` do `package.json` da raiz. Os três workspaces
    acompanham a mesma versão (o projeto é um produto só). Nada de `version.txt` paralelo.
-5. **SemVer enquanto `0.x`:** funcionalidade nova visível ao usuário sobe o *minor*
-   (`0.1.0 → 0.2.0`); só correção sobe o *patch*. `1.0.0` é decisão do autor, nunca do agente.
-6. **Área pública.** `/patchnotes` (lista + detalhe) sem login, como as calculadoras/simulação;
+5. **SemVer:** funcionalidade nova visível ao usuário sobe o *minor* (`1.0.0 → 1.1.0`); só
+   correção sobe o *patch*; mudança que quebre o uso existente (ex.: fluxo de sessão refeito) sobe
+   o *major*. Quem decide o major é o autor, nunca o agente.
+6. **Versão-base `1.0.0`** (o sistema já teve sessão real e está em uso). O histórico vira **dois
+   patchnotes retroativos**:
+   - **v1.0.0** — do início do projeto (02/07/2026) até o último commit de 01/09/2026
+     (`306a9714`, "evita overflow na barra de energia"). Tag `v1.0.0` nesse commit.
+   - **v1.1.0** — de 02/09/2026 até o momento do fechamento (hoje, 29/09/2026). É minor porque só
+     traz funcionalidade nova compatível (Cenas, Biblioteca de documentos, painel do espectador
+     refeito, janelas soltas, montador de rolagem, ficha de criatura redesenhada) e correções.
+     Tag `v1.1.0` no HEAD do fechamento.
+7. **Área pública.** `/patchnotes` (lista + detalhe) sem login, como as calculadoras/simulação;
    os endpoints do backend usam `@Public()`.
 
 ## Entregáveis
 
 ### pn-01 — Versão como fonte única
 
-1. Corrigir o `version` da raiz e dos três workspaces para a versão-base definida pelo autor (ver
-   "Perguntas abertas") e criar a tag git correspondente.
+1. Fixar o `version` da raiz e dos três workspaces em `1.1.0` (versão vigente após o fechamento
+   dos dois patchnotes retroativos) e criar as tags `v1.0.0` (commit `306a9714`) e `v1.1.0`.
 2. Script de prebuild do frontend que gera uma constante `versao` (versão + SHA curto do commit)
    a partir do `package.json`; `environment` não duplica o número à mão.
 3. `GET /health` passa a devolver `{ status, versao }` (`versao` lida do `package.json` no build do
    backend). Permite ver o que está no ar e detectar front/back dessincronizados.
-4. Exibir a versão na interface. Local **a decidir no gate visual** (ver "Perguntas abertas"):
-   `design-fidelity` escolhe o análogo aprovado; o item linka para `/patchnotes`.
+4. Exibir a versão na interface conforme a proposta escolhida no POC visual (ver "Perguntas
+   abertas", item 1). Recomendação: chip na topbar ao lado da marca, com ponto de "versão nova"
+   (comparada com a última visita em `localStorage`), e item "Novidades" no menu do perfil no
+   mobile; o chip linka para `/patchnotes`. `design-fidelity` fixa o análogo aprovado.
 
 ### pn-02 — Armazenamento de texto no R2
 
@@ -83,19 +96,24 @@ uma versão.
    ela (`git log` + `docs/context/HISTORY.md`); (b) propor o bump conforme a decisão 5 e **pedir
    confirmação do autor**; (c) redigir o patchnote no formato da decisão 3 — traduzindo o
    histórico técnico para linguagem de jogador; (d) atualizar `version` nos quatro `package.json`
-   (e o lock); (e) gravar `docs/patchnotes/<versao>.md`; (f) commit e tag `v<versao>`;
+   (e o lock); (e) gravar o rascunho em `docs/patchnotes/<versao>.md` (ignorado pelo git); (f) commit da
+   mudança de versão e tag `v<versao>`;
    (g) publicar no R2 (script `patchnotes:publicar`, que sobe o `.md` e regenera o
-   `indice.json`); (h) registrar em `HISTORY.md`.
+   `indice.json`; roda **localmente**, com credencial de escrita nas variáveis do autor, porque o
+   `.md` não está no git e portanto um passo do `cloudbuild.yaml` não o enxerga); (h) registrar em
+   `HISTORY.md`.
 3. Checklist de conferência e armadilhas: nota sem termo técnico; versão igual nos quatro
-   `package.json`; tag e nota apontam para a mesma versão; nunca `1.0.0` sem pedido do autor.
+   `package.json`; tag e nota apontam para a mesma versão; nunca subir o *major* sem pedido do autor.
 4. **Push da tag e publicação no R2 são ações externas: a skill sempre confirma com o autor antes.**
-5. Validação por uso: a skill só fecha depois de publicar a versão-base real (o mesmo ato que
-   corrige o `0.0.1`).
+5. Validação por uso: a skill só fecha depois de publicar os dois patchnotes retroativos reais
+   (`v1.0.0` e `v1.1.0`) e de eles aparecerem na página pública. O intervalo de cada um vem das
+   tags: `v1.0.0` = início → `306a9714`; `v1.1.0` = `v1.0.0` → HEAD.
 
 ## Critérios de Aceite
 
-1. `git grep -n '"version"' -- '*package.json'` mostra a mesma versão nos quatro pacotes; a tag
-   `v<versao>` existe.
+1. `git grep -n '"version"' -- '*package.json'` mostra `1.1.0` nos quatro pacotes; as tags
+   `v1.0.0` (em `306a9714`) e `v1.1.0` existem; `git check-ignore docs/patchnotes/x.md` confirma
+   a pasta ignorada.
 2. `GET /health` devolve a versão; a interface mostra a mesma versão do `package.json`.
 3. `GET /patchnotes` e `GET /patchnotes/:versao` respondem **sem token**; segunda chamada dentro
    das 24 h não lê o R2 (teste com provedor espião).
@@ -104,11 +122,11 @@ uma versão.
    sem novos avisos; `diff -r .claude/skills .agents/skills` vazio.
 6. Gate visual da `pn-04` e do ponto de exibição da versão registrado no fecho (análogo, viewports,
    estados).
-7. A skill foi exercitada publicando a versão-base, com a nota lida na página pública real.
+7. A skill foi exercitada publicando `v1.0.0` e `v1.1.0`, com as duas notas lidas na página pública real.
 
 ## Fora de Escopo
 
-- Editor de patchnotes na interface; a autoria é Markdown no repositório.
+- Editor de patchnotes na interface; a autoria é Markdown local, publicado no R2 pela skill.
 - Notificação in-app "há novidades desde sua última visita" (candidata a ideia futura).
 - Traduzir/gerar automaticamente a nota a partir de commits sem revisão do autor.
 - Paginação do índice, busca, RSS, comentários.
@@ -119,24 +137,24 @@ uma versão.
 - `core/armazenamento` (m3-62) e a configuração `ARMAZENAMENTO_*` já existentes.
 - `docs/design/` e um análogo aprovado, escolhido na `pn-04`, para a página; `marked` já está
   no frontend.
-- `cloudbuild.yaml` — o script de publicação precisa de credencial de **escrita** no R2.
+- Credencial de **escrita** no R2 na máquina do autor (só a leitura já está no backend).
+- POC visual: https://claude.ai/artifact/E2xhXddp4QyyT4i9tjBqsL (posição da versão e página
+  `/patchnotes`, em desktop e mobile), a servir de análogo para o gate da `pn-01`/`pn-04`.
 
-## Perguntas abertas (decidir antes de quebrar em tasks)
+## Perguntas abertas
 
-1. **Versão-base.** Sugestão: `0.1.0` (o produto já tem campanhas, fichas, cenas e documentos —
-   mais do que `0.0.x`). Confirmar ou escolher outra.
-2. **Onde exibir a versão.** Hoje o layout só tem a topbar, sem footer. Opções: footer discreto
-   global; item pequeno no fim da topbar/menu do usuário; só na tela de login e em "Sobre".
-   Decidir na `pn-01` com o gate visual.
-3. **Fonte dos `.md`.** Sugestão: `docs/patchnotes/*.md` versionado no git (revisão por PR, histórico)
-   e o R2 como espelho servido ao público. Confirmar; a alternativa é o R2 ser a única cópia.
-4. **Quem publica no R2.** Local, com credencial de escrita nas variáveis do autor, ou automático num
-   passo do `cloudbuild.yaml` no deploy. O segundo evita credencial na máquina do autor, mas
-   acopla a publicação do texto ao deploy.
+Fechadas em 2026-09-29: versão-base (`1.0.0` + `1.1.0`), fonte única no R2 com `docs/patchnotes/`
+ignorada, publicação local.
+
+1. **Onde exibir a versão** — escolher entre as três propostas do POC: A (rodapé global), B (chip
+   na topbar, recomendada), C (só no menu do perfil e no login).
+2. **Estados da página `/patchnotes`** no POC (carregando, versão inexistente, falha) — aprovar ou
+   ajustar junto com o layout.
 
 ## Riscos e Mitigação
 
 - **Nota com jargão.** A skill traduz do histórico técnico; o autor revisa antes do commit.
 - **Versão divergente** entre pacotes/tag/nota: a skill confere os três e o critério 1 prova.
 - **HTML injetado** via Markdown: sanitização obrigatória (critério 4).
+- **Credencial de escrita no R2** só na máquina do autor: nunca em repositório; a skill lê das variáveis de ambiente e recusa rodar sem elas.
 - **Cache de 24 h** escondendo correção de nota: aceito e documentado (decisão 2).
