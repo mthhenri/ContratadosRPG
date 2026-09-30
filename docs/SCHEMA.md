@@ -698,6 +698,7 @@ edição.
   },
   "vidaMaxima": 245,                    // snapshot: Base(25) + (Nível 8 + VIG 3) × Multiplicador(20) da Categoria (m3-10: editável depois)
   "vidaAtual": 245,
+  "condicoes": { "morrendo": false },  // m4-07: ativa ao chegar a 0; cura não remove sozinha
   "defesaBase": 18,                     // snapshot: 10 + Nível (m3-10: editável depois)
   "bloquear": 21,                       // snapshot: Defesa Base + VIG
   "esquivar": 21,                       // snapshot: Defesa Base + DES
@@ -735,6 +736,18 @@ interfaces readonly sem class-validator. Reusa `FichaAtributosDto`, `FichaSequel
 sem tabela `tipo_*`. O tipo de habilidade é próprio do NPC para excluir `GATILHO` em compilação:
 uma Passiva condicional continua `PASSIVA`, conforme o guia.
 
-O contrato não adiciona marcador de exceção Civil nem condição de saúde: o motor valida o cap
-sem bloquear Luta/Pontaria autorizadas pelo mestre (`m4-06`). A integração de Morrendo ao chegar
-a 0 de Vida exige definição na ficha/backend antes da UI; não se herdam flags de jogador.
+O contrato não adiciona marcador de exceção Civil: o motor valida o cap sem bloquear
+Luta/Pontaria autorizadas pelo mestre (`m4-06`). A `m4-07` acrescenta
+`condicoes?: FichaNpcCondicoesDto`, com `morrendo: boolean`; ausência em documento anterior
+equivale a `false`. Criação/edição/ajuste de Vida usam `shared/regras/npc.resolverMorrendo`:
+Vida ≤ 0 ativa a condição, cura mantém a condição, remoção explícita exige Vida positiva.
+Testes de Vigor por turno e socorro continuam narrativos; não se herdam Machucado,
+Inconsciente ou lesões de agente. O estado é lido pelos resumos e pelo Encontro na ficha,
+sem segunda cópia no combatente.
+
+A API própria usa `FichaNpc*Dto` de `ficha-npc-operacao.dtos.ts`, sem herança de DTOs de negócio:
+`POST /ficha/npc`, `GET/PUT /ficha/npc/:id` e `PATCH /ficha/npc/:id/vitalidade`.
+Criação exige mestre e define a posse pela sessão; leitura/edição reusam a matriz de permissões
+e o documento mantém snapshots editados. Imagem, concessão, exclusão, duplicação e atribuição
+reusam os endpoints genéricos. O campo relacional `oculta` não substitui concessão no NPC:
+jogador vê apenas mediante acesso explícito, independentemente desse campo.

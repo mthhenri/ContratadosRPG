@@ -109,6 +109,7 @@ describe('EncontroService — condução (m7-04)', () => {
     listarFichas: ReturnType<typeof vi.fn>;
     alterarVitalidade: ReturnType<typeof vi.fn>;
     alterarVitalidadeCriatura: ReturnType<typeof vi.fn>;
+    alterarVitalidadeNpc: ReturnType<typeof vi.fn>;
   };
   let campanhaGateway: {
     emitirEncontroAlterado: ReturnType<typeof vi.fn>;
@@ -142,6 +143,7 @@ describe('EncontroService — condução (m7-04)', () => {
       listarFichas: vi.fn().mockResolvedValue([{ id: 20 }]),
       alterarVitalidade: vi.fn(),
       alterarVitalidadeCriatura: vi.fn(),
+      alterarVitalidadeNpc: vi.fn(),
     };
     campanhaGateway = {
       emitirEncontroAlterado: vi.fn(),
@@ -395,6 +397,25 @@ describe('EncontroService — condução (m7-04)', () => {
   });
 
   describe('ajustarVida — fonte única', () => {
+    it.each(["vida", "energia"])("ajusta %s de NPC pelo contrato próprio da ficha", async (recurso) => {
+      encontroRepositorio.recuperarCombatentePorId.mockResolvedValue(criarCombatenteLinha({
+        id: 400, fichaId: 40, tipoFicha: TipoFichaEnum.NPC, fichaNome: "Rafael",
+        fichaDados: {
+          vidaAtual: 85, vidaMaxima: 999, energia: { atual: 12, maxima: 99 },
+          defesaBase: 15, esquivar: 17, bloquear: 17, atributos: { destreza: 2 },
+        } as unknown as EncontroCombatenteLinhaDto["fichaDados"],
+      }));
+      if (recurso === "vida") {
+        await service.ajustarVida({ id: 400, delta: -85, origemTexto: null }, mestre);
+      } else {
+        await service.ajustarEnergia({ id: 400, delta: -4, origemTexto: null }, mestre);
+      }
+      expect(fichaService.alterarVitalidadeNpc).toHaveBeenCalledWith(
+        recurso === "vida" ? { id: 40, vidaAtual: 0 } : { id: 40, energiaAtual: 8 }, mestre,
+      );
+      expect(fichaService.alterarVitalidade).not.toHaveBeenCalled();
+      expect(fichaService.alterarVitalidadeCriatura).not.toHaveBeenCalled();
+    });
     it('dano em agente muda a FICHA, nunca uma cópia no encontro', async () => {
       const agente = criarAgenteLinha();
       encontroRepositorio.recuperarCombatentePorId.mockResolvedValue(agente);

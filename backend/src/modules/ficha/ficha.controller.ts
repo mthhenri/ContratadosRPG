@@ -33,6 +33,12 @@ import type {
   FichaInventarioItemMandarParaBaseDto,
   FichaInventarioItemPegarDto,
   FichaMediasEsquadraoDto,
+  FichaNpcCriarDto,
+  FichaNpcCriadaDto,
+  FichaNpcRecuperadaDto,
+  FichaNpcAlterarDto,
+  FichaNpcAlteradaDto,
+  FichaNpcVitalidadeAlterarDto,
   FichaRecuperadaDto,
   FichaResumoDto,
   FichaVitalidadeAlterarDto,
@@ -120,6 +126,41 @@ export class FichaController {
   ): Promise<FichaCriaturaAlteradaDto> {
     return this.fichaService.alterarFichaCriatura({ ...dto, id }, usuarioAtivo);
   }
+
+    /** NPC reusa imagem, acesso, exclusão e atribuição das rotas genéricas. */
+    @Post("npc")
+    criarNpc(
+        @Body() dto: FichaNpcCriarDto,
+        @ActiveUser() usuarioAtivo: JwtPayload,
+    ): Promise<FichaNpcCriadaDto> {
+        return this.fichaService.criarFichaNpc(dto, usuarioAtivo);
+    }
+
+    @Get("npc/:id")
+    recuperarNpc(
+        @Param("id", ParseIntPipe) id: number,
+        @ActiveUser() usuarioAtivo: JwtPayload,
+    ): Promise<FichaNpcRecuperadaDto> {
+        return this.fichaService.recuperarFichaNpc({ id }, usuarioAtivo);
+    }
+
+    @Put("npc/:id")
+    alterarNpc(
+        @Param("id", ParseIntPipe) id: number,
+        @Body() dto: FichaNpcAlterarDto,
+        @ActiveUser() usuarioAtivo: JwtPayload,
+    ): Promise<FichaNpcAlteradaDto> {
+        return this.fichaService.alterarFichaNpc({ ...dto, id }, usuarioAtivo);
+    }
+
+    @Patch("npc/:id/vitalidade")
+    alterarVitalidadeNpc(
+        @Param("id", ParseIntPipe) id: number,
+        @Body() dto: FichaNpcVitalidadeAlterarDto,
+        @ActiveUser() usuarioAtivo: JwtPayload,
+    ): Promise<FichaNpcAlteradaDto> {
+        return this.fichaService.alterarVitalidadeNpc({ ...dto, id }, usuarioAtivo);
+    }
 
   @Get(':id')
   recuperar(

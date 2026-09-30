@@ -38,6 +38,14 @@ import type {
   FichaJogadorDadosDto,
   FichaListarDto,
   FichaMediasEsquadraoDto,
+  FichaNpcAlteradaDto,
+  FichaNpcCriadaDto,
+  FichaNpcCriarDto,
+  FichaNpcDadosDto,
+  FichaNpcInternoAlterarDto,
+  FichaNpcRecuperadaDto,
+  FichaNpcRecuperarDto,
+  FichaNpcVitalidadeInternoAlterarDto,
   FichaOrigemDto,
   FichaPreviaJogadorRecuperarDto,
   FichaRecuperadaDto,
@@ -66,6 +74,7 @@ import {
 } from '@contratados-rpg/shared/regras/agente';
 import { calcularResumoCompras, type CarrinhoItemDto } from '@contratados-rpg/shared/regras/compras';
 import { validarFichaCriatura } from '@contratados-rpg/shared/regras/criatura';
+import { resolverMorrendo } from "@contratados-rpg/shared/regras/npc";
 import {
   aplicarFormacaoAosDerivados,
   experimentoComPeculiaridade,
@@ -88,6 +97,7 @@ import { CampanhaRepository } from '../campanha/campanha.repository';
 import { CampanhaService } from '../campanha/campanha.service';
 import { omitirCamposPrivados, preservarCamposPrivados } from './ficha-campos-privados.util';
 import { FichaRepository } from './ficha.repository';
+import { validarDadosNpc } from "./ficha-npc-validacao.util";
 
 /** Tamanho máximo do avatar da ficha (m3-62) — 2MB. */
 const TAMANHO_MAXIMO_IMAGEM_BYTES = 2 * 1024 * 1024;
@@ -485,6 +495,7 @@ export class FichaService {
     }
 
     await this.validarPermissaoEdicao(fichaEncontrada, usuarioAtivo);
+    this.validarTipoFicha(fichaEncontrada, TipoFichaEnum.JOGADOR);
     this.validarDadosContraRegras(dto.dados);
     this.validarCor(dto.cor);
     this.validarImagemFoco(dto.imagemFoco);
@@ -535,6 +546,7 @@ export class FichaService {
     if (fichaEncontrada.usuarioId !== usuarioAtivo.sub) {
       throw new UnauthorizedAccessException();
     }
+    this.validarTipoFicha(fichaEncontrada, TipoFichaEnum.JOGADOR);
     if (fichaEncontrada.campanhaId === null) {
       throw new BusinessException('Ficha sem campanha não tem inventário de esquadrão');
     }
@@ -622,6 +634,7 @@ export class FichaService {
     if (fichaEncontrada.usuarioId !== usuarioAtivo.sub) {
       throw new UnauthorizedAccessException();
     }
+    this.validarTipoFicha(fichaEncontrada, TipoFichaEnum.JOGADOR);
     if (fichaEncontrada.campanhaId === null) {
       throw new BusinessException('Ficha sem campanha não tem inventário de esquadrão');
     }
@@ -700,6 +713,7 @@ export class FichaService {
     }
 
     await this.validarPermissaoEdicao(fichaEncontrada, usuarioAtivo);
+    this.validarTipoFicha(fichaEncontrada, TipoFichaEnum.JOGADOR);
     const estado = this.extrairVitalidade(dto.estado);
     this.validarVitalidade(estado);
     const estadoComMachucado = this.resolverMachucadoNaVitalidade(fichaEncontrada.dados, estado);
@@ -749,6 +763,7 @@ export class FichaService {
     }
 
     await this.validarPermissaoEdicao(fichaEncontrada, usuarioAtivo);
+    this.validarTipoFicha(fichaEncontrada, TipoFichaEnum.CRIATURA);
     if (!Number.isInteger(dto.vidaAtual)) {
       throw new BusinessException('Vida atual deve ser um número inteiro');
     }
@@ -937,6 +952,7 @@ export class FichaService {
     }
 
     const ehSoVisualizador = await this.validarPermissaoVisualizacao(fichaEncontrada, usuarioAtivo);
+    this.validarTipoFicha(fichaEncontrada, TipoFichaEnum.CRIATURA);
     const dados = ehSoVisualizador
       ? omitirCamposPrivados(fichaEncontrada.dados)
       : fichaEncontrada.dados;
@@ -958,6 +974,7 @@ export class FichaService {
     }
 
     await this.validarPermissaoEdicao(fichaEncontrada, usuarioAtivo);
+    this.validarTipoFicha(fichaEncontrada, TipoFichaEnum.CRIATURA);
     this.validarDadosCriaturaContraRegras(dto.dados);
     this.validarCor(dto.cor);
     this.validarImagemFoco(dto.imagemFoco);
@@ -990,6 +1007,134 @@ export class FichaService {
 
     return this.paraCriaturaAlterada(fichaAlterada);
   }
+
+    /** Cria NPC para o mestre da campanha ou, solto, para mestre de alguma campanha. */
+    async criarFichaNpc(
+        dto: FichaNpcCriarDto,
+        usuarioAtivo: JwtPayload,
+    ): Promise<FichaNpcCriadaDto> {
+        if (dto.campanhaId !== null) {
+            await this.validarMestreAlvo({
+                campanhaId: dto.campanhaId, usuarioId: usuarioAtivo.sub,
+            });
+        } else if (await this.campanhaRepositorio.contarCampanhasComoMestre({
+            id: usuarioAtivo.sub,
+        }) === 0) {
+            throw new UnauthorizedAccessException();
+        }
+        validarDadosNpc(dto.dados);
+        this.validarCor(dto.cor);
+        const dados = this.resolverCondicoesNpc(dto.dados);
+        // Mesma fronteira JSONB da criatura (m4-03); o contrato público permanece próprio.
+        const ficha = await this.fichaRepositorio.criarFicha({
+            campanhaId: dto.campanhaId, usuarioId: usuarioAtivo.sub, tipo: TipoFichaEnum.NPC,
+            nome: dto.nome, cor: dto.cor ?? null,
+            dados: dados as unknown as FichaJogadorDadosDto,
+        });
+        this.emitirFichaEntrouNaCampanha(ficha, { tipo: TipoFichaEnum.NPC, oculta: false });
+        return {
+            ...ficha, tipo: TipoFichaEnum.NPC, dados: ficha.dados as unknown as FichaNpcDadosDto,
+        };
+    }
+
+    /** Recupera NPC usando a mesma autorização de leitura e privacidade das demais fichas. */
+    async recuperarFichaNpc(
+        dto: FichaNpcRecuperarDto,
+        usuarioAtivo: JwtPayload,
+    ): Promise<FichaNpcRecuperadaDto> {
+        const ficha = await this.recuperarFicha(dto, usuarioAtivo);
+        this.validarTipoFicha(ficha, TipoFichaEnum.NPC);
+        return {
+            ...ficha, tipo: TipoFichaEnum.NPC, dados: ficha.dados as unknown as FichaNpcDadosDto,
+        };
+    }
+
+    /** Altera o documento de NPC sem recalcular máximos; leitor nunca ganha edição. */
+    async alterarFichaNpc(
+        dto: FichaNpcInternoAlterarDto,
+        usuarioAtivo: JwtPayload,
+    ): Promise<FichaNpcAlteradaDto> {
+        const ficha = await this.fichaRepositorio.recuperarPorId({ id: dto.id });
+        if (!ficha) throw new ResourceNotFoundException("Ficha");
+        await this.validarPermissaoEdicao(ficha, usuarioAtivo);
+        this.validarTipoFicha(ficha, TipoFichaEnum.NPC);
+        validarDadosNpc(dto.dados);
+        this.validarCor(dto.cor);
+        this.validarImagemFoco(dto.imagemFoco);
+        const anteriores = ficha.dados as unknown as FichaNpcDadosDto;
+        const dados = this.resolverCondicoesNpc(
+            preservarCamposPrivados(anteriores, dto.dados), anteriores,
+        );
+        const alterada = await this.fichaRepositorio.alterarFicha({
+            id: dto.id, nome: dto.nome,
+            cor: dto.cor === undefined ? ficha.cor : dto.cor,
+            imagemFoco: dto.imagemFoco === undefined ? ficha.imagemFoco : dto.imagemFoco,
+            oculta: dto.oculta ?? ficha.oculta, dados: dados as unknown as FichaJogadorDadosDto,
+        });
+        this.campanhaGateway.emitirFichaAlterada(alterada);
+        this.emitirRecortesAlterados(ficha, alterada, TipoFichaEnum.NPC);
+        if (alterada.campanhaId !== null && ficha.oculta !== alterada.oculta) {
+            this.campanhaGateway.emitirFichaVisibilidadeAlterada({
+                campanhaId: alterada.campanhaId,
+            });
+        }
+        return {
+            ...alterada, tipo: TipoFichaEnum.NPC,
+            dados: alterada.dados as unknown as FichaNpcDadosDto,
+        };
+    }
+
+    /** Ajusta Vida/Energia na fonte da ficha; máximos, recarga e demais campos ficam intactos. */
+    async alterarVitalidadeNpc(
+        dto: FichaNpcVitalidadeInternoAlterarDto,
+        usuarioAtivo: JwtPayload,
+    ): Promise<FichaNpcAlteradaDto> {
+        const ficha = await this.fichaRepositorio.recuperarPorId({ id: dto.id });
+        if (!ficha) throw new ResourceNotFoundException("Ficha");
+        await this.validarPermissaoEdicao(ficha, usuarioAtivo);
+        this.validarTipoFicha(ficha, TipoFichaEnum.NPC);
+        if ((dto.vidaAtual === undefined && dto.energiaAtual === undefined
+            && dto.morrendo === undefined)
+            || (dto.vidaAtual !== undefined && !Number.isInteger(dto.vidaAtual))
+            || (dto.energiaAtual !== undefined && !Number.isInteger(dto.energiaAtual))
+            || (dto.morrendo !== undefined && typeof dto.morrendo !== "boolean")) {
+            throw new BusinessException("Vitalidade do NPC inválida");
+        }
+        const dados = ficha.dados as unknown as FichaNpcDadosDto;
+        const morrendo = resolverMorrendo({
+            vidaAtual: dto.vidaAtual ?? dados.vidaAtual,
+            morrendo: dto.morrendo ?? dados.condicoes?.morrendo ?? false,
+        });
+        const alterada = await this.fichaRepositorio.alterarVitalidadeNpc({
+            id: dto.id, vidaAtual: dto.vidaAtual, energiaAtual: dto.energiaAtual, morrendo,
+        });
+        this.campanhaGateway.emitirFichaAlterada(alterada);
+        this.emitirRecortesAlterados(ficha, alterada, TipoFichaEnum.NPC);
+        return {
+            ...alterada, tipo: TipoFichaEnum.NPC,
+            dados: alterada.dados as unknown as FichaNpcDadosDto,
+        };
+    }
+
+    private resolverCondicoesNpc(
+        dados: FichaNpcDadosDto,
+        anteriores?: FichaNpcDadosDto,
+    ): FichaNpcDadosDto {
+        return {
+            ...dados,
+            condicoes: { morrendo: resolverMorrendo({
+                vidaAtual: dados.vidaAtual,
+                morrendo: dados.condicoes?.morrendo ?? anteriores?.condicoes?.morrendo ?? false,
+            }) },
+        };
+    }
+
+    private validarTipoFicha(ficha: FichaRecuperadaDto, tipo: TipoFichaEnum): void {
+        // SQL resolve sempre tipo; o contrato legado ainda o declara opcional (m4-03).
+        if (ficha.tipo !== undefined && ficha.tipo !== tipo) {
+            throw new BusinessException("Tipo de ficha incompatível com esta operação");
+        }
+    }
 
   /**
    * Avisa a sala ampla `campanha:<id>` que uma ficha passou a pertencer à campanha (criação ou
@@ -1067,6 +1212,16 @@ export class FichaService {
   }
 
   private recorteListaFichas(ficha: FichaRecuperadaDto, tipo: TipoFichaEnum): unknown {
+    if (tipo === TipoFichaEnum.NPC) {
+      const dados = ficha.dados as unknown as FichaNpcDadosDto;
+      return {
+        nome: ficha.nome, cor: ficha.cor, imagemUrl: ficha.imagemUrl,
+        nivel: dados.nivel, categoria: dados.categoria, cooperacao: dados.cooperacao,
+        vidaAtual: dados.vidaAtual, vidaMaxima: dados.vidaMaxima, energia: dados.energia,
+        defesa: dados.defesaBase, esquiva: dados.esquivar, bloqueio: dados.bloquear,
+        morrendo: dados.condicoes?.morrendo ?? false,
+      };
+    }
     if (tipo === TipoFichaEnum.CRIATURA) {
       const dados = ficha.dados as unknown as FichaCriaturaDadosDto;
       return {

@@ -12,6 +12,7 @@ import type {
   FichaCampanhaInternoAtribuirDto,
   FichaCriadaDto,
   FichaCriaturaVitalidadeInternoAlterarDto,
+  FichaNpcVitalidadeInternoAlterarDto,
   FichaExcluirDto,
   FichaImagemAlteradaDto,
   FichaImagemInternoAlterarDto,
@@ -158,15 +159,22 @@ export class FichaRepository extends BaseRepository {
               ficha.dados->'identidade'->>'comportamento' AS comportamento,
               COALESCE((ficha.dados->'estado'->>'vidaAtual')::int, (ficha.dados->>'vidaAtual')::int) AS "vidaAtual",
               COALESCE((ficha.dados->'estado'->>'vidaMaxima')::int, (ficha.dados->>'vidaMaxima')::int) AS "vidaMaxima",
-              (ficha.dados->'estado'->>'energiaAtual')::int AS "energiaAtual",
-              (ficha.dados->'estado'->>'energiaMaxima')::int AS "energiaMaxima",
-              COALESCE((ficha.dados->'estado'->>'morrendo')::boolean, false) AS morrendo,
+              COALESCE((ficha.dados->'estado'->>'energiaAtual')::int,
+                       (ficha.dados->'energia'->>'atual')::int) AS "energiaAtual",
+              COALESCE((ficha.dados->'estado'->>'energiaMaxima')::int,
+                       (ficha.dados->'energia'->>'maxima')::int) AS "energiaMaxima",
+              COALESCE((ficha.dados->'estado'->>'morrendo')::boolean,
+                       (ficha.dados->'condicoes'->>'morrendo')::boolean, false) AS morrendo,
               COALESCE((ficha.dados->'estado'->>'machucado')::boolean, false) AS machucado,
               COALESCE((ficha.dados->'estado'->>'inconsciente')::boolean, false) AS inconsciente,
               (ficha.dados->>'prestigio')::int AS prestigio,
-              COALESCE((ficha.dados->'derivados'->>'defesa')::int, (ficha.dados->>'defesa')::int) AS defesa,
-              (ficha.dados->'derivados'->>'esquiva')::int AS esquiva,
-              (ficha.dados->'derivados'->>'bloqueio')::int AS bloqueio,
+              COALESCE((ficha.dados->'derivados'->>'defesa')::int,
+                       (ficha.dados->>'defesa')::int,
+                       (ficha.dados->>'defesaBase')::int) AS defesa,
+              COALESCE((ficha.dados->'derivados'->>'esquiva')::int,
+                       (ficha.dados->>'esquivar')::int) AS esquiva,
+              COALESCE((ficha.dados->'derivados'->>'bloqueio')::int,
+                       (ficha.dados->>'bloquear')::int) AS bloqueio,
               (ficha.dados->'derivados'->>'contraAtaque')::int AS "contraAtaque",
               ficha.dados->'identidade'->>'personalidade' AS personalidade,
               ficha.dados->'identidade'->'origem'->>'nome' AS "origemNome",
@@ -402,6 +410,32 @@ export class FichaRepository extends BaseRepository {
     );
     return fichaAlterada;
   }
+
+    /** Mescla somente recursos correntes e Morrendo do NPC, preservando seus snapshots. */
+    async alterarVitalidadeNpc(
+        dto: FichaNpcVitalidadeInternoAlterarDto,
+    ): Promise<FichaRecuperadaDto> {
+        const [fichaAlterada] = await this.executarConsulta<FichaRecuperadaDto>(
+            `UPDATE ficha
+             SET dados = jsonb_set(
+                   jsonb_set(dados || :vida::jsonb, '{energia}',
+                     COALESCE(dados->'energia', '{}'::jsonb) || :energia::jsonb, true),
+                   '{condicoes}',
+                   COALESCE(dados->'condicoes', '{}'::jsonb) || :condicoes::jsonb, true),
+                 updated_date = NOW()
+             WHERE id = :id AND is_deleted = false
+             RETURNING id, campanha_id AS "campanhaId", usuario_id AS "usuarioId", nome, cor,
+                       imagem_url AS "imagemUrl", imagem_foco AS "imagemFoco",
+                       COALESCE(oculta, false) AS oculta, dados`,
+            {
+                id: dto.id,
+                vida: JSON.stringify({ vidaAtual: dto.vidaAtual }),
+                energia: JSON.stringify({ atual: dto.energiaAtual }),
+                condicoes: JSON.stringify({ morrendo: dto.morrendo }),
+            },
+        );
+        return fichaAlterada;
+    }
 
   /**
    * `UPDATE` dedicado só para `dados` (transferência de item do inventário de esquadrão) — fora

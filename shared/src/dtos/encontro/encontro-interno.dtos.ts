@@ -1,5 +1,6 @@
 import type { FichaCriaturaDadosDto } from '../ficha/ficha-criatura.dtos';
 import type { FichaJogadorDadosDto } from '../ficha/ficha.dtos';
+import type { FichaNpcDadosDto } from "../ficha/ficha-npc.dtos";
 import type { FichaImagemFocoDto } from '../ficha/ficha-operacao.dtos';
 import type {
   CadenciaEnum,
@@ -55,7 +56,7 @@ export interface EncontroCombatenteLinhaDto {
   readonly fichaImagemUrl: string | null;
   readonly fichaImagemFoco: FichaImagemFocoDto | null;
   readonly tipoFicha: TipoFichaEnum | null;
-  readonly fichaDados: FichaJogadorDadosDto | FichaCriaturaDadosDto | null;
+  readonly fichaDados: FichaJogadorDadosDto | FichaCriaturaDadosDto | FichaNpcDadosDto | null;
   /**
    * Dado bruto pro recorte de identidade "de carteirinha" (m7-16) — se a ficha esconde a própria
    * identidade de quem não tem concessão (`ficha.oculta`, m3-65) e o nome de quem a possui. Nunca

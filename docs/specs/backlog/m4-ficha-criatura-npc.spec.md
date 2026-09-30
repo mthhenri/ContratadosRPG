@@ -2,8 +2,9 @@
 
 > **Milestone M4 — Ficha de Criatura/NPC.** Design mecânico fechado em
 > `docs/core/guia_de_mestre-v4.0.0.md` (capítulos "Guia de Criação de Ameaças" e "Guia de Criação
-> de NPCs"); este spec fixa o escopo acordado. Quebrar em tasks numeradas quando o milestone
-> começar.
+> de NPCs"); este spec fixa o escopo acordado. Milestone já dividido em tasks numeradas;
+> planejamento visual revisado em 2026-09-30; contrato, motor e backend NPC concluídos
+> em `m4-05`/`m4-06`/`m4-07`.
 
 > **Decisão (ex-pendência do `m3-10`):** Criatura e NPC seguem a mesma convenção da ficha de
 > jogador — **snapshot na criação + máximos editáveis** (Vida Máxima, Defesa/Bloquear/Esquivar,
@@ -39,13 +40,27 @@ criação do `docs/core/guia_de_mestre-v4.0.0.md`.
   criação de NPC guiado pelo roteiro de NPCs (mais leve — o guia descreve o NPC como uma "versão
   otimizada" da estrutura de agente); listagem no painel do mestre; revelação seletiva a
   jogadores.
+- **Ficha pronta de NPC** (`m4-08b`): consulta e edição no lugar, tela dedicada ao contrato
+  de NPC, duas colunas seguindo a criatura atual e controles de recurso/edição do jogador.
+  Criação agrupada em cinco etapas, ficha e estados definidos em
+  `docs/design/FICHA-NPC.md`. Não deixar consulta/edição como pendência da listagem.
 - **Refinamento de UI/UX mobile** (task numerada dedicada no fim do milestone): os dois
   assistentes de criação (multi-etapas) e a listagem/revelação no painel do mestre otimizados
   para tela pequena (~360px, sem scroll horizontal, alvos de toque adequados, navegação de
-  etapas confortável no polegar), reusando o padrão responsivo por tokens de `m1-15` e a
-  identidade `docs/design/` (protótipo `docs/design/examples/ficha-de-criatura.html` é alvo
-  desktop — falta protótipo equivalente para NPC, avaliar se é necessário antes da task). Ver
-  `m1-15-*`.
+  etapas confortável no polegar), incluindo fichas prontas. Reusar padrões responsivos e
+  análogos atuais definidos em `docs/design/FICHA-NPC.md`; o mockup antigo de criatura não
+  representa o shell atual. O polimento final não adia o gate mobile de cada task de UI.
+
+## Ordem das tasks restantes
+
+`m4-08` (criação) → `m4-08b` (ficha pronta) →
+`m4-09` (listagem/revelação integrada) → `m4-10` (polimento responsivo).
+
+São quatro tasks restantes, preservando os números originais. `m4-05`/`m4-06`/`m4-07` já
+entregaram contrato, motor e backend de NPC: volume validado pela tabela do guia; cap de Civil
+sem marcador de desbloqueio (decisão do mestre); criação solta e atribuição conforme `m4-11`.
+Morrendo foi definido em `dados.condicoes.morrendo` (`SCHEMA.md`), com resolução pura em
+`shared/regras/npc`; a futura UI consome o contrato. O refinamento visual não modifica fórmulas.
 
 ## Critérios de Aceite (mínimos)
 
@@ -56,6 +71,9 @@ criação do `docs/core/guia_de_mestre-v4.0.0.md`.
 - Jogador não vê criatura/NPC sem concessão; passa a ver após revelação
 - Nenhuma regra de criação duplicada fora de `shared/regras/criatura` e `shared/regras/npc`
 - Assistentes de criação e listagem do mestre usáveis no mobile (~360px) sem scroll horizontal
+- NPC criado abre sua ficha própria; mestre edita no lugar e jogador autorizado lê, sem
+  depender da tela de agente. Fidelidade aos dois análogos observada no app real em todos os
+  viewports/estados do contrato visual, com recursos adequados às cinco Categorias.
 
 ## Dependências
 

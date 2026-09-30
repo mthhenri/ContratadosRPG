@@ -10,7 +10,8 @@
 ## Objetivo
 
 Refinamento de UI/UX **mobile** dos dois assistentes de criação (criatura e NPC,
-multi-etapas) e da listagem/revelação no painel do mestre (`m4-04`/`m4-08`/`m4-09`) —
+multi-etapas), das fichas prontas de criatura/NPC e da listagem/revelação no painel do mestre
+(`m4-04`/`m4-04b`/`m4-08`/`m4-08b`/`m4-09`) —
 usáveis em ~360px, sem scroll horizontal, com alvos de toque adequados e navegação de
 etapas confortável no polegar. Só apresentação — sem tocar em regra de jogo ou de negócio.
 Task explicitamente reservada para o fim do milestone (escopo acordado em
@@ -24,11 +25,17 @@ Task explicitamente reservada para o fim do milestone (escopo acordado em
    aplicável ao volume de conteúdo de cada roteiro).
 2. **Listagem/revelação do painel do mestre** (`m4-09`) usável em ~360px: cards/linhas que
    refluem, sem rolagem horizontal.
-3. **Alvos de toque ≥ 44px** (`$alvo-toque`) em todos os controles interativos dos três
+3. **Alvos de toque ≥ 44px** (`$alvo-toque`) em todos os controles interativos dos
    fluxos.
-4. **Verificação responsiva registrada** (360/390/430px, mais 1920×1080 para confirmar que
-   nada regrediu no desktop), na linha do gate obrigatório de UI (`AGENTS.md`) e de
+4. **Verificação responsiva registrada** (`360×800`, `390×844`, `430×932`, `960×1080`,
+   `1366×768` e `1920×1080` para confirmar que nada regrediu no desktop), na linha do gate
+   obrigatório de UI (`AGENTS.md`) e de
    `docs/PARIDADE-M1.md` §6.
+5. **Ficha pronta de NPC**: composição/abas e ações inferiores conforme
+   `docs/design/FICHA-NPC.md`; comparar com jogador e criatura atuais. Cobrir leitura e
+   edição, listas longas/vazias, teclado/foco, Civil sem Energia, Cooperação e histórico
+   lateral aberto; nenhuma ação inferior pode cobrir conteúdo. Conferir também a ficha
+   pronta de criatura, sem redesenhar seus dados ou sua composição desktop.
 
 ## Critérios de Aceite
 
@@ -36,14 +43,18 @@ Task explicitamente reservada para o fim do milestone (escopo acordado em
   horizontal (critério de aceite do milestone).
 - Alvos de toque confortáveis; densidade coerente com o padrão já estabelecido no projeto.
 - `lint`/`test`/`build` do frontend verdes; identidade "Terminal de Contenção" preservada.
+- Executar `verify` no stack real e registrar comparação pessoal contra os análogos,
+  estados, viewports e correções. Esta task complementa os gates mobile de `m4-08`,
+  `m4-08b` e `m4-09`; não autoriza adiá-los até o fim do milestone.
 
 ## Fora de Escopo
 
-- Novas features ou telas além das entregues em `m4-04`/`m4-08`/`m4-09`.
+- Novas features ou telas além das entregues em `m4-04`/`m4-04b`/`m4-08`/`m4-08b`/`m4-09`.
 - Qualquer mudança de regra de negócio, permissão ou de domínio.
 - Rework visual desktop.
 
 ## Dependências
 
-- `m4-04`, `m4-08`, `m4-09` (telas base a refinar).
+- `m4-04`, `m4-04b`, `m4-08`, `m4-08b`, `m4-09` (telas base a refinar).
 - `m1-15`/`m3-09` (padrão responsivo por tokens já validado no projeto).
+- `docs/design/FICHA-NPC.md` (contrato visual do NPC).

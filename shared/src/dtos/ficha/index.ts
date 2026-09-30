@@ -4,4 +4,6 @@ export * from './ficha-combo.dtos';
 export * from './ficha-criatura.dtos';
 export * from './ficha-criatura-operacao.dtos';
 export * from "./ficha-npc.dtos";
+export * from "./ficha-npc-operacao.dtos";
+export * from "./ficha-npc-condicao.dtos";
 export * from "./ficha-npc-calculo.dtos";

@@ -1,5 +1,82 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-30 — m4-07: API tipada de NPC, recursos e Morrendo integrados
+
+Após os commits separados da `m4-05` (`02283dcb`) e da `m4-06` (`d8e1d21c`), ambos com
+`Co-authored-by: Codex <noreply@openai.com>` conferido no log, a autorização do autor avançou
+para a `m4-07`. Spec movida de backlog para active antes da implementação e para done no fecho.
+
+`FichaNpc*Dto` próprios, readonly e sem herança entre DTOs de negócio, descrevem criação,
+recuperação, edição e vitalidade. Rotas `POST /ficha/npc`, `GET/PUT /ficha/npc/:id` e
+`PATCH /ficha/npc/:id/vitalidade` usam controllers finas e `FichaService`. Criação exige
+mestre da campanha, ou mestre de alguma campanha quando solta, com dono inferido da sessão.
+Atribuição, acesso, imagem, exclusão e duplicação usam os caminhos genéricos da `m4-11`.
+NPC continua invisível ao jogador sem concessão; concessão libera leitura, nunca edição,
+e anotações permanecem privadas ao dono/mestre.
+
+Validação estrutural REST foi extraída em `ficha-npc-validacao.util.ts`; cap, volume,
+Categoria/Nível/Cooperação continuam no motor de `shared/regras/npc`, sem fórmulas locais.
+Não foi criada uma segunda service de permissão: a extensão local da `FichaService` mantém
+a mesma responsabilidade de orquestrar CRUD e autorizar fichas, reutiliza os gates existentes
+e isola a validação de formato para não ampliar essa responsabilidade. A ponte de tipos para
+o repository JSONB continua localizada na service, conforme decisão da `m4-03`.
+Rotas de escrita de jogador/criatura recusam tipos incompatíveis antes de tocar seus campos;
+isso evita que uma rota alternativa sobrescreva o documento de NPC.
+
+Morrendo definido em `dados.condicoes.morrendo` (campo opcional para leitura de documento
+anterior, ausência = false). `shared/regras/npc.resolverMorrendo` ativa com Vida ≤ 0,
+mantém após cura e aceita remoção explícita com Vida positiva, conforme guia de mestre >
+NPC > Vida e sistema > Morrendo. Criação, edição completa e ajuste pontual preservam esse
+estado; testes por turno e socorro continuam narrativos. Sem flags/lesões de jogador.
+Máximos, defesa e recarga permanecem snapshots editáveis; recursos correntes podem exceder
+os máximos. Ajuste SQL mescla somente Vida/Energia corrente e Morrendo, sem regravar máximos.
+
+Consumidores derivados conferidos: projeção SQL de resumo lê Energia/reações/condição do
+NPC; `recorteListaFichas` invalida a campanha por mudanças no recorte; mapper do Encontro
+lê o documento tipado; dano/cura/gasto no Encontro chamam `alterarVitalidadeNpc` da fonte.
+Criação só transmite invalidador sem identidade à sala de campanha, edição reusa
+`ficha:alterada` na sala autorizada e a ponte de sincronização do Encontro. Gateway e
+consumidores frontend não foram alterados. OpenAPI regenerado a partir dos contratos públicos.
+
+**Verificação e evidência:**
+
+- Testes novos começaram vermelhos pela ausência das operações e por escrita incompatível
+  causar erro de formato. Gates focados passaram após implementação; 73 casos no motor de
+  NPC. Gate final `npm run test --workspaces --if-present`: shared **871/871** (60 arquivos),
+  backend **947 aprovados + 1 ignorado** (52 arquivos), frontend **2634/2634** (185 arquivos):
+  **4452 aprovados**. A M4-07 acrescentou 4 casos shared e 24 backend.
+- `npm run build --workspace=shared`, `npm run build --workspace=backend`,
+  `npx tsc --noEmit -p backend/tsconfig.json` e `npx tsc --noEmit -p frontend/tsconfig.app.json`
+  passaram. `npm run openapi:gerar-contratos --workspace=backend` executado; testes OpenAPI
+  confirmaram operações atuais. `npm run lint` passou sem erros; warnings legados
+  permanecem (shared 5159, backend 4422 na rodada, frontend 24599). Passe de ESLint sobre
+  linhas novas identificou uma aspa herdada no import do mapper, corrigida; arquivos novos
+  não apresentam erros/warnings. `git diff --check` passou.
+- `npx tsc --noEmit -p shared/tsconfig.json` permanece com **somente o P-092 preexistente**:
+  `shared/src/regras/agente/derivados.spec.ts:129`, `uid` incompatível com `CarrinhoItemDto`.
+  Nenhum erro novo de tipos. Esse defeito segue aberto, sem correção oportunista.
+- Skill `verify` exercitada contra NestJS/Postgres reais em `localhost:3100`, com
+  `codex.dev` (id 2) e `jogador.stub.1` (id 3). Campanha temporária id 9, fichas 27–33.
+  Cinco Categorias: Vida/Energia **16/0, 85/12, 245/21, 600/30, 1440/45**, dados persistidos
+  e recuperados iguais. Biblioteca usada nos quatro NPCs de combate; Civil acrescentado.
+  Criação por jogador negada (campanha/solta), volume inválido negado; leitura e join de
+  ficha negados sem concessão, liberados após concessão; edição/vitalidade do leitor negadas.
+- REST e Socket.IO com duas sessões: cinco criações geraram cinco invalidadores contendo
+  apenas campanha/flags e nenhum `ficha:criada`; edição chegou ao leitor sem anotações.
+  Vida/Energia do Encontro alteraram a ficha, conservaram máximos manuais **999/99**, ativaram
+  Morrendo a zero e mantiveram a condição após cura até remoção explícita. Resumo trouxe
+  máximos **999/99**, Energia corrente **8** e defesas **15/17/17**. Upload/remoção de imagem,
+  cor/enquadramento, criação solta, atribuição negada onde o dono é jogador e permitida onde
+  é mestre, duplicação com tipo NPC e revogação verificados. Reconexão do socket reaplicou
+  o gate e manteve leitura negada após revogação. Cenário temporário removido por soft delete,
+  inclusive tentativas preliminares; imagem removida pelo endpoint.
+- Sem mudança de UI/estilo nesta task: não há gate visual de tela nova. A consulta/edição
+  visual continua na `m4-08b`; não foi declarada implementada. Sem migration, publicação,
+  push ou deploy. Contexto, schema, ponteiros e specs futuras refletem o contrato entregue.
+
+**Resultado:** `m4-07` concluída. Próxima etapa do M4: `m4-08`, seguida de `m4-08b`,
+`m4-09` e `m4-10`. Pendência externa ao recorte: P-092.
+
 ## 2026-09-30 — m4-06: motor puro de NPC e integração dos contratos shared
 
 Após a `m4-05`, executada por autorização do autor, `shared/src/regras/npc/` entrega as onze
@@ -80,6 +157,47 @@ Verificado: build do shared passou, lint dos três arquivos novos sem avisos, su
 como P-092, sem alterar teste alheio. Vitest exigiu execução fora do sandbox porque o esbuild
 não conseguia ler os diretórios ancestrais; a suíte passou após a liberação. Contrato e diff
 revisados manualmente. Spec movida para `done`; `m4-06` aberta em seguida. Sem UI nesta task.
+
+## 2026-09-30 — M4: planejamento visual de NPC alinhado às fichas atuais
+
+O autor pediu uma nova revisão da parte de NPCs da M4, principalmente visual, usando jogador e
+criatura como referências, e confirmou o recorte **refinar as specs primeiro**. Nenhuma tela,
+fórmula, DTO ou endpoint foi implementado nesta sessão; as tasks de NPC continuam no backlog.
+
+A revisão encontrou um assistente descrito como leve, mas com cerca de dez etapas, sem contrato
+visual concreto, e uma lacuna de ficha pronta: a `m4-09` deixava consulta/edição completa como
+eventual pendência. O código atual da criatura já usa duas colunas, com Identidade/Atributos
+agrupados, e diverge do mockup antigo; as rotas atuais usam `/campanhas`, enquanto as specs
+antigas ainda exemplificavam `/painel`. A `m4-11` já havia decidido criação solta e acervo por
+tipo, mas a `m4-07` conservava a restrição anterior de NPC somente em campanha.
+
+Foi escrito `docs/design/FICHA-NPC.md`, com referências ao código vigente dos dois assistentes,
+`CriaturaVisualizacao`, `FichaVisualizacao`, coluna de ações e cartão do acervo. O roteiro foi
+agrupado em cinco etapas, preservando seu conteúdo; Saúde/Defesa/Energia entram como prévias de
+recursos junto dos atributos. A ficha pronta terá Identidade/recursos e Atributos à esquerda,
+Habilidades/Conduta/Sanidade à direita, Cooperação numérica com faixa textual, Civil sem barra
+de Energia e demais modelos com o recurso apropriado. Anotações continuam privadas no utilitário
+próprio. O contrato exige primitivas completas, estados de erro/vazio/edição/leitura e comparação
+com os análogos atuais; não autoriza copiar controles locais legados.
+
+Adicionada `m4-08b-frontend-visualizacao-npc.spec.md`, entre criação e listagem. Ajustadas as
+specs `m4-07`/`m4-08`/`m4-09`/`m4-10` e o guarda-chuva: leitura/alteração tipadas, criação solta
+conforme decisão já tomada, rotas de NPC próprias, reuso do acervo por tipo, leitura concedida
+sem guarda exclusiva de mestre, e polimento também da ficha pronta. Sete tasks permanecem;
+o gate obrigatório mobile já pertence a cada entrega visual, não fica adiado para `m4-10`.
+
+Três lacunas prévias ficam explicitamente a resolver na camada dona antes de implementar:
+volume de habilidades bloqueante em `m4-06`/`m4-07` versus orientação na antiga `m4-08`, marca
+de exceção Civil não explicitada no JSONB e representação de Morrendo ausente no contrato.
+Não foi escolhida uma regra nova nem alterada a forma fechada de `SCHEMA.md` nesta revisão.
+
+**Verificação do planejamento:** referências conferidas contra código de rotas/componentes,
+primitivos existentes, `SCHEMA.md`, capítulo de NPC do guia e decisão histórica da `m4-11`;
+revisão do diff e checagem de espaços/referências locais. Builds, testes e inspeção visual da
+aplicação não se aplicam ao diff documental. A fidelidade renderizada de NPC permanece
+**não verificada** e obrigatória na implementação com a skill `verify`, nos viewports definidos.
+Specs históricas em `done/`, alterações de código preexistentes, skills e instruções canônicas
+não foram modificadas.
 
 ## 2026-09-30 — P-091, P-089, I-037 e I-038
 

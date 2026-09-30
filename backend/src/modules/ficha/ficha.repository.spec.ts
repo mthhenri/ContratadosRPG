@@ -4,6 +4,18 @@ import { TipoFichaEnum } from '@contratados-rpg/shared/enums';
 import { FichaRepository } from './ficha.repository';
 
 describe('FichaRepository', () => {
+    it("mescla somente recursos correntes e Morrendo do NPC", async () => {
+        const raw = vi.fn().mockResolvedValue({ rows: [{ id: 7 }] });
+        const repositorio = new FichaRepository({ raw } as unknown as Knex);
+        await repositorio.alterarVitalidadeNpc({ id: 7, energiaAtual: 8, morrendo: true });
+        const [sql, parametros] = raw.mock.calls[0] as [string, Record<string, unknown>];
+        expect(sql).toContain("WHERE id = :id AND is_deleted = false");
+        expect(sql).toContain("COALESCE(dados->'energia', '{}'::jsonb) || :energia::jsonb");
+        expect(sql).not.toContain("nome =");
+        expect(parametros).toEqual({
+            id: 7, vida: "{}", energia: '{"atual":8}', condicoes: '{"morrendo":true}',
+        });
+    });
   it('recuperarPorId devolve o tipo via JOIN tipo_ficha (m4-11)', async () => {
     const raw = vi.fn().mockResolvedValue({
       rows: [

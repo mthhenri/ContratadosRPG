@@ -536,6 +536,11 @@ export class EncontroService {
         { id: combatente.fichaId, vidaAtual: vidaResultante },
         usuarioAtivo,
       );
+    } else if (combatente.tipoFicha === TipoFichaEnum.NPC) {
+      await this.fichaService.alterarVitalidadeNpc(
+        { id: combatente.fichaId, vidaAtual: vidaResultante },
+        usuarioAtivo,
+      );
     } else {
       await this.fichaService.alterarVitalidade(
         { id: combatente.fichaId, estado: { vidaAtual: vidaResultante } },
@@ -573,10 +578,16 @@ export class EncontroService {
       throw new BusinessException('O ajuste de Energia precisa ser diferente de zero');
     }
 
-    await this.fichaService.alterarVitalidade(
-      { id: combatente.fichaId, estado: { energiaAtual: resumo.energiaAtual + dto.delta } },
-      usuarioAtivo,
-    );
+    const energiaAtual = resumo.energiaAtual + dto.delta;
+    if (combatente.tipoFicha === TipoFichaEnum.NPC) {
+      await this.fichaService.alterarVitalidadeNpc(
+        { id: combatente.fichaId, energiaAtual }, usuarioAtivo,
+      );
+    } else {
+      await this.fichaService.alterarVitalidade(
+        { id: combatente.fichaId, estado: { energiaAtual } }, usuarioAtivo,
+      );
+    }
 
     await this.registrarEventoDoTurno(encontro, {
       combatenteId: combatente.id,

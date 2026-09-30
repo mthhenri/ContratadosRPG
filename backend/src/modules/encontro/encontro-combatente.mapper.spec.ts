@@ -5,6 +5,21 @@ import { CadenciaEnum, ClasseEnum, TipoFichaEnum } from '@contratados-rpg/shared
 import { montarCombatenteResumo } from './encontro-combatente.mapper';
 
 describe('montarCombatenteResumo — stats efetivos de agente', () => {
+    it("lê snapshots, Energia e Morrendo do NPC sem calcular equipamento", () => {
+        const linha = {
+            id: 1, encontroId: 2, fichaId: 3, tipoFicha: TipoFichaEnum.NPC,
+            fichaDados: {
+                vidaAtual: 10, vidaMaxima: 999, energia: { atual: 12, maxima: 99 },
+                defesaBase: 15, esquivar: 17, bloquear: 18, atributos: { destreza: 2 },
+                condicoes: { morrendo: true },
+            },
+        } as unknown as EncontroCombatenteLinhaDto;
+        expect(montarCombatenteResumo(linha)).toMatchObject({
+            vidaAtual: 10, vidaMaxima: 999, energiaAtual: 12, energiaMaxima: 99,
+            defesa: 15, esquiva: 17, bloqueio: 18, morrendo: true,
+            machucado: null, inconsciente: null, contraAtaque: null, resistencias: null,
+        });
+    });
   it('aplica amplificadores e proteção equipada sobre os snapshots da ficha', () => {
     const linha = {
       id: 1, encontroId: 2, fichaId: 3, tipoFicha: TipoFichaEnum.JOGADOR,

@@ -2,7 +2,9 @@ import type {
   EncontroCombatenteLinhaDto,
   EncontroCombatenteResumoDto,
 } from '@contratados-rpg/shared/dtos/encontro';
-import type { FichaCriaturaDadosDto, FichaJogadorDadosDto } from '@contratados-rpg/shared/dtos/ficha';
+import type {
+  FichaCriaturaDadosDto, FichaJogadorDadosDto, FichaNpcDadosDto,
+} from "@contratados-rpg/shared/dtos/ficha";
 import { CombatenteOrigemEnum, TipoDanoEnum, TipoFichaEnum } from '@contratados-rpg/shared/enums';
 import {
   ajusteDadoIniciativaAmplificadores,
@@ -119,7 +121,7 @@ function resolverEstadoDaCriatura(dados: FichaCriaturaDadosDto): EstadoDoCombate
  * Resistência a dano por tipo (m7-17) — só agente e criatura têm ficha tipada o bastante pra
  * calcular. Agente reusa o mesmo motor da aba Combate da ficha (`montarResistencias`: manual +
  * equipamento + Formação, incluindo Maestria de Vigor quando aplicável); criatura soma as linhas
- * de `resistencias` (`subtipo` não distingue aqui). NPC (contrato ainda não tipado, m4-05) e
+ * de `resistencias` (`subtipo` não distingue aqui). NPC (sem bloco de resistências no contrato) e
  * avulso saem `null` — não é `0`, é "não existe".
  */
 function resolverResistencias(linha: EncontroCombatenteLinhaDto): Partial<Record<TipoDanoEnum, number>> | null {
@@ -186,26 +188,21 @@ function resolverEstadoDoAvulso(linha: EncontroCombatenteLinhaDto): EstadoDoComb
 }
 
 /**
- * NPC ainda não tem contrato tipado (`m4-05` está no backlog). Até lá o combatente NPC entra pelo
- * que é comum a qualquer documento — vida e Destreza —, sem inventar campo: o que faltar fica
- * nulo e a tela simplesmente não desenha.
+ * NPC lê snapshots e recursos do contrato próprio (m4-07), sem regras de equipamento de agente.
  */
-function resolverEstadoGenerico(dados: Record<string, unknown>): EstadoDoCombatente {
-  const numeroOuZero = (valor: unknown): number => (typeof valor === 'number' ? valor : 0);
-  const atributos = (dados.atributos ?? {}) as Record<string, unknown>;
-  const estado = (dados.estado ?? {}) as Record<string, unknown>;
+function resolverEstadoDoNpc(dados: FichaNpcDadosDto): EstadoDoCombatente {
   return {
-    vidaAtual: numeroOuZero(dados.vidaAtual ?? estado.vidaAtual),
-    vidaMaxima: numeroOuZero(dados.vidaMaxima ?? estado.vidaMaxima),
-    energiaAtual: typeof estado.energiaAtual === 'number' ? estado.energiaAtual : null,
-    energiaMaxima: typeof estado.energiaMaxima === 'number' ? estado.energiaMaxima : null,
-    defesa: typeof dados.defesaBase === 'number' ? dados.defesaBase : null,
-    esquiva: typeof dados.esquivar === 'number' ? dados.esquivar : null,
-    bloqueio: typeof dados.bloquear === 'number' ? dados.bloquear : null,
+    vidaAtual: dados.vidaAtual,
+    vidaMaxima: dados.vidaMaxima,
+    energiaAtual: dados.energia.atual,
+    energiaMaxima: dados.energia.maxima,
+    defesa: dados.defesaBase,
+    esquiva: dados.esquivar,
+    bloqueio: dados.bloquear,
     contraAtaque: null,
-    destreza: numeroOuZero(atributos.destreza),
+    destreza: dados.atributos.destreza,
     iniciativaBonus: 0,
-    morrendo: null,
+    morrendo: dados.condicoes?.morrendo ?? false,
     machucado: null,
     inconsciente: null,
   };
@@ -222,7 +219,7 @@ function resolverEstado(linha: EncontroCombatenteLinhaDto): EstadoDoCombatente {
   if (linha.tipoFicha === TipoFichaEnum.CRIATURA) {
     return resolverEstadoDaCriatura(linha.fichaDados as FichaCriaturaDadosDto);
   }
-  return resolverEstadoGenerico(linha.fichaDados as unknown as Record<string, unknown>);
+  return resolverEstadoDoNpc(linha.fichaDados as FichaNpcDadosDto);
 }
 
 /** Monta o resumo de um combatente a partir da linha do repositório. */

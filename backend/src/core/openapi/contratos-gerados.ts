@@ -2303,6 +2303,9 @@ export const schemasContratosPublicos = {
                     },
                     {
                         "$ref": "#/components/schemas/FichaCriaturaDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/FichaNpcDadosDto"
                     }
                 ]
             },
@@ -3768,6 +3771,714 @@ export const schemasContratosPublicos = {
         ],
         "additionalProperties": false,
         "description": "Uma habilidade especial da criatura — propriedade da própria criatura, não selecionada de\num catálogo (diferente das habilidades de jogador). `restricao` é a frequência/condição\nde uso quando aplicável (ex.: \"uma vez por cena\", \"recarga de 3 turnos\")."
+    },
+    "NpcCategoriaConsultarDto": {
+        "type": "object",
+        "properties": {
+            "categoria": {
+                "type": "string",
+                "enum": [
+                    "CIVIL",
+                    "OPERATIVO",
+                    "VETERANO",
+                    "ELITE",
+                    "LENDARIO"
+                ]
+            }
+        },
+        "required": [
+            "categoria"
+        ],
+        "additionalProperties": false,
+        "description": "Categoria para consultar tabelas do guia de mestre — \"Guia de Criação de NPCs\"."
+    },
+    "NpcPontosLimiteDto": {
+        "type": "object",
+        "properties": {
+            "pontosDistribuir": {
+                "type": "number"
+            },
+            "limite": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "pontosDistribuir",
+            "limite"
+        ],
+        "additionalProperties": false
+    },
+    "NpcAtributosValidarDto": {
+        "type": "object",
+        "properties": {
+            "categoria": {
+                "type": "string",
+                "enum": [
+                    "CIVIL",
+                    "OPERATIVO",
+                    "VETERANO",
+                    "ELITE",
+                    "LENDARIO"
+                ]
+            },
+            "atributos": {
+                "$ref": "#/components/schemas/FichaAtributosDto"
+            }
+        },
+        "required": [
+            "categoria",
+            "atributos"
+        ],
+        "additionalProperties": false
+    },
+    "NpcVidaMaximaCalcularDto": {
+        "type": "object",
+        "properties": {
+            "categoria": {
+                "type": "string",
+                "enum": [
+                    "CIVIL",
+                    "OPERATIVO",
+                    "VETERANO",
+                    "ELITE",
+                    "LENDARIO"
+                ]
+            },
+            "nivel": {
+                "type": "number"
+            },
+            "vigor": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "categoria",
+            "nivel",
+            "vigor"
+        ],
+        "additionalProperties": false
+    },
+    "NpcDefesaBaseCalcularDto": {
+        "type": "object",
+        "properties": {
+            "nivel": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "nivel"
+        ],
+        "additionalProperties": false
+    },
+    "NpcBloquearCalcularDto": {
+        "type": "object",
+        "properties": {
+            "defesaBase": {
+                "type": "number"
+            },
+            "vigor": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "defesaBase",
+            "vigor"
+        ],
+        "additionalProperties": false
+    },
+    "NpcEsquivarCalcularDto": {
+        "type": "object",
+        "properties": {
+            "defesaBase": {
+                "type": "number"
+            },
+            "destreza": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "defesaBase",
+            "destreza"
+        ],
+        "additionalProperties": false
+    },
+    "NpcEnergiaCalcularDto": {
+        "type": "object",
+        "properties": {
+            "categoria": {
+                "type": "string",
+                "enum": [
+                    "CIVIL",
+                    "OPERATIVO",
+                    "VETERANO",
+                    "ELITE",
+                    "LENDARIO"
+                ]
+            },
+            "destreza": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "categoria",
+            "destreza"
+        ],
+        "additionalProperties": false
+    },
+    "NpcEnergiaDto": {
+        "type": "object",
+        "properties": {
+            "pool": {
+                "type": "number"
+            },
+            "recarga": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "pool",
+            "recarga"
+        ],
+        "additionalProperties": false,
+        "description": "Energia inicial das Categorias que usam Pool + Recarga; demais retornam número."
+    },
+    "NpcDtAtributoCalcularDto": {
+        "type": "object",
+        "properties": {
+            "nivel": {
+                "type": "number"
+            },
+            "valorAtributo": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "nivel",
+            "valorAtributo"
+        ],
+        "additionalProperties": false
+    },
+    "NpcVolumeHabilidadesDto": {
+        "type": "object",
+        "properties": {
+            "totalMinimo": {
+                "type": "number"
+            },
+            "totalMaximo": {
+                "type": "number"
+            },
+            "passivasMinimas": {
+                "type": "number"
+            },
+            "ativasMaximas": {
+                "type": "number"
+            },
+            "limitePorTurno": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "totalMinimo",
+            "totalMaximo",
+            "passivasMinimas",
+            "ativasMaximas",
+            "limitePorTurno"
+        ],
+        "additionalProperties": false
+    },
+    "NpcVolumeHabilidadesValidarDto": {
+        "type": "object",
+        "properties": {
+            "categoria": {
+                "type": "string",
+                "enum": [
+                    "CIVIL",
+                    "OPERATIVO",
+                    "VETERANO",
+                    "ELITE",
+                    "LENDARIO"
+                ]
+            },
+            "habilidades": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/FichaNpcHabilidadeDto"
+                }
+            }
+        },
+        "required": [
+            "categoria",
+            "habilidades"
+        ],
+        "additionalProperties": false
+    },
+    "FichaNpcValidadaDto": {
+        "type": "object",
+        "properties": {
+            "violacoes": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                }
+            }
+        },
+        "required": [
+            "violacoes"
+        ],
+        "additionalProperties": false,
+        "description": "Mesmo envelope de validação de coerência usado pela criatura."
+    },
+    "FichaNpcMorrendoResolverDto": {
+        "type": "object",
+        "properties": {
+            "vidaAtual": {
+                "type": "number"
+            },
+            "morrendo": {
+                "type": "boolean"
+            }
+        },
+        "required": [
+            "vidaAtual",
+            "morrendo"
+        ],
+        "additionalProperties": false,
+        "description": "Estado corrente e pedido de remoção explícita de Morrendo."
+    },
+    "FichaNpcCriarDto": {
+        "type": "object",
+        "properties": {
+            "campanhaId": {
+                "type": "number"
+            },
+            "nome": {
+                "type": "string"
+            },
+            "cor": {
+                "type": "string"
+            },
+            "dados": {
+                "$ref": "#/components/schemas/FichaNpcDadosDto"
+            }
+        },
+        "required": [
+            "campanhaId",
+            "nome",
+            "dados"
+        ],
+        "additionalProperties": false,
+        "description": "Criação pelo mestre; dono inferido da sessão, campanha null permite NPC solto."
+    },
+    "FichaNpcCriadaDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "campanhaId": {
+                "type": "number"
+            },
+            "usuarioId": {
+                "type": "number"
+            },
+            "tipo": {
+                "type": "string"
+            },
+            "nome": {
+                "type": "string"
+            },
+            "cor": {
+                "type": "string"
+            },
+            "imagemUrl": {
+                "type": "string"
+            },
+            "dados": {
+                "$ref": "#/components/schemas/FichaNpcDadosDto"
+            }
+        },
+        "required": [
+            "id",
+            "campanhaId",
+            "usuarioId",
+            "tipo",
+            "nome",
+            "cor",
+            "imagemUrl",
+            "dados"
+        ],
+        "additionalProperties": false,
+        "description": "Documento criado, com tipo explícito e snapshots preservados."
+    },
+    "FichaNpcRecuperarDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "id"
+        ],
+        "additionalProperties": false,
+        "description": "Consulta individual; id preenchido pela controller."
+    },
+    "FichaNpcRecuperadaDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "campanhaId": {
+                "type": "number"
+            },
+            "usuarioId": {
+                "type": "number"
+            },
+            "tipo": {
+                "type": "string"
+            },
+            "nome": {
+                "type": "string"
+            },
+            "cor": {
+                "type": "string"
+            },
+            "imagemUrl": {
+                "type": "string"
+            },
+            "imagemFoco": {
+                "$ref": "#/components/schemas/FichaImagemFocoDto"
+            },
+            "oculta": {
+                "type": "boolean"
+            },
+            "dados": {
+                "$ref": "#/components/schemas/FichaNpcDadosDto"
+            }
+        },
+        "required": [
+            "id",
+            "campanhaId",
+            "usuarioId",
+            "tipo",
+            "nome",
+            "cor",
+            "imagemUrl",
+            "imagemFoco",
+            "oculta",
+            "dados"
+        ],
+        "additionalProperties": false,
+        "description": "Consulta autorizada; anotações omitidas para leitores."
+    },
+    "FichaNpcAlterarDto": {
+        "type": "object",
+        "properties": {
+            "nome": {
+                "type": "string"
+            },
+            "cor": {
+                "type": "string"
+            },
+            "imagemFoco": {
+                "$ref": "#/components/schemas/FichaImagemFocoDto"
+            },
+            "oculta": {
+                "type": "boolean"
+            },
+            "dados": {
+                "$ref": "#/components/schemas/FichaNpcDadosDto"
+            }
+        },
+        "required": [
+            "nome",
+            "dados"
+        ],
+        "additionalProperties": false,
+        "description": "Edição completa pelo dono/mestre; máximos não são recalculados."
+    },
+    "FichaNpcAlteradaDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "campanhaId": {
+                "type": "number"
+            },
+            "usuarioId": {
+                "type": "number"
+            },
+            "tipo": {
+                "type": "string"
+            },
+            "nome": {
+                "type": "string"
+            },
+            "cor": {
+                "type": "string"
+            },
+            "imagemUrl": {
+                "type": "string"
+            },
+            "imagemFoco": {
+                "$ref": "#/components/schemas/FichaImagemFocoDto"
+            },
+            "oculta": {
+                "type": "boolean"
+            },
+            "dados": {
+                "$ref": "#/components/schemas/FichaNpcDadosDto"
+            }
+        },
+        "required": [
+            "id",
+            "campanhaId",
+            "usuarioId",
+            "tipo",
+            "nome",
+            "cor",
+            "imagemUrl",
+            "imagemFoco",
+            "oculta",
+            "dados"
+        ],
+        "additionalProperties": false,
+        "description": "Documento alterado, preservando posse e tipo."
+    },
+    "FichaNpcVitalidadeAlterarDto": {
+        "type": "object",
+        "properties": {
+            "vidaAtual": {
+                "type": "number"
+            },
+            "energiaAtual": {
+                "type": "number"
+            },
+            "morrendo": {
+                "type": "boolean"
+            }
+        },
+        "additionalProperties": false,
+        "description": "Ajuste pontual dos recursos e remoção explícita de Morrendo pelo mestre."
+    },
+    "FichaNpcDadosDto": {
+        "type": "object",
+        "properties": {
+            "identidadeNarrativa": {
+                "$ref": "#/components/schemas/FichaNpcIdentidadeNarrativaDto"
+            },
+            "categoria": {
+                "type": "string",
+                "enum": [
+                    "CIVIL",
+                    "OPERATIVO",
+                    "VETERANO",
+                    "ELITE",
+                    "LENDARIO"
+                ]
+            },
+            "nivel": {
+                "type": "number",
+                "description": "0–20; a faixa sugerida da Categoria não restringe o Nível."
+            },
+            "cooperacao": {
+                "type": "number",
+                "description": "0–10; estado atual, independente da Categoria e mutável em jogo."
+            },
+            "atributos": {
+                "$ref": "#/components/schemas/FichaAtributosDto",
+                "description": "Reusa os dez atributos; Civil inicia com Luta/Pontaria 0, salvo exceção do mestre."
+            },
+            "vidaMaxima": {
+                "type": "number"
+            },
+            "vidaAtual": {
+                "type": "number",
+                "description": "Pode exceder a máxima editável, como nas demais fichas."
+            },
+            "condicoes": {
+                "$ref": "#/components/schemas/FichaNpcCondicoesDto",
+                "description": "Morrendo persiste após cura; ausência em documentos antigos equivale a false."
+            },
+            "defesaBase": {
+                "type": "number"
+            },
+            "bloquear": {
+                "type": "number"
+            },
+            "esquivar": {
+                "type": "number"
+            },
+            "energia": {
+                "$ref": "#/components/schemas/FichaNpcEnergiaDto"
+            },
+            "sanidade": {
+                "$ref": "#/components/schemas/FichaNpcSanidadeDto"
+            },
+            "habilidades": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/FichaNpcHabilidadeDto"
+                }
+            },
+            "condutaCombate": {
+                "$ref": "#/components/schemas/FichaNpcCondutaCombateDto"
+            },
+            "anotacoes": {
+                "type": "string",
+                "description": "Texto privado do dono/mestre; o recorte de leitura é responsabilidade do backend."
+            }
+        },
+        "required": [
+            "identidadeNarrativa",
+            "categoria",
+            "nivel",
+            "cooperacao",
+            "atributos",
+            "vidaMaxima",
+            "vidaAtual",
+            "defesaBase",
+            "bloquear",
+            "esquivar",
+            "energia",
+            "sanidade",
+            "habilidades",
+            "condutaCombate"
+        ],
+        "additionalProperties": false,
+        "description": "Documento JSONB do NPC, conforme SCHEMA.md e o \"Guia de Criação de NPCs\" do guia de mestre.\nVida, Defesa e Energia são snapshots calculados na criação e editáveis depois (m3-10).\nDT varia com o atributo do contexto e não é persistida. Sem Maestria ou regras de jogador.\nValidação de domínio pertence a shared/regras/npc; este contrato não depende de framework."
+    },
+    "FichaNpcCondicoesDto": {
+        "type": "object",
+        "properties": {
+            "morrendo": {
+                "type": "boolean"
+            }
+        },
+        "required": [
+            "morrendo"
+        ],
+        "additionalProperties": false,
+        "description": "Condição de saúde persistida; testes por turno e socorro permanecem narrativos."
+    },
+    "FichaNpcIdentidadeNarrativaDto": {
+        "type": "object",
+        "properties": {
+            "nome": {
+                "type": "string"
+            },
+            "funcao": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "nome",
+            "funcao"
+        ],
+        "additionalProperties": false,
+        "description": "Identidade biográfica e propósito operacional do NPC."
+    },
+    "FichaNpcEnergiaDto": {
+        "type": "object",
+        "properties": {
+            "maxima": {
+                "type": "number"
+            },
+            "atual": {
+                "type": "number"
+            },
+            "recargaPorTurno": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "maxima",
+            "atual",
+            "recargaPorTurno"
+        ],
+        "additionalProperties": false,
+        "description": "Civil: máxima/atual 0, recarga null. Operativo/Veterano: Reserva Fixa, recarga null.\nElite/Lendário: Pool + Recarga por turno; o uso em jogo não recarrega além da Pool máxima."
+    },
+    "FichaNpcSanidadeDto": {
+        "type": "object",
+        "properties": {
+            "sequelas": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/FichaSequelaDto"
+                }
+            },
+            "traumas": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/FichaTraumaDto"
+                }
+            }
+        },
+        "required": [
+            "sequelas",
+            "traumas"
+        ],
+        "additionalProperties": false,
+        "description": "Mesmos registros do jogador; os efeitos no NPC são interpretados pelo mestre."
+    },
+    "FichaNpcHabilidadeDto": {
+        "type": "object",
+        "properties": {
+            "nomeNeutro": {
+                "type": "string"
+            },
+            "nomeNarrativo": {
+                "type": "string"
+            },
+            "tipo": {
+                "type": "string",
+                "enum": [
+                    "PASSIVA",
+                    "ATIVA"
+                ]
+            },
+            "custoEnergia": {
+                "type": "number",
+                "description": "Obrigatório nas Ativas; ausente/null nas Passivas, inclusive condicionais."
+            },
+            "descricao": {
+                "type": "string"
+            },
+            "restricao": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "nomeNeutro",
+            "tipo",
+            "descricao"
+        ],
+        "additionalProperties": false,
+        "description": "Habilidade própria do NPC, extensão de sua biografia; não é um item de catálogo."
+    },
+    "FichaNpcCondutaCombateDto": {
+        "type": "object",
+        "properties": {
+            "gatilhosFuga": {
+                "type": "string"
+            },
+            "prioridadesAlvo": {
+                "type": "string"
+            },
+            "reacaoFerimentoSevero": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "gatilhosFuga",
+            "prioridadesAlvo",
+            "reacaoFerimentoSevero"
+        ],
+        "additionalProperties": false,
+        "description": "Roteiro narrativo de comportamento em combate, sem automação de ações."
     },
     "FichaCriarDto": {
         "type": "object",
@@ -7315,6 +8026,41 @@ export const operacoesContratosPublicos = {
         "publica": false,
         "requestSchema": "FichaCriaturaAlterarDto",
         "responseSchema": "FichaCriaturaAlteradaDto"
+    },
+    "FichaController_criarNpc": {
+        "controller": "FichaController",
+        "metodo": "post",
+        "caminho": "/ficha/npc",
+        "tag": "Fichas",
+        "publica": false,
+        "requestSchema": "FichaNpcCriarDto",
+        "responseSchema": "FichaNpcCriadaDto"
+    },
+    "FichaController_recuperarNpc": {
+        "controller": "FichaController",
+        "metodo": "get",
+        "caminho": "/ficha/npc/:id",
+        "tag": "Fichas",
+        "publica": false,
+        "responseSchema": "FichaNpcRecuperadaDto"
+    },
+    "FichaController_alterarNpc": {
+        "controller": "FichaController",
+        "metodo": "put",
+        "caminho": "/ficha/npc/:id",
+        "tag": "Fichas",
+        "publica": false,
+        "requestSchema": "FichaNpcAlterarDto",
+        "responseSchema": "FichaNpcAlteradaDto"
+    },
+    "FichaController_alterarVitalidadeNpc": {
+        "controller": "FichaController",
+        "metodo": "patch",
+        "caminho": "/ficha/npc/:id/vitalidade",
+        "tag": "Fichas",
+        "publica": false,
+        "requestSchema": "FichaNpcVitalidadeAlterarDto",
+        "responseSchema": "FichaNpcAlteradaDto"
     },
     "FichaController_recuperar": {
         "controller": "FichaController",

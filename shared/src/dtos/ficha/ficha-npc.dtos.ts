@@ -19,6 +19,8 @@ export interface FichaNpcDadosDto {
     readonly vidaMaxima: number;
     /** Pode exceder a máxima editável, como nas demais fichas. */
     readonly vidaAtual: number;
+    /** Morrendo persiste após cura; ausência em documentos antigos equivale a false. */
+    readonly condicoes?: FichaNpcCondicoesDto;
     readonly defesaBase: number;
     readonly bloquear: number;
     readonly esquivar: number;
@@ -28,6 +30,11 @@ export interface FichaNpcDadosDto {
     readonly condutaCombate: FichaNpcCondutaCombateDto;
     /** Texto privado do dono/mestre; o recorte de leitura é responsabilidade do backend. */
     readonly anotacoes?: string;
+}
+
+/** Condição de saúde persistida; testes por turno e socorro permanecem narrativos. */
+export interface FichaNpcCondicoesDto {
+    readonly morrendo: boolean;
 }
 
 /** Identidade biográfica e propósito operacional do NPC. */
