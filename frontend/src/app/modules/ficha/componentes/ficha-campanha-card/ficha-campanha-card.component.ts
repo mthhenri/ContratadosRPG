@@ -1,3 +1,4 @@
+import { IMAGEM_MIMES_ACCEPT, IMAGEM_MIMES_PERMITIDOS } from '@contratados-rpg/shared/validators';
 import { NgTemplateOutlet } from '@angular/common';
 import {
   Component,
@@ -177,7 +178,6 @@ const FORMULA_DT = 'DT = 10 + NÍVEL + ATR×2';
 const COR_FICHA_PADRAO = '#d53030';
 
 /** Avatar da ficha (m3-62) — mesmos limites validados no backend (`FichaService.alterarImagem`). */
-const TIPOS_IMAGEM_ACEITOS = ['image/jpeg', 'image/png', 'image/webp'];
 const TAMANHO_MAXIMO_IMAGEM_BYTES = 2 * 1024 * 1024;
 
 /**
@@ -413,6 +413,7 @@ export interface AjusteClasse {
   styleUrl: './ficha-campanha-card.component.scss',
 })
 export class FichaCampanhaCard {
+  protected readonly tiposImagemAceitos = IMAGEM_MIMES_ACCEPT;
   /** A janela flutuante do Encontro é o único scroll vertical no mobile. */
   readonly rolagemExterna = input(false);
 
@@ -1068,7 +1069,7 @@ export class FichaCampanhaCard {
     if (!arquivo) {
       return;
     }
-    if (!TIPOS_IMAGEM_ACEITOS.includes(arquivo.type)) {
+    if (!IMAGEM_MIMES_PERMITIDOS.includes(arquivo.type)) {
       this.erroImagem.set('Formato inválido: use JPEG, PNG ou WEBP');
       return;
     }

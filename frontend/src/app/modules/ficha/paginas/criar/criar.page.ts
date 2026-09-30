@@ -1,3 +1,4 @@
+import { IMAGEM_MIMES_ACCEPT, IMAGEM_MIMES_PERMITIDOS } from '@contratados-rpg/shared/validators';
 import { Component, DestroyRef, ElementRef, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -97,7 +98,6 @@ const ATRIBUTO_MAXIMO_GUIA = 6;
 /** Custo em pontos de atributo da Maestria (doc — "⬥ Maestrias"), além do ponto que já leva o atributo a 6. */
 const MAESTRIA_PONTOS_CUSTO = 2;
 /** Avatar do guia (m3-62) — mesmos limites validados no backend (`FichaService.alterarImagem`). */
-const TIPOS_IMAGEM_ACEITOS = ['image/jpeg', 'image/png', 'image/webp'];
 const TAMANHO_MAXIMO_IMAGEM_BYTES = 2 * 1024 * 1024;
 
 function normalizarEstado(estado: EstadoGuiaCriacao): EstadoGuiaCriacao {
@@ -123,6 +123,7 @@ function normalizarEstado(estado: EstadoGuiaCriacao): EstadoGuiaCriacao {
 
 @Component({ selector: 'app-ficha-criar', imports: [Botao, BotaoIcone, CampoRotulado, Stat, StepInput, CommonModule, Icone, FichaHabilidadeSeletor, GuiaEquipamentoLoja, Tooltip], templateUrl: './criar.page.html', styleUrl: './criar.page.scss' })
 export class FichaCriar {
+  protected readonly tiposImagemAceitos = IMAGEM_MIMES_ACCEPT;
   private readonly destroyRef = inject(DestroyRef);
   private readonly rota = inject(ActivatedRoute); private readonly router = inject(Router);
   private readonly campanhaService = inject(CampanhaService); private readonly fichaService = inject(FichaService);
@@ -183,7 +184,7 @@ export class FichaCriar {
     if (!arquivo) {
       return;
     }
-    if (!TIPOS_IMAGEM_ACEITOS.includes(arquivo.type)) {
+    if (!IMAGEM_MIMES_PERMITIDOS.includes(arquivo.type)) {
       this.erroImagemGuia.set('Formato inválido: use JPEG, PNG ou WEBP');
       return;
     }

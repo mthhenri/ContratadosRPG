@@ -1,3 +1,4 @@
+import { IMAGEM_MIMES_ACCEPT, IMAGEM_MIMES_PERMITIDOS } from '@contratados-rpg/shared/validators';
 import {
   Component,
   ElementRef,
@@ -130,6 +131,7 @@ const ATRIBUTOS_NEUTROS: FichaAtributosDto = {
   host: { '(document:keydown.escape)': 'fecharHistoricoPeloTeclado()' },
 })
 export class PainelEncontroMestre {
+  protected readonly tiposImagemAceitos = IMAGEM_MIMES_ACCEPT;
   protected readonly dados = inject(EncontroPainelDadosService);
   protected readonly janelaHistorico = inject(HistoricoRolagensJanelaService);
   private readonly encontroService = inject(EncontroService);
@@ -411,7 +413,7 @@ export class PainelEncontroMestre {
     const arquivo = entrada.files?.[0];
     if (!arquivo) return;
     if (
-      !['image/jpeg', 'image/png', 'image/webp'].includes(arquivo.type) ||
+      !IMAGEM_MIMES_PERMITIDOS.includes(arquivo.type) ||
       arquivo.size > 2 * 1024 * 1024
     ) {
       entrada.value = '';
@@ -438,7 +440,7 @@ export class PainelEncontroMestre {
   /** Valida e substitui a imagem do cartão editável do avulso. */
   protected alterarImagemAvulso(combatente: EncontroCombatenteResumoDto, arquivo: File): void {
     if (
-      !['image/jpeg', 'image/png', 'image/webp'].includes(arquivo.type) ||
+      !IMAGEM_MIMES_PERMITIDOS.includes(arquivo.type) ||
       arquivo.size > 2 * 1024 * 1024
     ) {
       this.notificacaoService.notificar({

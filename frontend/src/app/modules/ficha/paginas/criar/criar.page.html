@@ -166,7 +166,7 @@
                             <input
                                 type="file"
                                 class="guia__avatar-entrada"
-                                accept="image/jpeg,image/png,image/webp"
+                                [accept]="tiposImagemAceitos"
                                 aria-label="Escolher avatar"
                                 (change)="aoSelecionarImagemGuia($event)"
                             />

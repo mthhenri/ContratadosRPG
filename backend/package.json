@@ -17,6 +17,7 @@
     "test:watch": "vitest",
     "openapi:gerar-contratos": "ts-node tools/gerar-openapi-contratos.ts",
     "patchnotes:publicar": "ts-node tools/patchnotes/publicar.ts",
+    "armazenamento:faxinar": "ts-node tools/armazenamento/faxinar-imagens.ts",
     "db:migrate": "knex migrate:latest --knexfile knexfile.ts",
     "db:rollback": "knex migrate:rollback --knexfile knexfile.ts",
     "db:seed:dev": "ts-node tools/database/seed-dev.ts",

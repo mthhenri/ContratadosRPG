@@ -1,5 +1,34 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-30 — P-091, P-089, I-037 e I-038
+
+Dois problemas e duas ideias fechados; só a I-038 teve spec (`docs/specs/done/armazenamento-faxina-imagens-orfas.spec.md`).
+
+- **P-091 (frontend):** `DocumentoEdicao.haRascunho()` e o `salvar()` sem mudança comparam o texto sem a
+  quebra de linha final (`semQuebraFinal`), que o Milkdown sempre acrescenta. Editar → Cancelar num texto
+  gravado por fora do editor não pergunta mais, e salvar sem mexer não grava versão nova. Teste novo na
+  `biblioteca-mestre.page.spec.ts`.
+- **P-089 (frontend):** o Caderno flutuante respeita a faixa da coluna de ações (`viewport − 240px`) fora do
+  maximizado, quando `mostrarGatilho` é falso e ainda sobra o mínimo de 440px — ao abrir (o tamanho persistido
+  de 960px era usado direto), ao redimensionar, ao restaurar e no resize da janela. Maximizado continua
+  ocupando o viewport. Dois testes novos. Ao vivo em 960×1080 como mestre (`codex.dev`, campanha 1): janela
+  em `x: 240`, largura 720, sem cobrir o item "Caderno" (antes `x: 0`, 960); em 1920×1080 segue 960 de largura
+  em `x: 280`. Calculadora (280px) e Leitor de documentos (640px) cabem na faixa livre e não precisaram de ajuste.
+- **I-037:** `shared/src/validators/imagem.validators.ts` guarda a tabela MIME → extensão e deriva
+  `IMAGEM_MIMES_PERMITIDOS` e `IMAGEM_MIMES_ACCEPT`. Substituem as listas de sete pontos do frontend (cinco
+  `TIPOS_IMAGEM_ACEITOS`, dois no `painel-mestre`) e os `accept=` dos templates (agora `[accept]`), os três mapas
+  das services de ficha, encontro e documento e o texto do OpenAPI. Teste de contrato no `shared`.
+- **I-038:** `ArmazenamentoProvedor.listarImagens` (local: `readdir` só de arquivos, para ignorar
+  `agentes/dev/` do seed; R2: `ListObjectsV2` paginado) e `tools/armazenamento/faxinar-imagens.ts`. Órfã =
+  arquivo de `AGENTES`/`DOCUMENTOS` fora de `ficha.imagem_url`, `encontro_combatente.imagem_url_avulso` e
+  `documento.imagem_url` vivos e gravado há mais de 30 dias; simulação por padrão; aborta com zero referências
+  e arquivos presentes. Ao vivo no disco local, só em simulação: um marcador antigo foi listado, um recente
+  ficou em carência, e o marcador foi removido depois. `--apagar` está coberto por teste com provedor
+  simulado, não foi exercitado no disco do autor (há órfãos reais de testes antigos lá).
+- **Verificação:** shared 798 testes, backend 923, frontend 2634 (suíte completa, 185 arquivos);
+  `lint` do backend (com `tsc`) e do frontend com 0 erros. O `tsc` do lint pegou dois dublês de
+  `ArmazenamentoProvedor` sem o método novo. O build de produção do frontend não foi rodado.
+
 ## 2026-09-30 — P-075, P-078, P-087 e P-088 corrigidos
 
 Quatro itens de `PROBLEMS.md` fechados numa sessão, sem spec própria (defeitos pequenos e independentes).

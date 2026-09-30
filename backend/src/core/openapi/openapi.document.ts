@@ -8,7 +8,7 @@ import {
     type SchemaObject,
 } from "@nestjs/swagger";
 import type { INestApplication } from "@nestjs/common";
-import { DOCUMENTO_IMAGEM_TAMANHO_MAXIMO_BYTES } from "@contratados-rpg/shared/validators";
+import { DOCUMENTO_IMAGEM_TAMANHO_MAXIMO_BYTES, IMAGEM_MIMES_PERMITIDOS } from "@contratados-rpg/shared/validators";
 import { operacoesContratosPublicos, schemasContratosPublicos } from "./contratos-gerados";
 
 const NOME_SEGURANCA_JWT = "jwt";
@@ -160,7 +160,7 @@ function configurarUpload(operacao: OperationObject, tamanhoMaximoMiB: number): 
                     required: ["arquivo"],
                     properties: { arquivo: { type: "string", format: "binary" } },
                 },
-                encoding: { arquivo: { contentType: "image/jpeg, image/png, image/webp" } },
+                encoding: { arquivo: { contentType: IMAGEM_MIMES_PERMITIDOS.join(", ") } },
             },
         },
     };

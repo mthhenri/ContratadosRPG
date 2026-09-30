@@ -217,6 +217,17 @@ describe('BibliotecaMestre', () => {
     expect(texto(painel(contexto.raiz))).toContain('Nenhum documento aberto.');
   });
 
+  it('a quebra final que o editor sempre acrescenta não conta como rascunho (P-091)', async () => {
+    const contexto = montar();
+    await abrir(contexto, 'Carta do informante');
+    botao(painel(contexto.raiz), 'Editar')!.click();
+    await estabilizar(contexto.fixture);
+    vi.spyOn(editor(contexto.fixture), 'confirmarValor').mockReturnValue('# Texto\n');
+    await abrir(contexto, 'Carta do informante');
+    expect(contexto.confirmar).not.toHaveBeenCalled();
+    expect(texto(painel(contexto.raiz))).toContain('Nenhum documento aberto.');
+  });
+
   it('abrir pela busca o documento já aberto mantém o painel', async () => {
     const contexto = montar();
     await abrir(contexto, 'Carta do informante');

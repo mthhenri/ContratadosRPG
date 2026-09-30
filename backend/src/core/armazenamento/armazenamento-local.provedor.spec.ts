@@ -139,4 +139,21 @@ describe('ArmazenamentoLocalProvedor (m3-62)', () => {
       ).rejects.toThrow('inválido');
     });
   });
+
+  it('lista as imagens da pasta com o caminho público e a data de gravação', async () => {
+    const salvo = await provedor.salvarImagem({
+      pasta: ArmazenamentoPastaEnum.AGENTES,
+      conteudo: new Uint8Array([9]),
+      mimetype: 'image/png',
+      extensao: 'png',
+    });
+    arquivosCriados.push(salvo.caminho);
+
+    const imagens = await provedor.listarImagens({ pasta: ArmazenamentoPastaEnum.AGENTES });
+
+    const listada = imagens.find((imagem) => imagem.caminho === salvo.caminho);
+    expect(listada).toBeDefined();
+    expect(imagens.every((imagem) => !imagem.caminho.endsWith('/dev'))).toBe(true);
+    expect(Math.abs(Date.now() - listada!.modificadoEm.getTime())).toBeLessThan(60_000);
+  });
 });

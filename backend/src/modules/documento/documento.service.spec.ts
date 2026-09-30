@@ -83,6 +83,7 @@ describe('DocumentoService', () => {
   let armazenamentoProvedor: {
     salvarImagem: Mock;
     excluirImagem: Mock;
+    listarImagens: Mock;
     lerTexto: Mock;
     salvarTexto: Mock;
   };
@@ -164,6 +165,7 @@ describe('DocumentoService', () => {
     armazenamentoProvedor = {
       salvarImagem: vi.fn().mockResolvedValue({ caminho: '/uploads/documentos/nova.png' }),
       excluirImagem: vi.fn().mockResolvedValue(undefined),
+      listarImagens: vi.fn().mockResolvedValue([]),
       lerTexto: vi.fn(),
       salvarTexto: vi.fn(),
     };

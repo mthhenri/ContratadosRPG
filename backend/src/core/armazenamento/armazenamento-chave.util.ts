@@ -14,6 +14,11 @@ const NOME_PASTA: Readonly<Record<ArmazenamentoPastaEnum, string>> = {
   [ArmazenamentoPastaEnum.PATCHNOTES]: 'patchnotes',
 };
 
+/** Nome da pasta no armazenamento (`agentes`, `documentos`...) — o prefixo das chaves dela. */
+export function obterNomePasta(pasta: ArmazenamentoPastaEnum): string {
+  return NOME_PASTA[pasta];
+}
+
 /**
  * Chave relativa de uma imagem, comum às duas implementações de armazenamento
  * (`<pasta>/<uuid>.<extensão>`) — a única diferença entre elas é a raiz (disco local vs bucket

@@ -76,7 +76,7 @@ consomem os dois o mesmo motor — nunca reimplemente uma fórmula de um lado s�
 | Documentação REST OpenAPI/Swagger | `backend/src/core/openapi/` — `openapi.document.ts` registra `/api/docs` e `/api/docs-json`; `contratos-gerados.ts` é produzido por `backend/tools/gerar-openapi-contratos.ts` a partir de DTOs públicos e controllers |
 | **Gateway WebSocket** (broadcast-only) | `backend/src/core/gateway/` — `CampanhaGateway`, `WsIoAdapter` |
 | Resincronização da Iniciativa quando a ficha muda fora do `EncontroService` (ficha flutuante etc.) | `CampanhaGateway.emitirFichaAlterada` chama `EncontroService.sincronizarFichaAlterada` |
-| **Armazenamento de blob** (avatar da ficha, local/R2) | `backend/src/core/armazenamento/` — `ArmazenamentoProvedor`, `ArmazenamentoLocalProvedor`/`ArmazenamentoR2Provedor`, toggle via `ConfigService.obterConfiguracaoArmazenamento()` |
+| **Armazenamento de blob** (avatar da ficha, local/R2) | `backend/src/core/armazenamento/` — `ArmazenamentoProvedor`, `ArmazenamentoLocalProvedor`/`ArmazenamentoR2Provedor`, toggle via `ConfigService.obterConfiguracaoArmazenamento()`; `tools/armazenamento/faxinar-imagens.ts` (faxina de órfãs); formatos de imagem em `shared/src/validators/imagem.validators.ts` |
 | Patchnotes públicos (`GET /patchnote[/:versao]`, cache 24 h) e o formato do arquivo `.md`/`indice.json` | `backend/src/modules/patchnote/` (`patchnote-formato.util.ts` é compartilhado com o script); leitura/gravação de texto em `ArmazenamentoProvedor.lerTexto`/`salvarTexto` |
 | Publicar patchnotes no armazenamento (R2/local) | `backend/tools/patchnotes/publicar.ts` — `npm run patchnotes:publicar`; fluxo completo na skill `publicar-versao` |
 | Conexão Knex em runtime | `backend/src/database/` |

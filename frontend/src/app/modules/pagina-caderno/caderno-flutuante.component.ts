@@ -21,12 +21,19 @@ import {
   PainelFlutuante,
   type PainelFlutuantePosicao,
 } from '../../shared/ui/painel-flutuante/painel-flutuante.component';
-import { type CadernoTamanho, consultarCadernoMobile } from './caderno-flutuante.model';
+import {
+  CADERNO_LARGURA_MINIMA,
+  type CadernoTamanho,
+  consultarCadernoMobile,
+} from './caderno-flutuante.model';
 import { CadernoFlutuanteStore } from './caderno-flutuante.store';
 import { CadernoConteudo } from './caderno-conteudo.component';
 import { CadernoEsquadraoColaborativoService } from './caderno-esquadrao-colaborativo.service';
 import { CadernoJanelaService } from './caderno-janela.service';
 import { CadernoSalvamento } from './caderno-salvamento.component';
+
+/** Faixa da coluna de ações (o `pisoX` de 220px + respiro) que a janela não cobre fora do maximizado. */
+const RESERVA_COLUNA_ACOES = 240;
 
 /**
  * Caderno da campanha em painel flutuante: gatilho, janela arrastável, maximizar e redimensionar.
@@ -138,6 +145,10 @@ export class CadernoFlutuante implements OnDestroy {
       return;
     }
     this.store.abrir(this.campanhaId());
+    // O tamanho persistido pode caber só no viewport inteiro; ao abrir, respeita a faixa da coluna.
+    if (!this.ehMobile() && !this.maximizada()) {
+      this.store.alterarTamanho(this.estado().tamanho, this.viewportSemColuna());
+    }
   }
 
   /**
@@ -187,7 +198,7 @@ export class CadernoFlutuante implements OnDestroy {
         const tamanhoRestaurado = precisaReduzir
           ? { largura: 800, altura: 800 }
           : this.tamanhoAntesDeMaximizar;
-        this.store.alterarTamanho(tamanhoRestaurado, viewport);
+        this.store.alterarTamanho(tamanhoRestaurado, this.viewportSemColuna());
         const posicaoRestaurada = precisaReduzir
           ? {
               x: Math.round((viewport.largura - tamanhoRestaurado.largura) / 2),
@@ -242,7 +253,7 @@ export class CadernoFlutuante implements OnDestroy {
           evento.clientY -
           this.origemRedimensionamento.ponteiroY,
       },
-      this.viewport(),
+      this.viewportSemColuna(),
     );
   }
 
@@ -257,12 +268,24 @@ export class CadernoFlutuante implements OnDestroy {
     if (this.maximizada()) {
       this.store.alterarTamanho({ largura: viewport.largura, altura: viewport.altura }, viewport);
     } else {
-      this.store.alterarTamanho(this.estado().tamanho, viewport);
+      this.store.alterarTamanho(this.estado().tamanho, this.viewportSemColuna());
     }
   }
 
   private viewport(): { largura: number; altura: number } {
     return { largura: window.innerWidth, altura: window.innerHeight };
+  }
+
+  /**
+   * Viewport que o tamanho não maximizado pode ocupar: com a coluna de ações na tela
+   * (`mostrarGatilho` falso), a janela não cobre a faixa dela — na tela dividida uma janela de
+   * 960px esconderia o item que a fecha (P-089). Sem folga para o mínimo, vale o viewport todo.
+   */
+  private viewportSemColuna(): { largura: number; altura: number } {
+    const viewport = this.viewport();
+    const semColuna = viewport.largura - RESERVA_COLUNA_ACOES;
+    if (this.mostrarGatilho() || semColuna < CADERNO_LARGURA_MINIMA) return viewport;
+    return { largura: semColuna, altura: viewport.altura };
   }
 }
 

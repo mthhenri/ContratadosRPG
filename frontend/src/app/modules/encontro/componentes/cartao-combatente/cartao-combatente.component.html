@@ -47,7 +47,7 @@
                         <input
                             class="combatente__arquivo-entrada"
                             type="file"
-                            accept="image/jpeg,image/png,image/webp"
+                            [accept]="tiposImagemAceitos"
                             [attr.aria-label]="'Trocar imagem de ' + combatente().nome"
                             (change)="selecionarImagemAvulso($event)"
                         />

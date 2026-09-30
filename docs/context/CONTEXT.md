@@ -2858,7 +2858,8 @@ leva só `{ campanhaId, documentoId, alteracao }` (nunca título, conteúdo ou U
 remover um oculto vai só à sala do mestre; revelar, ocultar, reordenar e mexer num revelado vão à
 sala cheia + espectador. Toda escrita avança o `updatedDate` (inclusive revelar/reordenar), e o
 `PUT` usa-o como versão otimista (409). A URL da imagem é pública e não revogável (decisão
-confirmada da M9); a imagem de um documento removido fica no armazenamento (`I-038`). O
+confirmada da M9); a imagem de um documento removido fica no armazenamento até a faxina (`npm run
+armazenamento:faxinar`, I-038: simula por padrão, carência de 30 dias). O
 `DocumentoModule` exporta a `DocumentoService` para a `m7-25`.
 
 **Busca (`m9-03`):** `GET campanha/:campanhaId/documento/busca?termo=&pagina=&limite=` →

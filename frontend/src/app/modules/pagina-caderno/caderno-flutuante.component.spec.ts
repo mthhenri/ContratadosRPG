@@ -360,6 +360,29 @@ describe('CadernoFlutuante', () => {
     expect(obter('.painel-flutuante__janela').style.top).toBe(yAntes);
   });
 
+  it('na tela dividida com a coluna de ações, a janela não cobre a faixa da coluna (P-089)', () => {
+    definirViewport(960, 1080);
+    fixture.componentRef.setInput('mostrarGatilho', false);
+    fixture.componentInstance.abrir();
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance['estado']().tamanho.largura).toBe(720);
+
+    definirViewport(1920, 1080);
+    fixture.componentInstance['aoRedimensionarViewport']();
+    fixture.componentInstance['store'].alterarTamanho({ largura: 960, altura: 680 }, { largura: 1920, altura: 1080 });
+    fixture.componentInstance['aoRedimensionarViewport']();
+    expect(fixture.componentInstance['estado']().tamanho.largura).toBe(960);
+  });
+
+  it('sem a coluna de ações (gatilho próprio), a janela pode ocupar o viewport todo', () => {
+    definirViewport(960, 1080);
+    fixture.componentInstance.abrir();
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance['estado']().tamanho.largura).toBe(960);
+  });
+
   it('restaura em 800 × 800 centralizado quando o tamanho anterior ocupava ao menos 90% da tela', () => {
     const store = fixture.componentInstance['store'];
     store.alterarTamanho(

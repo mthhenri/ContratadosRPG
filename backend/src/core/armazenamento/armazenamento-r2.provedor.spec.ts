@@ -19,6 +19,12 @@ vi.mock('@aws-sdk/client-s3', () => ({
       Object.assign(this as object, entrada as object);
     }
   },
+  ListObjectsV2Command: class {
+    constructor(entrada: unknown) {
+      construtoresComandoRecebidos.push(entrada);
+      Object.assign(this as object, entrada as object);
+    }
+  },
   DeleteObjectCommand: class {
     constructor(entrada: unknown) {
       construtoresComandoRecebidos.push(entrada);
@@ -165,5 +171,28 @@ describe('ArmazenamentoR2Provedor (m3-62)', () => {
       ).rejects.toThrow('inválido');
       expect(enviarMock).not.toHaveBeenCalled();
     });
+  });
+
+  it('lista a pasta seguindo a paginação e devolve a URL pública de cada chave', async () => {
+    const provedor = new ArmazenamentoR2Provedor(configuracaoR2);
+    const antes = new Date('2026-01-01T00:00:00Z');
+    enviarMock
+      .mockResolvedValueOnce({
+        Contents: [{ Key: 'agentes/a.png', LastModified: antes }],
+        IsTruncated: true,
+        NextContinuationToken: 'proxima',
+      })
+      .mockResolvedValueOnce({ Contents: [{ Key: 'agentes/b.webp', LastModified: antes }] });
+
+    const imagens = await provedor.listarImagens({ pasta: ArmazenamentoPastaEnum.AGENTES });
+
+    expect(imagens).toEqual([
+      { caminho: 'https://pub-hash.r2.dev/agentes/a.png', modificadoEm: antes },
+      { caminho: 'https://pub-hash.r2.dev/agentes/b.webp', modificadoEm: antes },
+    ]);
+    expect(construtoresComandoRecebidos).toEqual([
+      expect.objectContaining({ Prefix: 'agentes/', ContinuationToken: undefined }),
+      expect.objectContaining({ Prefix: 'agentes/', ContinuationToken: 'proxima' }),
+    ]);
   });
 });

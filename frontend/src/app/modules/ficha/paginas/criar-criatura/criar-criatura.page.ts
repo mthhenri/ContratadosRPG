@@ -1,3 +1,4 @@
+import { IMAGEM_MIMES_ACCEPT, IMAGEM_MIMES_PERMITIDOS } from '@contratados-rpg/shared/validators';
 import { Component, DestroyRef, ElementRef, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -68,7 +69,6 @@ import {
 type ChaveAtributo = keyof FichaAtributosDto;
 
 /** Imagem de registro (mesmos limites validados no backend, `FichaService.alterarImagem`). */
-const TIPOS_IMAGEM_ACEITOS = ['image/jpeg', 'image/png', 'image/webp'];
 const TAMANHO_MAXIMO_IMAGEM_BYTES = 2 * 1024 * 1024;
 
 /** Rótulo dos dez atributos (mesma grafia do guia de jogador) — reusa `FichaAtributosDto`, sem redefinir (proibição #21). */
@@ -248,6 +248,7 @@ const paraHabilidadeDto = (linha: LinhaHabilidade): FichaCriaturaHabilidadeDto =
   styleUrl: './criar-criatura.page.scss',
 })
 export class CriaturaCriar {
+  protected readonly tiposImagemAceitos = IMAGEM_MIMES_ACCEPT;
   private readonly rota = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly fichaService = inject(FichaService);
@@ -350,7 +351,7 @@ export class CriaturaCriar {
     if (!arquivo) {
       return;
     }
-    if (!TIPOS_IMAGEM_ACEITOS.includes(arquivo.type)) {
+    if (!IMAGEM_MIMES_PERMITIDOS.includes(arquivo.type)) {
       this.erroImagemGuia.set('Formato inválido: use JPEG, PNG ou WEBP');
       return;
     }

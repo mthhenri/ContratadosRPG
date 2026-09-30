@@ -356,7 +356,7 @@
                         <input
                             class="adicionar__arquivo-entrada"
                             type="file"
-                            accept="image/jpeg,image/png,image/webp"
+                            [accept]="tiposImagemAceitos"
                             aria-label="Imagem do avulso"
                             (change)="selecionarImagemAvulso($event)"
                         />

@@ -220,7 +220,7 @@
                                                     <input
                                                         type="file"
                                                         class="ficha-ident__avatar-upload-entrada"
-                                                        accept="image/jpeg,image/png,image/webp"
+                                                        [accept]="tiposImagemAceitos"
                                                         aria-label="Trocar avatar"
                                                         (change)="aoSelecionarImagem($event)"
                                                     />

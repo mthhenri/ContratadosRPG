@@ -1,13 +1,16 @@
 import {
   DeleteObjectCommand,
   GetObjectCommand,
+  ListObjectsV2Command,
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
 import type { ConfiguracaoArmazenamento } from '../../config/config.service';
-import { construirChaveImagem, construirChaveTexto } from './armazenamento-chave.util';
+import { construirChaveImagem, construirChaveTexto, obterNomePasta } from './armazenamento-chave.util';
 import type {
   ArmazenamentoImagemExcluir,
+  ArmazenamentoImagemListada,
+  ArmazenamentoImagensListar,
   ArmazenamentoImagemSalva,
   ArmazenamentoImagemSalvar,
   ArmazenamentoProvedor,
@@ -55,6 +58,31 @@ export class ArmazenamentoR2Provedor implements ArmazenamentoProvedor {
   async excluirImagem(dto: ArmazenamentoImagemExcluir): Promise<void> {
     const chave = dto.caminho.replace(`${this.configuracao.r2UrlPublica}/`, '');
     await this.clienteS3.send(new DeleteObjectCommand({ Bucket: this.configuracao.r2Bucket, Key: chave }));
+  }
+
+  /** Varre `<pasta>/` com `ListObjectsV2`, seguindo a paginação (até 1000 chaves por página). */
+  async listarImagens(dto: ArmazenamentoImagensListar): Promise<ArmazenamentoImagemListada[]> {
+    const imagens: ArmazenamentoImagemListada[] = [];
+    let token: string | undefined;
+    do {
+      const resposta = await this.clienteS3.send(
+        new ListObjectsV2Command({
+          Bucket: this.configuracao.r2Bucket,
+          Prefix: `${obterNomePasta(dto.pasta)}/`,
+          ContinuationToken: token,
+        }),
+      );
+      for (const objeto of resposta.Contents ?? []) {
+        if (objeto.Key && objeto.LastModified) {
+          imagens.push({
+            caminho: `${this.configuracao.r2UrlPublica}/${objeto.Key}`,
+            modificadoEm: objeto.LastModified,
+          });
+        }
+      }
+      token = resposta.IsTruncated ? resposta.NextContinuationToken : undefined;
+    } while (token);
+    return imagens;
   }
 
   /** Lê via `GetObject`; chave inexistente (`NoSuchKey`/404) vira `null` — qualquer outro erro sobe. */

@@ -7,6 +7,8 @@
 export interface ArmazenamentoProvedor {
   salvarImagem(dto: ArmazenamentoImagemSalvar): Promise<ArmazenamentoImagemSalva>;
   excluirImagem(dto: ArmazenamentoImagemExcluir): Promise<void>;
+  /** Lista as imagens de uma pasta, com o caminho no formato de `salvarImagem` (faxina de órfãs). */
+  listarImagens(dto: ArmazenamentoImagensListar): Promise<ArmazenamentoImagemListada[]>;
   /** Lê um arquivo de texto da pasta; `null` quando ele não existe (pn-02). */
   lerTexto(dto: ArmazenamentoTextoLer): Promise<string | null>;
   /** Grava (ou substitui) um arquivo de texto na pasta (pn-02). */
@@ -44,6 +46,17 @@ export interface ArmazenamentoImagemSalva {
 /** Entrada de `excluirImagem` — o `caminho` que `salvarImagem` devolveu. */
 export interface ArmazenamentoImagemExcluir {
   readonly caminho: string;
+}
+
+/** Entrada de `listarImagens` — a pasta a varrer. */
+export interface ArmazenamentoImagensListar {
+  readonly pasta: ArmazenamentoPastaEnum;
+}
+
+/** Uma imagem armazenada: o `caminho` que `salvarImagem` devolveu e quando o arquivo foi gravado. */
+export interface ArmazenamentoImagemListada {
+  readonly caminho: string;
+  readonly modificadoEm: Date;
 }
 
 /**

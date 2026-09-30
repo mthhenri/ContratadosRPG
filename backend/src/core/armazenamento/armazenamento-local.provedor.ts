@@ -1,8 +1,11 @@
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import type { Dirent } from 'node:fs';
+import { mkdir, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
-import { construirChaveImagem, construirChaveTexto } from './armazenamento-chave.util';
+import { construirChaveImagem, construirChaveTexto, obterNomePasta } from './armazenamento-chave.util';
 import type {
   ArmazenamentoImagemExcluir,
+  ArmazenamentoImagemListada,
+  ArmazenamentoImagensListar,
   ArmazenamentoImagemSalva,
   ArmazenamentoImagemSalvar,
   ArmazenamentoProvedor,
@@ -31,6 +34,28 @@ export class ArmazenamentoLocalProvedor implements ArmazenamentoProvedor {
   async excluirImagem(dto: ArmazenamentoImagemExcluir): Promise<void> {
     const chave = dto.caminho.replace(`${PREFIXO_PUBLICO}/`, '');
     await rm(join(this.diretorioUploads, chave), { force: true });
+  }
+
+  async listarImagens(dto: ArmazenamentoImagensListar): Promise<ArmazenamentoImagemListada[]> {
+    const nomePasta = obterNomePasta(dto.pasta);
+    let entradas: Dirent[];
+    try {
+      entradas = await readdir(join(this.diretorioUploads, nomePasta), { withFileTypes: true });
+    } catch (erro) {
+      if ((erro as NodeJS.ErrnoException).code === 'ENOENT') {
+        return [];
+      }
+      throw erro;
+    }
+    // Só arquivos: subpastas (ex.: `agentes/dev/`, dos avatares do seed) não são imagens gravadas.
+    return Promise.all(
+      entradas
+        .filter((entrada) => entrada.isFile())
+        .map(async (entrada) => ({
+          caminho: `${PREFIXO_PUBLICO}/${nomePasta}/${entrada.name}`,
+          modificadoEm: (await stat(join(this.diretorioUploads, nomePasta, entrada.name))).mtime,
+        })),
+    );
   }
 
   async lerTexto(dto: ArmazenamentoTextoLer): Promise<string | null> {

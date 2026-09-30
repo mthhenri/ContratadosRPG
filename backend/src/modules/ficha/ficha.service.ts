@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { IMAGEM_EXTENSAO_POR_MIME } from '@contratados-rpg/shared/validators';
 import type { CampanhaInventarioItemDto } from '@contratados-rpg/shared/dtos/campanha';
 import type {
   FichaAcervoListarDto,
@@ -87,16 +88,6 @@ import { CampanhaRepository } from '../campanha/campanha.repository';
 import { CampanhaService } from '../campanha/campanha.service';
 import { omitirCamposPrivados, preservarCamposPrivados } from './ficha-campos-privados.util';
 import { FichaRepository } from './ficha.repository';
-
-/**
- * MIME permitido para o avatar da ficha (m3-62) → extensão de arquivo correspondente — cobre a
- * validação de formato e a nomeação do blob (`agentes/<uuid>.<extensão>`) num só lugar.
- */
-const EXTENSAO_POR_MIME_IMAGEM: Readonly<Record<string, string>> = {
-  'image/jpeg': 'jpg',
-  'image/png': 'png',
-  'image/webp': 'webp',
-};
 
 /** Tamanho máximo do avatar da ficha (m3-62) — 2MB. */
 const TAMANHO_MAXIMO_IMAGEM_BYTES = 2 * 1024 * 1024;
@@ -782,7 +773,7 @@ export class FichaService {
     if (dto.arquivo.tamanho === 0) {
       throw new BusinessException('Envie um arquivo de imagem');
     }
-    const extensao = EXTENSAO_POR_MIME_IMAGEM[dto.arquivo.mimetype];
+    const extensao = IMAGEM_EXTENSAO_POR_MIME[dto.arquivo.mimetype];
     if (!extensao) {
       throw new BusinessException('Formato de imagem inválido: use JPEG, PNG ou WEBP');
     }

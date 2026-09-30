@@ -19,6 +19,10 @@ class ArmazenamentoMemoria implements ArmazenamentoProvedor {
     throw new Error('não usado');
   }
 
+  listarImagens(): Promise<never[]> {
+    throw new Error('não usado');
+  }
+
   lerTexto(dto: ArmazenamentoTextoLer): Promise<string | null> {
     return Promise.resolve(this.arquivos.get(dto.nomeArquivo) ?? null);
   }

@@ -34,6 +34,7 @@ import {
   DOCUMENTO_IMAGEM_MIMES_PERMITIDOS,
   DOCUMENTO_IMAGEM_TAMANHO_MAXIMO_BYTES,
   DOCUMENTO_TITULO_MAXIMO,
+  IMAGEM_EXTENSAO_POR_MIME,
 } from '@contratados-rpg/shared/validators';
 import {
   ARMAZENAMENTO_PROVEDOR,
@@ -53,13 +54,6 @@ import { CampanhaRepository } from '../campanha/campanha.repository';
 import { CampanhaService } from '../campanha/campanha.service';
 import { DocumentoLeituraService } from './documento-leitura.service';
 import { DocumentoRepository } from './documento.repository';
-
-/** Extensão de arquivo de cada MIME aceito — nomeia o blob (`documentos/<uuid>.<extensão>`). */
-const EXTENSAO_POR_MIME_IMAGEM: Readonly<Record<string, string>> = {
-  'image/jpeg': 'jpg',
-  'image/png': 'png',
-  'image/webp': 'webp',
-};
 
 /** Mensagem da imagem acima do teto — a mesma na service e no interceptor do upload. */
 export const MENSAGEM_IMAGEM_DOCUMENTO_GRANDE = `Imagem maior que o limite permitido (${
@@ -382,7 +376,7 @@ export class DocumentoService {
       throw new BusinessException('Envie um arquivo de imagem');
     }
     const extensao = DOCUMENTO_IMAGEM_MIMES_PERMITIDOS.includes(dto.arquivo.mimetype)
-      ? EXTENSAO_POR_MIME_IMAGEM[dto.arquivo.mimetype]
+      ? IMAGEM_EXTENSAO_POR_MIME[dto.arquivo.mimetype]
       : undefined;
     if (!extensao) {
       throw new BusinessException('Formato de imagem inválido: use JPEG, PNG ou WEBP');

@@ -1,3 +1,4 @@
+import { IMAGEM_MIMES_ACCEPT } from '@contratados-rpg/shared/validators';
 import { Component, computed, input, output, signal } from '@angular/core';
 
 import type { EncontroCombatenteResumoDto } from '@contratados-rpg/shared/dtos/encontro';
@@ -55,6 +56,7 @@ const ABREVIACAO_RESISTENCIA: Record<TipoDanoEnum, string> = {
   styleUrl: './cartao-combatente.component.scss',
 })
 export class CartaoCombatente {
+  protected readonly tiposImagemAceitos = IMAGEM_MIMES_ACCEPT;
   readonly combatente = input.required<EncontroCombatenteResumoDto>();
 
   /** Posição deste cartão entre os turnos do mesmo combatente. */

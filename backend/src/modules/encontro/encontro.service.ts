@@ -1,4 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { IMAGEM_EXTENSAO_POR_MIME } from '@contratados-rpg/shared/validators';
 import type {
   EncontroCombatenteAdicionarDto,
   EncontroCombatenteIdentidadeAlterarDto,
@@ -237,12 +238,7 @@ export class EncontroService {
     if (dto.arquivo.tamanho === 0) {
       throw new BusinessException('Envie um arquivo de imagem');
     }
-    const extensaoPorMime: Readonly<Record<string, string>> = {
-      'image/jpeg': 'jpg',
-      'image/png': 'png',
-      'image/webp': 'webp',
-    };
-    const extensao = extensaoPorMime[dto.arquivo.mimetype];
+    const extensao = IMAGEM_EXTENSAO_POR_MIME[dto.arquivo.mimetype];
     if (!extensao) {
       throw new BusinessException('Formato de imagem inválido: use JPEG, PNG ou WEBP');
     }

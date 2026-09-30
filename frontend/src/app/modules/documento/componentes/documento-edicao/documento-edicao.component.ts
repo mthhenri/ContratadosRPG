@@ -47,6 +47,14 @@ import { LeitorDocumento } from '../leitor-documento/leitor-documento.component'
 const TAMANHO_MAXIMO_IMAGEM_MB = DOCUMENTO_IMAGEM_TAMANHO_MAXIMO_BYTES / (1024 * 1024);
 
 /**
+ * O Milkdown sempre serializa terminando em `\n`; texto gravado por fora do editor não tem a
+ * quebra. Comparar sem ela evita "Descartar alterações?" e versão nova sem mudança real (P-091).
+ */
+function semQuebraFinal(texto: string): string {
+  return texto.replace(/\n+$/, '');
+}
+
+/**
  * Edição de um documento no próprio lugar (m9-04, extraída da `BibliotecaMestre` na m9-13) — a
  * mesma na página do mestre e no painel flutuante: título, texto (editor Markdown e importação) ou
  * imagem (escolher/trocar, com a validação de `shared`), o aviso de conflito 409 e o rodapé
@@ -149,7 +157,8 @@ export class DocumentoEdicao implements OnInit {
     const conteudo = this.editor()?.confirmarValor() ?? this.conteudoEdicao();
     return (
       titulo !== documento.titulo ||
-      (documento.tipo === TipoDocumentoEnum.TEXTO && conteudo !== (documento.conteudoMarkdown ?? ''))
+      (documento.tipo === TipoDocumentoEnum.TEXTO &&
+        semQuebraFinal(conteudo) !== semQuebraFinal(documento.conteudoMarkdown ?? ''))
     );
   }
 
@@ -189,7 +198,7 @@ export class DocumentoEdicao implements OnInit {
     }
     if (
       titulo === documento.titulo &&
-      (conteudoMarkdown ?? null) === (documento.conteudoMarkdown ?? null)
+      semQuebraFinal(conteudoMarkdown ?? '') === semQuebraFinal(documento.conteudoMarkdown ?? '')
     ) {
       this.encerrada.emit();
       return;

@@ -27,6 +27,19 @@
 
 ## Promovidas
 
+### I-038 — Faxina das imagens órfãs no armazenamento · backend/armazenamento
+
+- Implementada em 2026-09-30: `docs/specs/done/armazenamento-faxina-imagens-orfas.spec.md`. Comando
+  `npm run armazenamento:faxinar --workspace=backend -- [--apagar] [--carencia-dias=30]`, simulação por
+  padrão, com carência pela data de gravação e trava de sanidade.
+
+### I-037 — Uma constante compartilhada para os MIMEs de imagem · shared/validators
+
+- Implementada em 2026-09-30, a pedido do autor, sem spec própria (troca mecânica):
+  `shared/src/validators/imagem.validators.ts` (`IMAGEM_EXTENSAO_POR_MIME`, `IMAGEM_MIMES_PERMITIDOS`,
+  `IMAGEM_MIMES_ACCEPT`), usada pelos sete pontos do frontend e pelas três services e o OpenAPI do
+  backend. `DOCUMENTO_IMAGEM_MIMES_PERMITIDOS` virou alias.
+
 ### I-036 — Título neutro da ficha flutuante fora do combate · frontend/ficha
 
 - Implementada em 2026-09-26, a pedido do autor, logo depois da `m7-24` (sem spec própria: uma
@@ -91,30 +104,6 @@
   `WsIoAdapter` e a presença movida para o armazenamento compartilhado (com expiração, porque uma
   instância que morre não roda o `handleDisconnect` dos sockets dela). Só vale quando o deploy
   exigir escala horizontal.
-
-### I-038 — Faxina das imagens órfãs no armazenamento · backend/armazenamento
-
-- **Ideia:** apagar do disco/bucket as imagens que nenhuma linha viva referencia — a de um
-  documento removido (soft delete mantém `imagem_url`, e o arquivo fica) e as de ficha/avulso
-  excluídos —, por um job ou comando de manutenção que cruza o armazenamento com o banco.
-- **Origem:** `m9-02` (2026-09-26), que deixou a remoção do arquivo fora de escopo para o soft delete
-  continuar recuperável.
-- **Por quê:** a URL é pública e não revogável (decisão confirmada da M9): enquanto o arquivo
-  existir, quem guardou o endereço de um documento removido ainda o abre. E o bucket só cresce.
-- **Custo aparente:** médio — listar o bucket (R2) e o disco, cruzar com três colunas `imagem_url`,
-  e decidir uma carência antes de apagar (remoção recuperável).
-
-### I-037 — Uma constante compartilhada para os MIMEs de imagem · shared/validators
-
-- **Ideia:** substituir a lista `['image/jpeg', 'image/png', 'image/webp']` repetida no frontend
-  (`ficha-campanha-card`, `ficha-visualizacao`, `criar`, `criar-criatura`, `painel-mestre` ×2) e o
-  mapa MIME→extensão de `ficha.service.ts`/`encontro.service.ts` por uma constante em
-  `shared/src/validators`, como a `DOCUMENTO_IMAGEM_MIMES_PERMITIDOS` que a `m9-01` criou para o
-  documento.
-- **Origem:** `m9-01` (2026-09-26), ao procurar um precedente para a lista de MIMEs do documento.
-- **Por quê:** aceitar um formato novo (ex.: AVIF) hoje exige editar oito lugares, e o cliente
-  pode divergir do backend sem nenhum teste perceber.
-- **Custo aparente:** baixo — troca mecânica, com um teste de contrato no `shared`.
 
 ### I-035 — Mecânica da cena de Resistência no painel · cenas/regras
 

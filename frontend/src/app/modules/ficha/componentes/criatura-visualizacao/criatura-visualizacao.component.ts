@@ -1,3 +1,4 @@
+import { IMAGEM_MIMES_ACCEPT } from '@contratados-rpg/shared/validators';
 import { Component, computed, effect, inject, input, output, signal, viewChild } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 
@@ -173,6 +174,7 @@ const ANOTACOES_ALTURA_MINIMA = 260;
   },
 })
 export class CriaturaVisualizacao {
+  protected readonly tiposImagemAceitos = IMAGEM_MIMES_ACCEPT;
   private readonly bandeja = inject(BandejaDadosService);
   private readonly rolagemRegistro = inject(FichaRolagemRegistroService);
   private readonly tema = inject(TemaService);
