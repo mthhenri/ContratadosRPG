@@ -19,7 +19,7 @@ import type { FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
 import { CampanhaDetalheMestre } from './detalhe-mestre.page';
 import { BibliotecaFlutuante } from '../../../documento/componentes/biblioteca-flutuante/biblioteca-flutuante.component';
 import { EspectadorFichaCard } from '../../componentes/espectador-ficha-card/espectador-ficha-card.component';
-import { CriaturaEsquadraoCard } from '../../componentes/criatura-esquadrao-card/criatura-esquadrao-card.component';
+import { CampanhaFichasEspeciais } from '../../componentes/campanha-fichas-especiais/campanha-fichas-especiais.component';
 import { CampanhaDetalheDadosService } from '../detalhe/campanha-detalhe-dados.service';
 import { CampanhaService } from '../../campanha.service';
 import { FichaService } from '../../../ficha/ficha.service';
@@ -386,17 +386,17 @@ describe('CampanhaDetalheMestre', () => {
     expect(cartao.componentInstance.ultimaRolagem()?.id).toBe(77);
   });
 
-  it('renderiza a subseção Criaturas com app-criatura-esquadrao-card, registro/porte/comportamento/NA e a barra de Vida', () => {
+  it('integra criaturas/NPCs com registro, classificação, NA e vitalidade persistida', () => {
     const { raiz, fixture } = montar();
-    const cartao = fixture.debugElement.query(By.directive(CriaturaEsquadraoCard));
+    const cartao = fixture.debugElement.query(By.directive(CampanhaFichasEspeciais));
     expect(cartao).not.toBeNull();
-    expect(raiz.querySelector('.criatura-card__nome')?.textContent).toContain('Aberração');
-    expect(raiz.querySelector('.criatura-card__registro')?.textContent).toContain('SCP-049');
-    const classificacao = raiz.querySelector('.criatura-card__classificacao')?.textContent ?? '';
+    expect(raiz.querySelector('.acervo__cartao-nome')?.textContent).toContain('Aberração');
+    const classificacao = raiz.querySelector('app-campanha-fichas-especiais')?.textContent ?? '';
+    expect(classificacao).toContain('SCP-049');
     expect(classificacao).toContain('Grande');
     expect(classificacao).toContain('Caçadora');
     expect(classificacao).toContain('Média');
-    expect(raiz.querySelector('app-criatura-esquadrao-card app-barra-recurso')).not.toBeNull();
+    expect(raiz.querySelector('.acervo__cartao-vitais')?.textContent).toContain('Vida');
   });
 
   it('abre a ficha flutuante ao emitir abrirFicha do cartão do Esquadrão', () => {
@@ -415,8 +415,8 @@ describe('CampanhaDetalheMestre', () => {
     const spy = vi
       .spyOn(fixture.componentInstance['fichaFlutuanteRef']()!, 'abrir')
       .mockImplementation(() => {});
-    const cartao = fixture.debugElement.query(By.directive(CriaturaEsquadraoCard));
-    cartao.componentInstance.abrirFicha.emit();
+    const cartao = fixture.debugElement.query(By.directive(CampanhaFichasEspeciais));
+    cartao.componentInstance.abrirCriatura.emit({ id: 9, usuarioId: 1 });
     expect(spy).toHaveBeenCalledWith({ fichaId: 9, tipo: TipoFichaEnum.CRIATURA, usuarioIdDono: 1 });
   });
 
@@ -430,7 +430,7 @@ describe('CampanhaDetalheMestre', () => {
     expect(abrir).toHaveBeenCalledWith(expect.stringContaining('/fichas/4'), '_blank', 'noopener');
 
     abrir.mockClear();
-    (raiz.querySelector('.criatura-card__menu-botao') as HTMLButtonElement).click();
+    (raiz.querySelector('app-campanha-fichas-especiais .acervo__menu-botao') as HTMLButtonElement).click();
     fixture.detectChanges();
     (raiz.querySelector('.detalhe-mestre__ficha-menu-item') as HTMLButtonElement).click();
     expect(abrir).toHaveBeenCalledWith(
@@ -442,7 +442,7 @@ describe('CampanhaDetalheMestre', () => {
 
   it('duplica uma criatura pelo mesmo menu "⋯" do cartão, sem exigir dono', () => {
     const { raiz, fixture, fichaService } = montar();
-    (raiz.querySelector('.criatura-card__menu-botao') as HTMLButtonElement).click();
+    (raiz.querySelector('app-campanha-fichas-especiais .acervo__menu-botao') as HTMLButtonElement).click();
     fixture.detectChanges();
 
     (raiz.querySelector('.detalhe-mestre__ficha-menu-item:nth-child(2)') as HTMLButtonElement).click();

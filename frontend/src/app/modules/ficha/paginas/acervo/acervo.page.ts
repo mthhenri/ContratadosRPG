@@ -8,6 +8,7 @@ import { TipoCampanhaMembroPapelEnum, TipoFichaEnum } from '@contratados-rpg/sha
 
 import { Icone } from '../../../../shared/icone/icone.component';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
+import { Campo } from '../../../../shared/ui/campo/campo.component';
 import { Cartao } from '../../../../shared/ui/cartao/cartao.component';
 import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
 import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
@@ -19,7 +20,7 @@ import { CartaoFichaAcervo, type ItemAcervo } from '../../componentes/cartao-fic
 import { confirmarRemocaoDaCampanha } from '../../ficha-confirmacoes';
 import { FichaService } from '../../ficha.service';
 import { montarItemNpc } from "../../npc-acervo";
-import { rotuloNivelAmeaca } from '../../rotulos-criatura';
+import { montarItemCriatura } from "../../criatura-acervo";
 import { rotuloClasseCompleto } from '../../rotulos-ficha';
 import { rotuloPatente } from '../../status-derivado';
 
@@ -74,7 +75,7 @@ const BLOCOS_ACERVO: readonly DefinicaoBlocoAcervo[] = [
  */
 @Component({
   selector: 'app-ficha-acervo',
-  imports: [Botao, Cartao, Icone, OverflowFade, CartaoFichaAcervo, Modal, EstadoVazio, Esqueleto],
+  imports: [Botao, Campo, Cartao, Icone, OverflowFade, CartaoFichaAcervo, Modal, EstadoVazio, Esqueleto],
   templateUrl: './acervo.page.html',
   styleUrl: './acervo.page.scss',
 })
@@ -146,6 +147,7 @@ export class FichaAcervo {
     this.fichas().map((ficha) => {
       const tipo = ficha.tipo ?? TipoFichaEnum.JOGADOR;
       if (tipo === TipoFichaEnum.NPC) return montarItemNpc(ficha);
+      if (tipo === TipoFichaEnum.CRIATURA) return montarItemCriatura(ficha);
       const comum = {
         id: ficha.id,
         tipo,
@@ -157,14 +159,6 @@ export class FichaAcervo {
         vidaAtual: ficha.vidaAtual,
         vidaMaxima: ficha.vidaMaxima,
       };
-      if (tipo === TipoFichaEnum.CRIATURA) {
-        return {
-          ...comum,
-          naTexto: ficha.na ? rotuloNivelAmeaca(ficha.na) : undefined,
-          vd: ficha.vd,
-          defesa: ficha.defesa,
-        };
-      }
       return {
         ...comum,
         classeTexto: rotuloClasseCompleto(ficha.classe, ficha.arquetipo),
@@ -275,6 +269,10 @@ export class FichaAcervo {
   /** Navega pro guia de criação de criatura solta (`/fichas/criatura/nova`, m4-11). */
   protected abrirCriarCriatura(): void {
     void this.router.navigate(['/fichas', 'criatura', 'nova']);
+  }
+
+  protected abrirCriarNpc(): void {
+    void this.router.navigate(["/fichas", "npc", "novo"]);
   }
 
   /** Troca o filtro de visão do `<select>` — "Todos" ou um `TipoFichaEnum`. */

@@ -191,16 +191,6 @@
                 >
                 <button
                     app-botao
-                    variante="secundario"
-                    class="detalhe-mestre__nova-ficha"
-                    type="button"
-                    (click)="abrirCriarCriatura()"
-                >
-                    <app-icone nome="alerta" />
-                    Nova Criatura
-                </button>
-                <button
-                    app-botao
                     variante="primario"
                     class="detalhe-mestre__nova-ficha"
                     type="button"
@@ -235,32 +225,12 @@
             </ul>
             }
 
-            <header class="detalhe-mestre__secao detalhe-mestre__secao--criaturas">
-                <h2 class="detalhe-mestre__secao-titulo">Criaturas</h2>
-                <span class="detalhe-mestre__secao-regua"></span>
-                <span class="detalhe-mestre__secao-contagem" aria-hidden="true"
-                    >{{ criaturasEsquadrao().length }}</span
-                >
-            </header>
-
-            @if (criaturasEsquadrao().length === 0) {
-            <p class="detalhe-mestre__estado">Nenhuma criatura registrada ainda.</p>
-            } @else {
-            <ul class="detalhe-mestre__esquadrao-grid" appOverflowFade>
-                @for (criatura of criaturasEsquadrao(); track criatura.id) {
-                <li>
-                    <app-criatura-esquadrao-card
-                        [criatura]="criatura"
-                        [ultimaRolagem]="ultimaRolagemFicha(criatura.id)"
-                        [menuAberto]="menuFichaAberto()?.id === criatura.id"
-                        (abrirFicha)="abrirFichaFlutuante(criatura, TipoFichaEnum.CRIATURA)"
-                        (alternarMenu)="alternarMenuFicha(criatura, TipoFichaEnum.CRIATURA, $event)"
-                    />
-                </li>
-                }
-            </ul>
-            }
-            <app-npc-campanha-fichas [fichas]="dados.fichas()" />
+            <app-campanha-fichas-especiais
+                [fichas]="dados.fichas()" [campanhaId]="campanhaAtual.id"
+                [membros]="dados.membros()" [gerenciavel]="true"
+                [rolagens]="dados.rolagensFeed()" [menuFichaId]="menuFichaAberto()?.id ?? null"
+                (abrirCriatura)="abrirFichaFlutuante($event, TipoFichaEnum.CRIATURA)"
+                (menuCriatura)="alternarMenuFicha($event.ficha, TipoFichaEnum.CRIATURA, $event.evento)" />
         </section>
 
         <aside class="detalhe-mestre__painel-lateral">

@@ -2744,6 +2744,37 @@ describe('FichaService', () => {
   });
 
   describe('concederAcesso', () => {
+    it.each([TipoFichaEnum.CRIATURA, TipoFichaEnum.NPC])(
+      "invalida a listagem da campanha somente após conceder acesso a %s",
+      async (tipo) => {
+        fichaRepositorio.recuperarPorId.mockResolvedValue({ ...fichaPersistida, tipo });
+        campanhaRepositorio.recuperarMembro.mockResolvedValue({
+          papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+        });
+        fichaRepositorio.recuperarAcesso.mockResolvedValue(null);
+        fichaRepositorio.concederAcesso.mockImplementation(() => {
+          expect(campanhaGateway.emitirFichaVisibilidadeAlterada).not.toHaveBeenCalled();
+          return { id: 1, fichaId: 5, usuarioId: usuarioMembro.sub };
+        });
+        await service.concederAcesso({ fichaId: 5, usuarioId: usuarioMembro.sub }, usuarioDono);
+        expect(campanhaGateway.emitirFichaVisibilidadeAlterada).toHaveBeenCalledExactlyOnceWith({
+          campanhaId: fichaPersistida.campanhaId,
+        });
+      },
+    );
+
+    it("não anuncia concessão que falhou na persistência", async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+      fichaRepositorio.recuperarAcesso.mockResolvedValue(null);
+      fichaRepositorio.concederAcesso.mockRejectedValue(new Error("falhou"));
+      await expect(service.concederAcesso({ fichaId: 5, usuarioId: usuarioMembro.sub }, usuarioDono))
+        .rejects.toThrow("falhou");
+      expect(campanhaGateway.emitirFichaVisibilidadeAlterada).not.toHaveBeenCalled();
+    });
+
     it('concede o acesso quando o autor é o dono e o alvo é membro da campanha', async () => {
       fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
       campanhaRepositorio.recuperarMembro.mockResolvedValue({
@@ -2829,6 +2860,7 @@ describe('FichaService', () => {
 
       expect(resultado).toEqual({ id: 77, fichaId: 5, usuarioId: usuarioMembro.sub });
       expect(fichaRepositorio.concederAcesso).not.toHaveBeenCalled();
+      expect(campanhaGateway.emitirFichaVisibilidadeAlterada).not.toHaveBeenCalled();
     });
 
     it('lança ResourceNotFoundException quando a ficha não existe', async () => {
@@ -2843,6 +2875,32 @@ describe('FichaService', () => {
   });
 
   describe('revogarAcesso', () => {
+    it("invalida a listagem da campanha depois de persistir a revogação", async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      fichaRepositorio.revogarAcesso.mockImplementation(() => {
+        expect(campanhaGateway.emitirFichaVisibilidadeAlterada).not.toHaveBeenCalled();
+      });
+      await service.revogarAcesso({ fichaId: 5, usuarioId: usuarioMembro.sub }, usuarioDono);
+      expect(campanhaGateway.emitirFichaVisibilidadeAlterada).toHaveBeenCalledExactlyOnceWith({
+        campanhaId: fichaPersistida.campanhaId,
+      });
+    });
+
+    it("falha de revogação não invalida a campanha nem expulsa o leitor", async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      fichaRepositorio.revogarAcesso.mockRejectedValue(new Error("falhou"));
+      await expect(service.revogarAcesso({ fichaId: 5, usuarioId: usuarioMembro.sub }, usuarioDono))
+        .rejects.toThrow("falhou");
+      expect(campanhaGateway.emitirFichaVisibilidadeAlterada).not.toHaveBeenCalled();
+      expect(campanhaGateway.emitirAcessoRevogado).not.toHaveBeenCalled();
+    });
+
+    it("revogação de ficha solta não emite para uma campanha inexistente", async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue({ ...fichaPersistida, campanhaId: null });
+      await service.revogarAcesso({ fichaId: 5, usuarioId: usuarioMembro.sub }, usuarioDono);
+      expect(campanhaGateway.emitirFichaVisibilidadeAlterada).not.toHaveBeenCalled();
+    });
+
     it('revoga o acesso quando o autor é o dono', async () => {
       fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
       fichaRepositorio.revogarAcesso.mockResolvedValue(undefined);

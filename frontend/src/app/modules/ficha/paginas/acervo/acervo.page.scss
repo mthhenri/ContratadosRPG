@@ -53,21 +53,8 @@
         }
     }
 
-    // Select de visão (Todos/Agentes/Criaturas…) — compacto, à direita da barra de ações; distinto
-    // de `&__select` (dialog "Atribuir a campanha", que ocupa a largura inteira do painel).
-    &__select-filtro {
-        flex: none;
-        padding: 9px 12px;
-        font-family: var(--font-mono);
-        font-size: 12px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: var(--tracking-label);
-        color: var(--text);
-        background: var(--surface-2);
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
-
+    &__filtro {
+        min-width: 160px;
         @include bp.mobile {
             width: 100%;
         }

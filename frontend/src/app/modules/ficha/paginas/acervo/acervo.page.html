@@ -28,20 +28,34 @@
                     <app-icone nome="alerta" />
                     Criar criatura
                 </button>
+                <button
+                    app-botao
+                    variante="secundario"
+                    estilo="contorno"
+                    tamanho="medio"
+                    type="button"
+                    (click)="abrirCriarNpc()"
+                >
+                    <app-icone nome="agente" /> Criar NPC
+                </button>
                 }
             </div>
-            <select
-                class="acervo__select-filtro"
-                aria-label="Filtrar por tipo"
-                (change)="mudarFiltro($event)"
-            >
-                <option [value]="FILTRO_TODOS" [selected]="filtro() === FILTRO_TODOS">Todos</option>
-                @for (bloco of blocos; track bloco.tipo) {
-                <option [value]="bloco.tipo" [selected]="filtro() === bloco.tipo">
-                    {{ bloco.titulo }}
-                </option>
-                }
-            </select>
+            <app-campo rotulo="Filtrar por tipo" tamanho="compacto" class="acervo__filtro">
+                <select
+                    class="campo__controle"
+                    aria-label="Filtrar por tipo"
+                    (change)="mudarFiltro($event)"
+                >
+                    <option [value]="FILTRO_TODOS" [selected]="filtro() === FILTRO_TODOS">
+                        Todos
+                    </option>
+                    @for (bloco of blocos; track bloco.tipo) {
+                    <option [value]="bloco.tipo" [selected]="filtro() === bloco.tipo">
+                        {{ bloco.titulo }}
+                    </option>
+                    }
+                </select>
+            </app-campo>
         </div>
 
         @if (carregando()) {

@@ -1,4 +1,4 @@
-import { NpcCampanhaFichas } from "../../componentes/npc-campanha-fichas/npc-campanha-fichas.component";
+import { CampanhaFichasEspeciais } from "../../componentes/campanha-fichas-especiais/campanha-fichas-especiais.component";
 import { Component, DestroyRef, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -16,7 +16,6 @@ import { CadernoFlutuante } from '../../../pagina-caderno/caderno-flutuante.comp
 import { BibliotecaFlutuante } from '../../../documento/componentes/biblioteca-flutuante/biblioteca-flutuante.component';
 import { FichaFlutuante } from '../../../ficha/componentes/ficha-flutuante/ficha-flutuante.component';
 import { EspectadorFichaCard, type EspectadorFichaCardDados } from '../../componentes/espectador-ficha-card/espectador-ficha-card.component';
-import { CriaturaEsquadraoCard, type CriaturaEsquadraoCardDados } from '../../componentes/criatura-esquadrao-card/criatura-esquadrao-card.component';
 import { InventarioEsquadrao } from '../../componentes/inventario-esquadrao/inventario-esquadrao.component';
 import { ColunaAcoes } from '../../../../shared/ui/coluna-acoes/coluna-acoes.component';
 import { ColunaAcoesItem } from '../../../../shared/ui/coluna-acoes/coluna-acoes-item.component';
@@ -40,16 +39,12 @@ import { RolagemService } from '../../../ficha/rolagem.service';
 import type { RolagemRealizadaDto } from '../../../ficha/rolagem-realizada';
 import { RolagemRapida } from '../../../ficha/componentes/rolagem-rapida/rolagem-rapida.component';
 import { HistoricoRolagensJanelaService } from '../../../../shared/historico-rolagens-sidebar/historico-rolagens-janela.service';
-import { nomePorte, rotuloComportamento, rotuloNivelAmeaca } from '../../../ficha/rotulos-criatura';
 
 /** Hover sustentado antes de abrir a prévia ampliada de um avatar. */
 const MS_PREVIEW_AVATAR = 600;
 
 /** Lado do preview ampliado do avatar em pixels, sem recorte. */
 const PX_PREVIEW_AVATAR = 300;
-
-/** Placeholder do registro/contrato quando a criatura não tem um catalogado — mesmo texto de `CriaturaVisualizacao.registroExibido`. */
-const REGISTRO_SEM_CATALOGACAO = 'SCP - ?????';
 
 const ATRIBUTOS_NEUTROS: FichaAtributosDto = { destreza: 0, forca: 0, luta: 0, pontaria: 0, vigor: 0, intelecto: 0, medicina: 0, sentidos: 0, social: 0, vontade: 0 };
 
@@ -63,7 +58,7 @@ const ATRIBUTOS_NEUTROS: FichaAtributosDto = { destreza: 0, forca: 0, luta: 0, p
 @Component({
   selector: 'app-campanha-detalhe-mestre',
   imports: [
-    NpcCampanhaFichas,
+    CampanhaFichasEspeciais,
     RouterLink,
     ReactiveFormsModule,
     ColunaAcoes,
@@ -71,7 +66,6 @@ const ATRIBUTOS_NEUTROS: FichaAtributosDto = { destreza: 0, forca: 0, luta: 0, p
     Segmentado,
     SegmentadoItem,
     EspectadorFichaCard,
-    CriaturaEsquadraoCard,
     InventarioEsquadrao,
     FichaFlutuante,
     CalculadoraFlutuante,
@@ -244,28 +238,6 @@ export class CampanhaDetalheMestre {
     return this.dados.rolagensFeed().find((rolagem) => rolagem.fichaId === fichaId) ?? null;
   }
 
-  /** Criaturas da campanha — mesma subseção da grade, `na`/`porte`/`comportamento`/`defesa` já resolvidos por `FichaResumoDto`. */
-  protected readonly criaturasEsquadrao = (): readonly CriaturaEsquadraoCardDados[] =>
-    this.dados
-      .fichas()
-      .filter((ficha) => ficha.tipo === TipoFichaEnum.CRIATURA)
-      .map((ficha): CriaturaEsquadraoCardDados => ({
-        id: ficha.id,
-        usuarioId: ficha.usuarioId,
-        imagemUrl: ficha.imagemUrl,
-        cor: ficha.cor ?? null,
-        nome: ficha.nome,
-        registroTexto: ficha.registro?.trim() || REGISTRO_SEM_CATALOGACAO,
-        porteTexto: ficha.porte ? nomePorte(ficha.porte) : '—',
-        comportamentoTexto: ficha.comportamento ? rotuloComportamento(ficha.comportamento) : '—',
-        naTexto: ficha.na ? rotuloNivelAmeaca(ficha.na) : '—',
-        vidaAtual: ficha.vidaAtual,
-        vidaMaxima: ficha.vidaMaxima,
-        defesa: ficha.defesa,
-        critico: ficha.vidaAtual <= 0,
-      }))
-      .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' }));
-
   /** Alterna Na Base/Em Missão — só o mestre altera; o jogador só lê (`CampanhaDetalheJogador`). */
   protected alterarEstadoCampanha(): void {
     const campanhaAtual = this.dados.campanha();
@@ -434,10 +406,6 @@ export class CampanhaDetalheMestre {
   /** Abre o assistente de criação de ficha/criatura — botões do cabeçalho do Esquadrão. */
   protected abrirCriarFicha(): void {
     void this.router.navigate(['/campanhas', this.dados.id, 'ficha', 'nova']);
-  }
-
-  protected abrirCriarCriatura(): void {
-    void this.router.navigate(['/campanhas', this.dados.id, 'criatura', 'nova']);
   }
 
   // === Editar/Excluir campanha — itens da coluna de ações. A edição é uma dialog (decisão do

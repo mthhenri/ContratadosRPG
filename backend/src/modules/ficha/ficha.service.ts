@@ -1474,7 +1474,13 @@ export class FichaService {
       return { id: acessoExistente.id, fichaId: dto.fichaId, usuarioId: dto.usuarioId };
     }
 
-    return this.fichaRepositorio.concederAcesso(dto);
+    const acessoConcedido = await this.fichaRepositorio.concederAcesso(dto);
+    if (fichaEncontrada.campanhaId !== null) {
+      this.campanhaGateway.emitirFichaVisibilidadeAlterada({
+        campanhaId: fichaEncontrada.campanhaId,
+      });
+    }
+    return acessoConcedido;
   }
 
   /**
@@ -1502,6 +1508,11 @@ export class FichaService {
 
     const acessoRevogado: FichaAcessoRevogadoDto = { fichaId: dto.fichaId, usuarioId: dto.usuarioId };
     this.campanhaGateway.emitirAcessoRevogado(acessoRevogado);
+    if (fichaEncontrada.campanhaId !== null) {
+      this.campanhaGateway.emitirFichaVisibilidadeAlterada({
+        campanhaId: fichaEncontrada.campanhaId,
+      });
+    }
     await this.campanhaGateway.expulsarUsuarioDaFicha(acessoRevogado);
     return acessoRevogado;
   }

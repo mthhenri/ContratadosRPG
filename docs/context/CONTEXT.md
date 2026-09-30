@@ -1930,7 +1930,10 @@ migração e está em `HISTORY.md`).
 `m4-08b-frontend-visualizacao-npc` está concluída, spec em `done/`: ficha dedicada lazy,
 edição por rascunho, entradas por tipo, leitura concedida, metadados e utilitários compatíveis.
 Gates e verificação pessoal nos quatro viewports em `docs/reviews/m4-08b-verificacao.md`.
-Próxima task: `m4-09`, listagem/revelação integrada. `m8-06` está concluída; módulo inteiro fechado.
+`m4-09` está concluída, spec em `done/`: listagem integrada, acesso seletivo, atalhos
+e filtro do acervo. Gates e reconexão real em `docs/reviews/m4-09-verificacao.md`.
+Próxima task: `m4-10`, refinamento mobile complementar.
+`m8-06` está concluída; módulo inteiro fechado.
 `ui-23` (stat sem valor/rodapé do cartão) já foi concluída — ver `HISTORY.md`
 2026-09-02; a fila abaixo estava desatualizada. A única frente de código de milestone ainda
 pendente é o **M4** (`m4-09` → `m4-10`,
@@ -1943,7 +1946,7 @@ incluindo todos os ajustes avulsos de pós-milestone.
 |---|---|---|
 | `civil-guia-criacao` | ficha | mapeia o escopo de `PROBLEMS.md` `P-018` (o guia de criação trata a classe Civil como um agente comum em vários passos) — spec de levantamento, ainda não implementa |
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
-| `m4-09` → `m4-10` | criatura/NPC | listagem/revelação e refinamento mobile; contrato, motor, backend, criação e consulta/edição prontos (`m4-05`…`m4-08b`); contrato visual em `docs/design/FICHA-NPC.md` |
+| `m4-10` | criatura/NPC | refinamento mobile; contrato, motor, backend, criação e consulta/edição prontos (`m4-05`…`m4-08b`); listagem/revelação pronta; contrato visual em `docs/design/FICHA-NPC.md` |
 
 Milestones ainda não abertos: `m5-guia-missao`. O M8 `m8-espectadores-campanha` está **concluído**
 (`m8-01`…`m8-06`).

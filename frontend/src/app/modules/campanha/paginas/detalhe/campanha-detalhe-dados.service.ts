@@ -1,7 +1,7 @@
 import { DestroyRef, Injectable, Injector, computed, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { bufferTime, filter, finalize, forkJoin, merge, Subject, type Observable } from 'rxjs';
-import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
+import { TipoCampanhaMembroPapelEnum, TipoFichaEnum } from '@contratados-rpg/shared/enums';
 import {
   CampanhaInventarioItemDto,
   CampanhaMembroResumoDto,
@@ -122,7 +122,8 @@ export class CampanhaDetalheDadosService {
 
   readonly fichasDestinoInventario = computed(() =>
     this.fichas()
-      .filter((ficha) => ficha.usuarioId === this.usuarioAtivoId())
+      .filter((ficha) => ficha.usuarioId === this.usuarioAtivoId()
+        && (ficha.tipo === undefined || ficha.tipo === TipoFichaEnum.JOGADOR))
       .map(({ id, nome }) => ({ id, nome })),
   );
 

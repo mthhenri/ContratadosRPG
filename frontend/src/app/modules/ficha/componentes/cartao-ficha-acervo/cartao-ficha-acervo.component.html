@@ -15,10 +15,17 @@
             }
         </span>
         <span class="acervo__cartao-texto">
+            @if (item().registroTexto) {
+                <span class="acervo__cartao-meta">{{ item().registroTexto }}</span>
+            }
             <span class="acervo__cartao-nome">{{ item().nome }}</span>
             @if (item().tipo === TipoFichaEnum.CRIATURA) {
                 <span class="acervo__cartao-meta">
-                    Ameaça · NA {{ item().naTexto ?? "—" }} · VD {{ item().vd ?? "—" }}
+                    Ameaça ·
+                    @if (item().classificacaoTexto) {
+                        {{ item().classificacaoTexto }} ·
+                    }
+                    NA {{ item().naTexto ?? "—" }} · VD {{ item().vd ?? "—" }}
                 </span>
                 <span class="acervo__cartao-vitais">
                     <span>Vida {{ item().vidaAtual }}/{{ item().vidaMaxima ?? "—" }}</span>
@@ -49,6 +56,7 @@
             }
         </span>
     </a>
+    <ng-content select="[cartaoFichaAcoes]" />
     <div class="acervo__cartao-rodape">
         @if (item().campanhaId !== null) {
             <span class="acervo__chip acervo__chip--campanha">

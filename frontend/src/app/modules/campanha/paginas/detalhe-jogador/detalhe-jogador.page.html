@@ -821,7 +821,8 @@
                             </li>
                             }
                         </ul>
-                        <app-npc-campanha-fichas [fichas]="dados.fichas()" />
+                        <app-campanha-fichas-especiais [fichas]="dados.fichas()"
+                            [campanhaId]="campanhaAtual.id" />
                     </div>
 
                     <div

@@ -1,5 +1,58 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-30 — m4-09: listagem e revelação integradas concluídas
+
+Criaturas e NPCs usam `CartaoFichaAcervo` na campanha e rotas próprias, com recortes de
+classificação distintos. `CampanhaFichasEspeciais` extrai a nova responsabilidade do painel
+extenso. Mestre concede/revoga acesso por diálogo; estado separado conserva seleção em
+falha e invalida respostas antigas. Criação/filtro NPC habilitados no acervo. NPCs deixaram
+de ser projetados como agentes ou destinos de inventário de jogador.
+
+A aplicação real revelou ausência de invalidação da campanha após concessão/revogação.
+O service agora emite `ficha:visibilidade-alterada` depois de persistir, reaproveitando evento
+e consumidores; testes cobrem falha, idempotência, avulsa e os dois tipos. Permissões,
+endpoints, schema e regras continuam existentes. Dois usuários comprovaram atualização sem
+F5 e reconexão real recuperou mudança sem broadcast. Espectador não é destinatário.
+
+Gates: frontend 2702 testes/195 arquivos; backend 954 testes/um skip/52 arquivos; builds
+frontend/backend e lint dos três workspaces passaram (zero erros, avisos legados).
+Arquivos novos sem avisos de lint. P-004/P-092 permanecem preexistentes. Verificação pessoal
+em 1920×1080, 1366×768, 960×1080 e 360×800, incluindo vazios, filtros, nomes longos,
+leitor, carga, erro/repetição, ocupado, concedido/revogado e entradas das fichas/assistentes.
+Análogos, controles, correções e evidência em `docs/reviews/m4-09-verificacao.md`.
+
+Spec em `done/`, nenhuma pendência obrigatória da task. Cenário de teste próprio mantido
+para a M4-10 e posterior limpeza. Autor autorizou commit separado e envio ao remoto antes
+de iniciar M4-10; esta também deverá ser concluída, commitada e enviada separadamente.
+## 2026-09-30 — m4-09: listagem/revelação iniciada após o commit da ficha de NPC
+
+A M4-08b foi commitada separadamente em `deebdff3a482845d409c117d3772c32596827bb4`;
+`git log -1 --format=full` confirmou o trailer `Co-authored-by: Codex
+<noreply@openai.com>` e o checkout ficou limpo antes de ativar a próxima task. O registro
+completo da entrega e dos gates está abaixo e em `docs/reviews/m4-08b-verificacao.md`.
+
+Por pedido do autor, a spec M4-09 saiu de `backlog/` para `active/`. O primeiro recorte é
+`FichaAcessoEstadoService`, fornecido por componente, para separar a gestão de acesso do
+painel de mestre já extenso. Usa exclusivamente os métodos existentes do `FichaService`;
+permissões e concessões continuam arbitradas pelo backend. A seleção, a carga e o envio
+possuem estados próprios. Troca/fechamento invalidam respostas atrasadas, GET concorrente
+aplica só a resposta mais recente, envio ocupado impede repetição e falha conserva os dados
+confirmados e a seleção. Após escrita confirmada, a lista é recuperada pela API; se esse GET
+falhar, o erro explicita a confirmação e bloqueia outra mutação até o retry.
+
+Verificação deste recorte: `npm run test --workspace=frontend -- --watch=false
+--include='**/ficha-acesso-estado.service.spec.ts'` — **9 testes passaram**; ESLint sobre
+o service e sua spec — **zero erros/avisos**. Revisão manual: nenhum DTO, endpoint, regra de
+domínio ou decisão de permissão novo. O teste inicial identificou a ausência do service;
+depois da implementação, os cenários focados passaram. Os análogos do próximo corte
+(`CartaoFichaAcervo`, Esquadrão do mestre e diálogo de acesso da ficha de NPC) foram
+registrados na spec ativa.
+
+A M4-09 está **iniciada, aberta e sem commit**: o service ainda não possui consumidor visual.
+Faltam a listagem integrada, conexão do diálogo, filtro/atalho de NPC no acervo, atualização
+do jogador por eventos e todos os gates de integração e de UI nos quatro viewports. Nenhuma
+tela nova foi apresentada como pronta; os resultados de UI da M4-08b não cobrem a M4-09.
+
 ## 2026-09-30 — m4-08b: ficha dedicada de NPC concluída e verificada
 
 O autor pediu concluir a M4-08b, fazer o commit separado e então iniciar a M4-09. A task

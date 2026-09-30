@@ -34,6 +34,8 @@ export interface ItemAcervo {
   readonly energiaMaxima?: number;
   /** CRIATURA — Nível de Ameaça já rotulado (`rotuloNivelAmeaca`). */
   readonly naTexto?: string;
+  readonly registroTexto?: string;
+  readonly classificacaoTexto?: string;
   readonly vd?: number | null;
   /** CRIATURA (e, futuramente, JOGADOR quando a classe possui) — Defesa. */
   readonly defesa?: number;

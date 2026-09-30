@@ -23,6 +23,15 @@ import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmaca
  * acervo e uma campanha via o menu de ações de cada cartão.
  */
 describe('FichaAcervo', () => {
+  beforeEach(() => {
+    vi.stubGlobal('ResizeObserver', class {
+      observe = vi.fn();
+      unobserve = vi.fn();
+      disconnect = vi.fn();
+    });
+  });
+  afterEach(() => vi.unstubAllGlobals());
+
   function fichaResumo(overrides: Partial<FichaResumoDto> = {}): FichaResumoDto {
     return {
       id: 1,
@@ -368,6 +377,20 @@ describe('FichaAcervo', () => {
   });
 
   describe('separação por tipo (m4-11)', () => {
+    it('oferece criação de NPC ao mestre e abre o assistente dedicado', () => {
+      const { fixture, raiz } = montar({ campanhas });
+      const navegar = vi.spyOn(TestBed.inject(Router), 'navigate');
+      Array.from(raiz.querySelectorAll('button')).find((botao) =>
+        botao.textContent?.includes('Criar NPC'))!.click();
+      fixture.detectChanges();
+      expect(navegar).toHaveBeenCalledWith(['/fichas', 'npc', 'novo']);
+    });
+
+    it('não oferece criação de NPC ao usuário sem campanha de mestre', () => {
+      const { raiz } = montar({ campanhas: [] });
+      expect(raiz.textContent).not.toContain('Criar NPC');
+    });
+
     it('retrocompat: ficha sem `tipo` é listada no bloco Agentes, sem erro', () => {
       const { raiz } = montar({ fichas: [fichaResumo({ tipo: undefined })] });
 
@@ -395,7 +418,7 @@ describe('FichaAcervo', () => {
     it('filtrar por Criaturas mostra só aquele bloco, mesmo vazio (com estado vazio próprio)', () => {
       const { fixture, raiz } = montar({ fichas: [fichaResumo()] });
 
-      const select = raiz.querySelector('.acervo__select-filtro') as HTMLSelectElement;
+      const select = raiz.querySelector('.acervo__filtro select') as HTMLSelectElement;
       select.value = TipoFichaEnum.CRIATURA;
       select.dispatchEvent(new Event('change'));
       fixture.detectChanges();

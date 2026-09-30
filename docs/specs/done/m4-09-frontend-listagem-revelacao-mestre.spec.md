@@ -61,3 +61,12 @@ diferente dos assistentes de criação).
 - `m4-04`/`m4-08` (assistentes a linkar).
 - `m3-04` (API de concessão/revogação de acesso, reusada sem mudança).
 - `m4-08b` (consulta/edição de NPC) e `m4-11` (estrutura de acervo já entregue).
+
+## Execução concluída — 2026-09-30
+
+Listagem/revelação integrada, atalhos e filtro entregues. Análogos aprovados:
+`CartaoFichaAcervo`, Esquadrão do mestre e diálogo de acesso da ficha NPC.
+Estado de acesso separado do painel extenso; API e permissões existentes preservadas.
+Evento existente de visibilidade emitido após concessão/revogação persistida.
+Gates de código, quatro viewports e dois usuários sem F5 concluídos;
+registro completo em `docs/reviews/m4-09-verificacao.md`. Próxima task: M4-10.

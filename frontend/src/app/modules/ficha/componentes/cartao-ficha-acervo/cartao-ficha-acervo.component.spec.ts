@@ -76,7 +76,7 @@ describe('CartaoFichaAcervo', () => {
   it('criatura: mostra Ameaça, NA, VD, Vida e Defesa — sem classe/nível/patente/energia', () => {
     const { raiz } = montar(itemCriatura);
 
-    expect(raiz.textContent).toContain('Ameaça · NA Média · VD 30');
+    expect(raiz.textContent?.replace(/\s+/g, ' ')).toContain('Ameaça · NA Média · VD 30');
     expect(raiz.textContent).toContain('Vida 1050/1050');
     expect(raiz.textContent).toContain('Defesa 30');
     expect(raiz.textContent).not.toContain('Energia');

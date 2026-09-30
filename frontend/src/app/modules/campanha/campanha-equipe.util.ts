@@ -110,15 +110,15 @@ export function ordenarMembros(
  * Fichas visíveis agrupadas por dono (`usuarioId`), enriquecidas com o rótulo de classe e as
  * três condições — sempre as 3, com `ativa` (item 3: mostra também as inativas, esmaecidas, em
  * vez de sumir quando nada está marcado). O backend já resolve `morrendo`/`machucado`/
- * `inconsciente` para `false` quando ausentes (`FichaResumoDto`). Criaturas nunca entram aqui
- * (forma própria, `ItemCriatura` em `detalhe.page.ts` — só a visão de mestre as usa).
+ * `inconsciente` para `false` quando ausentes (`FichaResumoDto`). Criaturas e NPCs possuem
+ * listagem própria; não são projetados como agentes, mesmo quando pertencem ao mestre.
  */
 export function agruparFichasPorMembro(
   fichas: readonly FichaResumoDto[],
 ): ReadonlyMap<number, readonly ItemFicha[]> {
   const mapa = new Map<number, ItemFicha[]>();
   for (const ficha of fichas) {
-    if (ficha.tipo === TipoFichaEnum.CRIATURA) {
+    if (ficha.tipo !== undefined && ficha.tipo !== TipoFichaEnum.JOGADOR) {
       continue;
     }
     const item: ItemFicha = {

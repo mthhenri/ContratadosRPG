@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { Observable, Subject, of, throwError } from 'rxjs';
 import { ApplicationRef, signal } from '@angular/core';
-import { RolagemVisibilidadeEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
+import { ClasseEnum, RolagemVisibilidadeEnum, TipoCampanhaMembroPapelEnum, TipoFichaEnum } from '@contratados-rpg/shared/enums';
 import type {
   CampanhaInventarioItemDto,
   CampanhaMembroResumoDto,
@@ -155,6 +155,20 @@ describe('CampanhaDetalheDadosService', () => {
     expect(service.campanha()?.nome).toBe('Contenção Delta');
     expect(service.membros().length).toBe(1);
     expect(service.carregando()).toBe(false);
+  });
+
+  it('oferece inventário somente às fichas de agente do autenticado', () => {
+    const agente: FichaResumoDto = {
+      id: 1, usuarioId: 1, campanhaId: CAMPANHA_ID, campanhaNome: null, nome: 'Agente',
+      imagemUrl: null, tipo: TipoFichaEnum.JOGADOR, classe: ClasseEnum.CIVIL, arquetipo: null,
+      nivel: 1, vidaAtual: 10, energiaAtual: 0, morrendo: false, machucado: false, inconsciente: false,
+    };
+    const { service } = montar({ usuarioId: 1,
+      membros: membrosCom(1, TipoCampanhaMembroPapelEnum.MESTRE), fichas: [agente,
+        { ...agente, id: 2, tipo: TipoFichaEnum.NPC },
+        { ...agente, id: 3, tipo: TipoFichaEnum.CRIATURA },
+        { ...agente, id: 4, usuarioId: 2 }] });
+    expect(service.fichasDestinoInventario()).toEqual([{ id: 1, nome: 'Agente' }]);
   });
 
   it('deriva ehMestre true quando o usuário autenticado é o MESTRE dos membros', () => {

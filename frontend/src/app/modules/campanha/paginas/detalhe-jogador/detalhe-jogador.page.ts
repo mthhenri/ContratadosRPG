@@ -1,4 +1,4 @@
-import { NpcCampanhaFichas } from "../../componentes/npc-campanha-fichas/npc-campanha-fichas.component";
+import { CampanhaFichasEspeciais } from "../../componentes/campanha-fichas-especiais/campanha-fichas-especiais.component";
 import {
   Component,
   DestroyRef,
@@ -85,7 +85,7 @@ const PX_PREVIEW_AVATAR = 300;
 @Component({
   selector: 'app-campanha-detalhe-jogador',
   imports: [
-    NpcCampanhaFichas,
+    CampanhaFichasEspeciais,
     RouterLink,
     ReactiveFormsModule,
     Icone,
