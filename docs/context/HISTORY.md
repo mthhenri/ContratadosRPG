@@ -1,5 +1,64 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-30 — m4-06: motor puro de NPC e integração dos contratos shared
+
+Após a `m4-05`, executada por autorização do autor, `shared/src/regras/npc/` entrega as onze
+funções públicas de pontos/cap, validação de atributos, Vida, Defesa/Bloquear/Esquivar, Energia,
+DT contextual, volume de habilidades e coerência de ficha. Exportado por
+`@contratados-rpg/shared/regras/npc`; DTOs de cálculo readonly ficam em
+`shared/src/dtos/ficha/ficha-npc-calculo.dtos.ts`, conforme a localização canônica atual.
+Sem consumo novo no backend/frontend, permissão, persistência, migration ou UI.
+
+Fonte conferida: `docs/core/guia_de_mestre-v4.0.0.md`, "Guia de Criação de NPCs" > Categoria,
+Nível, Cooperação, Construção Mecânica (Atributos/Vida/Energia/Defesa/DT) e Habilidades > Volume
+e Biblioteca de Referência. As tabelas de cinco Categorias são literais do guia. Reserva Fixa
+retorna número; Elite/Lendário retornam `{ pool, recarga }`, para a futura criação gravar
+`energia.maxima/atual/recargaPorTurno`. Recarga acima da Pool é proibida pelo guia em jogo;
+apenas documentada, sem automação de turno nova. DT calculada sob demanda, não persistida.
+
+Volume é validado pela tabela (total, mínimo de Passivas e máximo de Ativas). Limite por turno
+conta usos de Ativas, incluindo repetição permitida pela descrição; Passivas condicionais não
+consomem esse limite. Resolve a antiga divergência de orientação/validação de volume em favor
+do guia e do motor. A exceção Civil segue o item 1 da spec: cap validado sem bloqueio de
+Luta/Pontaria pelo motor e sem marcador de autorização persistido; criação/UI iniciam ambos em
+0 e deixam o desbloqueio narrativo explícito para o mestre. Nenhum snapshot editado é
+recalculado; recursos atuais podem exceder máximos. Nível 0–20 não é restringido pela faixa
+sugerida da Categoria; Cooperação 0–10 é independente. Sanidade permanece interpretada pelo
+mestre. A representação de Morrendo aos 0 de Vida permanece pendência de integração da ficha,
+explicitada na `m4-07` e no contrato visual, sem herdar flags de jogador nesta task.
+
+69 testes novos em três arquivos: tabelas/fórmulas/caps/volume e bordas; ficha completa,
+acúmulo de violações e preservação de snapshots; quatro indivíduos próprios com habilidades
+da Biblioteca (Operativo/Veterano/Elite/Lendário). O guia não traz fichas completas desses
+NPCs: os testes escolhem níveis nas faixas sugeridas e distribuições de pontos plausíveis,
+com expectativas calculadas à mão (Vida 85/245/600/1440). Não houve divergência de fórmula
+nesses exemplos. Testes escritos antes das regras; rodadas vermelhas registraram 30 falhas
+de cálculo/tabela e 12 de validação antes da implementação, depois passaram.
+
+Verificações finais desta execução:
+
+- `npm run build --workspace=shared`: passou; import real do subpath compilado confirmou
+  onze exports e Vida 245 para Veterano Nível 8/VIG 3.
+- `npm run test --workspaces --if-present`: shared **867/867** (59 arquivos), backend
+  **923 aprovados/1 pulado** (51 arquivos), frontend **2634/2634** (185 arquivos).
+  Frontend emitiu avisos do ambiente JSDOM sobre canvas sem implementação, sem falhas de teste.
+- `npm run lint`: passou nos três workspaces; avisos legados de formato
+  (shared 5159, backend 4428, frontend 24599), nenhum erro. Lint focado nos novos arquivos:
+  zero avisos/erros, após quebrar duas linhas de 101 caracteres.
+- Checagem estrita de tipos dos três testes novos e seus imports: passou. Checagem global do
+  shared foi executada na `m4-05` e permanece com P-092 (TS2353 em teste preexistente de agente);
+  não se declara esse gate global limpo nem se altera a fixture alheia.
+- Diff e arquivos novos lidos contra specs/convenções; buscas de identificadores,
+  localização/herança de DTOs, dependências e I/O limpas. Constantes de regras vivem só no
+  motor; todos os DTOs novos em `dtos/`, enums em `enums/`. `git diff --check` sem problemas.
+
+`m4-06` movida para `done`, seguindo a `m4-05`. Contexto e milestone apontam as cinco tasks
+restantes, próxima `m4-07`; MEMORY aponta contratos/motor. Specs futuras e contrato visual
+refletem as decisões efetivamente implementadas. O mapper do Encontro e as telas seguem sem
+consumo do motor de NPC: integração pertence à `m4-07` e às tasks frontend seguintes.
+Alterações anteriores da revisão visual preservadas. Sem commit/publicação e sem gate visual
+aplicável a estas duas tasks exclusivamente shared.
+
 ## 2026-09-30 — m4-05: contrato tipado da ficha de NPC
 
 Executada por autorização do autor, antes da `m4-06`. `FichaNpcDadosDto` e suas subestruturas

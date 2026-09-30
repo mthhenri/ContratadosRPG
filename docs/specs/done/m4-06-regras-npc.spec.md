@@ -60,3 +60,14 @@ frontend (`m4-08`).
 - `m4-05` (contrato `FichaNpcDadosDto`).
 - `docs/core/guia_de_mestre-v4.0.0.md` — "Guia de Criação de NPCs" (documento vence
   código, proibição #27).
+
+## Decisões de execução
+
+- Funções recebem DTOs readonly em `shared/src/dtos/ficha/ficha-npc-calculo.dtos.ts`,
+  seguindo a convenção atual de localização; motor exportado por `./regras/npc`.
+- Civil: o item 1 define cap sem bloqueio de combate pelo motor. Portanto o item 7 não
+  introduz marcador ausente em `m4-05`; criação/UI deixam a exceção explícita para o mestre.
+- Volume segue a tabela do guia. Limite por turno conta usos de Ativas, sem incluir Passivas
+  nem automatizar combate. Recarga não ultrapassa a Pool em jogo; nenhuma função de turno nova.
+- Biblioteca fornece habilidades, não fichas completas: testes montam quatro NPCs próprios
+  com seleções de cada Categoria e valores esperados calculados à mão pelas fórmulas gerais.

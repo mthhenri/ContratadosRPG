@@ -104,6 +104,10 @@
       "types": "./dist/regras/criatura/index.d.ts",
       "default": "./dist/regras/criatura/index.js"
     },
+    "./regras/npc": {
+      "types": "./dist/regras/npc/index.d.ts",
+      "default": "./dist/regras/npc/index.js"
+    },
     "./regras/cena": {
       "types": "./dist/regras/cena/index.d.ts",
       "default": "./dist/regras/cena/index.js"
