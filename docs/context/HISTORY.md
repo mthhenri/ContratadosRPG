@@ -1,5 +1,12 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-29 — Versão 1.4.1 preparada (Esquadrão na Investigação)
+
+Release de patch com uma única entrega desde a 1.4.0: o Esquadrão na cena de Investigação do jogador e a
+prévia do mestre (m7-27). Nota em `docs/patchnotes/1.4.1.md`, versão sincronizada nos pacotes. Conferido:
+`shared` build e 796 testes; dry-run da nota e do workflow (publicaria a 1.4.1 e criaria a tag `v1.4.1` em
+`7bc1c596`). Tag e publicação no R2 saem pelo workflow no push em `master`.
+
 ## 2026-09-29 — m7-27: Esquadrão na Investigação e prévia do jogador concluídos
 
 A task complementar M7 saiu do backlog para execução e terminou em
