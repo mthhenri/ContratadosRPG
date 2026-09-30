@@ -1930,7 +1930,7 @@ migração e está em `HISTORY.md`).
 Não há spec ativa no momento (`m8-06` concluída — ver acima; módulo `m8-espectadores-campanha`
 inteiro fechado). `ui-23` (stat sem valor/rodapé do cartão) já foi concluída — ver `HISTORY.md`
 2026-09-02; a fila abaixo estava desatualizada. A única frente de código de milestone ainda
-pendente é o **M4** (`m4-05`…`m4-10`,
+pendente é o **M4** (`m4-06`…`m4-10`,
 criatura/NPC — ver seção 3), ao lado de `m3-53` (M3). M0, M1, M2, M6, M7 e M8 estão concluídos,
 incluindo todos os ajustes avulsos de pós-milestone.
 
@@ -1940,7 +1940,7 @@ incluindo todos os ajustes avulsos de pós-milestone.
 |---|---|---|
 | `civil-guia-criacao` | ficha | mapeia o escopo de `PROBLEMS.md` `P-018` (o guia de criação trata a classe Civil como um agente comum em vários passos) — spec de levantamento, ainda não implementa |
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
-| `m4-05`…`m4-10` | criatura/NPC | 6 tasks restantes do M4 — contrato/regras/backend/frontend de NPC, listagem/revelação no painel do mestre, refinamento mobile |
+| `m4-06`…`m4-10` | criatura/NPC | 5 tasks restantes do M4 — regras/backend/frontend de NPC, listagem/revelação no painel do mestre, refinamento mobile |
 
 Milestones ainda não abertos: `m5-guia-missao`. O M8 `m8-espectadores-campanha` está **concluído**
 (`m8-01`…`m8-06`).
@@ -1952,7 +1952,7 @@ Milestones ainda não abertos: `m5-guia-missao`. O M8 `m8-espectadores-campanha`
 Monorepo npm workspaces (`shared/`, `backend/`, `frontend/`) rodando de ponta a ponta: Angular 21
 SPA → NestJS 11 REST + Socket.IO → PostgreSQL 16. **M0, M1, M2, M6 e M7 concluídos; M3 (ficha de
 jogador) em fase de refino avançado, falta só `m3-53`; M4 (criatura/NPC) iniciado, falta
-`m4-05`…`m4-10`** — a ficha lê, edita, rola dados, persiste e sincroniza em tempo real; o Encontro
+`m4-06`…`m4-10`** — a ficha lê, edita, rola dados, persiste e sincroniza em tempo real; o Encontro
 de Combate roda ponta a ponta com tempo real (ver seção 3 e seção 4).
 
 Deploy em produção por **integração nativa das plataformas**, sem GitHub Actions no deploy: push em
@@ -1978,7 +1978,7 @@ reproduzem isoladas (arquivo único), não na suíte completa.
 | M1 | Calculadora com paridade | **concluído** (`m1-01`…`m1-20`), incluindo os 2 passos operacionais de plataforma (Cloudflare Pages no ar, repo antigo arquivado) |
 | M2 | Auth + Campanhas | **concluído**, incluindo o redesenho do painel (`m2-01`…`m2-09` + extensões `m2-10`…`m2-17`; `m2-18` lista, `m2-19` detalhe/mestre, `m2-20` detalhe/jogador, `m2-21` abas + Rolagens na lateral + menu de ficha do jogador) |
 | M3 | Ficha de Jogador | **em andamento** — CRUD, editores, tempo real e rolagens prontos; guia de criação completo (`m3-57`/`m3-58`/`m3-59` — base, melhorias de nível, equipamento inicial); cor (`m3-61`) e avatar (`m3-62`) de identidade por ficha prontos; falta só `m3-53` |
-| M4 | Ficha de Criatura/NPC | **iniciado** — dividido em `m4-01`…`m4-10` (`docs/specs/backlog/`); `m4-01` (contrato), `m4-02` (`shared/regras/criatura`), `m4-03` (`backend/ficha` para `CRIATURA`) e `m4-04` (assistente de criação no frontend) concluídas; `m4-04b`/`m4-04c` (polimento de UI fora da fila) também concluídas. Próxima: `m4-05` (NPC) |
+| M4 | Ficha de Criatura/NPC | **iniciado** — criatura concluída e contrato NPC `m4-05` codificado no shared. Restam `m4-06`…`m4-10`; próxima: `m4-06`. |
 | M5 | Guia de Missão | não iniciado |
 | M6 | Gestão de Usuários e Papéis | **concluído** — `m6-01`…`m6-08` (`m6-08`: impersonação administrativa auditável) |
 | M7 | Encontro de Combate | **concluído** — 8 tasks originais (`m7-01` contrato, `m7-02` motor puro, `m7-03` backend de montagem, `m7-04` backend de condução/tempo real, `m7-05` painel do mestre, `m7-06` visão do jogador, `m7-07` log da rodada, `m7-08` refinamento mobile) + 9 ajustes de pós-milestone (`m7-09`…`m7-17`, ver seção 4 "Encontro de Combate"). Numeração M7 é sugestão, não decisão de roadmap |

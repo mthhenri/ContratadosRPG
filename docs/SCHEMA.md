@@ -675,7 +675,7 @@ editado sem o outro (achado ao vivo).
 }
 ```
 
-### FichaNpcDadosDto (design fechado — capítulo "Guia de Criação de NPCs" — codificar no M4)
+### FichaNpcDadosDto (codificado em m4-05 — capítulo "Guia de Criação de NPCs")
 
 O NPC é descrito no guia como uma "versão otimizada" da estrutura de agente: mesmos dez atributos,
 Vida e reações, mas o teto de tudo vem da **Categoria** em vez de classe/Nível livre. Mesma
@@ -701,7 +701,7 @@ edição.
   "defesaBase": 18,                     // snapshot: 10 + Nível (m3-10: editável depois)
   "bloquear": 21,                       // snapshot: Defesa Base + VIG
   "esquivar": 21,                       // snapshot: Defesa Base + DES
-  "energia": {                          // modelo depende da Categoria; ausente/zerado para Civil
+  "energia": {                          // modelo depende da Categoria; maxima/atual 0 e recarga null para Civil
     "maxima": 21,                       // Veterano = Reserva Fixa: 12 + DES × 3; Elite/Lendário usam Pool + Recarga
     "atual": 21,
     "recargaPorTurno": null             // só Elite/Lendário (modelo Pool + Recarga); null nos demais
@@ -728,3 +728,13 @@ edição.
 valor stored), a DT de um NPC é `10 + Nível + (Atributo × 2)` e varia por **qual** atributo o
 contexto exige (Vontade para manipulação, VIG para pressão física…) — `shared/regras/npc` calcula
 sob demanda, nunca persiste um valor único.
+
+Contrato em `shared/src/dtos/ficha/ficha-npc.dtos.ts`, exportado por `./dtos/ficha`, como
+interfaces readonly sem class-validator. Reusa `FichaAtributosDto`, `FichaSequelaDto` e
+`FichaTraumaDto`. `CategoriaNpcEnum` e `HabilidadeTipoNpcEnum` são enums de conteúdo JSONB,
+sem tabela `tipo_*`. O tipo de habilidade é próprio do NPC para excluir `GATILHO` em compilação:
+uma Passiva condicional continua `PASSIVA`, conforme o guia.
+
+O contrato não adiciona marcador de exceção Civil nem condição de saúde: o motor valida o cap
+sem bloquear Luta/Pontaria autorizadas pelo mestre (`m4-06`). A integração de Morrendo ao chegar
+a 0 de Vida exige definição na ficha/backend antes da UI; não se herdam flags de jogador.

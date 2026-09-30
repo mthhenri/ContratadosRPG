@@ -29,6 +29,16 @@
 
 ## Ativos
 
+### P-092 — Checagem de tipos do shared falha em fixture de agente · `ABERTO` · shared
+
+- **Sintoma:** `npm run typecheck --workspace=shared` falha com TS2353 em
+  `shared/src/regras/agente/derivados.spec.ts:129`.
+- **Causa:** a fixture declara `uid` num `CarrinhoItemDto`, que não possui esse campo.
+  A linha já existe em HEAD antes da implementação de `m4-05`.
+- **Contorno:** build de produção e testes Vitest passam; eles não substituem a checagem de tipos.
+- **Correção:** ajustar a fixture ao contrato real do item em tarefa própria.
+- **Desde:** identificado na execução de `m4-05`, em 2026-09-30; preexistente à task.
+
 ### P-003 — Backend não valida a estrutura do corpo das requisições · `ACEITO` · backend
 
 - **Sintoma:** nenhum `ValidationPipe` está registrado. Um corpo malformado (campo ausente, tipo

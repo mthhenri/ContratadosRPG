@@ -1,5 +1,27 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-30 — m4-05: contrato tipado da ficha de NPC
+
+Executada por autorização do autor, antes da `m4-06`. `FichaNpcDadosDto` e suas subestruturas
+readonly estão em `shared/src/dtos/ficha/ficha-npc.dtos.ts`, exportadas por `./dtos/ficha`.
+Forma conferida contra `SCHEMA.md` e "Guia de Criação de NPCs" do guia de mestre: identidade,
+Categoria, Nível, Cooperação, dez atributos, snapshots de Vida/Defesa/Energia, Sanidade,
+habilidades, Conduta e anotações. Atributos, sequelas e traumas reusam os contratos do jogador.
+Sem Maestria, DT persistida, decorators, endpoints, migration, frontend ou motor nesta task.
+
+Criados `CategoriaNpcEnum` e `HabilidadeTipoNpcEnum`. O segundo é próprio para excluir GATILHO
+em compilação: a Passiva condicional do NPC continua PASSIVA. Civil guarda Energia zerada com
+recarga null. Não se acrescentou marcador de exceção Civil: a `m4-06` especifica validação do
+cap sem bloqueio de combate pelo motor; autorização narrativa é do mestre. Representação de
+Morrendo continua pendente para a integração de domínio/ficha.
+
+Verificado: build do shared passou, lint dos três arquivos novos sem avisos, suíte shared
+798/798 (56 arquivos). `typecheck` executado, com falha preexistente TS2353 na fixture
+`regras/agente/derivados.spec.ts:129` (`uid` em `CarrinhoItemDto`); confirmado em HEAD e registrado
+como P-092, sem alterar teste alheio. Vitest exigiu execução fora do sandbox porque o esbuild
+não conseguia ler os diretórios ancestrais; a suíte passou após a liberação. Contrato e diff
+revisados manualmente. Spec movida para `done`; `m4-06` aberta em seguida. Sem UI nesta task.
+
 ## 2026-09-30 — P-091, P-089, I-037 e I-038
 
 Dois problemas e duas ideias fechados; só a I-038 teve spec (`docs/specs/done/armazenamento-faxina-imagens-orfas.spec.md`).
