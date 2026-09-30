@@ -286,9 +286,12 @@ informativo neutro do catálogo, reaproveitado aqui sem estender a `ui-13`.
 O produto tem três formas de sobrepor conteúdo à tela, e a escolha entre elas não é estética —
 depende de **quanto a interação bloqueia o resto da tela** e de **quem é dono da posição**:
 
-- **`.modal`** — sobre `<dialog>` nativo, `showModal()`. Bloqueia: o fundo escurece
-  (`::backdrop`) e nada atrás dele recebe foco ou clique enquanto está aberto. Sempre centralizado,
-  nunca arrasta. Use para uma decisão pontual que precisa da atenção inteira do usuário antes de
+- **`.modal`** — sobre `<dialog>` nativo, `showModal()`. A API `posicao="inferior"`
+  apresenta folha inferior no mobile e conserva o modal central no desktop; posição
+  padrão `centro` permanece igual. Foco, Escape, backdrop e trava de rolagem são do
+  mesmo primitivo. Bloqueia: o fundo escurece
+  (`::backdrop`) e nada atrás dele recebe foco ou clique enquanto está aberto. Centralizado
+  na posição padrão, nunca arrasta. Use para uma decisão pontual que precisa da atenção inteira do usuário antes de
   continuar — confirmar, editar um formulário curto, escolher algo de uma lista.
 - **`.painel-flutuante`** — não bloqueia nada. O resto da tela continua clicável, rolável e
   interagível enquanto o painel está aberto (por design: o jogador rola dados com a calculadora

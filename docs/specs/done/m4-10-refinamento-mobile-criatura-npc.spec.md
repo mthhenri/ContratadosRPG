@@ -58,3 +58,28 @@ Task explicitamente reservada para o fim do milestone (escopo acordado em
 - `m4-04`, `m4-04b`, `m4-08`, `m4-08b`, `m4-09` (telas base a refinar).
 - `m1-15`/`m3-09` (padrão responsivo por tokens já validado no projeto).
 - `docs/design/FICHA-NPC.md` (contrato visual do NPC).
+
+## Execução — 2026-09-30
+
+M4-09 concluída e enviada em `03926a60`; árvore limpa e remoto sincronizado antes desta task.
+Análogos: guia de jogador (`paginas/criar/`) para progresso, resumo e navegação inferior;
+guia de criatura atual para densidade/etapas; ficha de jogador e ficha de criatura atuais
+para hierarquia, abas e ações; `CampanhaFichasEspeciais`/acervo para listagem e acesso.
+Primitivos reutilizados: Campo/StepInput, Botao/BotaoIcone, Cartao, Abas, ColunaAcoes,
+ValorEditavel, EstadoVazio, Stat e Modal. Sem mudança de regra, DTO ou permissão.
+
+Inspeção inicial encontrou alvos pequenos em campos, modificadores, edição inline e
+ações inferiores. O autor autorizou ampliar os primitivos em 2026-09-30 (“Pode ajustar”).
+Ambos os resumos agora usam Modal inferior no mobile, com foco/Escape/body lock;
+ValorEditavel/BarraRecurso/ColunaAcoes preservam piso real de 44px e rolagem interna.
+Comparação pessoal também corrigiu o alinhamento de atual/separador/máximo na barra.
+
+Gates concluídos: 2703 testes frontend/195 arquivos, 55 focados, build aprovado e lint
+dos três workspaces sem erros; avisos legados separados. Revisão independente sem
+achados. Aplicação real percorrida nos seis viewports com os dois assistentes, cinco
+categorias, listas/abas, edição/leitura, teclado/foco, Cooperação, histórico, resumos
+e campanha. Análogo de jogador observado após a alteração dos primitivos.
+
+Resultado e critérios registrados em `docs/reviews/m4-10-verificacao.md`.
+Cenário próprio limpo por soft delete. Nenhuma pendência obrigatória da task;
+fecho com commit separado e envio ao remoto conforme autorização do autor.

@@ -19,6 +19,10 @@
         </div>
         <button
             app-botao
+            tamanho="medio"
+            variante="secundario"
+            estilo="contorno"
+            posicaoIcone="esquerda"
             class="guia__resumo-abrir"
             type="button"
             [class.guia__resumo-abrir--ativo]="resumoAberto()"
@@ -408,10 +412,15 @@
                         >
                             @for (tipo of modificadoresPorNivel; track tipo; let i = $index) {
                             <button
+                                app-botao
+                                tamanho="medio"
+                                [variante]="estado().modificadores[campo.chave] === tipo ? 'primario' : 'secundario'"
+                                [estilo]="estado().modificadores[campo.chave] === tipo ? 'preenchido' : 'contorno'"
                                 type="button"
                                 class="atributo__modificador"
                                 [class.atributo__modificador--ativo]="estado().modificadores[campo.chave] === tipo"
                                 [attr.aria-pressed]="estado().modificadores[campo.chave] === tipo"
+                                [attr.aria-label]="rotuloModificadorCriatura(tipo) + ' · ' + campo.nome"
                                 [attr.data-nivel]="i + 1"
                                 [disabled]="modificadorDesabilitado(campo.chave, tipo)"
                                 [appTooltip]="rotuloModificadorCriatura(tipo)"
@@ -1129,100 +1138,78 @@
             </div>
         </section>
 
-        <aside class="guia__resumo" [class.guia__resumo--aberto]="resumoAberto()">
-            <button
-                app-botao
-                class="guia__resumo-toggle"
-                type="button"
-                [attr.aria-expanded]="resumoAberto()"
-                (click)="resumoAberto.set(!resumoAberto())"
-            >
-                <span>Resumo operacional</span><app-icone nome="chevron" />
-            </button>
-            <button
-                class="guia__resumo-fundo"
-                type="button"
-                aria-label="Fechar resumo operacional"
-                (click)="resumoAberto.set(false)"
-            ></button>
-            <div
-                class="guia__resumo-corpo"
-                role="dialog"
-                aria-modal="true"
-                aria-label="Resumo operacional"
-            >
-                <button
-                    app-botao-icone
-                    class="guia__resumo-fechar"
-                    type="button"
-                    aria-label="Fechar resumo operacional"
-                    (click)="resumoAberto.set(false)"
-                >
-                    ×
-                </button>
-                <div class="guia__resumo-progresso">
-                    <div class="guia__resumo-progresso-topo">
-                        <span>Progresso</span>
-                        <b
-                            >{{ estado().passo + 1 | number: '2.0-0' }}/{{ passos.length | number:
-                            '2.0-0' }} · {{ passos[estado().passo] }}</b
-                        >
-                    </div>
-                    <div class="guia__resumo-trilho">
-                        <i [style.width.%]="((estado().passo + 1) / passos.length) * 100"></i>
-                    </div>
-                </div>
-                @if (!estado().designacao.trim()) {
-                <div class="guia__resumo-vazio">
-                    <app-icone nome="alerta" />
-                    <strong>Preencha a designação para iniciar</strong>
-                    <span>O dossiê será montado aqui conforme cada etapa for definida.</span>
-                </div>
-                } @else {
-                <div class="guia__agente">
-                    <span class="guia__agente-avatar"><app-icone nome="alerta" /></span>
-                    <div>
-                        <small>Ameaça em registro</small><strong>{{ estado().designacao }}</strong
-                        ><span>{{ rotuloComportamento(estado().comportamento) }}</span>
-                    </div>
-                </div>
-
-                @if (estado().vd > 0) {
-                <div class="guia__resumo-linha">
-                    <span>NA / VD</span
-                    ><b>{{ rotuloNivelAmeaca(estado().na) }} / {{ estado().vd }}</b>
-                </div>
-                } @if (estado().tenacidade) {
-                <div class="guia__stats">
-                    <app-stat
-                        tamanho="compacto"
-                        rotulo="Vida"
-                        [valor]="vidaMaxima()"
-                        variante="vida"
-                    />
-                    <app-stat tamanho="compacto" rotulo="Defesa" [valor]="defesaBase()" />
-                </div>
-                } @if (estado().resistencias.length || estado().fraquezas.length) {
-                <div class="guia__resumo-linha">
-                    <span>Resist. / Fraquezas</span
-                    ><b>{{ estado().resistencias.length }} / {{ estado().fraquezas.length }}</b>
-                </div>
-                } @if (estado().porte) {
-                <div class="guia__resumo-linha">
-                    <span>Porte</span><b>{{ rotuloPorte(estado().porte!) }}</b>
-                </div>
-                } @if (estado().passo >= 9 || visitado() >= 9) {
-                <div class="guia__resumo-linha">
-                    <span>Ataques</span><b>{{ estado().ataques.length }}</b>
-                </div>
-                } @if (estado().passo >= 10 || visitado() >= 10) {
-                <div class="guia__resumo-linha">
-                    <span>Habilidades</span><b>{{ estado().habilidades.length }}</b>
-                </div>
-                } }
+        <aside class="guia__resumo">
+            <div class="guia__resumo-toggle">Resumo operacional</div>
+            <div class="guia__resumo-corpo">
+                @if (!resumoAberto()) { <ng-container *ngTemplateOutlet="conteudoResumo" /> }
             </div>
         </aside>
+        <ng-template #conteudoResumo>
+            <div class="guia__resumo-progresso">
+                <div class="guia__resumo-progresso-topo">
+                    <span>Progresso</span>
+                    <b
+                        >{{ estado().passo + 1 | number: '2.0-0' }}/{{ passos.length | number:
+                        '2.0-0' }} · {{ passos[estado().passo] }}</b
+                    >
+                </div>
+                <div class="guia__resumo-trilho">
+                    <i [style.width.%]="((estado().passo + 1) / passos.length) * 100"></i>
+                </div>
+            </div>
+            @if (!estado().designacao.trim()) {
+            <div class="guia__resumo-vazio">
+                <app-icone nome="alerta" />
+                <strong>Preencha a designação para iniciar</strong>
+                <span>O dossiê será montado aqui conforme cada etapa for definida.</span>
+            </div>
+            } @else {
+            <div class="guia__agente">
+                <span class="guia__agente-avatar"><app-icone nome="alerta" /></span>
+                <div>
+                    <small>Ameaça em registro</small><strong>{{ estado().designacao }}</strong
+                    ><span>{{ rotuloComportamento(estado().comportamento) }}</span>
+                </div>
+            </div>
+
+            @if (estado().vd > 0) {
+            <div class="guia__resumo-linha">
+                <span>NA / VD</span><b>{{ rotuloNivelAmeaca(estado().na) }} / {{ estado().vd }}</b>
+            </div>
+            } @if (estado().tenacidade) {
+            <div class="guia__stats">
+                <app-stat tamanho="compacto" rotulo="Vida" [valor]="vidaMaxima()" variante="vida" />
+                <app-stat tamanho="compacto" rotulo="Defesa" [valor]="defesaBase()" />
+            </div>
+            } @if (estado().resistencias.length || estado().fraquezas.length) {
+            <div class="guia__resumo-linha">
+                <span>Resist. / Fraquezas</span
+                ><b>{{ estado().resistencias.length }} / {{ estado().fraquezas.length }}</b>
+            </div>
+            } @if (estado().porte) {
+            <div class="guia__resumo-linha">
+                <span>Porte</span><b>{{ rotuloPorte(estado().porte!) }}</b>
+            </div>
+            } @if (estado().passo >= 9 || visitado() >= 9) {
+            <div class="guia__resumo-linha">
+                <span>Ataques</span><b>{{ estado().ataques.length }}</b>
+            </div>
+            } @if (estado().passo >= 10 || visitado() >= 10) {
+            <div class="guia__resumo-linha">
+                <span>Habilidades</span><b>{{ estado().habilidades.length }}</b>
+            </div>
+            } }
+        </ng-template>
     </div>
+
+    <app-modal
+        [aberto]="resumoAberto()"
+        titulo="Resumo operacional"
+        posicao="inferior"
+        (fechou)="resumoAberto.set(false)"
+    >
+        @if (resumoAberto()) { <ng-container *ngTemplateOutlet="conteudoResumo" /> }
+    </app-modal>
 
     <footer class="guia__rodape">
         <button

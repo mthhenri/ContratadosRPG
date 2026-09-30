@@ -124,6 +124,10 @@
         }
     }
     @include bp.mobile {
+        .campo__controle,
+        [app-botao] {
+            min-height: bp.$alvo-toque;
+        }
         &__identidade,
         &__campos {
             grid-template-columns: 1fr;

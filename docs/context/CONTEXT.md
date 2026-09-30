@@ -1932,12 +1932,17 @@ edição por rascunho, entradas por tipo, leitura concedida, metadados e utilit�
 Gates e verificação pessoal nos quatro viewports em `docs/reviews/m4-08b-verificacao.md`.
 `m4-09` está concluída, spec em `done/`: listagem integrada, acesso seletivo, atalhos
 e filtro do acervo. Gates e reconexão real em `docs/reviews/m4-09-verificacao.md`.
-Próxima task: `m4-10`, refinamento mobile complementar.
+`m4-10` está concluída, spec em `done/`: progresso/navegação mobile, resumos dos dois
+assistentes em Modal inferior, piso de toque dos primitivos, reflow e ações inferiores.
+Autor autorizou ampliar Modal/ValorEditavel/BarraRecurso/ColunaAcoes. Gate pessoal nos
+seis viewports, 2703 testes frontend, build/lint aprovados e revisão independente sem
+achados. Evidência em `docs/reviews/m4-10-verificacao.md`; cenário próprio limpo.
+M4-09 foi commitada/enviada em `03926a60`; M4-10 fecha com commit/envio separado.
 `m8-06` está concluída; módulo inteiro fechado.
 `ui-23` (stat sem valor/rodapé do cartão) já foi concluída — ver `HISTORY.md`
-2026-09-02; a fila abaixo estava desatualizada. A única frente de código de milestone ainda
-pendente é o **M4** (`m4-09` → `m4-10`,
-criatura/NPC — ver seção 3), ao lado de `m3-53` (M3). M0, M1, M2, M6, M7 e M8 estão concluídos,
+2026-09-02; a fila abaixo estava desatualizada. As tasks do **M4** estão concluídas,
+incluindo refinamento mobile e integração de acesso; `m3-53` permanece no backlog do M3.
+M0, M1, M2, M6, M7 e M8 estão concluídos,
 incluindo todos os ajustes avulsos de pós-milestone.
 
 ### Fila do backlog (`docs/specs/backlog/`)
@@ -1946,7 +1951,6 @@ incluindo todos os ajustes avulsos de pós-milestone.
 |---|---|---|
 | `civil-guia-criacao` | ficha | mapeia o escopo de `PROBLEMS.md` `P-018` (o guia de criação trata a classe Civil como um agente comum em vários passos) — spec de levantamento, ainda não implementa |
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
-| `m4-10` | criatura/NPC | refinamento mobile; contrato, motor, backend, criação e consulta/edição prontos (`m4-05`…`m4-08b`); listagem/revelação pronta; contrato visual em `docs/design/FICHA-NPC.md` |
 
 Milestones ainda não abertos: `m5-guia-missao`. O M8 `m8-espectadores-campanha` está **concluído**
 (`m8-01`…`m8-06`).
@@ -1957,8 +1961,7 @@ Milestones ainda não abertos: `m5-guia-missao`. O M8 `m8-espectadores-campanha`
 
 Monorepo npm workspaces (`shared/`, `backend/`, `frontend/`) rodando de ponta a ponta: Angular 21
 SPA → NestJS 11 REST + Socket.IO → PostgreSQL 16. **M0, M1, M2, M6 e M7 concluídos; M3 (ficha de
-jogador) em fase de refino avançado, falta só `m3-53`; M4 (criatura/NPC) iniciado, falta
-`m4-09` → `m4-10`** — a ficha lê, edita, rola dados, persiste e sincroniza em tempo real; o Encontro
+jogador) em fase de refino avançado, falta só `m3-53`; M4 (criatura/NPC) com todas as tasks concluídas** — a ficha lê, edita, rola dados, persiste e sincroniza em tempo real; listagem/revelação concluída e enviada. O Encontro
 de Combate roda ponta a ponta com tempo real (ver seção 3 e seção 4).
 
 Deploy em produção por **integração nativa das plataformas**, sem GitHub Actions no deploy: push em
@@ -1984,7 +1987,7 @@ reproduzem isoladas (arquivo único), não na suíte completa.
 | M1 | Calculadora com paridade | **concluído** (`m1-01`…`m1-20`), incluindo os 2 passos operacionais de plataforma (Cloudflare Pages no ar, repo antigo arquivado) |
 | M2 | Auth + Campanhas | **concluído**, incluindo o redesenho do painel (`m2-01`…`m2-09` + extensões `m2-10`…`m2-17`; `m2-18` lista, `m2-19` detalhe/mestre, `m2-20` detalhe/jogador, `m2-21` abas + Rolagens na lateral + menu de ficha do jogador) |
 | M3 | Ficha de Jogador | **em andamento** — CRUD, editores, tempo real e rolagens prontos; guia de criação completo (`m3-57`/`m3-58`/`m3-59` — base, melhorias de nível, equipamento inicial); cor (`m3-61`) e avatar (`m3-62`) de identidade por ficha prontos; falta só `m3-53` |
-| M4 | Ficha de Criatura/NPC | **iniciado** — `m4-01`…`m4-08b`, ajustes de criatura e `m4-11` concluídos. NPC tem motor puro, API tipada, criação dedicada e ficha própria em `/fichas/npc/:id` e `/campanhas/:campanhaId/npc/:id`. Edição do mestre usa rascunho conjunto, Salvar/Cancelar e snapshots preservados; jogador concedido só lê. Notas privadas, retrato/cor/foco e utilitários compatíveis usam APIs existentes. Revogação limpa/redireciona; eventos e reconexão recuperam GET autorizado. Entradas por criação/acervo/painel funcionam; filtro/botão do acervo e revelação integrada seguem na `m4-09`, depois `m4-10`. Gate visual e resultados em `docs/reviews/m4-08b-verificacao.md`. Checagem global do shared mantém P-092 preexistente |
+| M4 | Ficha de Criatura/NPC | **tasks concluídas** — `m4-01`…`m4-08b`, ajustes de criatura e `m4-11` concluídos. NPC tem motor puro, API tipada, criação dedicada e ficha própria em `/fichas/npc/:id` e `/campanhas/:campanhaId/npc/:id`. Edição do mestre usa rascunho conjunto, Salvar/Cancelar e snapshots preservados; jogador concedido só lê. Notas privadas, retrato/cor/foco e utilitários compatíveis usam APIs existentes. Revogação limpa/redireciona; eventos e reconexão recuperam GET autorizado. Entradas por criação/acervo/painel funcionam; filtro/botão do acervo e revelação integrada concluídos na `m4-09`; refinamento mobile concluído na `m4-10`, incluindo os primitivos autorizados. Gates em `docs/reviews/m4-08b-verificacao.md`, `m4-09-verificacao.md` e `m4-10-verificacao.md`. Checagem global do shared mantém P-092 preexistente |
 | M5 | Guia de Missão | não iniciado |
 | M6 | Gestão de Usuários e Papéis | **concluído** — `m6-01`…`m6-08` (`m6-08`: impersonação administrativa auditável) |
 | M7 | Encontro de Combate | **concluído** — 8 tasks originais (`m7-01` contrato, `m7-02` motor puro, `m7-03` backend de montagem, `m7-04` backend de condução/tempo real, `m7-05` painel do mestre, `m7-06` visão do jogador, `m7-07` log da rodada, `m7-08` refinamento mobile) + 9 ajustes de pós-milestone (`m7-09`…`m7-17`, ver seção 4 "Encontro de Combate"). Numeração M7 é sugestão, não decisão de roadmap |
@@ -2577,7 +2580,7 @@ desenhos foram confirmados em `1920×1080` e `360×800` sem overflow.
 Dois cuidados que valem pra qualquer tela: `<select>` de edição usa `[selected]` na `<option>` (com
 `[value]` no `<select>` as opções do `@for` ainda não existem e o controle abre na 1ª), e `.botao`
 precisa ser copiado pro SCSS de cada componente (a definição da página não atravessa o
-encapsulamento). O refinamento mobile mais amplo de criatura/NPC permanece em `m4-10`, no backlog.
+encapsulamento). O refinamento mobile mais amplo de criatura/NPC foi concluído em `m4-10`; ver `docs/reviews/m4-10-verificacao.md`.
 
 **Enquadramento do avatar (pan/zoom) — jogador e criatura.** Retomada do que `m3-62` tinha deixado
 fora de escopo ("crop/editor de imagem no client"), sem processamento de imagem no servidor: só um

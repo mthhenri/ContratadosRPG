@@ -19,21 +19,20 @@
     // `justify-items: stretch` é o padrão), alargando o alvo de hover além do texto.
     align-self: flex-start;
     justify-self: start;
-    // Alvo de toque de 44px (WCAG 2.5.5) SEM inflar o desenho (era `alvo-de-toque` duplicado em
-    // até 6 seletores por consumidor, ex. `ficha-visualizacao.component.scss`): o botão é texto
-    // no meio de uma frase, então quem cresce no mobile é a área clicável (`::after` centrado),
-    // não a caixa visível.
+    // No mobile o piso ocupa espaço real: pseudo-elementos sobrepostos confundiam Vida/máximo
+    // e os números vizinhos. Desktop mantém a apresentação inline do consumidor.
     position: relative;
 
     @include bp.mobile {
-        &::after {
-            content: "";
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: bp.$alvo-toque;
-            height: bp.$alvo-toque;
+        --valor-editavel-piso: #{bp.$alvo-toque};
+        min-width: bp.$alvo-toque;
+        min-height: bp.$alvo-toque;
+        margin: 0;
+        padding: var(--space-4);
+        align-items: center;
+        justify-content: center;
+        &--bloco {
+            text-align: left;
         }
     }
 

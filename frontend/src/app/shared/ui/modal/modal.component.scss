@@ -46,6 +46,17 @@
 
     @include bp.mobile {
         max-width: calc(100vw - 24px);
+        &--inferior {
+            position: fixed;
+            inset: auto 0 0;
+            margin: 0;
+            width: 100vw;
+            max-width: 100vw;
+            max-height: 82dvh;
+            padding-bottom: calc(var(--pad-card) + env(safe-area-inset-bottom, 0px));
+            border-bottom: 0;
+            border-radius: var(--radius-card) var(--radius-card) 0 0;
+        }
     }
 
     &__cabecalho {

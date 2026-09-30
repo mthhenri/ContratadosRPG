@@ -103,6 +103,9 @@
     &__resumo-toggle {
         display: none;
     }
+    &__progresso-mobile {
+        display: none;
+    }
     &__stats {
         display: grid;
         gap: var(--space-12);
@@ -133,12 +136,18 @@
         }
         &__stats {
             grid-template-columns: repeat(3, minmax(0, 1fr));
-            &--civil { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            &--civil {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
         }
     }
     @include bp.mobile {
         width: auto;
         margin: var(--space-16) var(--space-12);
+        padding-bottom: calc(
+            #{bp.$alvo-toque} + var(--space-12) * 2 + var(--space-20) +
+                env(safe-area-inset-bottom, 0px)
+        );
         &__cabecalho {
             flex-wrap: wrap;
             gap: var(--space-8);
@@ -151,9 +160,35 @@
             flex-direction: column;
         }
         &__trilha {
-            flex-direction: row;
-            flex-wrap: wrap;
-            gap: var(--space-4);
+            display: none;
+        }
+        &__progresso-mobile {
+            display: block;
+            margin-bottom: var(--space-12);
+            padding: var(--space-12);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-control);
+        }
+        &__progresso-topo {
+            display: flex;
+            justify-content: space-between;
+            gap: var(--space-8);
+            font: 600 9px var(--font-mono);
+            color: var(--text-mute);
+            strong {
+                color: var(--accent);
+            }
+        }
+        &__progresso-trilho {
+            height: 3px;
+            margin-top: var(--space-8);
+            background: var(--border-strong);
+            i {
+                display: block;
+                height: 100%;
+                background: var(--accent);
+            }
         }
         &__trilha > .npc-guia__kicker {
             width: 100%;
@@ -170,12 +205,22 @@
         &__resumo-toggle {
             display: flex;
         }
-        &__resumo:not(.npc-guia__resumo--aberto) app-cartao {
+        &__resumo app-cartao {
             display: none;
         }
         &__rodape {
+            position: fixed;
+            z-index: 20;
+            inset: auto 0 0;
+            margin: 0;
+            padding: var(--space-12) var(--space-12)
+                calc(var(--space-12) + env(safe-area-inset-bottom, 0px));
+            background: var(--surface);
+            border-top: 1px solid var(--border);
             button {
                 flex: 1;
+                min-width: 0;
+                min-height: bp.$alvo-toque;
             }
         }
     }

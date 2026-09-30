@@ -38,6 +38,24 @@
         </button>
     </app-cartao>
     } @else {
+    <!-- Mesmo indicador informativo do guia de criatura; não altera a navegação/validação. -->
+    <div
+        class="npc-guia__progresso-mobile"
+        role="progressbar"
+        aria-label="Progresso da criação do NPC"
+        aria-valuemin="0"
+        [attr.aria-valuemax]="etapas.length"
+        [attr.aria-valuenow]="etapa() + 1"
+        [attr.aria-valuetext]="etapas[etapa()]"
+    >
+        <div class="npc-guia__progresso-topo">
+            <span>NPC · {{ etapa() + 1 }}/{{ etapas.length }}</span>
+            <strong>{{ etapas[etapa()] }}</strong>
+        </div>
+        <div class="npc-guia__progresso-trilho">
+            <i [style.width.%]="((etapa() + 1) / etapas.length) * 100"></i>
+        </div>
+    </div>
     <div class="npc-guia__layout">
         <nav class="npc-guia__trilha" aria-label="Etapas da criação">
             <p class="npc-guia__kicker">ETAPA {{ etapa() + 1 }} DE 5</p>
@@ -125,7 +143,7 @@
                 }
             </footer>
         </main>
-        <aside class="npc-guia__resumo" [class.npc-guia__resumo--aberto]="mostrarResumo()">
+        <aside class="npc-guia__resumo">
             <button
                 app-botao
                 type="button"
@@ -139,77 +157,90 @@
             >
                 <app-icone nome="visao-geral" />Resumo do NPC
             </button>
+            @if (!mostrarResumo()) {
             <app-cartao titulo="Resumo do NPC">
                 <app-icone cartaoIndice nome="ficha" />
-                <div class="npc-guia__resumo-corpo" aria-live="polite">
-                    <h3>{{ criacao.estado().nome || 'Nome a definir' }}</h3>
-                    <p class="npc-guia__funcao">
-                        {{ criacao.estado().funcao || 'Função narrativa a definir' }}
-                    </p>
-                    <app-chip variante="sutil"
-                        >{{ criacao.referenciaCategoria().rotulo }} · N{{ criacao.estado().nivel
-                        }}</app-chip
-                    >
-                    <p>
-                        Cooperação {{ criacao.estado().cooperacao }} · {{
-                        criacao.referenciaCooperacao()?.rotulo }}
-                    </p>
-                    @if (etapa() >= 1) {
-                    <div class="npc-guia__stats" [class.npc-guia__stats--civil]="criacao.ehCivil()">
-                        <app-stat
-                            rotulo="Vida"
-                            [valor]="criacao.dados().vidaMaxima"
-                            variante="vida"
-                            tamanho="compacto"
-                        />
-                        <app-stat
-                            rotulo="Defesa"
-                            [valor]="criacao.dados().defesaBase"
-                            variante="positivo"
-                            tamanho="compacto"
-                        />
-                        @if (!criacao.ehCivil()) {
-                        <app-stat
-                            rotulo="Energia"
-                            [valor]="criacao.dados().energia.maxima"
-                            variante="energia"
-                            tamanho="compacto"
-                        />
-                        }
-                    </div>
-                    @if (criacao.ehCivil()) {
-                    <p>Sem Energia</p>
-                    } } @if (etapa() >= 1 && !criacao.ehCivil()) {
-                    <p>
-                        {{ criacao.dados().energia.recargaPorTurno === null ? 'Reserva fixa' : 'Pool
-                        + Recarga · +' + criacao.dados().energia.recargaPorTurno + ' por turno' }}
-                    </p>
-                    } @if (etapa() >= 2) {
-                    <p>{{ criacao.passivas() }} Passivas · {{ criacao.ativas() }} Ativas</p>
-                    @if (!criacao.ehCivil()) {
-                    <p>{{ criacao.volume().limitePorTurno }} usos de Ativas por turno</p>
-                    } } @if (etapa() >= 3) {
-                    <p class="npc-guia__conduta">
-                        Fuga: {{ criacao.estado().gatilhosFuga || 'A definir' }}
-                    </p>
-                    <p class="npc-guia__conduta">
-                        Alvo: {{ criacao.estado().prioridadesAlvo || 'A definir' }}
-                    </p>
-                    <p class="npc-guia__conduta">
-                        Ferimento: {{ criacao.estado().reacaoFerimentoSevero || 'A definir' }}
-                    </p>
-                    <p>
-                        {{ criacao.estado().sequelas.length }} sequelas · {{
-                        criacao.estado().traumas.length }} traumas
-                    </p>
-                    <p>
-                        {{ criacao.estado().anotacoes ? 'Anotações preenchidas' : 'Sem anotações
-                        (opcional)' }}
-                    </p>
-                    }
-                </div>
+                <ng-container *ngTemplateOutlet="conteudoResumo" />
             </app-cartao>
+            }
         </aside>
     </div>
+    <ng-template #conteudoResumo>
+        <div class="npc-guia__resumo-corpo" aria-live="polite">
+            <h3>{{ criacao.estado().nome || 'Nome a definir' }}</h3>
+            <p class="npc-guia__funcao">
+                {{ criacao.estado().funcao || 'Função narrativa a definir' }}
+            </p>
+            <app-chip variante="sutil"
+                >{{ criacao.referenciaCategoria().rotulo }} · N{{ criacao.estado().nivel
+                }}</app-chip
+            >
+            <p>
+                Cooperação {{ criacao.estado().cooperacao }} · {{
+                criacao.referenciaCooperacao()?.rotulo }}
+            </p>
+            @if (etapa() >= 1) {
+            <div class="npc-guia__stats" [class.npc-guia__stats--civil]="criacao.ehCivil()">
+                <app-stat
+                    rotulo="Vida"
+                    [valor]="criacao.dados().vidaMaxima"
+                    variante="vida"
+                    tamanho="compacto"
+                />
+                <app-stat
+                    rotulo="Defesa"
+                    [valor]="criacao.dados().defesaBase"
+                    variante="positivo"
+                    tamanho="compacto"
+                />
+                @if (!criacao.ehCivil()) {
+                <app-stat
+                    rotulo="Energia"
+                    [valor]="criacao.dados().energia.maxima"
+                    variante="energia"
+                    tamanho="compacto"
+                />
+                }
+            </div>
+            @if (criacao.ehCivil()) {
+            <p>Sem Energia</p>
+            } } @if (etapa() >= 1 && !criacao.ehCivil()) {
+            <p>
+                {{ criacao.dados().energia.recargaPorTurno === null ? 'Reserva fixa' : 'Pool +
+                Recarga · +' + criacao.dados().energia.recargaPorTurno + ' por turno' }}
+            </p>
+            } @if (etapa() >= 2) {
+            <p>{{ criacao.passivas() }} Passivas · {{ criacao.ativas() }} Ativas</p>
+            @if (!criacao.ehCivil()) {
+            <p>{{ criacao.volume().limitePorTurno }} usos de Ativas por turno</p>
+            } } @if (etapa() >= 3) {
+            <p class="npc-guia__conduta">
+                Fuga: {{ criacao.estado().gatilhosFuga || 'A definir' }}
+            </p>
+            <p class="npc-guia__conduta">
+                Alvo: {{ criacao.estado().prioridadesAlvo || 'A definir' }}
+            </p>
+            <p class="npc-guia__conduta">
+                Ferimento: {{ criacao.estado().reacaoFerimentoSevero || 'A definir' }}
+            </p>
+            <p>
+                {{ criacao.estado().sequelas.length }} sequelas · {{ criacao.estado().traumas.length
+                }} traumas
+            </p>
+            <p>
+                {{ criacao.estado().anotacoes ? 'Anotações preenchidas' : 'Sem anotações (opcional)'
+                }}
+            </p>
+            }
+        </div>
+    </ng-template>
+    <app-modal
+        [aberto]="mostrarResumo()"
+        titulo="Resumo do NPC"
+        posicao="inferior"
+        (fechou)="mostrarResumo.set(false)"
+    >
+        @if (mostrarResumo()) { <ng-container *ngTemplateOutlet="conteudoResumo" /> }
+    </app-modal>
     }
 </div>

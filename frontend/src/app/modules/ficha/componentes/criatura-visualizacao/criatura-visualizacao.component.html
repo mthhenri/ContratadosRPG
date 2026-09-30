@@ -159,19 +159,26 @@
                                     aria-label="Cor de identidade da ficha"
                                     [formControl]="corCriaturaForm"
                                 />
-                                <label
+                                <button
+                                    app-botao-icone
+                                    type="button"
+                                    tamanho="padrao"
+                                    [redondo]="true"
                                     class="criatura__avatar-upload"
+                                    aria-label="Trocar imagem de registro"
                                     [appTooltip]="'Trocar imagem de registro'"
+                                    (click)="entradaAvatar.click()"
                                 >
-                                    <input
-                                        type="file"
-                                        class="criatura__avatar-upload-entrada"
-                                        [accept]="tiposImagemAceitos"
-                                        aria-label="Trocar imagem de registro"
-                                        (change)="aoSelecionarImagem($event)"
-                                    />
                                     <app-icone nome="editar" />
-                                </label>
+                                </button>
+                                <input
+                                    #entradaAvatar
+                                    type="file"
+                                    hidden
+                                    [accept]="tiposImagemAceitos"
+                                    aria-label="Arquivo da imagem de registro"
+                                    (change)="aoSelecionarImagem($event)"
+                                />
 
                                 @if (enquadramentoOrigem(); as origemAtual) {
                                     <app-ajuste-enquadramento-imagem
@@ -330,6 +337,10 @@
                             </span>
                             <div class="criatura__vitalidade">
                                 <button
+                                    app-botao
+                                    tamanho="pequeno"
+                                    variante="secundario"
+                                    estilo="contorno"
                                     class="criatura__passo"
                                     type="button"
                                     [disabled]="!ajustavel()"
@@ -394,6 +405,10 @@
                                     />
                                 </app-valor-editavel>
                                 <button
+                                    app-botao
+                                    tamanho="pequeno"
+                                    variante="secundario"
+                                    estilo="contorno"
                                     class="criatura__passo"
                                     type="button"
                                     [disabled]="!ajustavel()"

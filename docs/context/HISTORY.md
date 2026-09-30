@@ -1,5 +1,67 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-30 — m4-10: refinamento mobile concluído e gates aprovados
+
+Autor autorizou ampliar os primitivos após as duas escolhas apresentadas. Modal ganhou
+`posicao="inferior"` apenas no mobile; ambos os assistentes o usam e mantêm resumo lateral
+desktop, com conteúdo único por ngTemplateOutlet. Foco, Escape, backdrop e trava de body
+continuam no primitivo. NPC recebeu progresso/navegação mobile e reserva do rodapé.
+ValorEditavel usa caixa real de 44px em vez de pseudoárea sobreposta; BarraRecurso mantém
+o piso ao digitar e alinha atual/separador/máximo. ColunaAcoes conserva 44px por item e
+rola internamente quando necessário. Modificadores/passos de Vida/retrato de criatura
+reutilizam os controles canônicos com sua API completa. Reflow de cards/inputs refinado.
+
+O gate real percorreu 360×800, 390×844, 430×932, 960×1080, 1366×768 e 1920×1080:
+etapas dos assistentes, cinco categorias, listas longas/vazias, abas, edição/Cancelar,
+Cooperação, teclado, histórico, leitura concedida, tema claro/escuro e rodapé. Resumos
+passaram em foco contido, três formas de fechamento, restauração de foco/rolagem, largura
+e altura. Jogador também observado como consumidor compartilhado, sem overflow ou
+regressão desktop. Inspeção pessoal corrigiu StepInput, altura de linha, largura da folha
+com scrollbar e separador dos recursos; verificações afetadas repetidas.
+
+Frontend: 2703 testes/195 arquivos; 55 focados; build e lint aprovados. Lint integrado
+dos três workspaces sem erros; aspas/linha longa introduzidas corrigidas no recorte.
+P-004 segue preexistente (inicial 556,30 kB para orçamento 450 kB); P-092 e avisos de canvas
+legados não alterados. Revisão independente somente do código sem achados acionáveis;
+não substituiu a inspeção principal. Sem DTO, regra, fórmula, endpoint ou permissão novos.
+
+Spec em done; nenhuma pendência obrigatória. Evidência auditável no relatório
+`docs/reviews/m4-10-verificacao.md`; contexto, mapa e documentação do Modal atualizados.
+Cenário próprio: oito fichas 82–89 e campanha 10 conferidos e excluídos logicamente pela
+API; GETs posteriores 404, acesso temporário revogado. Nenhum dado do autor descartado.
+M4-09 já enviada em 03926a60; M4-10 fechada para commit/envio próprio, como solicitado,
+com coautoria Codex a conferir na mensagem efetivamente gravada.
+
+## 2026-09-30 — m4-10: corte mobile verificado parcialmente; decisões de primitivos pendentes
+
+M4-09 foi commitada separadamente em `03926a608a22775ea87cce7c296776eb425383bf`,
+com coautoria Codex conferida, e enviada ao remoto antes de ativar M4-10. Nova conferência
+com fetch confirmou `master`/`origin/master` sem commits divergentes. A worktree contém
+somente o trabalho ainda aberto da M4-10; nenhum commit parcial desta task foi criado.
+
+A spec saiu do backlog para active. O corte mobile reutiliza os análogos de criação de
+jogador/criatura, fichas prontas e listagem integrada. NPC ganhou progresso compacto e
+navegação inferior com reserva de conteúdo; campos e steppers respeitam o piso de toque
+local. Modificadores e passos de Vida da criatura agora consomem Botao; upload utiliza
+BotaoIcone e aceita teclado. Cards com nomes longos conservam retrato compacto e ações
+de criatura rolam dentro da própria barra. Nenhuma mudança de regra, DTO ou permissão.
+
+Build encontrou tamanho inválido do Botao na primeira rodada; corrigido para `pequeno`,
+com repetição das checagens afetadas. Frontend: 2702 testes em 195 arquivos passaram;
+lint zero erros/24602 avisos legados; build passou com P-004 preexistente. Aplicação real
+em seis viewports cobriu etapas dos dois assistentes, cinco categorias NPC, listas,
+abas, rascunho/cancelar, Cooperação, histórico, fichas de criatura e campanha. Complemento
+cobriu tema claro, foco, leitura concedida e retrato por teclado, sem salvar imagem.
+Comparação pessoal de capturas e limitações registradas no relatório parcial.
+
+A medição identificou alvos de edição inline abaixo de 44px. Ampliação dos primitivos
+ValorEditavel/BarraRecurso/ColunaAcoes e posição inferior do Modal foram perguntadas
+separadamente ao autor, conforme AGENTS.md; respostas ainda pendentes. Resumos mobile,
+alvos compartilhados e gate visual final permanecem abertos. Spec continua active;
+commit/envio da M4-10 ocorrerão somente após conclusão. Cenário próprio de teste da
+campanha 10 permanece reservado para a verificação final e posterior limpeza.
+
+
 ## 2026-09-30 — m4-09: listagem e revelação integradas concluídas
 
 Criaturas e NPCs usam `CartaoFichaAcervo` na campanha e rotas próprias, com recortes de

@@ -1,4 +1,6 @@
 import { Component, HostListener, inject, signal, viewChild, ElementRef } from "@angular/core";
+import { NgTemplateOutlet } from "@angular/common";
+import { Modal } from "../../../../shared/ui/modal/modal.component";
 import { ActivatedRoute, Router } from "@angular/router";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { DestroyRef } from "@angular/core";
@@ -22,8 +24,8 @@ import { Icone } from "../../../../shared/icone/icone.component";
 /** Shell do guia; composição e estado dedicados, sem branches no assistente de jogador. */
 @Component({
     selector: "app-npc-criar", providers: [NpcCriacaoFormulario],
-    imports: [Botao, Cartao, Chip, Stat, Icone, NpcIdentidade, NpcAtributos,
-        NpcHabilidades, NpcConduta, NpcRevisao],
+    imports: [Botao, Cartao, Chip, Stat, Icone, Modal, NgTemplateOutlet,
+        NpcIdentidade, NpcAtributos, NpcHabilidades, NpcConduta, NpcRevisao],
     templateUrl: "./criar-npc.page.html", styleUrl: "./criar-npc.page.scss",
 })
 export class NpcCriar {

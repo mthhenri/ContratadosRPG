@@ -1,3 +1,5 @@
+@use "tema/breakpoints" as bp;
+
 // Primitivo de recurso com máximo (ui-16). Só tokens do tema — nenhum hex, fonte ou raio literal
 // (proibição #29). Absorve o trilho de 4px do HUD e o de 8px do bloco de vitalidade da ficha
 // (nenhum dos dois era normativo) num só desenho.
@@ -176,5 +178,19 @@
         .barra-recurso__preenchimento {
             background: var(--warning);
         }
+    }
+}
+
+@include bp.mobile {
+    .barra-recurso__topo {
+        flex-wrap: wrap;
+        align-items: center;
+    }
+    .barra-recurso__entrada {
+        min-width: bp.$alvo-toque;
+        min-height: bp.$alvo-toque;
+    }
+    .barra-recurso__valor {
+        align-items: center;
     }
 }

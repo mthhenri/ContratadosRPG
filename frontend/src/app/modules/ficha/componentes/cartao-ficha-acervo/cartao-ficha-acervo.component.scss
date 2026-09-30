@@ -24,6 +24,13 @@
     &:hover .acervo__cartao-nome {
         color: var(--accent);
     }
+
+    @include bp.mobile {
+        align-items: flex-start;
+        .acervo__cartao-avatar {
+            height: 64px;
+        }
+    }
 }
 
 // Avatar da ficha (m3-62) — placeholder listrado a 20% de opacidade quando não há imagem

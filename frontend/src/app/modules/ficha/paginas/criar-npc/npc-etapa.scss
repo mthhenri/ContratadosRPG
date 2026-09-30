@@ -76,6 +76,12 @@
         overflow-wrap: anywhere;
     }
     @include bp.mobile {
+        &__atributo app-step-input {
+            min-width: calc(#{bp.$alvo-toque} * 3 + var(--space-8));
+        }
+        .campo__controle {
+            min-height: bp.$alvo-toque;
+        }
         &__dupla {
             grid-template-columns: minmax(0, 1fr);
         }

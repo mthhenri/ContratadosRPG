@@ -18,7 +18,8 @@
     margin: -24px -20px;
 
     @include bp.mobile {
-        --piso-flutuante: 57px;
+        // Oito ações preservam o piso de toque e rolam dentro da barra, sem estreitar ícones.
+        --piso-flutuante: calc(#{bp.$alvo-toque} + var(--space-12) + var(--space-16));
         margin: -16px -12px;
     }
 }

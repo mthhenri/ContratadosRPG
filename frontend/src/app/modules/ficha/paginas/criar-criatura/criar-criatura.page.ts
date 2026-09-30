@@ -1,5 +1,6 @@
 import { IMAGEM_MIMES_ACCEPT, IMAGEM_MIMES_PERMITIDOS } from '@contratados-rpg/shared/validators';
 import { Component, DestroyRef, ElementRef, computed, effect, inject, signal, viewChild } from '@angular/core';
+import { Modal } from "../../../../shared/ui/modal/modal.component";
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { catchError, finalize, of } from 'rxjs';
@@ -243,7 +244,7 @@ const paraHabilidadeDto = (linha: LinhaHabilidade): FichaCriaturaHabilidadeDto =
  */
 @Component({
   selector: 'app-criatura-criar',
-  imports: [Botao, BotaoIcone, CampoRotulado, Stat, StepInput, CommonModule, Icone, Tooltip],
+  imports: [Botao, BotaoIcone, CampoRotulado, Stat, StepInput, CommonModule, Icone, Tooltip, Modal],
   templateUrl: './criar-criatura.page.html',
   styleUrl: './criar-criatura.page.scss',
 })

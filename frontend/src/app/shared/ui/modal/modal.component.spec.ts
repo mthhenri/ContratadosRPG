@@ -16,6 +16,7 @@ import { Modal } from './modal.component';
       [aberto]="aberto()"
       [titulo]="'Editar item'"
       [largura]="largura()"
+      [posicao]="posicao()"
       [fechavelPeloFundo]="fechavelPeloFundo()"
       (fechou)="fechamentos.set(fechamentos() + 1)"
     >
@@ -26,11 +27,27 @@ import { Modal } from './modal.component';
 class Hospedeiro {
   readonly aberto = signal(false);
   readonly largura = signal<string | null>(null);
+  readonly posicao = signal<"centro" | "inferior">("centro");
   readonly fechavelPeloFundo = signal(true);
   readonly fechamentos = signal(0);
 }
 
 describe('Modal', () => {
+  it("mantém foco, Escape e trava de rolagem na posição inferior", () => {
+    const fixture = montar();
+    fixture.componentInstance.posicao.set("inferior");
+    fixture.componentInstance.aberto.set(true);
+    fixture.detectChanges();
+    expect(document.activeElement).toBe(dialogo(fixture));
+    expect(document.body.style.overflow).toBe("hidden");
+    dialogo(fixture).dispatchEvent(new Event("cancel", { cancelable: true }));
+    fixture.detectChanges();
+    expect(dialogo(fixture).open).toBe(false);
+    expect(fixture.componentInstance.fechamentos()).toBe(1);
+    fixture.componentInstance.aberto.set(false);
+    fixture.detectChanges();
+    expect(document.body.style.overflow).toBe("");
+  });
   function montar() {
     TestBed.configureTestingModule({ imports: [Hospedeiro] });
     const fixture = TestBed.createComponent(Hospedeiro);

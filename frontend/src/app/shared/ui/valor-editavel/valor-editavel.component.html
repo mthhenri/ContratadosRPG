@@ -14,7 +14,7 @@
         [attr.aria-label]="'Editar ' + rotuloAria()"
         [appTooltip]="tooltip()"
         [style.flex]="flex()"
-        [style.min-width]="flex() ? '0' : null"
+        [style.min-width]="flex() ? 'var(--valor-editavel-piso, 0px)' : null"
         (click)="editarSolicitado.emit()"
     >
         {{ valor() }}

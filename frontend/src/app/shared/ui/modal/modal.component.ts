@@ -61,6 +61,8 @@ export class Modal {
   readonly titulo = input.required<string>();
   /** Largura CSS (ex.: `'640px'`, `'50vw'`). Sem valor, usa o padrão do primitivo. */
   readonly largura = input<string | null>(null);
+  /** Folha inferior no mobile; conserva o modal central no desktop. */
+  readonly posicao = input<"centro" | "inferior">("centro");
   /** `false` desliga o fechar por clique no fundo — usado por `ReceberDanoDialog`, que já não
    *  preserva um formulário com dado digitado, evitando perda acidental. */
   readonly fechavelPeloFundo = input(true);

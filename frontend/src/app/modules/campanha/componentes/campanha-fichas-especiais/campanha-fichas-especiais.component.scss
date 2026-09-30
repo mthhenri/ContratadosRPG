@@ -83,3 +83,10 @@
         }
     }
 }
+
+@include bp.mobile {
+    :host .campo__controle,
+    :host [app-botao] {
+        min-height: bp.$alvo-toque;
+    }
+}
