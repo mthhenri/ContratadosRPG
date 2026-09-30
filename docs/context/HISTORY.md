@@ -1,5 +1,49 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-30 — P-075, P-078, P-087 e P-088 corrigidos
+
+Quatro itens de `PROBLEMS.md` fechados numa sessão, sem spec própria (defeitos pequenos e independentes).
+
+- **P-088 (backend):** `POST /ficha/:id/imagem` e `POST /encontro/combatente/:id/imagem` sem o campo
+  `arquivo` respondiam 500 (`TypeError` em `arquivo.buffer`). O helper que o `DocumentoController` já
+  tinha virou `montarArquivoImagem` (`core/armazenamento/arquivo-imagem.util.ts`) e as três controllers
+  de upload o usam; `FichaService.alterarImagem` e `EncontroService.alterarImagemAvulso` recusam
+  `tamanho === 0` com 400 "Envie um arquivo de imagem" (a checagem vem depois da permissão, como no
+  documento). Ao vivo: ficha própria sem arquivo → 400 com a mensagem; avulso inexistente → 404 (antes,
+  500 para qualquer id).
+- **P-087 (backend):** `tsc --noEmit -p backend/tsconfig.json` tinha 18 erros (o item dizia 17) e agora
+  tem 0. `tools/gerar-openapi-contratos.ts`: type guard passa a estreitar `name`.
+  `OperacoesSeedDev` tinha os retornos de `garantirMembro` (`void`) e `garantirFicha` (`number`)
+  trocados em relação à implementação e ao dublê. Nos specs: `corAvulso`/`imagemUrlAvulso`/`corFicha`
+  faltando nas fábricas, 5º argumento (armazenamento) do `EncontroService`, `Mock` tipado no dublê da
+  projeção, enum no lugar de string literal e `Promise.resolve` no dublê de `recuperarMembro`. O
+  `lint` do backend passou a encadear `tsc --noEmit -p tsconfig.json`, então `npm run lint` (raiz) já
+  cobre specs e `tools/`. Nenhum comportamento de produção mudou.
+- **P-075 (frontend):** o "voltar ao topo" do editor Markdown deixou de ser `<button>` nativo estilizado
+  à mão: é `app-botao-icone` `tamanho="padrao"` `variante="primario"` (32 px), e o SCSS ficou só com o
+  posicionamento. A sombra usa a receita `color-mix(in srgb, var(--bg) 62%, transparent)` da barra
+  ancorada; o token `--shadow` nunca existiu. A margem negativa passou de −50 para −46 px (36 → 32 px
+  de altura).
+- **P-078 (frontend):** decisão do autor: o painel lateral (Rolagens/Esquadrão/Inv.) fica **visível
+  abaixo do estado vazio** para o jogador sem ficha, abrindo em Rolagens. `semFichaExibida` (computed:
+  sem documento e sem carga em voo) liga a exceção em `detalhe__jogador-lateral--oculto-mobile`;
+  com ficha nada mudou. "Ver Esquadrão" continua, agora só troca a aba e rola até o painel
+  (`painelLateral`, `rolarAte` extraído de `aoMudarDestinoFicha`).
+
+**Testes:** backend 913 passam, 1 pulado (50 arquivos); `npm run lint --workspace=backend` 0 erros,
+`tsc` limpo; lint do frontend 0 erros; `detalhe-jogador` 43/43 (o teste do P-074 foi reescrito e ganhou
+dois casos: sem ficha visível, com ficha escondida); editor Markdown e `botao-icone` 75/75. Suíte
+completa do frontend e build de produção não rodaram nesta sessão.
+
+**Ao vivo** (Postgres + backend + frontend reais, campanha sintética com mestre e jogador sem ficha,
+excluída logicamente ao fim): P-075 em `1920×1080` — botão `app-botao-icone--padrao--primario` 32×32 no
+canto do editor, mesma cor do "Novo documento". Em `360×800` o editor da Biblioteca cresce até a altura
+do conteúdo e a página rola, então o host não rola e o botão não aparece (comportamento anterior à
+mudança); com a altura do host limitada por script o botão aparece igual. P-078 em `360×800` e
+`1920×1080`: painel visível com a aba Rolagens ativa, sem overflow horizontal; "Ver Esquadrão" troca a
+aba e "Rolagens" volta; jogador com ficha (`jogador.stub.1`) segue com o painel em `display: none`.
+Análogo visual: o próprio painel lateral do mestre e o `detalhe-jogador` com ficha.
+
 ## 2026-09-29 — Versão 1.4.1 preparada (Esquadrão na Investigação)
 
 Release de patch com uma única entrega desde a 1.4.0: o Esquadrão na cena de Investigação do jogador e a

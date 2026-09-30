@@ -37,6 +37,7 @@ import type {
   FichaResumoDto,
   FichaVitalidadeAlterarDto,
 } from '@contratados-rpg/shared/dtos/ficha';
+import { montarArquivoImagem } from '../../core/armazenamento';
 import { ActiveUser } from '../../core/decorators';
 import { DocumentarController } from '../../core/openapi';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
@@ -158,16 +159,10 @@ export class FichaController {
   @UseInterceptors(FileInterceptor('arquivo'))
   alterarImagem(
     @Param('id', ParseIntPipe) id: number,
-    @UploadedFile() arquivo: Express.Multer.File,
+    @UploadedFile() arquivo: Express.Multer.File | undefined,
     @ActiveUser() usuarioAtivo: JwtPayload,
   ): Promise<FichaImagemAlteradaDto> {
-    return this.fichaService.alterarImagem(
-      {
-        id,
-        arquivo: { conteudo: arquivo.buffer, mimetype: arquivo.mimetype, tamanho: arquivo.size },
-      },
-      usuarioAtivo,
-    );
+    return this.fichaService.alterarImagem({ id, arquivo: montarArquivoImagem(arquivo) }, usuarioAtivo);
   }
 
   /** Remove o avatar da ficha (m3-62) — exclui o arquivo do armazenamento e limpa `imagemUrl`. */

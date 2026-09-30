@@ -568,7 +568,9 @@
 
             <div
                 class="detalhe__jogador-lateral"
-                [class.detalhe__jogador-lateral--oculto-mobile]="destinoMobileFicha() !== 'rolagens'"
+                [class.detalhe__jogador-lateral--oculto-mobile]="
+                    !semFichaExibida() && destinoMobileFicha() !== 'rolagens'
+                "
             >
                 <!-- Painel lateral unificado (Rolagens/Esquadrão/Inv. Esquadrão) — mesmo padrão
              `app-segmentado` da visão de mestre (`detalhe-mestre__painel-lateral`): sempre
@@ -579,8 +581,10 @@
              isso duplicava a mesma ação dentro da própria barra lateral (feedback do autor).
              `--oculto-mobile` (achado ao vivo, autor): no mobile o painel ficava sempre visível
              rolando a página, mesmo com "Agente"/"Status"/etc. selecionado na `.ficha-nav` — só
-             `bp.mobile` esconde (desktop/tablet mostram sempre, sem barra de destino). -->
-                <div class="detalhe__painel-lateral">
+             `bp.mobile` esconde (desktop/tablet mostram sempre, sem barra de destino). Sem ficha
+             na coluna principal (`semFichaExibida`, P-078) não existe `.ficha-nav`, então o painel
+             nunca é escondido: aparece abaixo do estado vazio, abrindo em Rolagens. -->
+                <div class="detalhe__painel-lateral" #painelLateral>
                     <app-segmentado
                         rotulo="Rolagens, Esquadrão e Inventário do Esquadrão"
                         [fluido]="true"

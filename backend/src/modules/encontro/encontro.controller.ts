@@ -13,6 +13,7 @@ import type {
   EncontroRecuperadoDto,
   EncontroResumoDto,
 } from '@contratados-rpg/shared/dtos/encontro';
+import { montarArquivoImagem } from '../../core/armazenamento';
 import { ActiveUser } from '../../core/decorators';
 import { DocumentarController } from '../../core/openapi';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
@@ -77,13 +78,10 @@ export class EncontroController {
   @UseInterceptors(FileInterceptor('arquivo'))
   alterarImagemAvulso(
     @Param('id', ParseIntPipe) id: number,
-    @UploadedFile() arquivo: Express.Multer.File,
+    @UploadedFile() arquivo: Express.Multer.File | undefined,
     @ActiveUser() usuarioAtivo: JwtPayload,
   ): Promise<EncontroRecuperadoDto> {
-    return this.encontroService.alterarImagemAvulso(
-      { id, arquivo: { conteudo: arquivo.buffer, mimetype: arquivo.mimetype, tamanho: arquivo.size } },
-      usuarioAtivo,
-    );
+    return this.encontroService.alterarImagemAvulso({ id, arquivo: montarArquivoImagem(arquivo) }, usuarioAtivo);
   }
 
   @Delete('encontro/combatente/:id/imagem')

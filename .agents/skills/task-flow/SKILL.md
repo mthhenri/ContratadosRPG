@@ -38,6 +38,8 @@ nomear um DTO, use a skill `dto-conventions`; para verificar UI ao vivo, use `ve
 | `backend` | `npm run test --workspace=backend -- <arquivo>` | `npm run test --workspace=backend` | `npm run lint --workspace=backend` |
 | `frontend` | `npm run test --workspace=frontend -- --include=<arquivo>` | `npm run test --workspace=frontend` | `npm run lint --workspace=frontend` |
 
+- `npm run lint --workspace=backend` também roda `tsc --noEmit -p tsconfig.json` (specs e `tools/`,
+  que o build exclui) — erro de tipo em spec derruba o lint (P-087).
 - `npm run lint` (raiz) roda os três workspaces de uma vez; `npm run test --workspaces --if-present`
   idem, para a suíte completa no gate de integração/conclusão — não repita build/lint/teste sem
   mudança relevante desde a última rodada (`CLAUDE.md` "Rigor com eficiência").

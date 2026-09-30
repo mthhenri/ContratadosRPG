@@ -501,6 +501,20 @@ describe('EncontroService', () => {
       });
     });
 
+    it('recusa com "Envie um arquivo de imagem" quando o upload chegou sem arquivo', async () => {
+      encontroRepositorio.recuperarCombatentePorId.mockResolvedValue(criarCombatenteLinha());
+
+      await expect(
+        service.alterarImagemAvulso(
+          { id: 100, arquivo: { conteudo: new Uint8Array(), mimetype: '', tamanho: 0 } },
+          mestre,
+        ),
+      ).rejects.toMatchObject({ response: { mensagem: 'Envie um arquivo de imagem' } });
+
+      expect(armazenamentoProvedor.salvarImagem).not.toHaveBeenCalled();
+      expect(encontroRepositorio.alterarIdentidadeAvulso).not.toHaveBeenCalled();
+    });
+
     it('remove a imagem do avulso e limpa o armazenamento', async () => {
       encontroRepositorio.recuperarCombatentePorId.mockResolvedValue(
         criarCombatenteLinha({ imagemUrlAvulso: '/uploads/anterior.webp' }),

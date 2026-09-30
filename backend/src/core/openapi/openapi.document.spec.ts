@@ -47,7 +47,7 @@ describe("documentação OpenAPI", () => {
             expect(operacao?.operationId).toBe(operationId);
             expect(operacao?.tags).toEqual([contrato.tag]);
             expect(operacao?.security).toEqual(contrato.publica ? [] : [{ jwt: [] }]);
-            expect(operacao?.responses["200"]?.description).toContain("StandardResponse");
+            expect((operacao?.responses["200"] as { description?: string } | undefined)?.description).toContain("StandardResponse");
         }
     });
 

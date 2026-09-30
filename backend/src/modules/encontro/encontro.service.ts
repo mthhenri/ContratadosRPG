@@ -234,6 +234,9 @@ export class EncontroService {
     usuarioAtivo: JwtPayload,
   ): Promise<EncontroRecuperadoDto> {
     const { combatente, encontro } = await this.recuperarAvulsoMutavel(dto.id, usuarioAtivo);
+    if (dto.arquivo.tamanho === 0) {
+      throw new BusinessException('Envie um arquivo de imagem');
+    }
     const extensaoPorMime: Readonly<Record<string, string>> = {
       'image/jpeg': 'jpg',
       'image/png': 'png',

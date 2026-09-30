@@ -128,8 +128,11 @@
 <div #raiz class="editor-markdown__superficie"></div>
 @if (mostrarVoltarAoTopo()) {
     <button
+        app-botao-icone
         class="editor-markdown__voltar-topo"
         type="button"
+        tamanho="padrao"
+        variante="primario"
         aria-label="Voltar ao topo"
         [appTooltip]="'Voltar ao topo'"
         (click)="voltarAoTopo()"

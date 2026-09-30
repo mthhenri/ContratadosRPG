@@ -13,6 +13,7 @@ import {
   TipoUsuarioEnum,
 } from '@contratados-rpg/shared/enums';
 import { BusinessException, UnauthorizedAccessException } from '../../core/exceptions';
+import type { ArmazenamentoProvedor } from '../../core/armazenamento';
 import type { CampanhaGateway } from '../../core/gateway/campanha.gateway';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
 import type { CampanhaRepository } from '../campanha/campanha.repository';
@@ -71,6 +72,8 @@ function criarCombatenteLinha(
     fichaDados: null,
     fichaOculta: null,
     fichaDonoNome: null,
+    corAvulso: null,
+    imagemUrlAvulso: null,
     ...overrides,
   };
 }
@@ -149,6 +152,7 @@ describe('EncontroService — condução (m7-04)', () => {
       campanhaRepositorio as unknown as CampanhaRepository,
       fichaService as unknown as FichaService,
       campanhaGateway as unknown as CampanhaGateway,
+      { salvarImagem: vi.fn(), excluirImagem: vi.fn() } as unknown as ArmazenamentoProvedor,
     );
   });
 

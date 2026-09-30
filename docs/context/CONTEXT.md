@@ -22,7 +22,9 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-29 · **Última decisão registrada:**
+> **Última revisão:** 2026-09-30 · **Última decisão registrada:** `P-075`, `P-078`, `P-087` e `P-088`
+> corrigidos (ver `HISTORY.md`): jogador sem ficha vê o painel lateral no mobile; `tsc` completo do
+> backend limpo e dentro do `lint`; upload de avatar sem arquivo responde 400. Antes:
 > `m7-27-investigacao-jogador-visao-esquadrao` concluída: Investigação do jogador abre com
 > Esquadrão/Rolagens alternáveis; a prévia do mestre usa o recorte do alvo em leitura. Ver seção
 > "Módulo de Cenas". Antes:
@@ -3147,6 +3149,8 @@ cada usuário possui uma ficha diferente em cada campanha. O seed transacional i
 `npm run db:seed:dev`; cenário e credenciais estão em `docs/DEVELOPMENT.md`. Na visão do mestre,
 os cartões de agente do **Esquadrão** abrem a mesma prévia integral de 300 px do avatar que a
 visão de jogador usa, após hover sustentado de 600 ms e apenas sobre fichas de agente.
+`npm run lint --workspace=backend` também roda `tsc --noEmit -p tsconfig.json` (specs e `tools/`
+incluídos, que o build exclui): checagem de tipos completa faz parte do gate do backend.
 
 ---
 

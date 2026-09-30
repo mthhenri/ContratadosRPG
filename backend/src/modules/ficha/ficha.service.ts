@@ -779,6 +779,9 @@ export class FichaService {
     }
     await this.validarPermissaoEdicao(fichaEncontrada, usuarioAtivo);
 
+    if (dto.arquivo.tamanho === 0) {
+      throw new BusinessException('Envie um arquivo de imagem');
+    }
     const extensao = EXTENSAO_POR_MIME_IMAGEM[dto.arquivo.mimetype];
     if (!extensao) {
       throw new BusinessException('Formato de imagem inválido: use JPEG, PNG ou WEBP');

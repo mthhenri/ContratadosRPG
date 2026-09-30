@@ -45,14 +45,14 @@ export interface OperacoesSeedDev {
     campanhaId: number,
     usuarioId: number,
     papel: TipoCampanhaMembroPapelEnum,
-  ): Promise<number>;
+  ): Promise<void>;
   garantirRolagem(campanhaId: number, usuarioId: number, fichaId: number, rotulo: string): Promise<void>;
   garantirFicha(
     campanhaId: number,
     usuarioId: number,
     ficha: FichaComumDev,
     dados: FichaJogadorDadosDto | FichaCriaturaDadosDto,
-  ): Promise<void>;
+  ): Promise<number>;
 }
 
 export interface PersistenciaSeedDev {

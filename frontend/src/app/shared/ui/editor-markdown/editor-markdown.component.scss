@@ -15,31 +15,16 @@
     min-height: 100%;
 }
 
+// Só o posicionamento: caixa, cor e hover vêm do `app-botao-icone` (`variante="primario"`, 32px).
+// A margem negativa devolve a altura do botão ao fluxo (32px + os 14px da folga inferior).
 .editor-markdown__voltar-topo {
     position: sticky;
     z-index: 2;
     right: 14px;
     bottom: 14px;
-    display: flex;
-    width: 36px;
-    height: 36px;
-    align-items: center;
-    justify-content: center;
     float: right;
-    margin: -50px 14px 14px 0;
-    padding: 0;
-    color: var(--accent-text);
-    background: var(--accent);
-    border: 1px solid var(--accent);
-    border-radius: var(--radius-control);
-    box-shadow: 0 8px 20px var(--shadow);
-    cursor: pointer;
-
-    &:hover,
-    &:focus-visible {
-        filter: brightness(1.08);
-        outline: none;
-    }
+    margin: -46px 14px 14px 0;
+    box-shadow: 0 8px 20px color-mix(in srgb, var(--bg) 62%, transparent);
 }
 
 // Barra: histórico fixo (fora da rolagem) + faixa de formatação + faixa contextual "Tabela" (só

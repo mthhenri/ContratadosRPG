@@ -60,33 +60,6 @@
   `CalculadoraFlutuante` e o `LeitorDocumentos`.
 - **Desde:** `campanha-detalhe-mestre-coluna-acoes` (o Caderno passou a abrir pela coluna).
 
-### P-088 — Upload de avatar sem arquivo responde 500 · `ABERTO` · backend/ficha
-
-- **Sintoma:** `POST /ficha/:id/imagem` (e o equivalente do avulso do encontro,
-  `encontro.controller.ts:84`) sem o campo `arquivo` no multipart responde **500 "Erro interno do
-  servidor"**, qualquer que seja o id. Verificado ao vivo na `m9-02`.
-- **Causa:** a controller lê `arquivo.buffer` de um `@UploadedFile()` `undefined` e estoura
-  `TypeError` antes de a service validar qualquer coisa.
-- **Contorno:** o frontend sempre envia o arquivo; só uma chamada direta cai aqui.
-- **Correção:** o que o `DocumentoController` faz — montar o value object por um helper que
-  transforma "sem arquivo" em arquivo vazio, e a service recusar com 400 "Envie um arquivo de imagem".
-- **Desde:** m3-62 (avatar); encontrado na `m9-02` (2026-09-26).
-
-### P-087 — Checagem de tipos completa do backend tem 17 erros fora do build · `ABERTO` · backend/testes
-
-- **Sintoma:** `npx tsc --noEmit -p backend/tsconfig.json` acusa 17 erros: 3 em
-  `tools/gerar-openapi-contratos.ts` (`declaracao.name` possivelmente `undefined`), 5 em
-  `tools/database/seed-dev.ts`, 3 em `tools/database/seed-dev.spec.ts` e 6 em specs de
-  `src/` (`openapi.document`, `encontro-conducao.service`, `ficha.service`, `rolagem.service`).
-  `tsconfig.build.json` sai com 0 e a suíte do vitest passa.
-- **Causa:** nenhum gate roda a checagem com o `tsconfig.json` completo — o build exclui specs e
-  `tools/`, e o vitest transpila sem checar tipos. Os erros se acumularam sem ninguém ver.
-- **Contorno:** nenhum necessário em runtime; ao verificar um import novo, comparar a contagem
-  antes/depois em vez de esperar 0.
-- **Correção:** corrigir os 17 e incluir `tsc --noEmit -p tsconfig.json` no lint ou no gate do
-  backend.
-- **Desde:** encontrado na `m9-01` (2026-09-26); os erros são anteriores à task.
-
 ### P-003 — Backend não valida a estrutura do corpo das requisições · `ACEITO` · backend
 
 - **Sintoma:** nenhum `ValidationPipe` está registrado. Um corpo malformado (campo ausente, tipo
@@ -146,34 +119,3 @@
   de Civil levantadas na mesma investigação (passo // Recursos, progressão pós-criação) ficaram
   fora do escopo escolhido pelo dono, registradas em "Fora de Escopo" da spec.
 - **Desde:** reportado pelo dono em 2026-08-11.
-
-### P-075 — Botão "voltar ao topo" do editor Markdown usa token de sombra inexistente · `ABERTO` · frontend
-
-- **Sintoma:** `.editor-markdown__voltar-topo` declara `box-shadow: 0 8px 20px var(--shadow)`, mas
-  `--shadow` não existe em `_tokens.scss` — a sombra não é aplicada.
-- **Causa:** token inventado na criação do botão; nunca houve `--shadow` no tema.
-- **Contorno:** o botão continua legível pelo fundo `--accent`.
-- **Correção:** trocar pela receita já usada no produto (`color-mix(in srgb, var(--bg) 62%,
-  transparent)`, a mesma da barra ancorada do editor) ou decidir um token de sombra no tema. O
-  botão também é um `<button>` nativo estilizado à mão — candidato a `app-botao-icone`.
-- **Desde:** achado em 2026-09-23 na revisão do editor Markdown (fora do escopo daquela task).
-
-### P-078 — Jogador sem ficha no celular não encontra o histórico de rolagens da campanha · `ABERTO` · frontend/campanha
-
-- **Sintoma:** em `360×800`, o jogador sem ficha na campanha abre `/campanhas/:id` e vê só "Você
-  ainda não tem uma ficha nesta campanha" com os botões "Criar nova ficha", "Vincular ficha
-  existente" e "Ver Esquadrão". Nenhum cartão de rolagem aparece e nada indica que o histórico
-  existe. No desktop o painel lateral de Rolagens aparece normalmente.
-- **Causa:** em `detalhe-jogador.page.html`, o painel lateral (Rolagens/Esquadrão/Inv. Esquadrão)
-  recebe `detalhe__jogador-lateral--oculto-mobile` (`display: none`) enquanto
-  `destinoMobileFicha()` for diferente de `'rolagens'`. O sinal começa em `'agente'` e só muda
-  pela `.ficha-nav` da ficha embutida (`abaStatusMudou` → `aoMudarDestinoFicha`), que não existe
-  sem ficha. A única saída é `abrirEsquadraoSemFicha()`, que abre o painel já na aba Esquadrão.
-- **Contorno:** tocar em "Ver Esquadrão" e depois na aba "Rolagens" do painel lateral. Conferido
-  ao vivo em 2026-09-24: o feed da campanha aparece completo, com os 7 cartões.
-- **Correção:** a decidir com o autor. Uma opção é mostrar o painel lateral no mobile sem ficha
-  (por exemplo, abrir em "Rolagens" por padrão ou exibir o painel abaixo do estado vazio). Outra é
-  dar ao estado vazio uma ação "Ver rolagens" ao lado de "Ver Esquadrão". É mudança de UI: exige o
-  gate visual (`design-fidelity` + `verify`).
-- **Desde:** achado em 2026-09-24 na verificação ao vivo da `p-076`, com uma conta de jogador sem
-  ficha. O comportamento é anterior a essa task.

@@ -181,6 +181,13 @@ export class CampanhaDetalheJogador {
   /** Documento completo da ficha exibida — buscado via `recuperarFicha` sempre que `fichaExibidaId` muda. */
   protected readonly fichaExibidaDados = signal<FichaRecuperadaDto | null>(null);
   protected readonly carregandoFichaExibida = signal(false);
+  /**
+   * Nenhuma ficha na coluna principal (estado vazio): sem `app-ficha-campanha-card` não há
+   * `.ficha-nav` para ligar o painel lateral no mobile (P-078), então ele nunca é escondido.
+   */
+  protected readonly semFichaExibida = computed(
+    () => this.fichaExibidaDados() === null && !this.carregandoFichaExibida(),
+  );
 
   /** `true` quando o usuário autenticado pode editar a ficha exibida — dono ou mestre; nunca na
    * prévia nem durante a troca de ficha exibida (`trocandoFichaExibida`, P-082: sem isto, dava
@@ -250,6 +257,8 @@ export class CampanhaDetalheJogador {
 
   /** Card "Rolagens" da coluna lateral — alvo do destino `'rolagens'` da barra inferior do mobile. */
   private readonly cardRolagens = viewChild<ElementRef<HTMLElement>>('cardRolagens');
+  /** Painel lateral inteiro (abas Rolagens/Esquadrão/Inv. Esquadrão) — alvo do "Ver Esquadrão" sem ficha. */
+  private readonly painelLateral = viewChild<ElementRef<HTMLElement>>('painelLateral');
 
   protected aoMudarDestinoFicha(destino: DestinoMobile): void {
     this.destinoMobileFicha.set(destino);
@@ -266,26 +275,34 @@ export class CampanhaDetalheJogador {
     if (typeof window === 'undefined') {
       return;
     }
+    this.rolarAte(() => this.cardRolagens()?.nativeElement);
+  }
+
+  /**
+   * `setTimeout` empurra o `scrollIntoView` para depois de o Angular aplicar no DOM as mudanças
+   * de visibilidade que o antecederam — medido antes, o alvo ainda estava escondido (altura 0).
+   */
+  private rolarAte(alvo: () => HTMLElement | undefined): void {
     setTimeout(() => {
-      const alvo = this.cardRolagens()?.nativeElement;
-      if (!alvo) {
+      const elemento = alvo();
+      if (!elemento) {
         return;
       }
       const reduzMovimento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      alvo.scrollIntoView({ behavior: reduzMovimento ? 'auto' : 'smooth', block: 'start' });
+      elemento.scrollIntoView({ behavior: reduzMovimento ? 'auto' : 'smooth', block: 'start' });
     });
   }
 
   /**
-   * Gatilho mobile independente da ficha própria (P-074): sem `app-ficha-campanha-card` montado,
-   * a `.ficha-nav` que normalmente dispara `aoMudarDestinoFicha('rolagens')` nem existe, e o
-   * painel lateral (Rolagens/Esquadrão/Inv. Esquadrão) fica preso em `--oculto-mobile` para
-   * sempre. Este método replica o mesmo destino "rolagens" direto na aba Esquadrão, sem depender
-   * da ficha embutida.
+   * "Ver Esquadrão" do estado vazio (P-074): sem ficha o painel lateral já está visível abaixo
+   * dele (P-078, `semFichaExibida`), então só troca para a aba Esquadrão e rola até o painel.
    */
   protected abrirEsquadraoSemFicha(): void {
-    this.destinoMobileFicha.set('rolagens');
     this.painelLateralAtivo.set('esquadrao');
+    if (typeof window === 'undefined') {
+      return;
+    }
+    this.rolarAte(() => this.painelLateral()?.nativeElement);
   }
 
   /**

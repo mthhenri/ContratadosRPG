@@ -148,7 +148,7 @@ function gerarSchemasPublicos(programa: ts.Program): Record<string, unknown> {
     const declaracoes = arquivosDto.flatMap((arquivo) => {
         const sourceFile = programa.getSourceFile(arquivo);
         return sourceFile?.statements.filter(
-            (declaracao): declaracao is ts.InterfaceDeclaration | ts.ClassDeclaration =>
+            (declaracao): declaracao is (ts.InterfaceDeclaration | ts.ClassDeclaration) & { name: ts.Identifier } =>
                 (ts.isInterfaceDeclaration(declaracao) || ts.isClassDeclaration(declaracao))
                 && !!declaracao.name
                 && declaracao.name.text.endsWith("Dto")

@@ -23,6 +23,7 @@ import {
   TipoDanoEnum,
   TipoUsuarioEnum,
   ItemCategoriaEnum,
+  ModificacaoEfeitoTipoEnum,
   TipoCampanhaMembroPapelEnum,
   TipoFichaEnum,
 } from '@contratados-rpg/shared/enums';
@@ -1273,7 +1274,7 @@ describe('FichaService', () => {
       porUsuario: Record<number, { papel: TipoCampanhaMembroPapelEnum } | null>,
     ): void {
       campanhaRepositorio.recuperarMembro.mockImplementation(
-        (dto: { usuarioId: number }) => porUsuario[dto.usuarioId] ?? null,
+        (dto: { usuarioId: number }) => Promise.resolve(porUsuario[dto.usuarioId] ?? null),
       );
     }
 
@@ -2990,6 +2991,20 @@ describe('FichaService', () => {
       expect(fichaRepositorio.alterarImagem).not.toHaveBeenCalled();
     });
 
+    it('recusa com "Envie um arquivo de imagem" quando o upload chegou sem arquivo', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+
+      await expect(
+        service.alterarImagem(
+          { id: 5, arquivo: { conteudo: new Uint8Array(), mimetype: '', tamanho: 0 } },
+          usuarioDono,
+        ),
+      ).rejects.toMatchObject({ response: { mensagem: 'Envie um arquivo de imagem' } });
+
+      expect(armazenamentoProvedor.salvarImagem).not.toHaveBeenCalled();
+      expect(fichaRepositorio.alterarImagem).not.toHaveBeenCalled();
+    });
+
     it('lança BusinessException quando o arquivo excede 2MB', async () => {
       fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
 
@@ -3130,7 +3145,7 @@ describe('FichaService', () => {
         {
           id: 'item-1', nome: 'Colete Reforçado', categoria: ItemCategoriaEnum.PROTECOES,
           custo: 100, peso: 3, quantidade: 1,
-          modificacoes: [{ nome: 'Placa Extra', empilhamentos: 1, efeitos: [{ tipo: 'RESISTENCIA', valor: 2 }] }],
+          modificacoes: [{ nome: 'Placa Extra', empilhamentos: 1, efeitos: [{ tipo: ModificacaoEfeitoTipoEnum.RESISTENCIA, valor: 2 }] }],
         },
       ]);
       fichaRepositorio.alterarInventario.mockResolvedValue({ ...fichaComInventarioVazio });

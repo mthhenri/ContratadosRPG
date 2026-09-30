@@ -728,7 +728,7 @@ describe('CampanhaDetalheJogador', () => {
     expect(raiz.querySelector('.detalhe__jogador-vazio')).not.toBeNull();
   });
 
-  it('"Ver Esquadrão" no estado vazio revela o painel lateral e ativa a aba Esquadrão (P-074)', async () => {
+  it('sem ficha, o painel lateral fica visível no mobile abrindo em Rolagens (P-078)', () => {
     const { fixture, raiz } = montar({
       usuarioId: 2,
       membros: membrosDois(),
@@ -736,7 +736,26 @@ describe('CampanhaDetalheJogador', () => {
     });
 
     const lateral = raiz.querySelector('.detalhe__jogador-lateral')!;
+    expect(lateral.classList.contains('detalhe__jogador-lateral--oculto-mobile')).toBe(false);
+    expect(fixture.componentInstance['painelLateralAtivo']()).toBe('rolar');
+  });
+
+  it('com ficha, o painel lateral segue escondido no mobile fora do destino Rolagens', () => {
+    const { raiz } = montar({ usuarioId: 2, membros: membrosDois(), fichas });
+
+    const lateral = raiz.querySelector('.detalhe__jogador-lateral')!;
     expect(lateral.classList.contains('detalhe__jogador-lateral--oculto-mobile')).toBe(true);
+  });
+
+  it('"Ver Esquadrão" no estado vazio ativa a aba Esquadrão do painel visível (P-074, P-078)', async () => {
+    const rolar = vi.fn();
+    vi.stubGlobal('matchMedia', () => ({ matches: false }));
+    Element.prototype.scrollIntoView = rolar;
+    const { fixture, raiz } = montar({
+      usuarioId: 2,
+      membros: membrosDois(),
+      fichas: fichas.filter((ficha) => ficha.usuarioId !== 2),
+    });
 
     const botao = Array.from(raiz.querySelectorAll<HTMLButtonElement>('.detalhe__jogador-vazio-acoes button')).find(
       (elemento) => elemento.textContent?.includes('Ver Esquadrão'),
@@ -745,8 +764,14 @@ describe('CampanhaDetalheJogador', () => {
     botao!.click();
     fixture.detectChanges();
 
+    const lateral = raiz.querySelector('.detalhe__jogador-lateral')!;
     expect(lateral.classList.contains('detalhe__jogador-lateral--oculto-mobile')).toBe(false);
     expect(fixture.componentInstance['painelLateralAtivo']()).toBe('esquadrao');
+
+    await new Promise((resolver) => setTimeout(resolver));
+    expect(rolar).toHaveBeenCalledTimes(1);
+    expect(rolar.mock.contexts[0]).toBe(raiz.querySelector('.detalhe__painel-lateral'));
+    vi.unstubAllGlobals();
   });
 
   it('cancelar a confirmação de "Remover da campanha" não desatribui a ficha', async () => {

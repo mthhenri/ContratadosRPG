@@ -59,6 +59,7 @@ function criarResumo(overrides: Partial<RolagemResumoDto> = {}): RolagemResumoDt
     visibilidade: RolagemVisibilidadeEnum.PUBLICA,
     resultado,
     createdDate: new Date().toISOString(),
+    corFicha: null,
     ...overrides,
   };
 }

@@ -26,27 +26,14 @@ import type {
   DocumentoResumoDto,
   DocumentoReveladoDto,
 } from '@contratados-rpg/shared/dtos/documento';
-import type { FichaImagemArquivoDto } from '@contratados-rpg/shared/dtos/ficha';
 import type { PaginatedResult } from '@contratados-rpg/shared/interfaces';
 import { DOCUMENTO_IMAGEM_TAMANHO_MAXIMO_BYTES } from '@contratados-rpg/shared/validators';
+import { montarArquivoImagem } from '../../core/armazenamento';
 import { ActiveUser } from '../../core/decorators';
 import { DocumentarController } from '../../core/openapi';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
 import { DocumentoService } from './documento.service';
 import { ImagemDocumentoGrandeInterceptor } from './imagem-documento-grande.interceptor';
-
-/**
- * Conteúdo bruto do upload, no value object de imagem da ficha. Um pedido sem arquivo vira um
- * arquivo vazio, que a service recusa com mensagem própria (em vez de a controller quebrar ao ler
- * `buffer` de `undefined`).
- */
-function montarArquivoImagem(arquivo: Express.Multer.File | undefined): FichaImagemArquivoDto {
-  return {
-    conteudo: arquivo?.buffer ?? new Uint8Array(),
-    mimetype: arquivo?.mimetype ?? '',
-    tamanho: arquivo?.size ?? 0,
-  };
-}
 
 /**
  * Endpoints da biblioteca de documentos (m9-02) — rotas **protegidas**:

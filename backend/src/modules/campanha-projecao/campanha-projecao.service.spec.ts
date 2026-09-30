@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import { TipoCampanhaMembroPapelEnum, TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
 import { ResourceNotFoundException, UnauthorizedAccessException } from '../../core/exceptions';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
@@ -24,7 +24,7 @@ interface CampanhaServicoDublado {
 }
 
 interface EncontroServicoDublado {
-  recuperarEncontroAtivoParaEspectador: ReturnType<typeof vi.fn>;
+  recuperarEncontroAtivoParaEspectador: Mock<(dto: { campanhaId: number }) => Promise<unknown>>;
   recuperarEncontroAtivoParaAlvo: ReturnType<typeof vi.fn>;
 }
 
