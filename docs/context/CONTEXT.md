@@ -1930,7 +1930,7 @@ migração e está em `HISTORY.md`).
 Não há spec ativa no momento (`m8-06` concluída — ver acima; módulo `m8-espectadores-campanha`
 inteiro fechado). `ui-23` (stat sem valor/rodapé do cartão) já foi concluída — ver `HISTORY.md`
 2026-09-02; a fila abaixo estava desatualizada. A única frente de código de milestone ainda
-pendente é o **M4** (`m4-08`…`m4-10` + `m4-08b`,
+pendente é o **M4** (`m4-08b` → `m4-09` → `m4-10`,
 criatura/NPC — ver seção 3), ao lado de `m3-53` (M3). M0, M1, M2, M6, M7 e M8 estão concluídos,
 incluindo todos os ajustes avulsos de pós-milestone.
 
@@ -1940,7 +1940,7 @@ incluindo todos os ajustes avulsos de pós-milestone.
 |---|---|---|
 | `civil-guia-criacao` | ficha | mapeia o escopo de `PROBLEMS.md` `P-018` (o guia de criação trata a classe Civil como um agente comum em vários passos) — spec de levantamento, ainda não implementa |
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
-| `m4-08`…`m4-10` + `m4-08b` | criatura/NPC | 4 tasks restantes do M4 — criação de NPC, ficha própria de consulta/edição, listagem/revelação e refinamento mobile; contrato, motor e backend prontos (`m4-05`/`m4-06`/`m4-07`), contrato visual em `docs/design/FICHA-NPC.md` |
+| `m4-08b` → `m4-09` → `m4-10` | criatura/NPC | 3 tasks restantes do M4 — ficha própria de consulta/edição, listagem/revelação e refinamento mobile; contrato, motor, backend e criação em cinco etapas prontos (`m4-05`…`m4-08`), contrato visual em `docs/design/FICHA-NPC.md` |
 
 Milestones ainda não abertos: `m5-guia-missao`. O M8 `m8-espectadores-campanha` está **concluído**
 (`m8-01`…`m8-06`).
@@ -1952,7 +1952,7 @@ Milestones ainda não abertos: `m5-guia-missao`. O M8 `m8-espectadores-campanha`
 Monorepo npm workspaces (`shared/`, `backend/`, `frontend/`) rodando de ponta a ponta: Angular 21
 SPA → NestJS 11 REST + Socket.IO → PostgreSQL 16. **M0, M1, M2, M6 e M7 concluídos; M3 (ficha de
 jogador) em fase de refino avançado, falta só `m3-53`; M4 (criatura/NPC) iniciado, falta
-`m4-08`…`m4-10` + `m4-08b`** — a ficha lê, edita, rola dados, persiste e sincroniza em tempo real; o Encontro
+`m4-08b` → `m4-09` → `m4-10`** — a ficha lê, edita, rola dados, persiste e sincroniza em tempo real; o Encontro
 de Combate roda ponta a ponta com tempo real (ver seção 3 e seção 4).
 
 Deploy em produção por **integração nativa das plataformas**, sem GitHub Actions no deploy: push em
@@ -1978,7 +1978,7 @@ reproduzem isoladas (arquivo único), não na suíte completa.
 | M1 | Calculadora com paridade | **concluído** (`m1-01`…`m1-20`), incluindo os 2 passos operacionais de plataforma (Cloudflare Pages no ar, repo antigo arquivado) |
 | M2 | Auth + Campanhas | **concluído**, incluindo o redesenho do painel (`m2-01`…`m2-09` + extensões `m2-10`…`m2-17`; `m2-18` lista, `m2-19` detalhe/mestre, `m2-20` detalhe/jogador, `m2-21` abas + Rolagens na lateral + menu de ficha do jogador) |
 | M3 | Ficha de Jogador | **em andamento** — CRUD, editores, tempo real e rolagens prontos; guia de criação completo (`m3-57`/`m3-58`/`m3-59` — base, melhorias de nível, equipamento inicial); cor (`m3-61`) e avatar (`m3-62`) de identidade por ficha prontos; falta só `m3-53` |
-| M4 | Ficha de Criatura/NPC | **iniciado** — `m4-01`…`m4-07`, ajustes de criatura e `m4-11` (acervo por tipo) concluídos. NPC tem contrato readonly, motor puro e API tipada, com criação solta pelo mestre, concessão de leitura e snapshots editáveis. Volume segue a tabela do guia; Civil não exige marcador de desbloqueio no motor. Morrendo vive em `dados.condicoes.morrendo`; Vida/Energia alimentam resumos e Encontro sem regras de agente. Restam `m4-08` → `m4-08b` → `m4-09` → `m4-10`; criação em cinco etapas e ficha dedicada conforme `docs/design/FICHA-NPC.md`. Próxima: `m4-08`. Checagem global de tipos do shared tem falha preexistente P-092 |
+| M4 | Ficha de Criatura/NPC | **iniciado** — `m4-01`…`m4-08`, ajustes de criatura e `m4-11` (acervo por tipo) concluídos. NPC tem contrato readonly, motor puro, API tipada e criação dedicada em cinco etapas, nas rotas `/fichas/npc/novo` e `/campanhas/:campanhaId/npc/novo`. Mestre cria solto ou em campanha; concessão só libera leitura. Civil tem exceção explícita no formulário, sem marcador persistido; cálculos e volume vêm do motor. Morrendo vive em `dados.condicoes.morrendo`; recursos alimentam resumos e Encontro. Restam `m4-08b` → `m4-09` → `m4-10`; consulta própria conforme `docs/design/FICHA-NPC.md`. Atalhos públicos de NPC continuam desligados até a consulta existir. Próxima: `m4-08b`. Checagem global de tipos do shared tem falha preexistente P-092 |
 | M5 | Guia de Missão | não iniciado |
 | M6 | Gestão de Usuários e Papéis | **concluído** — `m6-01`…`m6-08` (`m6-08`: impersonação administrativa auditável) |
 | M7 | Encontro de Combate | **concluído** — 8 tasks originais (`m7-01` contrato, `m7-02` motor puro, `m7-03` backend de montagem, `m7-04` backend de condução/tempo real, `m7-05` painel do mestre, `m7-06` visão do jogador, `m7-07` log da rodada, `m7-08` refinamento mobile) + 9 ajustes de pós-milestone (`m7-09`…`m7-17`, ver seção 4 "Encontro de Combate"). Numeração M7 é sugestão, não decisão de roadmap |
@@ -2448,7 +2448,7 @@ hover sustentado sobre o avatar abre um preview 300×300 sem recorte
 
 **Acervo (`/fichas`, `FichaAcervo`) separado por tipo (`m4-11`).** A tela lista agentes e criaturas
 em blocos próprios (`AGENTES`/`CRIATURAS`; NPC estruturalmente pronto na mesma lista dirigida por
-`TipoFichaEnum`, mas desligado do filtro/botão até `m4-07`/`m4-08` existirem), cada um com
+`TipoFichaEnum`, mas desligado do filtro/botão até a consulta própria da `m4-08b` existir), cada um com
 cabeçalho (título + régua + contagem, padrão de `CampanhaDetalhe.__secao`) e um `<select>` de visão
 (Todos/Agentes/Criaturas) alinhado à direita da barra de ações. Em "Todos", cada bloco trava em
 ~2 linhas de card e rola por dentro (`.acervo__lista--limitada`, `appOverflowFade`) — um bloco sem

@@ -1,0 +1,176 @@
+<div class="npc-etapa">
+    @if (criacao.pendencias().length) {
+        <app-cartao titulo="Antes de registrar" [cabecalhoQuebravel]="true">
+            <app-icone cartaoIndice nome="alerta" />
+            <div class="npc-etapa__lista">
+                @for (pendencia of criacao.pendencias(); track $index) {
+                    <button
+                        app-botao
+                        type="button"
+                        tamanho="medio"
+                        estilo="contorno"
+                        variante="aviso"
+                        (click)="corrigir.emit(pendencia.etapa)"
+                    >
+                        {{ pendencia.mensagem }}
+                    </button>
+                }
+            </div>
+        </app-cartao>
+    }
+    <div class="npc-revisao">
+        <div class="npc-etapa">
+            <section>
+                <h3 class="npc-revisao__nome">
+                    {{ criacao.dados().identidadeNarrativa.nome || "Nome a definir" }}
+                </h3>
+                <p class="npc-etapa__texto">
+                    {{ criacao.dados().identidadeNarrativa.funcao || "Função a definir" }}
+                </p>
+                <div class="npc-etapa__acoes">
+                    <app-chip variante="sutil"
+                        >{{ criacao.referenciaCategoria().rotulo }} · N{{
+                            criacao.dados().nivel
+                        }}</app-chip
+                    >
+                    <app-chip variante="sutil"
+                        >Cooperação {{ criacao.dados().cooperacao }} ·
+                        {{ criacao.referenciaCooperacao()?.rotulo }}</app-chip
+                    >
+                </div>
+            </section>
+            <div class="npc-etapa__recursos">
+                <app-stat
+                    rotulo="Vida"
+                    [valor]="criacao.dados().vidaMaxima"
+                    tamanho="compacto"
+                    variante="vida"
+                />
+                <app-stat
+                    rotulo="Defesa"
+                    [valor]="criacao.dados().defesaBase"
+                    tamanho="compacto"
+                    variante="positivo"
+                />
+                <app-stat
+                    rotulo="Bloquear"
+                    [valor]="criacao.dados().bloquear"
+                    tamanho="compacto"
+                    variante="positivo"
+                />
+                <app-stat
+                    rotulo="Esquivar"
+                    [valor]="criacao.dados().esquivar"
+                    tamanho="compacto"
+                    variante="positivo"
+                />
+                <app-stat
+                    rotulo="Energia"
+                    [valor]="criacao.ehCivil() ? 'Sem Energia' : criacao.dados().energia.maxima"
+                    tamanho="compacto"
+                    variante="energia"
+                    [nota]="
+                        criacao.dados().energia.recargaPorTurno === null
+                            ? ''
+                            : '+' + criacao.dados().energia.recargaPorTurno + ' por turno'
+                    "
+                />
+            </div>
+            @for (grupo of grupos; track grupo.nome) {
+                <section>
+                    <h3 class="npc-etapa__titulo">{{ grupo.nome }}</h3>
+                    @for (campo of grupo.campos; track campo.chave) {
+                        <div class="npc-etapa__atributo">
+                            <span
+                                >{{ campo.nome }}
+                                <span class="npc-etapa__dica"
+                                    >DT {{ criacao.calcularDt(campo.chave) }}</span
+                                ></span
+                            >
+                            <strong>{{ criacao.dados().atributos[campo.chave] }}</strong>
+                        </div>
+                    }
+                </section>
+            }
+        </div>
+        <div class="npc-etapa">
+            <section class="npc-etapa">
+                <h3 class="npc-etapa__titulo">Habilidades</h3>
+                @if (!criacao.dados().habilidades.length) {
+                    <app-estado-vazio titulo="Sem habilidades especiais" tamanho="compacto" />
+                }
+                @for (habilidade of criacao.dados().habilidades; track $index) {
+                    <app-cartao
+                        [titulo]="habilidade.nomeNeutro || 'Nome a definir'"
+                        [cabecalhoQuebravel]="true"
+                    >
+                        <span cartaoIndice>{{ $index + 1 }}</span>
+                        <app-chip variante="sutil">{{
+                            habilidade.tipo === "ATIVA"
+                                ? "Ativa · " + habilidade.custoEnergia + " E"
+                                : "Passiva"
+                        }}</app-chip>
+                        @if (habilidade.nomeNarrativo) {
+                            <p class="npc-etapa__apoio">{{ habilidade.nomeNarrativo }}</p>
+                        }
+                        <p class="npc-etapa__texto">{{ habilidade.descricao }}</p>
+                        @if (habilidade.restricao) {
+                            <p class="npc-etapa__apoio">Restrição: {{ habilidade.restricao }}</p>
+                        }
+                    </app-cartao>
+                }
+            </section>
+            <section class="npc-etapa">
+                <h3 class="npc-etapa__titulo">Conduta</h3>
+                <div>
+                    <h4 class="npc-etapa__dica">Gatilhos de fuga</h4>
+                    <p class="npc-etapa__texto">
+                        {{ criacao.dados().condutaCombate.gatilhosFuga || "A definir" }}
+                    </p>
+                </div>
+                <div>
+                    <h4 class="npc-etapa__dica">Prioridades de alvo</h4>
+                    <p class="npc-etapa__texto">
+                        {{ criacao.dados().condutaCombate.prioridadesAlvo || "A definir" }}
+                    </p>
+                </div>
+                <div>
+                    <h4 class="npc-etapa__dica">Reação a ferimento severo</h4>
+                    <p class="npc-etapa__texto">
+                        {{ criacao.dados().condutaCombate.reacaoFerimentoSevero || "A definir" }}
+                    </p>
+                </div>
+            </section>
+            <section class="npc-etapa">
+                <h3 class="npc-etapa__titulo">Sanidade</h3>
+                @for (sequela of criacao.dados().sanidade.sequelas; track $index) {
+                    <div>
+                        <strong>{{ sequela.nome }}</strong>
+                        <p class="npc-etapa__texto">{{ sequela.descricao }}</p>
+                    </div>
+                } @empty {
+                    <p class="npc-etapa__apoio">Sem sequelas (opcional)</p>
+                }
+                @for (trauma of criacao.dados().sanidade.traumas; track $index) {
+                    <div>
+                        <strong>{{ trauma.nome }}</strong>
+                        <p class="npc-etapa__dica">
+                            {{ trauma.tratado ? "Tratado" : "Não tratado" }}
+                        </p>
+                        <p class="npc-etapa__texto">{{ trauma.descricao }}</p>
+                    </div>
+                } @empty {
+                    <p class="npc-etapa__apoio">Sem traumas (opcional)</p>
+                }
+            </section>
+            <section>
+                <h3 class="npc-etapa__titulo">Anotações privadas</h3>
+                @if (criacao.dados().anotacoes) {
+                    <div class="npc-etapa__texto" [innerHTML]="anotacoesHtml()"></div>
+                } @else {
+                    <p class="npc-etapa__apoio">Sem anotações (opcional)</p>
+                }
+            </section>
+        </div>
+    </div>
+</div>

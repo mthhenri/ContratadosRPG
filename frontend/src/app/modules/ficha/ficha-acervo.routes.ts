@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 
 import { rascunhoDocumentoPainelGuard } from '../documento/rascunho-documento.guard';
+import { mestreAlgumaCampanhaGuard, npcCriacaoSaidaGuard } from "./npc-criacao.guard";
 
 /**
  * Rotas privadas do **acervo** de fichas (m3-28), montadas sob `/fichas` pelo `app.routes.ts`
@@ -22,6 +23,12 @@ import { rascunhoDocumentoPainelGuard } from '../documento/rascunho-documento.gu
  * pelo mesmo motivo de `nova`.
  */
 export const fichaAcervoRoutes: Routes = [
+    {
+        path: "npc/novo", canActivate: [mestreAlgumaCampanhaGuard],
+        canDeactivate: [npcCriacaoSaidaGuard],
+        loadComponent: () => import("./paginas/criar-npc/criar-npc.page")
+            .then((modulo) => modulo.NpcCriar),
+    },
   {
     path: '',
     loadComponent: () => import('./paginas/acervo/acervo.page').then((modulo) => modulo.FichaAcervo),

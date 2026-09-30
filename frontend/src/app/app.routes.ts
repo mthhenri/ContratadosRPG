@@ -90,6 +90,11 @@ export const routes: Routes = [
     loadChildren: () =>
       import('./modules/ficha/criatura.routes').then((modulo) => modulo.criaturaRoutes),
   },
+  {
+    path: "campanhas/:campanhaId/npc",
+    canActivate: [autenticacaoGuard, mestreCampanhaGuard],
+    loadChildren: () => import("./modules/ficha/npc.routes").then((modulo) => modulo.npcRoutes),
+  },
   // Cenas (m7-23): o hub e o painel de cada cena — o painel de Iniciativa (m7-05 mestre, m7-06
   // jogador) passou a ser o de uma cena com iniciativa. Mesma convenção das rotas de
   // ficha/criatura: precede a rota `campanhas` genérica para ser casada antes do prefixo mais

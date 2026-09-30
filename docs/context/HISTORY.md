@@ -1,5 +1,84 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-30 — m4-08: assistente dedicado de criação de NPC
+
+O autor pediu o commit da `m4-07` antes de iniciar a `m4-08`. Commit `441f8f70`, com
+`Co-authored-by: Codex <noreply@openai.com>` conferido na mensagem gravada. A spec da
+`m4-08` passou de backlog para active antes do trabalho e para done após os gates abaixo.
+
+`NpcCriar` entrega cinco etapas: Identidade, Atributos/recursos, Habilidades,
+Conduta/Sanidade e Revisão. Página standalone lazy em `/fichas/npc/novo` e
+`/campanhas/:campanhaId/npc/novo`; guard da campanha existente e guard de mestre de alguma
+campanha para criação avulsa. Nenhum atalho público do acervo/painel foi habilitado: a
+consulta própria continua na `m4-08b`. Sucesso confirma o registro e permite retornar ao
+acervo/campanha, sem encaminhar um NPC à ficha de jogador.
+
+O estado transitório foi extraído em `NpcCriacaoFormulario`, com Reactive Forms e Signals;
+cada etapa tem componente pequeno. Os assistentes extensos de jogador/criatura não
+receberam nova responsabilidade. `FichaService` só ganhou o transporte HTTP tipado de
+criação. Voltar preserva campos e listas; saída suja usa `ConfirmacaoService` e fechamento
+da aba usa a proteção nativa. Envio ocupado impede duplicação e navegação; erro mantém
+os dados para nova tentativa. Não há promessa de rascunho persistido.
+
+Toda fórmula e tabela continua em `shared/regras/npc`. Foram acrescentadas consultas de
+referência de Categoria/Cooperação e orçamento inicial de atributos; DTOs readonly em
+`shared/src/dtos/ficha/`, sem herança. Faixas sugeridas não restringem Nível e Cooperação
+não depende da Categoria. Civil parte de Luta/Pontaria 0, com liberação explícita por
+atributo; a decisão é transitória e não cria marcador no documento. Troca de Categoria
+mantém os demais valores, inclusive acima do novo teto, visíveis para correção. A validação
+de distribuição é específica da criação; edição de snapshots da API não foi alterada.
+
+**Gate visual — `design-fidelity` e `verify`:** análogos escolhidos antes da implementação:
+`FichaCriar` (shell/trilha/resumo) e `CriaturaCriar` (agrupamento compacto de recursos).
+Código e aplicação real inspecionados. Corte representativo de Identidade/Atributos
+conferido antes dos editores; corte integrado observado pessoalmente em `1920×1080`,
+`1366×768`, `960×1080` e `360×800`. Estados: cinco Categorias, seis faixas de Cooperação,
+exceções Civil, listas vazias/preenchidas, textos longos, voltar, pendências da revisão,
+erro, envio ocupado e sucesso. Primitivos `Campo`, `StepInput`, `Botao`, `Cartao`, `Stat`,
+`Chip`, `EstadoVazio`, `EditorMarkdown`, ícones e confirmação usam suas APIs existentes.
+Tokens/BEM e utilitários Tailwind; nenhum primitivo novo nem receita local substituta.
+
+Achados corrigidos durante a inspeção: destaque da etapa ativa; trilha compacta no celular;
+resumo abreviado para textos longos; coluna da revisão alinhada ao topo; legenda de reserva
+retirada do Civil e nota “Sem Energia” fora da grade estreita do resumo. Botões secundários
+pequenos foram trocados para `tamanho="medio"`/`estilo="contorno"`; medição dos botões
+visíveis de operação no celular confirmou alvos ≥44px. Tab e foco de 2px conferidos.
+Resultado: mesma linguagem, hierarquia, densidade, controles e estados dos análogos;
+nenhum overflow nos quatro viewports, sem aparência de formulário HTML genérico. Conteúdo
+longo permanece acessível por rolagem, sem alturas fixas ou truncamento da revisão.
+
+**Verificação auditável:**
+
+- `npm run build --workspace=shared` e `npm run build --workspace=frontend`: passaram;
+  página dedicada em chunk lazy. Frontend conserva o aviso de budget inicial (`P-004`):
+  555,57kB ante limite de aviso de 450kB, sem erro de build.
+- `npm run test --workspace=shared`: 62 arquivos, **889 testes passaram**.
+- `npm run test --workspace=frontend -- --watch=false`: 188 arquivos,
+  **2654 testes passaram**. Após os ajustes de controles, os 20 testes focados de criação/
+  formulário/guard passaram novamente. Avisos legados de Canvas/jsdom sem falha de teste.
+- `npm run lint --workspace=shared` e `--workspace=frontend`: zero erros; mesmos
+  5159/24599 avisos legados. Recorte novo conferido também separadamente, sem avisos.
+- `npx tsc --noEmit -p frontend/tsconfig.app.json`: passou. Checagem global do shared
+  segue com a única falha preexistente **P-092**, `regras/agente/derivados.spec.ts:129`
+  (`uid` fora de `CarrinhoItemDto`); não alterada por esta task.
+- Diff completo e recorte novo revisados contra spec/convenções: contratos em shared,
+  fórmulas só no motor, sem enums duplicados, ngModel, hardcodes de cor/fonte/raio,
+  tooltip nativo ou controle que contorne `shared/ui/`. `git diff --check` limpo.
+- Postgres/API/SPA reais: cinco registros avulsos finais (#46–50) com habilidades da
+  Biblioteca de Referência. Vida/Energia: Civil **19/0**, Operativo **85/14**, Veterano
+  **245/21**, Elite **600/30**, Lendário **1440/45**. Leitura tipada reproduziu exatamente
+  os documentos criados. Jogador barrado nas duas rotas; mestre admitido.
+- Fluxo inteiro dirigido em `360×800`: Civil N20 fora da faixa sugerida, Pontaria liberada,
+  remover registro, resumo aberto, falha/retry, envio único e retorno à campanha. Vida 76,
+  Luta 0/Pontaria 1, sem marcador persistido. Notificação de erro fechada pelo controle
+  canônico antes de tentar novamente. Fichas temporárias removidas por soft delete.
+
+Evidências locais em `.superpowers/m4-08-verificar.cjs`, `m4-08-mobile-foco.cjs`,
+`m4-08-evidencias.json`, capturas `m4-08-*.png` e logs de gates. Não há gate obrigatório
+da criação pendente; consulta/edição, atalhos de lista e refinamento integrado continuam
+respectivamente em `m4-08b`, `m4-09` e `m4-10`. O autor autorizou o commit separado da
+`m4-08` e o início da `m4-08b` após esse registro.
+
 ## 2026-09-30 — m4-07: API tipada de NPC, recursos e Morrendo integrados
 
 Após os commits separados da `m4-05` (`02283dcb`) e da `m4-06` (`d8e1d21c`), ambos com

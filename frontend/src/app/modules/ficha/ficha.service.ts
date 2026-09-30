@@ -18,6 +18,8 @@ import {
   FichaCriaturaRecuperadaDto,
   FichaImagemAlteradaDto,
   FichaMediasEsquadraoDto,
+  FichaNpcCriadaDto,
+  FichaNpcCriarDto,
   FichaRecuperadaDto,
   FichaResumoDto,
   FichaVitalidadeAlterarDto,
@@ -43,6 +45,13 @@ export class FichaService {
   private readonly httpClient = inject(HttpClient);
 
   private readonly base = `${environment.apiBase}/ficha`;
+
+  /** Cria o documento de NPC; autorização e persistência pertencem à API tipada. */
+  criarFichaNpc(dto: FichaNpcCriarDto): Observable<FichaNpcCriadaDto> {
+    return this.httpClient
+      .post<StandardResponse<FichaNpcCriadaDto>>(`${this.base}/npc`, dto)
+      .pipe(map((resposta) => resposta.dados as FichaNpcCriadaDto));
+  }
 
   /**
    * Cria a ficha de jogador do usuário autenticado na campanha informada. O documento de jogo

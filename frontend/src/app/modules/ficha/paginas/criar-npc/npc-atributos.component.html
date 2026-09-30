@@ -1,0 +1,103 @@
+<div class="npc-etapa">
+    <p class="npc-etapa__apoio">
+        Distribua {{ criacao.pontos().pontosDistribuir }} pontos adicionais. Limite de
+        {{ criacao.pontos().limite }} por atributo.
+    </p>
+    <div class="npc-etapa__recursos" aria-live="polite">
+        <app-stat
+            rotulo="Restantes"
+            [valor]="criacao.distribuicao().restantes"
+            tamanho="compacto"
+            variante="destaque"
+        />
+        <app-stat
+            rotulo="Vida"
+            [valor]="criacao.dados().vidaMaxima"
+            tamanho="compacto"
+            variante="vida"
+        />
+        <app-stat
+            rotulo="Defesa"
+            [valor]="criacao.dados().defesaBase"
+            tamanho="compacto"
+            variante="positivo"
+        />
+        <app-stat
+            rotulo="Bloquear"
+            [valor]="criacao.dados().bloquear"
+            tamanho="compacto"
+            variante="positivo"
+        />
+        <app-stat
+            rotulo="Esquivar"
+            [valor]="criacao.dados().esquivar"
+            tamanho="compacto"
+            variante="positivo"
+        />
+        <app-stat
+            rotulo="Energia"
+            [valor]="criacao.ehCivil() ? 'Sem Energia' : criacao.dados().energia.maxima"
+            tamanho="compacto"
+            variante="energia"
+            [nota]="
+                criacao.ehCivil() ? '' : criacao.dados().energia.recargaPorTurno === null
+                    ? 'Reserva'
+                    : '+' + criacao.dados().energia.recargaPorTurno + ' por turno'
+            "
+        />
+    </div>
+    <div class="npc-etapa__dupla">
+        @for (grupo of grupos; track grupo.nome) {
+            <section>
+                <h3 class="npc-etapa__titulo">{{ grupo.nome }}</h3>
+                @for (campo of grupo.campos; track campo.chave) {
+                    <div class="npc-etapa__atributo">
+                        <div>
+                            <strong>{{ campo.nome }}</strong>
+                            <span class="npc-etapa__dica"
+                                >DT {{ criacao.calcularDt(campo.chave) }}</span
+                            >
+                        </div>
+                        <app-step-input
+                            [formControl]="
+                                criacao.formulario.controls.atributos.controls[campo.chave]
+                            "
+                            [min]="
+                                criacao.formulario.controls.atributos.controls[campo.chave].disabled
+                                    ? 0
+                                    : 1
+                            "
+                            [max]="maximoVisivel(campo.chave)"
+                            [bloquearAumentar]="
+                                criacao.estado().atributos[campo.chave] >= criacao.pontos().limite
+                            "
+                            tamanho="compacto"
+                            variante="discreto"
+                            [ariaRotulo]="campo.nome"
+                        />
+                    </div>
+                    @if (
+                        criacao.ehCivil() && (campo.chave === "luta" || campo.chave === "pontaria")
+                    ) {
+                        <button
+                            app-botao
+                            type="button"
+                            tamanho="medio"
+                            estilo="contorno"
+                            variante="secundario"
+                            [attr.aria-pressed]="liberado(campo.chave)"
+                            (click)="criacao.liberarCombateCivil(campo.chave)"
+                        >
+                            {{
+                                liberado(campo.chave)
+                                    ? "Retirar exceção"
+                                    : "Liberar por motivo narrativo"
+                            }}
+                        </button>
+                    }
+                }
+            </section>
+        }
+    </div>
+    <p class="npc-etapa__apoio">DT é contextual: consulte o atributo usado em cada teste.</p>
+</div>

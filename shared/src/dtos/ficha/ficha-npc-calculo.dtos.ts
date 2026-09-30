@@ -12,6 +12,21 @@ export interface NpcPontosLimiteDto {
     readonly limite: number;
 }
 
+/** Estado de criação; liberações narrativas de Civil não são persistidas no documento. */
+export interface NpcAtributosCriacaoConsultarDto {
+    readonly categoria: CategoriaNpcEnum;
+    readonly atributos: FichaAtributosDto;
+    readonly lutaCivilLiberada: boolean;
+    readonly pontariaCivilLiberada: boolean;
+}
+
+/** Saldo de distribuição da criação; edição posterior usa apenas validação de cap. */
+export interface NpcAtributosCriacaoDto {
+    readonly distribuidos: number;
+    readonly restantes: number;
+    readonly violacoes: readonly string[];
+}
+
 export interface NpcAtributosValidarDto {
     readonly categoria: CategoriaNpcEnum;
     readonly atributos: FichaAtributosDto;

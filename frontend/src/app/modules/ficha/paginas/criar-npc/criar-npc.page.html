@@ -1,0 +1,202 @@
+<div class="npc-guia">
+    <header class="npc-guia__cabecalho">
+        <div class="npc-guia__marca">//</div>
+        <div>
+            <p class="npc-guia__kicker">
+                GUIA DE CRIAÇÃO · {{ campanhaId === null ? 'ACERVO' : 'CAMPANHA' }}
+            </p>
+            <h1>Novo NPC</h1>
+            <p class="npc-guia__subtitulo">Uma pessoa pronta para entrar em cena.</p>
+        </div>
+        <app-chip variante="padrao">NPC · MESTRE</app-chip>
+    </header>
+    @if (registrado()) {
+    <app-cartao titulo="NPC registrado">
+        <app-icone cartaoIndice nome="check" />
+        <p class="npc-guia__sucesso" role="status">
+            {{ criacao.dados().identidadeNarrativa.nome }} foi registrado com seus atributos,
+            recursos e detalhes.
+        </p>
+        <button
+            app-botao
+            tamanho="medio"
+            variante="primario"
+            estilo="preenchido"
+            (click)="voltarAoDestino()"
+        >
+            {{ campanhaId === null ? 'Voltar ao acervo' : 'Voltar à campanha' }}
+        </button>
+    </app-cartao>
+    } @else {
+    <div class="npc-guia__layout">
+        <nav class="npc-guia__trilha" aria-label="Etapas da criação">
+            <p class="npc-guia__kicker">ETAPA {{ etapa() + 1 }} DE 5</p>
+            @for (nome of etapas; track nome; let indice = $index) {
+            <button
+                app-botao
+                type="button"
+                tamanho="medio"
+                estilo="texto"
+                variante="secundario"
+                class="npc-guia__passo"
+                [class.npc-guia__passo--ativo]="etapa() === indice"
+                [attr.aria-current]="etapa() === indice ? 'step' : null"
+                [disabled]="enviando()"
+                (click)="irEtapa(indice)"
+            >
+                <span class="npc-guia__numero">0{{ indice + 1 }}</span>{{ nome }}
+            </button>
+            }
+            <p class="npc-guia__nota">
+                Cinco etapas para preparar a presença, os recursos e a conduta do NPC.
+            </p>
+        </nav>
+        <main class="npc-guia__conteudo" [attr.aria-busy]="enviando()">
+            <app-cartao>
+                <h2 #tituloEtapa tabindex="-1" class="npc-guia__titulo">
+                    <span>0{{ etapa() + 1 }}</span>{{ etapas[etapa()] }}
+                </h2>
+                <fieldset [disabled]="enviando()" class="m-0 min-w-0 border-0 p-0">
+                    @switch (etapa()) { @case (0) { <app-npc-identidade /> } @case (1) {
+                    <app-npc-atributos /> } @case (2) { <app-npc-habilidades /> } @case (3) {
+                    <app-npc-conduta /> } @case (4) {
+                    <app-npc-revisao (corrigir)="irEtapa($event)" /> } }
+                </fieldset>
+                @if (mostrarErros() && criacao.violacoesEtapa(etapa()).length) {
+                <div class="npc-guia__erros" role="alert">
+                    @for (mensagem of criacao.violacoesEtapa(etapa()); track $index) {
+                    <p>{{ mensagem }}</p>
+                    }
+                </div>
+                } @if (erroEnvio()) {
+                <p class="npc-guia__erros" role="alert">{{ erroEnvio() }}</p>
+                }
+            </app-cartao>
+            <footer class="npc-guia__rodape">
+                <button
+                    app-botao
+                    type="button"
+                    tamanho="medio"
+                    estilo="contorno"
+                    variante="secundario"
+                    posicaoIcone="esquerda"
+                    [disabled]="enviando()"
+                    (click)="etapa() === 0 ? voltarAoDestino() : irEtapa(etapa() - 1)"
+                >
+                    <app-icone nome="voltar" />
+                    {{ etapa() === 0 ? 'Cancelar' : 'Voltar' }}
+                </button>
+                @if (etapa() < 4) {
+                <button
+                    app-botao
+                    type="button"
+                    tamanho="medio"
+                    estilo="preenchido"
+                    variante="primario"
+                    posicaoIcone="direita"
+                    [disabled]="enviando()"
+                    (click)="avancar()"
+                >
+                    <app-icone nome="chevron-direita" />Continuar
+                </button>
+                } @else {
+                <button
+                    app-botao
+                    type="button"
+                    tamanho="medio"
+                    estilo="preenchido"
+                    variante="primario"
+                    [carregando]="enviando()"
+                    [disabled]="enviando()"
+                    (click)="registrar()"
+                >
+                    Registrar NPC
+                </button>
+                }
+            </footer>
+        </main>
+        <aside class="npc-guia__resumo" [class.npc-guia__resumo--aberto]="mostrarResumo()">
+            <button
+                app-botao
+                type="button"
+                tamanho="medio"
+                estilo="contorno"
+                variante="secundario"
+                class="npc-guia__resumo-toggle"
+                [attr.aria-expanded]="mostrarResumo()"
+                posicaoIcone="esquerda"
+                (click)="mostrarResumo.set(!mostrarResumo())"
+            >
+                <app-icone nome="visao-geral" />Resumo do NPC
+            </button>
+            <app-cartao titulo="Resumo do NPC">
+                <app-icone cartaoIndice nome="ficha" />
+                <div class="npc-guia__resumo-corpo" aria-live="polite">
+                    <h3>{{ criacao.estado().nome || 'Nome a definir' }}</h3>
+                    <p class="npc-guia__funcao">{{ criacao.estado().funcao || 'Função narrativa a definir' }}</p>
+                    <app-chip variante="sutil"
+                        >{{ criacao.referenciaCategoria().rotulo }} · N{{ criacao.estado().nivel
+                        }}</app-chip
+                    >
+                    <p>
+                        Cooperação {{ criacao.estado().cooperacao }} · {{
+                        criacao.referenciaCooperacao()?.rotulo }}
+                    </p>
+                    @if (etapa() >= 1) {
+                    <div class="npc-guia__stats" [class.npc-guia__stats--civil]="criacao.ehCivil()">
+                        <app-stat
+                            rotulo="Vida"
+                            [valor]="criacao.dados().vidaMaxima"
+                            variante="vida"
+                            tamanho="compacto"
+                        />
+                        <app-stat
+                            rotulo="Defesa"
+                            [valor]="criacao.dados().defesaBase"
+                            variante="positivo"
+                            tamanho="compacto"
+                        />
+                        @if (!criacao.ehCivil()) {
+                        <app-stat
+                            rotulo="Energia"
+                            [valor]="criacao.dados().energia.maxima"
+                            variante="energia"
+                            tamanho="compacto"
+                        />
+                        }
+                    </div>
+                    @if (criacao.ehCivil()) { <p>Sem Energia</p> }
+                    } @if (etapa() >= 1 && !criacao.ehCivil()) {
+                    <p>
+                        {{ criacao.dados().energia.recargaPorTurno === null ? 'Reserva fixa' : 'Pool
+                        + Recarga · +' + criacao.dados().energia.recargaPorTurno + ' por turno' }}
+                    </p>
+                    } @if (etapa() >= 2) {
+                    <p>{{ criacao.passivas() }} Passivas · {{ criacao.ativas() }} Ativas</p>
+                    @if (!criacao.ehCivil()) {
+                    <p>{{ criacao.volume().limitePorTurno }} usos de Ativas por turno</p>
+                    } } @if (etapa() >= 3) {
+                    <p class="npc-guia__conduta">
+                        Fuga: {{ criacao.estado().gatilhosFuga || 'A definir' }}
+                    </p>
+                    <p class="npc-guia__conduta">
+                        Alvo: {{ criacao.estado().prioridadesAlvo || 'A definir' }}
+                    </p>
+                    <p class="npc-guia__conduta">
+                        Ferimento: {{ criacao.estado().reacaoFerimentoSevero || 'A definir' }}
+                    </p>
+                    <p>
+                        {{ criacao.estado().sequelas.length }} sequelas · {{
+                        criacao.estado().traumas.length }} traumas
+                    </p>
+                    <p>
+                        {{ criacao.estado().anotacoes ? 'Anotações preenchidas' : 'Sem anotações
+                        (opcional)' }}
+                    </p>
+                    }
+                </div>
+            </app-cartao>
+        </aside>
+    </div>
+    }
+</div>

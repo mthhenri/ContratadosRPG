@@ -1,0 +1,69 @@
+<div class="npc-etapa">
+    <p class="npc-etapa__apoio">Quem é esta pessoa e qual papel ela ocupa na história?</p>
+    <app-campo rotulo="Nome" tamanho="padrao">
+        <input
+            class="campo__controle"
+            [formControl]="controles.nome"
+            autocomplete="off"
+            placeholder="Ex.: Dra. Helena Mota"
+        />
+    </app-campo>
+    <app-campo rotulo="Função narrativa" tamanho="padrao">
+        <textarea
+            class="campo__controle"
+            [formControl]="controles.funcao"
+            rows="2"
+            placeholder="Ex.: médica da Fundação e contato do esquadrão"
+        ></textarea>
+    </app-campo>
+    <div class="npc-etapa__dupla">
+        <app-campo
+            rotulo="Categoria"
+            tamanho="padrao"
+            [dica]="criacao.referenciaCategoria().perfil"
+        >
+            <select class="campo__controle" [formControl]="controles.categoria">
+                @for (categoria of categorias; track categoria.categoria) {
+                    <option [value]="categoria.categoria">{{ categoria.rotulo }}</option>
+                }
+            </select>
+        </app-campo>
+        <app-campo
+            rotulo="Nível"
+            tamanho="padrao"
+            [dica]="
+                'Faixa sugerida: ' +
+                criacao.referenciaCategoria().nivelSugerido +
+                '. Livre de 0 a 20.'
+            "
+        >
+            <app-step-input
+                [formControl]="controles.nivel"
+                [min]="0"
+                [max]="20"
+                tamanho="padrao"
+                ariaRotulo="Nível"
+            />
+        </app-campo>
+    </div>
+    <app-campo
+        rotulo="Cooperação"
+        tamanho="padrao"
+        dica="Postura diante do grupo, independente da Categoria."
+    >
+        <app-step-input
+            [formControl]="controles.cooperacao"
+            [min]="0"
+            [max]="10"
+            tamanho="padrao"
+            ariaRotulo="Cooperação"
+        />
+    </app-campo>
+    @if (criacao.referenciaCooperacao(); as referencia) {
+        <div class="npc-etapa__referencia" aria-live="polite">
+            <h3>{{ referencia.rotulo }}</h3>
+            <p><strong>Social</strong> {{ referencia.social }}</p>
+            <p><strong>Combate</strong> {{ referencia.combate }}</p>
+        </div>
+    }
+</div>

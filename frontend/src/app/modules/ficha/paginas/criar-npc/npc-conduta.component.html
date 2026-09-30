@@ -1,0 +1,115 @@
+<div class="npc-etapa">
+    <p class="npc-etapa__apoio">
+        Defina respostas rápidas para conduzir o NPC em cena. Para Civil, descreva como evita o
+        confronto e busca segurança.
+    </p>
+    <app-campo rotulo="Gatilhos de fuga" tamanho="padrao">
+        <textarea
+            class="campo__controle campo__controle--area"
+            rows="2"
+            [formControl]="controles.gatilhosFuga"
+            placeholder="Quando abandona o confronto?"
+        ></textarea>
+    </app-campo>
+    <app-campo rotulo="Prioridades de alvo" tamanho="padrao">
+        <textarea
+            class="campo__controle campo__controle--area"
+            rows="2"
+            [formControl]="controles.prioridadesAlvo"
+            placeholder="Quem enfrenta, protege ou evita?"
+        ></textarea>
+    </app-campo>
+    <app-campo rotulo="Reação a ferimento severo" tamanho="padrao">
+        <textarea
+            class="campo__controle campo__controle--area"
+            rows="2"
+            [formControl]="controles.reacaoFerimentoSevero"
+            placeholder="Como sua conduta muda ao se ferir?"
+        ></textarea>
+    </app-campo>
+    @for (grupo of grupos; track grupo.chave) {
+        <section class="npc-etapa">
+            <app-cartao
+                [titulo]="grupo.nome + ' (opcional)'"
+                [semCaixa]="true"
+                [cabecalhoQuebravel]="true"
+            >
+                <app-icone cartaoIndice nome="sanidade" />
+                <button
+                    cartaoFim
+                    app-botao
+                    type="button"
+                    tamanho="medio"
+                    variante="secundario"
+                    estilo="contorno"
+                    posicaoIcone="esquerda"
+                    [attr.aria-label]="'Adicionar ' + grupo.nome"
+                    (click)="criacao.adicionarSanidade(grupo.chave)"
+                >
+                    <app-icone nome="mais" />Adicionar
+                </button>
+            </app-cartao>
+            @if (!criacao[grupo.chave].length) {
+                <app-estado-vazio
+                    [titulo]="'Sem ' + grupo.nome.toLowerCase()"
+                    tamanho="compacto"
+                    linhaApoio="Adicione somente o que faz parte da história deste NPC."
+                />
+            }
+            @for (registro of criacao[grupo.chave].controls; track registro; let indice = $index) {
+                <app-cartao
+                    [titulo]="grupo.nome + ' · ' + (indice + 1)"
+                    [cabecalhoQuebravel]="true"
+                >
+                    <span cartaoIndice>{{ indice + 1 }}</span>
+                    <div class="npc-etapa">
+                        <app-campo rotulo="Nome" tamanho="compacto">
+                            <input class="campo__controle" [formControl]="registro.controls.nome" />
+                        </app-campo>
+                        <app-campo rotulo="Descrição (opcional)" tamanho="compacto">
+                            <textarea
+                                class="campo__controle"
+                                rows="2"
+                                [formControl]="registro.controls.descricao"
+                            ></textarea>
+                        </app-campo>
+                        @if (grupo.chave === "traumas") {
+                            <app-campo rotulo="Tratado" tamanho="compacto">
+                                <select
+                                    class="campo__controle"
+                                    [formControl]="registro.controls.tratado"
+                                >
+                                    <option [ngValue]="false">Não</option>
+                                    <option [ngValue]="true">Sim</option>
+                                </select>
+                            </app-campo>
+                        }
+                        <button
+                            app-botao
+                            type="button"
+                            tamanho="medio"
+                            variante="perigo"
+                            estilo="contorno"
+                            posicaoIcone="esquerda"
+                            [attr.aria-label]="'Remover ' + grupo.nome + ' ' + (indice + 1)"
+                            (click)="criacao.removerLinha(grupo.chave, indice)"
+                        >
+                            <app-icone nome="excluir" />Remover
+                        </button>
+                    </div>
+                </app-cartao>
+            }
+        </section>
+    }
+    <section class="npc-etapa">
+        <h3 class="npc-etapa__titulo">Anotações privadas (opcional)</h3>
+        <app-editor-markdown
+            [formControl]="controles.anotacoes"
+            [compacto]="true"
+            rotulo="Anotações privadas"
+        />
+        <p class="npc-etapa__apoio">
+            Privadas para o mestre; não aparecem para jogadores com acesso ao NPC.
+        </p>
+    </section>
+</div>

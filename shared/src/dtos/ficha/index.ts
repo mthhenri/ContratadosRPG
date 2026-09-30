@@ -6,4 +6,5 @@ export * from './ficha-criatura-operacao.dtos';
 export * from "./ficha-npc.dtos";
 export * from "./ficha-npc-operacao.dtos";
 export * from "./ficha-npc-condicao.dtos";
+export * from "./ficha-npc-referencia.dtos";
 export * from "./ficha-npc-calculo.dtos";

@@ -1,0 +1,86 @@
+@use "tema/breakpoints" as bp;
+
+:host {
+    display: block;
+    min-width: 0;
+}
+.npc-etapa {
+    display: grid;
+    align-content: start;
+    gap: var(--space-16);
+    &__apoio,
+    &__dica {
+        color: var(--text-dim);
+        font-size: 12px;
+        line-height: 1.6;
+    }
+    &__dica {
+        display: block;
+        font-size: 10px;
+        font-family: var(--font-mono);
+    }
+    &__dupla {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--space-20);
+    }
+    &__recursos {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: var(--space-12);
+    }
+    &__titulo,
+    &__referencia h3 {
+        font: 600 11px var(--font-mono);
+        text-transform: uppercase;
+        color: var(--text);
+        margin-bottom: var(--space-12);
+    }
+    &__referencia {
+        border-left: 2px solid var(--accent);
+        padding-left: var(--space-16);
+        p {
+            color: var(--text-dim);
+            font-size: 12px;
+            line-height: 1.6;
+        }
+        strong {
+            color: var(--text);
+            margin-right: var(--space-8);
+        }
+    }
+    &__atributo {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-8);
+        padding: var(--space-8) 0;
+        border-bottom: 1px solid var(--border);
+        strong {
+            font: 500 12px var(--font-sans);
+        }
+    }
+    &__lista {
+        display: grid;
+        gap: var(--space-16);
+    }
+    &__acoes {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-8);
+    }
+    &__texto {
+        font-size: 13px;
+        line-height: 1.7;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+    }
+    @include bp.mobile {
+        &__dupla {
+            grid-template-columns: minmax(0, 1fr);
+        }
+        &__recursos {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+}

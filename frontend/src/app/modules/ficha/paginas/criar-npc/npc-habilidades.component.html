@@ -1,0 +1,131 @@
+<div class="npc-etapa">
+    @if (criacao.ehCivil()) {
+        <app-estado-vazio
+            titulo="Civil não possui habilidades especiais"
+            tamanho="compacto"
+            icone="habilidades"
+            linhaApoio="Sua presença em cena se apoia na identidade e na conduta."
+        />
+        @if (criacao.habilidades.length) {
+            <p class="npc-etapa__apoio">
+                Remova as habilidades anteriores para registrar como Civil.
+            </p>
+        }
+    } @else {
+        <p class="npc-etapa__apoio">
+            {{ criacao.volume().totalMinimo }}–{{ criacao.volume().totalMaximo }} habilidades · ao
+            menos {{ criacao.volume().passivasMinimas }} Passivas · até
+            {{ criacao.volume().ativasMaximas }} Ativas.
+        </p>
+        <div class="npc-etapa__referencia">
+            <h3>Assinatura mecânica</h3>
+            <p>
+                Escolha um verbo principal. Na descrição, diga o efeito, o alvo, o alcance e a
+                duração. A restrição deve explicar a condição ou contrapartida.
+            </p>
+            <p>
+                Em Ativas, calibre o custo pela reserva de Energia e pela frequência desejada.
+                Procure impacto tático claro e uma resposta possível para o grupo.
+            </p>
+            <p>
+                Limite: {{ criacao.volume().limitePorTurno }} usos de Ativas por turno, incluindo
+                repetições permitidas. Passivas não consomem esse limite.
+            </p>
+        </div>
+        <div class="npc-etapa__acoes">
+            <button
+                app-botao
+                type="button"
+                tamanho="medio"
+                variante="secundario"
+                estilo="contorno"
+                posicaoIcone="esquerda"
+                (click)="criacao.adicionarHabilidade(tipos.PASSIVA)"
+            >
+                <app-icone nome="mais" />Adicionar Passiva
+            </button>
+            <button
+                app-botao
+                type="button"
+                tamanho="medio"
+                variante="secundario"
+                estilo="contorno"
+                posicaoIcone="esquerda"
+                (click)="criacao.adicionarHabilidade(tipos.ATIVA)"
+            >
+                <app-icone nome="mais" />Adicionar Ativa
+            </button>
+        </div>
+        @if (!criacao.habilidades.length) {
+            <app-estado-vazio
+                titulo="Nenhuma habilidade adicionada"
+                tamanho="compacto"
+                icone="habilidades"
+                linhaApoio="Comece pelas Passivas que definem a atuação deste NPC."
+            />
+        }
+    }
+    <div class="npc-etapa__lista">
+        @for (habilidade of criacao.habilidades.controls; track habilidade; let indice = $index) {
+            <app-cartao
+                [titulo]="habilidade.controls.tipo.value === tipos.ATIVA ? 'Ativa' : 'Passiva'"
+                [cabecalhoQuebravel]="true"
+            >
+                <span cartaoIndice>{{ indice + 1 }}</span>
+                <div class="npc-etapa">
+                    <div class="npc-etapa__dupla">
+                        <app-campo rotulo="Nome neutro" tamanho="compacto">
+                            <input
+                                class="campo__controle"
+                                [formControl]="habilidade.controls.nomeNeutro"
+                                placeholder="Ex.: Cobertura coordenada"
+                            />
+                        </app-campo>
+                        <app-campo rotulo="Nome narrativo (opcional)" tamanho="compacto">
+                            <input
+                                class="campo__controle"
+                                [formControl]="habilidade.controls.nomeNarrativo"
+                            />
+                        </app-campo>
+                    </div>
+                    @if (habilidade.controls.tipo.value === tipos.ATIVA) {
+                        <app-campo rotulo="Custo de Energia" tamanho="compacto">
+                            <app-step-input
+                                [formControl]="habilidade.controls.custoEnergia"
+                                [min]="0"
+                                tamanho="compacto"
+                                ariaRotulo="Custo de Energia"
+                            />
+                        </app-campo>
+                    }
+                    <app-campo rotulo="Descrição e efeito tático" tamanho="compacto">
+                        <textarea
+                            class="campo__controle campo__controle--area"
+                            rows="3"
+                            [formControl]="habilidade.controls.descricao"
+                        ></textarea>
+                    </app-campo>
+                    <app-campo rotulo="Restrição (opcional)" tamanho="compacto">
+                        <textarea
+                            class="campo__controle"
+                            rows="2"
+                            [formControl]="habilidade.controls.restricao"
+                        ></textarea>
+                    </app-campo>
+                    <button
+                        app-botao
+                        type="button"
+                        tamanho="medio"
+                        variante="perigo"
+                        estilo="contorno"
+                        posicaoIcone="esquerda"
+                        [attr.aria-label]="'Remover habilidade ' + (indice + 1)"
+                        (click)="criacao.removerLinha('habilidades', indice)"
+                    >
+                        <app-icone nome="excluir" />Remover
+                    </button>
+                </div>
+            </app-cartao>
+        }
+    </div>
+</div>
