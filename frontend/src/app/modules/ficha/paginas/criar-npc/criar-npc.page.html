@@ -22,6 +22,16 @@
             tamanho="medio"
             variante="primario"
             estilo="preenchido"
+            (click)="abrirNpc()"
+        >
+            Abrir NPC
+        </button>
+        <button
+            app-botao
+            type="button"
+            tamanho="medio"
+            variante="secundario"
+            estilo="contorno"
             (click)="voltarAoDestino()"
         >
             {{ campanhaId === null ? 'Voltar ao acervo' : 'Voltar à campanha' }}
@@ -133,7 +143,9 @@
                 <app-icone cartaoIndice nome="ficha" />
                 <div class="npc-guia__resumo-corpo" aria-live="polite">
                     <h3>{{ criacao.estado().nome || 'Nome a definir' }}</h3>
-                    <p class="npc-guia__funcao">{{ criacao.estado().funcao || 'Função narrativa a definir' }}</p>
+                    <p class="npc-guia__funcao">
+                        {{ criacao.estado().funcao || 'Função narrativa a definir' }}
+                    </p>
                     <app-chip variante="sutil"
                         >{{ criacao.referenciaCategoria().rotulo }} · N{{ criacao.estado().nivel
                         }}</app-chip
@@ -165,8 +177,9 @@
                         />
                         }
                     </div>
-                    @if (criacao.ehCivil()) { <p>Sem Energia</p> }
-                    } @if (etapa() >= 1 && !criacao.ehCivil()) {
+                    @if (criacao.ehCivil()) {
+                    <p>Sem Energia</p>
+                    } } @if (etapa() >= 1 && !criacao.ehCivil()) {
                     <p>
                         {{ criacao.dados().energia.recargaPorTurno === null ? 'Reserva fixa' : 'Pool
                         + Recarga · +' + criacao.dados().energia.recargaPorTurno + ' por turno' }}

@@ -43,6 +43,7 @@ export class NpcCriar {
     readonly mostrarErros = signal(false);
     readonly enviando = signal(false);
     readonly registrado = signal(false);
+    readonly npcCriadoId = signal<number | null>(null);
     readonly erroEnvio = signal("");
 
     /** Navegação conserva o mesmo FormGroup, inclusive listas e valores inválidos. */
@@ -75,7 +76,8 @@ export class NpcCriar {
             nome: dados.identidadeNarrativa.nome, dados }).pipe(
             takeUntilDestroyed(this.destroyRef), finalize(() => this.enviando.set(false)),
         ).subscribe({
-            next: () => {
+            next: (ficha) => {
+                this.npcCriadoId.set(ficha.id);
                 this.registrado.set(true);
                 this.criacao.formulario.markAsPristine();
                 this.notificacao.notificar({ severidade: "sucesso", resumo: "NPC registrado",
@@ -95,10 +97,17 @@ export class NpcCriar {
             rotuloConfirmar: "Sair sem registrar", rotuloCancelar: "Continuar criando" });
     }
 
-    /** O destino não depende da ficha de consulta futura nem abre a ficha de jogador. */
+    /** Retorno ao acervo ou painel de origem; abrirNpc usa a consulta dedicada por tipo. */
     voltarAoDestino(): void {
         void this.router.navigate(this.campanhaId === null
             ? ["/fichas"] : ["/campanhas", this.campanhaId]);
+    }
+
+    abrirNpc(): void {
+        const id = this.npcCriadoId();
+        if (id === null) return;
+        void this.router.navigate(this.campanhaId === null ? ["/fichas", "npc", id]
+            : ["/campanhas", this.campanhaId, "npc", id]);
     }
 
     /** A proteção da aba usa o diálogo nativo exigido pelo navegador. */

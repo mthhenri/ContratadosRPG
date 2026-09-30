@@ -20,6 +20,10 @@ import {
   FichaMediasEsquadraoDto,
   FichaNpcCriadaDto,
   FichaNpcCriarDto,
+  FichaNpcAlteradaDto,
+  FichaNpcAlterarDto,
+  FichaNpcRecuperadaDto,
+  FichaNpcVitalidadeAlterarDto,
   FichaRecuperadaDto,
   FichaResumoDto,
   FichaVitalidadeAlterarDto,
@@ -51,6 +55,29 @@ export class FichaService {
     return this.httpClient
       .post<StandardResponse<FichaNpcCriadaDto>>(`${this.base}/npc`, dto)
       .pipe(map((resposta) => resposta.dados as FichaNpcCriadaDto));
+  }
+
+  /** Consulta autorizada; a API omite as anotações privadas para leitores. */
+  recuperarFichaNpc(id: number): Observable<FichaNpcRecuperadaDto> {
+    return this.httpClient
+      .get<StandardResponse<FichaNpcRecuperadaDto>>(`${this.base}/npc/${id}`)
+      .pipe(map((resposta) => resposta.dados as FichaNpcRecuperadaDto));
+  }
+
+  /** Persiste o grupo completo, preservando os snapshots enviados pelo mestre. */
+  alterarFichaNpc(id: number, dto: FichaNpcAlterarDto): Observable<FichaNpcAlteradaDto> {
+    return this.httpClient
+      .put<StandardResponse<FichaNpcAlteradaDto>>(`${this.base}/npc/${id}`, dto)
+      .pipe(map((resposta) => resposta.dados as FichaNpcAlteradaDto));
+  }
+
+  /** Ajuste pontual; a condição Morrendo é resolvida pelo domínio na API. */
+  alterarVitalidadeNpc(
+    id: number, dto: FichaNpcVitalidadeAlterarDto,
+  ): Observable<FichaNpcAlteradaDto> {
+    return this.httpClient
+      .patch<StandardResponse<FichaNpcAlteradaDto>>(`${this.base}/npc/${id}/vitalidade`, dto)
+      .pipe(map((resposta) => resposta.dados as FichaNpcAlteradaDto));
   }
 
   /**

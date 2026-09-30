@@ -1,3 +1,4 @@
+import { NpcCampanhaFichas } from "../../componentes/npc-campanha-fichas/npc-campanha-fichas.component";
 import { Component, DestroyRef, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -62,6 +63,7 @@ const ATRIBUTOS_NEUTROS: FichaAtributosDto = { destreza: 0, forca: 0, luta: 0, p
 @Component({
   selector: 'app-campanha-detalhe-mestre',
   imports: [
+    NpcCampanhaFichas,
     RouterLink,
     ReactiveFormsModule,
     ColunaAcoes,

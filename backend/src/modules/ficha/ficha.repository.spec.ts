@@ -4,6 +4,15 @@ import { TipoFichaEnum } from '@contratados-rpg/shared/enums';
 import { FichaRepository } from './ficha.repository';
 
 describe('FichaRepository', () => {
+    it("resumo expõe Categoria do JSONB mantendo filtro de fichas ativas", async () => {
+        const raw = vi.fn().mockResolvedValue({ rows: [] });
+        const repositorio = new FichaRepository({ raw } as unknown as Knex);
+        await repositorio.listarPorCampanha({ campanhaId: 2 });
+        const [sql, parametros] = raw.mock.calls[0] as [string, Record<string, unknown>];
+        expect(sql).toContain("ficha.dados->>'categoria' AS categoria");
+        expect(sql).toContain("ficha.is_deleted = false");
+        expect(parametros).toEqual({ campanhaId: 2 });
+    });
     it("mescla somente recursos correntes e Morrendo do NPC", async () => {
         const raw = vi.fn().mockResolvedValue({ rows: [{ id: 7 }] });
         const repositorio = new FichaRepository({ raw } as unknown as Knex);

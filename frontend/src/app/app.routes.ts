@@ -92,7 +92,7 @@ export const routes: Routes = [
   },
   {
     path: "campanhas/:campanhaId/npc",
-    canActivate: [autenticacaoGuard, mestreCampanhaGuard],
+    canActivate: [autenticacaoGuard],
     loadChildren: () => import("./modules/ficha/npc.routes").then((modulo) => modulo.npcRoutes),
   },
   // Cenas (m7-23): o hub e o painel de cada cena — o painel de Iniciativa (m7-05 mestre, m7-06

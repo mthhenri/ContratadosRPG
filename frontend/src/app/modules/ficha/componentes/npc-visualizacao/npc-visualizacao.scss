@@ -1,0 +1,147 @@
+@use "tema/breakpoints" as bp;
+
+:host {
+    display: block;
+    min-width: 0;
+}
+.npc {
+    display: grid;
+    grid-template-columns: minmax(0, 694px) minmax(0, 1fr);
+    gap: var(--gap-grid);
+    align-items: start;
+    color: var(--text);
+    container-type: inline-size;
+    &__coluna,
+    &__lista,
+    &__combate,
+    &__perfil {
+        display: grid;
+        min-width: 0;
+        gap: var(--space-16);
+        align-content: start;
+    }
+    &__identidade {
+        display: grid;
+        grid-template-columns: 230px minmax(0, 1fr);
+        gap: var(--space-16);
+    }
+    &__campos {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--space-12);
+    }
+    &__campos app-campo:has(textarea),
+    &__campos .npc__nota,
+    &__campos .npc__erro {
+        grid-column: 1 / -1;
+    }
+    &__editor {
+        margin-top: var(--space-16);
+        padding-top: var(--space-16);
+        border-top: 1px solid var(--border);
+    }
+    &__acoes,
+    &__metas {
+        display: flex;
+        gap: var(--space-8);
+        flex-wrap: wrap;
+        align-items: center;
+    }
+    &__lista > button,
+    &__combate > button,
+    &__perfil > button {
+        justify-self: start;
+    }
+    &__stats {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: var(--space-8);
+    }
+    &__atributos {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: var(--space-8);
+    }
+    &__cooperacao {
+        display: grid;
+        gap: var(--space-8);
+    }
+    &__nome {
+        margin: 0;
+        font: 700 22px/1.3 var(--font-mono);
+        overflow-wrap: anywhere;
+    }
+    &__subtitulo {
+        margin: 0;
+        font: 600 10px/1.5 var(--font-mono);
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        color: var(--text-dim);
+    }
+    &__texto {
+        margin: 0;
+        font: 14px/1.65 var(--font-sans);
+        color: var(--text-dim);
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+    }
+    &__nota {
+        margin: 0;
+        font: 11px/1.6 var(--font-mono);
+        color: var(--text-dim);
+        overflow-wrap: anywhere;
+    }
+    &__erro {
+        margin: 0;
+        font: 13px/1.5 var(--font-sans);
+        color: var(--erro);
+    }
+    // Retrato decorativo: mesmo enquadramento do análogo, sem reinvenção de controle.
+    &__retrato {
+        width: 100%;
+        aspect-ratio: 1;
+        overflow: hidden;
+        border: 1px solid var(--border-strong);
+        border-color: var(--cor-ficha, var(--border-strong));
+        border-radius: var(--radius-control);
+        background: repeating-linear-gradient(
+            135deg,
+            var(--surface-2) 0 3px,
+            var(--surface) 3px 9px
+        );
+    }
+    &__retrato img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    @include bp.tablet {
+        grid-template-columns: 1fr;
+    }
+    &--apertado {
+        @include bp.tablet-lateral-aberta {
+            grid-template-columns: 1fr;
+        }
+    }
+    @include bp.mobile {
+        &__identidade,
+        &__campos {
+            grid-template-columns: 1fr;
+        }
+        &__retrato {
+            max-width: 230px;
+            justify-self: center;
+        }
+        &__atributos {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+    @container (max-width: 570px) {
+        &__identidade {
+            grid-template-columns: 1fr;
+        }
+        &__atributos {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+}

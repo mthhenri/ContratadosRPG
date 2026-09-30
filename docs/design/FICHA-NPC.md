@@ -1,6 +1,7 @@
 # Ficha de NPC — contrato visual da M4
 
-> Planejamento refinado em 2026-09-30. A ficha de NPC ainda não está implementada.
+> Contrato refinado e implementado em 2026-09-30 (`m4-08`/`m4-08b`).
+> Evidências: `docs/reviews/m4-08b-verificacao.md`. Listagem integrada segue na `m4-09`.
 > Este documento define apresentação e composição; regras e forma dos dados continuam em
 > `docs/core/guia_de_mestre-v4.0.0.md` (Guia de Criação de NPCs) e `docs/SCHEMA.md`
 > (`FichaNpcDadosDto`). Tokens e primitivos seguem `docs/design/DESIGN.md`.
@@ -135,4 +136,4 @@ agente principal. Este planejamento não comprova fidelidade de uma tela ainda i
 - Morrendo foi definido na `m4-07`: `dados.condicoes.morrendo`, conforme `SCHEMA.md` e
   `shared/regras/npc.resolverMorrendo`. Vida ≤ 0 ativa; cura mantém; remoção explícita após
   socorro exige Vida positiva. Não transportar Machucado, Inconsciente ou lesões do jogador.
-  A futura ficha usa a API tipada de NPC, incluindo o ajuste pontual de vitalidade.
+  A ficha usa a API tipada de NPC, incluindo o ajuste pontual de vitalidade.

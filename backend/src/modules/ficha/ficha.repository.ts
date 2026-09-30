@@ -152,6 +152,7 @@ export class FichaRepository extends BaseRepository {
               ficha.dados->>'classe' AS classe,
               ficha.dados->>'arquetipo' AS arquetipo,
               (ficha.dados->>'nivel')::int AS nivel,
+              ficha.dados->>'categoria' AS categoria,
               ficha.dados->>'na' AS na,
               (ficha.dados->>'vd')::int AS vd,
               ficha.dados->>'registro' AS registro,

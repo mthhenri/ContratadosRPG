@@ -1,0 +1,304 @@
+<section class="npc-pagina" [class.npc-pagina--lateral-aberta]="historicoAberto()">
+    <app-coluna-acoes id="ficha-npc" rotulo="Ações da ficha de NPC">
+        @if (edicao.ficha()) {
+        <div class="coluna-acoes__categoria">Ficha</div>
+        <button
+            app-coluna-acoes-item
+            type="button"
+            icone="d20"
+            appTooltip="Histórico"
+            [pressionado]="historicoAberto()"
+            (click)="historicoAberto.set(!historicoAberto())"
+        >
+            Histórico
+        </button>
+        <button
+            app-coluna-acoes-item
+            type="button"
+            icone="calculadora"
+            appTooltip="Calculadora"
+            [pressionado]="calculadoraAberta()"
+            (click)="calculadoraAberta.set(!calculadoraAberta())"
+        >
+            Calculadora
+        </button>
+        @if (gerenciavel()) {
+        <button
+            app-coluna-acoes-item
+            type="button"
+            icone="anotacoes"
+            appTooltip="Anotações privadas"
+            [pressionado]="anotacoesAbertas()"
+            (click)="anotacoesAbertas.set(!anotacoesAbertas())"
+        >
+            Anotações
+        </button>
+        <div class="coluna-acoes__categoria">Gestão</div>
+        @if (campanhaId() !== null) {
+        <button
+            app-coluna-acoes-item
+            type="button"
+            icone="olho-membros"
+            appTooltip="Acesso de visualização"
+            [pressionado]="dialogAcesso()"
+            (click)="abrirAcesso()"
+        >
+            Acesso de visualização
+        </button>
+        }
+        <button
+            app-coluna-acoes-item
+            type="button"
+            icone="excluir"
+            appTooltip="Excluir NPC"
+            [disabled]="edicao.salvando()"
+            (click)="excluir()"
+        >
+            Excluir NPC
+        </button>
+        } }
+    </app-coluna-acoes>
+    <div class="npc-pagina__conteudo">
+        <header class="npc-pagina__cabecalho">
+            <a
+                app-botao-icone
+                tamanho="padrao"
+                [routerLink]="rotaSaida()"
+                aria-label="Voltar"
+                appTooltip="Voltar"
+                ><app-icone nome="voltar"
+            /></a>
+            <span class="npc-pagina__indice">//</span>
+            <h1 class="npc-pagina__titulo">{{ edicao.ficha()?.nome || 'Ficha de NPC' }}</h1>
+            @if (campanhaNome()) { <span class="npc-pagina__campanha">{{ campanhaNome() }}</span> }
+            <span class="npc-pagina__regua"></span>
+            <span class="npc-pagina__estado" role="status">
+                {{ edicao.estadoPersistencia() === 'salvando' ? 'Salvando…' :
+                edicao.estadoPersistencia() === 'salvo' ? 'Salvo' : edicao.estadoPersistencia() ===
+                'erro' ? 'Falha ao salvar' : edicao.edicaoPendente() ? 'Rascunho' : '' }}
+            </span>
+        </header>
+        @if (carregando()) {
+        <div class="npc-pagina__esqueleto" role="status" aria-label="Carregando NPC">
+            @for (item of [0, 1, 2]; track item) { <app-esqueleto /> }
+        </div>
+        } @else if (erroCarga()) {
+        <app-estado-vazio
+            titulo="Não foi possível abrir o NPC"
+            icone="alerta"
+            linhaApoio="Confira seu acesso à ficha ou tente carregar novamente."
+        >
+            <button
+                app-botao
+                estadoVazioAcao
+                type="button"
+                variante="primario"
+                estilo="preenchido"
+                tamanho="medio"
+                (click)="carregar()"
+            >
+                Tentar novamente
+            </button>
+        </app-estado-vazio>
+        } @else if (edicao.ficha()) {
+        <app-npc-visualizacao
+            [gerenciavel]="gerenciavel()"
+            [apertado]="historicoAberto()"
+            [imagemOcupada]="imagemOcupada()"
+            (imagemAlterada)="alterarImagem($event)"
+            (imagemRemovida)="removerImagem()"
+        />
+        @if (edicao.erro() || formulario.erroFormulario()) {
+        <p class="npc-pagina__erro" role="alert">
+            {{ edicao.erro() || formulario.erroFormulario() }}
+        </p>
+        } @if (gerenciavel() && edicao.edicaoPendente()) {
+        <app-cartao class="npc-pagina__rascunho">
+            <p class="npc-pagina__nota">
+                Alterações em rascunho. Salvar confirma todos os grupos editados.
+            </p>
+            @if (edicao.violacoes().length) {
+            <ul class="npc-pagina__pendencias">
+                @for (pendencia of edicao.violacoes(); track $index) {
+                <li>{{ pendencia }}</li>
+                }
+            </ul>
+            }
+            <div class="npc-pagina__acoes">
+                <button
+                    app-botao
+                    type="button"
+                    variante="secundario"
+                    estilo="contorno"
+                    tamanho="medio"
+                    [disabled]="edicao.salvando()"
+                    (click)="formulario.cancelar()"
+                >
+                    Cancelar
+                </button>
+                <button
+                    app-botao
+                    type="button"
+                    variante="primario"
+                    estilo="preenchido"
+                    tamanho="medio"
+                    [carregando]="edicao.salvando()"
+                    [disabled]="edicao.salvando()"
+                    (click)="salvar()"
+                >
+                    Salvar alterações
+                </button>
+            </div>
+        </app-cartao>
+        } @if (erroImagem()) {
+        <p class="npc-pagina__erro" role="alert">{{ erroImagem() }}</p>
+        @if (imagemPendente(); as alteracao) {
+        <button
+            app-botao
+            type="button"
+            variante="secundario"
+            estilo="contorno"
+            tamanho="medio"
+            [disabled]="imagemOcupada()"
+            (click)="alterarImagem(alteracao)"
+        >
+            Tentar enviar retrato
+        </button>
+        } }
+        <app-historico-rolagens-sidebar
+            [(aberto)]="historicoAberto"
+            titulo="Histórico de Rolagens do NPC"
+            [itens]="historico()"
+            [carregando]="historicoCarregando()"
+            [carregandoMais]="historicoCarregando()"
+            [temMais]="historicoTemMais()"
+            [mostrarFicha]="false"
+            [mostrarGatilho]="false"
+            [acimaDaCalculadora]="true"
+            (carregarMais)="carregarHistorico()"
+            (abrirCalculadora)="calculadoraAberta.set(true)"
+        />
+        <app-calculadora-flutuante [(aberta)]="calculadoraAberta" [mostrarGatilho]="false" />
+        }
+    </div>
+</section>
+@if (gerenciavel() && anotacoesAbertas()) {
+<app-painel-flutuante
+    [id]="'npc-anotacoes-' + fichaId"
+    titulo="Anotações"
+    kicker="Privadas ao mestre"
+    [aberto]="true"
+    [mobile]="mobile()"
+    [largura]="420"
+    [pisoX]="56"
+    (fechar)="anotacoesAbertas.set(false)"
+>
+    <div class="npc-pagina__anotacoes">
+        @if (formulario.grupo() === 'anotacoes') {
+        <app-editor-markdown
+            #editorAnotacoes
+            rotulo="Anotações privadas"
+            [formControl]="formulario.formulario.controls.anotacoes"
+            [somenteLeitura]="edicao.salvando()"
+        />
+        <div class="npc-pagina__acoes">
+            <button
+                app-botao
+                type="button"
+                variante="secundario"
+                estilo="contorno"
+                tamanho="medio"
+                [disabled]="edicao.salvando()"
+                (click)="formulario.cancelar()"
+            >
+                Cancelar
+            </button>
+            <button
+                app-botao
+                type="button"
+                variante="primario"
+                estilo="preenchido"
+                tamanho="medio"
+                [disabled]="edicao.salvando()"
+                (click)="salvar()"
+            >
+                Salvar anotações
+            </button>
+        </div>
+        @if (edicao.erro()) {
+        <p role="alert" class="npc-pagina__erro">{{ edicao.erro() }}</p>
+        } } @else {
+        <app-editor-markdown
+            rotulo="Anotações privadas"
+            [valor]="edicao.rascunho()?.dados?.anotacoes
+                    ?? edicao.ficha()?.dados?.anotacoes ?? ''"
+            [somenteLeitura]="true"
+        />
+        <button
+            app-botao
+            type="button"
+            variante="secundario"
+            estilo="contorno"
+            tamanho="medio"
+            [disabled]="edicao.salvando()"
+            (click)="formulario.iniciar('anotacoes')"
+        >
+            Editar anotações
+        </button>
+        }
+    </div>
+</app-painel-flutuante>
+} @if (gerenciavel() && dialogAcesso()) {
+<app-modal [aberto]="true" titulo="Acesso de visualização" (fechou)="dialogAcesso.set(false)">
+    <div class="npc-pagina__acessos">
+        <p class="npc-pagina__nota">
+            Jogadores com acesso podem ler a ficha. As anotações continuam privadas.
+        </p>
+        <app-campo rotulo="Jogador">
+            <select
+                class="campo__controle"
+                [formControl]="membroParaConceder"
+                [attr.disabled]="acessoOcupado() ? '' : null"
+            >
+                <option [ngValue]="null" disabled>Selecione um jogador…</option>
+                @for (membro of elegiveis(); track membro.usuarioId) {
+                <option [ngValue]="membro.usuarioId">{{ membro.nome }}</option>
+                }
+            </select>
+        </app-campo>
+        <button
+            app-botao
+            type="button"
+            variante="primario"
+            estilo="preenchido"
+            tamanho="medio"
+            [disabled]="membroParaConceder.value === null || acessoOcupado()"
+            (click)="conceder()"
+        >
+            Conceder acesso
+        </button>
+        @for (acesso of acessos(); track acesso.usuarioId) {
+        <app-cartao>
+            <div class="npc-pagina__acesso">
+                <span>{{ acesso.nome }}</span>
+                <button
+                    app-botao
+                    type="button"
+                    variante="perigo"
+                    estilo="contorno"
+                    tamanho="medio"
+                    [disabled]="acessoOcupado()"
+                    (click)="revogar(acesso.usuarioId)"
+                >
+                    Revogar acesso
+                </button>
+            </div>
+        </app-cartao>
+        } @empty {
+        <app-estado-vazio titulo="Nenhum acesso concedido" icone="membros" tamanho="compacto" /> }
+        @if (erroAcesso()) {
+        <p class="npc-pagina__erro" role="alert">{{ erroAcesso() }}</p>
+        }
+    </div>
+</app-modal>
+}

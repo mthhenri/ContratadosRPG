@@ -51,6 +51,19 @@ describe('CartaoFichaAcervo', () => {
     return { fixture, raiz: fixture.nativeElement as HTMLElement };
   }
 
+  it("NPC Civil abre o tipo correto no acervo e no painel, sem meta de agente", () => {
+    const { raiz, fixture } = montar({ ...itemAgente, tipo: TipoFichaEnum.NPC,
+      categoriaTexto: "Civil", nivel: 3 });
+    expect(raiz.textContent).toContain("Civil · Nível 3");
+    expect(raiz.textContent).not.toContain("Recruta");
+    expect(raiz.textContent).not.toContain("Energia");
+    expect(raiz.querySelector("a")?.getAttribute("href")).toBe("/fichas/npc/1");
+    fixture.componentRef.setInput("campanhaDestino", 9);
+    fixture.componentRef.setInput("mostrarMenu", false); fixture.detectChanges();
+    expect(raiz.querySelector("a")?.getAttribute("href")).toBe("/campanhas/9/npc/1");
+    expect(raiz.querySelector("button")).toBeNull();
+  });
+
   it('agente: mostra classe, arquétipo/subclasse, nível e Patente — e Vida/Energia', () => {
     const { raiz } = montar(itemAgente);
 

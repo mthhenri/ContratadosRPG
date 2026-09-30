@@ -27,6 +27,7 @@ export interface ItemAcervo {
   /** JOGADOR — `rotuloClasseCompleto` (classe + arquétipo/subclasse). */
   readonly classeTexto?: string;
   readonly nivel?: number;
+  readonly categoriaTexto?: string;
   /** JOGADOR — Patente derivada do Prestígio (`rotuloPatente`). */
   readonly patenteTexto?: string;
   readonly energiaAtual?: number;
@@ -56,6 +57,8 @@ export interface ItemAcervo {
 export class CartaoFichaAcervo {
   readonly item = input.required<ItemAcervo>();
   readonly menuAberto = input(false);
+  readonly mostrarMenu = input(true);
+  readonly campanhaDestino = input<number | null>(null);
 
   /** Kebab clicado — a página calcula a posição `fixed` a partir do `MouseEvent` (`alternarMenuFicha`). */
   readonly menu = output<MouseEvent>();
@@ -67,6 +70,11 @@ export class CartaoFichaAcervo {
   /** Link do card por tipo (m4-11): `JOGADOR` → `/fichas/:id`; `CRIATURA` → `/fichas/criatura/:id`. */
   protected readonly rota = computed<readonly (string | number)[]>(() => {
     const item = this.item();
+    if (item.tipo === TipoFichaEnum.NPC) {
+      return this.campanhaDestino() === null
+        ? ["/fichas", "npc", item.id]
+        : ["/campanhas", this.campanhaDestino()!, "npc", item.id];
+    }
     return item.tipo === TipoFichaEnum.CRIATURA
       ? ['/fichas', 'criatura', item.id]
       : ['/fichas', item.id];

@@ -8,7 +8,7 @@ import { EstadoVazio } from "../../../../shared/ui/estado-vazio/estado-vazio.com
 import { Icone } from "../../../../shared/icone/icone.component";
 import { renderizarMarkdownSeguro } from "../../../../shared/markdown/markdown-seguro";
 import { NpcCriacaoFormulario } from "./npc-criacao-formulario.service";
-import { GRUPOS_ATRIBUTOS } from "./npc-atributos.component";
+import { GRUPOS_ATRIBUTOS } from "../../npc-atributos-campos";
 
 /** Prévia em duas colunas da ficha planejada, sem segunda entrada para o mesmo campo. */
 @Component({

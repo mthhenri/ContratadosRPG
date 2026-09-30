@@ -6,22 +6,7 @@ import { Botao } from "../../../../shared/ui/botao/botao.component";
 import { Stat } from "../../../../shared/ui/stat/stat.component";
 import { NpcCriacaoFormulario } from "./npc-criacao-formulario.service";
 
-/** Agrupamento de apresentação; valores, teto e DT vêm do motor. */
-export const GRUPOS_ATRIBUTOS: readonly {
-    readonly nome: string;
-    readonly campos: readonly { readonly chave: keyof FichaAtributosDto; readonly nome: string }[];
-}[] = [
-    { nome: "Físicos", campos: [
-        { chave: "destreza", nome: "Destreza" }, { chave: "forca", nome: "Força" },
-        { chave: "luta", nome: "Luta" }, { chave: "pontaria", nome: "Pontaria" },
-        { chave: "vigor", nome: "Vigor" },
-    ] },
-    { nome: "Mentais", campos: [
-        { chave: "intelecto", nome: "Intelecto" }, { chave: "medicina", nome: "Medicina" },
-        { chave: "sentidos", nome: "Sentidos" }, { chave: "social", nome: "Social" },
-        { chave: "vontade", nome: "Vontade" },
-    ] },
-];
+import { GRUPOS_ATRIBUTOS } from "../../npc-atributos-campos";
 
 @Component({
     selector: "app-npc-atributos", imports: [ReactiveFormsModule, StepInput, Botao, Stat],

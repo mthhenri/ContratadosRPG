@@ -1,7 +1,7 @@
 # m4-08b-frontend-visualizacao-npc.spec.md
 
 > Task adicional do M4, após `m4-08` e antes de `m4-09`. Fecha a lacuna de consulta/edição
-> que a listagem anterior adiava para uma pendência. Planejada, ainda não implementada.
+> que a listagem anterior adiava para uma pendência. Implementada e verificada em 2026-09-30.
 > Contrato visual: `docs/design/FICHA-NPC.md`; constituição visual: `docs/design/DESIGN.md`.
 
 ## Objetivo

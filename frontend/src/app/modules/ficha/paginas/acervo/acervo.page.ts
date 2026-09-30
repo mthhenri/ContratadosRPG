@@ -18,6 +18,7 @@ import { CampanhaService } from '../../../campanha/campanha.service';
 import { CartaoFichaAcervo, type ItemAcervo } from '../../componentes/cartao-ficha-acervo/cartao-ficha-acervo.component';
 import { confirmarRemocaoDaCampanha } from '../../ficha-confirmacoes';
 import { FichaService } from '../../ficha.service';
+import { montarItemNpc } from "../../npc-acervo";
 import { rotuloNivelAmeaca } from '../../rotulos-criatura';
 import { rotuloClasseCompleto } from '../../rotulos-ficha';
 import { rotuloPatente } from '../../status-derivado';
@@ -46,6 +47,7 @@ interface DefinicaoBlocoAcervo {
 const BLOCOS_ACERVO: readonly DefinicaoBlocoAcervo[] = [
   { tipo: TipoFichaEnum.JOGADOR, titulo: 'Agentes', estadoVazio: 'Nenhum agente ainda.' },
   { tipo: TipoFichaEnum.CRIATURA, titulo: 'Criaturas', estadoVazio: 'Nenhuma criatura ainda.' },
+  { tipo: TipoFichaEnum.NPC, titulo: "NPCs", estadoVazio: "Nenhum NPC ainda." },
 ];
 
 /**
@@ -143,6 +145,7 @@ export class FichaAcervo {
   protected readonly itens = computed<readonly ItemAcervo[]>(() =>
     this.fichas().map((ficha) => {
       const tipo = ficha.tipo ?? TipoFichaEnum.JOGADOR;
+      if (tipo === TipoFichaEnum.NPC) return montarItemNpc(ficha);
       const comum = {
         id: ficha.id,
         tipo,

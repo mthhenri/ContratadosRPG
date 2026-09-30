@@ -1,0 +1,111 @@
+<div class="npc__lista">
+    @for (lista of listas; track lista.chave) {
+        <h3 class="npc__subtitulo">{{ lista.nome }}</h3>
+        @for (registro of ficha()!.dados.sanidade[lista.chave]; track $index; let indice = $index) {
+            <app-cartao [titulo]="registro.nome || 'Novo registro'" [cabecalhoQuebravel]="true">
+                <app-icone cartaoIndice nome="sanidade" />
+                @if (lista.chave === "traumas") {
+                    <app-chip cartaoFim variante="sutil">
+                        {{
+                            ficha()!.dados.sanidade.traumas[indice].tratado
+                                ? "Tratado"
+                                : "Não tratado"
+                        }}
+                    </app-chip>
+                }
+                @if (
+                    gerenciavel() &&
+                    formulario.grupo() === "sanidade" &&
+                    editando()?.lista === lista.chave &&
+                    editando()?.indice === indice
+                ) {
+                    @let controle = formulario[lista.chave].at(indice);
+                    <div class="npc__campos">
+                        <app-campo rotulo="Nome">
+                            <input class="campo__controle" [formControl]="controle.controls.nome" />
+                        </app-campo>
+                        <app-campo rotulo="Descrição (opcional)">
+                            <textarea
+                                class="campo__controle"
+                                rows="3"
+                                [formControl]="controle.controls.descricao"
+                            ></textarea>
+                        </app-campo>
+                        @if (lista.chave === "traumas") {
+                            <app-campo rotulo="Tratamento">
+                                <select
+                                    class="campo__controle"
+                                    [formControl]="formulario.traumas.at(indice).controls.tratado"
+                                >
+                                    <option [ngValue]="false">Não tratado</option>
+                                    <option [ngValue]="true">Tratado</option>
+                                </select>
+                            </app-campo>
+                        }
+                        @if (controle.invalid && controle.touched) {
+                            <p class="npc__erro" role="alert">Informe um nome para o registro.</p>
+                        }
+                        <button
+                            app-botao
+                            type="button"
+                            variante="secundario"
+                            estilo="contorno"
+                            tamanho="medio"
+                            (click)="concluir()"
+                        >
+                            Concluir
+                        </button>
+                    </div>
+                } @else {
+                    <p class="npc__texto">{{ registro.descricao || "Sem descrição adicional." }}</p>
+                    @if (gerenciavel()) {
+                        <div class="npc__acoes">
+                            <button
+                                app-botao
+                                type="button"
+                                variante="secundario"
+                                estilo="contorno"
+                                tamanho="medio"
+                                [disabled]="formulario.edicao.salvando()"
+                                (click)="editar(lista.chave, indice)"
+                            >
+                                <app-icone nome="editar" />Editar
+                            </button>
+                            <button
+                                app-botao
+                                type="button"
+                                variante="perigo"
+                                estilo="contorno"
+                                tamanho="medio"
+                                [disabled]="formulario.edicao.salvando()"
+                                (click)="remover(lista.chave, indice)"
+                            >
+                                <app-icone nome="excluir" />Remover
+                            </button>
+                        </div>
+                    }
+                }
+            </app-cartao>
+        } @empty {
+            <app-estado-vazio
+                [titulo]="'Sem ' + lista.nome.toLowerCase()"
+                icone="sanidade"
+                tamanho="compacto"
+            />
+        }
+        @if (gerenciavel()) {
+            <button
+                app-botao
+                type="button"
+                variante="secundario"
+                estilo="contorno"
+                tamanho="medio"
+                [disabled]="formulario.edicao.salvando()"
+                (click)="adicionar(lista.chave)"
+            >
+                <app-icone nome="mais" />
+                {{ lista.chave === "sequelas" ? "Adicionar sequela" : "Adicionar trauma" }}
+            </button>
+        }
+    }
+</div>

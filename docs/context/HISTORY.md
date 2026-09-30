@@ -1,5 +1,108 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-30 — m4-08b: ficha dedicada de NPC concluída e verificada
+
+O autor pediu concluir a M4-08b, fazer o commit separado e então iniciar a M4-09. A task
+entrega `NpcVisualizar` lazy nas rotas de campanha/acervo e `NpcVisualizacao` com
+Identidade/recursos + Atributos à esquerda e Habilidades/Conduta/Sanidade à direita.
+`FichaEdicaoNpcService` e `NpcEdicaoFormulario` separam confirmação, rascunho conjunto e
+adaptador de formulários. Listas usam Adicionar/Editar/Concluir; Salvar valida pelo motor,
+Cancelar descarta todos os grupos e erro conserva o preenchimento. Categoria/Nível/atributos
+não recalculam recursos ou defesas. Vitalidade pontual usa a API de NPC; Morrendo continua
+sendo resolvido no backend, com cura preservando e socorro explícito exigindo Vida positiva.
+
+Criação permanece restrita ao mestre, enquanto a leitura não herda essa guarda. GET tipado,
+eventos da ficha e reconexão usam o recorte autorizado; revogação limpa os dados antes de
+navegar e invalida respostas em andamento. Mestre gerencia anotações privadas e acesso por
+jogador. Cor, retrato e foco usam metadados e APIs genéricas existentes. Histórico interno e
+calculadora são compatíveis; não se oferece janela externa com contrato exclusivo de agente
+ou criatura. Não há gateway novo ou reinterpretação do documento de NPC como ficha de jogador.
+
+A saída da criação oferece Abrir NPC. `CartaoFichaAcervo` ganhou rota/recorte de NPC e
+`NpcCampanhaFichas` fornece a entrada mínima no painel com os resumos já autorizados. Para
+Categoria aparecer corretamente, `FichaResumoDto` recebeu campo opcional readonly e a query
+comum projeta a chave do JSONB; nenhuma coluna ou migration nova. Esse recorte não implementa
+a listagem/revelação integrada, atalhos de criação nem filtro do acervo da M4-09. Os hospedeiros
+extensos receberam apenas a composição do novo componente; não receberam nova orquestração.
+
+**Gate pessoal com `verify`:** análogos atuais de jogador/criatura inspecionados no código e
+na aplicação. Cinco Categorias e histórico aberto em 1920×1080, 1366×768, 960×1080 e 360×800;
+listas vazias/longas, nome/função extensos, Conduta e Sanidade; tema claro/escuro, foco, áreas
+de toque canônicas e ausência de overflow. Percorridos edição, cancelamento/testes, erro de
+carga/retry, erro de gravação preservando rascunho, envio ocupado, notas, cor e retrato real
+(upload/enquadramento/remoção). Entradas do acervo/painel abriram a ficha do tipo correto;
+saída da criação foi coberta pelos testes nas duas rotas.
+
+Dois usuários reais comprovaram leitura concedida sem gestão/notas, atualização sem F5 e
+revogação com limpeza/redirecionamento sem recarga; jogador sem concessão e espectador foram
+recusados, inclusive por rota direta. Reconexão foi testada derrubando a API, alterando o
+cenário direto no Postgres e reiniciando o executável: a ficha recuperou Cooperação sem
+broadcast de alteração e sem F5. O supervisor local não reiniciou por mero timestamp; foi
+restaurado explicitamente, mantendo a API disponível. Cenários temporários foram soft deleted.
+
+A inspeção corrigiu controle nativo visível de retrato, largura/densidade de ações, cor
+ausente adotando valor do input, slot de ação do estado vazio e rótulo da campanha esmagado
+por nome longo. Remoção remota de campos opcionais também deixou de reaparecer no formulário.
+Comparação final: mesma família, hierarquia e controles dos análogos, sem HTML genérico.
+Inventário de APIs, cobertura e limites: `docs/reviews/m4-08b-verificacao.md`.
+
+**Gates de código:** 889 testes shared; 948 backend e um skip preexistente; integração frontend
+com 2.682 testes, seguida de regressão final de 54 testes em nove arquivos. Builds dos três
+workspaces passaram; lint global sem erros e lint do código novo limpo. Diff completo e arquivos
+novos revisados com `convencoes-check`, sem fórmula local, DTO/enum duplicado, SQL interpolado
+ou hardcodes visuais; templates/SCSS formatados no recorte. Permanecem somente os avisos legados,
+P-004 (pacote inicial 555,92 kB frente a 450 kB) e P-092 (checagem global de tipos do shared,
+`derivados.spec.ts:129`, `uid` de `CarrinhoItemDto`). Não são falhas desta implementação.
+
+Spec movida de active para done após os gates; CONTEXT/MEMORY e contrato visual atualizados.
+Nenhum gate obrigatório da M4-08b ficou aberto. Próximo recorte autorizado: M4-09.
+
+## 2026-09-30 — m4-08b iniciada: base tipada de consulta e edição de NPC
+
+A pedido do autor, a `m4-08` foi commitada separadamente em `b074a8d7`
+(`feat(npc): criar assistente dedicado de NPC (m4-08)`). A mensagem efetivamente gravada
+foi conferida com `git log -1 --format=full`, incluindo o trailer
+`Co-authored-by: Codex <noreply@openai.com>`; workspace limpo após o commit.
+Em seguida, a spec `m4-08b-frontend-visualizacao-npc` passou de backlog para active.
+
+Este é o início da implementação, **não o fecho da task**. `FichaService` ganhou transporte
+tipado para GET/PUT `/ficha/npc/:id` e PATCH `/ficha/npc/:id/vitalidade`, usando os DTOs
+existentes em shared. A extensão conserva a responsabilidade de cliente HTTP; não leva
+orquestração ou regra de domínio ao serviço já extenso.
+
+`FichaEdicaoNpcService`, com instância por futura página, separa ficha confirmada e rascunho.
+Grupos/listas podem ser validados e salvos conjuntamente; validação de domínio consome
+`validarFichaNpc`. Não há nova fórmula nem recálculo dos snapshots. Salvar/Cancelar,
+bloqueio de envio duplicado e falha mantendo rascunho estão implementados. Vitalidade usa
+a API própria e só assume valores/condição Morrendo após confirmação do servidor.
+`mesclarDocumento` reaproveita a política estrutural existente para absorver campos remotos
+sem apagar a edição local. Limpeza invalida respostas em voo, evitando repor ficha ou notas
+privadas depois da perda de acesso. Os eventos e GET de reconexão serão ligados na página.
+
+Análogos registrados antes da futura UI: `CriaturaVisualizacao` para as duas colunas e
+perfil/combate, `FichaVisualizacao` para recursos/edição, `CriaturaVisualizar` para shell,
+coluna de ações e histórico. Nenhum template, estilo ou rota pública foi alterado neste
+recorte; nenhuma tela nova foi apresentada como pronta. Plano local em
+`.superpowers/m4-08b-plano.md`, com inventário de primitivos e matriz dos quatro viewports.
+
+**Verificação do recorte inicial:**
+
+- Testes escritos antes da implementação confirmaram a ausência dos métodos/serviço.
+  Após a implementação, **12 testes novos passaram**: três de transporte e nove de edição.
+- Regressão proporcional incluindo cliente HTTP existente e criação de NPC:
+  `npm run test --workspace=frontend -- --watch=false` com os cinco arquivos pertinentes,
+  **48 testes passaram**. Log local `.superpowers/m4-08b-regressao-base.log`.
+- `npx tsc --noEmit -p frontend/tsconfig.app.json`: passou.
+- Lint do novo serviço, specs e fixture, com a configuração do frontend: zero erros/avisos.
+- Leitura manual do diff e arquivos novos contra spec/convenções; buscas sem DTO/enums
+  redefinidos, fórmulas locais, hardcodes ou alteração fora do escopo; diff sem whitespace.
+
+**Pendências obrigatórias:** página standalone/lazy e componentes visuais; entradas por
+criação/acervo/painel; leitura concedida sem guarda de mestre; utilitários/metadados e
+gestão de acesso; eventos, revogação e reconexão ligados à página; gates integrados e
+verificação pessoal com `verify` nos quatro viewports e todos os estados da spec.
+`m4-08b` permanece **ativa e não commitada**, com os atalhos públicos ainda desligados.
+
 ## 2026-09-30 — m4-08: assistente dedicado de criação de NPC
 
 O autor pediu o commit da `m4-07` antes de iniciar a `m4-08`. Commit `441f8f70`, com

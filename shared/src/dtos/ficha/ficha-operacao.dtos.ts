@@ -1,5 +1,6 @@
 import type {
   ArquetipoEnum,
+  CategoriaNpcEnum,
   ClasseEnum,
   ComportamentoCriaturaEnum,
   NivelAmeacaEnum,
@@ -133,6 +134,8 @@ export interface FichaResumoDto {
    * o front trata ausência como "não é criatura" (mesmo efeito de `JOGADOR`).
    */
   readonly tipo?: TipoFichaEnum;
+  /** Categoria do NPC; ausente nos outros tipos. Não altera o snapshot da ficha. */
+  readonly categoria?: CategoriaNpcEnum | null;
   /** Nível de Ameaça (`FichaCriaturaDadosDto.na`) — só presente numa ficha `CRIATURA`. */
   readonly na?: NivelAmeacaEnum | null;
   /**

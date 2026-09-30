@@ -399,6 +399,7 @@ export class FichaService {
       cor: fichaInterna.cor,
       imagemUrl: fichaInterna.imagemUrl,
       tipo: fichaInterna.tipo,
+      categoria: fichaInterna.categoria,
       na: fichaInterna.na,
       vd: fichaInterna.vd,
       registro: fichaInterna.registro,

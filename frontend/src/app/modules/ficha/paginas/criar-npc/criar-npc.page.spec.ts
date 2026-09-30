@@ -36,6 +36,17 @@ describe("NpcCriar", () => {
             prioridadesAlvo: "Evitar", reacaoFerimentoSevero: "Buscar ajuda" });
     }
 
+    it.each([null, "7"])("saída da criação abre NPC por tipo, campanha %s", (campanhaId) => {
+        const { pagina, resposta, router } = montar(campanhaId);
+        preencherCivil(pagina); pagina.registrar();
+        resposta.next({ id: 9, campanhaId: campanhaId ? 7 : null, usuarioId: 1,
+            tipo: TipoFichaEnum.NPC, nome: "Helena", cor: null, imagemUrl: null,
+            dados: pagina.criacao.dados() });
+        pagina.abrirNpc();
+        expect(router.navigate).toHaveBeenCalledWith(campanhaId
+            ? ["/campanhas", 7, "npc", 9] : ["/fichas", "npc", 9]);
+    });
+
     it("bloqueia avanço vazio e revisão permite corrigir pela etapa", () => {
         const { pagina, fixture } = montar();
         pagina.avancar();
