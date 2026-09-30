@@ -5,7 +5,7 @@
 Release de patch com uma única entrega desde a 1.4.0: o Esquadrão na cena de Investigação do jogador e a
 prévia do mestre (m7-27). Nota em `docs/patchnotes/1.4.1.md`, versão sincronizada nos pacotes. Conferido:
 `shared` build e 796 testes; dry-run da nota e do workflow (publicaria a 1.4.1 e criaria a tag `v1.4.1` em
-`7bc1c596`). Tag e publicação no R2 saem pelo workflow no push em `master`.
+`7bc1c596`). Tag e publicação no R2 saem pelo workflow no push em `master`. Depois da publicação, o preview de avatar em hover (`PreviewAvatar`) entrou no Esquadrão da Investigação e foi incluído na mesma nota 1.4.1; a tag `v1.4.1` permanece no commit original.
 
 ## 2026-09-29 — m7-27: Esquadrão na Investigação e prévia do jogador concluídos
 

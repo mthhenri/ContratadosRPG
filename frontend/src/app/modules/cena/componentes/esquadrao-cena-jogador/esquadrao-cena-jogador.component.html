@@ -21,6 +21,7 @@
                                 class="esquadrao-cena__avatar"
                                 aria-hidden="true"
                                 [style.--cor-ficha]="ficha.cor"
+                                [appPreviewAvatar]="ficha.imagemUrl"
                             >
                                 @if (ficha.imagemUrl; as imagemUrl) {
                                     <img [src]="imagemUrl" alt="" />

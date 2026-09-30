@@ -65,6 +65,25 @@ describe('EsquadraoCenaJogador', () => {
     expect(raiz.textContent).toContain('Agente 21');
   });
 
+  it('amplia a foto do agente em hover sustentado de mouse, como o Esquadrão da campanha', () => {
+    vi.useFakeTimers();
+    try {
+      const comFoto = { ...membro(8, 'Ana', [{ id: 20, acessoCompleto: false }]) } as unknown as CampanhaMembroResumoDto;
+      (comFoto.fichas[0] as { imagemUrl: string | null }).imagemUrl = '/foto.png';
+      const fixture = montar([comFoto], [resumo(20, 8, 'Ficha alheia')]);
+      const avatar = (fixture.nativeElement as HTMLElement).querySelector('.esquadrao-cena__avatar') as HTMLElement;
+      const entrada = new Event('pointerenter');
+      Object.defineProperty(entrada, 'pointerType', { value: 'mouse' });
+      avatar.dispatchEvent(entrada);
+      vi.advanceTimersByTime(600);
+      expect(document.body.querySelector('body > div[aria-hidden="true"] img[src="/foto.png"]')).not.toBeNull();
+      avatar.dispatchEvent(new Event('pointerleave'));
+      expect(document.body.querySelector('body > div[aria-hidden="true"] img[src="/foto.png"]')).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('usa o estado vazio sem agentes', () => {
     const raiz = montar([], []).nativeElement as HTMLElement;
     expect(raiz.querySelector('app-estado-vazio')).not.toBeNull();
