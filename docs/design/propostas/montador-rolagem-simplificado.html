@@ -1,0 +1,1152 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>POC · Montador de rolagem simplificado</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    /* Protótipo descartável: valores transcritos dos tokens do tema (docs/design/tema/_tokens.scss),
+       sem efeito no produto. O "motor" em JS no fim do arquivo é um brinquedo só para o POC — o
+       produto usa `interpretarFormula`/`validarFormula`/`rolarInterpretada` de shared/regras/rolagem. */
+    :root {
+      --bg: #0a0c0f; --surface: #13161b; --surface-2: #1a1e24;
+      --border: rgba(255,255,255,.07); --border-strong: rgba(255,255,255,.12);
+      --text: #e6e8eb; --text-dim: #969ba3; --text-mute: #656a72;
+      --accent: #d53030; --accent-text: #fff; --accent-hover: #c42c2c; --accent-press: #b32828;
+      --accent-dim: color-mix(in srgb, var(--accent) 12%, transparent);
+      --accent-border: color-mix(in srgb, var(--accent) 40%, transparent);
+      --positive: #4a9d6b; --warning: #d9a441; --energy: #4c8dd0; --erro: #d62222;
+      --dano-fisico: #ef4444; --dano-balistico: #3b82f6; --dano-explosao: #f97316; --dano-quimico: #22c55e; --dano-geral: #e5e7eb;
+      --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+      --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+      --tracking-label: .12em; --radius-card: 6px; --radius-control: 4px; --radius-compact: 3px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 70px; }
+    body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font-sans); line-height: 1.5; }
+    button { font: inherit; color: inherit; cursor: pointer; }
+    button:disabled { opacity: .55; cursor: not-allowed; }
+    button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid var(--accent-border); outline-offset: 2px; }
+    code { font-family: var(--font-mono); color: var(--text); }
+    .pagina { max-width: 1640px; margin: auto; padding: 24px 24px 90px; }
+
+    /* ===== Moldura da proposta ===== */
+    .kicker { color: var(--accent); font: 600 11px var(--font-mono); text-transform: uppercase; letter-spacing: .12em; }
+    h1 { font: 700 26px var(--font-mono); margin: 6px 0 8px; }
+    .intro { color: var(--text-dim); max-width: 940px; margin: 0 0 18px; font-size: 14px; }
+    .nav { position: sticky; top: 0; z-index: 60; display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 0; margin-bottom: 8px; background: color-mix(in srgb, var(--bg) 94%, transparent); backdrop-filter: blur(6px); border-bottom: 1px solid var(--border); }
+    .nav a { font: 600 10.5px var(--font-mono); text-transform: uppercase; letter-spacing: .08em; color: var(--text-dim); text-decoration: none; padding: 7px 10px; border: 1px solid var(--border-strong); border-radius: var(--radius-control); background: var(--surface); }
+    .nav a:hover { color: var(--text); border-color: var(--accent-border); }
+    .secao-pg { margin: 40px 0 14px; display: flex; align-items: center; gap: 12px; font: 600 12px var(--font-mono); text-transform: uppercase; letter-spacing: .12em; }
+    .secao-pg::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .secao-pg b { display: grid; place-items: center; min-width: 22px; height: 22px; padding: 0 5px; border: 1px solid var(--accent); color: var(--accent); border-radius: 3px; font-size: 11px; }
+    .sub { color: var(--text-dim); font-size: 13.5px; max-width: 980px; margin: 0 0 14px; }
+    .achados { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 12px; }
+    .achado { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-card); padding: 14px; display: grid; grid-template-columns: 26px 1fr; gap: 4px 12px; align-content: start; }
+    .achado__n { grid-row: 1 / span 3; width: 24px; height: 24px; display: grid; place-items: center; border: 1px solid var(--warning); color: var(--warning); border-radius: 50%; font: 700 11px var(--font-mono); }
+    .achado--ui .achado__n { border-color: var(--energy); color: var(--energy); border-radius: 3px; }
+    .achado h3 { margin: 0; font: 600 13.5px var(--font-sans); }
+    .achado p { margin: 0; font-size: 12.5px; color: var(--text-dim); }
+    .achado .prova { font: 11px var(--font-mono); color: var(--text-mute); }
+    .tab { width: 100%; border-collapse: collapse; font-size: 12.5px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-card); }
+    .tab th { text-align: left; font: 600 10px var(--font-mono); text-transform: uppercase; letter-spacing: .1em; color: var(--text-mute); padding: 9px 10px; border-bottom: 1px solid var(--border-strong); white-space: nowrap; }
+    .tab td { padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; color: var(--text-dim); }
+    .tab td:first-child { color: var(--text); font-weight: 500; }
+    .tab tr:last-child td { border-bottom: 0; }
+    .tab .base { color: var(--positive); font: 600 11px var(--font-mono); }
+    .tab .ctx { color: var(--energy); font: 600 11px var(--font-mono); }
+    .tab .guia { color: var(--warning); font: 600 11px var(--font-mono); }
+    .tab .fora { color: var(--text-mute); font: 600 11px var(--font-mono); }
+    .rolagem-tabela { overflow-x: auto; }
+    .rolagem-tabela .tab { min-width: 880px; }
+    .pt { font-family: var(--font-mono); letter-spacing: .08em; color: var(--accent); white-space: nowrap; }
+    .pt i { font-style: normal; color: var(--border-strong); }
+    .escolhas { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+    .escolhas button { background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-control); color: var(--text-dim); padding: 9px 13px; font: 600 11px var(--font-mono); text-transform: uppercase; }
+    .escolhas button small { font: inherit; opacity: .7; margin-left: 4px; text-transform: none; }
+    .escolhas button[aria-pressed="true"] { background: var(--accent-dim); border-color: var(--accent-border); color: var(--text); }
+    .nota-opcao { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 0; margin-bottom: 16px; border: 1px solid var(--border); border-left: 2px solid var(--accent); background: var(--surface); border-radius: 0 var(--radius-card) var(--radius-card) 0; }
+    .nota-opcao > div { padding: 12px 14px; font-size: 12.5px; color: var(--text-dim); border-right: 1px solid var(--border); }
+    .nota-opcao > div:last-child { border-right: 0; }
+    .nota-opcao h4 { margin: 0 0 4px; font: 600 10px var(--font-mono); text-transform: uppercase; letter-spacing: .1em; color: var(--text-mute); }
+    .nota-opcao strong { color: var(--text); }
+    .nota-opcao ul { margin: 0; padding-left: 16px; }
+    .nota-opcao li { margin: 2px 0; }
+    .nota-opcao .mais { color: var(--positive); } .nota-opcao .menos { color: var(--warning); }
+    .previews { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 22px; align-items: start; }
+    .preview__legenda { display: flex; align-items: center; gap: 10px; margin: 0 0 8px; color: var(--text-mute); font: 600 11px var(--font-mono); text-transform: uppercase; letter-spacing: .1em; }
+    .preview__legenda::after { content: ''; height: 1px; background: var(--border); flex: 1; }
+    .preview__legenda label { text-transform: none; letter-spacing: 0; color: var(--text-dim); font-weight: 500; display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+    .frame { position: relative; overflow: hidden; border: 1px solid var(--border-strong); border-radius: var(--radius-card); background: var(--bg); }
+    .frame--d { height: 800px; }
+    .frame--d.frame--alto { height: 880px; }
+    .frame--m { width: 360px; height: 800px; }
+    .etiqueta-poc { color: var(--text-mute); font: 11px var(--font-mono); margin-top: 14px; }
+    .decisoes { display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 12px; }
+    .decisao { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-card); padding: 14px; font-size: 13px; color: var(--text-dim); }
+    .decisao strong { color: var(--text); display: block; margin-bottom: 4px; }
+    .reco { background: var(--surface); border: 1px solid var(--accent-border); border-radius: var(--radius-card); padding: 18px 20px; font-size: 14px; color: var(--text-dim); max-width: 1100px; }
+    .reco h3 { margin: 0 0 8px; font: 700 15px var(--font-mono); color: var(--text); }
+    .reco ol { margin: 8px 0 0; padding-left: 20px; } .reco li { margin: 6px 0; }
+    .reco strong { color: var(--text); }
+
+    /* ===== Fundo: a ficha por trás (barra "Rolagem rápida" real do produto) ===== */
+    .host { position: absolute; inset: 0; padding: 18px; }
+    .host__tit { font: 600 11px var(--font-mono); text-transform: uppercase; letter-spacing: .12em; color: var(--text-mute); margin-bottom: 10px; }
+    .barra { padding: 14px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-card); }
+    .barra__rot { display: flex; align-items: center; justify-content: space-between; font: 10px var(--font-mono); text-transform: uppercase; letter-spacing: .1em; color: var(--text-mute); margin-bottom: 8px; }
+    .barra__lin { display: flex; gap: 8px; align-items: center; }
+    .barra .vs { flex: 1; min-width: 0; background: var(--surface); font-size: 13px; padding: 9px 10px; }
+    .guia-link { background: none; border: 0; padding: 0; color: var(--text-dim); font: 600 10px var(--font-mono); text-transform: uppercase; letter-spacing: .08em; }
+    .guia-link b { display: inline-grid; place-items: center; width: 15px; height: 15px; border: 1px solid var(--border-strong); border-radius: 50%; margin-right: 4px; color: var(--text-dim); }
+    .host__lista { margin-top: 16px; opacity: .45; display: grid; gap: 8px; }
+    .host__preset { display: flex; justify-content: space-between; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-control); font: 12px var(--font-mono); }
+    .host__preset span:last-child { color: var(--text-mute); }
+
+    /* ===== Átomos do POC (receitas dos tokens do produto) ===== */
+    .ico { display: inline-block; width: 1em; height: 1em; line-height: 0; }
+    .ico svg { width: 100%; height: 100%; display: block; }
+    .b { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 32px; padding: 0 12px; border: 1px solid var(--border-strong); border-radius: var(--radius-control); background: transparent; color: var(--text); font: 600 11px var(--font-mono); text-transform: uppercase; letter-spacing: .06em; white-space: nowrap; }
+    .b:hover:not(:disabled) { border-color: var(--accent-border); }
+    .b--prim { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+    .b--prim:hover:not(:disabled) { background: var(--accent-hover); border-color: var(--accent-hover); }
+    .b--ctn { color: var(--accent); border-color: var(--accent-border); }
+    .b--txt { border-color: transparent; color: var(--text-dim); }
+    .b--txt:hover:not(:disabled) { color: var(--text); border-color: var(--border-strong); }
+    .b--ico { width: 36px; padding: 0; font-size: 18px; } .b--ico .ico { width: 20px; height: 20px; }
+    .b--grande { min-height: 46px; font-size: 13px; letter-spacing: .1em; }
+    .b--flex { flex: 1; }
+    .gatilho { position: relative; } .gatilho .mais-selo { position: absolute; right: 3px; top: 1px; font: 700 11px var(--font-mono); color: var(--accent); }
+    .gatilho--ativo { background: var(--accent-dim); border-color: var(--accent-border); }
+    .vs { width: 100%; background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: var(--radius-control); padding: 9px 12px; font: 14px var(--font-mono); color: var(--text); }
+    .vs::placeholder { color: var(--text-mute); }
+    .vs--grande { font-size: 17px; padding: 12px 14px; }
+    .vs--linha { padding: 6px 10px; font-size: 12px; color: var(--text-dim); }
+    .tt { margin: 0; font: 600 10px var(--font-mono); text-transform: uppercase; letter-spacing: var(--tracking-label); color: var(--text-mute); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .tt .dir { text-transform: none; letter-spacing: 0; font-weight: 500; }
+    .dica { margin: 0; font-size: 12px; color: var(--text-dim); } .dica code { font-size: 11.5px; }
+    .gr { display: flex; flex-direction: column; gap: 6px; position: relative; }
+    .grade { display: flex; flex-wrap: wrap; gap: 6px; }
+    .grade--g7 { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+    .grade--g6 { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
+    .grade--g5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
+    .lin { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .lin--entre { justify-content: space-between; }
+    .rot-lin { font-size: 12px; color: var(--text-dim); }
+    .t { position: relative; display: inline-grid; place-items: center; width: 36px; height: 36px; padding: 0; border: 1px solid var(--border-strong); border-radius: var(--radius-control); background: transparent; color: var(--text); font: 600 12px var(--font-mono); }
+    .t:hover:not(:disabled) { border-color: var(--accent-border); }
+    .grade--g7 .t, .grade--g6 .t, .grade--g5 .t { width: 100%; }
+    .t--op { color: var(--accent); border-color: var(--accent-border); }
+    .t--extra { color: var(--text-dim); }
+    .t--on { background: var(--accent-dim); border-color: var(--accent-border); color: var(--text); }
+    .t--on::after { content: '✓'; position: absolute; top: 1px; right: 4px; font-size: 9px; color: var(--accent); }
+    .t-dado > * { grid-area: 1 / 1; }
+    .t-dado .ico { width: 82%; height: 82%; color: var(--text-dim); opacity: .45; }
+    .t-dado .rot { font: 700 10px var(--font-mono); color: var(--text); text-shadow: 0 0 3px rgb(0 0 0 / 70%), 0 0 3px rgb(0 0 0 / 70%); }
+    .t--grande { height: 52px; width: 100%; } .t--grande .rot { font-size: 11px; }
+    .t .cont { position: absolute; top: -6px; right: -4px; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px; background: var(--accent); color: var(--accent-text); font: 700 10px/17px var(--font-mono); text-align: center; z-index: 2; }
+    .dn { display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 0 10px; border: 1px solid var(--c-b); border-radius: var(--radius-control); background: var(--c-d); color: var(--c); font: 600 11px var(--font-mono); }
+    .dn::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--c); }
+    .dn:hover:not(:disabled) { filter: brightness(1.2); }
+    .dn--sel { box-shadow: 0 0 0 1px var(--c); }
+    .dn--fisico { --c: var(--dano-fisico); --c-d: color-mix(in srgb, var(--dano-fisico) 12%, transparent); --c-b: color-mix(in srgb, var(--dano-fisico) 40%, transparent); }
+    .dn--balistico { --c: var(--dano-balistico); --c-d: color-mix(in srgb, var(--dano-balistico) 12%, transparent); --c-b: color-mix(in srgb, var(--dano-balistico) 40%, transparent); }
+    .dn--explosao { --c: var(--dano-explosao); --c-d: color-mix(in srgb, var(--dano-explosao) 12%, transparent); --c-b: color-mix(in srgb, var(--dano-explosao) 40%, transparent); }
+    .dn--quimico { --c: var(--dano-quimico); --c-d: color-mix(in srgb, var(--dano-quimico) 12%, transparent); --c-b: color-mix(in srgb, var(--dano-quimico) 40%, transparent); }
+    .dn--geral { --c: var(--dano-geral); --c-d: color-mix(in srgb, var(--dano-geral) 12%, transparent); --c-b: color-mix(in srgb, var(--dano-geral) 40%, transparent); }
+    .dn--sigla { min-width: 36px; justify-content: center; padding: 0; height: 36px; } .dn--sigla::before { display: none; }
+    .dn--nenhum { --c: var(--text-dim); --c-d: transparent; --c-b: var(--border-strong); }
+    .sg { display: inline-flex; flex-wrap: wrap; gap: 2px; padding: 2px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-control); }
+    .sg button { min-height: 28px; padding: 0 10px; border: 0; border-radius: var(--radius-compact); background: transparent; color: var(--text-dim); font: 600 11px var(--font-mono); }
+    .sg button[aria-pressed="true"] { background: var(--accent-dim); color: var(--text); box-shadow: inset 0 0 0 1px var(--accent-border); }
+    .sg--bloco { display: flex; } .sg--bloco button { flex: 1; }
+    .st { display: inline-flex; align-items: center; border: 1px solid var(--border-strong); border-radius: var(--radius-control); background: var(--surface-2); }
+    .st button { width: 30px; height: 30px; border: 0; background: transparent; color: var(--text-dim); font: 600 15px var(--font-mono); }
+    .st button:hover { color: var(--accent); }
+    .st .sv { min-width: 38px; text-align: center; font: 600 13px var(--font-mono); }
+    .leitura { padding: 10px 12px; background: var(--surface-2); border: 1px solid var(--border); border-left: 2px solid var(--accent); border-radius: var(--radius-control); font-size: 12.5px; color: var(--text-dim); line-height: 1.7; }
+    .leitura--erro { border-left-color: var(--warning); } .leitura--vazio { border-left-color: var(--border-strong); }
+    .leitura strong { color: var(--text); font-weight: 600; } .leitura .mais { color: var(--text-mute); font-style: normal; margin: 0 4px; }
+    .leitura .num { font-family: var(--font-mono); color: var(--text); }
+    .leitura .faixa { display: block; margin-top: 2px; font: 11px var(--font-mono); color: var(--text-mute); }
+    .leitura .mini-dn { display: inline-block; padding: 0 6px; border-radius: 3px; font: 600 10.5px var(--font-mono); border: 1px solid var(--c-b); background: var(--c-d); color: var(--c); }
+    .leitura .acao-inline { display: inline; margin-left: 6px; padding: 0 6px; min-height: 0; background: none; border: 1px solid var(--border-strong); border-radius: 3px; color: var(--text); font: 600 10.5px var(--font-mono); }
+
+    /* ===== Janela flutuante (painel-flutuante do produto) ===== */
+    .mr-janela { position: absolute; display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-card); box-shadow: 0 18px 50px rgba(0,0,0,.55); overflow: hidden; max-height: calc(100% - 24px); z-index: 5; }
+    .mr-janela--m { inset: 0; max-height: none; border-radius: 0; border: 0; width: auto; }
+    .mr-topo { display: flex; align-items: center; justify-content: space-between; height: 40px; flex: none; padding: 0 8px 0 14px; border-bottom: 1px solid var(--border); font: 600 11px var(--font-mono); text-transform: uppercase; letter-spacing: .1em; color: var(--text-dim); }
+    .mr-topo .x { width: 28px; height: 28px; border: 0; background: transparent; color: var(--text-dim); font-size: 14px; border-radius: var(--radius-control); }
+    .mr-topo .x:hover { color: var(--text); background: var(--surface-2); }
+    .mr-abas { display: flex; flex: none; border-bottom: 1px solid var(--border); padding: 0 8px; }
+    .mr-abas button { background: none; border: 0; border-bottom: 2px solid transparent; padding: 10px 12px; font: 600 11px var(--font-mono); text-transform: uppercase; letter-spacing: .08em; color: var(--text-mute); }
+    .mr-abas button[aria-selected="true"] { color: var(--text); border-bottom-color: var(--accent); }
+    .mr-corpo { flex: 1; min-height: 0; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 14px; }
+    .mr-rodape { flex: none; display: flex; gap: 8px; padding: 10px 14px 14px; border-top: 1px solid var(--border); }
+    .mr-fechado { position: absolute; left: 24px; top: 130px; right: 24px; padding: 14px; border: 1px dashed var(--border-strong); border-radius: var(--radius-card); color: var(--text-mute); font: 12px var(--font-mono); text-align: center; }
+    .alca { position: absolute; right: 0; bottom: 0; width: 20px; height: 20px; }
+    .alca::after { content: ''; position: absolute; right: 4px; bottom: 4px; width: 8px; height: 8px; border-right: 1px solid var(--accent); border-bottom: 1px solid var(--accent); }
+
+    /* modo mobile: alvos de toque de 44px (bp.$alvo-toque) */
+    .m .b { min-height: 44px; } .m .b--ico { width: 44px; }
+    .m .t { height: 44px; } .m .t:not(.t--grande) { min-width: 44px; } .m .t--grande { height: 56px; }
+    .m .grade .t { width: 44px; }
+    .m .st button { width: 44px; height: 44px; } .m .sg button { min-height: 44px; }
+    .m .dn { min-height: 44px; } .m .dn--sigla { height: 44px; }
+    .m .mr-topo .x { width: 44px; height: 44px; }
+    .m .mr-abas button { min-height: 44px; }
+    .m .host { padding: 12px; }
+
+    /* ===== Anotações do diagnóstico sobre o baseline ===== */
+    .anot [data-nota] { outline: 1.5px dashed var(--warning); outline-offset: 3px; }
+    .anot [data-nota]::before { content: attr(data-nota); position: absolute; top: -10px; right: -8px; z-index: 6; width: 19px; height: 19px; display: grid; place-items: center; border-radius: 50%; background: var(--warning); color: #0a0c0f; font: 700 11px var(--font-mono); pointer-events: none; }
+    .anot .t[data-nota], .anot .b[data-nota], .anot .vs[data-nota] { position: relative; }
+
+    /* ===== Opção 2: fichas ===== */
+    .fc-area { min-height: 76px; padding: 10px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: var(--radius-control); }
+    .fc-vazio { color: var(--text-mute); font-size: 12.5px; padding: 4px 2px; }
+    .fc { display: inline-flex; align-items: center; gap: 7px; min-height: 34px; padding: 0 10px; border: 1px solid var(--border-strong); border-radius: var(--radius-control); background: var(--surface); font: 600 13px var(--font-mono); }
+    .fc .ico { width: 16px; height: 16px; color: var(--text-dim); }
+    .fc small { font: 500 10.5px var(--font-mono); color: var(--text-mute); }
+    .fc .bdg { padding: 0 5px; border-radius: 3px; font: 600 10px var(--font-mono); background: var(--accent-dim); color: var(--text); border: 1px solid var(--accent-border); }
+    .fc--sel { border-color: var(--accent); background: var(--accent-dim); }
+    .fc--dano { box-shadow: inset 3px 0 0 var(--c); }
+    .fc-sinal { min-width: 22px; height: 28px; border: 0; background: none; color: var(--text-mute); font: 600 14px var(--font-mono); border-radius: 3px; }
+    .fc-sinal:hover { color: var(--accent); background: var(--surface); }
+    .insp { padding: 12px; border: 1px solid var(--accent-border); border-radius: var(--radius-control); background: color-mix(in srgb, var(--accent) 4%, var(--surface)); display: flex; flex-direction: column; gap: 10px; }
+    .insp--vazio { border: 1px dashed var(--border-strong); background: none; color: var(--text-mute); font-size: 12.5px; }
+    .insp__topo { display: flex; align-items: center; justify-content: space-between; font: 600 12px var(--font-mono); }
+    .insp__topo .b { min-height: 26px; padding: 0 8px; font-size: 10px; }
+    .insp .linha { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+    .insp .rot { font-size: 12px; color: var(--text-dim); }
+
+    /* ===== Opção 3: receitas ===== */
+    .rec-grade { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .rec { text-align: left; display: flex; flex-direction: column; gap: 3px; padding: 11px 12px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-control); }
+    .rec:hover { border-color: var(--accent-border); }
+    .rec b { font: 600 13px var(--font-sans); } .rec span { font-size: 11.5px; color: var(--text-dim); line-height: 1.35; }
+    .rec code { margin-top: 3px; font-size: 11px; color: var(--accent); }
+    .rec--lado { grid-column: 1 / -1; flex-direction: row; align-items: center; justify-content: space-between; border-style: dashed; }
+    .slot { display: flex; flex-direction: column; gap: 6px; }
+    .slot--linha { flex-direction: row; align-items: center; justify-content: space-between; gap: 10px; }
+
+    /* ===== Opção 4: comando ===== */
+    .sug { display: flex; flex-wrap: wrap; gap: 6px; }
+    .sug button { min-height: 32px; padding: 0 10px; border: 1px solid var(--border-strong); border-radius: var(--radius-control); background: var(--surface-2); font: 600 12px var(--font-mono); display: inline-flex; flex-direction: column; justify-content: center; line-height: 1.15; text-align: left; }
+    .sug button small { font: 500 9.5px var(--font-sans); color: var(--text-mute); }
+    .sug button:hover { border-color: var(--accent-border); }
+    .sug .grupo { width: 100%; }
+
+    /* ===== Guia embutido ===== */
+    .guia { display: flex; flex-direction: column; gap: 8px; }
+    .gc { padding: 11px 12px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-control); display: grid; gap: 4px; }
+    .gc h5 { margin: 0; font: 600 13px var(--font-sans); }
+    .gc p { margin: 0; font-size: 12px; color: var(--text-dim); }
+    .gc .exemplo { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 3px; }
+    .gc .exemplo code { padding: 3px 8px; background: var(--bg); border: 1px solid var(--border); border-radius: 3px; font-size: 12px; color: var(--accent); overflow-wrap: anywhere; }
+    .gc .exemplo .b { min-height: 26px; padding: 0 8px; font-size: 10px; }
+    .gc .obs { font-size: 11.5px; color: var(--text-mute); }
+
+    /* ===== Opção 5: passos ===== */
+    .trilha { display: flex; align-items: center; gap: 4px; }
+    .trilha .p { display: flex; align-items: center; gap: 6px; font: 600 10px var(--font-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--text-mute); }
+    .trilha .p i { font-style: normal; width: 20px; height: 20px; display: grid; place-items: center; border: 1px solid var(--border-strong); border-radius: 3px; font-size: 10px; }
+    .trilha .p--on { color: var(--text); } .trilha .p--on i { border-color: var(--accent); color: var(--accent); }
+    .trilha .p--ok i { background: var(--accent-dim); border-color: var(--accent-border); color: var(--text); }
+    .trilha .reg { flex: 1; height: 1px; background: var(--border); min-width: 6px; }
+    .m .trilha .p span { display: none; } .m .trilha .p--on span { display: inline; }
+    .mini-visor { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-control); font: 13px var(--font-mono); }
+    .mini-visor small { font: 600 9.5px var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--text-mute); }
+
+    /* ===== Opção 6: gaveta ===== */
+    .gaveta { margin-top: 8px; padding: 12px 14px 14px; background: var(--surface); border: 1px solid var(--accent-border); border-radius: var(--radius-card); display: flex; flex-direction: column; gap: 12px; }
+    .gaveta .grade--g7 { grid-template-columns: repeat(7, 42px); justify-content: start; gap: 4px; }
+    .gaveta .grade--g7 .t { width: 42px; height: 42px; }
+    .gaveta__linha-atr { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+    .gaveta__cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 18px; }
+    .gaveta__cols > .gr { min-width: 0; }
+    .faixa-rolagem { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; scroll-snap-type: x proximity; -webkit-mask-image: linear-gradient(to right, #000 88%, transparent); mask-image: linear-gradient(to right, #000 88%, transparent); }
+    .faixa-rolagem > * { flex: none; scroll-snap-align: start; }
+    .faixa-rolagem .t { width: 44px; }
+    .faixa-rolagem::-webkit-scrollbar { height: 4px; } .faixa-rolagem::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 2px; }
+    .folha { position: absolute; left: 0; right: 0; bottom: 0; background: var(--surface); border-top: 1px solid var(--accent-border); border-radius: 10px 10px 0 0; box-shadow: 0 -14px 40px rgba(0,0,0,.55); z-index: 5; display: flex; flex-direction: column; gap: 8px; padding: 8px 14px 14px; max-height: 80%; overflow-y: auto; }
+    .leitura--compacta { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 12px; line-height: 1.35; }
+    .leitura--compacta code { font-size: 12.5px; overflow-wrap: anywhere; }
+    .leitura--compacta small { font: 11px var(--font-mono); color: var(--text-mute); white-space: nowrap; }
+    .modal-guia { position: absolute; inset: 0; z-index: 30; background: rgba(0,0,0,.6); display: grid; place-items: start center; padding: 40px 24px; overflow: auto; }
+    .modal-guia__caixa { width: min(980px, 100%); background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-card); padding: 16px 18px; box-shadow: 0 24px 60px rgba(0,0,0,.6); }
+    .modal-guia__caixa h4 { margin: 0 0 6px; font: 700 14px var(--font-mono); }
+    .modal-guia__grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; margin: 12px 0; }
+    .modal-guia__grade section { font-size: 12px; color: var(--text-dim); } .modal-guia__grade code { display: block; color: var(--accent); }
+    .modal-guia__rodape { display: flex; justify-content: space-between; align-items: center; gap: 10px; font: 11px var(--font-mono); color: var(--text-mute); }
+    .folha__alca { align-self: center; width: 36px; height: 4px; border-radius: 2px; background: var(--border-strong); }
+
+    /* ===== Opção 7: bandeja ===== */
+    .bandeja { position: relative; min-height: 132px; padding: 12px; border: 1px solid var(--border-strong); border-radius: var(--radius-control); background-color: var(--surface-2); background-image: linear-gradient(var(--grid-l, rgba(255,255,255,.03)) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px); background-size: 24px 24px; display: flex; flex-wrap: wrap; gap: 10px; align-content: flex-start; }
+    .bandeja__vazio { margin: auto; text-align: center; color: var(--text-mute); font: 12px var(--font-mono); padding: 22px 0; }
+    .grupo-dado { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 8px 10px; background: color-mix(in srgb, var(--surface) 70%, transparent); border: 1px solid var(--border-strong); border-radius: var(--radius-control); border-bottom: 3px solid var(--c, var(--border-strong)); }
+    .grupo-dado .dados { display: flex; gap: 2px; align-items: center; min-height: 30px; }
+    .grupo-dado .dados .ico { width: 28px; height: 28px; color: var(--text); }
+    .grupo-dado .dados em { font: 600 12px var(--font-mono); font-style: normal; color: var(--text-dim); margin-left: 4px; }
+    .grupo-dado .rodape { display: flex; align-items: center; gap: 6px; font: 600 12px var(--font-mono); }
+    .grupo-dado .rodape button { width: 22px; height: 22px; border: 1px solid var(--border-strong); border-radius: 3px; background: none; color: var(--text-dim); font-size: 12px; line-height: 1; }
+    .pilula { display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 0 10px; border: 1px solid var(--border-strong); border-radius: var(--radius-control); background: color-mix(in srgb, var(--surface) 70%, transparent); font: 600 12.5px var(--font-mono); }
+    .pilula small { color: var(--text-mute); font-weight: 500; } .pilula button { border: 0; background: none; color: var(--text-mute); padding: 0 0 0 2px; }
+
+    /* ===== Resultado (no produto: bandeja de dados) ===== */
+    .res { position: absolute; right: 16px; bottom: 16px; width: min(430px, calc(100% - 32px)); z-index: 20; display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; padding: 10px 14px; background: var(--surface-2); border: 1px solid var(--border-strong); border-left: 3px solid var(--accent); border-radius: var(--radius-control); box-shadow: 0 10px 30px rgba(0,0,0,.5); font: 12px var(--font-mono); }
+    .res__total { font-size: 26px; font-weight: 700; color: var(--accent); min-width: 44px; text-align: center; }
+    .res__det { color: var(--text-dim); display: grid; gap: 2px; min-width: 0; overflow-wrap: anywhere; } .res__det b { color: var(--text); }
+    .res__det .mant { color: var(--text); font-weight: 700; } .res__det .desc { color: var(--text-mute); text-decoration: line-through; }
+    .res button { border: 0; background: none; color: var(--text-mute); font-size: 14px; }
+    .frame--m .res { left: 8px; right: 8px; top: 8px; bottom: auto; width: auto; }
+    @media (max-width: 1180px) { .previews { grid-template-columns: 1fr; } .frame--m { margin: 0 auto; } .nota-opcao { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 640px) { .nav { position: static; } .nota-opcao { grid-template-columns: 1fr; } .achados, .decisoes { grid-template-columns: 1fr; } }
+    @media (max-width: 420px) { .pagina { padding: 14px 0 70px; } .pagina > :not(.previews):not(.rolagem-tabela) { padding-inline: 12px; } .pagina > .nav { margin-inline: 0; } .frame--d { height: 640px; } }
+  </style>
+</head>
+<body>
+  <main class="pagina">
+    <div class="kicker">POC · Montador de rolagem · sem efeito no produto</div>
+    <h1>Montador de rolagem: menos teclado, mais intenção</h1>
+    <p class="intro">
+      Pedido: deixar o montador menos burocrático e confuso, com <strong>ações base</strong> à vista e <strong>guias de instrução</strong> para o resto.
+      Abaixo: diagnóstico de UX/UI do componente atual, o critério “base × contextual × guia”, sete direções interativas (cada uma em desktop e em 360×800) e um comparativo.
+      Tudo clicável — monte uma fórmula, role e leia o resultado.
+    </p>
+    <nav class="nav" aria-label="Seções">
+      <a href="#diagnostico">Diagnóstico</a><a href="#criterio">Critério base/guia</a><a href="#opcoes">Opções (POC)</a><a href="#comparativo">Comparativo</a><a href="#recomendacao">Recomendação</a><a href="#decisoes">Decisões do autor</a>
+    </nav>
+
+    <h2 class="secao-pg" id="diagnostico"><b>1</b>Diagnóstico UX/UI do montador atual</h2>
+    <p class="sub">
+      Base: leitura de <code>montador-rolagem.component.{html,ts,scss}</code>, <code>montador-rolagem.util.ts</code>, <code>rolagem-rapida</code>, do <code>guia-formula</code> e do motor <code>shared/regras/rolagem</code>.
+      O baseline fiel está na aba <strong>Atual</strong> das opções, com as anotações numeradas abaixo (ligue “Anotar problemas”).
+      Os números de controles são <strong>medidos no próprio POC</strong>; as medidas de tela são aritmética sobre o SCSS, não captura do app real (ver nota ao fim).
+    </p>
+    <div class="achados" id="achados"></div>
+
+    <h2 class="secao-pg" id="criterio"><b>2</b>Critério: o que é base, o que é contextual, o que vira guia</h2>
+    <p class="sub">
+      Régua proposta: <strong>base</strong> = o jogador usa toda sessão e cabe numa palavra do jogo (dado, atributo, bônus, tipo de dano).
+      <strong>Contextual</strong> = só faz sentido junto de um termo já escolhido.
+      <strong>Guia</strong> = rara, ou sintaxe que o motor já aceita digitada; ganha texto + exemplo que se insere com um toque, e nenhum botão fixo.
+      Efeito colateral bom: ao tirar <code>kh</code>/<code>kl</code>/<code>cm</code> dos botões, some o “alvo invisível” (achado 3) — não há mais botão que age num dado que o jogador não escolheu.
+    </p>
+    <div class="rolagem-tabela"><table class="tab" id="tabela-mapa"></table></div>
+
+    <h2 class="secao-pg" id="opcoes"><b>3</b>Opções de POC</h2>
+    <p class="sub">
+      Sete direções, de evolutiva (1) a trocar o container (6) ou a metáfora (7). Todas usam o mesmo agente de teste
+      (<code>FOR 3 · LUT 4 · PROF 3 …</code>) e o mesmo guia embutido; o que muda é o <em>caminho</em> até a fórmula.
+      Dica: ligue “Anotar problemas” em <strong>Atual</strong> para ver onde cada achado mora.
+    </p>
+    <div class="escolhas" id="escolhas" role="group" aria-label="Opção de POC"></div>
+    <div class="nota-opcao" id="nota"></div>
+    <div class="previews">
+      <section aria-label="Prévia desktop">
+        <div class="preview__legenda"><span id="legenda-d">Desktop</span><span id="anotar-slot"></span></div>
+        <div class="frame frame--d" id="frame-d"></div>
+      </section>
+      <section aria-label="Prévia mobile">
+        <div class="preview__legenda">Mobile · 360 × 800</div>
+        <div class="frame frame--m m" id="frame-m"></div>
+      </section>
+    </div>
+    <p class="etiqueta-poc">Agente de teste: DES 2 · FOR 3 · LUT 4 · PON 2 · VIG 3 · INT 1 · MED 1 · SEN 2 · SOC 1 · VON 2 · PROF 3 · NIV 3. “Rolar” sorteia de verdade e mostra o resultado no rodapé do quadro (no produto ele vai para a bandeja de dados).</p>
+
+    <h2 class="secao-pg" id="comparativo"><b>4</b>Comparativo</h2>
+    <p class="sub">“Controles ao abrir” = botões e campos visíveis no estado inicial (medido no POC, desktop); entre parênteses, o máximo numa tela ao percorrer as variantes da opção. As notas de 1 a 5 pontos são <strong>julgamento de quem montou o POC</strong>, não medição — maior é melhor para o jogador.</p>
+    <div class="rolagem-tabela"><table class="tab" id="tabela-comp"></table></div>
+
+    <h2 class="secao-pg" id="recomendacao"><b>5</b>Recomendação</h2>
+    <div class="reco">
+      <h3>Fundação: Opção 1 + guia com receitas · camada de leitura da Opção 4</h3>
+      <p>É a leitura mais literal do pedido (“só ações base e guias para o resto”), a de menor custo e a que mais elimina confusão por controle removido. Duas costuras tornam o resultado melhor que a soma das partes:</p>
+      <ol>
+        <li><strong>Paleta base da Opção 1</strong> (dado · atributo com modo “Somar/Testar” · bônus · tipo de dano · atalhos do agente), cerca de metade dos controles de hoje, sem rolagem no desktop.</li>
+        <li><strong>Guia como aba do próprio painel</strong>, com exemplos que se inserem (Opção 1/3/4), no lugar do modal de 1180 px com 13 seções (o “?” da barra passa a abrir essa aba). Receitas “Teste de atributo” e “Dano de arma” cobrem o caso de uso mais comum sem botão.</li>
+        <li><strong>Leitura em português + faixa de resultado</strong> sob o visor (Opção 4): resolve o feedback ausente e o erro fora de contexto. Dá para derivar de <code>interpretarFormula</code> (agrupa por tipo: basta para “rola X, soma Y”); a frase na ordem digitada pede o divisor de termos exportado do shared — sem regra nova no frontend.</li>
+      </ol>
+      <p style="margin-top:12px"><strong>Depois, se houver apetite:</strong> Opção 6 como troca de container (gaveta/folha inferior no lugar da janela arrastável) — avaliar uso real: se o jogador não deixa o montador aberto enquanto joga, a janela é cerimônia demais. Opção 2 (fichas) só se surgir demanda por editar fórmulas longas, porque exige primitivo novo e tokenização exportada do shared. Opção 5 serve como <em>primeiro uso</em>, não como padrão.</p>
+    </div>
+
+    <h2 class="secao-pg" id="decisoes"><b>6</b>Decisões que dependem do autor</h2>
+    <div class="decisoes">
+      <div class="decisao"><strong>A janela arrastável continua?</strong>O padrão <code>painel-flutuante</code> existe para ferramenta que fica aberta enquanto se faz outra coisa. Se o jogador abre, monta, rola e fecha, vale folha/gaveta (Opção 6).</div>
+      <div class="decisao"><strong>“Testar atributo” vira ação base?</strong>É a rolagem mais comum do jogo (<code>ATRd20kh1</code>, regra de Testes). Hoje exige Dado + Atributo + Manter maior em sequência escondida. Propomos modo explícito Somar/Testar no seletor de atributo.</div>
+      <div class="decisao"><strong>Tipo de dano com nome completo?</strong>Trocar F/B/E/Q/G por Físico/Balístico/Explosão/Químico/Geral custa ~30 px de largura e remove memorização. A sigla continua válida na fórmula.</div>
+      <div class="decisao"><strong>Tokenização exportada do shared?</strong>Opções 2, 5 e 7 precisam ler a fórmula como termos. <code>interpretarFormula</code> agrupa por tipo e perde a ordem; seria preciso expor o divisor de termos de nível superior (hoje privado). Mesma regra, nenhuma duplicada no frontend.</div>
+      <div class="decisao"><strong>Primitivos novos em <code>shared/ui/</code></strong>Fichas selecionáveis/removíveis (Op. 2; o DESIGN diz que chip não é controle), toggle-pill de múltipla escolha (Op. 5/7), faixa horizontal com snap (Op. 6), cartão-botão de receita (Op. 3). Cada um é decisão sua antes de implementar — este POC só aproxima o visual.</div>
+      <div class="decisao"><strong>Um visor só?</strong>A barra “Rolagem rápida” e o painel mostram a mesma fórmula em dois inputs. No mobile o painel cobre a barra, então o visor interno é necessário; no desktop dá para esconder o interno ou travar a barra.</div>
+    </div>
+
+    <p class="etiqueta-poc" style="margin-top:32px">
+      Limites deste POC: valores transcritos dos tokens (não o CSS compilado); o app real não foi levantado nesta sessão (sem node_modules/Postgres), então o baseline “Atual” é transcrição fiel do template e do SCSS, não captura.
+      O gate visual de implementação (<code>verify</code>, 1920×1080 e 360×800 no app real, comparação com o análogo aprovado) continua obrigatório para a opção escolhida.
+    </p>
+  </main>
+
+  <script>
+const ICONES={"d4":"<svg viewBox=\"650.5 13.5 113 112.5\" width=\"100%\" height=\"100%\" fill=\"currentColor\" stroke=\"none\" > <path fill-rule=\"evenodd\" d=\"M706.96 17.63C707.73 17.89 708.5 18.15 709.27 18.41C711.06 20.21 712.85 22.01 714.64 23.81C715.16 24.32 715.69 24.83 716.22 25.34C728.13 37.28 740.04 49.22 751.95 61.16C752.21 61.41 752.47 61.65 752.73 61.89C754.46 64.29 759.85 67.53 759.88 70.4C758.23 72.16 756.57 73.92 754.92 75.68C754.19 76.4 753.47 77.12 752.75 77.85C752.5 78.01 752.24 78.18 751.99 78.35C751.34 79.06 750.7 79.78 750.05 80.49C749.56 80.94 749.06 81.38 748.57 81.82C747.39 82.99 746.2 84.16 745.01 85.33C744.05 86.29 743.09 87.25 742.13 88.21C741.57 88.84 741.01 89.47 740.46 90.09C740.1 90.42 739.74 90.75 739.39 91.08C738.59 91.91 737.79 92.74 737 93.57C736.75 93.74 736.5 93.9 736.25 94.07C735.43 94.97 734.61 95.87 733.8 96.77C733.55 96.95 733.31 97.12 733.07 97.3C732.79 97.57 732.51 97.85 732.22 98.13C732.06 98.38 731.89 98.63 731.72 98.88C731.52 99.06 731.32 99.25 731.12 99.43C730.7 99.79 730.28 100.14 729.86 100.49C727 103.42 724.13 106.36 721.26 109.3C721.03 109.47 720.79 109.64 720.56 109.81C719.99 110.45 719.42 111.08 718.85 111.71C718.16 112.42 717.47 113.14 716.78 113.85C715.72 114.82 714.67 115.78 713.61 116.75C713.05 117.37 712.48 118 711.91 118.62C711.67 118.8 711.43 118.97 711.19 119.14C710.65 119.71 710.11 120.27 709.57 120.83C709.4 121.08 709.22 121.33 709.04 121.58C708.43 121.76 707.81 121.95 707.2 122.13C703.38 118.47 699.57 114.8 695.75 111.14C695.4 110.8 695.06 110.47 694.71 110.13C690.08 105.49 685.45 100.84 680.82 96.2C680.31 95.76 679.79 95.33 679.28 94.89C677.91 93.4 676.54 91.9 675.17 90.4C674.93 90.21 674.68 90.03 674.44 89.85C673.72 89.12 673.01 88.4 672.29 87.68C672.03 87.42 671.76 87.17 671.5 86.92C669.72 85.12 667.94 83.33 666.16 81.54C665.9 81.29 665.64 81.04 665.37 80.79C661.99 77.39 658.61 74 655.23 70.61C655.14 70.21 655.06 69.81 654.97 69.42C670.53 53.83 686.08 38.24 701.63 22.65C701.89 22.42 702.16 22.18 702.42 21.94C703.05 21.29 703.67 20.63 704.3 19.98C704.74 19.56 705.17 19.14 705.61 18.72C705.8 18.53 705.99 18.34 706.19 18.15C706.44 17.98 706.7 17.8 706.96 17.63Z M704.82 22.38C704.72 22.48 704.62 22.59 704.52 22.69C703.89 23.37 703.26 24.04 702.63 24.72C701.65 25.8 700.66 26.89 699.67 27.97C699.43 28.15 699.18 28.33 698.94 28.5C695.01 32.42 691.08 36.34 687.15 40.26C686.89 40.5 686.63 40.74 686.37 40.99C685.11 42.25 683.85 43.51 682.6 44.77C682.35 45.03 682.1 45.3 681.85 45.57C678.11 49.31 674.37 53.05 670.63 56.79C670.36 57.03 670.09 57.27 669.83 57.52C669.55 57.81 669.28 58.1 669.01 58.39C668.5 58.91 667.99 59.43 667.48 59.94C666.48 60.93 665.47 61.91 664.47 62.9C664.21 63.16 663.96 63.41 663.71 63.67C662.45 64.93 661.2 66.2 659.94 67.47C658.79 68.65 657.02 70.02 659.13 71.23C673.64 85.82 688.15 100.41 702.66 115C703.16 115.53 703.67 116.06 704.17 116.59C706.52 120.71 707.61 116.05 706.71 113.6C706.7 112.8 706.69 112 706.67 111.2C706.67 109.96 706.66 108.71 706.65 107.47C706.66 107.02 706.67 106.58 706.67 106.13C706.68 100.53 706.68 94.93 706.69 89.33C706.68 76.71 706.67 64.09 706.66 51.47C706.67 44.27 706.68 37.07 706.68 29.87C706.69 28.62 706.69 27.38 706.69 26.13C707.19 25.42 707.69 24.71 708.19 23.99C708.28 54.35 708.37 84.7 708.46 115.06C708.39 115.65 708.31 116.24 708.24 116.83C708.56 119.08 710.58 117.04 711.26 116.09C715.25 112.06 719.25 108.03 723.25 104C723.59 103.67 723.94 103.34 724.28 103C728.41 98.83 732.53 94.65 736.65 90.48C736.88 90.3 737.12 90.12 737.35 89.94C741.18 86.09 745.01 82.24 748.84 78.39C749.11 78.15 749.37 77.92 749.63 77.68C751.07 76.24 752.51 74.8 753.94 73.36C757.66 70.36 757.12 69.43 753.95 66.36C753.76 66.17 753.57 65.97 753.37 65.78C753.12 65.53 752.86 65.28 752.6 65.03C751.79 64.22 750.98 63.41 750.17 62.59C749.91 62.34 749.65 62.09 749.38 61.84C748.66 61.12 747.94 60.4 747.22 59.68C746.97 59.42 746.71 59.17 746.46 58.91C744.76 57.2 743.06 55.5 741.36 53.79C741.01 53.46 740.65 53.13 740.3 52.8C739.39 51.81 738.48 50.81 737.58 49.82C737.35 49.65 737.12 49.47 736.89 49.29C736.33 48.75 735.78 48.21 735.23 47.67C734.98 47.41 734.73 47.15 734.49 46.89C732.41 44.77 730.34 42.65 728.26 40.53C728.01 40.35 727.76 40.16 727.52 39.97C726.7 39.08 725.88 38.19 725.06 37.31C724.81 37.13 724.56 36.96 724.32 36.78C723.59 35.99 722.86 35.19 722.13 34.4C721.89 34.21 721.64 34.02 721.39 33.83C718.12 30.52 714.84 27.2 711.57 23.88C710.63 22.86 708.68 20.67 708.2 23.24C707.63 22.82 707.06 22.4 706.49 21.98C705.93 22.11 705.38 22.25 704.82 22.38Z\" /> </svg>","d6":"<svg viewBox=\"534.5 14 98.5 111.5\" width=\"100%\" height=\"100%\" fill=\"currentColor\" stroke=\"none\" > <path fill-rule=\"evenodd\" d=\"M584.53 18.14C592.87 22.94 601.21 27.73 609.55 32.53C609.83 32.71 610.12 32.9 610.4 33.08C614.55 35.48 626.31 41.2 628.79 44.27C628.81 44.98 628.83 45.69 628.85 46.4C628.44 50.79 628.85 55.45 628.89 59.87C628.97 67.42 628.97 74.98 628.88 82.53C628.84 85.17 629.73 93.75 628.61 95.69C627.54 97.55 621.76 99.83 619.7 101.18C614.69 104.44 609.35 107.47 604.05 110.08C601.01 111.58 598.21 113.93 595.13 115.29C592.71 116.36 585.84 121.7 583.6 121.65C581.82 121.6 579.23 119.14 577.58 118.27C571.16 114.85 565.05 110.74 558.69 107.33C553.83 104.71 549.12 101.8 544.22 99.11C542.66 98.25 539.36 97.05 538.89 95.2C538.9 78.22 538.91 61.24 538.92 44.27C541.15 42.76 543.37 41.26 545.6 39.75C545.86 39.59 546.13 39.43 546.39 39.27C556.01 33.74 565.64 28.22 575.26 22.69C575.5 22.52 575.74 22.35 575.98 22.18C576.1 22.09 576.22 22 576.34 21.91C576.68 21.74 577.01 21.57 577.34 21.4C577.9 21.04 578.46 20.67 579.02 20.31C579.37 20.15 579.72 19.99 580.07 19.84C580.7 19.46 581.32 19.08 581.94 18.7C582.8 18.51 583.67 18.33 584.53 18.14Z M583.14 20.7C582.89 20.81 582.65 20.92 582.4 21.04C582.04 21.29 581.67 21.54 581.31 21.79C568.57 29.17 555.83 36.55 543.09 43.93C542.55 44.2 542.27 44.48 542.85 44.84C555.65 52.24 568.44 59.64 581.24 67.04C581.54 67.29 581.83 67.53 582.13 67.77C584.47 69.57 589.15 65.75 591.16 64.38C596.18 60.98 601.8 58.26 606.97 55.1C609.81 53.37 613.16 52.14 615.73 50.14C616.01 49.98 616.28 49.83 616.56 49.67C617.53 49.11 618.5 48.54 619.47 47.97C620.02 47.66 620.58 47.34 621.13 47.03C621.95 46.84 625.34 45.12 625.02 44.18C624.72 43.32 623.31 43.38 622.72 42.99C620.5 41.53 617.93 40.26 615.7 38.83C609.11 34.57 602.19 30.72 595.12 26.87C592.26 25.3 589.37 22.62 586.23 21.75C585.2 21.4 584.17 21.05 583.14 20.7Z M542.93 95.8C548.34 98.91 553.75 102.03 559.16 105.15C559.41 105.32 559.66 105.48 559.92 105.64C563.78 107.87 567.64 110.09 571.5 112.32C571.76 112.5 572.01 112.68 572.27 112.86C575.08 114.47 577.89 116.09 580.7 117.71C582.52 118.87 582.79 117.7 582.63 116C582.63 102.22 582.63 88.44 582.64 74.67C582.76 73.27 583.21 70.94 581.87 70.09C580.98 69.55 580.09 69.02 579.2 68.49C578.93 68.33 578.67 68.17 578.4 68.01C568.45 62.29 558.51 56.57 548.56 50.85C548.31 50.69 548.06 50.53 547.8 50.37C546.93 49.9 546.05 49.42 545.18 48.95C544.79 48.71 544.41 48.48 544.02 48.24C539.72 43.9 540.8 53.24 540.81 55.6C540.87 65.2 540.71 74.81 540.84 84.4C540.88 87.64 539.31 94.3 542.93 95.8Z M624.54 47.7C612 54.89 599.47 62.09 586.93 69.29C586.67 69.46 586.4 69.64 586.14 69.81C584.16 70.7 584.66 80.47 585.02 82.79C585.02 84 585.03 85.2 585.03 86.4C585.03 86.53 585.02 86.66 585.02 86.79C584.96 95.55 584.9 104.31 584.84 113.07C584.84 113.78 584.84 114.49 584.84 115.2C584.84 115.56 584.83 115.91 584.83 116.27C584.82 116.44 584.82 116.62 584.82 116.8C584.78 117.88 585.2 118.65 586.25 117.98C587.57 117.24 588.89 116.51 590.22 115.77C590.74 115.44 591.26 115.1 591.79 114.76C602.91 108.34 614.03 101.93 625.15 95.51C627.56 94.33 626.84 90.86 626.68 88.53C626.68 86.76 626.67 84.98 626.66 83.2C627.26 73.99 626.69 64.57 626.7 55.33C626.7 53.75 627.87 44.33 624.54 47.7Z\" /> </svg>","d8":"<svg viewBox=\"417.5 15.5 95.5 107.5\" width=\"100%\" height=\"100%\" fill=\"currentColor\" stroke=\"none\" > <path fill-rule=\"evenodd\" d=\"M465.6 20.05C465.65 20.07 465.71 20.09 465.76 20.11C466.57 20.53 467.38 20.95 468.19 21.37C468.65 21.65 469.11 21.93 469.58 22.22C469.85 22.38 470.13 22.55 470.4 22.72C472.79 24.52 475.61 25.63 478.23 27.01C484.85 30.5 491.51 34.83 497.87 38.79C500.43 40.39 507.55 43.1 508.84 45.76C509.96 48.06 508.43 51.74 508.76 54.13C508.76 55.11 508.76 56.09 508.77 57.07C508.79 65.42 508.82 73.78 508.85 82.13C508.82 82.84 508.8 83.56 508.78 84.27C508.78 86.57 509.67 92.81 508.31 94.56C506.66 96.69 499.95 99.98 497.36 101.21C495.84 101.93 494.57 103.21 493.22 104.04C487.81 107.32 482.13 110.06 476.63 113.29C474.08 114.79 468.1 119.22 465.2 119.24C462.9 119.26 458.07 115.53 455.96 114.29C453.29 112.73 450.31 111.57 447.71 110C442.91 107.12 438.1 103.74 433.13 101.15C431.02 100.05 423.29 96.48 422.33 94.58C421.64 93.22 422.35 84.09 422.1 81.6C422.09 77.69 422.08 73.78 422.07 69.87C422.07 69.6 422.08 69.33 422.08 69.07C422.08 66.67 422.07 64.27 422.07 61.87C422.39 58.34 421.25 47.74 422.42 45.25C423.32 43.3 428.97 41.11 430.92 39.88C438.28 35.23 446.25 30.93 453.8 26.18C454.67 25.63 455.67 25.58 456.53 24.85C456.92 24.61 457.31 24.36 457.7 24.12C459.18 23.3 460.66 22.48 462.13 21.66C462.4 21.47 462.67 21.28 462.95 21.09C463.83 20.74 464.72 20.4 465.6 20.05Z M463.96 25.52C461.91 29.11 459.86 32.69 457.82 36.28C457.64 36.52 457.47 36.75 457.3 36.99C456.57 38.34 455.85 39.69 455.13 41.05C454.97 41.3 454.81 41.55 454.65 41.81C454.08 42.98 453.52 44.16 452.95 45.33C452.8 45.59 452.65 45.85 452.5 46.1C452.14 46.53 451.78 46.96 451.42 47.38C449.55 50.69 447.67 54 445.79 57.31C445.63 57.56 445.46 57.81 445.3 58.06C443.24 61.63 441.18 65.19 439.11 68.76C438.23 70.24 437.34 71.73 436.45 73.22C434.59 76.54 432.73 79.86 430.86 83.18C430.25 84.14 429.64 85.1 429.03 86.05C427.96 87.93 426.9 89.81 425.83 91.69C424.67 93.63 428.35 93.06 429.47 93.04C433.91 92.97 438.36 93.05 442.8 93.05C456.7 93.05 470.71 93.01 484.67 93.04C489.91 93.05 495.16 93.02 500.4 93.03C501.85 93.04 506.82 93.58 504.31 90.96C504.01 89.78 500.31 82.92 499.55 82.28C499.12 81.75 498.69 81.22 498.26 80.68C497.62 79.39 496.98 78.09 496.34 76.8C495.64 75.71 494.94 74.61 494.24 73.52C493.79 72.79 493.33 72.06 492.88 71.34C492.53 70.64 492.18 69.94 491.84 69.24C491.19 68.09 490.55 66.94 489.9 65.79C489.66 65.43 489.41 65.07 489.17 64.72C488.26 63.12 487.35 61.52 486.44 59.92C486.28 59.66 486.12 59.4 485.97 59.13C485.32 57.91 484.68 56.69 484.03 55.47C483.69 55.01 483.35 54.56 483.01 54.1C482.2 52.57 481.39 51.05 480.57 49.52C480.3 49.19 480.03 48.86 479.75 48.52C479.6 48.25 479.44 47.97 479.29 47.69C478.74 46.61 478.19 45.53 477.64 44.46C477.12 43.67 476.6 42.88 476.08 42.1C473.23 37.01 470.38 31.92 467.53 26.83C466.79 25.38 464.86 22.35 463.96 25.52Z M459.1 26.03C448.74 32.01 438.37 38 428 43.98C427.63 44.23 427.26 44.47 426.89 44.72C426.33 45.08 425.77 45.43 425.21 45.79C423.89 46.46 424.22 54.43 424.34 56.27C424.33 65.24 424.33 74.22 424.32 83.2C424.22 84.03 423.7 87.73 424.46 88.21C425.35 88.78 426.73 86.26 426.97 85.67C427.71 84.17 428.44 82.66 429.18 81.16C430.05 79.79 430.92 78.43 431.78 77.07C431.89 76.83 432 76.59 432.1 76.35C432.71 75.47 433.31 74.58 433.92 73.69C434.36 72.76 434.8 71.83 435.24 70.89C435.51 70.37 435.79 69.85 436.06 69.33C436.41 68.79 436.76 68.26 437.11 67.72C437.28 67.48 437.46 67.24 437.63 67C438.18 66.01 438.72 65.01 439.27 64.02C439.52 63.66 439.77 63.3 440.03 62.93C441.64 60.01 443.26 57.09 444.88 54.17C445.22 53.65 445.56 53.13 445.9 52.61C446.64 51.2 447.38 49.79 448.12 48.38C448.63 47.54 449.14 46.71 449.65 45.87C449.73 45.68 449.82 45.5 449.91 45.31C450.08 45.08 450.26 44.85 450.44 44.61C451.87 42.1 453.31 39.6 454.74 37.09C455.08 36.64 455.42 36.19 455.76 35.73C456.49 34.33 457.22 32.92 457.96 31.52C458.37 30.88 458.79 30.24 459.2 29.6C459.5 29.01 459.8 28.41 460.1 27.82C460.52 27.34 462.17 25.63 461.76 24.99C461.32 24.28 459.54 25.75 459.1 26.03Z M469.25 25.2C469.45 25.79 469.66 26.38 469.87 26.97C470.28 27.53 470.69 28.08 471.09 28.63C472.79 31.71 474.49 34.79 476.19 37.87C476.38 38.13 476.56 38.4 476.75 38.66C477.73 40.38 478.71 42.1 479.69 43.82C480.2 44.5 480.71 45.18 481.22 45.87C481.68 46.88 482.14 47.89 482.61 48.9C482.95 49.42 483.29 49.94 483.63 50.46C484.37 51.77 485.1 53.09 485.84 54.4C486.08 54.78 486.32 55.16 486.56 55.53C487.3 56.87 488.03 58.2 488.77 59.54C489.01 59.89 489.25 60.25 489.49 60.6C491.38 63.9 493.27 67.19 495.16 70.48C495.4 70.84 495.64 71.21 495.88 71.58C496.62 72.96 497.36 74.35 498.1 75.73C498.43 76.2 498.76 76.67 499.1 77.14C500.1 78.98 501.09 80.82 502.09 82.67C502.26 82.93 502.44 83.19 502.61 83.45C503.42 85 504.22 86.54 505.02 88.08C506.76 91.54 506.68 85.81 506.65 85.07C506.65 83.64 506.65 82.22 506.65 80.8C506.65 73.07 506.64 65.33 506.63 57.6C506.64 55.91 506.64 54.22 506.65 52.53C506.58 50.93 506.51 49.33 506.44 47.73C506.44 47.57 506.45 47.41 506.45 47.24C506.83 45.96 505.3 45.55 504.28 45.31C504.04 45.04 503.79 44.77 503.55 44.5C493.33 38.61 483.1 32.72 472.88 26.83C472.26 26.41 471.64 25.99 471.01 25.56C470.84 25.45 470.67 25.34 470.49 25.22C470.08 25.21 469.66 25.21 469.25 25.2Z M429.07 95.42C428.77 95.48 428.48 95.54 428.19 95.6C428.53 95.85 428.87 96.1 429.21 96.35C432.53 98.31 435.85 100.26 439.17 102.21C439.45 102.38 439.72 102.55 440 102.72C446.1 106.21 452.2 109.69 458.3 113.18C459.39 114.01 464.4 117 465.47 116.92C466.69 116.82 468.76 115.49 469.71 114.78C470.41 114.4 471.11 114.02 471.81 113.63C472.06 113.47 472.31 113.31 472.56 113.15C482 107.71 491.43 102.27 500.86 96.83C501.2 96.56 501.53 96.28 501.86 96.01C502.92 95.66 502.52 95.31 501.6 95.25C494.31 95.31 487.02 95.37 479.73 95.43C477.42 95.41 475.11 95.39 472.8 95.37C466.31 95.39 459.82 95.41 453.33 95.43C452.36 95.43 451.38 95.43 450.4 95.43C443.29 95.43 436.18 95.42 429.07 95.42Z\" /> </svg>","d10":"<svg viewBox=\"292.5 14.5 103.5 110\" width=\"100%\" height=\"100%\" fill=\"currentColor\" stroke=\"none\" > <path fill-rule=\"evenodd\" d=\"M344.07 18.97C344.84 19.23 345.62 19.49 346.39 19.75C346.63 19.94 346.87 20.13 347.1 20.32C348.96 23.04 354.42 26.18 357.12 28.09C365.09 33.75 373.38 40.75 381.11 47.01C384.1 49.43 389.62 52.43 391.8 55.54C392.81 56.99 392.13 60.56 392.13 62.27C392.13 67.26 392.12 72.26 392.13 77.25C392.14 79.14 392.68 81.98 391.84 83.71C390.4 86.69 381.55 92.44 378.51 94.65C369.95 100.88 361.78 107.87 353.32 114.25C351.26 115.81 347.77 119.66 345.4 120.48C343.62 121.09 341.14 118.29 339.9 117.3C335.8 114.03 331.59 110.47 327.31 107.46C319.75 102.17 312.47 96.06 305.26 90.34C303.48 88.93 297.9 85.73 297.28 83.57C296.41 80.5 297.27 72.03 297.27 68.4C297.27 65.19 296.37 58.54 297.46 55.72C297.92 54.56 299.93 53.21 300.86 52.55C301.2 52.29 301.54 52.02 301.88 51.75C302.14 51.58 302.4 51.42 302.65 51.25C302.86 51.07 303.07 50.89 303.28 50.71C303.6 50.43 303.92 50.16 304.23 49.89C305.07 49.27 305.9 48.65 306.73 48.03C307.17 47.69 307.6 47.35 308.03 47.01C316.14 40.6 324.26 34.19 332.37 27.78C332.69 27.61 333.01 27.44 333.34 27.27C333.81 26.91 334.28 26.54 334.75 26.18C335.18 25.83 335.6 25.49 336.03 25.15C338.09 23.53 340.15 21.91 342.2 20.3C342.45 20.13 342.69 19.96 342.94 19.79C343.32 19.52 343.69 19.24 344.07 18.97Z M341.84 29.32C341.66 29.59 341.47 29.86 341.29 30.13C341.09 30.72 340.89 31.31 340.69 31.9C340.55 32.2 340.42 32.5 340.28 32.8C338.75 36.54 337.22 40.28 335.69 44.02C335.51 44.28 335.32 44.54 335.13 44.8C334.33 46.93 333.53 49.05 332.73 51.18C332.48 51.54 332.24 51.9 331.99 52.27C329.3 58.83 326.6 65.39 323.91 71.95C323.58 72.59 323.25 73.23 322.92 73.87C322 76.16 321.09 78.45 320.17 80.74C319.77 81.47 319.37 82.2 318.96 82.93C318.42 83.96 317.49 85.6 317.82 86.79C318.16 88 319.68 87.7 320.42 88.24C321.85 89.29 328.93 93.74 330.29 93.98C330.86 94.3 331.43 94.62 332 94.94C332.26 95.05 332.52 95.17 332.77 95.28C333.14 95.45 333.5 95.62 333.87 95.79C336.33 97.14 342.02 101.69 344.62 101.81C346.17 101.88 353.11 97.06 354.93 96.03C355.59 95.7 356.24 95.37 356.89 95.05C357.66 94.67 358.43 94.29 359.2 93.91C359.47 93.74 359.74 93.57 360.01 93.4C360.99 92.86 361.96 92.32 362.93 91.77C363.2 91.6 363.47 91.44 363.74 91.27C365.04 90.82 371.12 87.66 371.66 86.73C372.01 86.11 371.4 85.22 371.01 84.8C370.49 83.7 369.97 82.6 369.45 81.5C368.9 80.02 368.34 78.54 367.79 77.07C367.01 75.38 366.24 73.69 365.46 72C365.25 71.38 365.04 70.76 364.83 70.13C364.65 69.86 364.47 69.58 364.3 69.31C363.96 68.5 363.63 67.69 363.29 66.88C362.83 65.56 362.37 64.25 361.91 62.93C361.39 61.95 360.87 60.96 360.34 59.97C359.8 58.47 359.26 56.97 358.72 55.47C358.53 55.19 358.34 54.92 358.16 54.65C357.83 53.92 357.49 53.19 357.16 52.47C356.51 50.8 355.86 49.13 355.21 47.47C354.8 46.67 354.39 45.87 353.98 45.07C353.34 43.38 352.7 41.69 352.05 40C351.71 39.36 351.37 38.71 351.03 38.07C350.29 36.05 349.55 34.02 348.81 32C348.13 30.54 347.45 29.08 346.77 27.62C346.47 26.77 346.17 25.92 345.86 25.07C344.31 21.11 342.18 28.27 341.84 29.32Z M339.14 25.5C335.71 26.98 332.8 30.68 329.79 32.86C322.35 38.26 315.43 44.51 307.9 49.9C306.3 51.04 300.3 55.07 299.59 56.54C298.95 57.87 299.31 60.2 299.47 61.6C299.47 65.24 299.47 68.89 299.47 72.53C299.28 74.15 298.84 81.5 299.63 82.67C300.21 83.54 302.53 83.7 303.46 83.87C306.9 84.47 311.18 86.05 314.67 85.84C314.95 85.7 315.23 85.56 315.51 85.42C315.76 84.77 316.02 84.12 316.28 83.48C316.74 82.67 317.2 81.87 317.67 81.07C318.22 79.47 318.77 77.87 319.32 76.27C319.83 75.38 320.33 74.49 320.84 73.6C321.49 71.64 322.13 69.69 322.78 67.73C323.21 67.02 323.65 66.31 324.08 65.6C324.72 63.95 325.35 62.3 325.99 60.65C326.39 59.9 326.79 59.15 327.19 58.4C327.85 56.64 328.51 54.89 329.17 53.13C329.49 52.49 329.82 51.85 330.15 51.21C330.33 50.94 330.51 50.67 330.69 50.4C331.16 49.09 331.63 47.78 332.1 46.47C332.35 45.92 332.61 45.36 332.87 44.8C333.66 42.84 334.46 40.87 335.25 38.91C335.7 38.03 336.15 37.15 336.6 36.27C337.13 34.75 337.66 33.24 338.2 31.72C338.72 30.84 339.25 29.95 339.78 29.07C340.16 28 340.54 26.93 340.92 25.87C342.42 23.73 340.23 24.42 339.14 25.5Z M349.22 27.58C349.79 29.05 350.36 30.53 350.92 32C351.24 32.53 351.56 33.07 351.88 33.6C352.34 36.85 354.37 39.62 355.63 42.61C359.39 51.58 363.4 60.56 366.97 69.6C368.49 73.44 369.99 77.25 371.72 80.98C372.36 82.35 372.39 84.07 373.58 85.14C374.21 85.37 374.84 85.6 375.47 85.83C377.95 85.82 383.1 84.35 386 83.96C386.84 83.85 389.31 83.49 389.79 82.72C390.67 81.3 389.99 77.54 389.99 75.87C389.99 69.88 390.76 63.24 389.86 57.33C389.53 56.88 389.2 56.42 388.87 55.97C376.34 46.08 363.8 36.19 351.26 26.3C350.82 25.98 348.57 24.09 348.13 24.34C347.27 24.83 348.97 27.05 349.22 27.58Z M350.33 101.3C349.96 101.54 349.6 101.78 349.23 102.02C348.46 102.41 347.7 102.79 346.93 103.18C344.61 104.62 345.92 110.83 345.93 113.2C345.93 114.01 345.47 115.73 346.21 116.34C346.77 116.79 347.61 116.22 348.03 115.81C348.66 115.34 349.28 114.86 349.9 114.38C350.26 114.06 350.62 113.74 350.97 113.42C354.6 111.82 360.09 106.9 362.92 104.12C363.5 103.55 364.4 103.28 365.05 102.79C369.49 99.44 374.13 96.1 378.16 92.43C379.98 90.78 381.84 89.32 383.88 88.05C384.26 87.81 385.89 86.8 385.75 86.35C385.3 84.89 380.17 86.94 379.33 87.07C378.33 87.22 377.28 86.76 376.31 87.11C371.89 88.72 368.26 91.61 364.02 93.73C359.49 96.01 354.6 98.46 350.33 101.3Z M305.3 87.77C305.55 87.95 305.79 88.13 306.04 88.32C316.2 96.24 326.36 104.15 336.52 112.07C336.76 112.24 337 112.41 337.25 112.57C337.9 113.11 338.55 113.65 339.2 114.19C340.19 115.16 342.56 117.62 343.55 115.73C343.57 115.76 343.58 115.79 343.6 115.81C343.64 115.25 343.67 114.69 343.71 114.13C343.7 112.71 343.69 111.29 343.69 109.87C343.96 104.51 343.61 102.6 338.17 100.99C337.91 100.82 337.66 100.66 337.41 100.5C335.47 98.98 332.98 98.03 330.87 96.96C325.69 94.31 321.07 90.46 315.57 88.3C312.67 87.16 308.77 86.79 305.72 86.29C303.54 85.58 303.61 86.96 305.3 87.77Z\" /> </svg>","d12":"<svg viewBox=\"169.5 15.5 102 108\" width=\"100%\" height=\"100%\" fill=\"currentColor\" stroke=\"none\" > <path fill-rule=\"evenodd\" d=\"M219.47 20.02C220 20.02 220.53 20.02 221.07 20.02C227.83 22.93 234.8 25.57 241.53 28.7C243.97 29.84 247.27 30.46 249.43 32.29C252.02 34.48 255.71 39.25 257.9 41.96C259.41 43.84 260.79 46.72 262.88 48.1C263.24 48.5 263.6 48.91 263.96 49.31C264.75 50.69 266.68 52.04 267.15 53.49C268.26 56.87 267.32 63.85 267.32 67.6C267.32 71.59 268.17 83.11 267.13 86.24C266.41 88.39 261 93.57 259.39 95.51C256.78 98.67 252.04 105.66 249.08 107.87C246.56 109.75 237.25 112.96 233.86 114.23C230.61 115.46 223.46 119.7 220.39 119.82C218.71 119.88 213.5 117.06 211.86 116.28C205.32 113.16 198.19 111.41 191.95 107.89C190.33 106.97 189.54 104.83 188.01 103.73C187.77 103.45 187.53 103.17 187.28 102.89C186.9 102.37 186.52 101.85 186.14 101.33C185.81 100.97 185.47 100.61 185.14 100.24C184.41 99.36 183.68 98.47 182.95 97.59C182.43 96.97 181.91 96.34 181.39 95.72C179.13 91.63 174.19 89.14 173.86 84.27C173.87 74.22 173.87 64.18 173.88 54.13C174.34 53.16 174.81 52.19 175.27 51.22C175.8 50.62 176.32 50.02 176.85 49.42C177.57 48.6 178.28 47.78 179 46.96C179.25 46.7 179.5 46.45 179.75 46.19C181.55 43.96 183.35 41.72 185.15 39.49C185.59 38.98 186.03 38.48 186.47 37.98C186.65 37.77 186.82 37.55 187 37.34C187.17 37.1 187.33 36.85 187.5 36.61C189.42 34.96 190.58 32.6 192.76 31.3C194.73 30.12 197.42 29.83 199.31 28.79C205.15 25.59 213.28 22.41 219.47 20.02Z M216.98 23.62C211.65 24.87 204.64 28.87 199.29 30.91C197.93 31.43 193.52 32.71 194.35 34.4C194.54 34.66 194.72 34.91 194.91 35.17C195.62 36.51 196.33 37.86 197.04 39.2C197.37 39.75 197.71 40.29 198.05 40.84C198.86 42.37 199.68 43.89 200.49 45.42C201.09 46.19 201.7 46.96 202.3 47.73C202.59 48.53 202.87 49.33 203.16 50.13C204.06 51.42 211.13 50.9 212.93 50.9C218.62 50.9 224.31 50.96 230 50.91C231.94 50.9 235.23 51.52 236.99 50.73C237.34 50.57 239.89 46.43 239.99 46.13C240.28 45.52 240.58 44.9 240.87 44.29C241.49 43.3 242.1 42.32 242.71 41.33C243.35 40.1 243.98 38.86 244.61 37.62C245.04 37.08 245.46 36.54 245.89 36C248.17 32.97 244.6 31.97 242.11 31.09C237.07 29.29 231.64 27.19 226.73 24.88C225.45 24.28 224.17 23.38 222.75 23.1C220.82 22.28 218.73 22.17 216.98 23.62Z M191.2 35.72C188.77 37.13 182.35 46.57 180.06 49.28C178.8 50.76 176.3 52.44 175.86 54.52C174.86 59.24 175.81 66.37 175.82 71.33C175.82 74.62 175.87 77.91 175.89 81.2C175.9 81.99 175.5 84.04 176.32 84.59C177.13 85.13 179.22 84.58 180.13 84.47C183.43 84.06 186.88 84.35 190.13 83.78C191.86 83.68 192.54 81.24 192.81 79.73C193.29 78.08 193.76 76.42 194.24 74.76C195.64 72.65 195.9 69.79 196.59 67.38C197.5 64.22 201.73 54.93 201.75 52.43C201.75 51.03 200.25 50.18 199.79 49.02C199.52 48.33 199.25 47.63 198.98 46.93C198.46 46.12 197.94 45.31 197.41 44.5C196.87 43.42 196.32 42.33 195.78 41.25C195.34 40.55 194.91 39.86 194.47 39.17C193.92 38.11 193.37 37.06 192.83 36C192.44 35.29 191.75 35.08 191.2 35.72Z M247.95 36.18C246.97 38.07 245.99 39.97 245.01 41.87C244.74 42.22 244.47 42.58 244.2 42.93C243.39 44.43 242.59 45.93 241.78 47.43C241.52 47.98 241.26 48.52 241 49.07C240.82 49.33 240.65 49.59 240.47 49.85C239.45 50.91 238.66 52.65 239.88 53.87C240.23 55.23 240.58 56.59 240.93 57.95C240.96 57.92 240.98 57.89 241 57.87C241.7 59.95 242.4 62.03 243.1 64.12C243.12 64.25 243.15 64.39 243.18 64.53C243.86 66.31 244.54 68.09 245.21 69.87C245.88 72.36 246.54 74.84 247.21 77.33C247.79 78.67 248.37 80 248.95 81.33C248.95 82.93 249.51 83.87 251.2 83.83C254.36 84.49 257.96 84.12 261.2 84.47C262.03 84.56 263.98 85.14 264.66 84.53C265.4 83.88 265.04 78.41 265.04 77.2C265.05 72.47 265.96 57.86 264.91 54.3C264.71 53.95 264.51 53.6 264.31 53.25C263.95 52.99 263.6 52.73 263.24 52.47C262.63 51.57 262.02 50.66 261.4 49.76C260.96 49.25 260.52 48.75 260.07 48.24C259.45 47.5 258.83 46.76 258.21 46.01C257.86 45.69 257.5 45.36 257.14 45.04C256.42 44.04 255.7 43.05 254.98 42.05C254.62 41.63 254.27 41.22 253.92 40.81C253.19 39.81 252.47 38.81 251.74 37.81C250.83 36.85 249.01 34.03 247.95 36.18Z M205.33 53.09C204.96 53.14 204.59 53.19 204.22 53.24C201.81 54.45 202.79 58.56 201.48 60.42C201.23 61.08 200.98 61.74 200.74 62.4C199.92 65.16 199.1 67.91 198.28 70.67C197.85 71.73 197.42 72.8 196.99 73.87C196.36 76 195.72 78.13 195.08 80.27C194.76 80.98 194.44 81.69 194.11 82.4C192.82 84.95 196.51 87.1 198.68 88.05C199.01 88.31 199.34 88.57 199.66 88.83C206.41 93.66 213.15 98.48 219.89 103.31C220.38 103.21 220.87 103.11 221.37 103.02C226.71 99.18 232.06 95.34 237.41 91.5C237.65 91.33 237.89 91.16 238.13 90.99C238.86 90.44 239.59 89.9 240.32 89.36C240.76 89.1 241.2 88.85 241.63 88.6C242.36 88.05 243.08 87.51 243.81 86.97C244.15 86.72 244.49 86.46 244.83 86.21C248.32 84.94 246.62 81.84 245.85 79.2C244.92 76.62 243.99 74.04 243.05 71.47C243.03 71.29 243.01 71.11 242.98 70.93C242.38 69.24 241.78 67.56 241.17 65.87C240.53 63.64 239.88 61.42 239.23 59.2C238.89 58.48 238.56 57.77 238.22 57.05C238.11 56.52 238 56 237.88 55.47C237.52 54.75 237.16 54.02 236.8 53.3C226.31 53.23 215.82 53.16 205.33 53.09Z M250.13 86.04C247.53 85.88 244.43 89.16 242.48 90.64C237.24 94.62 232.11 98.15 226.89 101.95C225.41 103.03 222.89 103.97 221.83 105.47C221.21 106.35 220.89 115.56 221.42 116.36C221.96 117.17 226.81 115.21 227.68 114.72C232.4 112.11 237.33 110.68 242.22 108.47C243.74 107.79 246.13 107.47 247.2 106.18C247.65 105.92 248.11 105.67 248.56 105.41C252.4 100.77 256.24 96.13 260.08 91.49C260.34 91.17 260.6 90.84 260.86 90.51C264.63 86.7 262.9 85.99 258.27 86.06C256.75 86.09 255.04 85.82 253.6 86.15C252.44 86.11 251.29 86.07 250.13 86.04Z M190.92 103.73C191.52 104.37 192.12 105 192.72 105.64C198.69 108.23 204.67 110.82 210.64 113.41C211 113.58 211.37 113.74 211.73 113.9C212.07 114.01 212.41 114.11 212.75 114.22C213.21 114.46 213.67 114.69 214.13 114.93C215.2 115.32 216.27 115.72 217.33 116.11C219.67 117.91 219.39 114.02 219.23 112.53C219.25 112.09 219.28 111.64 219.3 111.2C219.21 109.51 219.13 107.82 219.05 106.13C218.31 105.4 217.56 104.66 216.82 103.93C216.58 103.76 216.33 103.59 216.09 103.42C212.29 99.37 205.7 96.34 201.36 92.93C198.68 90.83 195.55 87.53 192.37 86.21C190.6 85.47 187.62 86.13 185.73 86.22C183.86 86.31 179.98 85.53 178.32 86.47C176.43 87.52 179.48 90.11 180.25 91.05C182.14 93.36 184.04 95.43 186.06 97.53C187.85 99.38 188.89 102.03 190.92 103.73Z\" /> </svg>","d20":"<svg viewBox=\"0 0 512.021 512.021\" width=\"100%\" height=\"100%\" fill=\"currentColor\" stroke=\"none\" > <path d=\"M490.421,137.707c-0.085-1.003-0.149-2.005-0.555-2.987c-0.107-0.256-0.32-0.427-0.448-0.683 c-0.277-0.533-0.597-0.981-0.96-1.472c-0.725-1.003-1.536-1.835-2.517-2.517c-0.256-0.171-0.363-0.491-0.64-0.64l-224-128 c-3.285-1.877-7.296-1.877-10.581,0l-224,128c-0.256,0.171-0.363,0.469-0.619,0.64c-1.024,0.704-1.899,1.557-2.645,2.624 c-0.299,0.427-0.597,0.811-0.832,1.28c-0.149,0.277-0.384,0.469-0.512,0.768c-0.469,1.173-0.619,2.389-0.661,3.584 c0,0.128-0.107,0.256-0.107,0.384v0.171c0,0.021,0,0.021,0,0.043v234.304c0,0.021,0,0.064,0,0.085v0.064 c0,0.213,0.149,0.405,0.171,0.619c0.085,1.493,0.32,2.987,1.045,4.352c0.043,0.085,0.128,0.107,0.171,0.192 c0.277,0.491,0.768,0.811,1.131,1.259c0.789,0.981,1.557,1.941,2.603,2.603c0.107,0.064,0.149,0.192,0.235,0.235l224,128 c1.664,0.939,3.477,1.408,5.312,1.408s3.648-0.469,5.291-1.408l224-128c0.107-0.064,0.149-0.192,0.256-0.256 c0.981-0.597,1.664-1.493,2.411-2.389c0.427-0.512,1.003-0.896,1.323-1.472c0.043-0.064,0.107-0.107,0.149-0.171 c0.576-1.109,0.683-2.325,0.853-3.52c0.064-0.491,0.384-0.939,0.384-1.451V138.688 C490.677,138.347,490.443,138.048,490.421,137.707z M455.52,136.981l-78.251,31.296L291.211,43.093L455.52,136.981z M256.011,29.504l97.067,141.184H158.944L256.011,29.504z M220.747,43.115l-86.037,125.163L56.48,136.981L220.747,43.115z M42.677,154.432l80.768,32.32L42.677,332.16V154.432z M138.635,203.392l98.325,178.773L49.248,364.288L138.635,203.392z M245.344,482.965l-165.12-94.336l165.12,15.573V482.965z M256.011,372.544l-99.285-180.523h198.571L256.011,372.544z M266.677,482.965v-78.571l165.035-15.723L266.677,482.965z M274.997,382.357l98.411-178.901l89.365,160.853L274.997,382.357z M469.344,332.203l-80.811-145.451l80.811-32.32V332.203z\" /> </svg>","d3":"<svg viewBox=\"0 0 24 24\" width=\"100%\" height=\"100%\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linejoin=\"round\"><path d=\"M12 4 20 19H4Z\"/><path d=\"M12 4v15\"/></svg>"};
+  </script>
+  <script>
+    /* ============================ DADOS DO AGENTE DE TESTE ============================ */
+    const FACES = [3, 4, 6, 8, 10, 12, 20];
+    const ATR = ['DES', 'FOR', 'LUT', 'PON', 'VIG', 'INT', 'MED', 'SEN', 'SOC', 'VON'];
+    const NOME = { DES: 'Destreza', FOR: 'Força', LUT: 'Luta', PON: 'Pontaria', VIG: 'Vigor', INT: 'Intelecto', MED: 'Medicina', SEN: 'Sentidos', SOC: 'Social', VON: 'Vontade', PROF: 'Proficiência', NIV: 'Nível', CORPO: 'Dano corpo a corpo', FURTIVO: 'Dano furtivo' };
+    const AGENTE = { DES: 2, FOR: 3, LUT: 4, PON: 2, VIG: 3, INT: 1, MED: 1, SEN: 2, SOC: 1, VON: 2, PROF: 3, NIV: 3 };
+    const ATALHOS = { CORPO: '2d6+FOR[F]', FURTIVO: '3d6[G]' };
+    const DANOS = [{ s: 'F', n: 'Físico', c: 'fisico' }, { s: 'B', n: 'Balístico', c: 'balistico' }, { s: 'E', n: 'Explosão', c: 'explosao' }, { s: 'Q', n: 'Químico', c: 'quimico' }, { s: 'G', n: 'Geral', c: 'geral' }];
+    const danoDe = (s) => DANOS.find((d) => d.s === String(s || '').charAt(0).toUpperCase()) || null;
+
+    /* ============================ MOTOR DE BRINQUEDO (só do POC) ============================ */
+    const FONTE = 'DES|FOR|LUT|PON|VIG|INT|MED|SEN|SOC|VON|PROF|NIV';
+    const OPS = '((?:kh\\d*|kl\\d*|cm\\d+|!(?:>=\\d+)?|\\?(?:<=\\d+)?)*)';
+    const RX = {
+      dado: new RegExp(`^(\\d*)d(\\d+)${OPS}$`, 'i'),
+      dadoAtr: new RegExp(`^(${FONTE})d(\\d+)${OPS}$`, 'i'),
+      comp: new RegExp(`^\\((${FONTE})([+-]\\d+|\\*\\d+)\\)d(\\d+)${OPS}$`, 'i'),
+      attr: new RegExp(`^(${FONTE})(?:\\*(\\d+)|/(\\d+))?$`, 'i'),
+    };
+    function lerTermo(corpo) {
+      let dano = null; const tag = corpo.match(/\[([^\]]+)\]$/);
+      if (tag) { dano = tag[1]; corpo = corpo.slice(0, tag.index); }
+      let m;
+      if ((m = corpo.match(RX.dado))) return { tipo: 'dado', qtd: m[1] === '' ? 1 : +m[1], faces: +m[2], ops: m[3], dano };
+      if ((m = corpo.match(RX.dadoAtr))) return { tipo: 'dadoAtr', fonte: m[1].toUpperCase(), faces: +m[2], ops: m[3], dano };
+      if ((m = corpo.match(RX.comp))) return { tipo: 'comp', fonte: m[1].toUpperCase(), mod: m[2], faces: +m[3], ops: m[4], dano };
+      if ((m = corpo.match(RX.attr))) return { tipo: 'attr', fonte: m[1].toUpperCase(), mult: m[2] ? +m[2] : 0, div: m[3] ? +m[3] : 0, dano };
+      if (/^(CORPO|FURTIVO)$/i.test(corpo)) return { tipo: 'atalho', fonte: corpo.toUpperCase(), dano };
+      if (/^\d+$/.test(corpo)) return { tipo: 'num', valor: +corpo, dano };
+      return null;
+    }
+    function dividir(t) {
+      const termos = []; let prof = 0, col = 0, atual = '', sinal = 1;
+      for (const c of t) {
+        if (c === '(') prof++; if (c === ')') prof--; if (c === '[') col++; if (c === ']') col--;
+        if (!prof && !col && (c === '+' || c === '-')) { if (atual !== '') { termos.push({ sinal, corpo: atual }); atual = ''; } sinal = c === '+' ? 1 : -1; continue; }
+        atual += c;
+      }
+      if (atual !== '') termos.push({ sinal, corpo: atual });
+      return { termos, pendente: atual === '' && /[+-]$/.test(t) };
+    }
+    function erroTermo(c) {
+      if (/^\d+d$/i.test(c)) return `Faltou o número de faces em “${c}” — tente ${c}6.`;
+      if (/[()]/.test(c)) return `Parênteses só valem em (ATR+n)dM e (fórmula)#N — “${c}” não se encaixa.`;
+      if (/^[a-z]+$/i.test(c)) return `“${c}” não é um atributo conhecido (DES FOR LUT PON VIG INT MED SEN SOC VON, PROF, NIV).`;
+      if (/\[|\]/.test(c)) return `Tipo de dano mal fechado em “${c}” — use [Físico], [F]… ou [F-Q].`;
+      return `Não entendi “${c}”.`;
+    }
+    function parse(f) {
+      let t = (f || '').replace(/\s+/g, '');
+      if (!t) return { ok: false, vazio: true, termos: [], rep: 1 };
+      let rep = 1; const mr = t.match(/^\((.+)\)#(\d+)$/);
+      if (mr) { t = mr[1]; rep = +mr[2]; if (rep < 1 || rep > 20) return { ok: false, erro: 'Repetições vão de 1 a 20.' }; }
+      const d = dividir(t);
+      if (d.pendente) return { ok: false, erro: 'A fórmula termina em + ou −: falta o próximo termo.' };
+      const termos = [];
+      for (const { sinal, corpo } of d.termos) {
+        const x = lerTermo(corpo);
+        if (!x) return { ok: false, erro: erroTermo(corpo) };
+        x.sinal = sinal; termos.push(x);
+      }
+      return { ok: true, termos, rep };
+    }
+    function textoTermo(t) {
+      let s = '';
+      if (t.tipo === 'dado') s = (t.qtd === 1 ? '' : t.qtd) + 'd' + t.faces + t.ops;
+      else if (t.tipo === 'dadoAtr') s = t.fonte + 'd' + t.faces + t.ops;
+      else if (t.tipo === 'comp') s = '(' + t.fonte + t.mod + ')d' + t.faces + t.ops;
+      else if (t.tipo === 'attr') s = t.fonte + (t.mult ? '*' + t.mult : '') + (t.div ? '/' + t.div : '');
+      else if (t.tipo === 'atalho') s = t.fonte;
+      else s = String(t.valor);
+      return s + (t.dano ? '[' + t.dano + ']' : '');
+    }
+    function serializar(p) {
+      const s = p.termos.map((t, i) => (t.sinal < 0 ? '-' : i ? '+' : '') + textoTermo(t)).join('');
+      return p.rep > 1 ? `(${s})#${p.rep}` : s;
+    }
+    const ultimoIdx = (arr, fn) => { for (let i = arr.length - 1; i >= 0; i--) if (fn(arr[i])) return i; return -1; };
+    const ehDado = (t) => t.tipo === 'dado' || t.tipo === 'dadoAtr' || t.tipo === 'comp';
+    /* Tag do motor vale por SEGMENTO: estampa os termos anteriores sem tag; o que sobra depois da última tag assume Físico. */
+    function danosPorTermo(termos) {
+      const out = new Array(termos.length).fill(null);
+      if (!termos.some((t) => t.dano)) return out;
+      let atual = null;
+      for (let i = termos.length - 1; i >= 0; i--) { if (termos[i].dano) atual = termos[i].dano; out[i] = atual || 'F'; }
+      return out;
+    }
+    const valorFonte = (f) => AGENTE[f] ?? 0;
+    function opsDe(ops, qtd) {
+      const kh = ops.match(/kh(\d*)/i), kl = ops.match(/kl(\d*)/i), cm = ops.match(/cm(\d+)/i);
+      return { kh: kh ? (kh[1] === '' ? 1 : +kh[1]) : 0, kl: kl ? (kl[1] === '' ? 1 : +kl[1]) : 0, cm: cm ? +cm[1] : 0, exp: /!/.test(ops), imp: /\?/.test(ops) };
+    }
+    function qtdReal(t) {
+      if (t.tipo === 'dado') return { qtd: t.qtd, desv: false };
+      const v = valorFonte(t.fonte);
+      if (t.tipo === 'comp') return { qtd: Math.max(0, t.mod[0] === '*' ? v * +t.mod.slice(1) : v + parseInt(t.mod, 10)), desv: false };
+      return v <= 0 ? { qtd: 2 + Math.abs(v), desv: true } : { qtd: v, desv: false };
+    }
+    function rolarTermo(t, aleat) {
+      const { qtd, desv } = qtdReal(t); const o = opsDe(t.ops);
+      const rolls = Array.from({ length: Math.min(qtd, 100) }, () => aleat(t.faces));
+      const idx = rolls.map((_, i) => i);
+      let manter = rolls.length;
+      if (desv) { idx.sort((a, b) => rolls[a] - rolls[b]); manter = 1; }
+      else if (o.kh) { idx.sort((a, b) => rolls[b] - rolls[a]); manter = Math.min(o.kh, rolls.length); }
+      else if (o.kl) { idx.sort((a, b) => rolls[a] - rolls[b]); manter = Math.min(o.kl, rolls.length); }
+      const mantidos = new Set(idx.slice(0, manter));
+      const soma = rolls.reduce((s, v, i) => s + (mantidos.has(i) ? v : 0), 0);
+      return { rolls, mantidos, soma, crit: o.cm ? rolls.filter((v) => v > t.faces - o.cm).length : 0 };
+    }
+    function simular(p, aleat) {
+      aleat = aleat || ((n) => 1 + Math.floor(Math.random() * n));
+      const rodadas = [];
+      for (let r = 0; r < Math.max(1, p.rep); r++) {
+        let total = 0; const partes = [];
+        for (const t of p.termos) {
+          if (ehDado(t)) {
+            const x = rolarTermo(t, aleat); total += t.sinal * x.soma; partes.push({ t, ...x });
+          } else if (t.tipo === 'attr') {
+            let v = valorFonte(t.fonte); if (t.mult) v *= t.mult; if (t.div) v = Math.floor(v / t.div);
+            total += t.sinal * v; partes.push({ t, valor: v });
+          } else if (t.tipo === 'num') { total += t.sinal * t.valor; partes.push({ t, valor: t.valor }); }
+          else if (t.tipo === 'atalho') {
+            const sub = simular(parse(ATALHOS[t.fonte]), aleat)[0]; total += t.sinal * sub.total; partes.push({ t, valor: sub.total, atalho: ATALHOS[t.fonte] });
+          }
+        }
+        rodadas.push({ total, partes });
+      }
+      return rodadas;
+    }
+    function faixa(p) {
+      let min = 0, max = 0;
+      const somar = (t, mn, mx) => { if (t.sinal > 0) { min += mn; max += mx; } else { min -= mx; max -= mn; } };
+      for (const t of p.termos) {
+        if (ehDado(t)) { const { qtd, desv } = qtdReal(t); const o = opsDe(t.ops); const k = desv ? 1 : o.kh || o.kl || qtd; const n = Math.min(k, qtd); somar(t, n, n * t.faces); }
+        else if (t.tipo === 'attr') { let v = valorFonte(t.fonte); if (t.mult) v *= t.mult; if (t.div) v = Math.floor(v / t.div); somar(t, v, v); }
+        else if (t.tipo === 'num') somar(t, t.valor, t.valor);
+        else if (t.tipo === 'atalho') { const f = faixa(parse(ATALHOS[t.fonte])); somar(t, f.min, f.max); }
+      }
+      let soma = 0; for (let i = 0; i < 400; i++) soma += simular({ ...p, rep: 1 })[0].total;
+      return { min, max, media: Math.round(soma / 400) };
+    }
+    function frasesOps(t) {
+      const o = opsDe(t.ops || ''); const f = [];
+      if (o.kh) f.push(o.kh === 1 ? 'fica com o maior' : `fica com os ${o.kh} maiores`);
+      if (o.kl) f.push(o.kl === 1 ? 'fica com o menor' : `fica com os ${o.kl} menores`);
+      if (o.cm) f.push(o.cm === 1 ? `crítico só no ${t.faces}` : `crítico de ${t.faces - o.cm + 1} a ${t.faces}`);
+      if (o.exp) f.push('explode no máximo'); if (o.imp) f.push('implode no mínimo');
+      return f.length ? ` <span class="mais">(${f.join(', ')})</span>` : '';
+    }
+    function leituraHTML(p) {
+      const danos = danosPorTermo(p.termos);
+      const partes = p.termos.map((t, i) => {
+        let s = '';
+        if (t.tipo === 'dado') s = `<strong>${t.qtd} ${t.qtd > 1 ? 'dados' : 'dado'} de ${t.faces}</strong>${frasesOps(t)}`;
+        else if (t.tipo === 'dadoAtr') { const v = valorFonte(t.fonte); s = `<strong>${NOME[t.fonte]} (${v}) → ${v > 0 ? v : 2 + Math.abs(v)} d${t.faces}</strong>${frasesOps(t)}${v <= 0 ? ' <span class="mais">(atributo ≤ 0: desvantagem)</span>' : ''}`; }
+        else if (t.tipo === 'comp') { const { qtd } = qtdReal(t); s = `<strong>(${NOME[t.fonte]} ${t.mod}) = ${qtd} d${t.faces}</strong>${frasesOps(t)}`; }
+        else if (t.tipo === 'attr') { let v = valorFonte(t.fonte); const extra = t.mult ? ` × ${t.mult}` : t.div ? ` ÷ ${t.div}` : ''; if (t.mult) v *= t.mult; if (t.div) v = Math.floor(v / t.div); s = `${NOME[t.fonte]}${extra} <span class="num">(${v})</span>`; }
+        else if (t.tipo === 'atalho') s = `${NOME[t.fonte]} atual <span class="num">(${ATALHOS[t.fonte]})</span>`;
+        else s = `<span class="num">${t.valor}</span>`;
+        const d = danos[i] && (t.dano || false) ? danoDe(t.dano) : null;
+        if (t.dano) { const dd = danoDe(t.dano); s += ` <span class="mini-dn" style="--c:var(--dano-${dd ? dd.c : 'geral'});--c-d:color-mix(in srgb,var(--dano-${dd ? dd.c : 'geral'}) 12%,transparent);--c-b:color-mix(in srgb,var(--dano-${dd ? dd.c : 'geral'}) 40%,transparent)">${dd ? dd.n : t.dano}</span>`; }
+        return (i === 0 ? (t.sinal < 0 ? '− ' : '') : `<i class="mais">${t.sinal < 0 ? '−' : '+'}</i>`) + s;
+      });
+      let html = partes.join(' ');
+      if (p.rep > 1) html += ` <span class="mais">· repete ${p.rep} vezes, cada uma independente</span>`;
+      const f = faixa(p);
+      return `${html}<span class="faixa">${p.rep > 1 ? 'cada rolagem: ' : ''}${f.min} a ${f.max} · média ≈ ${f.media}</span>`;
+    }
+
+    /* ============================ GUIA EMBUTIDO (comum a todas as opções) ============================ */
+    const GUIA = [
+      { t: 'Teste de atributo', q: 'Rola o valor do atributo em d20 e fica com o maior (regra de Testes). A Proficiência só entra se você escrever PROF.', ex: 'LUTd20kh1+PROF', o: 'Troque LUT pelo atributo do teste.' },
+      { t: 'Dano de arma', q: 'Dados da arma, atributo somado e o tipo de dano.', ex: '2d6+FOR[F]', o: '[F] é Físico. B, E, Q e G marcam os outros tipos.' },
+      { t: 'Mais (ou menos) dados que o atributo', q: 'Soma ou multiplica a quantidade de dados antes de rolar.', ex: '(LUT+2)d20kh1', o: 'Só existem (ATR+n)dM e (ATR*Y)dM. Qualquer outro parêntese dá erro.' },
+      { t: 'Maior ou menor dado', q: 'kh mantém o maior; kl, o menor (desvantagem). Sem número, vale 1.', ex: '2d20kl', o: 'kh e kl não se combinam no mesmo termo.' },
+      { t: 'Margem de crítico', q: 'cmN conta como crítico os N maiores resultados do dado. Só informa; não muda o total.', ex: 'LUTd20kh1cm2+PROF', o: 'cm1 = só o valor máximo; cm2 = 19 e 20 num d20.' },
+      { t: 'Multiplicar ou dividir atributo', q: 'Multiplicar e dividir só aparecem colados a um atributo.', ex: 'FOR*3', o: 'LUT/2 arredonda para baixo.' },
+      { t: 'Repetir a fórmula inteira', q: 'Envolva tudo em (…)#N para rolar N vezes, cada rolagem independente.', ex: '(2d6+FOR[F])#3', o: 'Vale para a fórmula inteira, nunca para um pedaço. Máximo 20.' },
+      { t: 'Dano composto', q: 'Divide o dano meio a meio entre dois tipos.', ex: '2d8[F-Q]', o: 'A sobra do arredondamento vai ao primeiro tipo. Geral não entra em composto.' },
+      { t: 'Explosão e implosão', q: '! rola um dado extra a cada resultado máximo; ? a cada mínimo.', ex: '4d6!', o: 'Operadores de ferramenta, não são regra do livro.' },
+    ];
+    function guiaHTML(compacto) {
+      return `<div class="guia">${compacto ? '' : '<p class="dica">Tudo que não está nos botões se escreve na fórmula. Toque em <strong>Usar</strong> para levar o exemplo ao visor (substitui a fórmula atual).</p>'}${GUIA.map((g, i) =>
+        `<article class="gc"><h5>${g.t}</h5><p>${g.q}</p><div class="exemplo"><code>${g.ex}</code><button type="button" class="b b--ctn" data-acao="usar-guia" data-i="${i}">Usar</button></div><span class="obs">${g.o}</span></article>`).join('')}</div>`;
+    }
+
+    /* ============================ ESTADO ============================ */
+    const novoEstado = () => ({ formula: '', aberto: true, aba: 'montar', sel: null, v: {}, passo: 1, receita: null, guia: false, resultado: null, anotar: false, avancado: false });
+    const ESTADOS = {}; let atual = 'atual';
+    const E = () => ESTADOS[atual];
+    const V = (e, k, def) => (e.v[k] === undefined ? def : e.v[k]);
+
+    /* ============================ HELPERS DE HTML ============================ */
+    const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+    const ic = (f) => `<span class="ico">${ICONES['d' + f]}</span>`;
+    const dados = (o) => Object.entries(o || {}).map(([k, v]) => `data-${k}="${esc(v)}"`).join(' ');
+    const btn = (rot, acao, cls = '', d = {}, extra = '') => `<button type="button" class="b ${cls}" data-acao="${acao}" ${dados(d)} ${extra}>${rot}</button>`;
+    const dadoTile = (f, acao = 'dado', cls = '', cont = 0, nota = '') => `<button type="button" class="t t-dado ${cls}" data-acao="${acao}" data-faces="${f}" aria-label="D${f}" title="D${f}" ${nota}>${ic(f)}<span class="rot">D${f}</span>${cont ? `<span class="cont">${cont}</span>` : ''}</button>`;
+    const tile = (rot, acao, d = {}, cls = '', extra = '') => `<button type="button" class="t ${cls}" data-acao="${acao}" ${dados(d)} ${extra}>${rot}</button>`;
+    const danoBtn = (d, acao, sel, completo = true) => `<button type="button" class="dn dn--${d.c} ${completo ? '' : 'dn--sigla'} ${sel ? 'dn--sel' : ''}" data-acao="${acao}" data-sigla="${d.s}" aria-pressed="${!!sel}" title="${d.n}">${completo ? d.n : d.s}</button>`;
+    const seg = (rot, itens, ativo, acao, extra = {}, cls = '') => `<div class="sg ${cls}" role="group" aria-label="${rot}">${itens.map((it) => { const [val, txt] = Array.isArray(it) ? it : [it, it]; return `<button type="button" data-acao="${acao}" data-valor="${esc(val)}" ${dados(extra)} aria-pressed="${String(val) === String(ativo)}">${txt}</button>`; }).join('')}</div>`;
+    const fmtN = (n, sinal) => (sinal && n > 0 ? '+' : '') + n;
+    const step = (nome, valor, sinal = false) => `<span class="st"><button type="button" data-acao="step" data-nome="${nome}" data-d="-1" aria-label="Diminuir">−</button><span class="sv">${fmtN(valor, sinal)}</span><button type="button" data-acao="step" data-nome="${nome}" data-d="1" aria-label="Aumentar">+</button></span>`;
+    const tt = (t, dir = '') => `<h3 class="tt"><span>${t}</span>${dir ? `<span class="dir">${dir}</span>` : ''}</h3>`;
+    const visor = (e, id = 'visor', cls = '') => `<input class="vs ${cls}" data-foco="${id}" data-entrada="formula" value="${esc(e.formula)}" placeholder="Sua fórmula aparece aqui" aria-label="Fórmula em edição" spellcheck="false" autocomplete="off" />`;
+    function leitura(e, vazio) {
+      const p = parse(e.formula);
+      if (p.vazio) return `<div class="leitura leitura--vazio">${vazio || 'Escolha um dado ou um atributo — a fórmula e o que ela faz aparecem aqui.'}</div>`;
+      if (!p.ok) return `<div class="leitura leitura--erro"><strong>Ainda não dá para rolar.</strong> ${p.erro}</div>`;
+      return `<div class="leitura">${leituraHTML(p)}</div>`;
+    }
+    const podeRolar = (e) => parse(e.formula).ok;
+    const rodapeBase = (e, rolarRot = 'Rolar') => `${btn('⌫ Desfazer', 'apagar', 'b--txt')}${btn('Limpar', 'limpar', 'b--txt')}${btn(rolarRot, 'rolar', 'b--prim b--flex', {}, podeRolar(e) ? '' : 'disabled')}`;
+
+    function janela(e, modo, o) {
+      if (!e.aberto) return modo === 'd' ? `<div class="mr-fechado">Painel fechado — toque no gatilho <b>dado +</b> da barra para reabrir.</div>` : '';
+      const estilo = modo === 'd' ? `style="left:${o.x ?? 24}px;top:${o.y ?? 112}px;width:${o.w ?? 440}px;${o.h ? `height:${o.h}px;` : ''}"` : '';
+      const abas = o.abas ? `<div class="mr-abas" role="tablist">${o.abas.map(([k, r]) => `<button type="button" role="tab" data-acao="aba" data-valor="${k}" aria-selected="${e.aba === k}">${r}</button>`).join('')}</div>` : '';
+      return `<section class="mr-janela ${modo === 'm' ? 'mr-janela--m' : ''}" ${estilo} aria-label="${o.titulo || 'Montador de rolagem'}"><header class="mr-topo"><span>${o.titulo || 'Montador de rolagem'}</span><span><button type="button" class="x" aria-label="Minimizar">−</button><button type="button" class="x" data-acao="fechar" aria-label="Fechar">✕</button></span></header>${abas}<div class="mr-corpo">${o.corpo}</div>${o.rodape ? `<footer class="mr-rodape">${o.rodape}</footer>` : ''}${modo === 'd' && o.alca ? '<span class="alca"></span>' : ''}</section>`;
+    }
+    function barra(e, nota = {}) {
+      return `<div class="barra"><div class="barra__rot"><span>Rolagem rápida</span><button type="button" class="guia-link" data-acao="guia-externo" ${nota.guia ? `data-nota="${nota.guia}"` : ''}><b>?</b>Guia</button></div><div class="barra__lin"><button type="button" class="b b--ico gatilho ${e.aberto ? 'gatilho--ativo' : ''}" data-acao="abrir" aria-pressed="${e.aberto}" aria-label="Montador de rolagem" title="Montar fórmula por botões">${ic(20)}<span class="mais-selo">+</span></button><input class="vs" data-foco="barra" data-entrada="formula" value="${esc(e.formula)}" placeholder="Ex.: 2d6 + FOR [Físico]  ·  LUTd20kh1 + PROF" aria-label="Fórmula da rolagem rápida" spellcheck="false" /><button type="button" class="b b--prim b--ico" data-acao="rolar" aria-label="Rolar" ${podeRolar(e) ? '' : 'disabled'}>${ic(20)}</button></div></div>`;
+    }
+    const fundo = (e, interno = '', nota) => `<div class="host"><div class="host__tit">Ficha · Rolagens</div>${barra(e, nota)}${interno}<div class="host__lista"><div class="host__preset"><span>Ataque — Pistola</span><span>2d6 + PON [Balístico]</span></div><div class="host__preset"><span>Teste de Luta</span><span>LUTd20kh1 + PROF</span></div><div class="host__preset"><span>Corpo a corpo</span><span>CORPO</span></div></div></div>`;
+    function resultadoHTML(e) {
+      if (!e.resultado) return '';
+      const { rodadas } = e.resultado;
+      const linha = (r) => r.partes.map((x) => {
+        const t = x.t;
+        if (x.rolls) return `<b>${t.tipo === 'dado' ? (t.qtd === 1 ? '' : t.qtd) + 'd' + t.faces : textoTermo({ ...t, dano: null })}</b> [${x.rolls.map((v, i) => `<span class="${x.mantidos.has(i) ? 'mant' : 'desc'}">${v}</span>`).join(', ')}]${x.crit ? ' ★' + x.crit : ''}`;
+        if (x.atalho) return `<b>${t.fonte}</b> (${x.atalho}) = ${x.valor}`;
+        return `<b>${t.tipo === 'num' ? '' : t.fonte}</b>${t.tipo === 'num' ? x.valor : ' ' + x.valor}`;
+      }).join(' <span style="color:var(--text-mute)">+</span> ');
+      const total = rodadas.length > 1 ? rodadas.map((r) => r.total).join(' · ') : rodadas[0].total;
+      return `<div class="res" role="status"><span class="res__total">${total}</span><span class="res__det">${rodadas.map((r, i) => `<span>${rodadas.length > 1 ? `#${i + 1} → ${r.total}: ` : ''}${linha(r)}</span>`).join('')}</span><button type="button" data-acao="fechar-res" aria-label="Fechar resultado">✕</button></div>`;
+    }
+    const moldura = (e, modo, janelaHtml, nota, interno = '') => (modo === 'd' || modo === 'm' ? fundo(e, interno, nota) : '') + janelaHtml + resultadoHTML(e);
+
+    /* ============================ EDIÇÃO DA FÓRMULA ============================ */
+    function editar(e, fn) {
+      const p = parse(e.formula);
+      if (!p.ok && !p.vazio) return false;
+      const m = p.vazio ? { termos: [], rep: 1 } : p;
+      fn(m); e.formula = serializar(m); return true;
+    }
+    const anexo = (e, s) => { e.formula += (e.formula && !/[+\-(]$/.test(e.formula) ? '+' : '') + s; };
+    const novoAttr = (fonte, modo) => (modo === 'testar' && ATR.includes(fonte)
+      ? { sinal: 1, tipo: 'dadoAtr', fonte, faces: 20, ops: 'kh1', dano: null }
+      : { sinal: 1, tipo: 'attr', fonte, mult: 0, div: 0, dano: null });
+    function aplicarDano(e, sigla, idx) {
+      editar(e, (m) => {
+        let i = idx ?? e.sel;
+        if (i == null || !m.termos[i]) i = ultimoIdx(m.termos, ehDado); if (i < 0) i = m.termos.length - 1; if (i < 0) return;
+        m.termos[i].dano = m.termos[i].dano === sigla ? null : sigla;
+      });
+    }
+    function setNumero(e, n) {
+      editar(e, (m) => {
+        m.termos = m.termos.filter((t) => t.tipo !== 'num');
+        if (n !== 0) m.termos.push({ sinal: n < 0 ? -1 : 1, tipo: 'num', valor: Math.abs(n), dano: null });
+      });
+    }
+    const numeroAtual = (e) => { const p = parse(e.formula); const t = p.ok && p.termos.find((x) => x.tipo === 'num'); return t ? t.sinal * t.valor : 0; };
+    function contagemDado(e, f) { const p = parse(e.formula); if (!p.ok) return 0; return p.termos.filter((t) => t.tipo === 'dado' && t.faces === f && t.sinal > 0).reduce((s, t) => s + t.qtd, 0); }
+
+    const ACOES = {
+      abrir(e) { e.aberto = !e.aberto; },
+      fechar(e) { e.aberto = false; },
+      'fechar-res'(e) { e.resultado = null; },
+      aba(e, d) { e.aba = d.valor; },
+      'guia-externo'(e) { if (atual === 'atual') { e.modalGuia = true; return; } e.aberto = true; e.aba = 'guia'; e.guia = true; },
+      'fechar-modal-guia'(e) { e.modalGuia = false; },
+      'fechar-guia'(e) { e.guia = false; },
+      'alt-guia'(e) { e.guia = !e.guia; },
+      dado(e, d) {
+        const f = +d.faces;
+        if (!editar(e, (m) => {
+          const u = m.termos.at(-1);
+          if (atual === 'atual' && u && u.tipo === 'attr' && !u.mult && !u.div && u.sinal > 0 && !u.dano) { m.termos[m.termos.length - 1] = { sinal: 1, tipo: 'dadoAtr', fonte: u.fonte, faces: f, ops: '', dano: null }; e.sel = m.termos.length - 1; return; }
+          const i = ultimoIdx(m.termos, (t) => t.tipo === 'dado' && t.faces === f && t.sinal > 0);
+          if (i >= 0) { m.termos[i].qtd++; e.sel = i; } else { m.termos.push({ sinal: 1, tipo: 'dado', qtd: 1, faces: f, ops: '', dano: null }); e.sel = m.termos.length - 1; }
+        })) anexo(e, 'd' + f);
+      },
+      'dado-menos'(e, d) { editar(e, (m) => { const i = ultimoIdx(m.termos, (t) => t.tipo === 'dado' && t.faces === +d.faces && t.sinal > 0); if (i < 0) return; if (m.termos[i].qtd > 1) m.termos[i].qtd--; else m.termos.splice(i, 1); e.sel = null; }); },
+      attr(e, d) { const modo = V(e, 'attrModo', 'somar'); if (!editar(e, (m) => { m.termos.push(novoAttr(d.sigla, modo)); e.sel = m.termos.length - 1; })) anexo(e, d.sigla); },
+      togattr(e, d) { editar(e, (m) => { const i = m.termos.findIndex((t) => t.tipo === 'attr' && t.fonte === d.sigla && !t.mult && !t.div); if (i >= 0) { m.termos.splice(i, 1); e.sel = null; } else { m.termos.push(novoAttr(d.sigla, 'somar')); e.sel = m.termos.length - 1; } }); },
+      atalho(e, d) { if (!editar(e, (m) => { m.termos.push({ sinal: 1, tipo: 'atalho', fonte: d.sigla, dano: null }); e.sel = m.termos.length - 1; })) anexo(e, d.sigla); },
+      'somar-num'(e) { const n = V(e, 'bonus', 0); if (!n) return; editar(e, (m) => { const t = m.termos.find((x) => x.tipo === 'num'); if (t) { const novo = t.sinal * t.valor + n; if (novo === 0) m.termos.splice(m.termos.indexOf(t), 1); else { t.sinal = novo < 0 ? -1 : 1; t.valor = Math.abs(novo); } } else m.termos.push({ sinal: n < 0 ? -1 : 1, tipo: 'num', valor: Math.abs(n), dano: null }); }) || anexo(e, String(n)); e.v.bonus = 0; },
+      dano(e, d) { aplicarDano(e, d.sigla); },
+      limpar(e) { e.formula = ''; e.sel = null; e.resultado = null; },
+      apagar(e) { if (!editar(e, (m) => { if (m.termos.length === 0) return; m.termos.pop(); e.sel = null; })) e.formula = e.formula.slice(0, -1); },
+      rolar(e) { const p = parse(e.formula); if (!p.ok) return; e.resultado = { rodadas: simular(p) }; },
+      step(e, d) {
+        const n = d.nome; const lim = { bonus: [-20, 20], rep: [1, 20], qtd: [1, 10], extra: [-3, 5], vezes: [2, 8], cm: [1, 5], mult: [1, 6] }[n] || [0, 10];
+        if (n === 'bonus-direto') { setNumero(e, Math.max(-20, Math.min(20, numeroAtual(e) + +d.d))); return; }
+        if (n === 'rep') { editar(e, (m) => { m.rep = Math.max(1, Math.min(20, (m.rep || 1) + +d.d)); }); return; }
+        if (/^qtd-/.test(n)) { const f = +n.slice(4); editar(e, (m) => { const i = ultimoIdx(m.termos, (t) => t.tipo === 'dado' && t.faces === f && t.sinal > 0); if (+d.d > 0) { if (i >= 0) m.termos[i].qtd = Math.min(10, m.termos[i].qtd + 1); else m.termos.push({ sinal: 1, tipo: 'dado', qtd: 1, faces: f, ops: '', dano: null }); } else if (i >= 0) { if (m.termos[i].qtd > 1) m.termos[i].qtd--; else m.termos.splice(i, 1); } }); return; }
+        e.v[n] = Math.max(lim[0], Math.min(lim[1], V(e, n, 0) + +d.d));
+        if (e.receita && RECEITAS[e.receita]) reconstruir(e);
+      },
+      seg(e, d) { e.v[d.nome] = d.valor; if (e.receita && RECEITAS[e.receita]) reconstruir(e); },
+      'usar-guia'(e, d) { e.formula = GUIA[+d.i].ex; e.aba = 'montar'; e.guia = false; e.sel = null; },
+      // Opção 2 — fichas
+      sel(e, d) { e.sel = e.sel === +d.i ? null : +d.i; },
+      remover(e, d) { editar(e, (m) => { m.termos.splice(+d.i, 1); e.sel = null; }); },
+      sinal(e, d) { editar(e, (m) => { const t = m.termos[+d.i]; if (t) t.sinal = -t.sinal; }); },
+      'term-qtd'(e, d) { editar(e, (m) => { const t = m.termos[+d.i]; if (t && t.tipo === 'dado') t.qtd = Math.max(1, Math.min(10, t.qtd + +d.d)); }); },
+      'term-modo'(e, d) { editar(e, (m) => { const t = m.termos[+d.i]; if (!t) return; t.ops = t.ops.replace(/k[hl]\d*/gi, '') + (d.valor === 'kh' ? 'kh1' : d.valor === 'kl' ? 'kl1' : ''); }); },
+      'term-cm'(e, d) { editar(e, (m) => { const t = m.termos[+d.i]; if (!t) return; const o = opsDe(t.ops); const n = Math.max(0, Math.min(5, o.cm + +d.d)); t.ops = t.ops.replace(/cm\d+/gi, '') + (n ? 'cm' + n : ''); }); },
+      'term-dano'(e, d) { aplicarDano(e, d.sigla, +d.i); },
+      'term-mult'(e, d) { editar(e, (m) => { const t = m.termos[+d.i]; if (!t || t.tipo !== 'attr') return; const n = Math.max(1, Math.min(6, (t.mult || 1) + +d.d)); t.mult = n === 1 ? 0 : n; t.div = 0; }); },
+      'term-num'(e, d) { editar(e, (m) => { const t = m.termos[+d.i]; if (!t || t.tipo !== 'num') return; const novo = t.sinal * t.valor + +d.d; if (novo === 0) { m.termos.splice(+d.i, 1); e.sel = null; } else { t.sinal = novo < 0 ? -1 : 1; t.valor = Math.abs(novo); } }); },
+      avancado(e) { e.avancado = !e.avancado; },
+      // Opção 3 — receitas
+      receita(e, d) { e.receita = d.id; e.v = { attrModo: e.v.attrModo }; const r = RECEITAS[d.id]; r.slots.forEach((s) => { if (s.def !== undefined) e.v[s.id] = s.def; }); reconstruir(e); },
+      'receita-voltar'(e) { e.receita = null; },
+      'tog'(e, d) { e.v[d.nome] = !V(e, d.nome, false); reconstruir(e); },
+      'slot-dano'(e, d) { e.v.dano = V(e, 'dano', '') === d.sigla ? '' : d.sigla; reconstruir(e); },
+      // Opção 4 — comando
+      sug(e, d) { e.formula += d.ins; e.foco = true; },
+      // Opção 5 — passos
+      passo(e, d) { e.passo = Math.max(1, Math.min(4, e.passo + +d.d)); },
+      'passo-ir'(e, d) { e.passo = +d.valor; },
+      teste(e, d) { e.formula = `${d.sigla}d20kh1`; e.sel = 0; },
+    };
+
+    /* ============================ RECEITAS (Opção 3) ============================ */
+    const RECEITAS = {
+      teste: { n: 'Teste de atributo', s: 'Seus d20 do atributo, vale o maior', ex: 'LUTd20kh1 + PROF', slots: [
+        { id: 'atr', t: 'seg', r: 'Atributo', op: ATR, def: 'LUT' }, { id: 'prof', t: 'tog', r: 'Somar Proficiência', def: true },
+        { id: 'extra', t: 'step', r: 'Dados a mais ou a menos', def: 0, sinal: true, dica: 'Usa a forma (ATR+n)d20 — veja “Mais dados” no guia.' },
+        { id: 'bonus', t: 'step', r: 'Bônus fixo', def: 0, sinal: true }],
+        build(v) { const m = { termos: [], rep: 1 }; m.termos.push(v.extra ? { sinal: 1, tipo: 'comp', fonte: v.atr, mod: (v.extra > 0 ? '+' : '') + v.extra, faces: 20, ops: 'kh1' } : { sinal: 1, tipo: 'dadoAtr', fonte: v.atr, faces: 20, ops: 'kh1' }); if (v.prof) m.termos.push({ sinal: 1, tipo: 'attr', fonte: 'PROF', mult: 0, div: 0 }); if (v.bonus) m.termos.push({ sinal: v.bonus < 0 ? -1 : 1, tipo: 'num', valor: Math.abs(v.bonus) }); return m; } },
+      dano: { n: 'Dano de arma', s: 'Dados da arma + atributo + tipo', ex: '2d6 + FOR [Físico]', slots: [
+        { id: 'qtd', t: 'step', r: 'Quantidade de dados', def: 2 }, { id: 'faces', t: 'seg', r: 'Dado da arma', op: [4, 6, 8, 10, 12], def: 6 },
+        { id: 'atr', t: 'seg', r: 'Somar atributo', op: ['—', 'FOR', 'DES', 'PON', 'INT'], def: 'FOR' }, { id: 'bonus', t: 'step', r: 'Bônus fixo', def: 0, sinal: true }, { id: 'dano', t: 'dano', r: 'Tipo de dano', def: 'F' }],
+        build(v) { const m = { termos: [{ sinal: 1, tipo: 'dado', qtd: +v.qtd, faces: +v.faces, ops: '' }], rep: 1 }; if (v.atr && v.atr !== '—') m.termos.push({ sinal: 1, tipo: 'attr', fonte: v.atr, mult: 0, div: 0 }); if (v.bonus) m.termos.push({ sinal: v.bonus < 0 ? -1 : 1, tipo: 'num', valor: Math.abs(v.bonus) }); if (v.dano) m.termos[m.termos.length - 1].dano = v.dano; return m; } },
+      agente: { n: 'Dano do agente', s: 'Atalhos que acompanham a ficha', ex: 'CORPO + FURTIVO', slots: [
+        { id: 'quais', t: 'seg', r: 'Quais danos', op: [['CORPO', 'Corpo a corpo'], ['FURTIVO', 'Furtivo'], ['AMBOS', 'Os dois']], def: 'CORPO' }, { id: 'bonus', t: 'step', r: 'Bônus fixo', def: 0, sinal: true }],
+        build(v) { const m = { termos: [], rep: 1 }; if (v.quais !== 'FURTIVO') m.termos.push({ sinal: 1, tipo: 'atalho', fonte: 'CORPO' }); if (v.quais !== 'CORPO') m.termos.push({ sinal: 1, tipo: 'atalho', fonte: 'FURTIVO' }); if (v.bonus) m.termos.push({ sinal: v.bonus < 0 ? -1 : 1, tipo: 'num', valor: Math.abs(v.bonus) }); return m; } },
+      rajada: { n: 'Rajada', s: 'Repete o ataque N vezes, cada uma independente', ex: '(2d6 + FOR [F])#3', slots: [
+        { id: 'vezes', t: 'step', r: 'Repetições', def: 3 }, { id: 'qtd', t: 'step', r: 'Quantidade de dados', def: 2 }, { id: 'faces', t: 'seg', r: 'Dado', op: [4, 6, 8, 10, 12], def: 6 },
+        { id: 'atr', t: 'seg', r: 'Somar atributo', op: ['—', 'FOR', 'DES', 'PON'], def: 'FOR' }, { id: 'dano', t: 'dano', r: 'Tipo de dano', def: 'F' }],
+        build(v) { const m = { termos: [{ sinal: 1, tipo: 'dado', qtd: +v.qtd, faces: +v.faces, ops: '' }], rep: +v.vezes }; if (v.atr && v.atr !== '—') m.termos.push({ sinal: 1, tipo: 'attr', fonte: v.atr, mult: 0, div: 0 }); if (v.dano) m.termos[m.termos.length - 1].dano = v.dano; return m; } },
+      livre: { n: 'Dados livres', s: 'Vários tipos de dado, do zero', ex: '1d6 + 2d4 + 3', slots: [
+        ...[4, 6, 8, 10, 12, 20].map((f) => ({ id: 'f' + f, t: 'step', r: 'D' + f, def: f === 6 ? 1 : 0, compacto: true })), { id: 'bonus', t: 'step', r: 'Bônus fixo', def: 0, sinal: true }],
+        build(v) { const m = { termos: [], rep: 1 }; [4, 6, 8, 10, 12, 20].forEach((f) => { if (v['f' + f] > 0) m.termos.push({ sinal: 1, tipo: 'dado', qtd: +v['f' + f], faces: f, ops: '' }); }); if (v.bonus) m.termos.push({ sinal: v.bonus < 0 ? -1 : 1, tipo: 'num', valor: Math.abs(v.bonus) }); return m; } },
+    };
+    function reconstruir(e) { const r = RECEITAS[e.receita]; const v = {}; r.slots.forEach((s) => { v[s.id] = V(e, s.id, s.def); }); const m = r.build(v); e.formula = m.termos.length ? serializar(m) : ''; }
+
+    /* ============================ SUGESTÕES (Opção 4) ============================ */
+    function sugestoes(f) {
+      const t = (f || '').replace(/\s+/g, '');
+      const ops = [{ r: '+', ins: '+', d: 'somar' }, { r: '−', ins: '-', d: 'subtrair' }];
+      const dadosS = [4, 6, 8, 10, 12, 20].map((n) => ({ r: 'd' + n, ins: 'd' + n, d: `dado de ${n}` }));
+      const atrs = ATR.map((a) => ({ r: a, ins: a, d: NOME[a] })).concat(['PROF', 'NIV'].map((a) => ({ r: a, ins: a, d: NOME[a] })));
+      const danosS = DANOS.map((d) => ({ r: d.n, ins: `[${d.n}]`, d: 'tipo de dano' }));
+      if (!t) return { titulo: 'Comece por', itens: [{ r: 'LUTd20kh1+PROF', ins: 'LUTd20kh1+PROF', d: 'teste de atributo' }, { r: '2d6+FOR[F]', ins: '2d6+FOR[F]', d: 'dano de arma' }, { r: 'd20', ins: 'd20', d: 'um d20' }, { r: 'CORPO', ins: 'CORPO', d: 'dano corpo a corpo' }] };
+      if (/[+\-(]$/.test(t)) return { titulo: 'Somar…', itens: [...atrs, ...dadosS.map((x) => ({ ...x, r: x.r })), { r: '1', ins: '1', d: 'número fixo' }] };
+      if (/\[[^\]]*\]$/.test(t)) return { titulo: 'Depois do tipo de dano', itens: ops };
+      if (/(?:kh\d*|kl\d*|cm\d+)$/i.test(t)) return { titulo: 'Mais um ajuste', itens: [...(/cm\d+$/i.test(t) ? [] : [{ r: 'cm1', ins: 'cm1', d: 'crítico no máximo' }]), ...danosS, ...ops] };
+      if (/(?:^|[^a-z])\d*d\d+!?\??$/i.test(t) || /(?:FOR|DES|LUT|PON|VIG|INT|MED|SEN|SOC|VON|PROF|NIV)d\d+$/i.test(t)) return { titulo: 'Ajustes do dado', itens: [{ r: 'kh1', ins: 'kh1', d: 'só o maior' }, { r: 'kl1', ins: 'kl1', d: 'só o menor' }, { r: 'cm1', ins: 'cm1', d: 'crítico no máximo' }, ...danosS, ...ops] };
+      if (/(?:FOR|DES|LUT|PON|VIG|INT|MED|SEN|SOC|VON|PROF|NIV)(?:\*\d+|\/\d+)?$/i.test(t)) return { titulo: 'Depois do atributo', itens: [{ r: 'd20', ins: 'd20', d: 'rolar d20 pelo atributo' }, { r: 'd6', ins: 'd6', d: 'rolar d6 pelo atributo' }, { r: '*2', ins: '*2', d: 'multiplicar' }, { r: '/2', ins: '/2', d: 'dividir' }, ...danosS, ...ops] };
+      if (/(?:^|[+\-(])\d+$/.test(t)) return { titulo: 'Quantas faces?', itens: [...dadosS, ...ops] };
+      return { titulo: 'Depois', itens: ops };
+    }
+
+    /* ============================ OPÇÕES ============================ */
+    const OP = {};
+
+    /* ---------- ATUAL: transcrição fiel do template ---------- */
+    OP.atual = {
+      nome: 'Atual', sub: 'baseline',
+      nota: `<div><h4>Premissa</h4><strong>Teclado de tokens, tudo numa coluna.</strong> Transcrição fiel do componente de hoje (570×725, 9 grupos + rodapé, <span data-medida="c-atual"></span> controles). Ligue “Anotar problemas” e relacione cada número com o Diagnóstico.</div><div><h4>O que funciona</h4><ul><li class="mais">Dados com ícone real e rótulo</li><li class="mais">Dano colorido por tipo</li><li class="mais">Rodapé fixo com Rolar</li></ul></div><div><h4>O que pesa</h4><ul><li class="menos">Calculadora antes do jogo</li><li class="menos">Operadores agem em alvo oculto</li><li class="menos">Sem leitura do que a fórmula faz</li></ul></div><div><h4>Custo</h4>Nenhum — é o que existe. Referência para medir as demais.</div>`,
+      render(e, modo) {
+        const n = (k) => (e.anotar ? `data-nota="${k}"` : '');
+        const dadoGrade = (acao = 'dado', t = '') => FACES.map((f) => dadoTile(f, acao, '', 0, t)).join('');
+        const corpo = `<div class="gr" ${n(8)}>${visor(e, 'visor-janela', '')}</div>
+          <section class="gr">${tt('Editar')}<div class="grade" ${n(1)}>${tile('+', 'op-solto', { v: '+' }, 't--op')}${tile('−', 'op-solto', { v: '-' }, 't--op')}${tile('(', 'tok', { v: '(' }, '', n(2))}${tile(')', 'tok', { v: ')' }, '', n(2))}${[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((d) => tile(d, 'tok', { v: d })).join('')}</div></section>
+          <section class="gr">${tt('Dado')}<p class="dica">Clique de novo no mesmo dado pra somar quantidade.</p><div class="grade">${dadoGrade()}</div></section>
+          <section class="gr" ${n(6)}>${tt('Atributo')}<div class="grade">${ATR.map((a) => tile(a, 'attr-soma', { sigla: a }, '', `title="Soma/usa ${a} como modificador ou fonte de dados"`)).join('')}${['PROF', 'NIV'].map((a) => tile(a, 'attr-soma', { sigla: a }, 't--extra')).join('')}</div></section>
+          <section class="gr" ${n(3)}>${tt('Manter maior / menor')}<div class="lin">${btn('Manter maior', 'pool', 'b--ctn b--flex', { op: 'kh' })}${btn('Manter menor', 'pool', 'b--ctn b--flex', { op: 'kl' })}</div></section>
+          <section class="gr" ${n(3)}>${tt('Avançado')}<div class="lin">${btn('Margem de crítico', 'pool', 'b--ctn b--flex', { op: 'cm1' })}${step('cmx', 1)}</div></section>
+          <section class="gr" ${n(5)}>${tt('Tipo de dano')}<div class="grade">${DANOS.map((d) => danoBtn(d, 'dano', false, false)).join('')}</div></section>
+          <section class="gr">${tt('Atalhos do agente')}<div class="grade">${btn('CORPO', 'atalho', '', { sigla: 'CORPO' })}${btn('FURTIVO', 'atalho', '', { sigla: 'FURTIVO' })}</div></section>
+          <section class="gr" ${n(4)}>${tt('Dado por Propriedade + Ajuste')}<p class="dica">Monta <code>(ATR±n)dM</code> ou <code>(ATR*Y)dM</code> de uma vez.</p>${seg('Propriedade', [...ATR, 'PROF', 'NIV'], V(e, 'prop', 'DES'), 'seg', { nome: 'prop' }, '')}${seg('Modo', [['aj', 'Ajuste'], ['mu', 'Multiplicador']], V(e, 'modo', 'aj'), 'seg', { nome: 'modo' })}<div class="lin"><span class="rot-lin">${V(e, 'modo', 'aj') === 'mu' ? 'Multiplicador' : 'Ajuste'}</span>${step('ajx', 1, true)}</div><div class="grade">${dadoGrade('dado-prop')}</div></section>
+          <section class="gr" ${n(7)}>${tt('Repetir tudo')}<p class="dica">Envolve a fórmula atual inteira em <code>(...)#N</code>, com os parênteses sempre balanceados.</p><div class="lin">${step('repx', 2)}${btn('Repetir (#2)', 'repetir-tudo', 'b--prim', {}, e.formula ? '' : 'disabled')}</div></section>`;
+        const rodape = `${btn('⌫', 'apagar', 'b--txt')}${btn('Limpar', 'limpar', 'b--txt')}${btn('Rolar', 'rolar', 'b--prim b--flex', {}, (podeRolar(e) ? '' : 'disabled ') + n(8))}`;
+        const j = janela(e, modo, { corpo, rodape, w: 570, h: 725, x: 24, y: 96, alca: true });
+        return moldura(e, modo, j, { guia: 6 }) + (e.modalGuia ? `<div class="modal-guia"><div class="modal-guia__caixa"><h4>Como escrever uma fórmula</h4><p class="dica">Uma fórmula combina dados, atributos e números com + e −. (Modal do produto: 1180 px, 13 seções estáticas, sem “inserir”; aqui, as 9 principais.)</p><div class="modal-guia__grade">${GUIA.map((g) => `<section><strong style="color:var(--text)">${g.t}</strong><code>${g.ex}</code>${g.q}</section>`).join('')}</div><div class="modal-guia__rodape"><span>Atributos: DES FOR LUT PON VIG · INT MED SEN SOC VON</span>${btn('Fechar', 'fechar-modal-guia', '')}</div></div></div>` : '');
+      },
+    };
+    // ações exclusivas do baseline (comportamento fiel ao produto: concatenação crua)
+    Object.assign(ACOES, {
+      'op-solto'(e, d) { const u = e.formula.at(-1); e.formula = u === '+' || u === '-' ? e.formula.slice(0, -1) + d.v : e.formula + d.v; },
+      tok(e, d) { e.formula += d.v; },
+      'attr-soma'(e, d) { e.formula += (e.formula && !/[+\-(]$/.test(e.formula) ? '+' : '') + d.sigla; },
+      pool(e, d) { const op = d.op; const p = parse(e.formula); if (!p.ok) return; const i = p.termos.findIndex((t) => ehDado(t) && !new RegExp(op, 'i').test(t.ops)); if (i < 0) return; const t = p.termos[i]; t.ops = (/^c/.test(op) ? t.ops.replace(/cm\d+/gi, '') : t.ops.replace(/k[hl]\d*/gi, '')) + op; e.formula = serializar(p); },
+      'dado-prop'(e, d) { const modo = V(e, 'modo', 'aj'); const q = modo === 'mu' ? `*${Math.max(1, V(e, 'ajx', 1))}` : `${V(e, 'ajx', 1) >= 0 ? '+' : ''}${V(e, 'ajx', 1)}`; anexo(e, `(${V(e, 'prop', 'DES')}${q})d${d.faces}`); },
+      'repetir-tudo'(e) { if (e.formula) e.formula = `(${e.formula})#${V(e, 'repx', 2)}`; },
+    });
+    const stepBase = ACOES.step;
+    ACOES.step = (e, d) => { if (['cmx', 'ajx', 'repx'].includes(d.nome)) { const lim = d.nome === 'ajx' ? [-20, 20] : d.nome === 'repx' ? [1, 20] : [1, 100]; e.v[d.nome] = Math.max(lim[0], Math.min(lim[1], V(e, d.nome, d.nome === 'repx' ? 2 : 1) + +d.d)); } else stepBase(e, d); };
+
+    /* ---------- OPÇÃO 1: paleta enxuta + guia ---------- */
+    function corpoPaleta(e, modo) {
+      const modoAttr = V(e, 'attrModo', 'somar');
+      return `${visor(e)}${leitura(e)}
+        <section class="gr">${tt('Dado', 'toque de novo para somar')}<div class="grade grade--g7">${FACES.map((f) => dadoTile(f, 'dado', '', contagemDado(e, f))).join('')}</div></section>
+        <section class="gr">${tt('Atributo')}${seg('Como usar o atributo', [['somar', 'Somar ao total'], ['testar', 'Testar (d20)']], modoAttr, 'seg', { nome: 'attrModo' }, 'sg--bloco')}<p class="dica">${modoAttr === 'testar' ? 'Rola o valor do atributo em d20 e fica com o maior: <code>LUTd20kh1</code>.' : 'Soma o valor do atributo ao total: <code>+FOR</code>.'}</p><div class="grade grade--g6">${ATR.map((a) => tile(a, 'attr', { sigla: a })).join('')}${['PROF', 'NIV'].map((a) => tile(a, 'attr', { sigla: a }, 't--extra')).join('')}</div></section>
+        <section class="gr">${tt('Bônus fixo')}<div class="lin">${step('bonus', V(e, 'bonus', 0), true)}${btn('Somar', 'somar-num', 'b--ctn', {}, V(e, 'bonus', 0) ? '' : 'disabled')}</div></section>
+        <section class="gr">${tt('Tipo de dano', 'opcional')}<div class="grade">${DANOS.map((d) => danoBtn(d, 'dano', false)).join('')}</div></section>
+        <section class="gr">${tt('Atalhos do agente')}<div class="grade">${btn('CORPO', 'atalho', '', { sigla: 'CORPO' })}${btn('FURTIVO', 'atalho', '', { sigla: 'FURTIVO' })}</div></section>
+        <button type="button" class="b b--txt" data-acao="aba" data-valor="guia" style="align-self:flex-start;padding-left:0">▸ Guia: maior/menor, crítico, repetir, mais dados…</button>`;
+    }
+    OP.o1 = {
+      nome: '1 · Essencial', sub: 'paleta enxuta + guia',
+      nota: `<div><h4>Premissa</h4><strong>Só o que se usa toda sessão fica em botão.</strong> Dado, atributo (com modo explícito Somar/Testar), bônus, tipo de dano com nome, atalhos do agente. Tudo o mais vira a aba <em>Guia</em> do próprio painel, com exemplos que se inserem.</div><div><h4>Ganha</h4><ul><li class="mais"><span data-medida="c-o1"></span> controles contra <span data-medida="c-atual"></span> de hoje</li><li class="mais">Fim dos parênteses soltos e do alvo oculto</li><li class="mais">“Testar” deixa de ser mágica escondida</li></ul></div><div><h4>Perde</h4><ul><li class="menos">Quem quer <code>kh</code>/<code>cm</code> vai ao Guia (2 toques)</li><li class="menos">Subtrair atributo exige digitar</li></ul></div><div><h4>Custo</h4>Baixo: remove seções do template, mantém <code>util.ts</code> (pode encolher). Reusa <code>app-botao</code>, <code>app-segmentado</code>, <code>app-step-input</code>, <code>app-abas</code>. Nenhum primitivo novo.</div>`,
+      render(e, modo) {
+        const guia = e.aba === 'guia';
+        const j = janela(e, modo, { corpo: guia ? guiaHTML() : corpoPaleta(e, modo), rodape: guia ? btn('‹ Voltar ao montador', 'aba', 'b--flex', { valor: 'montar' }) : rodapeBase(e), w: 440, abas: [['montar', 'Montar'], ['guia', 'Guia']], x: 24, y: 112 });
+        return moldura(e, modo, j);
+      },
+    };
+
+    /* ---------- OPÇÃO 2: fichas + inspetor ---------- */
+    function chipHTML(t, i, sel, danoEf) {
+      const d = danoEf ? danoDe(danoEf) : null;
+      const cor = d ? `style="--c:var(--dano-${d.c})"` : '';
+      let corpo = '';
+      const o = opsDe(t.ops || '');
+      const bdg = (o.kh ? `<span class="bdg">maior${o.kh > 1 ? ' ' + o.kh : ''}</span>` : '') + (o.kl ? `<span class="bdg">menor${o.kl > 1 ? ' ' + o.kl : ''}</span>` : '') + (o.cm ? `<span class="bdg">crít ${t.faces - o.cm + 1}+</span>` : '');
+      if (t.tipo === 'dado') corpo = `${ic(t.faces)}${t.qtd}D${t.faces}${bdg}`;
+      else if (t.tipo === 'dadoAtr') corpo = `${ic(t.faces)}${t.fonte} <small>${valorFonte(t.fonte)}×D${t.faces}</small>${bdg}`;
+      else if (t.tipo === 'comp') corpo = `${ic(t.faces)}(${t.fonte}${t.mod})D${t.faces}${bdg}`;
+      else if (t.tipo === 'attr') corpo = `${t.fonte}${t.mult ? '×' + t.mult : ''}${t.div ? '÷' + t.div : ''} <small>${valorFonte(t.fonte) * (t.mult || 1)}</small>`;
+      else if (t.tipo === 'atalho') corpo = `${t.fonte}`;
+      else corpo = `${t.valor}`;
+      return `<button type="button" class="fc ${sel ? 'fc--sel' : ''} ${d ? 'fc--dano' : ''}" ${cor} data-acao="sel" data-i="${i}" aria-pressed="${sel}">${corpo}</button>`;
+    }
+    function inspetor(e, p) {
+      const t = e.sel != null && p.ok ? p.termos[e.sel] : null;
+      if (!t) return `<div class="insp insp--vazio">Toque numa ficha da fórmula para ajustar quantidade, maior/menor, tipo de dano ou removê-la.</div>`;
+      const i = e.sel; const o = opsDe(t.ops || '');
+      const nomes = { dado: `${t.qtd}D${t.faces}`, dadoAtr: `${t.fonte} → D${t.faces}`, comp: `(${t.fonte}${t.mod})D${t.faces}`, attr: t.fonte, atalho: t.fonte, num: String(t.valor) };
+      let linhas = '';
+      if (t.tipo === 'dado') linhas += `<div class="linha"><span class="rot">Quantidade</span><span class="st"><button type="button" data-acao="term-qtd" data-i="${i}" data-d="-1">−</button><span class="sv">${t.qtd}</span><button type="button" data-acao="term-qtd" data-i="${i}" data-d="1">+</button></span></div>`;
+      if (ehDado(t)) {
+        const modo = o.kh ? 'kh' : o.kl ? 'kl' : 'soma';
+        linhas += `<div class="linha"><span class="rot">Conta</span>${seg('Quais dados contam', [['soma', 'Soma todos'], ['kh', 'Só o maior'], ['kl', 'Só o menor']], modo, 'term-modo', { i })}</div>`;
+        linhas += `<div class="linha"><span class="rot">Tipo de dano</span><span class="grade">${DANOS.map((d) => danoBtn(d, 'term-dano', t.dano && danoDe(t.dano)?.s === d.s, false).replace('data-acao="term-dano"', `data-acao="term-dano" data-i="${i}"`)).join('')}</span></div>`;
+        linhas += `<button type="button" class="b b--txt" style="align-self:flex-start;padding-left:0" data-acao="avancado">${e.avancado ? '▾' : '▸'} Avançado</button>`;
+        if (e.avancado) linhas += `<div class="linha"><span class="rot">Margem de crítico <small style="color:var(--text-mute)">(cmN)</small></span><span class="st"><button type="button" data-acao="term-cm" data-i="${i}" data-d="-1">−</button><span class="sv">${o.cm || '—'}</span><button type="button" data-acao="term-cm" data-i="${i}" data-d="1">+</button></span></div>`;
+      } else if (t.tipo === 'attr') {
+        linhas += `<div class="linha"><span class="rot">Multiplicar</span><span class="st"><button type="button" data-acao="term-mult" data-i="${i}" data-d="-1">−</button><span class="sv">×${t.mult || 1}</span><button type="button" data-acao="term-mult" data-i="${i}" data-d="1">+</button></span></div>`;
+      } else if (t.tipo === 'num') {
+        linhas += `<div class="linha"><span class="rot">Valor</span><span class="st"><button type="button" data-acao="term-num" data-i="${i}" data-d="-1">−</button><span class="sv">${t.sinal * t.valor}</span><button type="button" data-acao="term-num" data-i="${i}" data-d="1">+</button></span></div>`;
+      }
+      linhas += `<div class="linha"><span class="rot">Sinal na fórmula</span>${seg('Sinal', [['+', 'Soma'], ['-', 'Subtrai']], t.sinal > 0 ? '+' : '-', 'sinal-set', { i })}</div>`;
+      return `<div class="insp"><div class="insp__topo"><span>${nomes[t.tipo]}</span>${btn('Remover', 'remover', 'b--txt', { i })}</div>${linhas}</div>`;
+    }
+    ACOES['sinal-set'] = (e, d) => editar(e, (m) => { const t = m.termos[+d.i]; if (t) t.sinal = d.valor === '-' ? -1 : 1; });
+    OP.o2 = {
+      nome: '2 · Fichas', sub: 'chips + inspetor',
+      nota: `<div><h4>Premissa</h4><strong>A fórmula vira objetos que se tocam.</strong> Cada termo é uma ficha; tocar numa ficha abre um inspetor com só o que cabe naquele termo (quantidade, maior/menor, tipo de dano, remover). A paleta só <em>adiciona</em>.</div><div><h4>Ganha</h4><ul><li class="mais">Alvo explícito: acabou “qual dado recebeu o kh?”</li><li class="mais">Avançado por contexto, não em fila</li><li class="mais">Remover é direto (sem ⌫ adivinhando)</li></ul></div><div><h4>Perde</h4><ul><li class="menos">Mais cliques no caso simples</li><li class="menos">Tag do motor é por <em>segmento</em>, não por termo</li></ul></div><div><h4>Custo</h4>Alto: precisa de chip selecionável/removível (primitivo novo — o DESIGN diz que chip não é controle) e de um divisor de termos exportado do <code>shared</code>. A string continua sendo a fonte.</div>`,
+      render(e, modo) {
+        const p = parse(e.formula); const danos = p.ok ? danosPorTermo(p.termos) : [];
+        const chips = p.ok && p.termos.length ? p.termos.map((t, i) => `${i ? `<button type="button" class="fc-sinal" data-acao="sinal" data-i="${i}" aria-label="Alternar sinal" title="Alternar soma/subtração">${t.sinal < 0 ? '−' : '+'}</button>` : (t.sinal < 0 ? '<span class="fc-sinal">−</span>' : '')}${chipHTML(t, i, e.sel === i, danos[i])}`).join('') + (p.rep > 1 ? `<span class="fc-sinal" style="min-width:auto">· ×${p.rep}</span>` : '') : `<span class="fc-vazio">${!p.ok && !p.vazio ? 'Texto fora do padrão — corrija abaixo.' : 'Nenhum termo ainda. Adicione dados e atributos abaixo.'}</span>`;
+        const corpo = `<section class="gr">${tt('Fórmula', `<span class="rot-lin">Repetir</span> ${step('rep', p.ok ? p.rep : 1)}`)}<div class="fc-area">${chips}</div>${visor(e, 'visor', 'vs--linha')}</section>
+          ${leitura(e)}${inspetor(e, p)}
+          <section class="gr">${tt('Adicionar dado')}<div class="grade grade--g7">${FACES.map((f) => dadoTile(f, 'dado')).join('')}</div></section>
+          <section class="gr">${tt('Adicionar atributo')}${seg('Como usar o atributo', [['somar', 'Somar'], ['testar', 'Testar d20']], V(e, 'attrModo', 'somar'), 'seg', { nome: 'attrModo' }, 'sg--bloco')}<div class="grade grade--g6">${ATR.map((a) => tile(a, 'attr', { sigla: a })).join('')}${['PROF', 'NIV'].map((a) => tile(a, 'attr', { sigla: a }, 't--extra')).join('')}</div></section>
+          <section class="gr"><div class="lin">${step('bonus', V(e, 'bonus', 0), true)}${btn('+ Número', 'somar-num', 'b--ctn', {}, V(e, 'bonus', 0) ? '' : 'disabled')}${btn('CORPO', 'atalho', '', { sigla: 'CORPO' })}${btn('FURTIVO', 'atalho', '', { sigla: 'FURTIVO' })}</div></section>`;
+        const j = janela(e, modo, { corpo, rodape: rodapeBase(e), w: 480, h: 650, x: 24, y: 104, alca: true });
+        return moldura(e, modo, j);
+      },
+    };
+
+    /* ---------- OPÇÃO 3: receitas ---------- */
+    function slotsHTML(e) {
+      const r = RECEITAS[e.receita];
+      const compactos = r.slots.filter((s) => s.compacto);
+      let html = '';
+      r.slots.forEach((s) => {
+        if (s.compacto) return;
+        const val = V(e, s.id, s.def);
+        if (s.t === 'seg') html += `<div class="slot"><span class="tt">${s.r}</span>${seg(s.r, s.op.map((o) => (Array.isArray(o) ? o : [o, o])), val, 'seg', { nome: s.id })}</div>`;
+        else if (s.t === 'tog') html += `<div class="slot slot--linha"><span class="rot-lin">${s.r}</span>${seg(s.r, [[true, 'Sim'], [false, 'Não']], !!val, 'seg-bool', { nome: s.id })}</div>`;
+        else if (s.t === 'step') html += `<div class="slot slot--linha"><span class="rot-lin">${s.r}${s.dica ? `<br><small style="color:var(--text-mute)">${s.dica}</small>` : ''}</span>${step(s.id, val, s.sinal)}</div>`;
+        else if (s.t === 'dano') html += `<div class="slot"><span class="tt">${s.r}</span><div class="grade">${DANOS.map((d) => danoBtn(d, 'slot-dano', val === d.s)).join('')}</div></div>`;
+      });
+      if (compactos.length) html = `<div class="slot"><span class="tt">Quantos de cada dado</span><div class="grade grade--g6">${compactos.map((s) => `<div style="display:flex;flex-direction:column;align-items:center;gap:4px"><span class="rot-lin" style="font-family:var(--font-mono)">${s.r}</span>${step(s.id, V(e, s.id, s.def))}</div>`).join('')}</div></div>` + html;
+      return html;
+    }
+    ACOES['seg-bool'] = (e, d) => { e.v[d.nome] = d.valor === 'true'; reconstruir(e); };
+    OP.o3 = {
+      nome: '3 · Receitas', sub: 'comece por um modelo',
+      nota: `<div><h4>Premissa</h4><strong>Quem monta quer “um teste”, “um dano”, não uma sintaxe.</strong> A primeira tela é uma lista de receitas; cada uma abre só os campos que ela precisa e escreve a fórmula por baixo. A receita <em>é</em> o guia.</div><div><h4>Ganha</h4><ul><li class="mais">Vocabulário do jogo, zero sintaxe</li><li class="mais">Impossível gerar fórmula inválida</li><li class="mais">Ensina a fórmula (ela aparece embaixo)</li></ul></div><div><h4>Perde</h4><ul><li class="menos">Cobre só o que as receitas cobrem</li><li class="menos">Receitas são conteúdo a manter</li></ul></div><div><h4>Custo</h4>Médio: cartão-botão de receita é primitivo novo; cada receita tem um <code>build()</code> fino sobre o <code>shared</code>. As receitas precisam vir de <code>docs/core</code> (regras-do-jogo), não do frontend.</div>`,
+      render(e, modo) {
+        let corpo, rodape;
+        if (!e.receita) {
+          corpo = `<p class="dica">O que você quer rolar?</p><div class="rec-grade">${Object.entries(RECEITAS).filter(([k]) => k !== 'livre').map(([k, r]) => `<button type="button" class="rec" data-acao="receita" data-id="${k}"><b>${r.n}</b><span>${r.s}</span><code>${r.ex}</code></button>`).join('')}<button type="button" class="rec" data-acao="receita" data-id="livre"><b>${RECEITAS.livre.n}</b><span>${RECEITAS.livre.s}</span><code>${RECEITAS.livre.ex}</code></button><button type="button" class="rec rec--lado" data-acao="alt-guia"><span><b style="display:block">Guia de fórmulas</b>Crítico, maior/menor, repetir…</span><span>${e.guia ? '▾' : '▸'}</span></button></div>${e.guia ? guiaHTML(true) : ''}${e.formula ? `<div class="lin">${leitura(e)}</div>` : ''}`;
+          rodape = btn('Limpar', 'limpar', 'b--txt') + btn('Rolar', 'rolar', 'b--prim b--flex', {}, podeRolar(e) ? '' : 'disabled');
+        } else {
+          const r = RECEITAS[e.receita];
+          corpo = `<div class="lin lin--entre">${btn('‹ Receitas', 'receita-voltar', 'b--txt')}<strong style="font:600 13px var(--font-sans)">${r.n}</strong></div>${slotsHTML(e)}<section class="gr">${tt('Fórmula resultante')}${visor(e)}${leitura(e)}</section>`;
+          rodape = rodapeBase(e);
+        }
+        const j = janela(e, modo, { corpo, rodape, w: 460, x: 24, y: 112 });
+        return moldura(e, modo, j);
+      },
+    };
+
+    /* ---------- OPÇÃO 4: comando assistido ---------- */
+    OP.o4 = {
+      nome: '4 · Comando', sub: 'digite, a gente ajuda',
+      nota: `<div><h4>Premissa</h4><strong>O campo de texto é o controle; os botões se adaptam a ele.</strong> A linha “Próximo passo” só mostra o que cabe depois do ponto onde você está (dado após número, ajustes após dado, tipo após ajuste). Sob o campo, uma <em>leitura em português</em> do que vai rolar.</div><div><h4>Ganha</h4><ul><li class="mais">Divulgação progressiva: <span data-medida="c-o4"></span> controles ao abrir, no máx. <span data-medida="cmax-o4"></span></li><li class="mais">Feedback imediato e erro compreensível</li><li class="mais">Janela pequena: 440 px de largura, altura pelo conteúdo</li></ul></div><div><h4>Perde</h4><ul><li class="menos">Mobile: teclado cobre metade da tela</li><li class="menos">Pressupõe digitar; menos “tocar e pronto”</li></ul></div><div><h4>Custo</h4>Médio-baixo: a leitura sai de <code>interpretarFormula</code>; as sugestões são uma função pura nova (testável sem <code>TestBed</code>). Botões = <code>app-botao</code> pequeno.</div>`,
+      render(e, modo) {
+        const s = sugestoes(e.formula);
+        const corpo = `<section class="gr"><input class="vs vs--grande" data-foco="visor" data-entrada="formula" value="${esc(e.formula)}" placeholder="Ex.: 2d6 + FOR [Físico]" aria-label="Fórmula em edição" spellcheck="false" autocomplete="off" />${leitura(e, 'Digite uma fórmula ou toque numa sugestão abaixo.')}</section>
+          ${e.guia ? guiaHTML(true) : `<section class="gr">${tt(s.titulo)}<div class="sug">${s.itens.map((it) => `<button type="button" data-acao="sug" data-ins="${esc(it.ins)}"><span>${it.r}</span><small>${it.d}</small></button>`).join('')}</div></section>`}`;
+        const rodape = `${btn(e.guia ? '‹ Sugestões' : '? Guia', 'alt-guia', 'b--txt')}${btn('Limpar', 'limpar', 'b--txt')}${btn('Rolar', 'rolar', 'b--prim b--flex', {}, podeRolar(e) ? '' : 'disabled')}`;
+        const j = janela(e, modo, { corpo, rodape, w: 440, h: modo === 'd' ? (e.guia ? 640 : null) : null, x: 24, y: 112 });
+        return moldura(e, modo, j);
+      },
+    };
+
+    /* ---------- OPÇÃO 5: passo a passo ---------- */
+    OP.o5 = {
+      nome: '5 · Passos', sub: '3 toques e rola',
+      nota: `<div><h4>Premissa</h4><strong>Uma pergunta por tela.</strong> Dados → bônus → tipo de dano → revisar. Cada passo mostra 6–12 opções grandes e pode ser pulado. O visor fica sempre visível no topo.</div><div><h4>Ganha</h4><ul><li class="mais">Zero ambiguidade, ótimo no primeiro uso</li><li class="mais">Ótimo no mobile (alvos grandes)</li><li class="mais">Quase nenhuma densidade</li></ul></div><div><h4>Perde</h4><ul><li class="menos">Lento para quem rola toda hora</li><li class="menos">Voltar para corrigir custa toques</li></ul></div><div><h4>Custo</h4>Médio: trilha de passos já existe como padrão do Guia de criação, mas não como primitivo em <code>shared/ui/</code>. Melhor como <em>modo de primeiro uso</em> do que como padrão.</div>`,
+      render(e, modo) {
+        const passos = ['Dados', 'Bônus', 'Dano', 'Revisar'];
+        const trilha = `<div class="trilha">${passos.map((n, i) => `<button type="button" class="p ${e.passo === i + 1 ? 'p--on' : ''} ${e.passo > i + 1 ? 'p--ok' : ''}" data-acao="passo-ir" data-valor="${i + 1}" style="background:none;border:0;padding:0"><i>${e.passo > i + 1 ? '✓' : i + 1}</i><span>${n}</span></button>${i < 3 ? '<span class="reg"></span>' : ''}`).join('')}</div>`;
+        const miniVisor = `<div class="mini-visor"><small>Fórmula</small><span style="flex:1;overflow-wrap:anywhere;${e.formula ? '' : 'color:var(--text-mute)'}">${e.formula ? esc(e.formula) : 'vazia'}</span></div>`;
+        const p = parse(e.formula); const somados = p.ok ? p.termos.filter((t) => t.tipo === 'attr' && !t.mult && !t.div).map((t) => t.fonte) : [];
+        let passo = '';
+        if (e.passo === 1) {
+          const tipo = V(e, 'tipoDado', 'fixos');
+          passo = `<section class="gr"><h3 style="margin:0;font:600 15px var(--font-sans)">Quais dados?</h3>${seg('Origem dos dados', [['fixos', 'Dados da arma/ação'], ['atributo', 'Teste de atributo']], tipo, 'seg', { nome: 'tipoDado' }, 'sg--bloco')}</section>${tipo === 'fixos'
+            ? `<section class="gr"><p class="dica">Toque para somar dados; o número mostra a quantidade.</p><div class="grade grade--g7">${FACES.map((f) => dadoTile(f, 'dado', 't--grande', contagemDado(e, f))).join('')}</div></section>`
+            : `<section class="gr"><p class="dica">Rola o valor do atributo em d20 e fica com o maior. Escolha o atributo:</p><div class="grade grade--g5">${ATR.map((a) => tile(a, 'teste', { sigla: a }, '', '')).join('')}</div></section>`}`;
+        } else if (e.passo === 2) {
+          passo = `<section class="gr"><h3 style="margin:0;font:600 15px var(--font-sans)">Quanto somar?</h3><p class="dica">Toque para ligar ou desligar.</p><div class="grade grade--g6">${[...ATR, 'PROF', 'NIV'].map((a) => tile(a, 'togattr', { sigla: a }, somados.includes(a) ? 't--on' : (a === 'PROF' || a === 'NIV' ? 't--extra' : ''))).join('')}</div></section><section class="gr">${tt('Bônus fixo')}<div class="lin">${step('bonus-direto', numeroAtual(e), true)}</div></section>`;
+        } else if (e.passo === 3) {
+          const t = p.ok && ultimoIdx(p.termos, ehDado) >= 0 ? p.termos[ultimoIdx(p.termos, ehDado)] : null;
+          passo = `<section class="gr"><h3 style="margin:0;font:600 15px var(--font-sans)">Que tipo de dano?</h3><p class="dica">Opcional — só para rolagens de dano.</p><div class="grade">${DANOS.map((d) => danoBtn(d, 'dano', p.ok && p.termos.some((x) => x.dano && danoDe(x.dano)?.s === d.s))).join('')}</div></section>`;
+        } else passo = `<section class="gr"><h3 style="margin:0;font:600 15px var(--font-sans)">Confira e role</h3>${leitura(e)}${tt('Editar o texto')}${visor(e)}</section>`;
+        const corpo = `${trilha}${miniVisor}${passo}`;
+        const rodape = e.passo < 4
+          ? `${btn('‹ Voltar', 'passo', 'b--txt', { d: -1 }, e.passo === 1 ? 'disabled' : '')}${btn(e.passo > 1 ? 'Pular' : 'Limpar', e.passo > 1 ? 'passo' : 'limpar', 'b--txt', { d: 1 })}${btn('Avançar ›', 'passo', 'b--prim b--flex', { d: 1 }, e.passo === 1 && !e.formula ? 'disabled' : '')}`
+          : `${btn('‹ Voltar', 'passo', 'b--txt', { d: -1 })}${btn('Rolar', 'rolar', 'b--prim b--flex', {}, podeRolar(e) ? '' : 'disabled')}`;
+        const j = janela(e, modo, { corpo, rodape, w: 420, h: modo === 'd' ? 540 : null, x: 24, y: 112 });
+        return moldura(e, modo, j);
+      },
+    };
+
+    /* ---------- OPÇÃO 6: gaveta sob a barra / folha inferior no mobile ---------- */
+    function leituraCompacta(e) {
+      const p = parse(e.formula);
+      if (p.vazio) return '<div class="leitura leitura--compacta leitura--vazio"><span>Escolha um dado ou um atributo.</span></div>';
+      if (!p.ok) return `<div class="leitura leitura--compacta leitura--erro"><span>${p.erro}</span></div>`;
+      const f = faixa(p);
+      return `<div class="leitura leitura--compacta"><code>${esc(e.formula)}</code><small>${f.min}–${f.max} · ≈${f.media}</small></div>`;
+    }
+    OP.o6 = {
+      nome: '6 · Gaveta', sub: 'sem janela flutuante',
+      nota: `<div><h4>Premissa</h4><strong>Trocar o container, não só o conteúdo.</strong> No desktop, uma gaveta abre logo abaixo da barra “Rolagem rápida” (que passa a ser o único visor e já tem o Rolar). No mobile, uma folha inferior com <em>faixas</em> de rolagem horizontal: alcance do polegar e leitura numa linha, sem lista vertical longa.</div><div><h4>Ganha</h4><ul><li class="mais">Some arrastar/redimensionar/minimizar</li><li class="mais">Um visor só; fórmula sempre à vista</li><li class="mais">Mobile: folha de <span data-medida="o6-m">~370</span> px em vez de tela cheia</li></ul></div><div><h4>Perde</h4><ul><li class="menos">Desktop: empurra o conteúdo da ficha</li><li class="menos">Não fica por cima de outra aba</li><li class="menos">Faixa esconde itens fora da tela (affordance de deslizar)</li></ul></div><div><h4>Custo</h4>Médio: faixa horizontal com snap é primitivo novo; remove a dependência de <code>app-painel-flutuante</code> e do estado de tamanho local. Decisão de produto: o jogador mantém o montador aberto enquanto joga?</div>`,
+      render(e, modo) {
+        const modoAttr = V(e, 'attrModo', 'somar');
+        const modoSeg = (rot) => seg(rot, [['somar', 'Somar'], ['testar', 'Testar d20']], modoAttr, 'seg', { nome: 'attrModo' });
+        if (e.guia) {
+          const guia = `<div class="lin lin--entre"><strong style="font:600 13px var(--font-sans)">Guia de fórmulas</strong>${btn('✕ Fechar', 'alt-guia', 'b--txt')}</div><div style="max-height:${modo === 'm' ? 480 : 300}px;overflow-y:auto">${guiaHTML(true)}</div>`;
+          return modo === 'd'
+            ? fundo(e, `<div class="gaveta" role="region" aria-label="Montador de rolagem">${guia}</div>`, {}) + resultadoHTML(e)
+            : fundo(e, '', {}) + `<div class="folha" role="region" aria-label="Montador de rolagem"><span class="folha__alca"></span>${guia}</div>` + resultadoHTML(e);
+        }
+        if (modo === 'd') {
+          const gaveta = `<div class="gaveta__cols"><section class="gr">${tt('Dado', 'toque de novo para somar')}<div class="grade grade--g7">${FACES.map((f) => dadoTile(f, 'dado', '', contagemDado(e, f))).join('')}</div></section><section class="gr">${tt('Tipo de dano', 'opcional')}<div class="grade">${DANOS.map((d) => danoBtn(d, 'dano', false)).join('')}</div></section></div>
+            <section class="gr">${tt('Atributo', modoSeg('Como usar o atributo'))}<div class="gaveta__linha-atr">${ATR.map((a) => tile(a, 'attr', { sigla: a })).join('')}${['PROF', 'NIV'].map((a) => tile(a, 'attr', { sigla: a }, 't--extra')).join('')}${btn('CORPO', 'atalho', '', { sigla: 'CORPO' })}${btn('FURTIVO', 'atalho', '', { sigla: 'FURTIVO' })}</div></section>
+            <div class="lin lin--entre"><span class="lin">${btn('? Guia', 'alt-guia', 'b--txt')}${step('bonus', V(e, 'bonus', 0), true)}${btn('+ Bônus', 'somar-num', 'b--ctn', {}, V(e, 'bonus', 0) ? '' : 'disabled')}</span><span class="lin">${btn('⌫ Desfazer', 'apagar', 'b--txt')}${btn('Limpar', 'limpar', 'b--txt')}</span></div>${leitura(e)}`;
+          return fundo(e, e.aberto ? `<div class="gaveta" role="region" aria-label="Montador de rolagem">${gaveta}</div>` : '', {}) + resultadoHTML(e);
+        }
+        const folha = `<span class="folha__alca"></span>${leituraCompacta(e)}
+          <section class="gr">${tt('Dado', 'deslize →')}<div class="faixa-rolagem">${FACES.map((f) => dadoTile(f, 'dado', '', contagemDado(e, f))).join('')}</div></section>
+          <section class="gr">${tt('Atributo', modoSeg('Como usar o atributo'))}<div class="faixa-rolagem">${[...ATR, 'PROF', 'NIV'].map((a) => tile(a, 'attr', { sigla: a }, ['PROF', 'NIV'].includes(a) ? 't--extra' : '')).join('')}</div></section>
+          <section class="gr">${tt('Bônus e tipo de dano')}<div class="faixa-rolagem">${step('bonus', V(e, 'bonus', 0), true)}${btn('+ Bônus', 'somar-num', 'b--ctn', {}, V(e, 'bonus', 0) ? '' : 'disabled')}${DANOS.map((d) => danoBtn(d, 'dano', false)).join('')}</div></section>
+          <div class="lin">${btn('?', 'alt-guia', 'b--txt', {}, 'aria-label="Guia de fórmulas"')}${btn('⌫', 'apagar', 'b--txt')}${btn('Limpar', 'limpar', 'b--txt')}${btn('Rolar', 'rolar', 'b--prim b--flex', {}, podeRolar(e) ? '' : 'disabled')}</div>`;
+        return fundo(e, '', {}) + (e.aberto ? `<div class="folha" role="region" aria-label="Montador de rolagem">${folha}</div>` : '') + resultadoHTML(e);
+      },
+    };
+
+    /* ---------- OPÇÃO 7: bandeja de dados ---------- */
+    OP.o7 = {
+      nome: '7 · Bandeja', sub: 'dados na mão',
+      nota: `<div><h4>Premissa</h4><strong>A fórmula é uma bandeja de dados.</strong> Tocar num dado o joga na bandeja (com contador e − / +); atributos são <em>liga/desliga</em> (derivados da fórmula, sem duplicar); o botão grande diz o que vai rolar. A sintaxe vira apenas um subtítulo.</div><div><h4>Ganha</h4><ul><li class="mais">Metáfora de mesa: tátil e legível à distância</li><li class="mais">Toggle impede “+FOR+FOR” sem querer</li><li class="mais">Estado vazio ensina o primeiro toque</li></ul></div><div><h4>Perde</h4><ul><li class="menos">Janela alta (700 px): bandeja + dados grandes</li><li class="menos">Fórmulas longas poluem a bandeja</li></ul></div><div><h4>Custo</h4>Médio-alto: toggle-pill de múltipla escolha e grupo de dado são primitivos novos; requer tokenização exportada do <code>shared</code>. Ícones de dado já existem.</div>`,
+      render(e, modo) {
+        const p = parse(e.formula); const danos = p.ok ? danosPorTermo(p.termos) : [];
+        const somados = p.ok ? p.termos.filter((t) => t.tipo === 'attr' && !t.mult && !t.div).map((t) => t.fonte) : [];
+        const modoAttr = V(e, 'attrModo', 'somar');
+        let bandeja = '';
+        if (p.ok && p.termos.length) bandeja = p.termos.map((t, i) => {
+          const d = danos[i] ? danoDe(danos[i]) : null; const cor = d ? `style="--c:var(--dano-${d.c})"` : '';
+          if (t.tipo === 'dado') return `<div class="grupo-dado" ${cor}><div class="dados">${Array.from({ length: Math.min(t.qtd, 5) }, () => ic(t.faces)).join('')}${t.qtd > 5 ? `<em>+${t.qtd - 5}</em>` : ''}</div><div class="rodape"><button type="button" data-acao="dado-menos" data-faces="${t.faces}" aria-label="Menos um D${t.faces}">−</button>${t.qtd}D${t.faces}<button type="button" data-acao="dado" data-faces="${t.faces}" aria-label="Mais um D${t.faces}">+</button></div></div>`;
+          if (t.tipo === 'dadoAtr') return `<div class="grupo-dado" ${cor}><div class="dados">${ic(t.faces)}<em>×${valorFonte(t.fonte)}</em></div><div class="rodape">${t.fonte} → D${t.faces}${/kh/.test(t.ops) ? ' · maior' : ''}<button type="button" data-acao="remover" data-i="${i}" aria-label="Remover">✕</button></div></div>`;
+          if (t.tipo === 'attr') return `<span class="pilula">${t.sinal < 0 ? '−' : '+'} ${t.fonte} <small>${valorFonte(t.fonte)}</small><button type="button" data-acao="remover" data-i="${i}" aria-label="Remover ${t.fonte}">✕</button></span>`;
+          if (t.tipo === 'num') return `<span class="pilula">${t.sinal < 0 ? '−' : '+'} ${t.valor}</span>`;
+          return `<span class="pilula">${textoTermo(t)}<button type="button" data-acao="remover" data-i="${i}" aria-label="Remover">✕</button></span>`;
+        }).join('');
+        else bandeja = `<div class="bandeja__vazio">A bandeja está vazia.<br>Toque num dado abaixo para jogá-lo aqui.</div>`;
+        const rolarRot = p.ok ? `Rolar ${esc(e.formula.length > 22 ? e.formula.slice(0, 22) + '…' : e.formula)}` : 'Rolar';
+        const corpo = `<section class="gr">${tt('Bandeja', e.formula ? btn('Limpar', 'limpar', 'b--txt', {}, '').replace('class="b b--txt"', 'class="b b--txt" style="min-height:22px;padding:0 6px;font-size:10px"') : '')}<div class="bandeja">${bandeja}</div>${leitura(e, 'Sem fórmula ainda.')}</section>
+          <section class="gr">${tt('Dados')}<div class="grade grade--g7">${FACES.map((f) => dadoTile(f, 'dado', 't--grande')).join('')}</div></section>
+          <section class="gr">${tt('Atributo', modoAttr === 'somar' ? 'liga / desliga' : 'joga um teste na bandeja')}${seg('Como usar o atributo', [['somar', 'Somar ao total'], ['testar', 'Testar (d20)']], modoAttr, 'seg', { nome: 'attrModo' }, 'sg--bloco')}<div class="grade grade--g6">${[...ATR, 'PROF', 'NIV'].map((a) => tile(a, modoAttr === 'somar' || ['PROF', 'NIV'].includes(a) ? 'togattr' : 'attr', { sigla: a }, (modoAttr === 'somar' || ['PROF', 'NIV'].includes(a)) && somados.includes(a) ? 't--on' : (['PROF', 'NIV'].includes(a) ? 't--extra' : ''))).join('')}</div><div class="lin" style="margin-top:4px"><span class="rot-lin">Bônus</span>${step('bonus-direto', numeroAtual(e), true)}${btn('? Guia', 'alt-guia', 'b--txt')}</div></section>
+          ${e.guia ? `<section class="gr">${guiaHTML(true)}</section>` : ''}
+          <section class="gr">${tt('Tipo de dano', 'opcional')}<div class="grade">${DANOS.map((d) => danoBtn(d, 'dano', !!(p.ok && p.termos.some((x) => x.dano && danoDe(x.dano)?.s === d.s)))).join('')}</div></section>`;
+        const rodape = `${btn('⌫', 'apagar', 'b--txt')}<button type="button" class="b b--prim b--grande b--flex" data-acao="rolar" ${p.ok ? '' : 'disabled'}>${ic(20).replace('class="ico"', 'class="ico" style="width:22px;height:22px"')} ${rolarRot}</button>`;
+        const j = janela(e, modo, { corpo, rodape, w: 480, h: modo === 'd' ? 700 : null, x: 24, y: 96, alca: true });
+        return moldura(e, modo, j);
+      },
+    };
+
+    /* ============================ RENDERIZAÇÃO & EVENTOS ============================ */
+    const ORDEM = ['atual', 'o1', 'o2', 'o3', 'o4', 'o5', 'o6', 'o7'];
+    ORDEM.forEach((k) => { ESTADOS[k] = novoEstado(); });
+    ESTADOS.atual.anotar = false;
+    ESTADOS.o1.formula = ''; ESTADOS.o2.formula = '2d6+FOR[F]'; ESTADOS.o2.sel = 0; ESTADOS.o7.formula = '2d6+FOR[F]';
+    const frames = { d: document.getElementById('frame-d'), m: document.getElementById('frame-m') };
+
+    function desenhar(resetarScroll) {
+      const e = E();
+      ['d', 'm'].forEach((modo) => {
+        const frame = frames[modo];
+        const ativo = document.activeElement;
+        const foco = ativo && frame.contains(ativo) && ativo.dataset ? { id: ativo.dataset.foco, ini: ativo.selectionStart, fim: ativo.selectionEnd } : null;
+        const rolagens = resetarScroll ? [] : Array.from(frame.querySelectorAll('.mr-corpo, .folha, .gaveta, .mr-janela')).map((n) => n.scrollTop);
+        frame.innerHTML = OP[atual].render(e, modo);
+        frame.classList.toggle('anot', !!e.anotar);
+        Array.from(frame.querySelectorAll('.mr-corpo, .folha, .gaveta, .mr-janela')).forEach((n, i) => { if (rolagens[i]) n.scrollTop = rolagens[i]; });
+        if (e.foco && modo === 'd') { const el = frame.querySelector('[data-foco="visor"]'); if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }
+        else if (foco && foco.id) { const el = frame.querySelector(`[data-foco="${foco.id}"]`); if (el) { el.focus(); try { el.setSelectionRange(foco.ini, foco.fim); } catch (_) {} } }
+      });
+      e.foco = false;
+    }
+    function aoClicar(ev) {
+      const el = ev.target.closest('[data-acao]'); if (!el || el.disabled) return;
+      const a = ACOES[el.dataset.acao]; if (!a) return;
+      a(E(), el.dataset); desenhar();
+    }
+    function aoDigitar(ev) {
+      const el = ev.target; if (!el.dataset || el.dataset.entrada !== 'formula') return;
+      E().formula = el.value;
+      /* só reconstrói o que não é o campo digitado: preserva foco e cursor */
+      const e = E();
+      ['d', 'm'].forEach((modo) => {
+        const frame = frames[modo]; if (frame.contains(el)) {
+          const ini = el.selectionStart, fim = el.selectionEnd, id = el.dataset.foco;
+          frame.innerHTML = OP[atual].render(e, modo); frame.classList.toggle('anot', !!e.anotar);
+          const novo = frame.querySelector(`[data-foco="${id}"]`); if (novo) { novo.focus(); try { novo.setSelectionRange(ini, fim); } catch (_) {} }
+        } else { frame.innerHTML = OP[atual].render(e, modo); frame.classList.toggle('anot', !!e.anotar); }
+      });
+    }
+    Object.values(frames).forEach((f) => { f.addEventListener('click', aoClicar); f.addEventListener('input', aoDigitar); f.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' && ev.target.dataset && ev.target.dataset.entrada === 'formula') { ACOES.rolar(E()); desenhar(); } }); });
+
+    /* ---------- seletor, anotações, contagem ---------- */
+    const escolhas = document.getElementById('escolhas');
+    function escolher(k) {
+      atual = k;
+      escolhas.innerHTML = ORDEM.map((o) => `<button type="button" data-op="${o}" aria-pressed="${o === k}">${OP[o].nome}<small>${OP[o].sub}</small></button>`).join('');
+      document.getElementById('nota').innerHTML = OP[k].nota;
+      document.getElementById('legenda-d').textContent = k === 'atual' ? 'Desktop · 570 × 725 como hoje' : k === 'o6' ? 'Desktop · gaveta sob a barra' : 'Desktop · janela flutuante';
+      frames.d.classList.toggle('frame--alto', k === 'atual');
+      document.getElementById('anotar-slot').innerHTML = k === 'atual' ? `<label><input type="checkbox" id="chk-anotar" ${E().anotar ? 'checked' : ''}/> Anotar problemas</label>` : '';
+      const chk = document.getElementById('chk-anotar'); if (chk) chk.addEventListener('change', () => { E().anotar = chk.checked; desenhar(); });
+      desenhar(true);
+      preencherMedidas();
+    }
+    escolhas.addEventListener('click', (ev) => { const b = ev.target.closest('[data-op]'); if (b) escolher(b.dataset.op); });
+
+    /* ---------- achados, mapa e comparativo ---------- */
+    const ACHADOS = [
+      ['1', 'Teclado de calculadora antes do jogo', 'ux', 'O primeiro grupo é “Editar”: 14 teclas (+ − ( ) e 0–9). Quem quer “um teste de Luta” ou “dano da pistola” precisa pensar em caracteres. O que é do jogo (dado, atributo) vem depois.', 'Template: seção “Editar” = 4 operadores/parênteses + 10 dígitos (14 teclas).'],
+      ['2', 'Causa e cura do mesmo erro na mesma tela', 'ux', 'Os botões ( e ) permitem montar parênteses que o motor rejeita (só valem (ATR±n)dM e (…)#N) — exatamente o erro que as duas ações compostas existem para evitar.', 'Guia do motor: “Qualquer outro uso de parênteses é erro de parse.”'],
+      ['3', 'Alvo invisível dos operadores', 'ux', 'Manter maior/menor e Margem de crítico agem no “primeiro dado da esquerda que ainda não tem o operador” — ou no dado sob o cursor do visor. O ⌫ remove “o menor bloco” por uma cadeia de nove regras. Nada disso é visível; só se descobre testando.', 'montador-rolagem.util.ts: reposicionarOperadorPool / apagarUltimoBloco.'],
+      ['4', 'Duplicação e vocabulário trocado', 'ux', '“Atributo” e “Propriedade” são a mesma coisa em duas seções; os 7 dados aparecem duas vezes; os 12 atributos também (grade + seletor). Dois inputs mostram a mesma fórmula (barra e painel).', 'Seções “Atributo” e “Dado por Propriedade + Ajuste”; app-rolagem-rapida + visor interno.'],
+      ['5', 'Siglas sem nome', 'ux', 'Tipo de dano é F/B/E/Q/G; operadores são “kh/kl/cm” por trás de rótulos de mecânica (“Manter maior”). Obrigam a memorizar; boa parte da explicação mora em tooltip — que não existe no toque.', 'TIPOS_DANO (sigla de 1 letra) + [appTooltip] nos tiles.'],
+      ['6', 'Ajuda fora de contexto', 'ux', 'O Guia é um modal de 1180 px com 13 seções, aberto por um “?” na barra — não no painel onde a dúvida aparece, e sem “inserir”. Erro de fórmula aparece fora do painel (“Fórmula não reconhecida. Veja o guia”).', 'guia-formula.component (modal, 13 seções estáticas).'],
+      ['7', 'Ações raras com peso de ação base', 'ux', 'Avançado, Dado por Propriedade + Ajuste (≈ 23 controles) e Repetir tudo ocupam o mesmo espaço e a mesma ênfase que os dados. A gramática é uma só — a UI trata o raro como corriqueiro.', 'Avançado + Dado por Propriedade + Repetir tudo = cerca de 40% dos controles do painel (medido no POC).'],
+      ['8', 'Ciclo montar → rolar → ver quebrado em três lugares', 'ux', 'A fórmula fica no topo, o “Rolar” no rodapé e o resultado numa terceira região (bandeja de dados). Não há leitura do que a fórmula fará nem da faixa de resultado.', 'Janela 570×725: visor e Rolar em extremos opostos.'],
+      ['A', 'Sem hierarquia visual', 'ui', '9 grupos (mais o rodapé) com o mesmo título mono de 10 px em --text-mute e a mesma grade de tiles de 36 px. Nada diz “comece aqui”; o único acento é vermelho no operador e no Rolar.', ''],
+      ['B', 'Janela grande demais', 'ui', '725 px de altura: em 1366×768 a janela tem 94% da altura da tela (725 de 768); em 1080p ocupa cerca de 20% da área (570×725 de 1920×1080), sobre a ficha que se quer ver. (Aritmética sobre o SCSS, não captura.)', 'LARGURA_INICIAL 570 · ALTURA_INICIAL 725.'],
+      ['C', 'Três famílias de controle na mesma grade', 'ui', 'Tile quadrado, tecla larga e segmentado/stepper se misturam; o seletor de 12 propriedades quebra em duas linhas e cria ritmo irregular.', 'tile · tecla · app-segmentado · app-step-input.'],
+      ['D', 'Cor sem semântica', 'ui', 'Só o dano tem cor própria (bom). Dado, atributo, operador e ação são cinza ou vermelho de tema — nenhum agrupamento por significado além do título.', ''],
+    ];
+    document.getElementById('achados').innerHTML = ACHADOS.map(([n, t, tipo, p, prova]) => `<article class="achado ${tipo === 'ui' ? 'achado--ui' : ''}"><span class="achado__n">${n}</span><h3>${t}</h3><p>${p}</p>${prova ? `<span class="prova">${prova}</span>` : ''}</article>`).join('');
+
+    document.getElementById('tabela-mapa').innerHTML = `<thead><tr><th>Controle hoje</th><th>Destino proposto</th><th>Por quê</th></tr></thead><tbody>${[
+      ['Editar — dígitos 0–9', 'fora', 'Substituído por <em>bônus fixo</em> (stepper) e pelo campo de texto'],
+      ['Editar — ( )', 'fora', 'Armadilha de gramática (achado 2); as duas formas válidas viram receitas no guia'],
+      ['Editar — + e −', 'fora', 'Sinal automático ao adicionar; subtração vira bônus negativo ou texto'],
+      ['Dado (D3…D20)', 'base', 'O núcleo do jogo. Contador visível em vez de dica “clique de novo”'],
+      ['Atributo + PROF/NIV', 'base', 'Ganha modo explícito <strong>Somar / Testar</strong> (hoje a mágica “atributo + dado = ATRdM” é escondida)'],
+      ['Tipo de dano F/B/E/Q/G', 'base', 'Com nome completo e cor; a sigla continua válida na fórmula'],
+      ['CORPO / FURTIVO', 'base', 'Atalhos do agente — só aparecem quando existem'],
+      ['Manter maior / menor', 'ctx', 'Aparece no termo (Opção 2) ou na receita “Teste de atributo”; no mais, guia'],
+      ['Margem de crítico', 'guia', 'Rara; <code>cm</code> com N ajustável pede explicação, não botão'],
+      ['Dado por Propriedade + Ajuste', 'guia', 'Receita “Mais dados que o atributo”: <code>(ATR+n)dM</code> com exemplo inserível'],
+      ['Repetir tudo', 'guia', 'Receita “Repetir”: <code>(…)#N</code>; ou campo Repetir no contexto (Opção 2)'],
+      ['⌫ / Limpar / Rolar', 'base', '⌫ vira “Desfazer último termo” (previsível); Rolar fica sempre à vista'],
+    ].map(([c, d, p]) => `<tr><td>${c}</td><td class="${d}">${{ base: 'BASE', ctx: 'CONTEXTUAL', guia: 'GUIA', fora: 'REMOVIDO' }[d]}</td><td>${p}</td></tr>`).join('')}</tbody>`;
+
+    const pt = (n) => `<span class="pt">${'●'.repeat(n)}<i>${'●'.repeat(5 - n)}</i></span>`;
+    function variantes(k) {
+      const base = novoEstado();
+      if (k === 'o2') return [{ ...base, formula: '2d6+FOR[F]', sel: 0, avancado: true }];
+      if (k === 'o3') return Object.keys(RECEITAS).map((id) => { const e = novoEstado(); ACOES.receita(e, { id }); return e; });
+      if (k === 'o4') return ['', '2', '2d6', '2d6+', 'FOR', '2d6[F]', 'd20kh1'].map((formula) => ({ ...base, formula }));
+      if (k === 'o5') return [1, 2, 3, 4].map((passo) => ({ ...base, passo }));
+      if (k === 'o7') return [{ ...base, formula: '2d6+FOR[F]' }];
+      return [];
+    }
+    function contar(k, estado) {
+      const tmp = document.createElement('div'); tmp.style.cssText = 'position:absolute;left:-9999px;top:0;width:900px;height:900px'; document.body.appendChild(tmp);
+      tmp.innerHTML = OP[k].render(estado || novoEstado(), 'd');
+      const alvo = tmp.querySelector('.mr-janela, .gaveta') || tmp;
+      const n = Array.from(alvo.querySelectorAll('button, input')).filter((b) => !b.closest('.mr-topo')).length;
+      tmp.remove(); return n;
+    }
+    const CONTAGENS = {};
+    ORDEM.forEach((k) => { const ini = contar(k); CONTAGENS[k] = { ini, max: Math.max(ini, ...variantes(k).map((e) => contar(k, e))) }; });
+    function preencherMedidas() {
+      document.querySelectorAll('[data-medida]').forEach((el) => {
+        const chave = el.dataset.medida;
+        if (chave === 'o6-m') { const folha = frames.m.querySelector('.folha'); if (folha) el.textContent = Math.round(folha.getBoundingClientRect().height); return; }
+        const [tipo, k] = chave.split('-');
+        if (CONTAGENS[k]) el.textContent = tipo === 'cmax' ? CONTAGENS[k].max : CONTAGENS[k].ini;
+      });
+    }
+    function montarComparativo() {
+      /* notas de 1 a 5 = julgamento de quem montou o POC (não é medição); controles = medido */
+      const linhas = [
+        ['atual', 'Teclado único', 1, 3, 4, 2, '—', '—'],
+        ['o1', 'Paleta enxuta + guia', 4, 4, 3, 4, 'Baixo', 'nenhum'],
+        ['o2', 'Fichas + inspetor', 3, 3, 5, 3, 'Alto', 'ficha selecionável/removível; divisor de termos exportado do shared'],
+        ['o3', 'Receitas', 5, 3, 3, 4, 'Médio', 'cartão-botão de receita'],
+        ['o4', 'Comando assistido', 3, 5, 5, 2, 'Médio-baixo', 'nenhum (função pura de sugestões); mobile depende do teclado'],
+        ['o5', 'Passo a passo', 5, 1, 2, 5, 'Médio', 'trilha de passos (padrão local, não primitivo)'],
+        ['o6', 'Gaveta / folha inferior', 4, 4, 3, 5, 'Médio', 'faixa horizontal com snap; tira a dependência do painel flutuante'],
+        ['o7', 'Bandeja de dados', 4, 4, 3, 4, 'Médio-alto', 'toggle-pill múltiplo; grupo de dado; divisor de termos exportado'],
+      ];
+      document.getElementById('tabela-comp').innerHTML = `<thead><tr><th>Opção</th><th>Controles ao abrir (máx.)</th><th>1ª vez</th><th>Uso recorrente</th><th>Fórmulas complexas</th><th>Mobile</th><th>Custo</th><th>Primitivo novo / observação</th></tr></thead><tbody>${linhas.map(([k, n, a, b, c, d, custo, prim]) => `<tr><td>${OP[k].nome}<br><span style="color:var(--text-mute);font-weight:400">${n}</span></td><td class="pt" style="color:var(--text)">${CONTAGENS[k].ini}${CONTAGENS[k].max > CONTAGENS[k].ini ? ` <span style="color:var(--text-mute)">(${CONTAGENS[k].max})</span>` : ''}</td><td>${pt(a)}</td><td>${pt(b)}</td><td>${pt(c)}</td><td>${pt(d)}</td><td>${custo}</td><td>${prim}</td></tr>`).join('')}</tbody>`;
+    }
+    montarComparativo();
+    escolher('atual');
+  </script>
+</body>
+</html>

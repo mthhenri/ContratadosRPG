@@ -79,6 +79,23 @@
 
 ## Abertas
 
+### I-041 — Montador de rolagem enxuto: ações base + guias · frontend/rolagem
+
+- **Ideia:** reduzir o `MontadorRolagem` ao que se usa toda sessão (dado, atributo com modo explícito
+  Somar/Testar, bônus, tipo de dano com nome, atalhos do agente) e mover o resto — `kh`/`kl`, `cm`,
+  `(ATR±n)dM`, `(…)#N`, composto, explosão — para um guia embutido no painel, com exemplos que se
+  inserem no visor; leitura em português da fórmula sob o visor.
+- **Origem:** pedido do autor em 2026-10-01 (montador "burocrático e confuso"); análise de UX/UI e sete
+  direções de POC em [`docs/design/propostas/montador-rolagem-simplificado.html`](../design/propostas/montador-rolagem-simplificado.html).
+- **Por quê:** hoje são cerca de 75 controles em 9 grupos, com teclado de calculadora, parênteses que
+  geram fórmula inválida, operadores que agem num alvo oculto e ajuda só em tooltip/modal fora do
+  contexto (medido no POC; achados 1–8 e A–D na página).
+- **Custo aparente:** só frontend. A recomendação (Opção 1 + guia com receitas + leitura da Opção 4)
+  não pede primitivo novo nem regra nova; as opções 2, 5 e 7 pedem divisor de termos exportado do
+  `shared/regras/rolagem` e primitivos novos em `shared/ui/` (decisão do autor). Falta o autor escolher a
+  direção e as decisões da seção 6 da página (janela × gaveta, "Testar atributo" como ação base, nome
+  completo de tipo de dano) antes de virar spec.
+
 ### I-040 — Tela de acessos mostrar concessão suspensa pela ocultação · frontend/ficha
 
 - **Ideia:** na lista "Acesso de visualização" do dono/mestre, marcar como "suspensa" a concessão

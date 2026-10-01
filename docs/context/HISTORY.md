@@ -1,5 +1,35 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-01 — Montador de rolagem: análise de UX/UI e POCs de simplificação (sem spec)
+
+O autor pediu uma mexida no visual do `MontadorRolagem`, "menos burocrático e confuso", com só ações
+base e guias de instrução para o resto, e várias opções de POC. Nenhum código de produto foi
+alterado e nenhuma spec foi aberta: o material ficou em
+`docs/design/propostas/montador-rolagem-simplificado.html` (HTML único, interativo, desktop e
+360×800, mesmo formato de `investigacao-jogador-esquadrao.html`). Conteúdo: diagnóstico com 12
+achados (oito de UX, quatro de UI), régua base × contextual × guia com o destino de cada controle
+de hoje, o baseline "Atual" transcrito do template com anotações ligáveis, e sete direções —
+1 Essencial (paleta enxuta + aba Guia), 2 Fichas (chips + inspetor), 3 Receitas, 4 Comando
+assistido, 5 Passo a passo, 6 Gaveta/folha inferior e 7 Bandeja de dados —, comparativo e
+recomendação (Opção 1 + guia com receitas + leitura em português da Opção 4).
+
+Medido no próprio POC: o atual tem 75 controles ao abrir; a Opção 1, 38; a folha mobile da Opção 6,
+388 px de altura. Achados de maior peso: teclado de calculadora antes dos conceitos do jogo; os
+botões `(`/`)` permitem o erro que as ações compostas existem para evitar; `kh`/`kl`/`cm` agem num
+alvo invisível (primeiro dado à esquerda ou dado sob o cursor); "Atributo" e "Propriedade" duplicam
+o mesmo conceito; ajuda só em tooltip e num modal fora do contexto. Tirar `kh`/`kl`/`cm` dos botões
+elimina o alvo invisível de graça.
+
+Limites declarados: o app real não foi levantado (sem `node_modules`/Postgres no ambiente), então o
+baseline é transcrição fiel do template e do SCSS, e as medidas de tela (94% da altura em 1366×768)
+são aritmética, não captura; as notas do comparativo são julgamento, os controles são medição.
+Verificado: carga sem erro, 2.080 cliques aleatórios nas oito opções sem exceção nem `NaN`/`undefined`
+na tela, sem overflow horizontal em 1920 e 390 de largura, inspeção das capturas das oito opções em
+desktop e 360×800. O gate visual de implementação (`verify`, comparação com o análogo aprovado)
+continua obrigatório para a direção escolhida. Pendente do autor: escolher a direção e as
+decisões da seção 6 da página; a ideia ficou registrada em `IDEAS.md` `I-041` e a pasta
+`propostas/` ganhou ponteiro em `MEMORY.md`.
+
 ## 2026-09-30 — m4-10: refinamento mobile concluído e gates aprovados
 
 Autor autorizou ampliar os primitivos após as duas escolhas apresentadas. Modal ganhou
