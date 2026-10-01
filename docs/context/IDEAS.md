@@ -101,6 +101,9 @@
   ação base e a tokenização no `shared` ficaram sem resposta (o autor não entendeu): os mockups assumem o
   modo explícito Somar/Testar, e a tokenização é decisão técnica sem efeito visual. Cinco versões visuais
   no canvas "Montador de rolagem" (claude.ai), pendente escolher uma.
+- **Preferência (2026-10-01, depois dos mockups):** o autor gostou de Essencial, Fichas, Bandeja e Receitas
+  (Paisagem ficou de fora) e pediu mesclas entre elas; cinco mesclas no mesmo canvas — A Essencial + Bandeja,
+  B Fichas + Bandeja, C Receitas + Essencial, D Receitas + Fichas, E todas juntas. Pendente escolher uma.
 
 ### I-040 — Tela de acessos mostrar concessão suspensa pela ocultação · frontend/ficha
 

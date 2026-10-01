@@ -1,5 +1,17 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-01 — Montador de rolagem: cinco mesclas das versões preferidas (sem spec)
+
+O autor gostou das versões Essencial, Fichas, Bandeja e Receitas (a Paisagem ficou de fora) e pediu mesclas.
+O mesmo canvas "Montador de rolagem" ganhou cinco linhas, cada uma em desktop e 360×800: A Essencial +
+Bandeja (bandeja como visor, paleta completa visível), B Fichas + Bandeja (a ficha abre o ajuste dentro da
+bandeja, paleta em abas), C Receitas + Essencial (modelos no topo, "Livre" é a paleta do Essencial, cartão
+fixo de fórmula e Rolar embaixo), D Receitas + Fichas (o modelo escolhido vira fichas editáveis) e E todas
+juntas. Alturas desktop entre 567 e 711 px; no mobile a fórmula fica fixa no topo, exceto na C, que fixa o
+cartão de fórmula embaixo. O Guia vira o "?" do cabeçalho nas mesclas sem abas. Mesmos limites da rodada
+anterior (comps estáticas, conferência local, app real não levantado, sem código de produto). Pendente do
+autor: escolher uma mescla; só então nasce a spec.
+
 ## 2026-10-01 — Montador de rolagem: decisões do autor e cinco versões visuais (sem spec)
 
 Sobre as cinco decisões levantadas pela proposta de `docs/design/propostas/montador-rolagem-simplificado.html`,
