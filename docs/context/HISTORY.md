@@ -18,8 +18,7 @@ de `--text-mute` em 10 px não passa 4,5:1); a altura das janelas desktop ficou 
 tem 725) e, no mobile, a fórmula fica fixa no topo enquanto a paleta rola.
 
 Limites: são comps estáticas, sem comportamento; o app real não foi levantado; a renderização foi conferida
-localmente (Chromium, fonte de reserva no lugar da IBM Plex, que é mais larga que a Plex) e não no canvas
-publicado. Nenhum código de produto foi alterado. Pendente do autor: escolher a versão (ou combinar) e dizer
+localmente (Chromium, com fonte de reserva mais larga que a IBM Plex) e não no canvas publicado. Nenhum código de produto foi alterado. Pendente do autor: escolher a versão (ou combinar) e dizer
 se quer protótipo clicável; só depois disso nasce a spec e vale o gate visual de implementação.
 
 ## 2026-10-01 — Montador de rolagem: análise de UX/UI e POCs de simplificação (sem spec)
