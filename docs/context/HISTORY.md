@@ -1,5 +1,27 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-01 — Montador de rolagem: decisões do autor e cinco versões visuais (sem spec)
+
+Sobre as cinco decisões levantadas pela proposta de `docs/design/propostas/montador-rolagem-simplificado.html`,
+o autor decidiu: (1) a **janela flutuante fica**; (3) tipo de dano com **nome completo no botão**, sigla
+válida na fórmula; (5) **primitivos novos autorizados**. As decisões 2 ("Testar atributo" como ação base) e
+4 (tokenização exportada do `shared`) o autor disse não ter entendido; os mockups assumem o modo explícito
+Somar/Testar e a tokenização foi tratada como decisão técnica sem efeito visual. Registro em `IDEAS.md` `I-041`.
+
+A seguir o autor pediu cinco versões visuais do novo montador num artifact. Foi publicado o canvas
+"Montador de rolagem" (claude.ai, privado) com 12 artboards: Essencial, Paisagem, Fichas, Bandeja e Receitas,
+cada uma em desktop e em 360×800, mais o Guia embutido comum às cinco. Todas mantêm a janela, mostram os
+nomes completos nos botões (dano e atributos, com o valor do agente), a aba Guia e a leitura em português da
+fórmula, e usam os tokens do tema e as silhuetas reais dos dados. Decisões de desenho: atributos viram
+liga/desliga derivado da fórmula; rótulos secundários usam `--text-dim` em vez de `--text-mute` (o contraste
+de `--text-mute` em 10 px não passa 4,5:1); a altura das janelas desktop ficou entre 560 e 700 px (a atual
+tem 725) e, no mobile, a fórmula fica fixa no topo enquanto a paleta rola.
+
+Limites: são comps estáticas, sem comportamento; o app real não foi levantado; a renderização foi conferida
+localmente (Chromium, fonte de reserva no lugar da IBM Plex, que é mais larga que a Plex) e não no canvas
+publicado. Nenhum código de produto foi alterado. Pendente do autor: escolher a versão (ou combinar) e dizer
+se quer protótipo clicável; só depois disso nasce a spec e vale o gate visual de implementação.
+
 ## 2026-10-01 — Montador de rolagem: análise de UX/UI e POCs de simplificação (sem spec)
 
 O autor pediu uma mexida no visual do `MontadorRolagem`, "menos burocrático e confuso", com só ações

@@ -95,6 +95,12 @@
   `shared/regras/rolagem` e primitivos novos em `shared/ui/` (decisão do autor). Falta o autor escolher a
   direção e as decisões da seção 6 da página (janela × gaveta, "Testar atributo" como ação base, nome
   completo de tipo de dano) antes de virar spec.
+- **Decisões do autor (2026-10-01):** a janela flutuante **fica** (nada de gaveta); tipo de dano com
+  **nome completo no botão** e a sigla (`[F]`) valendo na fórmula; **primitivos novos em `shared/ui/`
+  autorizados** (toggle, ficha selecionável/removível, cartão de receita etc.). "Testar atributo" como
+  ação base e a tokenização no `shared` ficaram sem resposta (o autor não entendeu): os mockups assumem o
+  modo explícito Somar/Testar, e a tokenização é decisão técnica sem efeito visual. Cinco versões visuais
+  no canvas "Montador de rolagem" (claude.ai), pendente escolher uma.
 
 ### I-040 — Tela de acessos mostrar concessão suspensa pela ocultação · frontend/ficha
 
