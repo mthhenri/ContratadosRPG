@@ -1,5 +1,19 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-01 — Montador de rolagem: mesclas A–E navegáveis no canvas (sem spec)
+
+O autor pediu que as cinco mesclas fossem utilizáveis para ver todas as visões e botões, sem precisar montar a
+fórmula. As dez artboards (desktop e 360×800) foram trocadas por versões interativas, marcadas como
+interativas no canvas: tudo é HTML e CSS puro (inputs ocultos guardam o estado, os botões são `label`, regras
+`:has()` mostram a variante certa), sem script. Cada mescla tem os estados de fórmula dano, teste, livre e vazio
+(modelos, "Limpar", "Desfazer" e o Guia mudam o estado), o Guia como visão própria, as abas de paleta
+(Dado, Atributo, Número, Atalhos), Somar/Testar, contador nos dados, quantidade e tipo de dano que mudam o
+texto, atalhos que entram na bandeja, remoção da Força com desfazer, resultado de rolagem, minimizar, fechar e
+reabrir pelo gatilho. A fórmula não é calculada: cada estado é uma variante pronta.
+
+Verificado localmente no Chromium com 0 falhas em um teste de cliques que percorre todos esses fluxos nas dez
+artboards; não foi aberto no Play do canvas publicado. Nenhum código de produto foi alterado.
+
 ## 2026-10-01 — Montador de rolagem: cinco mesclas das versões preferidas (sem spec)
 
 O autor gostou das versões Essencial, Fichas, Bandeja e Receitas (a Paisagem ficou de fora) e pediu mesclas.
