@@ -1,5 +1,17 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-02 — Montador de rolagem: enquadramento da spec e extensão do motor decididos (sem spec)
+
+Conversa sem código. O autor decidiu: o montador inteiro fica **exclusivo de tester** até haver um montador final; as
+variantes (Atual, Essencial = E3.3, Completo = E3.1, Blocos = E3.2) são temporárias, com seletor só para testers/admin, e a
+spec do vencedor e a liberação são dele, depois. A quantidade de dados por **expressão qualquer** (`+ − × ÷`, parênteses, sobre
+números, atributos, `PROF` e `NIV`) vira extensão **definitiva do motor para todos**, documentada no guia de fórmulas do app,
+com arredondamento **para baixo**. A leitura de `sistema-v4.1.0.md:2025-2045` mostrou que a linha 2045 ("assim como dito
+acima… para cima") contradiz a seção "Arredondamentos" logo acima — registrada como `P-093`; antes de ler a seção inteira eu
+tinha apresentado a linha como regra de testes, o que exagerou o peso dela e levou o autor a decidir "para cima" por um
+instante, corrigido depois da leitura. UI da conta: campo "Dados por expressão" no "+ Adicionar" (opção B), ainda sem mockup.
+Decisões completas em `IDEAS.md`, I-041. Nenhum código de produto foi alterado.
+
 ## 2026-10-02 — Montador de rolagem: E3.3, divulgação progressiva sobre a E3.1 (sem spec)
 
 O autor sentiu a E3.1 "too much" e pediu uma E3.3 com base nela. A E3.3 mantém o estado, os ids e o texto gerado da E3.1 e

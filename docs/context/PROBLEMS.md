@@ -29,6 +29,18 @@
 
 ## Ativos
 
+### P-093 — Sistema contradiz a si mesmo no arredondamento de bônus · `ABERTO` · docs/core
+
+- **Sintoma:** `docs/core/sistema-v4.1.0.md:2045` (Ordem de Bônus) diz "assim como dito acima, quaisquer valores
+  que não sejam inteiros, serão arredondados para cima"; a seção "Arredondamentos" logo acima (`:2027-2033`) manda
+  arredondar **para baixo** (exemplo 27,5 → 27) e o motor (`shared/regras`) arredonda para baixo (`LUT/2`).
+- **Causa:** provável erro de digitação na linha 2045 — o "assim como dito acima" remete justamente à regra que diz
+  "para baixo". A única exceção "para cima" documentada é a média de nível do esquadrão (`:1185`), outra regra.
+- **Contorno:** vale "para baixo" (decisão confirmada pelo autor em 2026-10-02); o motor já se comporta assim.
+- **Correção:** trocar "cima" por "baixo" na linha 2045 — o documento é do autor; a spec da extensão do motor
+  (I-041) inclui a correção.
+- **Desde:** identificado em 2026-10-02, ao especificar a quantidade de dados por expressão (I-041).
+
 ### P-092 — Checagem de tipos do shared falha em fixture de agente · `ABERTO` · shared
 
 - **Sintoma:** `npm run typecheck --workspace=shared` falha com TS2353 em

@@ -184,7 +184,32 @@
   5 equivalentes, 4 montadas iguais, 1 diverge (a mesma `3D10+36[B]+3D8[Q]` da E3.1). Herda as três divergências por tipo
   herdado da posição da E3.1 (`furtivo+FOR` inclusive, que a E3.2 já corrige). Bateria de 78 fórmulas na E3.3: 35 iguais, 19
   equivalentes, 13 que não monta, 3 que divergem, 5 inválidas no motor e 3 acima do limite do mockup — idêntico à E3.1, como esperado.
-  Pendente do autor: qual versão (E3.1, E3.2 ou E3.3) vai para a spec e se entra o sinal por termo ("subtrair este bloco").
+  A pergunta "qual versão vai para a spec" foi respondida logo depois: as três entram como variantes de um experimento
+  exclusivo de tester (ver "Decisões do autor para a spec", abaixo); o sinal por termo segue pendente.
+- **Decisões do autor para a spec (2026-10-02, depois da E3.3):**
+  - **Um montador só, experimental e exclusivo de tester.** Hoje a barra de rolagem rápida já restringe o gatilho
+    (`restringirMontadorATester="true"` na ficha de jogador, criatura/NPC e cartão de campanha; `podeUsarMontador`
+    em `rolagem-rapida.component.ts`). Durante o experimento valem **quatro opções** num seletor só para testers/admin:
+    **Atual** (montador de hoje, intocado, só linha de base e descartado no fim), **Essencial** (E3.3), **Completo**
+    (E3.1) e **Blocos** (E3.2). A spec deixa explícito que **não ficam quatro montadores**: fica um, talvez com
+    preferência de usuário (Completo/Essencial) gravada. Avaliam o autor/admin e testers escolhidos. A **spec do
+    montador vencedor e a liberação para todos são do autor**, fora do escopo da spec do experimento.
+  - **Recomendações minhas, ainda não confirmadas:** preferência de layout em `localStorage` durante o experimento
+    (migration é a única categoria irreversível em produção e a variante pode morrer); gate centralizado em um ponto
+    único, com padrão restrito (hoje o padrão do input é `false`, liberado, e um consumidor novo esqueceria a
+    restrição), para que liberar depois seja uma mudança só.
+  - **Extensão do motor para todos, definitiva** (não é do experimento): quantidade de dados por expressão com
+    **qualquer conta** (`+ − × ÷`, parênteses) sobre números, os 10 atributos, `PROF` e `NIV`; a conta vai entre
+    parênteses logo antes do `dM` (`((FOR+VIG)*2)d4`) e vale para **qualquer dado**, não só d20. Arredondamento
+    **para baixo** (confirmado após a leitura de `:2027-2045`; ver `P-093`). Mantém o limite de 100 dados; divisão
+    por zero = fórmula inválida; teste com resultado ≤ 0 segue a regra atual do motor (2+|n| dados, mantendo o
+    menor); negativos arredondam para baixo (−1,5 → −2) — esses três são propostas minhas, sem objeção. A regra
+    fica no guia de fórmulas do app (`frontend/src/app/modules/ficha/componentes/guia-formula/`), **não** em
+    `docs/core`; a spec corrige só a linha 2045.
+  - **UI da conta, opção B:** campo "Dados por expressão" no "+ Adicionar", com leitura ao vivo (`(FOR+VIG)*2 = 14
+    dados`); os botões Soma/Média do teste ficam. **Ainda sem mockup** dessa opção no canvas.
+  - **Pendente:** confirmar o sinal por termo ("subtrair este bloco") como parte do núcleo (já entra na E3.3 em
+    "⋯ Mais"; a E3.2 só soma); qual opção vem selecionada por padrão para o tester.
 
 ### I-040 — Tela de acessos mostrar concessão suspensa pela ocultação · frontend/ficha
 
