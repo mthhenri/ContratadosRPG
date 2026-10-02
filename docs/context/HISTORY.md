@@ -1,5 +1,12 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-02 — Montador de rolagem: bateria de 78 fórmulas na E3.1 e na E3.2 (sem spec)
+
+Bateria completa com o motor real como juiz: E3.1 acertou 54 (35 iguais e 19 equivalentes) e divergiu em 3; E3.2 acertou 58
+(39 e 19) e não divergiu em nenhuma. A bateria achou e corrigiu um defeito da E3.2 (ordem dos atalhos) e mostrou que o sinal
+por termo precisa existir na spec (a E3.2 só soma; a E3.1 não tem como dar tipos diferentes ao mesmo dado). Números e
+detalhes em `IDEAS.md`, I-041. Nenhum código de produto foi alterado.
+
 ## 2026-10-02 — Montador de rolagem: E3.1 (controles de base) e E3.2 (formulário por blocos, sem bandeja) no canvas (sem spec)
 
 O autor respondeu as quatro perguntas (média sempre para baixo, qualquer conta, a regra vem de uma habilidade de jogador, pode

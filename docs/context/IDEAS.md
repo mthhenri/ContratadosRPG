@@ -166,6 +166,14 @@
   Teste das dez fórmulas dos jogadores: **E3.1 9 de 10** (a que diverge, `3D10+36[B]+3D8[Q]`, tem o +36 preso ao primeiro termo
   por ordem de face); **E3.2 10 de 10** (o tipo é do bloco, então atributo e número ficam no segmento certo). Limites da E3.2:
   atributos só somam, opções valem para todos os dados do bloco e o texto sai na ordem das faces (equivalente, não idêntico).
+- **Bateria completa E3.1 × E3.2 (78 fórmulas, 2026-10-02):** E3.1: 35 iguais, 19 equivalentes, 13 que não monta, 3 que
+  divergem (`2d8[B]+PON`, `furtivo+FOR` e `1d12+FOR[F]+1d4[Q]`, todas por tipo herdado da posição), 5 inválidas no motor e 3
+  acima do limite do mockup. E3.2: 39 iguais, 19 equivalentes, 12 que não monta, nenhuma divergente. Em comum, fora dos botões
+  por decisão: `kl2`, `!5`, `?<=2`, `(FOR-1)d6`, `FOR*3`, `LUT/2`, `2d8+FOR*3+5`, `1d100`, `LUTd20kh1+FOR`. Só na E3.1: quatro
+  fórmulas com o mesmo dado em tipos diferentes (`2d6[F]+1d6[Q]`...). Só na E3.2: três fórmulas com termo subtraindo
+  (`d6+2d8-FOR+3`, `2d6+FOR[F]-1d8[Q]+3`, `2d6-FOR`). A E3.2 teve um defeito corrigido: atalhos (`CORPO`/`FURTIVO`) agora vão no
+  início do texto, porque cada um expande com a própria tag e, no fim, carimbava o atributo anterior (`furtivo+FOR`). Para a
+  spec: sinal por termo (dado e atributo) é requisito, nas duas arquiteturas.
 
 ### I-040 — Tela de acessos mostrar concessão suspensa pela ocultação · frontend/ficha
 
