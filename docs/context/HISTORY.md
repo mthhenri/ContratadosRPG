@@ -1,5 +1,13 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-02 — Montador de rolagem: Mescla E escolhida, revisão de melhorias (sem spec)
+
+O autor escolheu seguir com a Mescla E e perguntou o que mais aprimorar. Foi feita uma revisão da E renderizada
+(desktop 960×860, janela de 694 px; mobile 360×800, com 8 px de rolagem no corpo) contra o código real do
+`MontadorRolagem` (`formula` é o mesmo texto do controle da "Rolagem rápida"; o rodapé não fecha o painel ao
+rolar; `CORPO`/`FURTIVO` só aparecem com valor). As melhorias propostas e as duas decisões pendentes (2 e 4)
+estão em `IDEAS.md`, I-041. Nenhum código de produto nem artboard foi alterado.
+
 ## 2026-10-01 — Montador de rolagem: mesclas A–E navegáveis no canvas (sem spec)
 
 O autor pediu que as cinco mesclas fossem utilizáveis para ver todas as visões e botões, sem precisar montar a

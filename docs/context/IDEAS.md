@@ -104,6 +104,15 @@
 - **Preferência (2026-10-01, depois dos mockups):** o autor gostou de Essencial, Fichas, Bandeja e Receitas
   (Paisagem ficou de fora) e pediu mesclas entre elas; cinco mesclas no mesmo canvas — A Essencial + Bandeja,
   B Fichas + Bandeja, C Receitas + Essencial, D Receitas + Fichas, E todas juntas. Pendente escolher uma.
+- **Direção escolhida (2026-10-02):** o autor decidiu seguir com a **Mescla E** ("todas juntas") e pediu o
+  que mais aprimorar. Achados da revisão (render da E + código real): três representações da mesma fórmula
+  (fichas, frase, texto) mais o texto repetido no botão Rolar; "Começar por" fixo e destrutivo (a fórmula é o
+  mesmo texto da barra, `formula = model<string>`); Somar/Testar como interruptor em vez de modo derivado do
+  estado; aba Atalhos sempre visível (o real só mostra `CORPO`/`FURTIVO` quando há valor, e a E não mostra o
+  valor); "Número" como aba em vez de bônus na bandeja; vermelho com três significados (seleção, tipo Físico,
+  Rolar); `⌫` sem rótulo e com alvo pequeno; faltam os estados avançada, inválida e resultado da rolagem (o
+  real não fecha o painel ao rolar). Aguardam resposta do autor: decisão 2 ("Testar atributo") e 4
+  (tokenização no `shared`), agora ligadas à E; sem spec ainda.
 
 ### I-040 — Tela de acessos mostrar concessão suspensa pela ocultação · frontend/ficha
 
