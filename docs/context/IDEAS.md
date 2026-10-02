@@ -174,6 +174,16 @@
   (`d6+2d8-FOR+3`, `2d6+FOR[F]-1d8[Q]+3`, `2d6-FOR`). A E3.2 teve um defeito corrigido: atalhos (`CORPO`/`FURTIVO`) agora vão no
   início do texto, porque cada um expande com a própria tag e, no fim, carimbava o atributo anterior (`furtivo+FOR`). Para a
   spec: sinal por termo (dado e atributo) é requisito, nas duas arquiteturas.
+- **E3.3 — divulgação progressiva (2026-10-02):** o autor achou a E3.1 "too much" e pediu uma E3.3 sobre ela. Mesmo estado e
+  mesmo texto de saída da E3.1; muda só o que fica à vista. Ficha de dado mostra dado, quantidade, tipo de dano e ✕; sinal,
+  segundo tipo (composto) e opções do dado ficam em "⋯ Mais". Atributo, número, "repetir ×N" e atalhos viram painéis de
+  "+ Adicionar" (um aberto por vez); no teste só o atributo fica à vista e combinar, dados a mais/menos, bônus e opções
+  entram por "+ Adicionar". Número sem o passo de ±5 e sem abas no mobile. Controles visíveis na janela, medidos por
+  `t/contar.js`: Dano padrão 42→24, Dados livres vazio 34→16, Dados livres montado 41→22, Teste 31→23; altura da janela no
+  desktop 703→449 px (Dano) e 733→526 px (Teste). Teste de cliques: 0 falhas (desktop e 360×800). Dez fórmulas dos jogadores:
+  5 equivalentes, 4 montadas iguais, 1 diverge (a mesma `3D10+36[B]+3D8[Q]` da E3.1). Herda as três divergências por tipo
+  herdado da posição da E3.1 (`furtivo+FOR` inclusive, que a E3.2 já corrige). Bateria de 78 fórmulas **não** rodada na E3.3.
+  Pendente do autor: qual versão (E3.1, E3.2 ou E3.3) vai para a spec e se entra o sinal por termo ("subtrair este bloco").
 
 ### I-040 — Tela de acessos mostrar concessão suspensa pela ocultação · frontend/ficha
 
