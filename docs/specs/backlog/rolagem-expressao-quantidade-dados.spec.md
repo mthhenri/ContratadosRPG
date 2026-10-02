@@ -4,16 +4,16 @@
 > para **todos** os usuários. Nasce da `I-041` de `docs/context/IDEAS.md` (pedido do autor em
 > 2026-10-02, "uma regra que eu não sabia que não estava implementada"). **Não faz parte do experimento
 > do montador** — o experimento (`montador-rolagem-experimento.spec.md`) depende desta, não o contrário.
-> Registra também a correção de `P-093`.
+> `docs/core` **não é alterado**: a contradição da linha 2045 fica anotada em `P-093`.
 
 ## Objetivo
 
-Permitir que a **quantidade de dados** de um termo seja uma **conta qualquer** — `+ − × ÷` e
-parênteses sobre números e fontes escalares (os 10 atributos, `PROF` e `NIV`) — e que o resultado seja
-arredondado **para baixo**. Exemplos do autor: a média de dois atributos num teste,
-`((INT+SOC)/2)d20kh1cm1+PROF`, e "somo Força com Vigor, multiplico por dois e rolo em d4",
-`((FOR+VIG)*2)d4`. Hoje o motor só aceita `(ATR±n)dM` e `(ATR*Y)dM`; qualquer outra conta é
-"Termo desconhecido".
+Permitir que a **quantidade de dados** de um termo **e os bônus fixos** sejam uma **conta qualquer** — `+ − × ÷`
+e parênteses sobre números e fontes escalares (os 10 atributos, `PROF` e `NIV`) — com o resultado arredondado
+**para baixo**. Exemplos do autor: a média de dois atributos num teste, `((INT+SOC)/2)d20kh1cm1+PROF`;
+"somo Força com Vigor, multiplico por dois e rolo em d4", `((FOR+VIG)*2)d4`; e o mesmo valor como bônus fixo,
+`2d6+(FOR+VIG)*2`. Hoje o motor só aceita `(ATR±n)dM` e `(ATR*Y)dM` para quantidade, e `ATR*N`/`ATR/N` para
+bônus; qualquer outra conta é "Termo desconhecido".
 
 ## Decisões fechadas (autor, 2026-10-02)
 
@@ -23,50 +23,66 @@ arredondado **para baixo**. Exemplos do autor: a média de dois atributos num te
    para baixo após a conclusão do cálculo"; exemplo 27,5 → 27). `(7/3)*3` vale 7, não 6.
 3. **Vale para qualquer dado** (`d4`, `d6`, `d20`…), não só para teste, e para todos os usuários. É regra
    do jogo; **não há flag, não há reversão**.
+   **Vale também para o bônus fixo** (decisão de 2026-10-02): `(FOR+VIG)*2`, `FOR*VIG`, `2*(LUT+PROF)`,
+   `(FOR+VIG)/2`, com sinal e tag de tipo como qualquer termo (`2d6 - (FOR+VIG)*2 [Q]`).
 4. **A regra fica escrita no guia de fórmulas do app**
    (`frontend/src/app/modules/ficha/componentes/guia-formula/`), não em `docs/core`. A fonte de verdade desta
    extensão é esta spec + o guia + os testes do motor.
-5. **Correção do documento (`P-093`)**: `sistema-v4.1.0.md:2045` diz "assim como dito acima… arredondados
-   para cima", contradizendo a seção logo acima (`:2027-2033`, para baixo) a que a própria frase remete.
-   Corrigir "cima" para "baixo". `docs/core` é do autor: a correção entra nesta task **com a aprovação desta
-   spec** e é a única alteração em `docs/core`.
+5. **`docs/core` não é alterado** (autor, 2026-10-02): `sistema-v4.1.0.md:2045` diz "assim como dito acima…
+   arredondados para cima", contradizendo a seção logo acima (`:2027-2033`, para baixo) a que a própria frase
+   remete. Fica **só anotado em `P-093`** (`ACEITO`); o motor e o guia valem "para baixo".
+6. **D1 e D2 decididos** (autor, 2026-10-02, ambos conforme a recomendação):
+   - **D1 — conta ≤ 0 num teste.** Em forma nova **com `kh`** (pool de teste) e resultado ≤ 0, vale a regra de
+     atributo zerado (rola 2+|n| dados e mantém o **menor**, a mesma de `ATRdM…kh` nu em `rolarTermo`). **Sem
+     `kh`** (dano), a quantidade trava em 0. As formas legadas `(ATR±n)dM` e `(ATR*Y)dM` **não mudam**: continuam
+     travando em 0 dado, sem desvantagem.
+   - **D2 — divisor.** Divisor literal zero (`(FOR/0)`) é fórmula inválida na interpretação; divisor que depende
+     de atributo e dá zero na rolagem (`(FOR/VIG)` com Vigor 0) faz a conta valer **0** (0 dado, ou bônus 0),
+     nunca exceção.
 
-## Pontos a confirmar na revisão (propostas do agente, não decisão do autor)
+## Ponto a confirmar na revisão (proposta do agente, não decisão do autor)
 
-- **D1 — resultado da conta ≤ 0 num teste.** Hoje só `ATRdM…kh` (atributo nu) com atributo ≤ 0 aplica a regra
-  de atributo zerado (rola 2+|n| dados e mantém o **menor**, `rolarTermo`); as formas de contagem explícita
-  `(ATR±n)dM`/`(ATR*Y)dM` apenas travam em 0 dado, sem desvantagem. **Recomendo:** em forma nova com `kh`
-  (pool de teste) e resultado ≤ 0, aplicar a regra de atributo zerado (a média de dois atributos *é* o
-  atributo do teste; rolar 0 dado num teste é pior que a desvantagem); sem `kh` (dano), travar em 0.
-  Alternativa: sempre travar em 0, como as formas atuais. As formas legadas **não mudam** em nenhuma das duas.
-- **D2 — divisor que vira zero na rolagem.** Divisor literal zero (`(FOR/0)`) é fórmula inválida na
-  interpretação. Divisor que depende de atributo e dá zero na rolagem (`(FOR/VIG)` com Vigor 0) resulta em
-  **0 dado**, nunca em exceção.
-- **D3 — escopo.** Só a **quantidade de dados**. Generalizar também os **bônus fixos** (`(FOR+VIG)*2` sem dado;
-  hoje só `ATR*N` e `ATR/N`) fica de fora — o crítico (regra de dobrar atributos, exceto `PROF`/`NIV`)
-  precisaria de decisão própria para contas que misturam as duas coisas.
+- **D4 — crítico num bônus fixo por conta.** O sistema manda dobrar "todos os dados e valores fixos (flat ou
+  atributo)" (`sistema-v4.1.0.md:1810`; `Força × 6` vira `Força × 12`), **exceto valores originados de Patente ou
+  Nível** (`:1965`; no motor, `PROF`/`NIV` não dobram). Para quantidade de dados nada muda: o crítico dobra a
+  contagem, como hoje. Para o bônus por conta **recomendo a regra simples**: o crítico dobra o **valor final** (já
+  arredondado) da conta; **se a conta referencia `PROF` ou `NIV`, ela não dobra** — e o guia ensina a escrever
+  `PROF` como termo separado (`(FOR+VIG)*2 + PROF`) para dobrar a parte de atributo e preservar a de Patente.
+  Alternativa mais fiel e mais cara: dobrar só a parcela originada de atributos (exige avaliar a conta duas
+  vezes e só é bem definida em conta linear). As formas legadas `ATR*N`/`ATR/N` **não mudam** (dobram o valor
+  final, como hoje).
 
 ## Entregáveis
 
-1. **Avaliador de expressão** puro em `shared/src/regras/rolagem/`: lê a conta, respeita precedência
+1. **Avaliador de conta** puro em `shared/src/regras/rolagem/`: lê a conta, respeita precedência
    (`* /` antes de `+ -`, associatividade à esquerda), parênteses aninhados e `-` unário; avalia com
    **aritmética exata (frações de inteiros)** e arredonda para baixo (`floor`) só no fim. Sem `eval`/`Function`.
    Limites explícitos de **profundidade** e de **tamanho** da conta (o backend valida texto vindo do cliente).
-2. **Gramática**: `(<conta>)[dD]<faces><operadores>` passa a valer em `interpretarSegmento`, aceitando os
-   mesmos operadores por pool (`kh`/`kl`/`cm`/`!`/`?`), sinal por termo e tag de tipo (`[Q]`, `[F-Q]`) como as
-   outras formas de dado. O parser distingue por contexto: grupo seguido de `dM` é conta de quantidade; grupo
-   com dados seguido de `[Tipo]` é pool tipado; grupo seguido de `#N` é repetição (nenhum deles muda).
-3. **Interpretação**: novo campo opcional em `TermoDadoDto` guardando a conta interpretada (value object
-   nomeado conforme `dto-conventions`), mantendo `quantidade` no default 1. `(ATR±n)dM` e `(ATR*Y)dM`
-   **continuam produzindo exatamente o DTO e o resultado de hoje** — seja roteando-as pelo avaliador novo com
-   saída idêntica, seja mantendo o caminho atual.
-4. **Rolagem**: quantidade = piso da conta, limitada a `QUANTIDADE_DADOS_MAXIMA` (100) e a 0 por baixo
-   (D1/D2 acima); crítico dobra a quantidade como hoje; `desvantagem` marcada no resultado quando D1 se aplica.
-5. **Guia de fórmulas** (`guia-formula.component.ts`): seção nova com os dois exemplos do autor, a regra de
-   arredondamento ("sempre para baixo, uma vez, no fim da conta") e a forma `((conta))dM`.
-6. **Documento**: linha `:2045` de `docs/core/sistema-v4.1.0.md` corrigida de "cima" para "baixo" e `P-093`
-   removido de `PROBLEMS.md` ao fechar (relato em `HISTORY.md`).
-7. **Corpus**: `docs/design/propostas/montador-rolagem-formulas.json` (10 fórmulas dos jogadores + 78 de bateria)
+2. **Gramática**, em `interpretarSegmento`:
+   - **Quantidade**: `(<conta>)[dD]<faces><operadores>`, com os mesmos operadores por pool (`kh`/`kl`/`cm`/`!`/`?`),
+     sinal por termo e tag de tipo (`[Q]`, `[F-Q]`) das outras formas de dado.
+   - **Bônus fixo**: um termo (o trecho entre `+`/`−` de nível superior) sem dado, formado por números, fontes,
+     `* /` e parênteses — `FOR*VIG`, `(FOR+VIG)*2`, `2*(LUT+PROF)` — com sinal e tag de tipo. `ATR*N` e `ATR/N`
+     são casos particulares e **mantêm DTO e resultado de hoje**.
+   - **Desambiguação por contexto** (nada do que vale hoje muda): grupo seguido de `dM` é conta de quantidade;
+     grupo **com dados** seguido de `[Tipo]` é pool tipado; grupo seguido de `#N` é repetição da fórmula inteira;
+     grupo **só de números e fontes**, sem `dM` nem `#N`, é conta de bônus fixo; grupo com dados sem tag nem `#N`
+     segue sendo erro de parse.
+   - **A conta é o termo.** Termos vizinhos separados por `+`/`−` arredondam cada um (`FOR/2+VIG/2`, com 3 e 3, dá
+     2, como hoje); **para somar antes de arredondar, parênteses** (`(FOR/2+VIG/2)` dá 3). O guia explica isso.
+3. **Interpretação**: a conta interpretada vira um value object (nomeado conforme `dto-conventions`) guardado em
+   campo opcional de `TermoDadoDto` (quantidade) e num termo de bônus por conta (extensão de `TermoAtributoDto`
+   ou termo novo, preservando `rotulo` para o detalhamento e o agrupamento por tipo de dano). `(ATR±n)dM`,
+   `(ATR*Y)dM`, `ATR*N` e `ATR/N` **continuam produzindo exatamente o DTO e o resultado de hoje** — seja roteando-as
+   pelo avaliador novo com saída idêntica, seja mantendo o caminho atual.
+4. **Rolagem**: quantidade = piso da conta, limitada a `QUANTIDADE_DADOS_MAXIMA` (100) e a 0 por baixo (D1/D2);
+   crítico dobra a quantidade como hoje; `desvantagem` marcada no resultado quando D1 se aplica. Bônus por conta =
+   piso da conta, somado com o sinal do termo e listado em `atributos` do resultado (`rotulo` + `valor`), de modo que
+   o detalhamento da bandeja de dados não muda; crítico conforme D4.
+5. **Guia de fórmulas** (`guia-formula.component.ts`): seção nova com os exemplos do autor, a regra de
+   arredondamento ("sempre para baixo, uma vez, no fim da conta", e parênteses para somar antes de arredondar), as
+   formas `((conta))dM` e `(conta)` de bônus, e a nota do crítico (D4).
+6. **Corpus**: `docs/design/propostas/montador-rolagem-formulas.json` (10 fórmulas dos jogadores + 78 de bateria)
    usado como snapshot de regressão.
 
 ## Critérios de Aceite
@@ -79,9 +95,14 @@ arredondado **para baixo**. Exemplos do autor: a média de dois atributos num te
   (−1,5 → −2, e a quantidade trava em 0); `((FOR+VIG)*2)d4` com 3 e 2 → 10 dados; teto de 100 dados; crítico
   dobrando; sinal por termo (`-((FOR+VIG)*2)d4` subtrai); combinação com `[Q]`, `[F-Q]` e `#2`; `PROF`/`NIV` e nomes
   por extenso (`força`) dentro da conta; D1 e D2 conforme decidido.
+- Testes do **bônus fixo**: `(FOR+VIG)*2` com 3 e 2 → 10; `FOR*VIG` e `2*(LUT+PROF)`; `FOR/2+VIG/2` com 3 e 3 → 2 contra
+  `(FOR/2+VIG/2)` → 3 (a conta é o termo); sinal (`2d6-(FOR+VIG)*2`) e tag (`(FOR+VIG)*2[Q]`, `[F-Q]`); divisor zero
+  literal inválido e por atributo valendo 0; conta que referencia `PROF`/`NIV`; crítico conforme D4; `ATR*N`/`ATR/N`
+  idênticos ao snapshot; `(2d6+FOR)` sem tag nem `#N` continua erro de parse.
 - Fórmulas inválidas devolvem erro claro, nunca lançam: parêntese aberto/fechado a mais, conta vazia (`()d6`),
   operador duplo (`**`), fonte desconhecida, divisão por zero literal, conta além dos limites de profundidade/tamanho.
-- `((Int+soc)/2)d20kh1cm1+prof` (a fórmula "não funciona, mas deveria") passa a ser válida e rola.
+- `((Int+soc)/2)d20kh1cm1+prof` (a fórmula "não funciona, mas deveria") passa a ser válida e rola; o corpus lista
+  também as formas novas esperadas (`esperada_apos_expressao`).
 - `npm run test --workspace=backend` sem regressão (o backend só chama `validarFormula`, em
   `encontro.service.ts:326`); lint dos workspaces tocados sem erro. **`npm run typecheck --workspace=shared` falha
   hoje por `P-092` (preexistente)** — relatar à parte, não corrigir aqui.
@@ -94,13 +115,15 @@ arredondado **para baixo**. Exemplos do autor: a média de dois atributos num te
   Atual não precisa entender a forma nova, mas **não pode quebrar** ao receber uma fórmula com ela — conferir
   que o fallback "avançada" ou equivalente aparece). Nenhum consumidor lê `quantidadeAtributo*` fora do motor
   (conferido em 2026-10-02), então o formato novo não exige mudança neles.
-- Teste de ponta a ponta no app real (`verify`): digitar `((FOR+VIG)*2)d4` e a fórmula da média na "Rolagem rápida",
-  rolar e conferir o detalhamento na bandeja de dados.
+- `docs/core` **sem diferença** no diff (a contradição segue só em `P-093`).
+- Teste de ponta a ponta no app real (`verify`): digitar `((FOR+VIG)*2)d4`, `2d6+(FOR+VIG)*2` e a fórmula da média
+  na "Rolagem rápida", rolar (também com crítico) e conferir o detalhamento na bandeja de dados.
 
 ## Fora de Escopo
 
-- **Bônus fixo por conta** (`(FOR+VIG)*2` sem dado), funções (`min`, `max`, raiz), decimais literais, `×`/`÷` como
-  caracteres: só ASCII `* /` — D3. Vira ideia em `IDEAS.md` se o autor quiser.
+- Funções (`min`, `max`, raiz), decimais literais e `×`/`÷` como caracteres: só ASCII `* /`. Vira ideia em
+  `IDEAS.md` se o autor quiser.
+- **Editar `docs/core`** (inclusive a linha 2045): decisão do autor, fica só em `P-093`.
 - Qualquer mudança no montador (é o experimento, em outra spec) e no formato salvo das fichas: a fórmula continua
   sendo só texto em `ficha.dados`, sem migration.
 - Mexer na linha `:1185` (média de nível do esquadrão, "0,5 para cima") — é outra regra, com exceção própria.
@@ -108,9 +131,9 @@ arredondado **para baixo**. Exemplos do autor: a média de dois atributos num te
 
 ## Dependências
 
-Nenhuma spec anterior. Fontes de verdade: `docs/core/sistema-v4.1.0.md` — "Arredondamentos" (`:2025-2039`) e
-"Ordem de Bônus" (`:2043-2049`); skill `regras-do-jogo` (motor puro, consumidores, fecho); `P-093` e `P-092`
-de `PROBLEMS.md`. Bloqueia `montador-rolagem-experimento.spec.md`.
+Nenhuma spec anterior. Fontes de verdade: `docs/core/sistema-v4.1.0.md` — "Arredondamentos" (`:2025-2039`), crítico
+(`:1810`, `:1965`) e "Ordem de Bônus" (`:2043-2049`, só para a contradição); skill `regras-do-jogo` (motor puro,
+consumidores, fecho); `P-093` e `P-092` de `PROBLEMS.md`. Bloqueia `montador-rolagem-experimento.spec.md`.
 
 ## Riscos e Mitigação
 
@@ -121,4 +144,7 @@ de `PROBLEMS.md`. Bloqueia `montador-rolagem-experimento.spec.md`.
   `interpretarSegmento`.
 - **Conta patológica vinda do cliente** (aninhamento extremo, texto enorme) no backend. Mitigação: limites de
   profundidade e tamanho + avaliador sem `eval`.
-- **D1 ambígua**: decidir antes de implementar; o teste cita a decisão tomada.
+- **D4 em aberto**: decidir antes de implementar o crítico do bônus por conta; o teste cita a decisão tomada.
+- **Bônus por conta colidir com `ATR*N`/`ATR/N`**: o termo `FOR*3` hoje usa piso de `(base*mult)/div` e o crítico
+  dobra o valor final; a forma nova não pode deslocar essa conta. Mitigação: o snapshot do corpus e os testes dos
+  dois caminhos lado a lado.

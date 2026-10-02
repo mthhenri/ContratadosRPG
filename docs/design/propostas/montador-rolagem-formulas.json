@@ -1,5 +1,5 @@
 {
- "_leia-me": "Corpus de aceite do montador de rolagem (I-041). 'jogadores' = fórmulas reais trazidas pelo autor em 2026-10-02; 'bateria' = exemplos do Guia, dos testes de shared/regras/rolagem e do montador, mais casos de jogo. O texto de cada item é o que o jogador digitaria; o juiz é interpretarFormula do motor real (a fórmula sem montador e a remontada devem ser interpretadas igual). 'esperada_apos_expressao' marca a única fórmula que só passa a valer com a spec rolagem-expressao-quantidade-dados.",
+ "_leia-me": "Corpus de aceite do montador de rolagem (I-041). 'jogadores' = fórmulas reais trazidas pelo autor em 2026-10-02; 'bateria' = exemplos do Guia, dos testes de shared/regras/rolagem e do montador, mais casos de jogo. O texto de cada item é o que o jogador digitaria; o juiz é interpretarFormula do motor real (a fórmula sem montador e a remontada devem ser interpretadas igual). 'esperada_apos_expressao' lista as fórmulas que só passam a valer com a spec rolagem-expressao-quantidade-dados (a primeira é dos jogadores; as demais são exemplos de conta de quantidade e de bônus fixo; as duas últimas mostram a diferença entre somar antes de arredondar e arredondar cada termo).",
  "jogadores": [
   "((PON+1)d20kh1cm1+PROF+2+6)#2",
   "(5d8+6d6 [Q] + 6d4+8 [B])#2",
@@ -93,6 +93,13 @@
   "2d20kl+PROF"
  ],
  "esperada_apos_expressao": [
-  "((Int+soc)/2)d20kh1cm1+prof"
+  "((Int+soc)/2)d20kh1cm1+prof",
+  "((FOR+VIG)*2)d4",
+  "2d6+(FOR+VIG)*2",
+  "2d6+(FOR+VIG)*2[Q]",
+  "FOR*VIG",
+  "2*(LUT+PROF)",
+  "(FOR/2+VIG/2)",
+  "FOR/2+VIG/2"
  ]
 }

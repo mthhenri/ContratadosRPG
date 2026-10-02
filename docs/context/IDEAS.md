@@ -148,7 +148,7 @@
     (E3.1) e **Blocos** (E3.2). A spec deixa explícito que **não ficam quatro montadores**: fica um, talvez com
     preferência de usuário (Completo/Essencial) gravada. Avaliam o autor/admin e testers escolhidos. A **spec do
     montador vencedor e a liberação para todos são do autor**, fora do escopo da spec do experimento.
-  - **Recomendações minhas, ainda não confirmadas:** preferência de layout em `localStorage` durante o experimento
+  - **Confirmados (2026-10-02, depois do rascunho das specs):** preferência de layout **só em `localStorage`, por ora**
     (migration é a única categoria irreversível em produção e a variante pode morrer); gate centralizado em um ponto
     único, com padrão restrito (hoje o padrão do input é `false`, liberado, e um consumidor novo esqueceria a
     restrição), para que liberar depois seja uma mudança só.
@@ -159,9 +159,14 @@
     por zero literal = fórmula inválida; negativos arredondam para baixo (−1,5 → −2). **Correção minha:** eu tinha dito que o
     teste com resultado ≤ 0 "segue a regra atual do motor (2+|n| dados)", mas no código essa desvantagem só vale
     para `ATRdM…kh` (atributo nu); as formas de contagem explícita `(ATR±n)dM`/`(ATR*Y)dM` só travam em 0 dado. A
-    escolha para a conta nova ficou como **D1, em aberto**, na spec do motor. A regra
+    escolha para a conta nova foi a **D1**, decidida na revisão da spec: com `kh` e resultado ≤ 0 vale a regra de
+    atributo zerado; sem `kh` trava em 0; divisor zero literal é inválido e por atributo vale 0 (**D2**).
+  - **Escopo ampliado (2026-10-02):** o autor quis o **bônus fixo por conta** também (`(FOR+VIG)*2` sem dado), não
+    só a quantidade de dados. Isso abre a **D4** (crítico num bônus por conta; recomendação: dobra o valor final,
+    exceto se a conta usa `PROF`/`NIV`), em aberto na spec do motor. **`docs/core` não será alterado**: a linha 2045
+    fica só em `P-093` (`ACEITO`). A regra
     fica no guia de fórmulas do app (`frontend/src/app/modules/ficha/componentes/guia-formula/`), **não** em
-    `docs/core`; a spec corrige só a linha 2045.
+    `docs/core` (a linha 2045 do sistema segue contradizendo `:2027`; ver `P-093`, `ACEITO`, sem edição do documento).
   - **UI da conta, opção B:** campo "Dados por expressão" no "+ Adicionar", com leitura ao vivo (`(FOR+VIG)*2 = 14
     dados`); os botões Soma/Média do teste ficam. **Ainda sem mockup** dessa opção no canvas.
   - **Confirmados depois:** o **sinal por termo** entra no núcleo (já está na E3.3 em "⋯ Mais"; a E3.2 do mockup só

@@ -1,5 +1,16 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-02 — Montador de rolagem: revisão das specs pelo autor (sem código)
+
+O autor revisou as duas specs: **D1** (conta ≤ 0 com `kh` aplica a regra de atributo zerado) e **D2** (divisor por atributo
+que dá zero vale 0; literal zero é inválido) aprovados; **D3 mudou de lado** — o **bônus fixo por conta** entra na
+extensão do motor (`(FOR+VIG)*2` sem dado, com sinal e tag), o que abriu a **D4** (crítico dobrando o bônus por conta;
+`sistema-v4.1.0.md:1810` manda dobrar valores fixos e `:1965` poupa os de Patente/Nível; recomendação na spec: dobra o
+valor final, exceto conta que usa `PROF`/`NIV`). **`docs/core` não é editado**: a linha 2045 fica só em `P-093`, agora
+`ACEITO`. **Gate centralizado** e **preferência só em `localStorage`, por ora** confirmados e movidos para as decisões
+fechadas do guarda-chuva; o corpus ganhou as formas novas esperadas. Ficam abertos: **D4** e a pergunta se o campo "Por
+expressão" do montador cobre também o bônus fixo. Nenhum código de produto foi alterado.
+
 ## 2026-10-02 — Montador de rolagem: specs da extensão do motor e do experimento redigidas (sem código)
 
 O autor confirmou o sinal por termo e o **Atual** como opção padrão e pediu a spec. Duas specs novas em

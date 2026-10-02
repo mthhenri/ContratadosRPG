@@ -28,23 +28,27 @@ preferência de usuário (por exemplo "completo" ou "essencial") gravada.
 3. **Avaliam o autor/admin e os jogadores de confiança marcados como `TESTER`.** Não há telemetria no projeto:
    a avaliação é qualitativa (ver "Critérios de Aceite").
 4. **Sinal por termo é requisito do núcleo** (dado e atributo podem ser subtraídos), nas três versões novas.
-5. **Campo "Dados por expressão" (opção B)**: um campo no "+ Adicionar", com leitura ao vivo do resultado
+5. **Campo de expressão (opção B)**: um campo no "+ Adicionar", com leitura ao vivo do resultado
    (`(FOR+VIG)*2 = 14 dados`), para montar a conta de quantidade de dados que a spec
    `rolagem-expressao-quantidade-dados.spec.md` passa a aceitar. Os botões Soma/Média do teste ficam.
 6. **O texto da fórmula é a única fonte de verdade.** O montador lê e escreve o mesmo texto da barra de
    "Rolagem rápida" (`formula = model<string>` hoje); o estado da tela é derivado dele. Fórmula que a versão
    escolhida não sabe montar aparece como **avançada** (texto editável), nunca é alterada em silêncio.
 
-### Propostas do agente a confirmar na revisão desta spec
+7. **Gate centralizado em um ponto**, com padrão restrito (autor, 2026-10-02): some o input
+   `restringirMontadorATester` (hoje o padrão `false` significa "liberado" e um consumidor novo esqueceria a
+   restrição). Liberar depois é remover a verificação desse único ponto.
+8. **Preferência de versão só em `localStorage`, por ora** (autor, 2026-10-02): por dispositivo, com padrão `Atual`
+   quando vazio ou quando o armazenamento falhar. Nenhuma migration; só vai para o perfil/banco se o montador final
+   mantiver a preferência (spec do autor, depois).
+9. **Uma pasta própria** (`frontend/src/app/shared/montador-rolagem-experimental/`) para as três versões novas,
+   de modo que apagar as perdedoras seja apagar código, não desfazer enxertos (organização, sem decisão de produto).
 
-- **Preferência de versão em `localStorage`** (por dispositivo) durante o experimento: migration é a única
-  categoria irreversível em produção e a variante pode morrer. Só vai para o perfil/banco se o montador final
-  mantiver a preferência. Padrão `Atual` quando vazio ou quando o armazenamento falhar.
-- **Gate centralizado em um ponto**, com padrão restrito: some o input `restringirMontadorATester` (hoje o
-  padrão `false` significa "liberado" e um consumidor novo esqueceria a restrição). Liberar depois é remover
-  a verificação desse único ponto.
-- **Uma pasta própria** (`frontend/src/app/shared/montador-rolagem-experimental/`) para as três versões novas,
-  de modo que apagar as perdedoras seja apagar código, não desfazer enxertos.
+### Ponto a confirmar na revisão desta spec (proposta do agente)
+
+- **O campo "Por expressão" serve aos dois usos do motor**: a **quantidade de dados** de um dado escolhido
+  (`((FOR+VIG)*2)d4`) e o **bônus fixo** (`(FOR+VIG)*2`), com leitura ao vivo do valor. A decisão 5 foi dada para a
+  quantidade de dados; o autor pediu o bônus fixo no motor em 2026-10-02 e ainda não disse se a tela o cobre.
 
 ## Referência visual e comportamental
 
@@ -71,7 +75,7 @@ Ordem obrigatória: `rolagem-expressao-quantidade-dados` → 01 → 02 → 03 e 
 ### `montador-exp-01` — Tokenização da fórmula em `shared` (sem UI)
 
 **Entrega:** em `shared/src/regras/rolagem/`, funções puras que leem o texto da fórmula como **lista ordenada de
-peças** (dado, fonte escalar, número, conta de quantidade, atalho `CORPO`/`FURTIVO`, cada uma com sinal, tag de
+peças** (dado, fonte escalar, número, conta de quantidade, conta de bônus fixo, atalho `CORPO`/`FURTIVO`, cada uma com sinal, tag de
 tipo simples ou composto, operadores por pool e repetição `#N`) e a recompõem em texto. Aprovada pelo autor em
 2026-10-02: o motor passa a devolver a fórmula em peças **sem mudar nenhum resultado de rolagem**.
 **Aceite:** para toda fórmula do corpus **válida no motor**, `montar(tokenizar(texto))` é interpretada **igual** ao
@@ -97,7 +101,7 @@ de quantidade) **não quebra**; lint e build de produção sem aviso novo; `veri
 
 **Entrega:** os três modos de partida (Teste de atributo, Dano de arma, Dados livres) sobre o modelo da task 02;
 ficha de dado com quantidade, tipo de dano, sinal, segundo tipo (composto) e opções do dado; atributo, número
-(campo digitável), repetir ×N, atalhos e **"Dados por expressão"** (decisão 5); teste com 1–2 atributos (soma ou
+(campo digitável), repetir ×N, atalhos e o **campo de expressão** (decisão 5 e ponto a confirmar); teste com 1–2 atributos (soma ou
 média, arredondando para baixo), dados a mais/menos, manter maior/menor, margem de crítico e bônus. **Completo**
 deixa tudo à vista; **Essencial** recolhe sinal, segundo tipo e opções em "⋯ Mais" e o restante em painéis de "+
 Adicionar" (um aberto por vez), sem abas no mobile. Alternar entre as duas é a mesma janela e o mesmo estado.
@@ -135,13 +139,13 @@ no produto as fórmulas com termo subtraindo passam a montar.
 - Qualquer alteração no montador **Atual** além de ser servido pelo seletor.
 - Backend: nenhuma mudança — o montador só produz texto de fórmula.
 - Telemetria e coleta automática de uso.
-- Contas fora da quantidade de dados (bônus fixo por conta) — ver `D3` da spec do motor.
-- A extensão do motor em si (`rolagem-expressao-quantidade-dados.spec.md`) e a correção de `P-093`.
+- A extensão do motor em si (`rolagem-expressao-quantidade-dados.spec.md`) e qualquer edição de `docs/core`
+  (`P-093` fica só anotado).
 
 ## Dependências
 
 `rolagem-expressao-quantidade-dados.spec.md` (a conta de quantidade de dados precisa existir no motor, para todos,
-antes da tokenização e do campo "Dados por expressão"). As superfícies já existem (barra de "Rolagem rápida" da
+antes da tokenização e do campo de expressão). As superfícies já existem (barra de "Rolagem rápida" da
 ficha de jogador, da criatura/NPC e do cartão de campanha) e não dependem de outra spec. Fontes de verdade: `docs/design/DESIGN.md` e o handoff
 `docs/design/tema/`; `docs/core/sistema-v4.1.0.md` ("Testes"; "Arredondamentos").
 
@@ -157,4 +161,4 @@ ficha de jogador, da criatura/NPC e do cartão de campanha) e não dependem de o
 - **Gate visual triplicado**: três versões × dois viewports × todos os estados. Mitigação: um corte integrado por
   versão (não uma inspeção por commit) e a verificação completa só nas tasks 03 e 04.
 - **Preferência por dispositivo**: o tester vê versões diferentes no celular e no desktop. Aceito durante o
-  experimento; muda se o autor promover a preferência ao perfil.
+  experimento (decisão 8); muda se o autor promover a preferência ao perfil.

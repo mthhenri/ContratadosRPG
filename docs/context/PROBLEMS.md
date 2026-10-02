@@ -29,16 +29,18 @@
 
 ## Ativos
 
-### P-093 — Sistema contradiz a si mesmo no arredondamento de bônus · `ABERTO` · docs/core
+### P-093 — Sistema contradiz a si mesmo no arredondamento de bônus · `ACEITO` · docs/core
 
 - **Sintoma:** `docs/core/sistema-v4.1.0.md:2045` (Ordem de Bônus) diz "assim como dito acima, quaisquer valores
   que não sejam inteiros, serão arredondados para cima"; a seção "Arredondamentos" logo acima (`:2027-2033`) manda
   arredondar **para baixo** (exemplo 27,5 → 27) e o motor (`shared/regras`) arredonda para baixo (`LUT/2`).
 - **Causa:** provável erro de digitação na linha 2045 — o "assim como dito acima" remete justamente à regra que diz
   "para baixo". A única exceção "para cima" documentada é a média de nível do esquadrão (`:1185`), outra regra.
-- **Contorno:** vale "para baixo" (decisão confirmada pelo autor em 2026-10-02); o motor já se comporta assim.
-- **Correção:** trocar "cima" por "baixo" na linha 2045 — o documento é do autor; a spec da extensão do motor
-  (I-041) inclui a correção.
+- **Contorno:** vale "para baixo" (decisão confirmada pelo autor em 2026-10-02); o motor e o guia de fórmulas já se
+  comportam assim, e a spec `rolagem-expressao-quantidade-dados` também.
+- **Correção:** trocar "cima" por "baixo" na linha 2045. **O autor decidiu não alterar `docs/core` por ora**
+  (2026-10-02) e pediu só o registro aqui; por isso o item fica `ACEITO`, para ninguém "corrigir" o documento ou o
+  motor por conta própria. Reabrir se o autor mudar de ideia.
 - **Desde:** identificado em 2026-10-02, ao especificar a quantidade de dados por expressão (I-041).
 
 ### P-092 — Checagem de tipos do shared falha em fixture de agente · `ABERTO` · shared
