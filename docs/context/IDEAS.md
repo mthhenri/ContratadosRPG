@@ -27,59 +27,13 @@
 
 ## Promovidas
 
-### I-038 — Faxina das imagens órfãs no armazenamento · backend/armazenamento
-
-- Implementada em 2026-09-30: `docs/specs/done/armazenamento-faxina-imagens-orfas.spec.md`. Comando
-  `npm run armazenamento:faxinar --workspace=backend -- [--apagar] [--carencia-dias=30]`, simulação por
-  padrão, com carência pela data de gravação e trava de sanidade.
-
-### I-037 — Uma constante compartilhada para os MIMEs de imagem · shared/validators
-
-- Implementada em 2026-09-30, a pedido do autor, sem spec própria (troca mecânica):
-  `shared/src/validators/imagem.validators.ts` (`IMAGEM_EXTENSAO_POR_MIME`, `IMAGEM_MIMES_PERMITIDOS`,
-  `IMAGEM_MIMES_ACCEPT`), usada pelos sete pontos do frontend e pelas três services e o OpenAPI do
-  backend. `DOCUMENTO_IMAGEM_MIMES_PERMITIDOS` virou alias.
-
-### I-036 — Título neutro da ficha flutuante fora do combate · frontend/ficha
-
-- Implementada em 2026-09-26, a pedido do autor, logo depois da `m7-24` (sem spec própria: uma
-  linha de template e um `computed`). A janela passou de "Ficha do combatente" fixo para
-  "Ficha · {nome}", com o nome lido do documento que o conteúdo já carrega (jogador ou criatura).
-  Detalhe em `HISTORY.md`.
-
-### I-014 — M9 sugerido: documentos e anotações de campanha · campanha/documentos
-
-- Promovida em 2026-09-21 a `docs/specs/backlog/m9-documentos-campanha.spec.md`. Nasceu do pedido
-  do autor de 2026-08-11 (biblioteca de documentos da campanha) e se encontrou com um segundo
-  pedido, de 2026-09-21, para que a cena de Investigação do módulo de Cenas
-  (`docs/specs/backlog/m7-cenas.spec.md`) pudesse apresentar documentos junto das fichas dos
-  jogadores. O upgrade "mesa investigativa/mapa mental" registrado nesta entrada foi levado à spec
-  como item de "Fora de escopo", não implementado. Os **cadernos privados**, que já tinham saído
-  desta ideia, continuam em
-  `docs/superpowers/specs/2026-08-12-cadernos-campanha-busca-design.md`, sem mudança.
-
-### I-028 — Pesquisar na descrição da habilidade · ficha/habilidades
-
-- Promovida em 2026-09-22 a `docs/specs/done/habilidades-busca-descricao.spec.md` (implementada na
-  mesma tarefa). Em vez de só ampliar o filtro existente para também casar contra a descrição, o
-  autor pediu um controle de 3 opções (Título/Descrição/Ambos) em vez de um toggle binário —
-  resolvido com `app-segmentado`, primitivo já existente em `shared/ui/`. Cobre tanto o seletor de
-  habilidades da ficha quanto o guia de criação, que reusa o mesmo componente.
-
-### I-027 — Janela externa para histórico de rolagens, anotações da ficha e Caderno · frontend/UX
-
-- Concluída em 2026-09-25, em três fatias (Histórico → Anotações → Caderno), todas via
-  `window.open` para rotas isoladas `/janela/...` sobre `JanelaExternaService`
-  (`shared/janela-externa/`), um contexto por janela, com o painel local recolhido enquanto a
-  janela existe e devolvido ao fechá-la: `docs/specs/done/rolagens-janela-externa.spec.md`,
-  `docs/specs/done/i-027-rolagens-janela-contextos.spec.md` (as oito visões do histórico),
-  `docs/specs/done/i-027-anotacoes-janela-externa.spec.md` e
-  `docs/specs/done/i-027-caderno-janela-externa.spec.md`. A opção C (Document Picture-in-Picture,
-  só Chromium) continua descartada como via principal; pode voltar como upgrade opcional.
-
-## Abertas
-
 ### I-041 — Montador de rolagem enxuto: ações base + guias · frontend/rolagem
+
+- **Promovida em 2026-10-02** (o autor pediu a spec depois da E3.3 e das decisões abaixo): duas specs em
+  `docs/specs/backlog/` — `rolagem-expressao-quantidade-dados.spec.md` (extensão definitiva do motor, para todos) e
+  `montador-rolagem-experimento.spec.md` (guarda-chuva do experimento exclusivo de tester, tasks `montador-exp-01`…`04`).
+  A spec do **montador vencedor** e a liberação para todos são do autor, depois do experimento. O registro de pesquisa
+  abaixo é a memória dos achados; o contrato está nas specs.
 
 - **Ideia:** reduzir o `MontadorRolagem` ao que se usa toda sessão (dado, atributo com modo explícito
   Somar/Testar, bônus, tipo de dano com nome, atalhos do agente) e mover o resto — `kh`/`kl`, `cm`,
@@ -202,14 +156,68 @@
     **qualquer conta** (`+ − × ÷`, parênteses) sobre números, os 10 atributos, `PROF` e `NIV`; a conta vai entre
     parênteses logo antes do `dM` (`((FOR+VIG)*2)d4`) e vale para **qualquer dado**, não só d20. Arredondamento
     **para baixo** (confirmado após a leitura de `:2027-2045`; ver `P-093`). Mantém o limite de 100 dados; divisão
-    por zero = fórmula inválida; teste com resultado ≤ 0 segue a regra atual do motor (2+|n| dados, mantendo o
-    menor); negativos arredondam para baixo (−1,5 → −2) — esses três são propostas minhas, sem objeção. A regra
+    por zero literal = fórmula inválida; negativos arredondam para baixo (−1,5 → −2). **Correção minha:** eu tinha dito que o
+    teste com resultado ≤ 0 "segue a regra atual do motor (2+|n| dados)", mas no código essa desvantagem só vale
+    para `ATRdM…kh` (atributo nu); as formas de contagem explícita `(ATR±n)dM`/`(ATR*Y)dM` só travam em 0 dado. A
+    escolha para a conta nova ficou como **D1, em aberto**, na spec do motor. A regra
     fica no guia de fórmulas do app (`frontend/src/app/modules/ficha/componentes/guia-formula/`), **não** em
     `docs/core`; a spec corrige só a linha 2045.
   - **UI da conta, opção B:** campo "Dados por expressão" no "+ Adicionar", com leitura ao vivo (`(FOR+VIG)*2 = 14
     dados`); os botões Soma/Média do teste ficam. **Ainda sem mockup** dessa opção no canvas.
-  - **Pendente:** confirmar o sinal por termo ("subtrair este bloco") como parte do núcleo (já entra na E3.3 em
-    "⋯ Mais"; a E3.2 só soma); qual opção vem selecionada por padrão para o tester.
+  - **Confirmados depois:** o **sinal por termo** entra no núcleo (já está na E3.3 em "⋯ Mais"; a E3.2 do mockup só
+    soma e ganha o "subtrair" no produto) e a opção **Atual** é a selecionada por padrão para o tester.
+
+### I-038 — Faxina das imagens órfãs no armazenamento · backend/armazenamento
+
+- Implementada em 2026-09-30: `docs/specs/done/armazenamento-faxina-imagens-orfas.spec.md`. Comando
+  `npm run armazenamento:faxinar --workspace=backend -- [--apagar] [--carencia-dias=30]`, simulação por
+  padrão, com carência pela data de gravação e trava de sanidade.
+
+### I-037 — Uma constante compartilhada para os MIMEs de imagem · shared/validators
+
+- Implementada em 2026-09-30, a pedido do autor, sem spec própria (troca mecânica):
+  `shared/src/validators/imagem.validators.ts` (`IMAGEM_EXTENSAO_POR_MIME`, `IMAGEM_MIMES_PERMITIDOS`,
+  `IMAGEM_MIMES_ACCEPT`), usada pelos sete pontos do frontend e pelas três services e o OpenAPI do
+  backend. `DOCUMENTO_IMAGEM_MIMES_PERMITIDOS` virou alias.
+
+### I-036 — Título neutro da ficha flutuante fora do combate · frontend/ficha
+
+- Implementada em 2026-09-26, a pedido do autor, logo depois da `m7-24` (sem spec própria: uma
+  linha de template e um `computed`). A janela passou de "Ficha do combatente" fixo para
+  "Ficha · {nome}", com o nome lido do documento que o conteúdo já carrega (jogador ou criatura).
+  Detalhe em `HISTORY.md`.
+
+### I-014 — M9 sugerido: documentos e anotações de campanha · campanha/documentos
+
+- Promovida em 2026-09-21 a `docs/specs/backlog/m9-documentos-campanha.spec.md`. Nasceu do pedido
+  do autor de 2026-08-11 (biblioteca de documentos da campanha) e se encontrou com um segundo
+  pedido, de 2026-09-21, para que a cena de Investigação do módulo de Cenas
+  (`docs/specs/backlog/m7-cenas.spec.md`) pudesse apresentar documentos junto das fichas dos
+  jogadores. O upgrade "mesa investigativa/mapa mental" registrado nesta entrada foi levado à spec
+  como item de "Fora de escopo", não implementado. Os **cadernos privados**, que já tinham saído
+  desta ideia, continuam em
+  `docs/superpowers/specs/2026-08-12-cadernos-campanha-busca-design.md`, sem mudança.
+
+### I-028 — Pesquisar na descrição da habilidade · ficha/habilidades
+
+- Promovida em 2026-09-22 a `docs/specs/done/habilidades-busca-descricao.spec.md` (implementada na
+  mesma tarefa). Em vez de só ampliar o filtro existente para também casar contra a descrição, o
+  autor pediu um controle de 3 opções (Título/Descrição/Ambos) em vez de um toggle binário —
+  resolvido com `app-segmentado`, primitivo já existente em `shared/ui/`. Cobre tanto o seletor de
+  habilidades da ficha quanto o guia de criação, que reusa o mesmo componente.
+
+### I-027 — Janela externa para histórico de rolagens, anotações da ficha e Caderno · frontend/UX
+
+- Concluída em 2026-09-25, em três fatias (Histórico → Anotações → Caderno), todas via
+  `window.open` para rotas isoladas `/janela/...` sobre `JanelaExternaService`
+  (`shared/janela-externa/`), um contexto por janela, com o painel local recolhido enquanto a
+  janela existe e devolvido ao fechá-la: `docs/specs/done/rolagens-janela-externa.spec.md`,
+  `docs/specs/done/i-027-rolagens-janela-contextos.spec.md` (as oito visões do histórico),
+  `docs/specs/done/i-027-anotacoes-janela-externa.spec.md` e
+  `docs/specs/done/i-027-caderno-janela-externa.spec.md`. A opção C (Document Picture-in-Picture,
+  só Chromium) continua descartada como via principal; pode voltar como upgrade opcional.
+
+## Abertas
 
 ### I-040 — Tela de acessos mostrar concessão suspensa pela ocultação · frontend/ficha
 

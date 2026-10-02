@@ -1,5 +1,18 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-02 — Montador de rolagem: specs da extensão do motor e do experimento redigidas (sem código)
+
+O autor confirmou o sinal por termo e o **Atual** como opção padrão e pediu a spec. Duas specs novas em
+`docs/specs/backlog/`: `rolagem-expressao-quantidade-dados.spec.md` (avulsa; quantidade de dados por conta qualquer, piso
+no fim, para todos os usuários, com a correção de `P-093`) e `montador-rolagem-experimento.spec.md` (guarda-chuva do
+experimento exclusivo de tester: seletor Atual/Essencial/Completo/Blocos e tasks `montador-exp-01`…`04`; o fechamento é do
+autor, fora da spec). A leitura do motor mostrou que a regra de atributo zerado (2+|n| dados, mantendo o menor) só vale para
+`ATRdM…kh` nu, e não para `(ATR±n)dM`/`(ATR*Y)dM`, que travam em 0 dado — corrige o que eu disse antes ao autor; virou a
+decisão **D1**, em aberto na spec do motor, junto de D2 (divisor que vira zero na rolagem) e D3 (só a quantidade de dados,
+sem bônus fixo por conta). `I-041` foi para "Promovidas"; o corpus de 78 fórmulas e das 10 dos jogadores ficou em
+`docs/design/propostas/montador-rolagem-formulas.json`. Nenhum código de produto foi alterado; o autor ainda precisa revisar
+as specs (D1 a D3, o `localStorage`, o gate centralizado e a correção da linha 2045 em `docs/core`).
+
 ## 2026-10-02 — Montador de rolagem: enquadramento da spec e extensão do motor decididos (sem spec)
 
 Conversa sem código. O autor decidiu: o montador inteiro fica **exclusivo de tester** até haver um montador final; as
