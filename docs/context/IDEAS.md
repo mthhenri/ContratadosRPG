@@ -182,7 +182,8 @@
   `t/contar.js`: Dano padrão 42→24, Dados livres vazio 34→16, Dados livres montado 41→22, Teste 31→23; altura da janela no
   desktop 703→449 px (Dano) e 733→526 px (Teste). Teste de cliques: 0 falhas (desktop e 360×800). Dez fórmulas dos jogadores:
   5 equivalentes, 4 montadas iguais, 1 diverge (a mesma `3D10+36[B]+3D8[Q]` da E3.1). Herda as três divergências por tipo
-  herdado da posição da E3.1 (`furtivo+FOR` inclusive, que a E3.2 já corrige). Bateria de 78 fórmulas **não** rodada na E3.3.
+  herdado da posição da E3.1 (`furtivo+FOR` inclusive, que a E3.2 já corrige). Bateria de 78 fórmulas na E3.3: 35 iguais, 19
+  equivalentes, 13 que não monta, 3 que divergem, 5 inválidas no motor e 3 acima do limite do mockup — idêntico à E3.1, como esperado.
   Pendente do autor: qual versão (E3.1, E3.2 ou E3.3) vai para a spec e se entra o sinal por termo ("subtrair este bloco").
 
 ### I-040 — Tela de acessos mostrar concessão suspensa pela ocultação · frontend/ficha

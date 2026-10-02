@@ -8,8 +8,9 @@ de "+ Adicionar" (atributo, número, repetir, atalhos; teste com atributo à vis
 no mobile. Controles visíveis: 42→24 no Dano padrão, 34→16 nos Dados livres vazio, 41→22 montado, 31→23 no Teste; janela de
 703→449 px (Dano) e 733→526 px (Teste) no desktop. Gerada por `mk33.py` a partir do gerador da E3.1 e fundida ao canvas
 publicado (versão 16). Testes de cliques nos dois tamanhos: 0 falhas; dez fórmulas dos jogadores: 5 equivalentes, 4 iguais,
-1 diverge (igual à E3.1). Limites: verificado só no Chromium local, não aberta no Play do canvas; a bateria de 78 fórmulas
-não foi rodada; as três divergências por tipo herdado da posição seguem. Detalhes em `IDEAS.md`, I-041. Nenhum código de
+1 diverge (igual à E3.1); bateria de 78 fórmulas com o motor real como juiz: 35 iguais, 19 equivalentes, 13 que não monta, 3 que
+divergem, 5 inválidas e 3 acima do limite, idêntico à E3.1. Limites: verificado só no Chromium local, não aberta no Play do
+canvas; as três divergências por tipo herdado da posição seguem. Detalhes em `IDEAS.md`, I-041. Nenhum código de
 produto foi alterado.
 
 ## 2026-10-02 — Montador de rolagem: bateria de 78 fórmulas na E3.1 e na E3.2 (sem spec)
