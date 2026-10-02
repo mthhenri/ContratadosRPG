@@ -154,6 +154,18 @@
   como expressão de atributos (soma e média). Arredondamento: `docs/core/sistema-v4.1.0.md` manda arredondar para baixo
   em "Arredondamentos" mas diz "para cima" em "Ordem de Bônus"; o motor usa para baixo (`LUT/2`). Não achei a regra da
   média de dois atributos em `docs/core`; a origem (habilidade, regra da mesa) fica a confirmar.
+- **Respostas do autor e novas telas (2026-10-02):** arredondamento da quantidade de dados por expressão: **sempre para baixo**;
+  a expressão deve aceitar **qualquer conta** (`+ − × ÷`, parênteses e números sobre atributos); a regra vem de **uma
+  habilidade de um jogador** (não está em `docs/core`). Aprovada a E3.1 e pedida uma E3.2 **sem bandeja** ("fichas/tokens
+  fica complexo"). **E3.1** = E3 + teste com 1 ou 2 atributos (soma ou média, que arredonda para baixo), dados a mais ou a menos
+  (−5..+5), manter maior/menor, margem de crítico, repetir ×N (também no dano de arma), dano composto (segundo tipo na ficha de
+  dado) e número fixo de −10 a +60 (no produto, campo digitável). **E3.2** = formulário por blocos, sem bandeja: três modos
+  (Teste, Dano de arma, Dados livres); dano e livres são listas de blocos (até 2 e 3), cada bloco com tipo de dano (e segundo
+  tipo), uma contagem por dado, atributos e bônus, mais opções do bloco nos livres; linha de leitura fixa com faixa, média e
+  texto. Contas fora da soma e da média de atributos (ex.: `(INT*2+SOC)/3`) ficam para o texto e para a extensão do motor.
+  Teste das dez fórmulas dos jogadores: **E3.1 9 de 10** (a que diverge, `3D10+36[B]+3D8[Q]`, tem o +36 preso ao primeiro termo
+  por ordem de face); **E3.2 10 de 10** (o tipo é do bloco, então atributo e número ficam no segmento certo). Limites da E3.2:
+  atributos só somam, opções valem para todos os dados do bloco e o texto sai na ordem das faces (equivalente, não idêntico).
 
 ### I-040 — Tela de acessos mostrar concessão suspensa pela ocultação · frontend/ficha
 

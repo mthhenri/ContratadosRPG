@@ -1,5 +1,16 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-02 — Montador de rolagem: E3.1 (controles de base) e E3.2 (formulário por blocos, sem bandeja) no canvas (sem spec)
+
+O autor respondeu as quatro perguntas (média sempre para baixo, qualquer conta, a regra vem de uma habilidade de jogador, pode
+montar a E3.1) e pediu uma E3.2 sem bandeja. Duas versões novas no mesmo canvas, desktop e 360×800, interativas. Peças
+compartilhadas em `core3` (teste de atributo calculado em CSS com `round(down)`, `pow()`, `clamp()` e `max()`, incluindo a
+média esperada de N d20 pela soma fechada; número de −10 a +60 com passos de ±1, ±5 e ±10). A E3.2 usa bandeiras numéricas
+(`--q`, `--c`, `--ne`) para omitir o "+" inicial e a tag de bloco vazio com `font-size:calc(var(--c)*1em)`. Testes de cliques
+nos dois tamanhos: 0 falhas em ambas. Teste das dez fórmulas dos jogadores com o motor real como juiz (a quantidade de dados
+por expressão é julgada por comparação estrutural própria, porque o motor ainda não a aceita): E3.1 9 de 10, E3.2 10 de 10.
+Limites: o mockup não digita números nem aceita contas fora de soma e média; nenhum código de produto foi alterado.
+
 ## 2026-10-02 — Montador de rolagem: fórmulas dos jogadores na E3 e pedido de expressão de atributos (sem spec)
 
 O autor passou dez fórmulas de jogadores. Resultado no teste da E3 (motor real como juiz): 1 igual, 2 equivalentes, 2 acima
