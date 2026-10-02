@@ -1,5 +1,26 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-02 — Montador de rolagem: Mescla E3, editor único com vários termos (sem spec)
+
+O autor perguntou por que a E2 removeu tanta coisa e apontou que os Dados livres deveriam ser mais completos. Foi
+reconhecido que a E2 separou os modelos em editores de um termo por limitação da técnica do mockup, não por decisão de
+design. A E3, no mesmo canvas (desktop e 360×800, interativas), tem um editor só: cada face de dado é um termo com
+quantidade, sinal, tipo de dano próprio e remoção; atributos, Proficiência e Nível somam ou subtraem (o sinal alterna
+no chip); o número aceita qualquer inteiro de −10 a +20; os atalhos do agente seguem condicionados à ficha. Dano de
+arma e Dados livres são presets do mesmo editor (o dano abre com 2d6 + Força [Físico] e pode ganhar um termo de outro
+tipo; os livres abrem em branco e ganham "Opções" por ficha de dado — manter maior/menor, explodir/implodir, margem
+de crítico — e "Repetir a fórmula ×N"). Teste de atributo continua à parte. No texto, atributos e número entram no
+segmento do primeiro termo de dado (antes da tag), o primeiro termo visível não leva "+" na frente e a faixa, a média e
+o total usam `counter-reset` com `calc()` e `min()`/`max()` para o sinal. Técnica nova: o "Limpar" é um
+`<button type="reset">` acionado por label, que devolve ao padrão só as entradas ligadas ao formulário `fm`, então um
+modelo novo começa do zero.
+
+Limites: a fórmula só tem um termo por face e até 8 dados (100 pela simulação do Guia); a ordem do texto segue a das
+faces, não a dos toques; o intervalo não conta explosão e implosão; "Desfazer" do rodapé não existe no mockup (o
+Limpar zera); o quarto ponto de partida "Em branco" foi absorvido por Dados livres. Verificado no Chromium com cliques
+automáticos nos dois tamanhos (0 falhas, incluindo texto, faixa, sinais, opções, repetir, Limpar, teste e simulações);
+não aberto no Play do canvas publicado. Nenhum código de produto foi alterado.
+
 ## 2026-10-02 — Montador de rolagem: Mescla E2 navegável no canvas (sem spec)
 
 O autor respondeu as pendências (Testar atributo como ponto de partida, tokenização aprovada, dado e atributo sem

@@ -120,6 +120,15 @@
   neutra (item 5) foi **recuada**: o tema define o estado selecionado em vermelho (`.selecionavel--ativo` em
   `docs/design/tema/_componentes.scss`), então a E2 mantém o padrão e só deixa o Rolar como único preenchido sólido.
   Mescla E2 publicada no canvas (desktop e 360×800), ainda sem spec.
+- **Correção de rumo (2026-10-02, depois da E2):** o autor apontou que a E2 deixou os Dados livres mais fracos que a
+  E (um termo só, um tipo de dano, bônus de −5 a +5). Era limitação do mockup vazando para o desenho: o motor aceita
+  vários termos com sinal, tipo de dano por segmento, até 100 dados por termo e qualquer constante. Decisão: **um
+  editor único com vários termos**, em que Dano de arma e Dados livres são presets (o dano abre com 2d6 + Força
+  [Físico]; os livres abrem em branco) e Teste de atributo segue como o único modo à parte. Dados livres ganha
+  "Opções" por ficha de dado (manter maior/menor, explodir/implodir, margem de crítico) e "Repetir a fórmula ×N"
+  recolhido; "Dado por propriedade + ajuste" fica só no Guia. O ponto de partida "Em branco" virou o próprio Dados
+  livres (já abre em branco). Mescla E3 publicada no canvas; o "Desfazer" do rodapé não é demonstrável no mockup
+  (o Limpar zera) e fica como item de spec.
 
 ### I-040 — Tela de acessos mostrar concessão suspensa pela ocultação · frontend/ficha
 
