@@ -1,5 +1,15 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-02 — Montador de rolagem: fórmulas dos jogadores na E3 e pedido de expressão de atributos (sem spec)
+
+O autor passou dez fórmulas de jogadores. Resultado no teste da E3 (motor real como juiz): 1 igual, 2 equivalentes, 2 acima
+do limite do mockup (bônus fixo de 36), 4 que a E3 não monta (dado por atributo + ajuste em três, dano composto em uma)
+e 1 inválida no motor: `((Int+soc)/2)d20kh1cm1+prof`, que o autor quer que funcione. Consequências registradas em
+`IDEAS.md`, I-041: o uso real reverte a decisão de deixar "dados a mais/menos", "repetir", "margem de crítico" e "dano
+composto" só no Guia; o número precisa de campo digitável; e a quantidade de dados por expressão de atributos é uma
+extensão de regra em `shared/regras/rolagem` que depende de decisão do autor (soma e média, e o arredondamento, já que
+`docs/core` se contradiz entre "para baixo" e "para cima"). Nenhum código de produto foi alterado.
+
 ## 2026-10-02 — Montador de rolagem: fórmulas reais testadas na E3 (sem spec)
 
 O autor pediu que fórmulas fossem testadas na visão da E3. O motor `shared/regras/rolagem` foi compilado localmente (sem

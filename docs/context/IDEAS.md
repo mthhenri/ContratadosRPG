@@ -141,6 +141,19 @@
   devem ficar no fim do texto (defeito da E3, corrigido: `2d6+FOR+CORPO[F]` saía inválida). Fora dos botões por decisão
   (Guia): kh/kl com N, limiar de explosão/implosão, `[F-Q]`, dado por atributo + ajuste e `FOR*3`/`LUT/2`; d100 não está
   na paleta (d3–d20). `d20` vira `1d20` e o texto segue a ordem das faces (equivalentes, mas reescritos).
+- **Fórmulas dos jogadores (2026-10-02):** o autor trouxe dez fórmulas de uso real; o teste na E3 (motor como juiz) deu:
+  duas montadas equivalentes (`(5d8+6d6[Q]+6d4+8[B])#2` e `(5d8[Q]+3d4+8[B])#2`, reescritas na ordem das faces), uma
+  igual (`(2d8[Q])#2`), duas acima do limite do mockup (`3D10+36[Balístico]+3D8[Químico]` e `6D8+36[Balístico]`:
+  o número real passa de 20 e exige campo digitável), quatro que a E3 não monta e uma inválida no motor. As quatro
+  que não montam são todas o que se escondeu no Guia por decisão: dado por atributo + ajuste em três delas
+  (`(PON+1)d20kh1cm1+PROF+...`, `(des+1)d20...`, `(pon+1)d20...`, 3 de 10) e dano composto `[F-Q]` em uma. O uso real
+  derruba essas duas decisões: **"dados a mais/menos" do teste, "repetir ×N" e "margem de crítico" no teste e "dano
+  composto" (dois tipos na mesma ficha) viram controles de base**; `cm1` é o padrão (os jogadores o escrevem por hábito).
+  Pedido do autor ("não funciona, mas deveria"): `((Int+soc)/2)d20kh1cm1+prof` é inválida hoje ("Termo desconhecido";
+  o motor só aceita `(ATR±n)dM` e `(ATR*Y)dM`). **Extensão de regra pendente de decisão do autor:** quantidade de dados
+  como expressão de atributos (soma e média). Arredondamento: `docs/core/sistema-v4.1.0.md` manda arredondar para baixo
+  em "Arredondamentos" mas diz "para cima" em "Ordem de Bônus"; o motor usa para baixo (`LUT/2`). Não achei a regra da
+  média de dois atributos em `docs/core`; a origem (habilidade, regra da mesa) fica a confirmar.
 
 ### I-040 — Tela de acessos mostrar concessão suspensa pela ocultação · frontend/ficha
 
