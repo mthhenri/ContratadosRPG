@@ -1,5 +1,15 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-02 — Montador de rolagem: fórmulas reais testadas na E3 (sem spec)
+
+O autor pediu que fórmulas fossem testadas na visão da E3. O motor `shared/regras/rolagem` foi compilado localmente (sem
+instalar dependências) e usado como juiz: cada fórmula foi interpretada, montada na E3 por cliques e o texto gerado foi
+relido pelo motor e comparado ao original. 78 fórmulas: 31 iguais, 19 equivalentes, 17 que a E3 não monta, 3 divergentes,
+5 inválidas no motor e 3 acima do limite do mockup. O teste achou um defeito da E3, corrigido e republicado (atalhos como
+`CORPO` saíam antes da tag, gerando `2d6+FOR+CORPO[F]`, inválida no motor; agora vão ao fim da fórmula), e quatro lacunas
+de desenho registradas em `IDEAS.md`, I-041: um termo por face, tipo herdado por posição, teste sem margem de crítico e
+ordem fixa do texto. Nenhum código de produto foi alterado.
+
 ## 2026-10-02 — Montador de rolagem: Mescla E3, editor único com vários termos (sem spec)
 
 O autor perguntou por que a E2 removeu tanta coisa e apontou que os Dados livres deveriam ser mais completos. Foi

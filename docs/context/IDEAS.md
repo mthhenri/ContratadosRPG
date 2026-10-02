@@ -129,6 +129,18 @@
   recolhido; "Dado por propriedade + ajuste" fica só no Guia. O ponto de partida "Em branco" virou o próprio Dados
   livres (já abre em branco). Mescla E3 publicada no canvas; o "Desfazer" do rodapé não é demonstrável no mockup
   (o Limpar zera) e fica como item de spec.
+- **Teste de fórmulas na E3 (2026-10-02):** 78 fórmulas reais (exemplos do Guia, dos testes de `shared/regras/rolagem` e do
+  montador, mais casos de jogo) foram interpretadas pelo motor do projeto (compilado localmente) e montadas na E3 por
+  cliques; o texto que a tela gerou foi relido pelo mesmo interpretador e comparado ao original. Resultado: 31 montadas
+  iguais, 19 equivalentes (mesma leitura do motor, texto diferente), 17 que a E3 não monta, 3 que divergem, 5 inválidas no
+  motor e 3 acima do limite do mockup. Achados que valem para a spec: (1) a bandeja precisa ser uma lista ordenada de
+  fichas, não um termo por face: `2d6[F]+1d6[Q]` e `(2d6+1d8)[F]+(1d4+1d6)[B]` não cabem; (2) atributo e número herdam
+  o tipo do segmento por posição (sem tipo vale Físico), e a E3 fixa a posição no primeiro termo, então
+  `2d8[B]+PON`, `1d12+FOR[F]+1d4[Q]` e `furtivo+FOR` mudam de tipo; o tipo precisa ser escolha explícita de cada ficha;
+  (3) o teste de atributo precisa de margem de crítico (`LUTd20kh1cm2+PROF`); (4) atalhos expandem com tag própria e
+  devem ficar no fim do texto (defeito da E3, corrigido: `2d6+FOR+CORPO[F]` saía inválida). Fora dos botões por decisão
+  (Guia): kh/kl com N, limiar de explosão/implosão, `[F-Q]`, dado por atributo + ajuste e `FOR*3`/`LUT/2`; d100 não está
+  na paleta (d3–d20). `d20` vira `1d20` e o texto segue a ordem das faces (equivalentes, mas reescritos).
 
 ### I-040 — Tela de acessos mostrar concessão suspensa pela ocultação · frontend/ficha
 
