@@ -113,6 +113,13 @@
   Rolar); `⌫` sem rótulo e com alvo pequeno; faltam os estados avançada, inválida e resultado da rolagem (o
   real não fecha o painel ao rolar). Aguardam resposta do autor: decisão 2 ("Testar atributo") e 4
   (tokenização no `shared`), agora ligadas à E; sem spec ainda.
+- **Respostas do autor (2026-10-02):** "Testar atributo" **fica como um dos quatro pontos de partida** (Teste de
+  atributo, Dano de arma, Dados livres, Em branco); a **tokenização no `shared` está aprovada** (o motor passa a
+  devolver a fórmula como lista ordenada de peças, sem mudar nenhum resultado de rolagem); **Dado e Atributo sempre
+  visíveis, sem aba, no desktop** (no mobile ficam as abas Dado, Atributo e Atalhos). A recomendação de seleção
+  neutra (item 5) foi **recuada**: o tema define o estado selecionado em vermelho (`.selecionavel--ativo` em
+  `docs/design/tema/_componentes.scss`), então a E2 mantém o padrão e só deixa o Rolar como único preenchido sólido.
+  Mescla E2 publicada no canvas (desktop e 360×800), ainda sem spec.
 
 ### I-040 — Tela de acessos mostrar concessão suspensa pela ocultação · frontend/ficha
 

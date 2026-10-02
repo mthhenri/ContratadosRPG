@@ -1,5 +1,26 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-02 — Montador de rolagem: Mescla E2 navegável no canvas (sem spec)
+
+O autor respondeu as pendências (Testar atributo como ponto de partida, tokenização aprovada, dado e atributo sem
+aba no desktop) e a Mescla E ganhou a versão revisada E2, no mesmo canvas (desktop e 360×800, interativas). Mudanças
+sobre a E: uma única representação da fórmula (bandeja de fichas mais uma linha com faixa, média e texto, sem a
+frase repetida nem o texto no botão Rolar); "Começar por" só aparece grande com a fórmula vazia e vira "Modelos" no
+cabeçalho da bandeja depois; o modo vem do estado (vazio: atributo inicia teste e dado inicia dados livres; teste:
+atributo é escolha única e os dados ficam desligados; dano e livre: atributo soma); bônus como ficha com stepper na
+bandeja, sem aba "Número"; Atalhos só com valor na ficha e mostrando o valor; Proficiência e Nível com borda tracejada;
+rodapé com "Desfazer" rotulado, Rolar sem texto e o último resultado dentro da janela (o painel não fecha ao rolar);
+estados fórmula avançada, fórmula inválida (Rolar desligado) e limite de 100 dados (mensagem real do motor).
+Diferente das rodadas anteriores, a fórmula é calculada: o texto é composto por peças ligadas a cada controle e a faixa,
+a média e o total do resultado usam `counter-reset` com `calc()` sobre custom properties, tudo em HTML e CSS puro.
+Limites: os dados da paleta só trocam a face e somam até 4 (a fórmula livre é de um termo); os ajustes de cada modelo
+ficam lembrados na sessão porque o mockup não consegue zerar vários controles com um toque; "Desfazer" volta ao
+exemplo de dano; os estados avançada, inválida, limite e ficha sem atalhos são forçados pelo Guia (seção Simular) ou
+pela faixa "Mockup · simular" no desktop; o texto do erro de fórmula inválida é ilustrativo.
+
+Verificado localmente no Chromium com um teste de cliques (0 falhas nos dois tamanhos) e conferência visual de faixa,
+média e totais; não foi aberto no Play do canvas publicado. Nenhum código de produto foi alterado.
+
 ## 2026-10-02 — Montador de rolagem: Mescla E escolhida, revisão de melhorias (sem spec)
 
 O autor escolheu seguir com a Mescla E e perguntou o que mais aprimorar. Foi feita uma revisão da E renderizada
