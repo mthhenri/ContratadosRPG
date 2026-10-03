@@ -3,19 +3,25 @@
         <ng-content select="[fichaTermoIcone]" />
         <span class="ficha-termo__rotulo"><ng-content select="[fichaTermoRotulo]" /></span>
         <span class="ficha-termo__controles"><ng-content select="[fichaTermoControles]" /></span>
-        @if (temMais()) {
+        @if (temMais() && compacta()) {
             <button
                 app-botao
                 variante="secundario"
                 estilo="texto"
                 tamanho="pequeno"
+                posicaoIcone="direita"
                 type="button"
                 class="ficha-termo__mais-gatilho"
                 [attr.aria-expanded]="maisAberto() ? 'true' : 'false'"
                 [attr.aria-label]="rotuloMais()"
                 (click)="alternarMais()"
             >
-                ⋯ Mais
+                Mais
+                <app-icone
+                    nome="chevron"
+                    class="ficha-termo__seta"
+                    [class.ficha-termo__seta--aberta]="maisAberto()"
+                />
             </button>
         }
         @if (removivel()) {
@@ -32,7 +38,30 @@
             </button>
         }
     </div>
-    <ng-content />
+    <div class="ficha-termo__corpo">
+        <div class="ficha-termo__conteudo"><ng-content /></div>
+        @if (temMais() && !compacta()) {
+            <button
+                app-botao
+                variante="secundario"
+                estilo="texto"
+                tamanho="pequeno"
+                posicaoIcone="direita"
+                type="button"
+                class="ficha-termo__mais-gatilho"
+                [attr.aria-expanded]="maisAberto() ? 'true' : 'false'"
+                [attr.aria-label]="rotuloMais()"
+                (click)="alternarMais()"
+            >
+                Mais
+                <app-icone
+                    nome="chevron"
+                    class="ficha-termo__seta"
+                    [class.ficha-termo__seta--aberta]="maisAberto()"
+                />
+            </button>
+        }
+    </div>
     @if (temMais() && maisAberto()) {
         <div class="ficha-termo__mais">
             <ng-content select="[fichaTermoMais]" />

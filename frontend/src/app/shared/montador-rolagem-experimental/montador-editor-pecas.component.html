@@ -16,7 +16,9 @@
                     (click)="escolherAtributoTeste(atributo.sigla)"
                 >
                     {{ atributo.sigla }}
-                    <span class="editor__atributo-valor">{{ d20DoAtributo(atributo.sigla) }}d20</span>
+                    <span class="editor__atributo-valor"
+                        >{{ d20DoAtributo(atributo.sigla) }}d20</span
+                    >
                 </button>
             }
         </app-segmentado>
@@ -185,9 +187,11 @@
                         [temMais]="essencial() && peca.tipo !== 'ATALHO'"
                         (remover)="removerTermo(indice)"
                     >
-                        <span fichaTermoRotulo
-                            >{{ peca.tipo === "NUMERO" ? "Número" : (peca.sinal === -1 ? "− " : "+ ") + rotuloPeca(peca) }}</span
-                        >
+                        <span fichaTermoRotulo>{{
+                            peca.tipo === "NUMERO"
+                                ? "Número"
+                                : (peca.sinal === -1 ? "− " : "+ ") + rotuloPeca(peca)
+                        }}</span>
                         @if (peca.tipo === "NUMERO") {
                             <app-step-input
                                 fichaTermoControles
@@ -204,33 +208,33 @@
                                 app-botao-icone
                                 tamanho="compacto"
                                 type="button"
-                                [attr.aria-label]="'Alternar soma e subtração de ' + rotuloPeca(peca)"
+                                [attr.aria-label]="
+                                    'Alternar soma e subtração de ' + rotuloPeca(peca)
+                                "
                                 appTooltip="Alterna + e −"
                                 (click)="alternarSinal(indice)"
                             >
                                 <span aria-hidden="true">±</span>
                             </button>
                         }
-                        @if (peca.tipo !== "ATALHO") {
-                            @if (essencial()) {
-                                <div fichaTermoMais class="editor__linha-tipo">
-                                    <ng-container
-                                        *ngTemplateOutlet="
-                                            tipoTermo;
-                                            context: { $implicit: peca, indice: indice }
-                                        "
-                                    />
-                                </div>
-                            } @else {
-                                <div class="editor__linha-tipo">
-                                    <ng-container
-                                        *ngTemplateOutlet="
-                                            tipoTermo;
-                                            context: { $implicit: peca, indice: indice }
-                                        "
-                                    />
-                                </div>
-                            }
+                        @if (peca.tipo !== "ATALHO" && essencial()) {
+                            <div fichaTermoMais class="editor__linha-tipo">
+                                <ng-container
+                                    *ngTemplateOutlet="
+                                        tipoTermo;
+                                        context: { $implicit: peca, indice: indice }
+                                    "
+                                />
+                            </div>
+                        } @else if (peca.tipo !== "ATALHO") {
+                            <div class="editor__linha-tipo">
+                                <ng-container
+                                    *ngTemplateOutlet="
+                                        tipoTermo;
+                                        context: { $implicit: peca, indice: indice }
+                                    "
+                                />
+                            </div>
                         }
                     </app-ficha-termo>
                 }
@@ -330,13 +334,17 @@
         </div>
         @switch (painelTermos()) {
             @case ("ATRIBUTO") {
-                <div class="editor__painel"><ng-container *ngTemplateOutlet="painelAtributo" /></div>
+                <div class="editor__painel">
+                    <ng-container *ngTemplateOutlet="painelAtributo" />
+                </div>
             }
             @case ("NUMERO") {
                 <div class="editor__painel"><ng-container *ngTemplateOutlet="painelNumero" /></div>
             }
             @case ("EXPRESSAO") {
-                <div class="editor__painel"><ng-container *ngTemplateOutlet="painelExpressao" /></div>
+                <div class="editor__painel">
+                    <ng-container *ngTemplateOutlet="painelExpressao" />
+                </div>
             }
             @case ("REPETIR") {
                 <div class="editor__painel"><ng-container *ngTemplateOutlet="painelRepetir" /></div>
@@ -639,7 +647,10 @@
                     }}</strong>
                 </p>
             } @else {
-                <p class="editor__leitura-expressao editor__leitura-expressao--erro" aria-live="polite">
+                <p
+                    class="editor__leitura-expressao editor__leitura-expressao--erro"
+                    aria-live="polite"
+                >
                     {{ avaliada.erro }}
                 </p>
             }
@@ -760,6 +771,7 @@
             <span class="editor__subtitulo">somados à quantidade de d20</span>
         </h3>
         <app-step-input
+            class="editor__stepper"
             tamanho="compacto"
             [min]="-10"
             [max]="10"
@@ -799,7 +811,7 @@
                 </button>
             </app-segmentado>
         </div>
-        <div class="editor__linha">
+        <div class="editor__opcao">
             <span class="editor__opcao-rotulo">Bônus fixo</span>
             <app-step-input
                 tamanho="compacto"
@@ -876,7 +888,8 @@
                     (remover)="definirCombinacao('UM')"
                 >
                     <span fichaTermoRotulo
-                        >{{ t.combinacao === "MEDIA" ? "Média com " : "+ " }}{{ t.atributos[1] }}</span
+                        >{{ t.combinacao === "MEDIA" ? "Média com " : "+ "
+                        }}{{ t.atributos[1] }}</span
                     >
                 </app-ficha-termo>
             }
@@ -916,7 +929,9 @@
                     rotuloRemover="Remover o bônus fixo"
                     (remover)="definirBonusTeste(0)"
                 >
-                    <span fichaTermoRotulo>{{ t.bonus > 0 ? "+ " : "− " }}{{ t.bonus > 0 ? t.bonus : -t.bonus }}</span>
+                    <span fichaTermoRotulo
+                        >{{ t.bonus > 0 ? "+ " : "− " }}{{ t.bonus > 0 ? t.bonus : -t.bonus }}</span
+                    >
                 </app-ficha-termo>
             }
         </div>

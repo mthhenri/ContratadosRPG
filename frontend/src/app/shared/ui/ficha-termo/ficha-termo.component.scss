@@ -105,8 +105,44 @@
         }
     }
 
+    // Segunda linha: o conteúdo do consumidor à esquerda e o "Mais" à direita. Some quando não há nenhum dos dois.
+    &__corpo {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: var(--space-8);
+        min-width: 0;
+
+        &:not(:has(.ficha-termo__mais-gatilho)):has(> .ficha-termo__conteudo:empty) {
+            display: none;
+        }
+    }
+
+    &__conteudo {
+        flex: 1 1 auto;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        gap: var(--space-8);
+        min-width: 0;
+
+        &:empty {
+            display: none;
+        }
+    }
+
     &__mais-gatilho {
         flex: none;
+        margin-left: auto;
+    }
+
+    &__seta {
+        transition: transform 0.15s ease;
+
+        &--aberta {
+            transform: rotate(180deg);
+        }
     }
 
     &__remover {

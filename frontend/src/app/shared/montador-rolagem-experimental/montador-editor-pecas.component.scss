@@ -208,6 +208,10 @@
         }
     }
 
+    &__stepper {
+        align-self: flex-start;
+    }
+
     &__resumo-teste {
         display: flex;
         flex-wrap: wrap;

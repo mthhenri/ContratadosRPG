@@ -1,0 +1,192 @@
+// Editor Blocos do montador (montador-exp-04, E3.2). Análogo: o editor Completo (mesmos grupos com rótulo mono
+// uppercase, fichas `app-ficha-termo`, segmentados e steppers de `shared/ui/`); aqui só tamanho e layout.
+@use "tema/breakpoints" as bp;
+
+:host {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-16);
+}
+
+.blocos {
+    &__lista {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-8);
+    }
+
+    &__titulo {
+        display: inline-flex;
+        align-items: baseline;
+        flex-wrap: wrap;
+        gap: var(--space-8);
+    }
+
+    &__subtitulo,
+    &__dica {
+        font-family: var(--font-sans);
+        font-size: 12px;
+        font-weight: 400;
+        letter-spacing: normal;
+        text-transform: none;
+        color: var(--text-dim);
+    }
+
+    // O corpo ocupa a linha inteira da ficha (o slot padrão é uma linha flexível).
+    &__corpo {
+        flex: 1 1 100%;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-12);
+        min-width: 0;
+    }
+
+    &__linha {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-8);
+    }
+
+    &__campo {
+        flex: 1 1 140px;
+        min-width: 0;
+    }
+
+    &__grupo {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-8);
+        min-width: 0;
+    }
+
+    &__rotulo {
+        display: inline-flex;
+        align-items: baseline;
+        flex-wrap: wrap;
+        gap: var(--space-8);
+        min-width: 112px;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        color: var(--text-mute);
+    }
+
+    &__dados {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+        gap: var(--space-8);
+    }
+
+    &__dado {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--space-4);
+        padding: var(--space-8) var(--space-4);
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-control);
+
+        &--ativo {
+            border-color: var(--accent-border);
+        }
+    }
+
+    &__dado-nome {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-4);
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text);
+    }
+
+    // Atributos e PROF/NIV: o grupo segmentado vira grade (layout do consumidor). O vão de 2px repete o respiro
+    // interno do próprio `app-segmentado` (fora da escala de propósito, como no primitivo).
+    &__fontes {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 2px;
+
+        @include bp.mobile {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+    }
+
+    &__fonte {
+        flex-direction: column;
+        gap: 2px;
+        min-height: 40px;
+        padding: var(--space-4);
+
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+    }
+
+    &__fonte-valor {
+        font-weight: 500;
+        letter-spacing: normal;
+        opacity: 0.85;
+    }
+
+    &__fichas {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-8);
+    }
+
+    &__opcao {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--space-4) var(--space-8);
+    }
+
+    &__opcoes-gatilho {
+        align-self: flex-start;
+
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+    }
+
+    &__seta {
+        transition: transform 0.15s ease;
+
+        &--aberta {
+            transform: rotate(180deg);
+        }
+    }
+
+    &__opcoes {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-8);
+        padding-top: var(--space-8);
+        border-top: 1px dashed var(--border-strong);
+    }
+
+    &__adicionar {
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+    }
+
+    &__fixo {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-12);
+        padding-top: var(--space-12);
+        border-top: 1px solid var(--border);
+    }
+
+    &__atalhos {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: var(--space-8);
+    }
+}

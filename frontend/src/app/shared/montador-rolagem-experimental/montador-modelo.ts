@@ -74,7 +74,7 @@ export const RECEITAS_MONTADOR: readonly ReceitaMontador[] = [
     modo: 'TESTE',
     titulo: 'Teste de atributo',
     descricao: 'Um ou dois atributos, dados a mais, crítico',
-    formula: 'LUTd20kh1 + PROF',
+    formula: 'LUTd20kh1cm1 + PROF',
   },
   { modo: 'DANO', titulo: 'Dano de arma', descricao: 'Já vem com 2d6 + Força [Físico]', formula: '2d6 + FOR [F]' },
   { modo: 'LIVRE', titulo: 'Dados livres', descricao: 'Começa em branco, tem todas as opções', formula: '' },

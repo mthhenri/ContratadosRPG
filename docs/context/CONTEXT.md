@@ -806,11 +806,13 @@
 
 ## 1. Próxima Task
 
-**Experimento do montador de rolagem (I-041) — em andamento, 1/4.** Guarda-chuva
-`montador-rolagem-experimento` em `active/`: `montador-exp-01` (fórmula em peças no `shared`, sem UI) concluída; seguem
-`02` (gate centralizado, seletor Atual/Essencial/Completo/Blocos, preferência em `localStorage`, modelo de estado),
-`03` (Completo e Essencial) e `04` (Blocos). A extensão do motor que ele usa (`rolagem-expressao-quantidade-dados`) está
-em `done/`; fica de fora só o `P-094`. Fonte: [guarda-chuva](../specs/active/montador-rolagem-experimento.spec.md).
+**Experimento do montador de rolagem (I-041) — tasks 4/4 concluídas; falta a avaliação do autor.** Guarda-chuva
+`montador-rolagem-experimento` em `active/`: `montador-exp-01` (fórmula em peças no `shared`), `02` (gate único
+`podeUsarMontador`, seletor Atual/Essencial/Completo/Blocos na barra de "Rolagem rápida", preferência em
+`localStorage`, casca comum), `03` (Completo e Essencial) e `04` (Blocos) em `done/`, verificados ao vivo. O guarda-chuva
+só fecha com a **avaliação qualitativa** das dez fórmulas dos jogadores pelo autor e pelos testers, registrada em
+`HISTORY.md`; a escolha do vencedor, a limpeza e a liberação para todos são uma spec do autor. Fica de fora só o
+`P-094`. Fonte: [guarda-chuva](../specs/active/montador-rolagem-experimento.spec.md).
 
 **Requests-correcoes (guarda-chuva de 6 tasks, `P-082`…`P-086` + inventário sob demanda) —
 concluído, 6/6**: `p-082` (autosave/seleção da ficha), `p-083` (reconexão sem carga duplicada),

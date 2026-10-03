@@ -181,6 +181,8 @@ aponta, bloco a bloco, para a implementação correspondente.
 | `.esqueleto` | Bloco de esqueleto de carregamento — fundo `--surface-2` pulsante, honra `prefers-reduced-motion` | Só identidade (cor/raio/pulso); o consumidor dimensiona pela própria classe BEM no mesmo elemento | **`<app-esqueleto class="…">`** |
 | `.painel-flutuante` | Janela flutuante arrastável, não modal — mesma superfície/borda/sombra de `.modal`, cabeçalho com título + minimizar (`−`) + "×" | `[compacta]` (popup pequeno, ex. calculadora) vs. janela normal (`[largura]`/`[altura]` do consumidor); `[mobile]` vira folha cheia sem arraste; `[maximizada]` só acabamento (some o raio); slots `[painelCabecalhoExtra]`, `[painelAcoesExtras]`, `[painelRedimensionar]` | **`<app-painel-flutuante id="…" titulo="…" [aberto]="…" (fechar)="…">`** (`shared/ui/painel-flutuante/`) |
 | `.paginador` | Paginação com salto para extremos — `Primeira < […] [x] […] > Última` | `[paginasVizinhas]` (padrão 2 de cada lado da atual); a janela desliza perto das bordas em vez de encolher; `Primeira`/`Anterior`/`Próxima`/`Última` desabilitam nos extremos | **`<app-paginador [pagina]="…" [totalPaginas]="…" (paginaAlterada)="…">`** (`shared/ui/paginador/`) |
+| `.cartao-receita` | Ponto de partida clicável — título (conteúdo projetado, como o rótulo de `app-botao`) e descrição curta; caixa interna `--surface-2`, hover `--accent-border` | `[ativo]` (receita em uso, `aria-pressed` + `--accent-dim`/`--accent-border`); `[descricao]` opcional. O host é o `<button>` nativo; grade e largura são do consumidor. Nasceu no experimento do montador (`montador-rolagem-experimento`) | **`<button app-cartao-receita [descricao]="…">Título</button>`** (`shared/ui/cartao-receita/`) |
+| `.ficha-termo` | Ficha removível de um termo editável — linha com ícone, rótulo, controles e "×"; segunda linha com o conteúdo do consumidor e o botão "Mais" (chevron); faixa de 3px na base na cor do tipo de dano (`--dano-*`, meio a meio no Composto) | `[cor]`/`[corSecundaria]`, `[compacta]` (uma linha; o "Mais" vai para a primeira linha), `[temMais]` + `[(maisAberto)]` (área `[fichaTermoMais]` recolhível), `[removivel]`, `(remover)`. Slots `[fichaTermoIcone]`, `[fichaTermoRotulo]`, `[fichaTermoControles]` — o elemento do slot precisa ser filho direto ou raiz única de um bloco de controle de fluxo (um `@if` dentro de outro não é casado). É o controle removível que `app-chip` não é | **`<app-ficha-termo rotuloRemover="…" (remover)="…">`** (`shared/ui/ficha-termo/`) |
 
 Os dois últimos (`.topbar`, `.abas`) foram extraídos direto de `layout.component.scss` e
 `ficha-visualizacao.component.scss` nesta atualização — existiam como padrão real no app, mas
@@ -203,7 +205,7 @@ sem estado do domínio. Use o chip de **severidade** para informar um estado cur
 aceitas hoje são `primario` (estado ativo), `secundario` (informação neutra), `aviso` e `perigo`.
 O tom `sutil` é a receita padrão, com fundo a 12% e borda a 40% da cor; `contorno` preserva um
 aviso contextual que não deve competir com o conteúdo. Ícones `app-icone` podem ser projetados no
-chip de severidade quando acrescentam significado; chip não é botão, nem controle removível.
+chip de severidade quando acrescentam significado; chip não é botão, nem controle removível — para um termo removível, `app-ficha-termo` (abaixo).
 
 ### Confirmação destrutiva (`ui-15`)
 

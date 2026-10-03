@@ -1,0 +1,323 @@
+@if (ehTeste()) {
+    <app-montador-editor-pecas
+        densidade="COMPLETO"
+        [tokenizada]="tokenizada()"
+        [modo]="modo()"
+        [atalhosDano]="atalhosDano()"
+        [ambiente]="ambiente()"
+        (editar)="editar.emit($event)"
+    />
+} @else {
+    <div class="blocos__lista">
+        @for (bloco of blocos(); track $index; let indice = $index) {
+            <app-ficha-termo
+                [rotuloRemover]="'Remover bloco ' + (indice + 1)"
+                [removivel]="blocos().length > 1"
+                [cor]="corDoTipo(bloco.tipo.primeiro)"
+                [corSecundaria]="corDoTipo(bloco.tipo.segundo)"
+                (remover)="removerBloco(indice)"
+            >
+                <span fichaTermoRotulo class="blocos__titulo"
+                    >Bloco {{ indice + 1 }}
+                    <span class="blocos__subtitulo">{{ subtitulo(indice) }}</span></span
+                >
+                <div class="blocos__corpo">
+                    <div class="blocos__linha">
+                        <app-campo rotulo="Tipo de dano" tamanho="compacto" class="blocos__campo">
+                            <select
+                                class="campo__controle"
+                                [attr.aria-label]="'Tipo de dano do bloco ' + (indice + 1)"
+                                (change)="definirTipo(indice, $event)"
+                            >
+                                <option value="" [selected]="!bloco.tipo.primeiro">Sem tipo</option>
+                                @for (tipo of tiposDano; track tipo.tipo) {
+                                    <option
+                                        [value]="tipo.tipo"
+                                        [selected]="bloco.tipo.primeiro === tipo.tipo"
+                                    >
+                                        {{ tipo.nome }}
+                                    </option>
+                                }
+                            </select>
+                        </app-campo>
+                        <app-campo
+                            rotulo="Dividir meio a meio com"
+                            tamanho="compacto"
+                            class="blocos__campo"
+                        >
+                            <select
+                                class="campo__controle"
+                                [attr.aria-label]="'Segundo tipo do bloco ' + (indice + 1)"
+                                [disabled]="!podeDividir(bloco)"
+                                (change)="definirSegundoTipo(indice, $event)"
+                            >
+                                <option value="" [selected]="!bloco.tipo.segundo">Nenhum</option>
+                                @for (tipo of tiposComposto; track tipo.tipo) {
+                                    @if (tipo.tipo !== bloco.tipo.primeiro) {
+                                        <option
+                                            [value]="tipo.tipo"
+                                            [selected]="bloco.tipo.segundo === tipo.tipo"
+                                        >
+                                            {{ tipo.nome }}
+                                        </option>
+                                    }
+                                }
+                            </select>
+                        </app-campo>
+                    </div>
+
+                    <div class="blocos__grupo">
+                        <span class="blocos__rotulo"
+                            >Dados <span class="blocos__dica">negativo subtrai</span></span
+                        >
+                        <div class="blocos__dados">
+                            @for (faces of faces; track faces) {
+                                <div
+                                    class="blocos__dado"
+                                    [class.blocos__dado--ativo]="contagem(bloco, faces) !== 0"
+                                >
+                                    <span class="blocos__dado-nome">
+                                        <app-icone [nome]="iconeDado(faces)" />
+                                        d{{ faces }}
+                                    </span>
+                                    <app-step-input
+                                        tamanho="mini"
+                                        [digitavel]="false"
+                                        [comSinal]="true"
+                                        [min]="-quantidadeMaxima"
+                                        [max]="quantidadeMaxima"
+                                        [valorExterno]="contagem(bloco, faces)"
+                                        [ariaRotulo]="
+                                            'Quantidade de d' + faces + ' do bloco ' + (indice + 1)
+                                        "
+                                        (valorAlterado)="definirContagem(indice, faces, $event)"
+                                    />
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="blocos__grupo">
+                        <span class="blocos__rotulo">Somar</span>
+                        <app-segmentado
+                            [rotulo]="'Atributos do bloco ' + (indice + 1)"
+                            class="blocos__fontes"
+                        >
+                            @for (fonte of fontes; track fonte.sigla) {
+                                <button
+                                    app-segmentado-item
+                                    type="button"
+                                    class="blocos__fonte"
+                                    [ativo]="temFonte(bloco, fonte.sigla)"
+                                    [appTooltip]="fonte.nome + ' (' + valorFonte(fonte.sigla) + ')'"
+                                    (click)="alternarFonte(indice, fonte.sigla)"
+                                >
+                                    {{ fonte.sigla }}
+                                    <span class="blocos__fonte-valor">{{
+                                        valorFonte(fonte.sigla)
+                                    }}</span>
+                                </button>
+                            }
+                        </app-segmentado>
+                        @if (bloco.fontes.length > 0) {
+                            <div class="blocos__fichas">
+                                @for (fonte of bloco.fontes; track fonte.sigla) {
+                                    <app-ficha-termo
+                                        [compacta]="true"
+                                        [rotuloRemover]="'Remover ' + nomeFonte(fonte.sigla)"
+                                        (remover)="alternarFonte(indice, fonte.sigla)"
+                                    >
+                                        <span fichaTermoRotulo
+                                            >{{ fonte.sinal === -1 ? "− " : "+ "
+                                            }}{{ nomeFonte(fonte.sigla) }}</span
+                                        >
+                                        <button
+                                            fichaTermoControles
+                                            app-botao-icone
+                                            tamanho="compacto"
+                                            type="button"
+                                            [attr.aria-label]="
+                                                'Alternar soma e subtração de ' +
+                                                nomeFonte(fonte.sigla)
+                                            "
+                                            appTooltip="Alterna + e −"
+                                            (click)="alternarSinalFonte(indice, fonte.sigla)"
+                                        >
+                                            <span aria-hidden="true">±</span>
+                                        </button>
+                                    </app-ficha-termo>
+                                }
+                            </div>
+                        }
+                    </div>
+
+                    <div class="blocos__opcao">
+                        <span class="blocos__rotulo">Bônus fixo</span>
+                        <app-step-input
+                            tamanho="compacto"
+                            [min]="-999"
+                            [max]="999"
+                            [valorExterno]="bloco.bonus"
+                            [ariaRotulo]="'Bônus fixo do bloco ' + (indice + 1)"
+                            (valorAlterado)="definirBonus(indice, $event)"
+                        />
+                    </div>
+
+                    @if (modoEfetivo() === "LIVRE") {
+                        <button
+                            app-botao
+                            variante="secundario"
+                            estilo="texto"
+                            tamanho="pequeno"
+                            posicaoIcone="direita"
+                            type="button"
+                            class="blocos__opcoes-gatilho"
+                            [attr.aria-expanded]="opcoesVisiveis(indice) ? 'true' : 'false'"
+                            (click)="alternarOpcoes(indice)"
+                        >
+                            Opções do bloco
+                            <app-icone
+                                nome="chevron"
+                                class="blocos__seta"
+                                [class.blocos__seta--aberta]="opcoesVisiveis(indice)"
+                            />
+                        </button>
+                        @if (opcoesVisiveis(indice)) {
+                            <div class="blocos__opcoes">
+                                <div class="blocos__opcao">
+                                    <span class="blocos__rotulo">Manter</span>
+                                    <app-segmentado
+                                        [rotulo]="'Manter dados do bloco ' + (indice + 1)"
+                                    >
+                                        <button
+                                            app-segmentado-item
+                                            type="button"
+                                            [ativo]="bloco.manter === 'TODOS'"
+                                            (click)="definirOpcoes(indice, { manter: 'TODOS' })"
+                                        >
+                                            Todos
+                                        </button>
+                                        <button
+                                            app-segmentado-item
+                                            type="button"
+                                            [ativo]="bloco.manter === 'MAIOR'"
+                                            (click)="definirOpcoes(indice, { manter: 'MAIOR' })"
+                                        >
+                                            Maior
+                                        </button>
+                                        <button
+                                            app-segmentado-item
+                                            type="button"
+                                            [ativo]="bloco.manter === 'MENOR'"
+                                            (click)="definirOpcoes(indice, { manter: 'MENOR' })"
+                                        >
+                                            Menor
+                                        </button>
+                                    </app-segmentado>
+                                </div>
+                                <div class="blocos__opcao">
+                                    <span class="blocos__rotulo">Dado extra</span>
+                                    <app-segmentado
+                                        [rotulo]="'Dado extra do bloco ' + (indice + 1)"
+                                    >
+                                        <button
+                                            app-segmentado-item
+                                            type="button"
+                                            [ativo]="bloco.extra === 'NENHUM'"
+                                            (click)="definirOpcoes(indice, { extra: 'NENHUM' })"
+                                        >
+                                            Nenhum
+                                        </button>
+                                        <button
+                                            app-segmentado-item
+                                            type="button"
+                                            [ativo]="bloco.extra === 'EXPLODE'"
+                                            (click)="definirOpcoes(indice, { extra: 'EXPLODE' })"
+                                        >
+                                            Explode no máximo
+                                        </button>
+                                        <button
+                                            app-segmentado-item
+                                            type="button"
+                                            [ativo]="bloco.extra === 'IMPLODE'"
+                                            (click)="definirOpcoes(indice, { extra: 'IMPLODE' })"
+                                        >
+                                            Implode no 1
+                                        </button>
+                                    </app-segmentado>
+                                </div>
+                                <div class="blocos__opcao">
+                                    <span class="blocos__rotulo">Margem de crítico</span>
+                                    <app-segmentado
+                                        [rotulo]="'Margem de crítico do bloco ' + (indice + 1)"
+                                    >
+                                        @for (margem of margens; track margem) {
+                                            <button
+                                                app-segmentado-item
+                                                type="button"
+                                                [ativo]="bloco.margem === margem"
+                                                (click)="definirOpcoes(indice, { margem: margem })"
+                                            >
+                                                {{ nomeMargem(margem) }}
+                                            </button>
+                                        }
+                                    </app-segmentado>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+            </app-ficha-termo>
+        }
+        @if (podeAdicionarBloco()) {
+            <button
+                app-botao
+                variante="secundario"
+                estilo="contorno"
+                tamanho="pequeno"
+                [fluido]="true"
+                type="button"
+                class="blocos__adicionar"
+                (click)="adicionarBloco()"
+            >
+                + Adicionar bloco de dano
+            </button>
+        }
+    </div>
+
+    <section class="blocos__fixo" aria-label="Repetir e atalhos">
+        <div class="blocos__opcao">
+            <span class="blocos__rotulo">Repetir a rolagem inteira</span>
+            <app-step-input
+                tamanho="compacto"
+                [min]="1"
+                [max]="repeticoesMaxima"
+                [valorExterno]="repeticoes()"
+                ariaRotulo="Número de rolagens"
+                (valorAlterado)="definirRepeticoes($event)"
+            />
+        </div>
+        @if (atalhosDisponiveis().length > 0) {
+            <div class="blocos__grupo">
+                <span class="blocos__rotulo"
+                    >Atalhos do agente
+                    <span class="blocos__dica">entram no início da fórmula</span></span
+                >
+                <div class="blocos__atalhos">
+                    @for (atalho of atalhosDisponiveis(); track atalho) {
+                        <button
+                            app-cartao-receita
+                            type="button"
+                            class="blocos__atalho"
+                            [ativo]="temAtalho(atalho)"
+                            [descricao]="expansaoAtalho(atalho)"
+                            (click)="alternarAtalho(atalho)"
+                        >
+                            {{ atalho === "CORPO" ? "Corpo a corpo" : "Furtivo" }}
+                        </button>
+                    }
+                </div>
+            </div>
+        }
+    </section>
+}

@@ -60,7 +60,9 @@
                 <section class="montador-exp__grupo">
                     <h3 class="montador-exp__titulo">
                         Começar por
-                        <span class="montador-exp__subtitulo">um modelo que você ajusta depois</span>
+                        <span class="montador-exp__subtitulo"
+                            >um modelo que você ajusta depois</span
+                        >
                     </h3>
                     <div class="montador-exp__receitas">
                         @for (receita of receitas; track receita.modo) {
@@ -163,7 +165,15 @@
                 </section>
                 @if (mostraEditor()) {
                     @switch (versao()) {
-                        @case ("BLOCOS") {}
+                        @case ("BLOCOS") {
+                            <app-montador-editor-blocos
+                                [tokenizada]="tokenizadaEditor()"
+                                [modo]="modo()"
+                                [atalhosDano]="atalhosDano()"
+                                [ambiente]="ambiente()"
+                                (editar)="aplicarEdicao($event)"
+                            />
+                        }
                         @default {
                             <app-montador-editor-pecas
                                 [densidade]="densidade()"

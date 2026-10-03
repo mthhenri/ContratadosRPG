@@ -1,5 +1,63 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-03 — `montador-exp-02`…`04`: gate único, seletor e as versões Essencial, Completo e Blocos do montador (I-041)
+
+As três tasks restantes do guarda-chuva `montador-rolagem-experimento` (que segue em `active/` à espera da avaliação
+qualitativa do autor e dos testers). Tudo novo mora em `frontend/src/app/shared/montador-rolagem-experimental/`; o
+`MontadorRolagem` (Atual) não foi tocado. O autor autorizou nesta sessão criar os primitivos que faltavam e subir o app
+para o gate visual.
+
+**02 — núcleo.** Gate único `podeUsarMontador` (TESTER/ADMIN, padrão restrito): o input `restringirMontadorATester` saiu de
+`RolagemRapida`, `FichaRolagens`, `FichaRolagensPainel` e dos cinco templates que o passavam. Seletor
+Atual · Essencial · Completo · Blocos (`app-segmentado`) na linha do rótulo da barra de "Rolagem rápida", fora das janelas;
+no mobile desce para a linha inteira. Preferência por dispositivo em `localStorage` com `try/catch` (padrão Atual; jogador
+comum com versão guardada continua sem montador). Casca comum `app-montador-rolagem-experimental`: gatilho e
+`app-painel-flutuante` do Atual, visor sincronizado com a barra nos dois sentidos, "Começar por"/"Modelos" (Teste de
+atributo `LUTd20kh1cm1 + PROF`, Dano de arma `2d6 + FOR [F]`, Dados livres em branco), avisos de **avançada** e
+**inválida** (motivo do motor), **último resultado** sem fechar a janela e rodapé **Desfazer** · Limpar · Rolar. Desfazer
+guarda o texto anterior a cada edição dos controles (digitação no visor não vira passo). Primitivo novo
+`app-cartao-receita`.
+
+**03 — Completo e Essencial.** Um componente (`app-montador-editor-pecas`), duas densidades. Termos: uma ficha por peça,
+na ordem do texto, cada uma com sinal e tipo (e segundo tipo, manter, dado extra e margem no dado); atributo, número,
+**campo de expressão** (quantidade de dados ou bônus fixo, com leitura ao vivo do motor: `(FOR+VIG)*2 = 16 dados`),
+repetir e atalhos. Teste: grade de atributos com a quantidade de d20 que o motor rolaria, combinar dois (soma/média),
+dados a mais/menos, Proficiência, Nível, bônus, manter, margem e repetir. Completo deixa tudo à vista; Essencial recolhe
+o segundo plano em "Mais" e o resto em painéis de "+ Adicionar", um por vez. Linha de leitura sob o visor: faixa e média
+de uma rolagem e a frase em português. A faixa vem do **próprio motor** com um dado travado no extremo certo de cada
+termo (o primeiro desenho — tudo em 1 e tudo no máximo — errava fórmulas que somam e subtraem dados; achado no teste
+`2d6 - 1d4`, corrigido); a média troca cada pool pela esperança (estatística de ordem para manter maior/menor);
+explosão/implosão ficam sem faixa. Primitivo novo `app-ficha-termo` (ficha removível com faixa do tipo de dano) — cobriu
+também os atributos/números, então `app-chip` ficou como está ("chip não é controle removível").
+
+**04 — Blocos.** `montador-blocos.ts` lê a fórmula como blocos (tipo e segundo tipo do bloco, uma contagem com sinal por
+dado, atributos com sinal, bônus, opções do bloco nos dados livres), atalhos no início, até 2 blocos no dano e 3 nos
+livres. Como reescrever em blocos reordena e soma termos (`d8+d4` → `1d4 + 1d8`, `2d4+2d4` → `4d4`), a garantia aqui é de
+**equivalência** no motor (forma normal da interpretação: ordem e rótulo de fora, dados iguais sem opções somados); o que
+não é equivalente fica "avançada". O teste usa o editor de teste do Completo (tudo à vista, como na E3.2).
+
+**Testes.** `frontend` 206 arquivos / 2792 testes (do experimento: 9 arquivos de modelo/componente + 2 primitivos). Corpus:
+no Completo/Essencial, **86** entradas válidas montam e nenhuma diverge ao ser **remontada só pelas operações dos
+controles** (comparação do motor sem os rótulos de exibição — `luta` remontado vira `LUT`); no Blocos, **62** entradas
+montam em blocos e nenhuma muda de faixa ou média; as dez dos jogadores montam nas três versões; as que subtraem
+(`3d6-2`, `d6+2d8-FOR+3`, `2d6+FOR[F]-1d8[Q]+3`…) montam no Blocos. `shared` 1060, `backend` 954 (1 pulado,
+preexistente). Lint dos três workspaces com 0 erros. Build de produção: só o aviso de budget do `P-004` (nada do
+experimento entra nos chunks iniciais).
+
+**Verificado ao vivo** (backend 3101 + frontend 4301 próprios, usuário descartável promovido a TESTER no banco de dev e
+ficha clonada da "Quimera Codex"; ambos apagados — soft delete — ao fim), `1920×1080` e `360×800`, as quatro versões:
+seletor na barra, vazio, dano, "Mais", cada painel de "+ Adicionar" e do teste, fórmula dos jogadores com composto e
+`#2`, teste por média, resultado com o painel aberto, avançada (`4d6kl2 + FOR`), inválida (`2d6+`), Desfazer
+(`2d6 + FOR + 1d8 [F]` → `2d6 + FOR [F]`), Blocos com dois blocos, atalho e opções. Sem overflow e sem erro de console em
+nenhum estado. **Achados só na verificação, corrigidos antes do fecho:** a ficha de termo era alta demais (tipo numa
+linha própria) e o "⋯" do IBM Plex Mono lia como traço — virou "Mais" com chevron na segunda linha; na ficha compacta do
+Essencial o tipo vazava do "Mais" porque **um `@if` dentro de outro não é casado pelo seletor de projeção** (achatado
+para um nível só e documentado no primitivo); o corpo dos blocos ocupava meia largura (o slot de conteúdo não crescia);
+steppers esticavam no mobile. O Prettier, rodado nos arquivos tocados, reformatou linhas alheias em três templates
+antigos — revertido para manter o diff só da task. **Incidente:** com um segundo `nest --watch` no mesmo checkout (o da
+porta 3101), o backend do autor na 3100 caiu (o processo filho morreu; o `nest --watch` dele segue vivo e relança na
+próxima mudança real em `backend/src`) — causa exata não confirmada.
+
 ## 2026-10-03 — `montador-exp-01`: fórmula de rolagem em peças no `shared` (I-041)
 
 Primeira task do guarda-chuva `montador-rolagem-experimento` (agora em `active/`). O motor passa a ler o texto da fórmula

@@ -70,14 +70,14 @@ describe('MontadorRolagemExperimental', () => {
 
     botaoPorTexto('Teste de atributo').click();
     fixture.detectChanges();
-    expect(hospedeiro.formula()).toBe('LUTd20kh1 + PROF');
+    expect(hospedeiro.formula()).toBe('LUTd20kh1cm1 + PROF');
     botaoPorTexto('Limpar').click();
     fixture.detectChanges();
     expect(hospedeiro.formula()).toBe('');
 
     botaoPorTexto('Desfazer').click();
     fixture.detectChanges();
-    expect(hospedeiro.formula()).toBe('LUTd20kh1 + PROF');
+    expect(hospedeiro.formula()).toBe('LUTd20kh1cm1 + PROF');
     botaoPorTexto('Desfazer').click();
     fixture.detectChanges();
     expect(hospedeiro.formula()).toBe('');

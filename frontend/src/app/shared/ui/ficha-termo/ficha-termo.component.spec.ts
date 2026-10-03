@@ -41,7 +41,7 @@ describe('FichaTermo', () => {
     const { raiz } = montar();
     expect(raiz.querySelector('.ficha-termo__rotulo')?.textContent).toContain('2d6');
     expect(raiz.querySelector('.ficha-termo__controles .controle')).not.toBeNull();
-    expect(raiz.querySelector('.corpo')).not.toBeNull();
+    expect(raiz.querySelector('.ficha-termo__conteudo .corpo')).not.toBeNull();
   });
 
   it('faixa na cor do tipo; composto divide a faixa; compacta sem tipo fica neutra', () => {

@@ -25,6 +25,8 @@ import {
   type ReceitaMontador,
   registrarPassoHistorico,
 } from './montador-modelo';
+import { podeMontarBlocosOuTeste } from './montador-blocos';
+import { MontadorEditorBlocos } from './montador-editor-blocos.component';
 import { podeMontarPecasOuTeste } from './montador-pecas';
 import { type MontadorVersao, rotuloMontadorVersao } from './montador-versao';
 
@@ -67,6 +69,7 @@ interface Tamanho {
     BotaoIcone,
     CartaoReceita,
     Icone,
+    MontadorEditorBlocos,
     MontadorEditorPecas,
     OverflowFade,
     PainelFlutuante,
@@ -128,7 +131,8 @@ export class MontadorRolagemExperimental {
    */
   protected readonly analise = computed<MontadorFormulaAnalise>(() => {
     const analise = analisarFormulaMontador(this.formula(), this.atalhosDano());
-    if (analise.estado === 'PECAS' && analise.tokenizada && !podeMontarPecasOuTeste(analise.tokenizada)) {
+    const podeMontar = this.versao() === 'BLOCOS' ? podeMontarBlocosOuTeste : podeMontarPecasOuTeste;
+    if (analise.estado === 'PECAS' && analise.tokenizada && !podeMontar(analise.tokenizada)) {
       return { estado: 'AVANCADA', tokenizada: null };
     }
     return analise;
