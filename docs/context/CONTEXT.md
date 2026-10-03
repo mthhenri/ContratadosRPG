@@ -806,11 +806,11 @@
 
 ## 1. Próxima Task
 
-**Extensão do motor de rolagem — conta na quantidade de dados e no bônus fixo (I-041) — concluída.**
-`rolagem-expressao-quantidade-dados` (spec em `done/`) entregou o avaliador de conta, a gramática, o crítico (D4) e as
-seções novas do guia; resta de fora só o `P-094` (estouro de 24 px do guia no mobile, texto antigo). O próximo
-passo do assunto é do autor: revisar a spec `montador-rolagem-experimento` (backlog, sem decisão em aberto) e pedir a
-implementação das tasks `montador-exp-01`…`04`. Fonte: [spec](../specs/done/rolagem-expressao-quantidade-dados.spec.md).
+**Experimento do montador de rolagem (I-041) — em andamento, 1/4.** Guarda-chuva
+`montador-rolagem-experimento` em `active/`: `montador-exp-01` (fórmula em peças no `shared`, sem UI) concluída; seguem
+`02` (gate centralizado, seletor Atual/Essencial/Completo/Blocos, preferência em `localStorage`, modelo de estado),
+`03` (Completo e Essencial) e `04` (Blocos). A extensão do motor que ele usa (`rolagem-expressao-quantidade-dados`) está
+em `done/`; fica de fora só o `P-094`. Fonte: [guarda-chuva](../specs/active/montador-rolagem-experimento.spec.md).
 
 **Requests-correcoes (guarda-chuva de 6 tasks, `P-082`…`P-086` + inventário sob demanda) —
 concluído, 6/6**: `p-082` (autosave/seleção da ficha), `p-083` (reconexão sem carga duplicada),
@@ -1960,7 +1960,6 @@ incluindo todos os ajustes avulsos de pós-milestone.
 |---|---|---|
 | `civil-guia-criacao` | ficha | mapeia o escopo de `PROBLEMS.md` `P-018` (o guia de criação trata a classe Civil como um agente comum em vários passos) — spec de levantamento, ainda não implementa |
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
-| `montador-rolagem-experimento` | ficha | guarda-chuva (tasks `montador-exp-01`…`04`) do experimento do montador de rolagem, exclusivo de TESTER/ADMIN: seletor Atual/Essencial/Completo/Blocos; o motor que ele precisava (`rolagem-expressao-quantidade-dados`) já está pronto |
 
 Milestones ainda não abertos: `m5-guia-missao`. O M8 `m8-espectadores-campanha` está **concluído**
 (`m8-01`…`m8-06`).
@@ -2029,6 +2028,9 @@ intercalada, condições, receber dano) e `cena/` (`m7-21`: `cenaTemIniciativa`,
 e `NIV`) na quantidade de dados (`(<conta>)dM`) e no bônus fixo (`(FOR+VIG)*2`): `rolagem.conta.ts` avalia em frações
 exatas e arredonda para baixo **uma vez, no fim**; no crítico a quantidade dobra e, no bônus, só o que vem de atributos
 e números dobra (não `PROF`/`NIV`). A regra de uso vive no guia de fórmulas do app, não em `docs/core` (`P-093`).
+Desde `montador-exp-01`, o motor também lê a fórmula como **lista ordenada de peças** (`tokenizarFormula`/
+`montarFormula`, `rolagem.pecas.ts`) — o modelo que o montador edita; devolve `null` quando a remontagem não seria lida
+igual pelo motor (fórmula "avançada"). Os auxiliares de leitura são comuns às duas leituras (`rolagem.leitura.ts`).
 
 **Fonte única:** frontend e backend consomem o mesmo motor. Nenhuma regra de jogo é reimplementada
 em nenhum dos dois lados.

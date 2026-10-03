@@ -31,7 +31,7 @@
 
 - **Promovida em 2026-10-02** (o autor pediu a spec depois da E3.3 e das decisões abaixo): duas specs —
   `rolagem-expressao-quantidade-dados.spec.md` (extensão definitiva do motor, para todos; concluída em 2026-10-03, em
-  `docs/specs/done/`) e `docs/specs/backlog/montador-rolagem-experimento.spec.md` (guarda-chuva do experimento exclusivo de tester, tasks `montador-exp-01`…`04`).
+  `docs/specs/done/`) e `docs/specs/active/montador-rolagem-experimento.spec.md` (guarda-chuva do experimento exclusivo de tester, tasks `montador-exp-01`…`04`).
   A spec do **montador vencedor** e a liberação para todos são do autor, depois do experimento. O registro de pesquisa
   abaixo é a memória dos achados; o contrato está nas specs.
 

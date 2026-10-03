@@ -160,6 +160,94 @@ export interface InterpretacaoFormulaDto {
   readonly erro?: string;
 }
 
+// ── Fórmula em peças (montador-exp-01) ────────────────────────────────────────
+
+/**
+ * Quantidade de dados de uma peça de dado: um número (`2d6`), uma fonte escalar como fonte de dados (`LUTd20`)
+ * ou uma **conta** entre parênteses (`(PON+1)d20`, `((INT+SOC)/2)d20`, `(FOR*2)d6`) — `texto` é o miolo da
+ * conta, sem os parênteses externos, em maiúsculas e sem espaços.
+ */
+export type PecaDadoQuantidadeDto =
+  | { readonly tipo: 'NUMERO'; readonly valor: number }
+  | { readonly tipo: 'FONTE'; readonly fonte: FonteEscalar; readonly nome: string }
+  | { readonly tipo: 'CONTA'; readonly texto: string };
+
+/** Peça de dado: quantidade, faces, operadores por pool (m3-29) e a tag de tipo de dano do segmento. */
+export interface PecaDadoDto {
+  readonly tipo: 'DADO';
+  readonly sinal: 1 | -1;
+  readonly quantidade: PecaDadoQuantidadeDto;
+  readonly faces: number;
+  readonly manterMaior?: number;
+  readonly manterMenor?: number;
+  readonly margemCritico?: number;
+  /** Limiar de explosão (`!` = `faces`). */
+  readonly explosao?: number;
+  /** Limiar de implosão (`?` = 1). */
+  readonly implosao?: number;
+  readonly tipoDano?: TipoDanoEnum;
+  readonly composto?: ParTipoDano;
+}
+
+/**
+ * Peça de fonte escalar somada como modificador (`+LUT`, `+PROF`) ou escalada (`FOR*3`, `LUT/2`). `nome` é
+ * como a fonte foi escrita, em maiúsculas (`LUT`, `LUTA`, `PROF`) — é o rótulo que o motor mostra.
+ */
+export interface PecaFonteDto {
+  readonly tipo: 'FONTE';
+  readonly sinal: 1 | -1;
+  readonly fonte: FonteEscalar;
+  readonly nome: string;
+  readonly multiplicador?: number;
+  readonly divisor?: number;
+  readonly tipoDano?: TipoDanoEnum;
+  readonly composto?: ParTipoDano;
+}
+
+/** Peça de número fixo (`+3`, `+36 [B]`). `valor` é sempre ≥ 0; o sentido vem do `sinal`. */
+export interface PecaNumeroDto {
+  readonly tipo: 'NUMERO';
+  readonly sinal: 1 | -1;
+  readonly valor: number;
+  readonly tipoDano?: TipoDanoEnum;
+  readonly composto?: ParTipoDano;
+}
+
+/**
+ * Peça de **bônus fixo por conta** (I-041): `(FOR+VIG)*2`, `FOR*VIG`, `(FOR/2+VIG/2)`. `texto` é a conta como
+ * escrita, em maiúsculas e sem espaços, com os parênteses que tiver.
+ */
+export interface PecaContaDto {
+  readonly tipo: 'CONTA';
+  readonly sinal: 1 | -1;
+  readonly texto: string;
+  readonly tipoDano?: TipoDanoEnum;
+  readonly composto?: ParTipoDano;
+}
+
+/**
+ * Peça de **atalho** do agente (`CORPO`/`FURTIVO`, m3-27-visual), expandido por `expandirAtalhosDano` antes do
+ * motor. Não carrega tag: a expressão expandida traz a sua (`2D6 [Físico]`) ou nenhuma (`2D6+2`).
+ */
+export interface PecaAtalhoDto {
+  readonly tipo: 'ATALHO';
+  readonly sinal: 1 | -1;
+  readonly atalho: 'CORPO' | 'FURTIVO';
+}
+
+/** Uma peça da fórmula, na ordem em que aparece no texto. */
+export type PecaFormulaDto = PecaDadoDto | PecaFonteDto | PecaNumeroDto | PecaContaDto | PecaAtalhoDto;
+
+/**
+ * Fórmula lida como **lista ordenada de peças** (montador-exp-01) — o que o montador de rolagem edita. A tag de
+ * tipo de cada peça é a do segmento em que ela foi escrita; peça sem tag numa fórmula tipada vale Físico (regra do
+ * motor). `repeticoes` é o envelope `(<fórmula>)#N` (ausente = sem repetição).
+ */
+export interface FormulaTokenizadaDto {
+  readonly pecas: readonly PecaFormulaDto[];
+  readonly repeticoes?: number;
+}
+
 // ── Entrada e resultado da rolagem ───────────────────────────────────────────
 
 /** Entrada de `rolarFormula`/`validarFormula`: a fórmula (texto), os atributos e as fontes escalares. */

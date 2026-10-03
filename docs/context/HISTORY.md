@@ -1,5 +1,29 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-03 — `montador-exp-01`: fórmula de rolagem em peças no `shared` (I-041)
+
+Primeira task do guarda-chuva `montador-rolagem-experimento` (agora em `active/`). O motor passa a ler o texto da fórmula
+como **lista ordenada de peças** e a recompor o texto: `tokenizarFormula`/`montarFormula` em
+`shared/src/regras/rolagem/rolagem.pecas.ts`, DTOs `PecaFormulaDto` (dado com quantidade número/fonte/conta e operadores
+por pool; fonte escalar com `*N`/`/N`; número; conta de bônus fixo; atalho `CORPO`/`FURTIVO`), cada peça com sinal e tag
+simples ou composta, e `FormulaTokenizadaDto` (peças + `repeticoes`). Para as duas leituras não divergirem, os
+auxiliares de leitura do motor (`resolverFonte`, `resolverTipoDano`, `interpretarOperadores`, divisão de termos,
+parênteses e `#N`) saíram de `rolagem.ts` para `rolagem.leitura.ts`, módulo interno não reexportado — só deslocamento,
+sem mudança de comportamento (os 172 testes do motor passaram antes e depois).
+
+Decisão de desenho: **autoverificação**. `tokenizarFormula` remonta o texto e só devolve as peças se `interpretarFormula`
+ler a remontagem igual ao original (igualdade estrutural, rótulos inclusive); senão devolve `null`, que o montador vai
+tratar como "avançada". Com atalho, a comparação roda sob duas expansões representativas (`CORPO` tipado, `FURTIVO` sem
+tag), porque o tipo do atalho depende da expansão — `FOR+FURTIVO[Q]` volta `null` (separar o atalho mudaria o tipo dele).
+O texto remontado é normalizado (`d20` → `1d20`, `kh` → `kh1`, `[Físico]` → `[F]`, nomes em maiúsculas, espaços em volta
+de `+`/`−`). Numa fórmula tipada, peça sem tag antes de um trecho tipado sai com `[F]` (o Físico que o motor já lhe daria;
+sem a tag ela seria absorvida pela tag seguinte). `siglaTipoDano` foi acrescentada a `rolagem.dados.ts`.
+
+**Corpus:** as 87 entradas válidas no motor do `montador-rolagem-formulas.json` (96 no total, uma repetida) (dez dos jogadores, bateria e formas
+de conta) têm peças e a remontagem é lida igual; nenhuma vira "avançada". As inválidas sem atalho devolvem `null`; as
+quatro com atalho mantêm a leitura depois de expandidas. **Testes:** `shared` 64 arquivos / 1060 testes (105 novos em
+`rolagem.pecas.spec.ts`); lint do `shared` com 0 erros. Sem UI, sem verificação ao vivo (não se aplica).
+
 ## 2026-10-03 — `rolagem-expressao-quantidade-dados`: conta na quantidade de dados e no bônus fixo (I-041)
 
 Implementada a extensão definitiva do motor para **todos** os usuários: a quantidade de dados e o bônus fixo de uma fórmula

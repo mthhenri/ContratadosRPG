@@ -77,6 +77,12 @@ export function resolverTipoDanoSimples(texto: string): TipoDanoEnum | null {
   return MAPA_TIPO_DANO[normalizarTipoDano(texto)] ?? null;
 }
 
+/** `TipoDanoEnum` → sigla de 1 letra da tag (`Físico` → `F`), para o texto que o montador escreve (I-041). */
+export function siglaTipoDano(tipo: TipoDanoEnum): string {
+  const par = Object.entries(SIGLAS_TIPO_DANO).find(([, valor]) => valor === tipo);
+  return par ? par[0] : tipo;
+}
+
 /** Chave do atributo → abreviação de 3 letras (ex.: `forca` → `FOR`), para rótulos de efeito (m3-20). */
 export function abreviacaoAtributo(chave: keyof FichaAtributosDto): string {
   const par = Object.entries(ABREVIACOES_ATRIBUTO).find(([, valor]) => valor === chave);
