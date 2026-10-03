@@ -1,0 +1,30 @@
+// O primitivo é dono da identidade do grupo e do item; aqui só tamanho e layout. No mobile o seletor ocupa a
+// linha inteira da barra, cada item com alvo de toque de 44px e a mesma largura.
+@use "tema/breakpoints" as bp;
+
+:host {
+    display: inline-flex;
+    max-width: 100%;
+
+    @include bp.mobile {
+        display: flex;
+        width: 100%;
+    }
+}
+
+.montador-seletor {
+    @include bp.mobile {
+        width: 100%;
+    }
+}
+
+.montador-seletor__item {
+    min-height: 26px;
+    padding: 0 var(--space-8);
+
+    @include bp.mobile {
+        flex: 1;
+        min-height: bp.$alvo-toque;
+        padding: 0 var(--space-4);
+    }
+}

@@ -41,9 +41,30 @@
 
     &__rotulo-linha {
         display: flex;
+        flex-wrap: wrap;
         align-items: center;
         justify-content: space-between;
         gap: 12px;
+    }
+
+    // Seletor de versão do montador (só TESTER/ADMIN, montador-exp-02) ao lado do guia; no mobile desce para a
+    // linha inteira, abaixo do rótulo.
+    &__rotulo-acoes {
+        display: flex;
+        align-items: center;
+        gap: var(--space-8);
+        min-width: 0;
+
+        @include bp.mobile {
+            flex: 1 1 100%;
+        }
+    }
+
+    &__seletor-montador {
+        @include bp.mobile {
+            flex: 1;
+            min-width: 0;
+        }
     }
 
     &__entrada {

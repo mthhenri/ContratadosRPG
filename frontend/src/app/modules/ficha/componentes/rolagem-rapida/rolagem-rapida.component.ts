@@ -1,8 +1,8 @@
-import { Component, computed, inject, input, output } from '@angular/core';
+import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 
-import { RolagemVisibilidadeEnum, TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
+import { RolagemVisibilidadeEnum } from '@contratados-rpg/shared/enums';
 import type { FichaAtributosDto } from '@contratados-rpg/shared/dtos/ficha';
 import { expandirAtalhosDano, rolarFormula, validarFormula } from '@contratados-rpg/shared/regras/rolagem';
 
@@ -10,6 +10,14 @@ import { SessaoService } from '../../../../core/services/sessao.service';
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { MontadorRolagem } from '../../../../shared/montador-rolagem/montador-rolagem.component';
+import { podeUsarMontador } from '../../../../shared/montador-rolagem-experimental/montador-acesso';
+import {
+  MontadorRolagemExperimental,
+  type MontadorUltimaRolagem,
+} from '../../../../shared/montador-rolagem-experimental/montador-rolagem-experimental.component';
+import { MontadorSeletorVersao } from '../../../../shared/montador-rolagem-experimental/montador-seletor-versao.component';
+import type { MontadorVersao } from '../../../../shared/montador-rolagem-experimental/montador-versao';
+import { MontadorVersaoPreferenciaService } from '../../../../shared/montador-rolagem-experimental/montador-versao-preferencia.service';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import type { RolagemRealizadaDto } from '../../rolagem-realizada';
@@ -29,7 +37,16 @@ import { GuiaFormula } from '../guia-formula/guia-formula.component';
  */
 @Component({
   selector: 'app-rolagem-rapida',
-  imports: [ReactiveFormsModule, GuiaFormula, MontadorRolagem, BotaoIcone, Icone, Tooltip],
+  imports: [
+    ReactiveFormsModule,
+    GuiaFormula,
+    MontadorRolagem,
+    MontadorRolagemExperimental,
+    MontadorSeletorVersao,
+    BotaoIcone,
+    Icone,
+    Tooltip,
+  ],
   templateUrl: './rolagem-rapida.component.html',
   styleUrl: './rolagem-rapida.component.scss',
 })
@@ -51,25 +68,28 @@ export class RolagemRapida {
   /** Cor de identidade visual da ficha — repassada à bandeja de dados. */
   readonly cor = input<string | null>(null);
 
-  /** Restringe o gatilho do Montador de rolagem a usuário TESTER/ADMIN — pedido do autor. Todo
-   *  consumidor real (ficha de jogador, criatura/NPC) passa `true`; o padrão `false` só cobre quem
-   *  ainda não decidiu (ex.: um teste unitário que monta o componente isolado). */
-  readonly restringirMontadorATester = input(false);
-
   /** Toda rolagem executada aqui — quem persiste o histórico. */
   readonly rolagemFeita = output<RolagemRealizadaDto>();
 
   private readonly bandeja = inject(BandejaDadosService);
   private readonly sessao = inject(SessaoService);
 
-  /** Ver `restringirMontadorATester`. */
-  protected readonly podeUsarMontador = computed(() => {
-    if (!this.restringirMontadorATester()) {
-      return true;
-    }
-    const tipo = this.sessao.usuario()?.tipo;
-    return tipo === TipoUsuarioEnum.TESTER || tipo === TipoUsuarioEnum.ADMIN;
+  private readonly preferenciaMontador = inject(MontadorVersaoPreferenciaService);
+
+  /** Montador e seletor de versão: gate único (`podeUsarMontador`), restrito a TESTER/ADMIN no experimento. */
+  protected readonly podeUsarMontador = computed(() => podeUsarMontador(this.sessao.usuario()?.tipo));
+
+  /**
+   * Versão nova do montador escolhida neste dispositivo, ou `null` para o Atual (padrão, e sempre para quem não
+   * passa no gate — o Atual então fica sem gatilho, `[permitido]="false"`).
+   */
+  protected readonly versaoMontadorNova = computed<Exclude<MontadorVersao, 'ATUAL'> | null>(() => {
+    const versao = this.preferenciaMontador.versao();
+    return this.podeUsarMontador() && versao !== 'ATUAL' ? versao : null;
   });
+
+  /** Última rolagem desta barra — o montador novo a mostra sem fechar a janela. */
+  protected readonly ultimaRolagem = signal<MontadorUltimaRolagem | null>(null);
 
   protected readonly formula = new FormControl('', { nonNullable: true });
   private readonly formulaTexto = toSignal(this.formula.valueChanges, { initialValue: '' });
@@ -106,6 +126,7 @@ export class RolagemRapida {
         corFicha: this.cor(),
         visibilidade: this.rolagemOculta() ? RolagemVisibilidadeEnum.PRIVADA : RolagemVisibilidadeEnum.PUBLICA,
       });
+      this.ultimaRolagem.set({ formula, resultado });
       this.rolagemFeita.emit({ rotulo: 'Rolagem rápida', formula, resultado });
     }
   }

@@ -1,0 +1,55 @@
+// Cartão de receita — superfície e borda de caixa interna (`--surface-2`, hairline), raio de controle e o
+// hover/ativo da família `--accent-border`/`--accent-dim` (mesma receita do cartão de documento e do item ativo
+// de lista). Foco visível vem do global `button:focus-visible` (`_base.scss`).
+@use "tema/breakpoints" as bp;
+
+:host {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-4);
+    min-width: 0;
+    padding: var(--space-12);
+    text-align: left;
+    color: var(--text);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+    cursor: pointer;
+    transition:
+        border-color 0.15s ease,
+        background-color 0.15s ease;
+
+    @media (hover: hover) {
+        &:hover:not(:disabled) {
+            border-color: var(--accent-border);
+        }
+    }
+
+    &:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+    }
+
+    @include bp.mobile {
+        min-height: bp.$alvo-toque;
+    }
+}
+
+:host(.cartao-receita--ativo) {
+    background: var(--accent-dim);
+    border-color: var(--accent-border);
+}
+
+.cartao-receita__titulo {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.cartao-receita__descricao {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    line-height: 1.35;
+    color: var(--text-dim);
+}

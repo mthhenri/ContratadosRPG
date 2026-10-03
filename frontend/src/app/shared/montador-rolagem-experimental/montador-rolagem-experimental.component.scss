@@ -1,0 +1,267 @@
+// Casca das versões novas do montador (montador-exp-02). Análogo aprovado: `MontadorRolagem` — mesma moldura
+// (`app-painel-flutuante`), gatilho, visor e rodapé fixo; os controles vêm dos primitivos de `shared/ui/`. Só
+// tokens do tema; espaços na escala de 5 degraus (`ui-18`).
+
+@use "tema/breakpoints" as bp;
+
+:host {
+    display: contents;
+}
+
+// Mesma margem/recuo da janela do `MontadorRolagem` (desktop com margem, mobile em folha cheia).
+:host ::ng-deep .painel-flutuante__janela:not(.painel-flutuante__janela--mobile) {
+    margin: max(var(--space-16), env(safe-area-inset-top))
+        max(var(--space-16), env(safe-area-inset-right))
+        max(var(--space-16), env(safe-area-inset-bottom))
+        max(var(--space-16), env(safe-area-inset-left));
+}
+
+:host ::ng-deep .painel-flutuante__janela--mobile {
+    inset: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
+        env(safe-area-inset-left);
+}
+
+.montador-exp {
+    &__gatilho {
+        flex: none;
+
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+            min-width: bp.$alvo-toque;
+        }
+    }
+
+    &__caixa {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        gap: var(--space-12);
+        padding: var(--space-12) var(--space-16) var(--space-16);
+    }
+
+    &__visor {
+        flex: none;
+        min-width: 0;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-control);
+        padding: var(--space-8) var(--space-12);
+        font-family: var(--font-mono);
+        font-size: 14px;
+        color: var(--text);
+
+        &:focus-visible {
+            outline: 2px solid var(--accent-border);
+            outline-offset: -1px;
+        }
+
+        &::placeholder {
+            color: var(--text-mute);
+        }
+
+        &--invalido {
+            border-color: color-mix(in srgb, var(--warning) 40%, transparent);
+        }
+
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+    }
+
+    &__corpo {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-16);
+
+        --fade-topo: 0px;
+        --fade-base: 0px;
+
+        &.overflow-fade--topo,
+        &.overflow-fade--base {
+            -webkit-mask-image: linear-gradient(
+                to bottom,
+                transparent 0,
+                #000 var(--fade-topo),
+                #000 calc(100% - var(--fade-base)),
+                transparent 100%
+            );
+            mask-image: linear-gradient(
+                to bottom,
+                transparent 0,
+                #000 var(--fade-topo),
+                #000 calc(100% - var(--fade-base)),
+                transparent 100%
+            );
+        }
+        &.overflow-fade--topo {
+            --fade-topo: 20px;
+        }
+        &.overflow-fade--base {
+            --fade-base: 20px;
+        }
+    }
+
+    &__grupo {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-8);
+    }
+
+    &__cabecalho-grupo {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-8);
+    }
+
+    &__titulo {
+        display: flex;
+        align-items: baseline;
+        flex-wrap: wrap;
+        gap: var(--space-4) var(--space-8);
+        margin: 0;
+        min-width: 0;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        color: var(--text-mute);
+    }
+
+    &__subtitulo {
+        font-family: var(--font-sans);
+        font-size: 12px;
+        font-weight: 400;
+        letter-spacing: normal;
+        text-transform: none;
+        color: var(--text-dim);
+        overflow-wrap: anywhere;
+    }
+
+    code.montador-exp__subtitulo {
+        font-family: var(--font-mono);
+    }
+
+    &__receitas {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: var(--space-8);
+    }
+
+    &__modelos {
+        flex: none;
+
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+    }
+
+    &__seta {
+        transition: transform 0.15s ease;
+
+        &--aberta {
+            transform: rotate(180deg);
+        }
+    }
+
+    // Faixa de aviso inline (receita do aviso de conflito da Biblioteca: cor a 12% de fundo e 40% de borda).
+    &__aviso {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-8);
+        padding: var(--space-12);
+        background: color-mix(in srgb, var(--warning) 12%, transparent);
+        border: 1px solid color-mix(in srgb, var(--warning) 40%, transparent);
+        border-radius: var(--radius-control);
+
+        &--erro {
+            background: color-mix(in srgb, var(--erro) 12%, transparent);
+            border-color: color-mix(in srgb, var(--erro) 40%, transparent);
+        }
+    }
+
+    &__aviso-titulo {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        color: var(--warning);
+
+        .montador-exp__aviso--erro & {
+            color: var(--erro);
+        }
+    }
+
+    &__codigo {
+        max-width: 100%;
+        font-family: var(--font-mono);
+        font-size: 13px;
+        color: var(--text);
+        overflow-wrap: anywhere;
+    }
+
+    &__aviso-texto {
+        margin: 0;
+        font-family: var(--font-sans);
+        font-size: 12px;
+        line-height: 1.4;
+        color: var(--text-dim);
+    }
+
+    &__resultado {
+        flex: none;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-8);
+        padding-top: var(--space-12);
+        border-top: 1px solid var(--border);
+    }
+
+    &__rodape {
+        flex: none;
+        display: flex;
+        gap: var(--space-8);
+        padding-top: var(--space-12);
+        border-top: 1px solid var(--border);
+    }
+
+    &__acao {
+        flex: 1;
+
+        &--rolar {
+            flex: 1.4;
+        }
+
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+    }
+
+    // Alça de redimensionar — mesma receita do `MontadorRolagem`.
+    &__redimensionar {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        width: 20px;
+        height: 20px;
+        cursor: nwse-resize;
+        touch-action: none;
+
+        &::after {
+            content: "";
+            position: absolute;
+            right: var(--space-4);
+            bottom: var(--space-4);
+            width: 8px;
+            height: 8px;
+            border-right: 1px solid var(--accent);
+            border-bottom: 1px solid var(--accent);
+        }
+    }
+}

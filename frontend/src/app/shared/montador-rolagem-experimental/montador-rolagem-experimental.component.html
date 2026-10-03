@@ -1,0 +1,228 @@
+@if (!oculto()) {
+    <button
+        app-botao-icone
+        tamanho="padrao"
+        variante="secundario"
+        type="button"
+        class="montador-exp__gatilho"
+        [ativo]="aberto()"
+        [attr.aria-pressed]="aberto() ? 'true' : 'false'"
+        aria-label="Montar fórmula por botões"
+        [appTooltip]="aberto() ? 'Fechar o montador' : 'Montar fórmula por botões'"
+        (click)="alternar()"
+    >
+        <app-icone nome="dado-mais" />
+    </button>
+}
+
+<app-painel-flutuante
+    #painel="appPainelFlutuante"
+    id="montador-rolagem-experimental"
+    titulo="Montador de rolagem"
+    [kicker]="'Experimento · ' + rotuloVersao()"
+    [aberto]="aberto()"
+    [largura]="mobileAtivo() ? null : tamanho().largura"
+    [altura]="mobileAtivo() ? null : tamanho().altura"
+    [mobile]="mobileAtivo()"
+    [posicaoInicial]="posicaoInicial"
+    (fechar)="fechar()"
+>
+    <div class="montador-exp__caixa">
+        <input
+            class="montador-exp__visor"
+            [class.montador-exp__visor--invalido]="analise().estado === 'INVALIDA'"
+            type="text"
+            [value]="formula()"
+            (input)="aoDigitarVisor($event)"
+            aria-label="Fórmula em edição"
+            placeholder="Sua fórmula aparece aqui"
+        />
+
+        <div class="montador-exp__corpo" appOverflowFade>
+            @if (mostraInicio()) {
+                <section class="montador-exp__grupo">
+                    <h3 class="montador-exp__titulo">
+                        Começar por
+                        <span class="montador-exp__subtitulo">um modelo que você ajusta depois</span>
+                    </h3>
+                    <div class="montador-exp__receitas">
+                        @for (receita of receitas; track receita.modo) {
+                            <button
+                                app-cartao-receita
+                                type="button"
+                                class="montador-exp__receita"
+                                [descricao]="receita.descricao"
+                                (click)="escolherReceita(receita)"
+                            >
+                                {{ receita.titulo }}
+                            </button>
+                        }
+                    </div>
+                </section>
+            } @else {
+                <section class="montador-exp__grupo">
+                    <div class="montador-exp__cabecalho-grupo">
+                        <h3 class="montador-exp__titulo">Fórmula</h3>
+                        <button
+                            app-botao
+                            variante="secundario"
+                            estilo="texto"
+                            tamanho="pequeno"
+                            type="button"
+                            class="montador-exp__modelos"
+                            [attr.aria-expanded]="modelosAbertos() ? 'true' : 'false'"
+                            (click)="modelosAbertos.set(!modelosAbertos())"
+                        >
+                            Modelos
+                            <app-icone
+                                nome="chevron"
+                                class="montador-exp__seta"
+                                [class.montador-exp__seta--aberta]="modelosAbertos()"
+                            />
+                        </button>
+                    </div>
+                    @if (modelosAbertos()) {
+                        <div class="montador-exp__receitas">
+                            @for (receita of receitas; track receita.modo) {
+                                <button
+                                    app-cartao-receita
+                                    type="button"
+                                    class="montador-exp__receita"
+                                    [descricao]="receita.descricao"
+                                    [ativo]="modo() === receita.modo"
+                                    (click)="escolherReceita(receita)"
+                                >
+                                    {{ receita.titulo }}
+                                </button>
+                            }
+                        </div>
+                    }
+
+                    @switch (analise().estado) {
+                        @case ("AVANCADA") {
+                            <div class="montador-exp__aviso" role="status">
+                                <strong class="montador-exp__aviso-titulo">Fórmula avançada</strong>
+                                <code class="montador-exp__codigo">{{ formula() }}</code>
+                                <p class="montador-exp__aviso-texto">
+                                    Usa recursos que os controles não montam. Edite pelo texto, ou
+                                    limpe para montar pelos controles.
+                                </p>
+                                <button
+                                    app-botao
+                                    variante="secundario"
+                                    estilo="contorno"
+                                    tamanho="pequeno"
+                                    type="button"
+                                    (click)="limpar()"
+                                >
+                                    Limpar
+                                </button>
+                            </div>
+                        }
+                        @case ("INVALIDA") {
+                            <div
+                                class="montador-exp__aviso montador-exp__aviso--erro"
+                                role="status"
+                            >
+                                <strong class="montador-exp__aviso-titulo">Fórmula inválida</strong>
+                                <code class="montador-exp__codigo">{{ formula() }}</code>
+                                <p class="montador-exp__aviso-texto">
+                                    {{ analise().erro }} Corrija o texto ou limpe para montar pelos
+                                    controles.
+                                </p>
+                                <button
+                                    app-botao
+                                    variante="secundario"
+                                    estilo="contorno"
+                                    tamanho="pequeno"
+                                    type="button"
+                                    (click)="limpar()"
+                                >
+                                    Limpar
+                                </button>
+                            </div>
+                        }
+                    }
+                </section>
+            }
+        </div>
+
+        @if (resultadoVisivel(); as rolagem) {
+            <section class="montador-exp__resultado" aria-label="Última rolagem">
+                <div class="montador-exp__cabecalho-grupo">
+                    <h3 class="montador-exp__titulo">
+                        Última rolagem
+                        <code class="montador-exp__subtitulo">{{ rolagem.formula }}</code>
+                    </h3>
+                    <button
+                        app-botao-icone
+                        tamanho="compacto"
+                        type="button"
+                        aria-label="Fechar resultado"
+                        appTooltip="Fechar resultado"
+                        (click)="fecharResultado()"
+                    >
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <app-resultado-rolagem
+                    [resultado]="rolagem.resultado"
+                    [corFicha]="corFicha()"
+                    [compacto]="true"
+                />
+            </section>
+        }
+
+        <div class="montador-exp__rodape">
+            <button
+                app-botao
+                variante="secundario"
+                estilo="texto"
+                tamanho="pequeno"
+                type="button"
+                class="montador-exp__acao"
+                [disabled]="!podeDesfazer()"
+                posicaoIcone="esquerda"
+                (click)="desfazer()"
+            >
+                <app-icone nome="desfazer" />
+                Desfazer
+            </button>
+            <button
+                app-botao
+                variante="secundario"
+                estilo="texto"
+                tamanho="pequeno"
+                type="button"
+                class="montador-exp__acao"
+                [disabled]="!formula() && modo() === null"
+                (click)="limpar()"
+            >
+                Limpar
+            </button>
+            <button
+                app-botao
+                variante="primario"
+                estilo="preenchido"
+                tamanho="pequeno"
+                posicaoIcone="esquerda"
+                type="button"
+                class="montador-exp__acao montador-exp__acao--rolar"
+                [disabled]="!formula().trim() || formulaValida() === false"
+                (click)="rolar.emit()"
+            >
+                <app-icone nome="d20" />
+                Rolar
+            </button>
+        </div>
+    </div>
+
+    @if (!mobileAtivo()) {
+        <span
+            painelRedimensionar
+            class="montador-exp__redimensionar"
+            aria-hidden="true"
+            (pointerdown)="iniciarRedimensionamento($event)"
+        ></span>
+    }
+</app-painel-flutuante>

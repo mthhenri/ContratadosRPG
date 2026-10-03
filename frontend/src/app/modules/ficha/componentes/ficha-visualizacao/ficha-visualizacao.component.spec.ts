@@ -282,9 +282,9 @@ describe('FichaVisualizacao', () => {
     });
 
     it('mantém o montador aberto e visível ao navegar para outra aba', () => {
-      // Gatilho do Montador é restrito a TESTER/ADMIN (`restringirMontadorATester`, ver
-      // `rolagem-rapida.component.ts`) — a ficha de jogador passa `true` como qualquer outro
-      // consumidor. Sessão de teste precisa refletir isso pro gatilho existir no DOM.
+      // Gatilho do Montador é restrito a TESTER/ADMIN pelo gate único (`podeUsarMontador`,
+      // `montador-rolagem-experimental/montador-acesso.ts`). Sessão de teste precisa refletir
+      // isso pro gatilho existir no DOM.
       const sessaoAdmin: UsuarioAutenticadoDto = {
         token: 'token-de-teste',
         id: 1,
