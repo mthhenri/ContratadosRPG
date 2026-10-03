@@ -162,13 +162,13 @@
     escolha para a conta nova foi a **D1**, decidida na revisão da spec: com `kh` e resultado ≤ 0 vale a regra de
     atributo zerado; sem `kh` trava em 0; divisor zero literal é inválido e por atributo vale 0 (**D2**).
   - **Escopo ampliado (2026-10-02):** o autor quis o **bônus fixo por conta** também (`(FOR+VIG)*2` sem dado), não
-    só a quantidade de dados. Isso abre a **D4** (crítico num bônus por conta; recomendação: dobra o valor final,
-    exceto se a conta usa `PROF`/`NIV`), em aberto na spec do motor. **`docs/core` não será alterado**: a linha 2045
-    fica só em `P-093` (`ACEITO`). A regra
-    fica no guia de fórmulas do app (`frontend/src/app/modules/ficha/componentes/guia-formula/`), **não** em
-    `docs/core` (a linha 2045 do sistema segue contradizendo `:2027`; ver `P-093`, `ACEITO`, sem edição do documento).
-  - **UI da conta, opção B:** campo "Dados por expressão" no "+ Adicionar", com leitura ao vivo (`(FOR+VIG)*2 = 14
-    dados`); os botões Soma/Média do teste ficam. **Ainda sem mockup** dessa opção no canvas.
+    só a quantidade de dados. Isso abriu a **D4** (crítico num bônus por conta), **decidida**: "apenas atributos de
+    verdade dobram, nível/prestígio não" — valor no crítico = valor da conta + valor da conta com `PROF`/`NIV` zerados.
+    **`docs/core` não será alterado**: a linha 2045 do sistema segue contradizendo `:2027` e fica só em `P-093`
+    (`ACEITO`). A regra fica no guia de fórmulas do app (`frontend/src/app/modules/ficha/componentes/guia-formula/`).
+  - **UI da conta, opção B:** campo de expressão no "+ Adicionar", com leitura ao vivo (`(FOR+VIG)*2 = 14 dados`), que
+    serve aos **dois usos** (quantidade de dados de um dado e bônus fixo — confirmado pelo autor em 2026-10-02); os
+    botões Soma/Média do teste ficam. **Ainda sem mockup** dessa opção no canvas.
   - **Confirmados depois:** o **sinal por termo** entra no núcleo (já está na E3.3 em "⋯ Mais"; a E3.2 do mockup só
     soma e ganha o "subtrair" no produto) e a opção **Atual** é a selecionada por padrão para o tester.
 

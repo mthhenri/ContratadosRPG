@@ -1,5 +1,14 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-03 — Montador de rolagem: D4 e campo de expressão fechados; specs sem ponto aberto (sem código)
+
+O autor decidiu a **D4**: no crítico, "apenas atributos de verdade dobram, nível/prestígio não". Li como a regra mais fiel ao
+sistema (`:1810`/`:1965`), não como a simples que eu recomendara (não dobrar conta nenhuma que use `PROF`/`NIV`): valor no
+crítico = valor da conta + valor da conta com `PROF` e `NIV` zerados; `(FOR+PROF)*2` com 3 e 2 vale 10 e, no crítico, 16. A
+quantidade de dados continua dobrando a contagem, como hoje. Também confirmou que o **campo de expressão** do montador serve
+à quantidade de dados e ao bônus fixo. As duas specs ficaram **sem decisão em aberto**; o que sobra é a revisão do autor e
+a implementação, que começa por `rolagem-expressao-quantidade-dados`. Nenhum código de produto foi alterado.
+
 ## 2026-10-02 — Montador de rolagem: revisão das specs pelo autor (sem código)
 
 O autor revisou as duas specs: **D1** (conta ≤ 0 com `kh` aplica a regra de atributo zerado) e **D2** (divisor por atributo

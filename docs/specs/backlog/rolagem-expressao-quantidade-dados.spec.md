@@ -39,18 +39,19 @@ bônus; qualquer outra conta é "Termo desconhecido".
    - **D2 — divisor.** Divisor literal zero (`(FOR/0)`) é fórmula inválida na interpretação; divisor que depende
      de atributo e dá zero na rolagem (`(FOR/VIG)` com Vigor 0) faz a conta valer **0** (0 dado, ou bônus 0),
      nunca exceção.
-
-## Ponto a confirmar na revisão (proposta do agente, não decisão do autor)
-
-- **D4 — crítico num bônus fixo por conta.** O sistema manda dobrar "todos os dados e valores fixos (flat ou
-  atributo)" (`sistema-v4.1.0.md:1810`; `Força × 6` vira `Força × 12`), **exceto valores originados de Patente ou
-  Nível** (`:1965`; no motor, `PROF`/`NIV` não dobram). Para quantidade de dados nada muda: o crítico dobra a
-  contagem, como hoje. Para o bônus por conta **recomendo a regra simples**: o crítico dobra o **valor final** (já
-  arredondado) da conta; **se a conta referencia `PROF` ou `NIV`, ela não dobra** — e o guia ensina a escrever
-  `PROF` como termo separado (`(FOR+VIG)*2 + PROF`) para dobrar a parte de atributo e preservar a de Patente.
-  Alternativa mais fiel e mais cara: dobrar só a parcela originada de atributos (exige avaliar a conta duas
-  vezes e só é bem definida em conta linear). As formas legadas `ATR*N`/`ATR/N` **não mudam** (dobram o valor
-  final, como hoje).
+7. **D4 decidido — crítico num bônus fixo por conta** (autor, 2026-10-02: "apenas atributos de verdade dobram,
+   nível/prestígio não"). O sistema manda dobrar "todos os dados e valores fixos (flat ou atributo)"
+   (`sistema-v4.1.0.md:1810`; `Força × 6` vira `Força × 12`), **exceto valores originados de Patente ou Nível**
+   (`:1965`; no motor, `PROF` e `NIV`, que é a regra já aplicada aos termos soltos). Para a quantidade de dados
+   nada muda: o crítico dobra a contagem, como hoje. Para o bônus por conta, **dobra o que vem de atributos e de
+   números fixos e não dobra o que vem de `PROF`/`NIV`**. Regra operacional, válida para qualquer conta:
+   **valor no crítico = valor da conta + valor da conta com `PROF` e `NIV` zerados** (cada um já arredondado para
+   baixo). Sem `PROF`/`NIV` isso é o dobro do valor final; só com `PROF`/`NIV` não dobra nada (como `PROF*2` hoje).
+   Com ambos, a parcela de `PROF`/`NIV` fica e o resto dobra: `(FOR+PROF)*2` com Força 3 e `PROF` 2 vale 10 e,
+   no crítico, 16 (a de Força vai de 6 para 12; a de `PROF` fica em 4). Num produto (`FOR*PROF`) a parcela de
+   `PROF` não se separa e o valor não dobra. As formas legadas `ATR*N`/`ATR/N` **não mudam** (dobram o valor
+   final, exceto `PROF`/`NIV`, como hoje). O arredondamento por parcela pode deslocar 1 ponto em contas com
+   divisão (`(FOR+PROF)/2`, 3 e 2: 2 normal, 3 no crítico) — aceito e documentado no guia.
 
 ## Entregáveis
 
@@ -78,10 +79,10 @@ bônus; qualquer outra conta é "Termo desconhecido".
 4. **Rolagem**: quantidade = piso da conta, limitada a `QUANTIDADE_DADOS_MAXIMA` (100) e a 0 por baixo (D1/D2);
    crítico dobra a quantidade como hoje; `desvantagem` marcada no resultado quando D1 se aplica. Bônus por conta =
    piso da conta, somado com o sinal do termo e listado em `atributos` do resultado (`rotulo` + `valor`), de modo que
-   o detalhamento da bandeja de dados não muda; crítico conforme D4.
+   o detalhamento da bandeja de dados não muda; crítico conforme D4 (decisão 7).
 5. **Guia de fórmulas** (`guia-formula.component.ts`): seção nova com os exemplos do autor, a regra de
    arredondamento ("sempre para baixo, uma vez, no fim da conta", e parênteses para somar antes de arredondar), as
-   formas `((conta))dM` e `(conta)` de bônus, e a nota do crítico (D4).
+   formas `((conta))dM` e `(conta)` de bônus, e a nota do crítico ("no crítico, o que vem de atributos e de números dobra; o que vem de `PROF` e `NIV` não").
 6. **Corpus**: `docs/design/propostas/montador-rolagem-formulas.json` (10 fórmulas dos jogadores + 78 de bateria)
    usado como snapshot de regressão.
 
@@ -97,7 +98,8 @@ bônus; qualquer outra conta é "Termo desconhecido".
   por extenso (`força`) dentro da conta; D1 e D2 conforme decidido.
 - Testes do **bônus fixo**: `(FOR+VIG)*2` com 3 e 2 → 10; `FOR*VIG` e `2*(LUT+PROF)`; `FOR/2+VIG/2` com 3 e 3 → 2 contra
   `(FOR/2+VIG/2)` → 3 (a conta é o termo); sinal (`2d6-(FOR+VIG)*2`) e tag (`(FOR+VIG)*2[Q]`, `[F-Q]`); divisor zero
-  literal inválido e por atributo valendo 0; conta que referencia `PROF`/`NIV`; crítico conforme D4; `ATR*N`/`ATR/N`
+  literal inválido e por atributo valendo 0; crítico conforme D4: `(FOR+VIG)*2` com 3 e 2 → 10 e 20, `(FOR+PROF)*2`
+  com 3 e 2 → 10 e 16, `PROF*FOR` e `PROF*2` não dobram, `(FOR+PROF)/2` com 3 e 2 → 2 e 3; `ATR*N`/`ATR/N`
   idênticos ao snapshot; `(2d6+FOR)` sem tag nem `#N` continua erro de parse.
 - Fórmulas inválidas devolvem erro claro, nunca lançam: parêntese aberto/fechado a mais, conta vazia (`()d6`),
   operador duplo (`**`), fonte desconhecida, divisão por zero literal, conta além dos limites de profundidade/tamanho.
@@ -144,7 +146,8 @@ consumidores, fecho); `P-093` e `P-092` de `PROBLEMS.md`. Bloqueia `montador-rol
   `interpretarSegmento`.
 - **Conta patológica vinda do cliente** (aninhamento extremo, texto enorme) no backend. Mitigação: limites de
   profundidade e tamanho + avaliador sem `eval`.
-- **D4 em aberto**: decidir antes de implementar o crítico do bônus por conta; o teste cita a decisão tomada.
+- **Crítico por parcela com divisão** desloca até 1 ponto (o piso é por parcela): é a regra decidida (D4), não um
+  defeito — o teste cita o caso `(FOR+PROF)/2` e o guia o descreve.
 - **Bônus por conta colidir com `ATR*N`/`ATR/N`**: o termo `FOR*3` hoje usa piso de `(base*mult)/div` e o crítico
   dobra o valor final; a forma nova não pode deslocar essa conta. Mitigação: o snapshot do corpus e os testes dos
   dois caminhos lado a lado.

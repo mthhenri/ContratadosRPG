@@ -44,11 +44,9 @@ preferência de usuário (por exemplo "completo" ou "essencial") gravada.
 9. **Uma pasta própria** (`frontend/src/app/shared/montador-rolagem-experimental/`) para as três versões novas,
    de modo que apagar as perdedoras seja apagar código, não desfazer enxertos (organização, sem decisão de produto).
 
-### Ponto a confirmar na revisão desta spec (proposta do agente)
-
-- **O campo "Por expressão" serve aos dois usos do motor**: a **quantidade de dados** de um dado escolhido
-  (`((FOR+VIG)*2)d4`) e o **bônus fixo** (`(FOR+VIG)*2`), com leitura ao vivo do valor. A decisão 5 foi dada para a
-  quantidade de dados; o autor pediu o bônus fixo no motor em 2026-10-02 e ainda não disse se a tela o cobre.
+10. **O campo de expressão serve aos dois usos do motor** (autor, 2026-10-02): a **quantidade de dados** de um dado
+    escolhido (`((FOR+VIG)*2)d4`) e o **bônus fixo** (`(FOR+VIG)*2`), com leitura ao vivo do valor. O autor
+    pediu o bônus fixo no motor e confirmou que a mesma tela o cobre.
 
 ## Referência visual e comportamental
 
@@ -101,7 +99,7 @@ de quantidade) **não quebra**; lint e build de produção sem aviso novo; `veri
 
 **Entrega:** os três modos de partida (Teste de atributo, Dano de arma, Dados livres) sobre o modelo da task 02;
 ficha de dado com quantidade, tipo de dano, sinal, segundo tipo (composto) e opções do dado; atributo, número
-(campo digitável), repetir ×N, atalhos e o **campo de expressão** (decisão 5 e ponto a confirmar); teste com 1–2 atributos (soma ou
+(campo digitável), repetir ×N, atalhos e o **campo de expressão** para quantidade de dados e bônus fixo (decisões 5 e 10); teste com 1–2 atributos (soma ou
 média, arredondando para baixo), dados a mais/menos, manter maior/menor, margem de crítico e bônus. **Completo**
 deixa tudo à vista; **Essencial** recolhe sinal, segundo tipo e opções em "⋯ Mais" e o restante em painéis de "+
 Adicionar" (um aberto por vez), sem abas no mobile. Alternar entre as duas é a mesma janela e o mesmo estado.
