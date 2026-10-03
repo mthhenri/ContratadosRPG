@@ -1,0 +1,216 @@
+// Editor Completo/Essencial do montador (montador-exp-03). Análogo: o corpo do `MontadorRolagem` (grupos com título
+// mono uppercase, grades de teclas `app-botao` pequenas). Os controles são os primitivos de `shared/ui/`; aqui só
+// tamanho e layout. Só tokens; espaços na escala de 5 degraus (`ui-18`).
+@use "tema/breakpoints" as bp;
+
+:host {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-16);
+}
+
+.editor {
+    &__grupo {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-8);
+        min-width: 0;
+    }
+
+    &__titulo {
+        display: flex;
+        align-items: baseline;
+        flex-wrap: wrap;
+        gap: var(--space-4) var(--space-8);
+        margin: 0;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        color: var(--text-mute);
+    }
+
+    &__subtitulo {
+        font-family: var(--font-sans);
+        font-size: 12px;
+        font-weight: 400;
+        letter-spacing: normal;
+        text-transform: none;
+        color: var(--text-dim);
+    }
+
+    &__vazio,
+    &__dica {
+        margin: 0;
+        font-family: var(--font-sans);
+        font-size: 12px;
+        color: var(--text-dim);
+    }
+
+    &__termos {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-8);
+    }
+
+    &__icone-dado {
+        flex: none;
+        font-size: 18px;
+        color: var(--text);
+    }
+
+    &__linha-tipo {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-8);
+    }
+
+    &__opcoes {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-8);
+    }
+
+    &__opcao {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--space-4) var(--space-8);
+        min-width: 0;
+    }
+
+    &__opcao-rotulo {
+        min-width: 112px;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        color: var(--text-mute);
+    }
+
+    &__campo {
+        min-width: 140px;
+
+        &--largo {
+            flex: 1;
+            min-width: 180px;
+        }
+    }
+
+    &__grade {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-8);
+
+        &--dados {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+
+            @include bp.mobile {
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+            }
+        }
+
+        &--atributos-termos {
+            display: grid;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+
+            @include bp.mobile {
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+            }
+        }
+    }
+
+    &__tecla {
+        justify-content: center;
+        min-width: 0;
+
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+    }
+
+    // Seleção do atributo do teste: o grupo segmentado vira grade de 5 colunas (layout do consumidor). O vão de 2px
+    // repete o respiro interno do próprio `app-segmentado` (fora da escala de propósito, como no primitivo).
+    &__grade-atributos {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 2px;
+    }
+
+    &__atributo {
+        flex-direction: column;
+        gap: 2px;
+        min-height: 44px;
+        padding: var(--space-4);
+    }
+
+    &__atributo-valor {
+        font-weight: 500;
+        letter-spacing: normal;
+        text-transform: none;
+        opacity: 0.85;
+    }
+
+    &__adicionar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-8);
+    }
+
+    &__adicionar-botao {
+        @include bp.mobile {
+            flex: 1 1 calc(50% - var(--space-8));
+            min-height: bp.$alvo-toque;
+        }
+    }
+
+    &__painel {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-8);
+        padding: var(--space-12);
+        background: var(--surface-2);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+    }
+
+    &__linha {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        gap: var(--space-8);
+    }
+
+    &__expressao {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-8);
+    }
+
+    &__leitura-expressao {
+        margin: 0;
+        font-family: var(--font-mono);
+        font-size: 13px;
+        color: var(--text-dim);
+
+        strong {
+            color: var(--text);
+        }
+
+        &--erro {
+            font-family: var(--font-sans);
+            font-size: 12px;
+            color: var(--warning);
+        }
+    }
+
+    &__resumo-teste {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-8);
+    }
+}

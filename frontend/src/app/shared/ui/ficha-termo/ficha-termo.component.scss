@@ -1,0 +1,129 @@
+// Ficha de termo — caixa interna (`--surface-2`, hairline forte, raio de controle) com uma faixa de 3px na base,
+// na cor do tipo de dano (tokens `--dano-*`, a mesma família do quadradinho de tipo do resultado de rolagem). Sem
+// tipo, a faixa é neutra. Espaços na escala de 5 degraus (`ui-18`).
+@use "tema/breakpoints" as bp;
+
+:host {
+    display: block;
+    min-width: 0;
+}
+
+.ficha-termo {
+    --ficha-termo-cor: var(--border-strong);
+
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
+    padding: var(--space-8) var(--space-12) var(--space-12);
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    overflow: hidden;
+
+    // Faixa do tipo; com `--cor2-*` vira meio a meio (dano Composto).
+    &::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 3px;
+        background: linear-gradient(
+            90deg,
+            var(--ficha-termo-cor) 50%,
+            var(--ficha-termo-cor-2, var(--ficha-termo-cor)) 50%
+        );
+    }
+
+    &--compacta {
+        gap: var(--space-4);
+        padding: var(--space-4) var(--space-8) var(--space-8);
+    }
+
+    &--cor-fisico {
+        --ficha-termo-cor: var(--dano-fisico);
+    }
+    &--cor-balistico {
+        --ficha-termo-cor: var(--dano-balistico);
+    }
+    &--cor-explosao {
+        --ficha-termo-cor: var(--dano-explosao);
+    }
+    &--cor-quimico {
+        --ficha-termo-cor: var(--dano-quimico);
+    }
+    &--cor-geral {
+        --ficha-termo-cor: var(--dano-geral);
+    }
+    &--cor2-fisico {
+        --ficha-termo-cor-2: var(--dano-fisico);
+    }
+    &--cor2-balistico {
+        --ficha-termo-cor-2: var(--dano-balistico);
+    }
+    &--cor2-explosao {
+        --ficha-termo-cor-2: var(--dano-explosao);
+    }
+    &--cor2-quimico {
+        --ficha-termo-cor-2: var(--dano-quimico);
+    }
+    &--cor2-geral {
+        --ficha-termo-cor-2: var(--dano-geral);
+    }
+
+    &__linha {
+        display: flex;
+        align-items: center;
+        gap: var(--space-8);
+        min-width: 0;
+    }
+
+    &__rotulo {
+        flex: 1;
+        min-width: 0;
+        font-family: var(--font-mono);
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--text);
+        overflow-wrap: anywhere;
+    }
+
+    &--compacta &__rotulo {
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    &__controles {
+        display: flex;
+        align-items: center;
+        gap: var(--space-4);
+        flex: none;
+
+        &:empty {
+            display: none;
+        }
+    }
+
+    &__mais-gatilho {
+        flex: none;
+    }
+
+    &__remover {
+        flex: none;
+    }
+
+    &__mais {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-8);
+        padding-top: var(--space-8);
+        border-top: 1px dashed var(--border-strong);
+    }
+
+    @include bp.mobile {
+        &__mais-gatilho {
+            min-height: bp.$alvo-toque;
+        }
+    }
+}

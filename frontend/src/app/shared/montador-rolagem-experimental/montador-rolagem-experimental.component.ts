@@ -1,6 +1,7 @@
 import { Component, computed, input, linkedSignal, model, output, signal, viewChild } from '@angular/core';
 
-import type { ResultadoRolagemDto } from '@contratados-rpg/shared/regras/rolagem';
+import type { FichaAtributosDto } from '@contratados-rpg/shared/dtos/ficha';
+import { expandirAtalhosDano, type ResultadoRolagemDto } from '@contratados-rpg/shared/regras/rolagem';
 
 import { Icone } from '../icone/icone.component';
 import { OverflowFade } from '../overflow-fade/overflow-fade.directive';
@@ -11,16 +12,20 @@ import { BotaoIcone } from '../ui/botao-icone/botao-icone.component';
 import { CartaoReceita } from '../ui/cartao-receita/cartao-receita.component';
 import type { PainelFlutuantePosicao } from '../ui/painel-flutuante/painel-flutuante.component';
 import { PainelFlutuante } from '../ui/painel-flutuante/painel-flutuante.component';
+import { type MontadorDensidade, MontadorEditorPecas } from './montador-editor-pecas.component';
+import { type AmbienteMontador, lerFormula, resumirFormula, type ResumoFormulaMontador } from './montador-leitura';
 import {
   type AtalhosDanoMontador,
   analisarFormulaMontador,
   desfazerPassoHistorico,
   type HistoricoMontador,
+  type MontadorFormulaAnalise,
   type MontadorModo,
   RECEITAS_MONTADOR,
   type ReceitaMontador,
   registrarPassoHistorico,
 } from './montador-modelo';
+import { podeMontarPecasOuTeste } from './montador-pecas';
 import { type MontadorVersao, rotuloMontadorVersao } from './montador-versao';
 
 /** Última rolagem feita pela barra, para o estado "resultado" (o painel não fecha ao rolar). */
@@ -62,6 +67,7 @@ interface Tamanho {
     BotaoIcone,
     CartaoReceita,
     Icone,
+    MontadorEditorPecas,
     OverflowFade,
     PainelFlutuante,
     ResultadoRolagem,
@@ -95,6 +101,11 @@ export class MontadorRolagemExperimental {
   /** Cor de identidade da ficha, repassada ao resultado. */
   readonly corFicha = input<string | null>(null);
 
+  /** Valores da ficha — leitura ao vivo (faixa, média, frase e campo de expressão). */
+  readonly atributos = input.required<FichaAtributosDto>();
+  readonly proficiencia = input<number | null>(null);
+  readonly nivel = input<number>(0);
+
   /** A instância continua viva fora da aba Rolagens; nessa condição só a janela permanece. */
   readonly oculto = input(false);
 
@@ -105,8 +116,53 @@ export class MontadorRolagemExperimental {
   protected readonly posicaoInicial = POSICAO_INICIAL;
   protected readonly rotuloVersao = computed(() => rotuloMontadorVersao(this.versao()));
 
-  /** Estado derivado do texto: vazia, em peças, avançada ou inválida. */
-  protected readonly analise = computed(() => analisarFormulaMontador(this.formula(), this.atalhosDano()));
+  protected readonly ambiente = computed<AmbienteMontador>(() => ({
+    atributos: this.atributos(),
+    proficiencia: this.proficiencia(),
+    nivel: this.nivel(),
+  }));
+
+  /**
+   * Estado derivado do texto: vazia, em peças, avançada ou inválida. Peças que os controles **desta versão** não
+   * montam também ficam como avançada — o texto nunca é reescrito por um controle que não o representa.
+   */
+  protected readonly analise = computed<MontadorFormulaAnalise>(() => {
+    const analise = analisarFormulaMontador(this.formula(), this.atalhosDano());
+    if (analise.estado === 'PECAS' && analise.tokenizada && !podeMontarPecasOuTeste(analise.tokenizada)) {
+      return { estado: 'AVANCADA', tokenizada: null };
+    }
+    return analise;
+  });
+
+  protected readonly densidade = computed<MontadorDensidade>(() =>
+    this.versao() === 'COMPLETO' ? 'COMPLETO' : 'ESSENCIAL',
+  );
+
+  /** Editor de controles visível: fórmula em peças, ou vazia depois de escolher um ponto de partida. */
+  protected readonly mostraEditor = computed(() => {
+    const estado = this.analise().estado;
+    return estado === 'PECAS' || (estado === 'VAZIA' && this.modo() !== null);
+  });
+
+  protected readonly tokenizadaEditor = computed(() => this.analise().tokenizada ?? { pecas: [] });
+
+  /** Linha de leitura sob o visor: faixa e média de uma rolagem (do motor) e a frase em português. */
+  protected readonly leitura = computed<{ resumo: ResumoFormulaMontador | null; frase: string | null } | null>(() => {
+    const analise = this.analise();
+    if (analise.estado !== 'PECAS' && analise.estado !== 'AVANCADA') return null;
+    const resumo = resumirFormula(expandirAtalhosDano(this.formula(), this.atalhosDano()), this.ambiente());
+    const frase = analise.tokenizada ? lerFormula(analise.tokenizada, this.ambiente(), this.atalhosDano()) : null;
+    return { resumo, frase };
+  });
+
+  protected textoFaixa(resumo: ResumoFormulaMontador): string {
+    const numero = (valor: number) => valor.toLocaleString('pt-BR', { maximumFractionDigits: 1 });
+    const faixa =
+      resumo.minimo === resumo.maximo ? numero(resumo.minimo) : numero(resumo.minimo) + ' a ' + numero(resumo.maximo);
+    return faixa + ' · média ' + numero(resumo.media);
+  }
+
+  protected readonly repeticoes = computed(() => this.analise().tokenizada?.repeticoes ?? 1);
 
   /**
    * Modo escolhido num ponto de partida. `null` com a fórmula vazia mostra "Começar por"; com texto, o editor

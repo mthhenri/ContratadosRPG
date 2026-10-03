@@ -16,6 +16,9 @@ import {
       [versao]="versao()"
       [atalhosDano]="atalhos()"
       [ultimaRolagem]="ultimaRolagem()"
+      [atributos]="atributos"
+      [proficiencia]="2"
+      [nivel]="2"
       (rolar)="rolagens = rolagens + 1"
     />
   `,
@@ -25,6 +28,7 @@ class Hospedeiro {
   readonly versao = signal<'ESSENCIAL' | 'COMPLETO' | 'BLOCOS'>('ESSENCIAL');
   readonly atalhos = signal<{ corpo?: string | null; furtivo?: string | null }>({});
   readonly ultimaRolagem = signal<MontadorUltimaRolagem | null>(null);
+  readonly atributos = { ...atributosZerados(), forca: 3, vigor: 4, luta: 4 };
   rolagens = 0;
 }
 

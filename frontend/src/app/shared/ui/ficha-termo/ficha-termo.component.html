@@ -1,0 +1,41 @@
+<div [class]="classes()">
+    <div class="ficha-termo__linha">
+        <ng-content select="[fichaTermoIcone]" />
+        <span class="ficha-termo__rotulo"><ng-content select="[fichaTermoRotulo]" /></span>
+        <span class="ficha-termo__controles"><ng-content select="[fichaTermoControles]" /></span>
+        @if (temMais()) {
+            <button
+                app-botao
+                variante="secundario"
+                estilo="texto"
+                tamanho="pequeno"
+                type="button"
+                class="ficha-termo__mais-gatilho"
+                [attr.aria-expanded]="maisAberto() ? 'true' : 'false'"
+                [attr.aria-label]="rotuloMais()"
+                (click)="alternarMais()"
+            >
+                ⋯ Mais
+            </button>
+        }
+        @if (removivel()) {
+            <button
+                app-botao-icone
+                tamanho="compacto"
+                type="button"
+                class="ficha-termo__remover"
+                [attr.aria-label]="rotuloRemover()"
+                appTooltip="Remover"
+                (click)="remover.emit()"
+            >
+                <span aria-hidden="true">×</span>
+            </button>
+        }
+    </div>
+    <ng-content />
+    @if (temMais() && maisAberto()) {
+        <div class="ficha-termo__mais">
+            <ng-content select="[fichaTermoMais]" />
+        </div>
+    }
+</div>

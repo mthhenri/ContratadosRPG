@@ -1,0 +1,924 @@
+@if (teste(); as t) {
+    <!-- Teste de atributo -->
+    <section class="editor__grupo">
+        <h3 class="editor__titulo">
+            Atributo
+            <span class="editor__subtitulo">vale o número de d20 do atributo</span>
+        </h3>
+        <app-segmentado rotulo="Atributo do teste" class="editor__grade-atributos">
+            @for (atributo of atributos; track atributo.sigla) {
+                <button
+                    app-segmentado-item
+                    type="button"
+                    class="editor__atributo"
+                    [ativo]="t.atributos[0] === atributo.sigla"
+                    [appTooltip]="atributo.nome"
+                    (click)="escolherAtributoTeste(atributo.sigla)"
+                >
+                    {{ atributo.sigla }}
+                    <span class="editor__atributo-valor">{{ d20DoAtributo(atributo.sigla) }}d20</span>
+                </button>
+            }
+        </app-segmentado>
+    </section>
+
+    @if (essencial()) {
+        <div class="editor__adicionar" role="group" aria-label="Ajustar o teste">
+            <button
+                app-botao
+                [variante]="painelTeste() === 'COMBINAR' ? 'primario' : 'secundario'"
+                estilo="contorno"
+                tamanho="pequeno"
+                type="button"
+                class="editor__adicionar-botao"
+                [attr.aria-expanded]="painelTeste() === 'COMBINAR' ? 'true' : 'false'"
+                (click)="alternarPainelTeste('COMBINAR')"
+            >
+                + Combinar atributo
+            </button>
+            <button
+                app-botao
+                [variante]="painelTeste() === 'DADOS' ? 'primario' : 'secundario'"
+                estilo="contorno"
+                tamanho="pequeno"
+                type="button"
+                class="editor__adicionar-botao"
+                [attr.aria-expanded]="painelTeste() === 'DADOS' ? 'true' : 'false'"
+                (click)="alternarPainelTeste('DADOS')"
+            >
+                ± Dados
+            </button>
+            <button
+                app-botao
+                [variante]="painelTeste() === 'BONUS' ? 'primario' : 'secundario'"
+                estilo="contorno"
+                tamanho="pequeno"
+                type="button"
+                class="editor__adicionar-botao"
+                [attr.aria-expanded]="painelTeste() === 'BONUS' ? 'true' : 'false'"
+                (click)="alternarPainelTeste('BONUS')"
+            >
+                + Bônus
+            </button>
+            <button
+                app-botao
+                [variante]="painelTeste() === 'OPCOES' ? 'primario' : 'secundario'"
+                estilo="contorno"
+                tamanho="pequeno"
+                type="button"
+                class="editor__adicionar-botao"
+                [attr.aria-expanded]="painelTeste() === 'OPCOES' ? 'true' : 'false'"
+                (click)="alternarPainelTeste('OPCOES')"
+            >
+                Opções
+            </button>
+        </div>
+        @switch (painelTeste()) {
+            @case ("COMBINAR") {
+                <div class="editor__painel">
+                    <ng-container *ngTemplateOutlet="testeCombinar; context: { $implicit: t }" />
+                </div>
+            }
+            @case ("DADOS") {
+                <div class="editor__painel">
+                    <ng-container *ngTemplateOutlet="testeDados; context: { $implicit: t }" />
+                </div>
+            }
+            @case ("BONUS") {
+                <div class="editor__painel">
+                    <ng-container *ngTemplateOutlet="testeBonus; context: { $implicit: t }" />
+                </div>
+            }
+            @case ("OPCOES") {
+                <div class="editor__painel">
+                    <ng-container *ngTemplateOutlet="testeOpcoes; context: { $implicit: t }" />
+                </div>
+            }
+        }
+        <ng-container *ngTemplateOutlet="testeSomas; context: { $implicit: t }" />
+    } @else {
+        <ng-container *ngTemplateOutlet="testeCombinar; context: { $implicit: t }" />
+        <ng-container *ngTemplateOutlet="testeDados; context: { $implicit: t }" />
+        <ng-container *ngTemplateOutlet="testeBonus; context: { $implicit: t }" />
+        <ng-container *ngTemplateOutlet="testeOpcoes; context: { $implicit: t }" />
+    }
+} @else {
+    <!-- Termos: dano de arma e dados livres -->
+    <section class="editor__grupo">
+        <h3 class="editor__titulo">
+            Termos
+            <span class="editor__subtitulo">na ordem da fórmula, cada um com sinal e tipo</span>
+        </h3>
+        @if (tokenizada().pecas.length === 0) {
+            <p class="editor__vazio">Toque num dado abaixo ou adicione um termo.</p>
+        }
+        <div class="editor__termos">
+            @for (peca of tokenizada().pecas; track $index; let indice = $index) {
+                @if (peca.tipo === "DADO") {
+                    <app-ficha-termo
+                        [rotuloRemover]="'Remover ' + rotuloPeca(peca)"
+                        [rotuloMais]="'Sinal, segundo tipo e opções de ' + rotuloPeca(peca)"
+                        [cor]="corDoTipo(tipoDe(peca).primeiro)"
+                        [corSecundaria]="corDoTipo(tipoDe(peca).segundo)"
+                        [temMais]="essencial()"
+                        (remover)="removerTermo(indice)"
+                    >
+                        <app-icone
+                            fichaTermoIcone
+                            class="editor__icone-dado"
+                            [nome]="iconeDado(peca.faces)"
+                        />
+                        <span fichaTermoRotulo
+                            >{{ peca.sinal === -1 ? "− " : ""
+                            }}{{
+                                peca.quantidade.tipo === "NUMERO"
+                                    ? "d" + peca.faces
+                                    : rotuloPeca(peca)
+                            }}</span
+                        >
+                        @if (peca.quantidade.tipo === "NUMERO") {
+                            <app-step-input
+                                fichaTermoControles
+                                tamanho="compacto"
+                                [min]="1"
+                                [max]="quantidadeMaxima"
+                                [valorExterno]="peca.quantidade.valor"
+                                [ariaRotulo]="'Quantidade de d' + peca.faces"
+                                (valorAlterado)="definirQuantidade(indice, $event)"
+                            />
+                        }
+                        <div class="editor__linha-tipo">
+                            <ng-container
+                                *ngTemplateOutlet="
+                                    tipoTermo;
+                                    context: { $implicit: peca, indice: indice }
+                                "
+                            />
+                        </div>
+                        @if (essencial()) {
+                            <div fichaTermoMais class="editor__opcoes">
+                                <ng-container
+                                    *ngTemplateOutlet="
+                                        opcoesDado;
+                                        context: { $implicit: peca, indice: indice }
+                                    "
+                                />
+                            </div>
+                        } @else {
+                            <div class="editor__opcoes">
+                                <ng-container
+                                    *ngTemplateOutlet="
+                                        opcoesDado;
+                                        context: { $implicit: peca, indice: indice }
+                                    "
+                                />
+                            </div>
+                        }
+                    </app-ficha-termo>
+                } @else {
+                    <app-ficha-termo
+                        [compacta]="true"
+                        [rotuloRemover]="'Remover ' + rotuloPeca(peca)"
+                        [rotuloMais]="'Tipo de ' + rotuloPeca(peca)"
+                        [cor]="corDoTipo(tipoDe(peca).primeiro)"
+                        [corSecundaria]="corDoTipo(tipoDe(peca).segundo)"
+                        [temMais]="essencial() && peca.tipo !== 'ATALHO'"
+                        (remover)="removerTermo(indice)"
+                    >
+                        <span fichaTermoRotulo
+                            >{{ peca.tipo === "NUMERO" ? "Número" : (peca.sinal === -1 ? "− " : "+ ") + rotuloPeca(peca) }}</span
+                        >
+                        @if (peca.tipo === "NUMERO") {
+                            <app-step-input
+                                fichaTermoControles
+                                tamanho="compacto"
+                                [min]="-999"
+                                [max]="999"
+                                [valorExterno]="peca.sinal * peca.valor"
+                                ariaRotulo="Valor do número"
+                                (valorAlterado)="definirValorNumero(indice, $event)"
+                            />
+                        } @else {
+                            <button
+                                fichaTermoControles
+                                app-botao-icone
+                                tamanho="compacto"
+                                type="button"
+                                [attr.aria-label]="'Alternar soma e subtração de ' + rotuloPeca(peca)"
+                                appTooltip="Alterna + e −"
+                                (click)="alternarSinal(indice)"
+                            >
+                                <span aria-hidden="true">±</span>
+                            </button>
+                        }
+                        @if (peca.tipo !== "ATALHO") {
+                            @if (essencial()) {
+                                <div fichaTermoMais class="editor__linha-tipo">
+                                    <ng-container
+                                        *ngTemplateOutlet="
+                                            tipoTermo;
+                                            context: { $implicit: peca, indice: indice }
+                                        "
+                                    />
+                                </div>
+                            } @else {
+                                <div class="editor__linha-tipo">
+                                    <ng-container
+                                        *ngTemplateOutlet="
+                                            tipoTermo;
+                                            context: { $implicit: peca, indice: indice }
+                                        "
+                                    />
+                                </div>
+                            }
+                        }
+                    </app-ficha-termo>
+                }
+            }
+        </div>
+    </section>
+
+    <section class="editor__grupo">
+        <h3 class="editor__titulo">
+            Dado
+            <span class="editor__subtitulo">toque de novo para somar</span>
+        </h3>
+        <div class="editor__grade editor__grade--dados">
+            @for (faces of faces; track faces) {
+                <button
+                    app-botao
+                    variante="secundario"
+                    estilo="contorno"
+                    tamanho="pequeno"
+                    posicaoIcone="esquerda"
+                    type="button"
+                    class="editor__tecla"
+                    [appTooltip]="'d' + faces + ' — toque de novo para somar mais um'"
+                    (click)="clicarDado(faces)"
+                >
+                    <app-icone [nome]="iconeDado(faces)" />
+                    d{{ faces }}
+                </button>
+            }
+        </div>
+    </section>
+
+    @if (essencial()) {
+        <div class="editor__adicionar" role="group" aria-label="Adicionar à fórmula">
+            <button
+                app-botao
+                [variante]="painelTermos() === 'ATRIBUTO' ? 'primario' : 'secundario'"
+                estilo="contorno"
+                tamanho="pequeno"
+                type="button"
+                class="editor__adicionar-botao"
+                [attr.aria-expanded]="painelTermos() === 'ATRIBUTO' ? 'true' : 'false'"
+                (click)="alternarPainelTermos('ATRIBUTO')"
+            >
+                + Atributo
+            </button>
+            <button
+                app-botao
+                [variante]="painelTermos() === 'NUMERO' ? 'primario' : 'secundario'"
+                estilo="contorno"
+                tamanho="pequeno"
+                type="button"
+                class="editor__adicionar-botao"
+                [attr.aria-expanded]="painelTermos() === 'NUMERO' ? 'true' : 'false'"
+                (click)="alternarPainelTermos('NUMERO')"
+            >
+                + Número
+            </button>
+            <button
+                app-botao
+                [variante]="painelTermos() === 'EXPRESSAO' ? 'primario' : 'secundario'"
+                estilo="contorno"
+                tamanho="pequeno"
+                type="button"
+                class="editor__adicionar-botao"
+                [attr.aria-expanded]="painelTermos() === 'EXPRESSAO' ? 'true' : 'false'"
+                (click)="alternarPainelTermos('EXPRESSAO')"
+            >
+                + Expressão
+            </button>
+            <button
+                app-botao
+                [variante]="painelTermos() === 'REPETIR' ? 'primario' : 'secundario'"
+                estilo="contorno"
+                tamanho="pequeno"
+                type="button"
+                class="editor__adicionar-botao"
+                [attr.aria-expanded]="painelTermos() === 'REPETIR' ? 'true' : 'false'"
+                (click)="alternarPainelTermos('REPETIR')"
+            >
+                Repetir{{ repeticoes() > 1 ? " ×" + repeticoes() : "" }}
+            </button>
+            @if (atalhosDisponiveis().length > 0) {
+                <button
+                    app-botao
+                    [variante]="painelTermos() === 'ATALHOS' ? 'primario' : 'secundario'"
+                    estilo="contorno"
+                    tamanho="pequeno"
+                    type="button"
+                    class="editor__adicionar-botao"
+                    [attr.aria-expanded]="painelTermos() === 'ATALHOS' ? 'true' : 'false'"
+                    (click)="alternarPainelTermos('ATALHOS')"
+                >
+                    Atalhos
+                </button>
+            }
+        </div>
+        @switch (painelTermos()) {
+            @case ("ATRIBUTO") {
+                <div class="editor__painel"><ng-container *ngTemplateOutlet="painelAtributo" /></div>
+            }
+            @case ("NUMERO") {
+                <div class="editor__painel"><ng-container *ngTemplateOutlet="painelNumero" /></div>
+            }
+            @case ("EXPRESSAO") {
+                <div class="editor__painel"><ng-container *ngTemplateOutlet="painelExpressao" /></div>
+            }
+            @case ("REPETIR") {
+                <div class="editor__painel"><ng-container *ngTemplateOutlet="painelRepetir" /></div>
+            }
+            @case ("ATALHOS") {
+                <div class="editor__painel"><ng-container *ngTemplateOutlet="painelAtalhos" /></div>
+            }
+        }
+    } @else {
+        <section class="editor__grupo">
+            <h3 class="editor__titulo">
+                Atributo
+                <span class="editor__subtitulo">toque para somar · no termo, ± alterna</span>
+            </h3>
+            <ng-container *ngTemplateOutlet="painelAtributo" />
+        </section>
+        <section class="editor__grupo">
+            <h3 class="editor__titulo">
+                Número <span class="editor__subtitulo">soma ou subtrai um valor fixo</span>
+            </h3>
+            <ng-container *ngTemplateOutlet="painelNumero" />
+        </section>
+        <section class="editor__grupo">
+            <h3 class="editor__titulo">
+                Expressão
+                <span class="editor__subtitulo">conta com atributos, PROF e NIV</span>
+            </h3>
+            <ng-container *ngTemplateOutlet="painelExpressao" />
+        </section>
+        <section class="editor__grupo">
+            <h3 class="editor__titulo">
+                Repetir <span class="editor__subtitulo">rola a fórmula inteira N vezes</span>
+            </h3>
+            <ng-container *ngTemplateOutlet="painelRepetir" />
+        </section>
+        @if (atalhosDisponiveis().length > 0) {
+            <section class="editor__grupo">
+                <h3 class="editor__titulo">Atalhos do agente</h3>
+                <ng-container *ngTemplateOutlet="painelAtalhos" />
+            </section>
+        }
+    }
+}
+
+<!-- ── Modelos reutilizados pelas duas densidades ───────────────────────── -->
+
+<ng-template #tipoTermo let-peca let-indice="indice">
+    <app-campo rotulo="Tipo" tamanho="compacto" class="editor__campo">
+        <select
+            class="campo__controle"
+            [attr.aria-label]="'Tipo de dano de ' + rotuloPeca(peca)"
+            (change)="definirTipo(indice, $event)"
+        >
+            <option value="" [selected]="!tipoDe(peca).primeiro">Sem tipo</option>
+            @for (tipo of tiposDano; track tipo.tipo) {
+                <option [value]="tipo.tipo" [selected]="tipoDe(peca).primeiro === tipo.tipo">
+                    {{ tipo.nome }}
+                </option>
+            }
+        </select>
+    </app-campo>
+</ng-template>
+
+<ng-template #opcoesDado let-peca let-indice="indice">
+    <div class="editor__opcao">
+        <span class="editor__opcao-rotulo">Sinal</span>
+        <app-segmentado [rotulo]="'Sinal de ' + rotuloPeca(peca)">
+            <button
+                app-segmentado-item
+                type="button"
+                [ativo]="peca.sinal === 1"
+                (click)="definirSinal(indice, 1)"
+            >
+                Soma
+            </button>
+            <button
+                app-segmentado-item
+                type="button"
+                [ativo]="peca.sinal === -1"
+                (click)="definirSinal(indice, -1)"
+            >
+                Subtrai
+            </button>
+        </app-segmentado>
+    </div>
+    <div class="editor__opcao">
+        <app-campo
+            rotulo="Dividir o dano meio a meio com"
+            tamanho="compacto"
+            class="editor__campo"
+            [dica]="podeDividir(peca) ? '' : 'Escolha antes um tipo bloqueável.'"
+        >
+            <select
+                class="campo__controle"
+                [attr.aria-label]="'Segundo tipo de ' + rotuloPeca(peca)"
+                [disabled]="!podeDividir(peca)"
+                (change)="definirSegundoTipo(indice, $event)"
+            >
+                <option value="" [selected]="!tipoDe(peca).segundo">Nenhum</option>
+                @for (tipo of tiposComposto; track tipo.tipo) {
+                    @if (tipo.tipo !== tipoDe(peca).primeiro) {
+                        <option [value]="tipo.tipo" [selected]="tipoDe(peca).segundo === tipo.tipo">
+                            {{ tipo.nome }}
+                        </option>
+                    }
+                }
+            </select>
+        </app-campo>
+    </div>
+    <div class="editor__opcao">
+        <span class="editor__opcao-rotulo">Manter</span>
+        <app-segmentado [rotulo]="'Manter dados de ' + rotuloPeca(peca)">
+            <button
+                app-segmentado-item
+                type="button"
+                [ativo]="manterDe(peca) === 'TODOS'"
+                (click)="definirOpcoes(indice, { manter: 'TODOS' })"
+            >
+                Todos
+            </button>
+            <button
+                app-segmentado-item
+                type="button"
+                [ativo]="manterDe(peca) === 'MAIOR'"
+                (click)="definirOpcoes(indice, { manter: 'MAIOR' })"
+            >
+                Maior
+            </button>
+            <button
+                app-segmentado-item
+                type="button"
+                [ativo]="manterDe(peca) === 'MENOR'"
+                (click)="definirOpcoes(indice, { manter: 'MENOR' })"
+            >
+                Menor
+            </button>
+        </app-segmentado>
+    </div>
+    <div class="editor__opcao">
+        <span class="editor__opcao-rotulo">Dado extra</span>
+        <app-segmentado [rotulo]="'Dado extra de ' + rotuloPeca(peca)">
+            <button
+                app-segmentado-item
+                type="button"
+                [ativo]="extraDe(peca) === 'NENHUM'"
+                (click)="definirOpcoes(indice, { extra: 'NENHUM' })"
+            >
+                Nenhum
+            </button>
+            <button
+                app-segmentado-item
+                type="button"
+                [ativo]="extraDe(peca) === 'EXPLODE'"
+                (click)="definirOpcoes(indice, { extra: 'EXPLODE' })"
+            >
+                Explode no máximo
+            </button>
+            <button
+                app-segmentado-item
+                type="button"
+                [ativo]="extraDe(peca) === 'IMPLODE'"
+                (click)="definirOpcoes(indice, { extra: 'IMPLODE' })"
+            >
+                Implode no 1
+            </button>
+        </app-segmentado>
+    </div>
+    <div class="editor__opcao">
+        <span class="editor__opcao-rotulo">Margem de crítico</span>
+        <app-segmentado [rotulo]="'Margem de crítico de ' + rotuloPeca(peca)">
+            @for (margem of margens; track margem) {
+                <button
+                    app-segmentado-item
+                    type="button"
+                    [ativo]="(peca.margemCritico ?? 0) === margem"
+                    (click)="definirOpcoes(indice, { margem: margem })"
+                >
+                    {{ nomeMargem(margem) }}
+                </button>
+            }
+        </app-segmentado>
+    </div>
+</ng-template>
+
+<ng-template #painelAtributo>
+    <div class="editor__grade editor__grade--atributos-termos">
+        @for (atributo of atributos; track atributo.sigla) {
+            <button
+                app-botao
+                variante="secundario"
+                estilo="contorno"
+                tamanho="pequeno"
+                type="button"
+                class="editor__tecla"
+                [appTooltip]="'Soma ' + atributo.nome + ' (' + valorFonte(atributo.sigla) + ')'"
+                (click)="adicionarFonte(atributo.sigla)"
+            >
+                {{ atributo.sigla }}
+            </button>
+        }
+        @for (fonte of fontesExtra; track fonte.sigla) {
+            <button
+                app-botao
+                variante="info"
+                estilo="contorno"
+                tamanho="pequeno"
+                type="button"
+                class="editor__tecla"
+                [appTooltip]="'Soma ' + fonte.nome + ' (' + valorFonte(fonte.sigla) + ')'"
+                (click)="adicionarFonte(fonte.sigla)"
+            >
+                {{ fonte.sigla }}
+            </button>
+        }
+    </div>
+</ng-template>
+
+<ng-template #painelNumero>
+    <div class="editor__linha">
+        <app-step-input
+            tamanho="compacto"
+            [min]="-999"
+            [max]="999"
+            [valorExterno]="numeroNovo()"
+            ariaRotulo="Número a adicionar"
+            (valorAlterado)="numeroNovo.set($event)"
+        />
+        <button
+            app-botao
+            variante="secundario"
+            estilo="contorno"
+            tamanho="pequeno"
+            type="button"
+            [disabled]="numeroNovo() === 0"
+            (click)="adicionarNumero()"
+        >
+            Adicionar
+        </button>
+    </div>
+</ng-template>
+
+<ng-template #painelExpressao>
+    <div class="editor__expressao">
+        <app-segmentado rotulo="Uso da expressão">
+            <button
+                app-segmentado-item
+                type="button"
+                [ativo]="expressaoUso() === 'QUANTIDADE'"
+                (click)="expressaoUso.set('QUANTIDADE')"
+            >
+                Quantidade de dados
+            </button>
+            <button
+                app-segmentado-item
+                type="button"
+                [ativo]="expressaoUso() === 'BONUS'"
+                (click)="expressaoUso.set('BONUS')"
+            >
+                Bônus fixo
+            </button>
+        </app-segmentado>
+        <div class="editor__linha">
+            <app-campo
+                rotulo="Conta"
+                tamanho="compacto"
+                class="editor__campo editor__campo--largo"
+                dica="+ − * / e parênteses; arredonda para baixo no fim"
+            >
+                <input
+                    class="campo__controle"
+                    type="text"
+                    inputmode="text"
+                    autocomplete="off"
+                    placeholder="(FOR+VIG)*2"
+                    [value]="expressao()"
+                    (input)="aoDigitarExpressao($event)"
+                    (keydown.enter)="adicionarExpressao()"
+                />
+            </app-campo>
+            @if (expressaoUso() === "QUANTIDADE") {
+                <app-campo rotulo="Dado" tamanho="compacto" class="editor__campo">
+                    <select class="campo__controle" (change)="definirFacesExpressao($event)">
+                        @for (faces of faces; track faces) {
+                            <option [value]="faces" [selected]="expressaoFaces() === faces">
+                                d{{ faces }}
+                            </option>
+                        }
+                    </select>
+                </app-campo>
+            }
+        </div>
+        @if (expressaoAvaliada(); as avaliada) {
+            @if (avaliada.valida) {
+                <p class="editor__leitura-expressao" aria-live="polite">
+                    {{ avaliada.texto }} =
+                    <strong>{{
+                        expressaoUso() === "QUANTIDADE"
+                            ? avaliada.valor + (avaliada.valor === 1 ? " dado" : " dados")
+                            : (avaliada.valor >= 0 ? "+" : "") + avaliada.valor
+                    }}</strong>
+                </p>
+            } @else {
+                <p class="editor__leitura-expressao editor__leitura-expressao--erro" aria-live="polite">
+                    {{ avaliada.erro }}
+                </p>
+            }
+        }
+        <button
+            app-botao
+            variante="secundario"
+            estilo="contorno"
+            tamanho="pequeno"
+            type="button"
+            class="editor__expressao-adicionar"
+            [disabled]="!expressaoAvaliada()?.valida"
+            (click)="adicionarExpressao()"
+        >
+            Adicionar
+        </button>
+    </div>
+</ng-template>
+
+<ng-template #painelRepetir>
+    <div class="editor__linha">
+        <app-step-input
+            tamanho="compacto"
+            [min]="1"
+            [max]="repeticoesMaxima"
+            [valorExterno]="repeticoes()"
+            ariaRotulo="Número de rolagens"
+            (valorAlterado)="definirRepeticoes($event)"
+        />
+        <span class="editor__dica">
+            {{ repeticoes() > 1 ? repeticoes() + " rolagens separadas" : "uma rolagem" }}
+        </span>
+    </div>
+</ng-template>
+
+<ng-template #painelAtalhos>
+    <div class="editor__grade">
+        @for (atalho of atalhosDisponiveis(); track atalho) {
+            <button
+                app-botao
+                variante="secundario"
+                estilo="contorno"
+                tamanho="pequeno"
+                type="button"
+                class="editor__tecla"
+                [appTooltip]="
+                    atalho === 'CORPO'
+                        ? 'Dano Corpo a corpo atual: ' + atalhosDano().corpo
+                        : 'Dano Furtivo atual: ' + atalhosDano().furtivo
+                "
+                (click)="adicionarAtalho(atalho)"
+            >
+                {{ atalho === "CORPO" ? "Corpo a corpo" : "Furtivo" }}
+            </button>
+        }
+    </div>
+</ng-template>
+
+<!-- Teste -->
+
+<ng-template #testeCombinar let-t>
+    <section class="editor__grupo">
+        <h3 class="editor__titulo">
+            Combinar atributo
+            <span class="editor__subtitulo">dois atributos somados ou na média (para baixo)</span>
+        </h3>
+        <div class="editor__linha">
+            <app-segmentado rotulo="Combinar atributos">
+                <button
+                    app-segmentado-item
+                    type="button"
+                    [ativo]="t.atributos.length === 1"
+                    (click)="definirCombinacao('UM')"
+                >
+                    Só um
+                </button>
+                <button
+                    app-segmentado-item
+                    type="button"
+                    [ativo]="t.atributos.length === 2 && t.combinacao === 'SOMA'"
+                    (click)="definirCombinacao('SOMA')"
+                >
+                    Soma
+                </button>
+                <button
+                    app-segmentado-item
+                    type="button"
+                    [ativo]="t.atributos.length === 2 && t.combinacao === 'MEDIA'"
+                    (click)="definirCombinacao('MEDIA')"
+                >
+                    Média
+                </button>
+            </app-segmentado>
+            @if (t.atributos.length === 2) {
+                <app-campo rotulo="Com" tamanho="compacto" class="editor__campo">
+                    <select class="campo__controle" (change)="escolherSegundoAtributo($event)">
+                        @for (atributo of atributos; track atributo.sigla) {
+                            @if (atributo.sigla !== t.atributos[0]) {
+                                <option
+                                    [value]="atributo.sigla"
+                                    [selected]="t.atributos[1] === atributo.sigla"
+                                >
+                                    {{ atributo.nome }}
+                                </option>
+                            }
+                        }
+                    </select>
+                </app-campo>
+            }
+        </div>
+    </section>
+</ng-template>
+
+<ng-template #testeDados let-t>
+    <section class="editor__grupo">
+        <h3 class="editor__titulo">
+            Dados a mais ou a menos
+            <span class="editor__subtitulo">somados à quantidade de d20</span>
+        </h3>
+        <app-step-input
+            tamanho="compacto"
+            [min]="-10"
+            [max]="10"
+            [digitavel]="false"
+            [comSinal]="true"
+            [valorExterno]="t.extra"
+            ariaRotulo="Dados a mais ou a menos"
+            (valorAlterado)="definirExtraTeste($event)"
+        />
+    </section>
+</ng-template>
+
+<ng-template #testeBonus let-t>
+    <section class="editor__grupo">
+        <h3 class="editor__titulo">
+            Somar <span class="editor__subtitulo">Proficiência, Nível e um valor fixo</span>
+        </h3>
+        <div class="editor__linha">
+            <app-segmentado rotulo="Proficiência no teste">
+                <button
+                    app-segmentado-item
+                    type="button"
+                    [ativo]="t.proficiencia"
+                    (click)="alternarFonteTeste('PROF', !t.proficiencia)"
+                >
+                    Proficiência ({{ valorFonte("PROF") }})
+                </button>
+            </app-segmentado>
+            <app-segmentado rotulo="Nível no teste">
+                <button
+                    app-segmentado-item
+                    type="button"
+                    [ativo]="t.nivel"
+                    (click)="alternarFonteTeste('NIV', !t.nivel)"
+                >
+                    Nível ({{ valorFonte("NIV") }})
+                </button>
+            </app-segmentado>
+        </div>
+        <div class="editor__linha">
+            <span class="editor__opcao-rotulo">Bônus fixo</span>
+            <app-step-input
+                tamanho="compacto"
+                [min]="-999"
+                [max]="999"
+                [valorExterno]="t.bonus"
+                ariaRotulo="Bônus fixo do teste"
+                (valorAlterado)="definirBonusTeste($event)"
+            />
+        </div>
+    </section>
+</ng-template>
+
+<ng-template #testeOpcoes let-t>
+    <section class="editor__grupo">
+        <h3 class="editor__titulo">Opções do teste</h3>
+        <div class="editor__opcao">
+            <span class="editor__opcao-rotulo">Manter</span>
+            <app-segmentado rotulo="Manter o maior ou o menor d20">
+                <button
+                    app-segmentado-item
+                    type="button"
+                    [ativo]="t.manter === 'MAIOR'"
+                    (click)="definirManterTeste('MAIOR')"
+                >
+                    Maior
+                </button>
+                <button
+                    app-segmentado-item
+                    type="button"
+                    [ativo]="t.manter === 'MENOR'"
+                    (click)="definirManterTeste('MENOR')"
+                >
+                    Menor
+                </button>
+            </app-segmentado>
+        </div>
+        <div class="editor__opcao">
+            <span class="editor__opcao-rotulo">Margem de crítico</span>
+            <app-segmentado rotulo="Margem de crítico do teste">
+                @for (margem of margens; track margem) {
+                    <button
+                        app-segmentado-item
+                        type="button"
+                        [ativo]="t.margem === margem"
+                        (click)="definirMargemTeste(margem)"
+                    >
+                        {{ nomeMargem(margem) }}
+                    </button>
+                }
+            </app-segmentado>
+        </div>
+        <div class="editor__opcao">
+            <span class="editor__opcao-rotulo">Repetir a rolagem</span>
+            <app-step-input
+                tamanho="compacto"
+                [min]="1"
+                [max]="repeticoesMaxima"
+                [valorExterno]="t.repeticoes"
+                ariaRotulo="Número de rolagens do teste"
+                (valorAlterado)="definirRepeticoesTeste($event)"
+            />
+        </div>
+    </section>
+</ng-template>
+
+<ng-template #testeSomas let-t>
+    @if (t.proficiencia || t.nivel || t.bonus !== 0 || t.extra !== 0 || t.atributos.length === 2) {
+        <div class="editor__resumo-teste" aria-label="Ajustes do teste">
+            @if (t.atributos.length === 2) {
+                <app-ficha-termo
+                    [compacta]="true"
+                    [rotuloRemover]="'Remover a combinação com ' + t.atributos[1]"
+                    (remover)="definirCombinacao('UM')"
+                >
+                    <span fichaTermoRotulo
+                        >{{ t.combinacao === "MEDIA" ? "Média com " : "+ " }}{{ t.atributos[1] }}</span
+                    >
+                </app-ficha-termo>
+            }
+            @if (t.extra !== 0) {
+                <app-ficha-termo
+                    [compacta]="true"
+                    rotuloRemover="Remover os dados a mais ou a menos"
+                    (remover)="definirExtraTeste(0)"
+                >
+                    <span fichaTermoRotulo
+                        >{{ t.extra > 0 ? "+" : "" }}{{ t.extra }}
+                        {{ t.extra === 1 || t.extra === -1 ? "dado" : "dados" }}</span
+                    >
+                </app-ficha-termo>
+            }
+            @if (t.proficiencia) {
+                <app-ficha-termo
+                    [compacta]="true"
+                    rotuloRemover="Remover Proficiência"
+                    (remover)="alternarFonteTeste('PROF', false)"
+                >
+                    <span fichaTermoRotulo>+ Proficiência ({{ valorFonte("PROF") }})</span>
+                </app-ficha-termo>
+            }
+            @if (t.nivel) {
+                <app-ficha-termo
+                    [compacta]="true"
+                    rotuloRemover="Remover Nível"
+                    (remover)="alternarFonteTeste('NIV', false)"
+                >
+                    <span fichaTermoRotulo>+ Nível ({{ valorFonte("NIV") }})</span>
+                </app-ficha-termo>
+            }
+            @if (t.bonus !== 0) {
+                <app-ficha-termo
+                    [compacta]="true"
+                    rotuloRemover="Remover o bônus fixo"
+                    (remover)="definirBonusTeste(0)"
+                >
+                    <span fichaTermoRotulo>{{ t.bonus > 0 ? "+ " : "− " }}{{ t.bonus > 0 ? t.bonus : -t.bonus }}</span>
+                </app-ficha-termo>
+            }
+        </div>
+    }
+</ng-template>

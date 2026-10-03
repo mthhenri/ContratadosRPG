@@ -68,6 +68,34 @@
         }
     }
 
+    // Linha de leitura sob o visor: faixa e média (mono) e a frase em português (sans).
+    &__leitura {
+        flex: none;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-4);
+    }
+
+    &__faixa {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text);
+    }
+
+    &__faixa-nota {
+        font-weight: 400;
+        color: var(--text-dim);
+    }
+
+    &__frase {
+        font-family: var(--font-sans);
+        font-size: 12px;
+        line-height: 1.4;
+        color: var(--text-dim);
+        overflow-wrap: anywhere;
+    }
+
     &__corpo {
         flex: 1;
         min-height: 0;
