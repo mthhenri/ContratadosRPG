@@ -750,9 +750,11 @@ describe('gramática v4 — atributo+valor como quantidade de dados: `(ATR±n)dM
     expect(resultado?.dados[0].valores).toEqual([]);
   });
 
-  it('rejeita fonte desconhecida e forma sem dM', () => {
+  it('rejeita fonte desconhecida; `(LUT+3)` sem dM deixou de ser erro (I-041: vira bônus por conta)', () => {
     expect(interpretarFormula('(XYZ+2)d6').valida).toBe(false);
-    expect(interpretarFormula('(LUT+3)').valida).toBe(false);
+    // Antes da I-041 era inválido; a regra nova trata grupo só de fontes/números como conta de bônus fixo.
+    expect(interpretarFormula('(LUT+3)').valida).toBe(true);
+    expect(rolarFormula({ formula: '(LUT+3)', atributos }, rolarMaximo)?.total).toBe(6);
   });
 });
 
@@ -882,9 +884,10 @@ describe('gramática v4 — parênteses fora das duas formas sancionadas continu
     expect(interpretarFormula('1d20)').valida).toBe(false);
   });
 
-  it('atributo sozinho entre parênteses (sem offset/dM) é inválido', () => {
-    expect(interpretarFormula('(LUT)').valida).toBe(false);
-    expect(interpretarFormula('2d6 + (LUT)').valida).toBe(false);
+  it('atributo sozinho entre parênteses (sem offset/dM) deixou de ser erro: é um bônus por conta (I-041)', () => {
+    // Antes da I-041 ambos eram inválidos; agora `(LUT)` é uma conta de bônus fixo valendo o próprio atributo.
+    expect(interpretarFormula('(LUT)').valida).toBe(true);
+    expect(rolarFormula({ formula: '2d6 + (LUT)', atributos }, rolarMaximo)?.total).toBe(15);
   });
 
   it('as duas formas novas podem compor: `((ATR+n)dM)#N`', () => {

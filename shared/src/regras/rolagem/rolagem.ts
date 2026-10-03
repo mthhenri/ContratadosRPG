@@ -5,8 +5,10 @@ import {
   REPETICOES_MAXIMA,
   resolverTipoDanoSimples,
 } from './rolagem.dados';
+import { analisarConta, avaliarConta, contaTemFonte } from './rolagem.conta';
 import {
   AtributoAplicadoDto,
+  ContaDto,
   DadosRoladosDto,
   FonteEscalar,
   FormulaInterpretadaDto,
@@ -20,6 +22,7 @@ import {
   RolagemDto,
   TermoAtributoDto,
   TermoConstanteDto,
+  TermoContaDto,
   TermoDadoDto,
 } from './rolagem.dtos';
 import { TipoDanoEnum } from '../../enums';
@@ -41,10 +44,11 @@ import type { FichaAtributosDto, FichaHabilidadeDto, FichaRolagemDto, FichaRolag
  * (`modo:'TESTE'`) para a notação nova. Funções puras; a **única brecha a `Math.random`** é a função de
  * rolagem injetável `rolarDado` (SYSTEM.SPEC §6.6).
  *
- * **Parênteses só existem em formas sancionadas**, sem aninhamento arbitrário: `(ATR±n)dM` e
- * `(ATR*Y)dM` para quantidade explícita de dados, `(<dados>)[Tipo]` para tipar pools de dado, e
- * `(<fórmula>)#N` para repetir a fórmula **inteira** N vezes independentes. Qualquer outro uso de
- * parênteses é erro de parse.
+ * **Parênteses só existem em formas sancionadas**: `(ATR±n)dM` e `(ATR*Y)dM` (legadas) e, desde a I-041,
+ * `(<conta>)dM` para a quantidade de dados e `(<conta>)`/`<conta>` para o **bônus fixo** — uma **conta**
+ * `+ − × ÷` com parênteses sobre números e fontes escalares (`rolagem.conta.ts`; piso uma vez, no fim);
+ * `(<dados>)[Tipo]` para tipar pools de dado, e `(<fórmula>)#N` para repetir a fórmula **inteira** N vezes
+ * independentes. Qualquer outro uso de parênteses é erro de parse.
  *
  * Fonte: docs/core/sistema-v4.1.0.md — "Atributos"/"Testes"/"Tipos de Dano". Explosão/implosão não são
  * regra do documento — entram como operadores de ferramenta (m3-29).
@@ -215,12 +219,56 @@ interface AcumuladoresFormula {
   readonly dados: TermoDadoDto[];
   readonly atributos: TermoAtributoDto[];
   readonly constantesTipadas: TermoConstanteDto[];
+  readonly contas: TermoContaDto[];
 }
 
 /** Metadado interno de `(ATR*Y)dM`; não altera o contrato público de `TermoDadoDto`. */
 type TermoDadoAtributoMultiplicado = TermoDadoDto & {
   readonly quantidadeAtributoMultiplicador?: number;
 };
+
+/** Posição do `)` que fecha o `(` inicial de `texto`, ou -1 (não começa com `(` ou não fecha). */
+function encontrarFechamento(texto: string): number {
+  if (texto[0] !== '(') {
+    return -1;
+  }
+  let profundidade = 0;
+  for (let indice = 0; indice < texto.length; indice += 1) {
+    if (texto[indice] === '(') {
+      profundidade += 1;
+    } else if (texto[indice] === ')') {
+      profundidade -= 1;
+      if (profundidade === 0) {
+        return indice;
+      }
+    }
+  }
+  return -1;
+}
+
+/**
+ * Registra uma conta de **bônus fixo** (I-041). Conta sem fonte (`2*3`, `(7/3)*3`) tem valor conhecido ao
+ * interpretar: vira constante (tipada → `constantesTipadas`; sem tag → devolvida para somar em `constante`).
+ * Com fonte, vira `TermoContaDto` e o piso é calculado na rolagem. Devolve a parcela para `constante`.
+ */
+function registrarContaBonus(
+  conta: ContaDto,
+  rotulo: string,
+  sinal: 1 | -1,
+  destino: DestinoDano,
+  acc: AcumuladoresFormula,
+): number {
+  if (contaTemFonte(conta.raiz)) {
+    acc.contas.push({ sinal, conta, rotulo, ...destino });
+    return 0;
+  }
+  const valor = avaliarConta(conta, {});
+  if (destino.tipoDano !== undefined || destino.composto !== undefined) {
+    acc.constantesTipadas.push({ sinal, valor, ...destino });
+    return 0;
+  }
+  return sinal * valor;
+}
 
 /**
  * Interpreta um segmento (expressão aritmética `+`/`−`) estampando cada termo com o `destino`
@@ -303,6 +351,39 @@ function interpretarSegmento(
       continue;
     }
 
+    // Conta como quantidade de dados `(<conta>)dM` (I-041) + operadores por pool. Vem depois das formas
+    // legadas `(ATR*Y)dM`/`(ATR±n)dM`, que mantêm o DTO e a regra de hoje (sem desvantagem).
+    const fechamentoConta = encontrarFechamento(corpo);
+    const dadoConta = fechamentoConta > 0 ? corpo.slice(fechamentoConta + 1).match(/^[dD](\d+)(.*)$/) : null;
+    if (dadoConta) {
+      const analise = analisarConta(corpo.slice(1, fechamentoConta), resolverFonte);
+      if (!analise.conta) {
+        return { constante, erro: analise.erro };
+      }
+      const faces = parseInt(dadoConta[1], 10);
+      if (faces < 1) {
+        return { constante, erro: `Dado inválido "${corpo}".` };
+      }
+      const { ops, erro } = interpretarOperadores(dadoConta[2], faces);
+      if (erro) {
+        return { constante, erro };
+      }
+      if (contaTemFonte(analise.conta.raiz)) {
+        acc.dados.push({ sinal, quantidade: 1, quantidadeConta: analise.conta, faces, ...ops, ...destino });
+      } else {
+        // Conta só de números (`(2*3)d6`): a quantidade já é conhecida — mesmas regras do `NdM` literal.
+        const quantidade = avaliarConta(analise.conta, {});
+        if (quantidade < 1) {
+          return { constante, erro: `Dado inválido "${corpo}".` };
+        }
+        if (quantidade > QUANTIDADE_DADOS_MAXIMA) {
+          return { constante, erro: `Máximo de ${QUANTIDADE_DADOS_MAXIMA} dados por termo.` };
+        }
+        acc.dados.push({ sinal, quantidade, faces, ...ops, ...destino });
+      }
+      continue;
+    }
+
     // Dado literal `NdM` (N opcional) + operadores por pool.
     const dado = corpo.match(/^(\d*)[dD](\d+)(.*)$/);
     if (dado) {
@@ -376,6 +457,17 @@ function interpretarSegmento(
       acc.atributos.push({ sinal, atributo, rotulo: corpo.toUpperCase(), ...destino });
       continue;
     }
+
+    // Bônus fixo por conta (I-041): `FOR*VIG`, `(FOR+VIG)*2`, `2*(LUT+PROF)`, `(FOR/2+VIG/2)`. `ATR*N`/`ATR/N`
+    // já foram tratados acima e mantêm o DTO de hoje. Grupo com dado (`(2d6+FOR)`) não é conta: segue erro.
+    if (/[*/()]/.test(corpo) && !/[dD]\d/.test(corpo)) {
+      const analise = analisarConta(corpo, resolverFonte);
+      if (!analise.conta) {
+        return { constante, erro: analise.erro };
+      }
+      constante += registrarContaBonus(analise.conta, corpo.toUpperCase(), sinal, destino, acc);
+      continue;
+    }
     return { constante, erro: `Termo desconhecido "${corpo}".` };
   }
   return { constante };
@@ -391,7 +483,7 @@ function interpretarGrupoTipado(
   acc: AcumuladoresFormula,
   sinalExterno: 1 | -1,
 ): { readonly erro?: string } {
-  const temporarios: AcumuladoresFormula = { dados: [], atributos: [], constantesTipadas: [] };
+  const temporarios: AcumuladoresFormula = { dados: [], atributos: [], constantesTipadas: [], contas: [] };
   const { constante, erro } = interpretarSegmento(corpo, destino, temporarios);
   if (erro) {
     return { erro };
@@ -399,6 +491,7 @@ function interpretarGrupoTipado(
   if (
     temporarios.dados.length === 0 ||
     temporarios.atributos.length > 0 ||
+    temporarios.contas.length > 0 ||
     temporarios.constantesTipadas.length > 0 ||
     constante !== 0
   ) {
@@ -477,7 +570,7 @@ export function interpretarFormula(formulaTexto: string): InterpretacaoFormulaDt
     return { valida: true, formula: { ...internaInterpretada.formula, repeticoes: repeticao.n } };
   }
 
-  const acc: AcumuladoresFormula = { dados: [], atributos: [], constantesTipadas: [] };
+  const acc: AcumuladoresFormula = { dados: [], atributos: [], constantesTipadas: [], contas: [] };
   let constante = 0;
 
   if (!texto.includes('[')) {
@@ -514,6 +607,12 @@ export function interpretarFormula(formulaTexto: string): InterpretacaoFormulaDt
       const grupoTipado = tag !== undefined && expr.match(/^([+-]?)\(([^()]+)\)$/);
       if (grupoTipado) {
         const sinalExterno: 1 | -1 = grupoTipado[1] === '-' ? -1 : 1;
+        // `(FOR+VIG)[Q]`: grupo só de números e fontes é bônus por conta tipado; com dado segue pool tipado.
+        const contaTipada = analisarConta(grupoTipado[2], resolverFonte);
+        if (contaTipada.conta) {
+          registrarContaBonus(contaTipada.conta, `(${grupoTipado[2].toUpperCase()})`, sinalExterno, destino, acc);
+          continue;
+        }
         const { erro } = interpretarGrupoTipado(grupoTipado[2], destino, acc, sinalExterno);
         if (erro) {
           return { valida: false, erro };
@@ -530,16 +629,20 @@ export function interpretarFormula(formulaTexto: string): InterpretacaoFormulaDt
   const vazio =
     acc.dados.length === 0 &&
     acc.atributos.length === 0 &&
+    acc.contas.length === 0 &&
     acc.constantesTipadas.length === 0 &&
     constante === 0;
   if (vazio) {
     return { valida: false, erro: 'A fórmula não soma nada.' };
   }
 
-  const formula: FormulaInterpretadaDto =
-    acc.constantesTipadas.length > 0
-      ? { dados: acc.dados, atributos: acc.atributos, constante, constantesTipadas: acc.constantesTipadas }
-      : { dados: acc.dados, atributos: acc.atributos, constante };
+  const formula: FormulaInterpretadaDto = {
+    dados: acc.dados,
+    atributos: acc.atributos,
+    constante,
+    ...(acc.constantesTipadas.length > 0 ? { constantesTipadas: acc.constantesTipadas } : {}),
+    ...(acc.contas.length > 0 ? { contas: acc.contas } : {}),
+  };
   return { valida: true, formula };
 }
 
@@ -653,7 +756,19 @@ function rolarTermo(
   let manterMenor = termo.manterMenor;
   let desvantagem = false;
   let quantidade: number;
-  if (termo.quantidadeAtributo) {
+  if (termo.quantidadeConta) {
+    // `(<conta>)dM` (I-041): quantidade = piso da conta. Em pool de teste (`kh`) com resultado ≤ 0 vale a
+    // regra de atributo zerado (D1: 2+|n| dados, mantém o menor); sem `kh` a quantidade trava em 0.
+    const valorConta = avaliarConta(termo.quantidadeConta, ambiente);
+    if (manterMaior !== undefined && valorConta <= 0) {
+      desvantagem = true;
+      quantidade = Math.min(QUANTIDADE_DADOS_MAXIMA, 2 - valorConta);
+      manterMenor = manterMaior;
+      manterMaior = undefined;
+    } else {
+      quantidade = Math.max(0, Math.min(QUANTIDADE_DADOS_MAXIMA, valorConta));
+    }
+  } else if (termo.quantidadeAtributo) {
     const valorAtributo = ambiente[termo.quantidadeAtributo] ?? 0;
     const multiplicador =
       (termo as TermoDadoAtributoMultiplicado).quantidadeAtributoMultiplicador;
@@ -803,6 +918,19 @@ function rolarInterpretadaUnica(
       ...(termo.composto ? { composto: termo.composto } : termo.tipoDano ? { tipoDano: termo.tipoDano } : {}),
     };
   });
+
+  // Bônus por conta (I-041): piso da conta. No crítico, vale a conta + a conta com PROF/NIV zerados (D4):
+  // dobra o que vem de atributos e de números fixos; o que vem de PROF/NIV fica como está.
+  const contasAplicadas: AtributoAplicadoDto[] = (formula.contas ?? []).map((termo) => {
+    const valor = avaliarConta(termo.conta, ambiente);
+    const valorFinal = critico ? valor + avaliarConta(termo.conta, ambiente, true) : valor;
+    return {
+      rotulo: termo.rotulo,
+      valor: termo.sinal * valorFinal,
+      ...(termo.composto ? { composto: termo.composto } : termo.tipoDano ? { tipoDano: termo.tipoDano } : {}),
+    };
+  });
+  atributosAplicados.push(...contasAplicadas);
 
   // Crítico dobra também as constantes (fixos), tipadas e sem tag (dados já vêm dobrados de `rolarTermo`).
   const fatorFixo = critico ? 2 : 1;

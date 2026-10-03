@@ -35,6 +35,14 @@ export const ABREVIACOES_FONTE_EXTRA: Readonly<Record<string, 'proficiencia' | '
 /** Teto defensivo de dados por termo (evita fórmulas absurdas como `9999d6`). */
 export const QUANTIDADE_DADOS_MAXIMA = 100;
 
+/**
+ * Limites defensivos de uma **conta** de quantidade de dados ou de bônus fixo (`((FOR+VIG)*2)d4`): o backend
+ * valida texto vindo do cliente, então o tamanho, o aninhamento e os dígitos de cada número são limitados.
+ */
+export const CONTA_TAMANHO_MAXIMO = 200;
+export const CONTA_PROFUNDIDADE_MAXIMA = 8;
+export const CONTA_NUMERO_DIGITOS_MAXIMO = 9;
+
 /** Teto defensivo de repetições `(<fórmula>)#N` (m3-46, evita fórmulas absurdas como `(1d6)#9999`). */
 export const REPETICOES_MAXIMA = 20;
 

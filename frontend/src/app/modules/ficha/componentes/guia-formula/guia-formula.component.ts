@@ -113,6 +113,39 @@ const SECOES: readonly SecaoGuia[] = [
     ],
   },
   {
+    titulo: 'Conta na quantidade de dados',
+    linhas: [
+      { codigo: '((INT+SOC)/2)d20kh1', texto: 'A média de Intelecto e Social (para baixo) é quantos d20 rolar no teste.' },
+      { codigo: '((FOR+VIG)*2)d4', texto: 'Soma Força com Vigor, multiplica por dois e rola esse tanto de dados de quatro. Vale para qualquer dado.' },
+      { codigo: '(FOR-VIG)d20kh1', texto: 'Num teste (kh), conta de 0 ou menos vale o atributo zerado: rola 2 + |n| dados e mantém o menor. Em dano (sem kh), a quantidade para em 0.' },
+    ],
+  },
+  {
+    titulo: 'Conta no bônus fixo',
+    linhas: [
+      { codigo: '2d6 + (FOR+VIG)*2', texto: 'Soma Força e Vigor, dobra e soma ao dano. Aceita sinal e tipo: 2d6 - (FOR+VIG)*2 [Q].' },
+      { codigo: 'FOR*VIG', texto: 'Qualquer conta de números, atributos, PROF e NIV com + − * / e parênteses.' },
+      { codigo: '2*(LUT+PROF)', texto: 'O parêntese soma antes de multiplicar: Luta mais Proficiência, vezes dois.' },
+    ],
+  },
+  {
+    titulo: 'Arredondamento das contas',
+    linhas: [
+      { codigo: '(FOR/3)*3', texto: 'Sempre para baixo, uma vez só, no fim da conta: com Força 7 dá 7, não 6.' },
+      { codigo: 'FOR/2 + VIG/2', texto: 'Cada termo (separado por + ou −) arredonda sozinho: com 3 e 3 dá 2.' },
+      { codigo: '(FOR/2 + VIG/2)', texto: 'Parênteses somam antes de arredondar: com 3 e 3 dá 3.' },
+      { codigo: 'FOR/VIG', texto: 'Dividir por um atributo que vale 0 dá 0. Dividir por 0 escrito na fórmula não é aceito.' },
+    ],
+  },
+  {
+    titulo: 'Crítico nas contas',
+    linhas: [
+      { codigo: '((FOR+VIG)*2)d4', texto: 'No crítico a quantidade de dados dobra, como em qualquer dado.' },
+      { codigo: '(FOR+PROF)*2', texto: 'No bônus, o que vem de atributos e de números dobra; o que vem de PROF e NIV não. Com Força 3 e PROF 2: 10 normal, 16 no crítico.' },
+      { codigo: '(FOR+PROF)/2', texto: 'Em contas com divisão o arredondamento é por parte, então o crítico pode deslocar 1 ponto (2 normal, 3 no crítico).' },
+    ],
+  },
+  {
     titulo: 'Repetir a fórmula inteira',
     linhas: [
       { codigo: '(PONd20kh1cm1+PROF)#3', texto: 'Rola a fórmula inteira 3 vezes, cada uma independente.' },

@@ -1,5 +1,48 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-03 — `rolagem-expressao-quantidade-dados`: conta na quantidade de dados e no bônus fixo (I-041)
+
+Implementada a extensão definitiva do motor para **todos** os usuários: a quantidade de dados e o bônus fixo de uma fórmula
+podem ser uma **conta** `+ − * /` com parênteses sobre números inteiros, os 10 atributos, `PROF` e `NIV` —
+`((INT+SOC)/2)d20kh1cm1+PROF`, `((FOR+VIG)*2)d4`, `2d6+(FOR+VIG)*2`, `FOR*VIG`, `2*(LUT+PROF)`. Novo
+`shared/src/regras/rolagem/rolagem.conta.ts`: analisador recursivo sobre tokens (sem `eval`), aritmética **exata** em frações
+de `BigInt` e **piso uma única vez no fim** (`sistema-v4.1.0.md:2027-2033`; `(7/3)*3` vale 7, `-1,5` vale `-2`). Limites:
+200 caracteres, 8 níveis de parêntese, 9 dígitos por número; nada lança (erro volta em `erro`). A divisão por zero **literal**
+(inclusive `FOR/(2-2)`) é fórmula inválida; divisor que vale 0 **na rolagem** faz a conta valer 0 (D2). `rolagem.ts`:
+`interpretarSegmento` tenta as formas legadas antes (`(ATR*Y)dM`, `(ATR±n)dM`, `ATR*N`, `ATR/N` — DTO e resultado de hoje),
+depois `(<conta>)dM` (`TermoDadoDto.quantidadeConta`) e, por último, o bônus por conta (`FormulaInterpretadaDto.contas`,
+listado em `atributos` do resultado para a bandeja não mudar). Conta só de números vira constante já na interpretação
+(`(2*3)d6` = `6d6`, com as regras do `NdM` literal); `(FOR+VIG)[Q]` (grupo só de fontes com tag) vira bônus tipado, e grupo com
+dado sem tag (`(2d6+FOR)`, `(2d12+2)[F]`) segue erro. **D1:** conta ≤ 0 com `kh` aplica a regra de atributo zerado (2+|n| dados,
+mantém o menor, `desvantagem`); sem `kh` trava em 0; as formas legadas continuam travando em 0 sem desvantagem. **D4:** no
+crítico, o bônus por conta vale a conta + a conta com `PROF`/`NIV` zerados — `(FOR+PROF)*2` com 3 e 2 dá 10 e 16, `PROF*FOR`
+e `PROF*2` não dobram, `(FOR+PROF)/2` dá 2 e 3; a quantidade de dados dobra a contagem como sempre. O guia de fórmulas ganhou
+quatro seções ("Conta na quantidade de dados", "Conta no bônus fixo", "Arredondamento das contas", "Crítico nas contas") e o
+resumo deixou de dizer que parênteses só existem em dois casos. `docs/core` **não foi alterado** (a linha 2045 segue só em
+`P-093`).
+
+**Duas expectativas de teste antigas mudaram, ao contrário do que a spec previa** ("nenhum teste existente tem expectativa
+alterada"): `(LUT+3)` (sem `dM`) e `(LUT)`/`2d6 + (LUT)` eram afirmados inválidos (m3-46), mas a própria regra de
+desambiguação da spec (grupo só de números e fontes, sem `dM` nem `#N`, é conta de bônus fixo) os torna válidos — exceção só
+para esses dois casos seria arbitrária frente a `(LUT+VIG)`. Os dois testes agora afirmam o bônus (`(LUT+3)` com Luta 3 vale 6;
+`2d6 + (LUT)` com 6 dados no máximo vale 15). Nenhuma fórmula **válida** de antes mudou: um **snapshot gerado com o motor
+anterior** (`fixtures/rolagem-corpus.snapshot.json`, as 88 fórmulas do corpus, 78 válidas) compara interpretação e rolagem em
+dois ambientes, com e sem crítico, e passa; as 10 inválidas que não são `esperada_apos_expressao` seguem inválidas.
+
+**Testes:** `shared` 63 arquivos / 955 testes (66 novos em `rolagem.conta.spec.ts`: precedência, parênteses aninhados, frações
+exatas, piso de negativo, D1/D2/D4, tetos, sinal/tags/`#2`, erros, entrada patológica, snapshot); `backend` 52 arquivos / 954
+(1 pulado, preexistente); `frontend` 195 arquivos / 2703; `lint` dos três workspaces com 0 erros (as milhares de avisos de
+aspas e `max-len` são preexistentes). `typecheck` do `shared` segue falhando só por `P-092` (preexistente, não tocado).
+**Verificado ao vivo** (Postgres 16 local religado à mão, sem Docker; seed de dev; ficha "Quimera Codex", FOR 4 e VIG 4):
+`((FOR+VIG)*2)d4` rolou 16 dados, `2d6+(FOR+VIG)*2` mostrou `(FOR+VIG)*2 16` no detalhamento, `((Int+soc)/2)d20kh1cm1+prof` rolou
+1 d20 (+PROF 1), sem aviso de fórmula inválida; em presets críticos, `2d6 + (FOR+PROF)*2` com FOR 4 e PROF 1 deu `18` no
+detalhamento (não 20) com 4 dados e `((FOR+VIG)*2)d4` foi de 16 para 32 dados. Guia aberto em 1920×1080 e 360×800 (seções novas
+legíveis, rolagem do modal ok). **Achado só na verificação:** no mobile o corpo do guia estoura 24 px por uma frase antiga
+("F/B/E/Q/G (Físico/Balístico/…)" sem ponto de quebra) — registrado como `P-094`, não corrigido aqui. Os consumidores
+(`ficha-rolagens`, `rolagem-rapida`, `ficha-inventario`, `ficha-campanha-card`, `ficha-visualizacao`, `criatura-rolagem`,
+`executar-rolagem`, `rolagem-avulso`, painéis de mestre e jogador do Encontro, `encontro.service`) só passam texto por `validarFormula`/`rolarFormula`; o
+montador "Atual" só concatena texto (nenhum parser de fórmula), então aceita as formas novas sem mudança.
+
 ## 2026-10-03 — Montador de rolagem: D4 e campo de expressão fechados; specs sem ponto aberto (sem código)
 
 O autor decidiu a **D4**: no crítico, "apenas atributos de verdade dobram, nível/prestígio não". Li como a regra mais fiel ao

@@ -23,6 +23,36 @@ export type ParTipoDano = readonly [TipoDanoEnum, TipoDanoEnum];
  */
 export type FonteEscalar = keyof FichaAtributosDto | 'proficiencia' | 'nivel';
 
+// ── Conta (I-041) ────────────────────────────────────────────────────────────
+
+/** Operadores binários de uma conta (`+ − × ÷`; só ASCII `* /` na notação). */
+export type OperadorConta = '+' | '-' | '*' | '/';
+
+/**
+ * Nó da árvore de uma conta: um número inteiro, uma fonte escalar (atributo/`PROF`/`NIV`, resolvida na
+ * rolagem), a negação de um nó (`-FOR` no início de um grupo) ou uma operação binária.
+ */
+export type NoContaDto =
+  | { readonly numero: number }
+  | { readonly fonte: FonteEscalar }
+  | { readonly negar: NoContaDto }
+  | { readonly operador: OperadorConta; readonly esquerda: NoContaDto; readonly direita: NoContaDto };
+
+/**
+ * Conta aritmética já lida (value object): `+ − × ÷` e parênteses sobre números e fontes escalares, ex.:
+ * `(FOR+VIG)*2`. Avaliada na rolagem com frações exatas e **arredondada para baixo uma única vez, no fim**
+ * (docs/core/sistema-v4.1.0.md:2027-2033). Serve à quantidade de dados (`quantidadeConta`) e ao bônus
+ * fixo (`TermoContaDto`).
+ */
+export interface ContaDto {
+  readonly raiz: NoContaDto;
+}
+
+/** Saída de `analisarConta`: a conta lida **ou** o erro (nunca os dois). */
+export type AnaliseContaDto =
+  | { readonly conta: ContaDto; readonly erro?: undefined }
+  | { readonly conta?: undefined; readonly erro: string };
+
 // ── Fórmula interpretada ─────────────────────────────────────────────────────
 
 /** Um termo de dado: `quantidade`D`faces`, com o sinal (+1 soma, −1 subtrai), e operadores por pool (m3-29). */
@@ -41,6 +71,13 @@ export interface TermoDadoDto {
    * que mantém a desvantagem intrínseca (regra 270); `(ATR±n)dM` não tem essa desvantagem.
    */
   readonly quantidadeAtributoOffset?: number;
+  /**
+   * `(<conta>)dM` (I-041): a quantidade de dados é o **piso** da conta no momento da rolagem, ex.:
+   * `((INT+SOC)/2)d20kh1`, `((FOR+VIG)*2)d4` — `quantidade` fica em 1 e é ignorada. Em pool de teste
+   * (`kh`) com resultado ≤ 0 vale a regra de atributo zerado (2+|n| dados, mantém o menor); sem `kh` a
+   * quantidade trava em 0. As formas `(ATR±n)dM`/`(ATR*Y)dM` seguem nos campos acima, sem mudança.
+   */
+  readonly quantidadeConta?: ContaDto;
   readonly faces: number;
   /** `khN` (m3-29): mantém os N **maiores** do pool; subtotal = soma dos mantidos. */
   readonly manterMaior?: number;
@@ -75,6 +112,22 @@ export interface TermoAtributoDto {
   readonly composto?: ParTipoDano;
 }
 
+/**
+ * Um termo de **bônus fixo por conta** (I-041), ex.: `(FOR+VIG)*2`, `FOR*VIG`, `2*(LUT+PROF)`: o valor é o piso
+ * da conta, somado com o `sinal` e listado em `atributos` do resultado (`rotulo` + `valor`). No crítico, vale o
+ * valor da conta mais o valor dela com `PROF`/`NIV` zerados (só o que vem de atributos e de números dobra).
+ */
+export interface TermoContaDto {
+  readonly sinal: 1 | -1;
+  readonly conta: ContaDto;
+  /** Texto original da conta, para o detalhamento (ex.: `(FOR+VIG)*2`). */
+  readonly rotulo: string;
+  /** Tipo de dano do termo (m3-18). */
+  readonly tipoDano?: TipoDanoEnum;
+  /** Composto (m3-18). */
+  readonly composto?: ParTipoDano;
+}
+
 /** Uma constante **tipada** (m3-18, ex.: `+4 [Físico]`). Constantes sem tag ficam em `constante`. */
 export interface TermoConstanteDto {
   readonly sinal: 1 | -1;
@@ -91,6 +144,8 @@ export interface FormulaInterpretadaDto {
   readonly constante: number;
   /** Constantes com tag de dano (m3-18); presente só quando a fórmula usa tags. */
   readonly constantesTipadas?: readonly TermoConstanteDto[];
+  /** Bônus fixos por conta (I-041, `(FOR+VIG)*2`); presente só quando a fórmula usa uma conta de bônus. */
+  readonly contas?: readonly TermoContaDto[];
   /**
    * `(<fórmula>)#N` (m3-46): repete a fórmula inteira N vezes independentes. Ausente/1 = sem repetição.
    * Definido só quando os parênteses envolvem a fórmula **inteira** — sem aninhamento.

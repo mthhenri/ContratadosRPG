@@ -57,6 +57,7 @@ Estas são as fontes da verdade. Em conflito entre código e documento, **o docu
 | Quero mexer em | Fica em |
 |---|---|
 | **Motor de regras do jogo** (funções puras) | `shared/src/regras/` — `agente/`, `compras/`, `dados/`, `descanso/`, `dt/`, `identidade/`, `novo-agente/`, `patente/`, `rolagem/` |
+| Conta aritmética das fórmulas de rolagem (quantidade de dados e bônus fixo; I-041) | `shared/src/regras/rolagem/rolagem.conta.ts` (`analisarConta`/`avaliarConta`, frações exatas, piso no fim); a gramática e o crítico por parcela em `rolagem.ts` (`interpretarSegmento`, `rolarTermo`, `rolarInterpretada`); regressão em `rolagem.conta.spec.ts` + `rolagem/fixtures/rolagem-corpus.snapshot.json` (gerado com o motor anterior); regra de uso no `guia-formula` do frontend |
 | DTOs (contratos entre camadas) | `shared/src/dtos/` |
 | Contratos, fontes e limites de cadernos/busca | `shared/src/dtos/pagina-caderno/`, `shared/src/enums/busca-campanha-*.enum.ts`, `shared/src/validators/pagina-caderno.validators.ts` |
 | Enums (string, valor = nome, SCREAMING_SNAKE_CASE) | `shared/src/enums/` |

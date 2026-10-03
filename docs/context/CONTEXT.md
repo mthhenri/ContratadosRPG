@@ -22,7 +22,10 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-30 · **Última decisão registrada:** `P-075`, `P-078`, `P-087` e `P-088`
+> **Última revisão:** 2026-10-03 · **Última decisão registrada:** `rolagem-expressao-quantidade-dados` concluída
+> (spec em `done/`; ver `HISTORY.md`): a quantidade de dados e o bônus fixo de uma fórmula aceitam uma **conta**
+> `+ − * /` com parênteses (`((FOR+VIG)*2)d4`, `2d6+(FOR+VIG)*2`), piso uma vez no fim, para todos os usuários.
+> Antes: `P-075`, `P-078`, `P-087` e `P-088`
 > corrigidos (ver `HISTORY.md`): jogador sem ficha vê o painel lateral no mobile; `tsc` completo do
 > backend limpo e dentro do `lint`; upload de avatar sem arquivo responde 400. Antes:
 > `m7-27-investigacao-jogador-visao-esquadrao` concluída: Investigação do jogador abre com
@@ -802,6 +805,12 @@
 ---
 
 ## 1. Próxima Task
+
+**Extensão do motor de rolagem — conta na quantidade de dados e no bônus fixo (I-041) — concluída.**
+`rolagem-expressao-quantidade-dados` (spec em `done/`) entregou o avaliador de conta, a gramática, o crítico (D4) e as
+seções novas do guia; resta de fora só o `P-094` (estouro de 24 px do guia no mobile, texto antigo). O próximo
+passo do assunto é do autor: revisar a spec `montador-rolagem-experimento` (backlog, sem decisão em aberto) e pedir a
+implementação das tasks `montador-exp-01`…`04`. Fonte: [spec](../specs/done/rolagem-expressao-quantidade-dados.spec.md).
 
 **Requests-correcoes (guarda-chuva de 6 tasks, `P-082`…`P-086` + inventário sob demanda) —
 concluído, 6/6**: `p-082` (autosave/seleção da ficha), `p-083` (reconexão sem carga duplicada),
@@ -1951,6 +1960,7 @@ incluindo todos os ajustes avulsos de pós-milestone.
 |---|---|---|
 | `civil-guia-criacao` | ficha | mapeia o escopo de `PROBLEMS.md` `P-018` (o guia de criação trata a classe Civil como um agente comum em vários passos) — spec de levantamento, ainda não implementa |
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
+| `montador-rolagem-experimento` | ficha | guarda-chuva (tasks `montador-exp-01`…`04`) do experimento do montador de rolagem, exclusivo de TESTER/ADMIN: seletor Atual/Essencial/Completo/Blocos; o motor que ele precisava (`rolagem-expressao-quantidade-dados`) já está pronto |
 
 Milestones ainda não abertos: `m5-guia-missao`. O M8 `m8-espectadores-campanha` está **concluído**
 (`m8-01`…`m8-06`).
@@ -2014,6 +2024,11 @@ para combatentes avulsos; após o cálculo, a Iniciativa desenha um cartão por 
 `docs/core/guia_de_mestre-v4.0.0.md`, caso de teste completo "A Estátua"). `encontro/` (ordem
 intercalada, condições, receber dano) e `cena/` (`m7-21`: `cenaTemIniciativa`, a fonte única de
 "este tipo de cena tem iniciativa") completam o motor.
+
+`rolagem/` aceita, desde 2026-10-03 (I-041), uma **conta** (`+ − * /` e parênteses sobre números, atributos, `PROF`
+e `NIV`) na quantidade de dados (`(<conta>)dM`) e no bônus fixo (`(FOR+VIG)*2`): `rolagem.conta.ts` avalia em frações
+exatas e arredonda para baixo **uma vez, no fim**; no crítico a quantidade dobra e, no bônus, só o que vem de atributos
+e números dobra (não `PROF`/`NIV`). A regra de uso vive no guia de fórmulas do app, não em `docs/core` (`P-093`).
 
 **Fonte única:** frontend e backend consomem o mesmo motor. Nenhuma regra de jogo é reimplementada
 em nenhum dos dois lados.
@@ -2365,7 +2380,8 @@ interna, nunca impõe largura ao consumidor. A aba História tem caixa própria 
 o teto de leitura de Anotações), preenchendo a coluna de Status no desktop e liberando o texto para
 crescer no mobile.
 
-Rolagem de dados: gramática v4, presets, teste de atributo, dano de item, iniciativa automática,
+Rolagem de dados: gramática v4 (mais **contas** na quantidade de dados e no bônus fixo, 2026-10-03: o guia de
+fórmulas ganhou quatro seções sobre elas), presets, teste de atributo, dano de item, iniciativa automática,
 calculadora flutuante e **histórico persistido** com visibilidade `PUBLICA`/`PRIVADA`. A "Rolagem
 rápida" ganhou um **montador de expressões** opcional (`ui-35`/`ui-36`/`montador-rolagem-ajustes`,
 `MontadorRolagem`, `frontend/.../shared/montador-rolagem/`): caixa flutuante arrastável (mesmo

@@ -151,3 +151,20 @@ consumidores, fecho); `P-093` e `P-092` de `PROBLEMS.md`. Bloqueia `montador-rol
 - **Bônus por conta colidir com `ATR*N`/`ATR/N`**: o termo `FOR*3` hoje usa piso de `(base*mult)/div` e o crítico
   dobra o valor final; a forma nova não pode deslocar essa conta. Mitigação: o snapshot do corpus e os testes dos
   dois caminhos lado a lado.
+
+## Fecho (2026-10-03)
+
+Implementada conforme a spec. Desvios e escolhas de implementação registrados para auditoria:
+
+- **Duas expectativas de teste antigas mudaram**, contra o critério "nenhum teste existente tem expectativa alterada":
+  `(LUT+3)` sem `dM` e `(LUT)`/`2d6 + (LUT)` eram afirmados inválidos (m3-46). A desambiguação desta spec (grupo só de
+  números e fontes, sem `dM` nem `#N`, é conta de bônus fixo) os torna válidos; nenhuma fórmula **válida** de antes mudou
+  (snapshot do corpus sem divergência).
+- **Limites escolhidos:** 200 caracteres (`CONTA_TAMANHO_MAXIMO`), 8 níveis de parêntese (`CONTA_PROFUNDIDADE_MAXIMA`) e 9
+  dígitos por número (`CONTA_NUMERO_DIGITOS_MAXIMO`), em `rolagem.dados.ts`.
+- **Conta só de números** vira constante (bônus) ou quantidade literal (dado) já na interpretação, com as regras do `NdM`
+  literal (`(1-1)d6` e `(200)d6` são inválidos).
+- **Grupo só de fontes com tag** (`(FOR+VIG)[Q]`) virou bônus tipado — antes era erro; grupo com dado sem tag e
+  `(2d12+2)[F]` seguem inválidos.
+- Fora do escopo e registrado: `P-094` (o guia estoura 24 px no mobile por uma frase antiga).
+

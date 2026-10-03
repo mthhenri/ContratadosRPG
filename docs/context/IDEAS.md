@@ -29,9 +29,9 @@
 
 ### I-041 — Montador de rolagem enxuto: ações base + guias · frontend/rolagem
 
-- **Promovida em 2026-10-02** (o autor pediu a spec depois da E3.3 e das decisões abaixo): duas specs em
-  `docs/specs/backlog/` — `rolagem-expressao-quantidade-dados.spec.md` (extensão definitiva do motor, para todos) e
-  `montador-rolagem-experimento.spec.md` (guarda-chuva do experimento exclusivo de tester, tasks `montador-exp-01`…`04`).
+- **Promovida em 2026-10-02** (o autor pediu a spec depois da E3.3 e das decisões abaixo): duas specs —
+  `rolagem-expressao-quantidade-dados.spec.md` (extensão definitiva do motor, para todos; concluída em 2026-10-03, em
+  `docs/specs/done/`) e `docs/specs/backlog/montador-rolagem-experimento.spec.md` (guarda-chuva do experimento exclusivo de tester, tasks `montador-exp-01`…`04`).
   A spec do **montador vencedor** e a liberação para todos são do autor, depois do experimento. O registro de pesquisa
   abaixo é a memória dos achados; o contrato está nas specs.
 
@@ -171,6 +171,10 @@
     botões Soma/Média do teste ficam. **Ainda sem mockup** dessa opção no canvas.
   - **Confirmados depois:** o **sinal por termo** entra no núcleo (já está na E3.3 em "⋯ Mais"; a E3.2 do mockup só
     soma e ganha o "subtrair" no produto) e a opção **Atual** é a selecionada por padrão para o tester.
+  - **Motor implementado (2026-10-03):** `docs/specs/done/rolagem-expressao-quantidade-dados.spec.md` — a conta na
+    quantidade de dados e no bônus fixo já vale para todos (`shared/src/regras/rolagem/rolagem.conta.ts`; guia de
+    fórmulas atualizado). Falta o experimento do montador (`docs/specs/backlog/montador-rolagem-experimento.spec.md`),
+    que depende dela e ainda não foi implementado.
 
 ### I-038 — Faxina das imagens órfãs no armazenamento · backend/armazenamento
 

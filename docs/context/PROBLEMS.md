@@ -29,6 +29,18 @@
 
 ## Ativos
 
+### P-094 — Guia de fórmulas estoura 24 px na horizontal no mobile (360×800) · `ABERTO` · frontend
+
+- **Sintoma:** com o guia (`?`) aberto em 360×800, o corpo do modal tem `scrollWidth` 387 contra `clientWidth` 334 e a
+  linha "Sigla de 1 letra também vale: F/B/E/Q/G (Físico/Balístico/Explosão/Químico/Geral)." da seção "Tipo de dano" é
+  cortada à direita (o texto passa da borda da caixa).
+- **Causa:** a sequência `F/B/E/Q/G (Físico/Balístico/Explosão/Químico/Geral)` não tem ponto de quebra e o `guia-secao__texto`
+  não quebra palavra longa. Texto preexistente, achado ao vivo na verificação de `rolagem-expressao-quantidade-dados`
+  (nenhum elemento das seções novas passa da borda).
+- **Contorno:** nenhum; no desktop (1920×1080) não aparece.
+- **Correção:** quebra de palavra (`overflow-wrap: anywhere`) em `.guia-secao__texto` ou reescrever a frase com espaços.
+- **Desde:** anterior a 2026-10-03 (achado nessa data).
+
 ### P-093 — Sistema contradiz a si mesmo no arredondamento de bônus · `ACEITO` · docs/core
 
 - **Sintoma:** `docs/core/sistema-v4.1.0.md:2045` (Ordem de Bônus) diz "assim como dito acima, quaisquer valores
