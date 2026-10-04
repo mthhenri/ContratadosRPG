@@ -126,7 +126,6 @@ describe('calcularStatsEfetivos', () => {
       ],
       itens: [
         {
-          uid: 'colete',
           nome: 'Colete de Kevlar',
           categoria: ItemCategoriaEnum.PROTECOES,
           custo: 100,

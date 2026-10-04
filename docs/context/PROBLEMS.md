@@ -29,18 +29,6 @@
 
 ## Ativos
 
-### P-094 — Guia de fórmulas estoura 24 px na horizontal no mobile (360×800) · `ABERTO` · frontend
-
-- **Sintoma:** com o guia (`?`) aberto em 360×800, o corpo do modal tem `scrollWidth` 387 contra `clientWidth` 334 e a
-  linha "Sigla de 1 letra também vale: F/B/E/Q/G (Físico/Balístico/Explosão/Químico/Geral)." da seção "Tipo de dano" é
-  cortada à direita (o texto passa da borda da caixa).
-- **Causa:** a sequência `F/B/E/Q/G (Físico/Balístico/Explosão/Químico/Geral)` não tem ponto de quebra e o `guia-secao__texto`
-  não quebra palavra longa. Texto preexistente, achado ao vivo na verificação de `rolagem-expressao-quantidade-dados`
-  (nenhum elemento das seções novas passa da borda).
-- **Contorno:** nenhum; no desktop (1920×1080) não aparece.
-- **Correção:** quebra de palavra (`overflow-wrap: anywhere`) em `.guia-secao__texto` ou reescrever a frase com espaços.
-- **Desde:** anterior a 2026-10-03 (achado nessa data).
-
 ### P-093 — Sistema contradiz a si mesmo no arredondamento de bônus · `ACEITO` · docs/core
 
 - **Sintoma:** `docs/core/sistema-v4.1.0.md:2045` (Ordem de Bônus) diz "assim como dito acima, quaisquer valores
@@ -54,16 +42,6 @@
   (2026-10-02) e pediu só o registro aqui; por isso o item fica `ACEITO`, para ninguém "corrigir" o documento ou o
   motor por conta própria. Reabrir se o autor mudar de ideia.
 - **Desde:** identificado em 2026-10-02, ao especificar a quantidade de dados por expressão (I-041).
-
-### P-092 — Checagem de tipos do shared falha em fixture de agente · `ABERTO` · shared
-
-- **Sintoma:** `npm run typecheck --workspace=shared` falha com TS2353 em
-  `shared/src/regras/agente/derivados.spec.ts:129`.
-- **Causa:** a fixture declara `uid` num `CarrinhoItemDto`, que não possui esse campo.
-  A linha já existe em HEAD antes da implementação de `m4-05`.
-- **Contorno:** build de produção e testes Vitest passam; eles não substituem a checagem de tipos.
-- **Correção:** ajustar a fixture ao contrato real do item em tarefa própria.
-- **Desde:** identificado na execução de `m4-05`, em 2026-09-30; preexistente à task.
 
 ### P-003 — Backend não valida a estrutura do corpo das requisições · `ACEITO` · backend
 

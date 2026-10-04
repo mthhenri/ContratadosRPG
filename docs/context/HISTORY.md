@@ -1,5 +1,27 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-04 — `P-094` e `P-092` corrigidos: frase do guia de fórmulas no mobile e fixture de agente no `shared`
+
+Dois problemas preexistentes, pedidos pelo autor, sem spec própria (correções pontuais registradas em `PROBLEMS.md`).
+
+**`P-094`.** No guia de fórmulas (`?`) aberto em 360×800, a linha "Sigla de 1 letra também vale: F/B/E/Q/G
+(Físico/Balístico/Explosão/Químico/Geral)." passava 24 px da borda: a sequência com barras não tinha ponto de quebra e a
+coluna de texto (`1fr` do grid de `.guia-secao__item`) não encolhia abaixo dela. Corrigido no texto
+(`guia-formula.component.ts`): "F, B, E, Q ou G (Físico, Balístico, Explosão, Químico ou Geral)." — preferido a
+`overflow-wrap: anywhere`, que quebraria "Balístico" no meio da palavra; nenhum estilo mudou. **Verificado ao vivo**
+(Postgres 16 local religado, backend 3100 e frontend 4300 desta sessão, ficha 6 do seed, aba Rolagens), `1920×1080` e
+`360×800`: nenhum elemento do modal passa da borda nem rola na horizontal, a frase quebra em 3 linhas no desktop e 4 no
+mobile, mesma aparência das linhas vizinhas. Único erro de console: `ERR_CERT_AUTHORITY_INVALID` de recurso externo
+(certificado do proxy do container), não do produto.
+
+**`P-092`.** `npm run typecheck --workspace=shared` falhava com TS2353 em `shared/src/regras/agente/derivados.spec.ts:129`:
+a fixture do colete declarava `uid`, campo inexistente no `CarrinhoItemDto` (o contrato tem `id`, só em armazenamento com
+sub-inventário, e o cálculo de stats não lê nenhum dos dois). A linha saiu da fixture; o teste prova o mesmo. O
+`typecheck` do `shared` passa limpo (exit 0) pela primeira vez desde 2026-09-30.
+
+**Testes:** `shared` 64 arquivos / 1060; `frontend` 206 / 2792; `lint` de `shared` e `frontend` com 0 erros (`backend`
+não foi tocado).
+
 ## 2026-10-03 — `montador-exp-02`…`04`: gate único, seletor e as versões Essencial, Completo e Blocos do montador (I-041)
 
 As três tasks restantes do guarda-chuva `montador-rolagem-experimento` (que segue em `active/` à espera da avaliação
