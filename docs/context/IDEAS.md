@@ -228,6 +228,16 @@
 
 ## Abertas
 
+### I-047 — Ladrilho de atributo do NPC igual ao da Criatura · frontend/ficha
+
+- **Ideia:** os atributos da ficha de NPC passarem a usar o ladrilho da ficha de Criatura (sigla DES/FOR…, bônus e, se o
+  autor quiser, ícone de rolagem) em vez do `app-stat` com o nome inteiro e a DT.
+- **Origem:** `m4-14` — o NPC manteve o `app-stat` só centralizado; o autor deixou o ajuste para depois ("vamos ajustar isso").
+- **Por quê:** é a divergência de estrutura que sobra entre as duas fichas; a rolagem de atributo do NPC estava fora do
+  escopo da `m4-14`, então a decisão inclui se o ladrilho rola ou só exibe.
+- **Custo aparente:** médio — pede ampliar o `Stat` ou criar um ladrilho em `shared/ui/` (decisão do autor, regra de
+  primitivos) e, se rolar, ligar ao fluxo de rolagem do NPC.
+
 ### I-046 — Imagem de registro no guia de criação de NPC · frontend/ficha
 
 - **Ideia:** o guia de NPC passa a ter a caixa de imagem de registro (`guia__avatar-campo`) que os guias de Jogador e de

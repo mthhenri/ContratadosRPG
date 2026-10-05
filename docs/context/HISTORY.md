@@ -40,9 +40,10 @@ deixa o estilo vazar); nenhuma classe sem uso nos dois SCSS (conferido por scrip
 (primitivo: título em caixa alta) e a criatura usa um cartão feito à mão com o título em caixa baixa ("Identidade"). Mantive o
 primitivo — copiar o cartão à mão da criatura contraria a regra de `shared/ui` e ampliar o primitivo é decisão do autor; é a
 única divergência visível de hierarquia que sobra. Se quiser a caixa baixa, a decisão é: ampliar `app-cartao` com uma variante de
-título ou migrar os cartões da criatura para o primitivo. (2) **Ladrilhos de atributo:** a criatura tem ladrilho próprio com
+título ou migrar os cartões da criatura para o primitivo. **Autor (2026-10-05): de acordo, fica o `app-cartao`.** (2) **Ladrilhos de atributo:** a criatura tem ladrilho próprio com
 sigla (DES/FOR…), bônus e ícone de rolagem; o NPC mantém `app-stat` (primitivo) com o nome inteiro e a DT, só centralizado — a
-rolagem está fora do escopo (decisão de abertura) e a sigla pediria um ladrilho novo ou ampliar o `Stat`. (3) **Mobile:** com
+rolagem está fora do escopo (decisão de abertura) e a sigla pediria um ladrilho novo ou ampliar o `Stat`. **Autor (2026-10-05): fica de fora por
+enquanto, vai ser ajustado depois — registrado como `I-047`.** (3) **Mobile:** com
 três abas em 360px o rótulo ativo ("Habilidades") aparece truncado, o que o primitivo `app-abas` já faz também na criatura —
 não alterado. (4) A `ficha-pagina__campanha` como chip e o `ficha-pagina` herdado do criatura duplicam SCSS entre as duas páginas
 (mesma razão das outras cópias do projeto).
