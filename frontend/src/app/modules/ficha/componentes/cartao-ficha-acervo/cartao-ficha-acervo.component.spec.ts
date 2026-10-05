@@ -99,6 +99,27 @@ describe('CartaoFichaAcervo', () => {
     expect(raizAtribuida.querySelector('.acervo__chip--campanha')?.textContent).toContain('Operação Alfa');
   });
 
+  it('etiqueta de tipo: só aparece quando `mostrarTipo` está ligado, com o rótulo do tipo', () => {
+    const { raiz: semEtiqueta } = montar(itemAgente);
+    expect(semEtiqueta.querySelector('.acervo__cartao-tipo')).toBeNull();
+
+    const rotulos = [
+      [itemAgente, 'Agente'],
+      [itemCriatura, 'Criatura'],
+      [{ ...itemAgente, tipo: TipoFichaEnum.NPC }, 'NPC'],
+    ] as const;
+    for (const [item, rotulo] of rotulos) {
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({ imports: [CartaoFichaAcervo], providers: [provideRouter([])] });
+      const fixture = TestBed.createComponent(CartaoFichaAcervo);
+      fixture.componentRef.setInput('item', item);
+      fixture.componentRef.setInput('mostrarTipo', true);
+      fixture.detectChanges();
+      const etiqueta = (fixture.nativeElement as HTMLElement).querySelector('.acervo__cartao-tipo');
+      expect(etiqueta?.textContent?.trim()).toBe(rotulo);
+    }
+  });
+
   it('emite o MouseEvent do kebab clicado, sem abrir o menu por conta própria', () => {
     const { fixture, raiz } = montar(itemAgente);
     const espiao = vi.fn();

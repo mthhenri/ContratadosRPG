@@ -80,6 +80,11 @@
     overflow-wrap: anywhere;
 }
 
+// Etiqueta de tipo (m4-12) — `app-chip` é dono da identidade; aqui só o alinhamento na coluna.
+.acervo__cartao-tipo {
+    align-self: flex-start;
+}
+
 .acervo__cartao-nome {
     font-family: var(--font-mono);
     font-size: 15px;

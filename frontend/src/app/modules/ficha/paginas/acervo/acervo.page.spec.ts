@@ -1,4 +1,4 @@
-import { TestBed } from '@angular/core/testing';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 
@@ -73,6 +73,29 @@ describe('FichaAcervo', () => {
       energiaAtual: 0,
       energiaMaxima: 0,
       defesa: 30,
+      morrendo: false,
+      machucado: false,
+      inconsciente: false,
+      ...overrides,
+    };
+  }
+
+  function npcResumo(overrides: Partial<FichaResumoDto> = {}): FichaResumoDto {
+    return {
+      id: 3,
+      campanhaId: null,
+      campanhaNome: null,
+      usuarioId: 7,
+      nome: 'Dona Marta',
+      imagemUrl: null,
+      tipo: TipoFichaEnum.NPC,
+      classe: ClasseEnum.CIVIL,
+      arquetipo: null,
+      nivel: 1,
+      vidaAtual: 20,
+      vidaMaxima: 20,
+      energiaAtual: 0,
+      energiaMaxima: 0,
       morrendo: false,
       machucado: false,
       inconsciente: false,
@@ -391,42 +414,90 @@ describe('FichaAcervo', () => {
       expect(raiz.textContent).not.toContain('Criar NPC');
     });
 
-    it('retrocompat: ficha sem `tipo` é listada no bloco Agentes, sem erro', () => {
-      const { raiz } = montar({ fichas: [fichaResumo({ tipo: undefined })] });
+    function nomesExibidos(raiz: HTMLElement): (string | null | undefined)[] {
+      return Array.from(raiz.querySelectorAll('.acervo__cartao-nome')).map((el) => el.textContent);
+    }
 
-      const titulos = Array.from(raiz.querySelectorAll('.acervo__secao-titulo')).map((el) => el.textContent);
-      expect(titulos).toEqual(['Agentes']);
-      expect(raiz.querySelector('.acervo__secao-contagem')?.textContent).toBe('1');
-    });
-
-    it('em "Todos", separa agentes e criaturas em blocos com cabeçalho e contagem próprios', () => {
-      const { raiz } = montar({ fichas: [fichaResumo(), criaturaResumo()] });
-
-      const titulos = Array.from(raiz.querySelectorAll('.acervo__secao-titulo')).map((el) => el.textContent);
-      expect(titulos).toEqual(['Agentes', 'Criaturas']);
-      const contagens = Array.from(raiz.querySelectorAll('.acervo__secao-contagem')).map((el) => el.textContent);
-      expect(contagens).toEqual(['1', '1']);
-    });
-
-    it('em "Todos", omite o bloco de um tipo sem ficha nenhuma', () => {
-      const { raiz } = montar({ fichas: [fichaResumo()] });
-
-      const titulos = Array.from(raiz.querySelectorAll('.acervo__secao-titulo')).map((el) => el.textContent);
-      expect(titulos).toEqual(['Agentes']);
-    });
-
-    it('filtrar por Criaturas mostra só aquele bloco, mesmo vazio (com estado vazio próprio)', () => {
-      const { fixture, raiz } = montar({ fichas: [fichaResumo()] });
-
-      const select = raiz.querySelector('.acervo__filtro select') as HTMLSelectElement;
-      select.value = TipoFichaEnum.CRIATURA;
+    function filtrarPor(fixture: ComponentFixture<FichaAcervo>, valor: string): void {
+      const select = (fixture.nativeElement as HTMLElement).querySelector(
+        '.acervo__filtro select',
+      ) as HTMLSelectElement;
+      select.value = valor;
       select.dispatchEvent(new Event('change'));
       fixture.detectChanges();
+    }
 
-      const titulos = Array.from(raiz.querySelectorAll('.acervo__secao-titulo')).map((el) => el.textContent);
-      expect(titulos).toEqual(['Criaturas']);
+    it('retrocompat: ficha sem `tipo` é listada como agente, sem erro', () => {
+      const { raiz } = montar({ fichas: [fichaResumo({ tipo: undefined })] });
+
+      expect(raiz.querySelectorAll('.acervo__cartao')).toHaveLength(1);
+      expect(raiz.querySelector('.acervo__cartao-tipo')?.textContent?.trim()).toBe('Agente');
+      expect(raiz.querySelector('.acervo__contagem')?.textContent).toBe('1');
+    });
+
+    it('em "Todos", mistura agentes, criaturas e NPCs numa lista única, sem cabeçalhos de bloco', () => {
+      const { raiz } = montar({
+        fichas: [
+          fichaResumo({ id: 1, nome: 'Kane' }),
+          criaturaResumo({ id: 2, nome: 'A Estátua' }),
+          npcResumo({ id: 3, nome: 'Dona Marta' }),
+        ],
+      });
+
+      expect(raiz.querySelectorAll('.acervo__lista')).toHaveLength(1);
+      expect(raiz.querySelector('.acervo__secao')).toBeNull();
+      const tipos = Array.from(raiz.querySelectorAll('.acervo__cartao-tipo')).map((el) =>
+        el.textContent?.trim(),
+      );
+      expect(tipos).toEqual(['Criatura', 'NPC', 'Agente']);
+    });
+
+    it('ordena por nome em ordem alfabética, ignorando acento e caixa, com desempate por id', () => {
+      const { raiz } = montar({
+        fichas: [
+          fichaResumo({ id: 10, nome: 'bruno' }),
+          criaturaResumo({ id: 11, nome: 'Álvaro' }),
+          npcResumo({ id: 13, nome: 'Zélia' }),
+          fichaResumo({ id: 12, nome: 'Bruno' }),
+          criaturaResumo({ id: 14, nome: 'Élio' }),
+        ],
+      });
+
+      expect(nomesExibidos(raiz)).toEqual(['Álvaro', 'bruno', 'Bruno', 'Élio', 'Zélia']);
+    });
+
+    it('a contagem do cabeçalho acompanha a lista exibida', () => {
+      const { fixture, raiz } = montar({ fichas: [fichaResumo(), criaturaResumo(), npcResumo()] });
+
+      expect(raiz.querySelector('.acervo__contagem')?.textContent).toBe('3');
+      filtrarPor(fixture, TipoFichaEnum.CRIATURA);
+      expect(raiz.querySelector('.acervo__contagem')?.textContent).toBe('1');
+    });
+
+    it('filtrar por um tipo mostra só ele, na mesma ordem alfabética', () => {
+      const { fixture, raiz } = montar({
+        fichas: [
+          criaturaResumo({ id: 2, nome: 'Zumbi' }),
+          fichaResumo({ id: 1, nome: 'Kane' }),
+          criaturaResumo({ id: 3, nome: 'Aberração' }),
+        ],
+      });
+
+      filtrarPor(fixture, TipoFichaEnum.CRIATURA);
+
+      expect(nomesExibidos(raiz)).toEqual(['Aberração', 'Zumbi']);
+      filtrarPor(fixture, 'TODOS');
+      expect(nomesExibidos(raiz)).toEqual(['Aberração', 'Kane', 'Zumbi']);
+    });
+
+    it('filtrar por um tipo sem ficha mostra o estado vazio do tipo', () => {
+      const { fixture, raiz } = montar({ fichas: [fichaResumo()] });
+
+      filtrarPor(fixture, TipoFichaEnum.CRIATURA);
+
       expect(raiz.textContent).toContain('Nenhuma criatura ainda.');
       expect(raiz.querySelectorAll('.acervo__cartao')).toHaveLength(0);
+      expect(raiz.querySelector('.acervo__contagem')?.textContent).toBe('0');
     });
 
     it('card de criatura mostra Ameaça/NA/VD/Vida/Defesa e o link aponta pra /fichas/criatura/:id', () => {

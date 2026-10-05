@@ -1,4 +1,9 @@
-import { ArquetipoEnum, ClasseEnum, MotivoEntradaAgenteEnum } from '@contratados-rpg/shared/enums';
+import {
+  ArquetipoEnum,
+  ClasseEnum,
+  MotivoEntradaAgenteEnum,
+  TipoFichaEnum,
+} from '@contratados-rpg/shared/enums';
 import { classeBaseDeHabilidades } from '@contratados-rpg/shared/regras/agente';
 import type { CarrinhoItemDto } from '@contratados-rpg/shared/regras/compras';
 
@@ -97,4 +102,16 @@ export function rotuloClasseCompleto(classe: ClasseEnum, arquetipo: ArquetipoEnu
  */
 export function rotuloItem(item: Pick<CarrinhoItemDto, 'nome' | 'apelido'>): string {
   return item.apelido?.trim() || item.nome;
+}
+
+/** Rótulos curtos do tipo de ficha — etiqueta do cartão do acervo (m4-12), tipos misturados. */
+const ROTULO_TIPO_FICHA: Record<TipoFichaEnum, string> = {
+  [TipoFichaEnum.JOGADOR]: 'Agente',
+  [TipoFichaEnum.CRIATURA]: 'Criatura',
+  [TipoFichaEnum.NPC]: 'NPC',
+};
+
+/** Rótulo legível do tipo de ficha ("Agente" para `JOGADOR`, como o acervo já chama o tipo). */
+export function rotuloTipoFicha(tipo: TipoFichaEnum): string {
+  return ROTULO_TIPO_FICHA[tipo];
 }

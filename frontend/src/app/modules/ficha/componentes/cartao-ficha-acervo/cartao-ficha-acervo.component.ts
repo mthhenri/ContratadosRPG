@@ -5,6 +5,8 @@ import { TipoFichaEnum } from '@contratados-rpg/shared/enums';
 
 import { Icone } from '../../../../shared/icone/icone.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
+import { Chip } from '../../../../shared/ui/chip/chip.component';
+import { rotuloTipoFicha } from '../../rotulos-ficha';
 
 /**
  * Ficha do acervo já enriquecida pro cartão (m4-11) — recorte de `FichaResumoDto` + os rótulos já
@@ -52,7 +54,7 @@ export interface ItemAcervo {
  */
 @Component({
   selector: 'app-cartao-ficha-acervo',
-  imports: [RouterLink, Icone, BotaoIcone],
+  imports: [RouterLink, Icone, BotaoIcone, Chip],
   templateUrl: './cartao-ficha-acervo.component.html',
   styleUrl: './cartao-ficha-acervo.component.scss',
 })
@@ -60,6 +62,11 @@ export class CartaoFichaAcervo {
   readonly item = input.required<ItemAcervo>();
   readonly menuAberto = input(false);
   readonly mostrarMenu = input(true);
+  /**
+   * Etiqueta de tipo (AGENTE/CRIATURA/NPC) — só onde os tipos se misturam na mesma lista (o acervo,
+   * m4-12). O painel da campanha já separa por bloco e não a quer.
+   */
+  readonly mostrarTipo = input(false);
   readonly campanhaDestino = input<number | null>(null);
 
   /** Kebab clicado — a página calcula a posição `fixed` a partir do `MouseEvent` (`alternarMenuFicha`). */
@@ -68,6 +75,9 @@ export class CartaoFichaAcervo {
   readonly avatarSaida = output<void>();
 
   protected readonly TipoFichaEnum = TipoFichaEnum;
+
+  /** Texto da etiqueta de tipo (`mostrarTipo`) — o recorte sozinho não distingue tipos misturados. */
+  protected readonly rotuloTipo = computed(() => rotuloTipoFicha(this.item().tipo));
 
   /** Link do card por tipo (m4-11): `JOGADOR` → `/fichas/:id`; `CRIATURA` → `/fichas/criatura/:id`. */
   protected readonly rota = computed<readonly (string | number)[]>(() => {

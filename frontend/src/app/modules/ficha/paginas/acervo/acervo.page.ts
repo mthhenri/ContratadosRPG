@@ -14,7 +14,6 @@ import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmaca
 import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
 import { Esqueleto } from '../../../../shared/ui/esqueleto/esqueleto.component';
 import { Modal } from '../../../../shared/ui/modal/modal.component';
-import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { CampanhaService } from '../../../campanha/campanha.service';
 import { CartaoFichaAcervo, type ItemAcervo } from '../../componentes/cartao-ficha-acervo/cartao-ficha-acervo.component';
 import { confirmarRemocaoDaCampanha } from '../../ficha-confirmacoes';
@@ -35,21 +34,28 @@ const FILTRO_TODOS = 'TODOS' as const;
 type FiltroAcervo = typeof FILTRO_TODOS | TipoFichaEnum;
 
 /**
- * Um bloco do acervo por tipo (m4-11) — a tela é dirigida por esta lista, não por `@if` por tipo:
- * acrescentar NPC (`m4-07`/`m4-08`) é só um novo item aqui (mais a opção do `<select>` e "Criar
- * NPC", gated do mesmo jeito que "Criar criatura"), sem tocar o restante do template.
+ * Um tipo de ficha do acervo — alimenta o `<select>` de filtro e o texto do estado vazio de cada
+ * tipo (m4-11/m4-12). A lista exibida é **única** e mistura os tipos; esta tabela não define mais
+ * blocos de renderização.
  */
-interface DefinicaoBlocoAcervo {
+interface DefinicaoTipoAcervo {
   readonly tipo: TipoFichaEnum;
   readonly titulo: string;
   readonly estadoVazio: string;
 }
 
-const BLOCOS_ACERVO: readonly DefinicaoBlocoAcervo[] = [
+const TIPOS_ACERVO: readonly DefinicaoTipoAcervo[] = [
   { tipo: TipoFichaEnum.JOGADOR, titulo: 'Agentes', estadoVazio: 'Nenhum agente ainda.' },
   { tipo: TipoFichaEnum.CRIATURA, titulo: 'Criaturas', estadoVazio: 'Nenhuma criatura ainda.' },
   { tipo: TipoFichaEnum.NPC, titulo: "NPCs", estadoVazio: "Nenhum NPC ainda." },
 ];
+
+/**
+ * Ordem alfabética do acervo (m4-12): `pt-BR`, sem diferenciar acento nem caixa ("Álvaro" antes de
+ * "Bruno"). O `ORDER BY ficha.nome` do backend não tem essa colação, então a ordem de apresentação
+ * é aplicada aqui, sobre o que o backend devolve.
+ */
+const COMPARADOR_NOME = new Intl.Collator('pt-BR', { sensitivity: 'base' });
 
 /**
  * O **acervo** de fichas do usuário (`/fichas`, m3-28) — todas as fichas do autenticado, com e
@@ -66,16 +72,16 @@ const BLOCOS_ACERVO: readonly DefinicaoBlocoAcervo[] = [
  * (`/fichas/criatura/:id`), campanha-scoped — ver a nota na rota (`ficha-acervo.routes.ts`) e no
  * próprio componente sobre como cada um resolve `campanhaId` sem o parâmetro de rota.
  *
- * **Separação por tipo (m4-11).** O acervo lista agentes, criaturas e — estruturalmente, hoje sem
- * dados — NPCs em blocos próprios (`BLOCOS_ACERVO`), com um `<select>` de visão (Todos/Agentes/
- * Criaturas). Card único (`CartaoFichaAcervo`) com recorte por tipo. "Criar criatura" só aparece
- * para quem é mestre de alguma campanha (`podeCriarCriatura`) — o backend (`FichaService.
- * criarFichaCriatura`) continua sendo a autoridade; esta checagem só evita oferecer o que seria
- * recusado.
+ * **Lista única e filtro por tipo (m4-11/m4-12).** O acervo mistura agentes, criaturas e NPCs numa
+ * só lista em ordem alfabética por nome (`itensExibidos`), com um `<select>` de visão (Todos/
+ * Agentes/Criaturas/NPCs) que filtra essa lista. Card único (`CartaoFichaAcervo`) com recorte e
+ * etiqueta por tipo. "Criar criatura" só aparece para quem é mestre de alguma campanha
+ * (`podeCriarCriatura`) — o backend (`FichaService.criarFichaCriatura`) continua sendo a
+ * autoridade; esta checagem só evita oferecer o que seria recusado.
  */
 @Component({
   selector: 'app-ficha-acervo',
-  imports: [Botao, Campo, Cartao, Icone, OverflowFade, CartaoFichaAcervo, Modal, EstadoVazio, Esqueleto],
+  imports: [Botao, Campo, Cartao, Icone, CartaoFichaAcervo, Modal, EstadoVazio, Esqueleto],
   templateUrl: './acervo.page.html',
   styleUrl: './acervo.page.scss',
 })
@@ -88,7 +94,7 @@ export class FichaAcervo {
 
   protected readonly TipoFichaEnum = TipoFichaEnum;
   protected readonly FILTRO_TODOS = FILTRO_TODOS;
-  protected readonly blocos = BLOCOS_ACERVO;
+  protected readonly tipos = TIPOS_ACERVO;
 
   protected readonly carregando = signal(true);
   private readonly fichas = signal<readonly FichaResumoDto[]>([]);
@@ -170,33 +176,26 @@ export class FichaAcervo {
     }),
   );
 
-  /** Fichas agrupadas por tipo — base de `itensDoTipo`/`mostrarBloco`, um único `for` por render. */
-  private readonly itensPorTipo = computed<ReadonlyMap<TipoFichaEnum, readonly ItemAcervo[]>>(() => {
-    const mapa = new Map<TipoFichaEnum, ItemAcervo[]>();
-    for (const item of this.itens()) {
-      const lista = mapa.get(item.tipo);
-      if (lista) {
-        lista.push(item);
-      } else {
-        mapa.set(item.tipo, [item]);
-      }
-    }
-    return mapa;
+  /**
+   * A lista exibida (m4-12): o `filtro()` aplicado e a ordem alfabética por nome, desempatada por
+   * `id` para a ordem ser estável entre ficha de mesmo nome.
+   */
+  protected readonly itensExibidos = computed<readonly ItemAcervo[]>(() => {
+    const filtroAtual = this.filtro();
+    const itensDoFiltro =
+      filtroAtual === FILTRO_TODOS
+        ? this.itens()
+        : this.itens().filter((item) => item.tipo === filtroAtual);
+    return [...itensDoFiltro].sort(
+      (anterior, seguinte) =>
+        COMPARADOR_NOME.compare(anterior.nome, seguinte.nome) || anterior.id - seguinte.id,
+    );
   });
 
-  protected itensDoTipo(tipo: TipoFichaEnum): readonly ItemAcervo[] {
-    return this.itensPorTipo().get(tipo) ?? [];
-  }
-
-  /**
-   * Em "Todos", um bloco só aparece se tiver ficha (o estado vazio geral cobre "nenhuma ficha
-   * nenhuma"); com um tipo filtrado, só o bloco daquele tipo aparece, mesmo vazio (estado vazio
-   * próprio).
-   */
-  protected mostrarBloco(tipo: TipoFichaEnum): boolean {
-    const filtroAtual = this.filtro();
-    return filtroAtual === FILTRO_TODOS ? this.itensDoTipo(tipo).length > 0 : filtroAtual === tipo;
-  }
+  /** Texto do estado vazio de um tipo filtrado sem ficha ("Nenhuma criatura ainda."). */
+  protected readonly estadoVazioDoFiltro = computed(
+    () => this.tipos.find((definicao) => definicao.tipo === this.filtro())?.estadoVazio ?? '',
+  );
 
   /** `true` quando o usuário é mestre de alguma campanha — condição de "Criar criatura" (m4-11). */
   protected readonly podeCriarCriatura = computed(() =>

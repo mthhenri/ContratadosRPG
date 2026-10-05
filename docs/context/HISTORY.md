@@ -1,5 +1,50 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-04 — `m4-12-acervo-misto-alfabetico`: acervo em lista única A–Z, com etiqueta de tipo (revisão do NPC)
+
+Primeira das três specs da revisão do NPC pedida pelo autor (`m4-12` acervo, `m4-13` guia de criação, `m4-14` ficha
+completa; as duas últimas no backlog). Reverte a apresentação em blocos da `m4-11` e mantém tudo o mais dela (filtro,
+`CartaoFichaAcervo`, recorte por tipo, permissões). Só frontend; nenhuma mudança de backend, DTO ou rota.
+
+**O que mudou.** O acervo deixa de ter blocos Agentes/Criaturas/NPCs (cabeçalho, régua, contagem e trava de duas linhas com
+rolagem interna). `FichaAcervo` ganhou `itensExibidos` (filtro aplicado + ordem por nome com `Intl.Collator('pt-BR',
+{ sensitivity: 'base' })`, desempate por `id`) e `estadoVazioDoFiltro`; saíram `itensPorTipo`, `itensDoTipo`,
+`mostrarBloco` e a diretiva `appOverflowFade` da lista. `BLOCOS_ACERVO` virou `TIPOS_ACERVO` e só alimenta o `<select>` e o
+texto de vazio. A contagem do cabeçalho do card acompanha a lista exibida (suposição da spec, não pedida). Estilos mortos
+(`.acervo__secao*`, `.acervo__lista--limitada`) removidos. `CartaoFichaAcervo` ganhou a etiqueta de tipo
+(`app-chip variante="sutil"`, `rotuloTipoFicha` em `rotulos-ficha.ts`).
+
+**Duas decisões fora do texto literal da spec.** (1) A etiqueta é ligada por um input novo, `mostrarTipo` (padrão
+`false`): o cartão também é consumido por `campanha-fichas-especiais` (painel da campanha), que já separa por bloco — sem
+o input a etiqueta apareceria lá, redundante. Só o acervo a liga. (2) A grade passou de `align-items: start` para
+`stretch`: a spec dizia "mesma altura na linha, como hoje", mas hoje não era assim, e com os tipos intercalados agente
+(mais baixo) e criatura (mais alta, com a linha do registro) deixavam a linha irregular.
+
+**Testes.** `acervo.page.spec.ts`: ordem alfabética misturada com acento, caixa e empate de nome; lista única sem
+cabeçalhos de bloco; filtro por tipo na mesma ordem; contagem acompanhando o filtro; estado vazio por tipo; retrocompat de
+ficha sem `tipo`. `cartao-ficha-acervo.component.spec.ts`: etiqueta por tipo e ausência dela sem `mostrarTipo`. Focados:
+3 arquivos / 43 testes (acervo, cartão, `campanha-fichas-especiais`). Suíte completa do `frontend`: 206 arquivos / 2795
+testes verdes; `lint` do `frontend` com 0 erros (warnings de estilo preexistentes); Prettier limpo nos HTML/SCSS tocados.
+
+**Verificado ao vivo** (stack já no ar na sessão — backend 3100, frontend 4300, Postgres; usuário e campanha de teste
+criados por REST, oito fichas clonadas por SQL para esse usuário e **removidas por soft delete ao fim**), `1920×1080` e
+`360×800`: Todos com os três tipos intercalados ("A Estátua", "Álvaro", "Bruno", "bruno", "Carla…", "Dona Marta", "Élio",
+"Zélia"), cada filtro isolado, filtro de NPC sem fichas (estado vazio "Nenhum NPC ainda." e contagem 0), menu (⋯) no último
+cartão (abre para baixo no desktop e para cima no mobile), nome longo quebrando no mobile, hover do cartão. Sem overflow
+horizontal em nenhum estado; alvo do kebab de 44 px no mobile. Comparação com o análogo (o próprio acervo da `m4-11`):
+mesmos cartões, mesma densidade; a etiqueta entra no topo da coluna de texto sem quebrar a hierarquia. **Não coberto:** o
+preview ampliado do avatar (nenhum cartão de teste tinha imagem; o código dele não foi tocado) e o ramo do contexto de
+campanha do cartão (coberto só pelo spec existente).
+
+**Achado só na verificação visual.** Ao inserir a regra `.acervo__cartao-tipo` no SCSS do cartão por substituição de
+texto, a primeira ocorrência de `.acervo__cartao-nome {` era a do seletor `&:hover .acervo__cartao-nome`, e a regra do
+hover ficou quebrada: todos os nomes apareciam em vermelho (cor do hover) o tempo todo. Testes e build passavam; só a
+captura mostrou os nomes vermelhos, e a medição de `getComputedStyle` (cor normal × cor com hover) confirmou a correção.
+
+**Pendente/aberto.** Nada da `m4-12`. A inconsistência do botão "Criar NPC" da barra de ações (sem a classe
+`acervo__acao` dos outros dois, com `tamanho`/`estilo` próprios) já existia e ficou fora do escopo; é candidata a
+entrar na revisão da `m4-14` ou numa correção à parte.
+
 ## 2026-10-04 — `P-094` e `P-092` corrigidos: frase do guia de fórmulas no mobile e fixture de agente no `shared`
 
 Dois problemas preexistentes, pedidos pelo autor, sem spec própria (correções pontuais registradas em `PROBLEMS.md`).

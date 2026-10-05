@@ -15,6 +15,9 @@
             }
         </span>
         <span class="acervo__cartao-texto">
+            @if (mostrarTipo()) {
+                <app-chip variante="sutil" class="acervo__cartao-tipo">{{ rotuloTipo() }}</app-chip>
+            }
             @if (item().registroTexto) {
                 <span class="acervo__cartao-meta">{{ item().registroTexto }}</span>
             }

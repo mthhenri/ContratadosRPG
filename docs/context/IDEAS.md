@@ -228,6 +228,27 @@
 
 ## Abertas
 
+### I-042 — Painel de documentos: quadro de pinos com conexões · campanha/documentos
+
+- **Ideia:** uma superfície visual na campanha onde os documentos da Biblioteca (M9) ficam
+  espalhados como num quadro de cortiça de investigação: cartões fixados por pino, posicionados
+  livremente, ligados entre si por fios (conexões) para mostrar relações entre pistas, pessoas,
+  locais e eventos.
+- **Origem:** conversa com o autor (2026-10-04), como extensão da M9. É a "mesa investigativa/mapa
+  mental" já listada em "Fora de escopo" de `docs/specs/backlog/m9-documentos-campanha.spec.md` e
+  mencionada em `I-014` — agora com a imagem de referência do quadro de pinos e fios.
+- **Por quê:** a Biblioteca hoje é uma lista/busca; ela guarda o material, mas não mostra a
+  **relação** entre os documentos. Numa campanha investigativa (a cena de Investigação do módulo
+  de Cenas já apresenta documentos junto das fichas), o mestre — e, se ele compartilhar, os
+  jogadores — montaria a teia de pistas em vez de reconstruí-la de cabeça.
+- **Custo aparente:** médio/alto. Schema novo (posição `x`/`y` por documento no quadro e uma
+  tabela de conexões entre documentos, com rótulo opcional); decidir se o quadro é um por
+  campanha ou vários, e se o mestre controla a visibilidade das conexões como já controla a dos
+  documentos (trava anti-vazamento do `documento:alterado`). Frontend: canvas arrastável com zoom
+  e pan, fios que seguem os cartões, alvo de toque no mobile. Tempo real opcional (vários
+  usuários movendo cartões) — pode começar só com o mestre editando e os demais lendo. Distinto do
+  tabletop tático da `I-016`/M11, que trata de mapas, tokens e posição de combate.
+
 ### I-040 — Tela de acessos mostrar concessão suspensa pela ocultação · frontend/ficha
 
 - **Ideia:** na lista "Acesso de visualização" do dono/mestre, marcar como "suspensa" a concessão

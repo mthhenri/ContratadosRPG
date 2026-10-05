@@ -2,7 +2,9 @@
     <app-cartao titulo="Fichas" nivelTitulo="h1">
         <span cartaoIndice>//</span>
         @if (!carregando() && itens().length) {
-        <span cartaoFim class="acervo__contagem" aria-hidden="true">{{ itens().length }}</span>
+        <span cartaoFim class="acervo__contagem" aria-hidden="true"
+            >{{ itensExibidos().length }}</span
+        >
         }
 
         <div class="acervo__acoes">
@@ -49,9 +51,9 @@
                     <option [value]="FILTRO_TODOS" [selected]="filtro() === FILTRO_TODOS">
                         Todos
                     </option>
-                    @for (bloco of blocos; track bloco.tipo) {
-                    <option [value]="bloco.tipo" [selected]="filtro() === bloco.tipo">
-                        {{ bloco.titulo }}
+                    @for (definicao of tipos; track definicao.tipo) {
+                    <option [value]="definicao.tipo" [selected]="filtro() === definicao.tipo">
+                        {{ definicao.titulo }}
                     </option>
                     }
                 </select>
@@ -77,27 +79,15 @@
             titulo="Nenhuma ficha ainda."
             linhaApoio="Crie uma — ela nasce solta, sem campanha, e você pode atribuí-la depois."
         />
-        } @else { @for (bloco of blocos; track bloco.tipo) { @if (mostrarBloco(bloco.tipo)) {
-        <header class="acervo__secao">
-            <h2 class="acervo__secao-titulo">{{ bloco.titulo }}</h2>
-            <span class="acervo__secao-regua"></span>
-            <span class="acervo__secao-contagem" aria-hidden="true"
-                >{{ itensDoTipo(bloco.tipo).length }}</span
-            >
-        </header>
-
-        @if (itensDoTipo(bloco.tipo).length === 0) {
-        <app-estado-vazio [titulo]="bloco.estadoVazio" />
+        } @else if (itensExibidos().length === 0) {
+        <app-estado-vazio [titulo]="estadoVazioDoFiltro()" />
         } @else {
-        <ul
-            class="acervo__lista"
-            [class.acervo__lista--limitada]="filtro() === FILTRO_TODOS"
-            appOverflowFade
-        >
-            @for (item of itensDoTipo(bloco.tipo); track item.id) {
+        <ul class="acervo__lista">
+            @for (item of itensExibidos(); track item.id) {
             <li>
                 <app-cartao-ficha-acervo
                     [item]="item"
+                    [mostrarTipo]="true"
                     [menuAberto]="menuFichaAberto()?.id === item.id"
                     (menu)="alternarMenuFicha(item, $event)"
                     (avatarHover)="agendarPreviewAvatar($event, item.imagemUrl)"
@@ -106,14 +96,14 @@
             </li>
             }
         </ul>
-        } } } }
+        }
     </app-cartao>
 </section>
 
 <!--
-  Menu de ações (kebab) — na RAIZ do template, fora de `.acervo__lista` (`overflow-y` +
-  `mask-image` via `appOverflowFade`, que cortaria um `position: fixed` comum na pintura —
-  mesmo problema e mesma correção de `CampanhaDetalhe`, m3-52).
+  Menu de ações (kebab) — na RAIZ do template, fora de `.acervo__lista`: o `<ul>` já não rola por
+  dentro (m4-12), mas a raiz continua sendo o lugar certo para um `position: fixed` (mesma
+  correção de `CampanhaDetalhe`, m3-52).
 -->
 @if (menuFichaAberto(); as menuAberto) {
 <button
@@ -177,9 +167,7 @@
 }
 
 <!--
-  Preview ampliado do avatar — mesma razão de morar na raiz do `menuFichaAberto` acima
-  (`.acervo__lista` tem overflow-y + mask-image via `appOverflowFade`, que cortaria um
-  `position: fixed` filho na pintura, mesmo problema/correção de `CampanhaDetalhe`).
+  Preview ampliado do avatar — mesma razão de morar na raiz do `menuFichaAberto` acima.
 -->
 @if (previewAvatar(); as preview) {
 <div

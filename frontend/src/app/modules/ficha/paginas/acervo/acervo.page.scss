@@ -60,42 +60,6 @@
         }
     }
 
-    // Cabeçalho de bloco (Agentes/Criaturas…) — mesmo tratamento de `CampanhaDetalhe.__secao`
-    // (rótulo mono uppercase + régua fina + contagem).
-    &__secao {
-        display: flex;
-        align-items: center;
-        gap: 11px;
-        margin: 24px 0 12px;
-
-        &:first-of-type {
-            margin-top: 0;
-        }
-    }
-
-    &__secao-titulo {
-        margin: 0;
-        font-family: var(--font-mono);
-        font-size: 11px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: var(--tracking-label);
-        color: var(--text-mute);
-    }
-
-    &__secao-regua {
-        flex: 1;
-        height: 1px;
-        background: var(--border);
-    }
-
-    &__secao-contagem {
-        font-family: var(--font-mono);
-        font-size: 12px;
-        font-weight: 600;
-        color: var(--text-mute);
-    }
-
     // Esqueleto de carregamento (ui-14) — grade de silhuetas de cartão (nome + meta + rodapé com
     // chip), mesma forma dos cartões reais, evitando o "flash" seco de texto "Carregando…" antes
     // da lista. `app-esqueleto` é dono da cor/pulso/`prefers-reduced-motion`; aqui só a geometria.
@@ -144,8 +108,10 @@
         margin-top: auto;
     }
 
-    // Grade de cartões de um bloco (Agentes/Criaturas…) — sem trava de altura por padrão: com um
-    // tipo filtrado, o bloco usa a altura toda e quem rola é a página.
+    // Grade única de cartões (m4-12) — os três tipos misturados, em ordem alfabética; sem trava de
+    // altura nem rolagem interna: quem rola é a página. Os cartões de uma linha se igualam em
+    // altura (`stretch`): com os tipos intercalados, agente e criatura têm recortes de alturas
+    // diferentes e a linha ficaria irregular.
     &__lista {
         list-style: none;
         margin: 0;
@@ -153,7 +119,7 @@
         display: grid;
         grid-template-columns: repeat(3, 1fr);
         gap: var(--gap-grid);
-        align-items: start;
+        align-items: stretch;
 
         @include bp.tablet {
             grid-template-columns: repeat(2, 1fr);
@@ -161,40 +127,6 @@
 
         @include bp.mobile {
             grid-template-columns: 1fr;
-        }
-
-        // "Todos" (m4-11, decisão de abertura): cada bloco trava em ~2 linhas de card e rola por
-        // dentro, com o mesmo fade topo/base de `CampanhaLista` (m2-17) — um tipo filtrado solta esta
-        // trava (`AcervoPage.filtro`).
-        &--limitada {
-            max-height: 300px;
-            overflow-y: auto;
-
-            --fade-topo: 0px;
-            --fade-base: 0px;
-            &.overflow-fade--topo,
-            &.overflow-fade--base {
-                -webkit-mask-image: linear-gradient(
-                    to bottom,
-                    transparent 0,
-                    #000 var(--fade-topo),
-                    #000 calc(100% - var(--fade-base)),
-                    transparent 100%
-                );
-                mask-image: linear-gradient(
-                    to bottom,
-                    transparent 0,
-                    #000 var(--fade-topo),
-                    #000 calc(100% - var(--fade-base)),
-                    transparent 100%
-                );
-            }
-            &.overflow-fade--topo {
-                --fade-topo: 22px;
-            }
-            &.overflow-fade--base {
-                --fade-base: 22px;
-            }
         }
     }
 
