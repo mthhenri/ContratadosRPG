@@ -1,5 +1,72 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-04 — `m4-15-campanha-mestre-abas-esquadrao-criaturas-npcs`: Esquadrão · Criaturas · NPCs em abas na campanha do mestre
+
+Terceira spec da revisão do NPC (`m4-12` acervo ✔, `m4-13` guia e `m4-14` ficha ainda no backlog). Pedido do autor: a
+seção "Criaturas e NPCs" da campanha do mestre vira **abas, todas no mesmo padrão**, com ordem A–Z, tipo e ações do cartão
+revistos. Só frontend; nenhuma mudança de backend, DTO, rota ou permissão.
+
+**Correção do que eu disse na `m4-12`.** O fecho da `m4-12` afirma que o painel da campanha "já separa por bloco". Estava
+errado: `campanha-fichas-especiais` já era uma lista única misturada, com filtro e na ordem do backend. A etiqueta de tipo
+ficou desligada lá (`mostrarTipo`) pelo motivo errado; agora o tipo vem da própria aba.
+
+**O que mudou.** `CampanhaFichasAbas` (novo, `campanha/componentes/campanha-fichas-abas/`) renderiza `app-abas`
+Esquadrão · Criaturas · NPCs e, por aba, o mesmo cabeçalho de seção (título, régua, contagem, botão de criar: Novo Agente /
+Nova criatura / Novo NPC, `app-botao` com `variante`/`estilo`/`tamanho`/`posicaoIcone`), a mesma grade e um estado vazio
+próprio; também a silhueta de carga (barra de abas + cabeçalho + 3 cartões, que saiu do SCSS da página). O select "Exibir" e
+o título "Criaturas e NPCs" saíram. Esquadrão mantém a ordem recebida; Criaturas e NPCs vão em A–Z por
+`ordenarPorNome` (`ficha/ordenacao-nome.ts`, collator `pt-BR` `sensitivity: 'base'`, desempate por id), **a mesma função
+que o acervo passou a usar** (saiu o `COMPARADOR_NOME` local). Cartões: Esquadrão = `EspectadorFichaCard`; criatura =
+`CriaturaEsquadraoCard` (já existia, sem nenhum template renderizando-o — só uma menção em comentário; projeção nova
+`montarCriaturaEsquadrao` em `campanha-fichas-especiais.util.ts`); NPC = o próprio `EspectadorFichaCard`, **generalizado**
+em vez de criar um terceiro cartão com 200 linhas de SCSS copiadas: `EspectadorFichaCardDados` virou um `Pick<ItemFicha>` do
+que o cartão lê (todo `ItemFicha` continua servindo) e ganhou o input `mostrarEnergia` (falso no NPC Civil). `donoNome` é a
+linha superior do cartão: o dono no agente, a **categoria** no NPC; a linha de classe mostra "Nível N". Ações: "Abrir
+ficha" de criatura abre a janela flutuante, como antes; a de NPC abre a ficha completa em nova aba
+(`/campanhas/:id/npc/:fichaId`) porque a janela flutuante só suporta jogador e criatura. O menu ⋯ é o mesmo dropdown da
+raiz da página e agora existe nos três tipos; criatura e NPC ganharam o item "Acesso de jogadores", que abre o diálogo
+extraído de `CampanhaFichasEspeciais` para `CampanhaFichaAcesso` (mesmo `FichaAcessoEstadoService`, mesmos eventos de tempo
+real; `abrirAcesso(id)`). Saíram os botões grandes "Acesso de jogadores"/"Ficha rápida" e a nota "Última rolagem" do corpo
+do cartão (a faixa do rodapé já a mostra). `CampanhaFichasEspeciais` ficou **só para a visão do jogador** (somente leitura,
+sem menu — `[mostrarMenu]="false"` explícito, que o ramo de mestre antes fornecia); perdeu `gerenciavel`, `membros`,
+`rolagens`, os outputs, o diálogo e o SCSS correspondente. A página do mestre perdeu `ultimaRolagemFicha` e as regras de SCSS
+migradas (seção, grade, esqueleto). Abertas por tipo: `abrirFichaCompletaNovaAba` e o menu passaram a aceitar `NPC`.
+
+**Decisões fora do texto literal da spec.** (1) `EspectadorFichaCard` generalizado em vez de `NpcEsquadraoCard` (acima).
+(2) A spec previa "Civil sem Energia **nem** Defesa/Esquiva/Bloqueio"; o código mostrou que todo NPC tem defesa
+(`defesaBase`/`esquivar`/`bloquear`), só a Energia é 0 no Civil (`calcularEnergia`) — spec corrigida e o cartão omite só a
+barra. (3) Contra-Ataque não existe no `FichaResumoDto` do NPC (só `derivados.contraAtaque`), então não é exibido.
+(4) Os nomes de criatura sem classificação completa usam "—" (traço), nunca valor inventado.
+
+**Testes.** Novos: `ordenacao-nome.spec.ts`, `campanha-fichas-especiais.util.spec.ts`,
+`campanha-ficha-acesso.component.spec.ts` (os testes do diálogo migraram do spec de `campanha-fichas-especiais`, que ficou
+só com a visão do jogador); `espectador-ficha-card` (`mostrarEnergia`); `detalhe-mestre.page.spec.ts` ganhou o bloco "abas"
+(três abas, cabeçalho/contagem/botão por aba, A–Z com acento, cartão de criatura, NPC combatente e Civil, vazio por aba,
+teclado) e as ações (Abrir ficha de NPC em nova aba, rota do "Abrir ficha completa" por tipo, "Acesso de jogadores" só em
+criatura/NPC, duplicar criatura e NPC). Suíte completa do `frontend`: 209 arquivos / 2816 testes verdes; `lint` 0 erros
+(warnings de aspas preexistentes); `ng build` ok; `tsc` de app e specs limpos. Prettier limpo nos HTML/SCSS novos (o HTML
+da página já não era limpo no HEAD; não reformatado para não inflar o diff).
+
+**Verificado ao vivo** (stack já no ar — backend 3100, frontend 4300, Postgres; usuário-mestre e campanha criados por REST,
+dez fichas clonadas por SQL: 2 agentes, 4 criaturas, 4 NPCs entre combatentes e Civil, nomes com acento e minúscula),
+`1920×1080` e `360×800`: as três abas com cabeçalho/contagem/botão; ordem A–Z conferida ("A Estátua", "abismo de Cinzas",
+"Ébano", "Zumbido"; "alberto civil", "Álvaro Pinto", "Bruna Lacerda", "Zélia Voss"); NPC Civil sem barra de Energia e
+combatente com Energia; menu ⋯ no último cartão de NPC e de criatura (itens e posição: abre abaixo, dentro da viewport);
+diálogo de acesso de jogadores aberto pelo menu do NPC; teclado (seta direita e End trocam de aba com foco acompanhando);
+"Abrir ficha" do NPC abriu `/campanhas/12/npc/109` em nova aba e a da criatura a janela flutuante; esqueleto de carga
+(navegando pela lista de campanhas, que dá o `papelHint` de mestre) com barra de abas e cartões; sem overflow horizontal em
+nenhum estado; sem erro de console. Comparação com o análogo (Esquadrão da mesma tela): mesmos cartões, mesma densidade e
+mesmos controles; no mobile as abas colapsam para só-ícone (rótulo só na ativa) como o primitivo manda. **Não coberto:**
+estado com painel de histórico externo aberto (a coluna lateral não mudou); avatar com imagem real (nenhuma ficha de teste
+tinha imagem — o preview do avatar do NPC reutiliza o do Esquadrão); concessão real de acesso (só o diálogo vazio).
+
+**Ajuste pedido pelo autor depois da entrega.** O título da seção ("NPCS ——— 4") repetia o rótulo da aba; o autor mandou tirá-lo. O cabeçalho de seção ficou com régua + contagem + botão de criar (e "atualizado há…" no Esquadrão); saíram o `h2`, a regra `__secao-titulo` e a silhueta do título no esqueleto. Spec em `done/` mantida como estava (registro histórico). Recapturado ao vivo nas duas larguras, sem overflow.
+
+**Pendências para o autor.** (a) No mobile, as
+reações do cartão (Def · Esq · Blo) quebram em linhas com o "·" no início da linha seguinte — comportamento já existente do
+`EspectadorFichaCard` no Esquadrão, não introduzido aqui. (b) `.detalhe-mestre__edicao-acoes` no SCSS da página já estava
+sem uso antes desta task; não removido (fora de escopo).
+
 ## 2026-10-04 — `m4-12-acervo-misto-alfabetico`: acervo em lista única A–Z, com etiqueta de tipo (revisão do NPC)
 
 Primeira das três specs da revisão do NPC pedida pelo autor (`m4-12` acervo, `m4-13` guia de criação, `m4-14` ficha

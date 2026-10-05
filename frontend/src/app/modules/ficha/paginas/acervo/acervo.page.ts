@@ -18,6 +18,7 @@ import { CampanhaService } from '../../../campanha/campanha.service';
 import { CartaoFichaAcervo, type ItemAcervo } from '../../componentes/cartao-ficha-acervo/cartao-ficha-acervo.component';
 import { confirmarRemocaoDaCampanha } from '../../ficha-confirmacoes';
 import { FichaService } from '../../ficha.service';
+import { ordenarPorNome } from '../../ordenacao-nome';
 import { montarItemNpc } from "../../npc-acervo";
 import { montarItemCriatura } from "../../criatura-acervo";
 import { rotuloClasseCompleto } from '../../rotulos-ficha';
@@ -49,13 +50,6 @@ const TIPOS_ACERVO: readonly DefinicaoTipoAcervo[] = [
   { tipo: TipoFichaEnum.CRIATURA, titulo: 'Criaturas', estadoVazio: 'Nenhuma criatura ainda.' },
   { tipo: TipoFichaEnum.NPC, titulo: "NPCs", estadoVazio: "Nenhum NPC ainda." },
 ];
-
-/**
- * Ordem alfabética do acervo (m4-12): `pt-BR`, sem diferenciar acento nem caixa ("Álvaro" antes de
- * "Bruno"). O `ORDER BY ficha.nome` do backend não tem essa colação, então a ordem de apresentação
- * é aplicada aqui, sobre o que o backend devolve.
- */
-const COMPARADOR_NOME = new Intl.Collator('pt-BR', { sensitivity: 'base' });
 
 /**
  * O **acervo** de fichas do usuário (`/fichas`, m3-28) — todas as fichas do autenticado, com e
@@ -186,10 +180,7 @@ export class FichaAcervo {
       filtroAtual === FILTRO_TODOS
         ? this.itens()
         : this.itens().filter((item) => item.tipo === filtroAtual);
-    return [...itensDoFiltro].sort(
-      (anterior, seguinte) =>
-        COMPARADOR_NOME.compare(anterior.nome, seguinte.nome) || anterior.id - seguinte.id,
-    );
+    return ordenarPorNome(itensDoFiltro);
   });
 
   /** Texto do estado vazio de um tipo filtrado sem ficha ("Nenhuma criatura ainda."). */

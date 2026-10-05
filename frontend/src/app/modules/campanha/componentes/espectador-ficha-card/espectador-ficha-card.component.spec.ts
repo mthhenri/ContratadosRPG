@@ -13,7 +13,7 @@ import { EspectadorFichaCard, type EspectadorFichaCardDados } from './espectador
 describe('EspectadorFichaCard', () => {
   let fixture: ComponentFixture<EspectadorFichaCard>;
 
-  function ficha(sobrescritas: Partial<ItemFicha> = {}): EspectadorFichaCardDados {
+  function ficha(sobrescritas: Partial<ItemFicha> = {}): ItemFicha & { donoNome: string } {
     return {
       id: 5,
       usuarioId: 12,
@@ -82,6 +82,18 @@ describe('EspectadorFichaCard', () => {
       'Combatente - Ranger',
     );
     expect(raiz.querySelectorAll('app-barra-recurso')).toHaveLength(2);
+  });
+
+  it('omite a barra de Energia com mostrarEnergia falso (NPC Civil), sem fabricar valor (m4-15)', () => {
+    TestBed.configureTestingModule({ imports: [EspectadorFichaCard] });
+    fixture = TestBed.createComponent(EspectadorFichaCard);
+    fixture.componentRef.setInput('ficha', ficha());
+    fixture.componentRef.setInput('mostrarEnergia', false);
+    fixture.detectChanges();
+    const raiz = fixture.nativeElement as HTMLElement;
+
+    expect(raiz.querySelectorAll('app-barra-recurso')).toHaveLength(1);
+    expect(raiz.textContent).not.toContain('Energia');
   });
 
   it('mostra Def/Esq/Blo quando presentes, omite Con ausente', () => {

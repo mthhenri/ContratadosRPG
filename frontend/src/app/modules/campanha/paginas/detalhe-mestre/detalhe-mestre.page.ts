@@ -1,4 +1,3 @@
-import { CampanhaFichasEspeciais } from "../../componentes/campanha-fichas-especiais/campanha-fichas-especiais.component";
 import { Component, DestroyRef, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -15,7 +14,8 @@ import { CalculadoraFlutuante } from '../../../../shared/calculadora-flutuante/c
 import { CadernoFlutuante } from '../../../pagina-caderno/caderno-flutuante.component';
 import { BibliotecaFlutuante } from '../../../documento/componentes/biblioteca-flutuante/biblioteca-flutuante.component';
 import { FichaFlutuante } from '../../../ficha/componentes/ficha-flutuante/ficha-flutuante.component';
-import { EspectadorFichaCard, type EspectadorFichaCardDados } from '../../componentes/espectador-ficha-card/espectador-ficha-card.component';
+import { CampanhaFichasAbas, type AlvoFicha } from '../../componentes/campanha-fichas-abas/campanha-fichas-abas.component';
+import type { EspectadorFichaCardDados } from '../../componentes/espectador-ficha-card/espectador-ficha-card.component';
 import { InventarioEsquadrao } from '../../componentes/inventario-esquadrao/inventario-esquadrao.component';
 import { ColunaAcoes } from '../../../../shared/ui/coluna-acoes/coluna-acoes.component';
 import { ColunaAcoesItem } from '../../../../shared/ui/coluna-acoes/coluna-acoes-item.component';
@@ -46,26 +46,28 @@ const MS_PREVIEW_AVATAR = 600;
 /** Lado do preview ampliado do avatar em pixels, sem recorte. */
 const PX_PREVIEW_AVATAR = 300;
 
+/** Tipos de ficha com cartão e menu ⋯ na campanha do mestre. */
+type TipoFichaMenu = typeof TipoFichaEnum.JOGADOR | typeof TipoFichaEnum.CRIATURA | typeof TipoFichaEnum.NPC;
+
 const ATRIBUTOS_NEUTROS: FichaAtributosDto = { destreza: 0, forca: 0, luta: 0, pontaria: 0, vigor: 0, intelecto: 0, medicina: 0, sentidos: 0, social: 0, vontade: 0 };
 
 /**
  * Visão do MESTRE em `/campanhas/:id` — redesenho (`campanha-detalhe-mestre-coluna-acoes.spec.md`).
  * Cabeçalho enxuto, `app-coluna-acoes` substituindo o menu kebab + os botões flutuantes de
- * calculadora/caderno, Esquadrão/Criaturas em grid de 3 colunas reusando `EspectadorFichaCard` em
- * modo interativo. Sem banner de crítico, sem coluna "Membros" ao lado (entregável 3 — removidos,
+ * calculadora/caderno, Esquadrão · Criaturas · NPCs em abas (`CampanhaFichasAbas`, m4-15) com os
+ * cartões do Esquadrão em modo interativo. Sem banner de crítico, sem coluna "Membros" ao lado (entregável 3 — removidos,
  * não apenas reposicionados). Dado e tempo real compartilhados vêm de `CampanhaDetalheDadosService`.
  */
 @Component({
   selector: 'app-campanha-detalhe-mestre',
   imports: [
-    CampanhaFichasEspeciais,
     RouterLink,
     ReactiveFormsModule,
     ColunaAcoes,
     ColunaAcoesItem,
     Segmentado,
     SegmentadoItem,
-    EspectadorFichaCard,
+    CampanhaFichasAbas,
     InventarioEsquadrao,
     FichaFlutuante,
     CalculadoraFlutuante,
@@ -144,6 +146,7 @@ export class CampanhaDetalheMestre {
   /** Biblioteca aberta (mesmo minimizada) — marca o item "Biblioteca" da coluna (m9-11). */
   protected readonly bibliotecaAberta = computed(() => this.bibliotecaRef()?.aberto() ?? false);
   private readonly calculadoraRef = viewChild<CalculadoraFlutuante>('calculadora');
+  private readonly fichasAbasRef = viewChild(CampanhaFichasAbas);
 
   protected readonly calculadoraAberta = signal(false);
 
@@ -233,11 +236,6 @@ export class CampanhaDetalheMestre {
     return montarAutoriaRolagem(rolagem);
   }
 
-  /** A lista do feed já vem em ordem decrescente; o primeiro item da ficha é sua última rolagem. */
-  protected ultimaRolagemFicha(fichaId: number) {
-    return this.dados.rolagensFeed().find((rolagem) => rolagem.fichaId === fichaId) ?? null;
-  }
-
   /** Alterna Na Base/Em Missão — só o mestre altera; o jogador só lê (`CampanhaDetalheJogador`). */
   protected alterarEstadoCampanha(): void {
     const campanhaAtual = this.dados.campanha();
@@ -251,7 +249,7 @@ export class CampanhaDetalheMestre {
     });
   }
 
-  /** Abre a ficha (jogador ou criatura) na janela flutuante — "Abrir ficha" do cartão do Esquadrão. */
+  /** Abre a ficha (jogador ou criatura) na janela flutuante — "Abrir ficha" do cartão. */
   protected abrirFichaFlutuante(
     ficha: { readonly id: number; readonly usuarioId: number },
     tipo: typeof TipoFichaEnum.JOGADOR | typeof TipoFichaEnum.CRIATURA,
@@ -259,26 +257,52 @@ export class CampanhaDetalheMestre {
     this.fichaFlutuanteRef()?.abrir({ fichaId: ficha.id, tipo, usuarioIdDono: ficha.usuarioId });
   }
 
+  /**
+   * "Abrir ficha" de um cartão das abas. A janela flutuante só suporta jogador e criatura
+   * (`ficha-flutuante.model.ts`); o NPC abre a ficha completa em nova aba até a janela aprender
+   * NPC (m4-15, ideia registrada).
+   */
+  protected abrirFichaDoCartao(evento: { ficha: AlvoFicha; tipo: TipoFichaEnum }): void {
+    if (evento.tipo === TipoFichaEnum.NPC) {
+      this.abrirFichaCompletaNovaAba(evento.ficha.id, TipoFichaEnum.NPC);
+      return;
+    }
+    this.abrirFichaFlutuante(
+      evento.ficha,
+      evento.tipo === TipoFichaEnum.CRIATURA ? TipoFichaEnum.CRIATURA : TipoFichaEnum.JOGADOR,
+    );
+  }
+
+  protected alternarMenuDoCartao(evento: { ficha: AlvoFicha; tipo: TipoFichaEnum; evento: MouseEvent }): void {
+    this.alternarMenuFicha(evento.ficha, evento.tipo as TipoFichaMenu, evento.evento);
+  }
+
+  /** Item "Acesso de jogadores" do menu ⋯ — abre o diálogo das abas (só criatura/NPC têm). */
+  protected abrirAcessoFicha(fichaId: number): void {
+    this.fecharMenuFicha();
+    this.fichasAbasRef()?.abrirAcesso(fichaId);
+  }
+
   // === Menu "⋯" por cartão do Esquadrão (duplicar/remover/excluir) — dropdown na raiz do
   // template (não dentro do grid, que tem overflow+mask-image e recortaria um `position: fixed`
   // filho na pintura), mesmo padrão do antigo `menuFichaAberto` de `CampanhaDetalhe`.
 
   /**
-   * `donoNome` fica ausente numa criatura (`CriaturaEsquadraoCard` não tem dono real — pertence
-   * ao mestre) — o dropdown e a confirmação de duplicar tratam a ausência condicionalmente.
+   * `donoNome` fica ausente numa criatura/NPC (pertencem ao mestre, sem dono real) — o dropdown e a
+   * confirmação de duplicar tratam a ausência condicionalmente.
    * `tipo` decide a rota de "Abrir ficha completa" (`abrirFichaCompletaNovaAba`).
    */
   protected readonly menuFichaAberto = signal<{
     id: number;
     nome: string;
     donoNome?: string;
-    tipo: typeof TipoFichaEnum.JOGADOR | typeof TipoFichaEnum.CRIATURA;
+    tipo: TipoFichaMenu;
   } | null>(null);
   protected readonly menuFichaPosicao = signal<{ top?: number; bottom?: number; right: number } | null>(null);
 
   protected alternarMenuFicha(
     ficha: { readonly id: number; readonly nome: string; readonly donoNome?: string },
-    tipo: typeof TipoFichaEnum.JOGADOR | typeof TipoFichaEnum.CRIATURA,
+    tipo: TipoFichaMenu,
     evento: MouseEvent,
   ): void {
     if (this.menuFichaAberto()?.id === ficha.id) {
@@ -303,19 +327,14 @@ export class CampanhaDetalheMestre {
   }
 
   /**
-   * Abre a ficha completa em outra aba — jogador vai pro acervo (`/fichas/:id`), criatura pra
-   * própria rota de visualização (`/campanhas/:campanhaId/criatura/:id`, não existe equivalente
-   * campanha-less pra criatura hoje).
+   * Abre a ficha completa em outra aba — jogador vai pro acervo (`/fichas/:id`); criatura e NPC
+   * pra própria rota de visualização na campanha (`/campanhas/:campanhaId/criatura|npc/:id`).
    */
-  protected abrirFichaCompletaNovaAba(
-    fichaId: number,
-    tipo: typeof TipoFichaEnum.JOGADOR | typeof TipoFichaEnum.CRIATURA,
-  ): void {
+  protected abrirFichaCompletaNovaAba(fichaId: number, tipo: TipoFichaMenu): void {
     this.fecharMenuFicha();
+    const segmento = tipo === TipoFichaEnum.NPC ? 'npc' : 'criatura';
     const rota =
-      tipo === TipoFichaEnum.CRIATURA
-        ? ['/campanhas', this.dados.id, 'criatura', fichaId]
-        : ['/fichas', fichaId];
+      tipo === TipoFichaEnum.JOGADOR ? ['/fichas', fichaId] : ['/campanhas', this.dados.id, segmento, fichaId];
     const url = this.router.serializeUrl(this.router.createUrlTree(rota));
     window.open(url, '_blank', 'noopener');
   }

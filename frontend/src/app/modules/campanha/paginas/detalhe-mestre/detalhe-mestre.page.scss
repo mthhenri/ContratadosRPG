@@ -197,75 +197,6 @@
     }
 }
 
-.detalhe-mestre__estado {
-    margin: 0;
-    padding: var(--space-16);
-    font-family: var(--font-sans);
-    font-size: 13px;
-    color: var(--text-mute);
-    text-align: center;
-}
-
-// === Esquadrão / Criaturas ===
-.detalhe-mestre__secao {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 12px;
-    flex-wrap: wrap;
-}
-
-.detalhe-mestre__secao-titulo {
-    margin: 0;
-    font-family: var(--font-mono);
-    font-size: 13px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
-    color: var(--text);
-    white-space: nowrap;
-}
-
-.detalhe-mestre__secao-regua {
-    flex: 1;
-    min-width: 20px;
-    height: 1px;
-    background: var(--border);
-}
-
-.detalhe-mestre__secao-contagem {
-    flex: none;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-mute);
-}
-
-.detalhe-mestre__secao-atualizado {
-    flex: none;
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--text-mute);
-}
-
-// Companion de tamanho do `app-botao` (mesmo racional de `.detalhe-mestre__acao` acima) para
-// "Nova Criatura"/"Novo Agente" no cabeçalho do Esquadrão — mesma receita de `.detalhe__nova-ficha`.
-.detalhe-mestre__nova-ficha {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    padding: 8px 14px;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
-
-    &:disabled {
-        opacity: 0.6;
-        cursor: default;
-    }
-}
-
 // Corpo em 2 colunas: Esquadrão/Criaturas (principal) + painel fixo Rolagens⇆Inventário — nunca
 // overlay, sempre montado (entregável 3). Colapsa a 1 coluna no tablet/mobile (o painel desce
 // abaixo do conteúdo principal em vez de sumir).
@@ -372,30 +303,7 @@
     min-height: 0;
 }
 
-// Grid de 3 colunas — colapsa a 2 no tablet, 1 no mobile (mesmo padrão de `.espectador__ficha-grid`,
-// uma coluna a mais por conta da coluna Membros ter saído de perto do Esquadrão).
-.detalhe-mestre__esquadrao-grid {
-    list-style: none;
-    margin: 0 0 var(--space-16);
-    padding: 2px;
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: var(--space-8);
-    align-items: start;
-
-    @include bp.tablet {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    @include bp.mobile {
-        grid-template-columns: minmax(0, 1fr);
-    }
-}
-
-// Cartão de criatura — extraído para `CriaturaEsquadraoCard` (componente próprio, mesma receita
-// visual do `EspectadorFichaCard`); nada fica aqui além do grid que os dois compartilham.
-
-// === Menu "⋯" por cartão do Esquadrão (raiz do template) ===
+// === Menu "⋯" por cartão — Esquadrão, Criaturas e NPCs (raiz do template) ===
 .detalhe-mestre__ficha-menu-fundo {
     position: fixed;
     inset: 0;
@@ -752,10 +660,9 @@
 }
 
 // === Esqueleto de carregamento ===
-// Reaproveita a casca real (`app-coluna-acoes`, `__conteudo`, `__cabecalho`, `__corpo`, `__secao`,
-// `__esquadrao-grid`, `__painel-lateral`); aqui só a geometria de cada bloco — a identidade
-// (cor/raio/pulso) vem de `app-esqueleto`. `__esqueleto-card` espelha `.espectador-ficha`: avatar
-// 128px + coluna de texto/barras + faixa "Última rolagem".
+// Reaproveita a casca real (`app-coluna-acoes`, `__conteudo`, `__cabecalho`, `__corpo`,
+// `__painel-lateral`); aqui só a geometria de cada bloco — a identidade (cor/raio/pulso) vem de
+// `app-esqueleto`. A silhueta das abas e dos cartões mora em `CampanhaFichasAbas`.
 .detalhe-mestre__esqueleto-acao {
     flex: none;
     height: 44px;
@@ -784,61 +691,6 @@
     flex: none;
     width: 92px;
     height: 28px;
-}
-
-.detalhe-mestre__esqueleto-botao {
-    flex: none;
-    width: 118px;
-    height: 30px;
-}
-
-.detalhe-mestre__esqueleto-card {
-    display: flex;
-    flex-direction: column;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-card);
-    overflow: hidden;
-}
-
-.detalhe-mestre__esqueleto-card-topo {
-    display: flex;
-    gap: var(--space-12);
-    padding: var(--space-12);
-}
-
-.detalhe-mestre__esqueleto-card-texto {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-8);
-}
-
-.detalhe-mestre__esqueleto-avatar {
-    flex: none;
-    width: 128px;
-    height: 128px;
-}
-
-.detalhe-mestre__esqueleto-linha-curta {
-    width: 45%;
-    height: 10px;
-}
-
-.detalhe-mestre__esqueleto-linha-nome {
-    width: 75%;
-    height: 16px;
-}
-
-.detalhe-mestre__esqueleto-barra {
-    width: 100%;
-    height: 22px;
-}
-
-.detalhe-mestre__esqueleto-rodape {
-    height: 30px;
-    margin: 0 var(--space-12) var(--space-12);
 }
 
 .detalhe-mestre__esqueleto-segmentado {

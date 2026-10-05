@@ -22,9 +22,10 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-10-04 · **Última decisão registrada:** `m4-12-acervo-misto-alfabetico` concluída (spec em
-> `done/`): o acervo (`/fichas`) mistura agentes, criaturas e NPCs numa lista única em ordem alfabética, com etiqueta de
-> tipo no cartão e o filtro por tipo mantido; abre a revisão do NPC (`m4-13` guia, `m4-14` ficha, no backlog). Antes:
+> **Última revisão:** 2026-10-04 · **Última decisão registrada:** `m4-15-campanha-mestre-abas-esquadrao-criaturas-npcs`
+> concluída (spec em `done/`): a campanha do mestre mostra Esquadrão · Criaturas · NPCs em abas do mesmo padrão
+> (`CampanhaFichasAbas`), criaturas e NPCs em A–Z, ações no menu ⋯ nos três tipos; sobra a `m4-13` (guia) e a `m4-14`
+> (ficha) da revisão do NPC. Antes: `m4-12-acervo-misto-alfabetico` (acervo misto A–Z com etiqueta de tipo). Antes:
 > `P-094` (frase do guia de fórmulas estourando no
 > mobile) e `P-092` (fixture de agente quebrando o `typecheck` do `shared`) corrigidos (ver `HISTORY.md`). Antes: as quatro
 > tasks do experimento do montador (`montador-exp-01`…`04`) concluídas, guarda-chuva em `active/` à espera da avaliação
@@ -812,11 +813,18 @@
 
 ## 1. Próxima Task
 
-**Revisão do NPC (pedido do autor, 2026-10-04) — `m4-12` concluída; `m4-13` e `m4-14` no backlog.** `m4-12` (acervo
-misto A–Z) em `done/`. Seguem, independentes entre si: [`m4-13`](../specs/backlog/m4-13-guia-criacao-npc-casco-guia.spec.md)
+**Revisão do NPC (pedido do autor, 2026-10-04) — `m4-12` e `m4-15` concluídas; `m4-13` e `m4-14` no backlog.** `m4-12` (acervo
+misto A–Z) e `m4-15` (campanha do mestre em abas) em `done/`. Seguem, independentes entre si: [`m4-13`](../specs/backlog/m4-13-guia-criacao-npc-casco-guia.spec.md)
 (guia de criação de NPC no casco `guia__*` dos guias de Jogador e Criatura, só apresentação) e
 [`m4-14`](../specs/backlog/m4-14-ficha-npc-aparencia-estrutura.spec.md) (ficha completa de NPC alinhada à de Criatura,
-começa por um diagnóstico visual lado a lado). Ambas exigem subir o stack para o gate visual, com autorização do autor.
+começa por um diagnóstico visual lado a lado). Ambas exigem o gate visual com o stack no ar. **Campanha do mestre (`m4-15`):**
+`CampanhaFichasAbas` (`campanha/componentes/campanha-fichas-abas/`) traz as três abas (`app-abas`), cada uma com o mesmo
+cabeçalho de seção (contagem + botão de criar) e a mesma grade; Esquadrão e NPC usam `EspectadorFichaCard` (generalizado: dados
+são um `Pick<ItemFicha>`, `donoNome` = categoria no NPC, `mostrarEnergia` falso no Civil), criatura usa
+`CriaturaEsquadraoCard`; ordem A–Z por `ordenarPorNome` (`ficha/ordenacao-nome.ts`, também do acervo). "Abrir ficha": criatura
+na janela flutuante, NPC em nova aba (a janela não suporta NPC — `I-044`). Menu ⋯ (raiz da página) nos três tipos; criatura e
+NPC têm "Acesso de jogadores" (`CampanhaFichaAcesso`). A visão do jogador segue com `campanha-fichas-especiais`, só leitura
+(`I-043`).
 
 **Experimento do montador de rolagem (I-041) — tasks 4/4 concluídas; falta a avaliação do autor.** Guarda-chuva
 `montador-rolagem-experimento` em `active/`: `montador-exp-01` (fórmula em peças no `shared`), `02` (gate único
@@ -2500,8 +2508,8 @@ comum a todos (moldura, avatar, chip de campanha, kebab); agente mostra
 `rotuloClasseCompleto(classe, arquetipo)` · Nível · **Patente** (`rotuloPatente`) · Vida/Energia; criatura mostra Ameaça ·
 NA · VD · Vida/Defesa; NPC mostra Categoria/Nível e recursos salvos, sem Energia para Civil. Com os tipos misturados, o
 cartão ganha uma **etiqueta de tipo** (AGENTE/CRIATURA/NPC, `app-chip variante="sutil"`, `rotuloTipoFicha` em
-`rotulos-ficha.ts`) ligada pelo input `mostrarTipo` — só o acervo a liga; o painel da campanha
-(`campanha-fichas-especiais`), que já separa por bloco, não a quer. O menu (⋯) e o preview do avatar continuam na raiz da
+`rotulos-ficha.ts`) ligada pelo input `mostrarTipo` — só o acervo a liga; a campanha do mestre usa abas (o tipo vem da aba,
+`m4-15`) e a do jogador (`campanha-fichas-especiais`) não a liga. O menu (⋯) e o preview do avatar continuam na raiz da
 página (`position: fixed`). Link do card por tipo: agente → `/fichas/:id`; criatura → `/fichas/criatura/:id`; NPC →
 `/fichas/npc/:id`.
 

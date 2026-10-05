@@ -20,48 +20,12 @@
 
     <div class="detalhe-mestre__corpo">
         <section class="detalhe-mestre__esquadrao">
-            <header class="detalhe-mestre__secao">
-                <h2 class="detalhe-mestre__secao-titulo">Esquadrão</h2>
-                <span class="detalhe-mestre__secao-regua"></span>
-                <app-esqueleto class="detalhe-mestre__esqueleto-botao" />
-                <app-esqueleto class="detalhe-mestre__esqueleto-botao" />
-            </header>
-            <ul class="detalhe-mestre__esquadrao-grid">
-                @for (i of [0, 1, 2]; track i) {
-                <li class="detalhe-mestre__esqueleto-card">
-                    <div class="detalhe-mestre__esqueleto-card-topo">
-                        <app-esqueleto class="detalhe-mestre__esqueleto-avatar" />
-                        <div class="detalhe-mestre__esqueleto-card-texto">
-                            <app-esqueleto class="detalhe-mestre__esqueleto-linha-curta" />
-                            <app-esqueleto class="detalhe-mestre__esqueleto-linha-nome" />
-                            <app-esqueleto class="detalhe-mestre__esqueleto-linha-curta" />
-                            <app-esqueleto class="detalhe-mestre__esqueleto-barra" />
-                            <app-esqueleto class="detalhe-mestre__esqueleto-barra" />
-                        </div>
-                    </div>
-                    <app-esqueleto class="detalhe-mestre__esqueleto-rodape" />
-                </li>
-                }
-            </ul>
-
-            <header class="detalhe-mestre__secao detalhe-mestre__secao--criaturas">
-                <h2 class="detalhe-mestre__secao-titulo">Criaturas</h2>
-                <span class="detalhe-mestre__secao-regua"></span>
-            </header>
-            <ul class="detalhe-mestre__esquadrao-grid">
-                <li class="detalhe-mestre__esqueleto-card">
-                    <div class="detalhe-mestre__esqueleto-card-topo">
-                        <app-esqueleto class="detalhe-mestre__esqueleto-avatar" />
-                        <div class="detalhe-mestre__esqueleto-card-texto">
-                            <app-esqueleto class="detalhe-mestre__esqueleto-linha-curta" />
-                            <app-esqueleto class="detalhe-mestre__esqueleto-linha-nome" />
-                            <app-esqueleto class="detalhe-mestre__esqueleto-linha-curta" />
-                            <app-esqueleto class="detalhe-mestre__esqueleto-barra" />
-                        </div>
-                    </div>
-                    <app-esqueleto class="detalhe-mestre__esqueleto-rodape" />
-                </li>
-            </ul>
+            <app-campanha-fichas-abas
+                [carregando]="true"
+                [campanhaId]="0"
+                [fichasEsquadrao]="[]"
+                [fichas]="[]"
+            />
         </section>
 
         <aside class="detalhe-mestre__painel-lateral">
@@ -183,54 +147,20 @@
 
     <div class="detalhe-mestre__corpo">
         <section class="detalhe-mestre__esquadrao">
-            <header class="detalhe-mestre__secao">
-                <h2 class="detalhe-mestre__secao-titulo">Esquadrão</h2>
-                <span class="detalhe-mestre__secao-regua"></span>
-                <span class="detalhe-mestre__secao-contagem" aria-hidden="true"
-                    >{{ fichasEsquadrao().length }}</span
-                >
-                <button
-                    app-botao
-                    variante="primario"
-                    class="detalhe-mestre__nova-ficha"
-                    type="button"
-                    (click)="abrirCriarFicha()"
-                >
-                    <app-icone nome="novo-agente" />
-                    Novo Agente
-                </button>
-                @if (dados.textoAtualizacao(); as texto) {
-                <span class="detalhe-mestre__secao-atualizado">{{ texto }}</span>
-                }
-            </header>
-
-            @if (fichasEsquadrao().length === 0) {
-            <p class="detalhe-mestre__estado">Nenhuma ficha na campanha ainda.</p>
-            } @else {
-            <ul class="detalhe-mestre__esquadrao-grid" appOverflowFade>
-                @for (ficha of fichasEsquadrao(); track ficha.id) {
-                <li>
-                    <app-espectador-ficha-card
-                        [ficha]="ficha"
-                        [ultimaRolagem]="ultimaRolagemFicha(ficha.id)"
-                        [mostrarAcoes]="true"
-                        [menuAberto]="menuFichaAberto()?.id === ficha.id"
-                        (avatarEntrou)="agendarPreviewAvatar($event, ficha.imagemUrl)"
-                        (avatarSaiu)="cancelarPreviewAvatar()"
-                        (abrirFicha)="abrirFichaFlutuante(ficha, TipoFichaEnum.JOGADOR)"
-                        (alternarMenu)="alternarMenuFicha(ficha, TipoFichaEnum.JOGADOR, $event)"
-                    />
-                </li>
-                }
-            </ul>
-            }
-
-            <app-campanha-fichas-especiais
-                [fichas]="dados.fichas()" [campanhaId]="campanhaAtual.id"
-                [membros]="dados.membros()" [gerenciavel]="true"
-                [rolagens]="dados.rolagensFeed()" [menuFichaId]="menuFichaAberto()?.id ?? null"
-                (abrirCriatura)="abrirFichaFlutuante($event, TipoFichaEnum.CRIATURA)"
-                (menuCriatura)="alternarMenuFicha($event.ficha, TipoFichaEnum.CRIATURA, $event.evento)" />
+            <app-campanha-fichas-abas
+                [campanhaId]="campanhaAtual.id"
+                [fichasEsquadrao]="fichasEsquadrao()"
+                [fichas]="dados.fichas()"
+                [membros]="dados.membros()"
+                [rolagens]="dados.rolagensFeed()"
+                [textoAtualizacao]="dados.textoAtualizacao()"
+                [menuFichaId]="menuFichaAberto()?.id ?? null"
+                (abrirFicha)="abrirFichaDoCartao($event)"
+                (alternarMenu)="alternarMenuDoCartao($event)"
+                (avatarEntrou)="agendarPreviewAvatar($event.evento, $event.imagemUrl)"
+                (avatarSaiu)="cancelarPreviewAvatar()"
+                (criarAgente)="abrirCriarFicha()"
+            />
         </section>
 
         <aside class="detalhe-mestre__painel-lateral">
@@ -397,6 +327,18 @@
         <app-icone nome="olho" />
         <span>Abrir ficha completa</span>
     </button>
+    @if (menuAberto.tipo !== TipoFichaEnum.JOGADOR) {
+    <button
+        app-botao
+        class="detalhe-mestre__ficha-menu-item"
+        type="button"
+        role="menuitem"
+        (click)="abrirAcessoFicha(menuAberto.id)"
+    >
+        <app-icone nome="membros" />
+        <span>Acesso de jogadores</span>
+    </button>
+    }
     <button
         app-botao
         class="detalhe-mestre__ficha-menu-item"

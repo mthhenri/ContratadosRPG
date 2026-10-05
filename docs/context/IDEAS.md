@@ -228,6 +228,27 @@
 
 ## Abertas
 
+### I-044 — Ficha de NPC na janela flutuante da campanha · frontend/campanha
+
+- **Ideia:** a janela flutuante de ficha (`FichaFlutuante`) passa a suportar `NPC`, como suporta jogador e criatura, para o
+  "Abrir ficha" do cartão de NPC na campanha do mestre abrir a janela em vez de uma nova aba.
+- **Origem:** `m4-15` — hoje `ficha-flutuante.model.ts` só aceita `JOGADOR`/`CRIATURA`; o NPC abre a ficha completa em nova
+  aba. O autor aprovou a solução provisória dizendo que "deveria ter depois".
+- **Por quê:** paridade entre os três tipos no mesmo cartão e na mesma tela, sem sair da campanha. Depende da `m4-14` (a
+  ficha de NPC alinhada à de Criatura facilita encaixá-la na janela).
+- **Custo aparente:** médio — a visualização de NPC (`npc-visualizacao`) é editável por grupo, com rascunho; na janela
+  flutuante ela precisa conviver com o ciclo de vida da janela (descartar/salvar ao fechar).
+
+### I-043 — Visão do jogador: criaturas/NPCs em A–Z e com tipo · frontend/campanha
+
+- **Ideia:** a seção de criaturas e NPCs da campanha **do jogador** (`campanha-fichas-especiais`) seguir o mesmo padrão da
+  visão do mestre: ordem A–Z (`ordenarPorNome`) e o tipo identificável, hoje na ordem do backend e com select de filtro.
+- **Origem:** `m4-15` — a visão do jogador ficou intencionalmente intacta (decisão do autor); só o ramo de mestre saiu do
+  componente.
+- **Por quê:** a mesma lista aparece diferente para o mestre e para o jogador. Pode virar abas também, ou apenas ordem e
+  etiqueta de tipo no cartão do acervo (`mostrarTipo`, que já existe).
+- **Custo aparente:** baixo para ordem + etiqueta; médio se for refazer em abas.
+
 ### I-042 — Painel de documentos: quadro de pinos com conexões · campanha/documentos
 
 - **Ideia:** uma superfície visual na campanha onde os documentos da Biblioteca (M9) ficam

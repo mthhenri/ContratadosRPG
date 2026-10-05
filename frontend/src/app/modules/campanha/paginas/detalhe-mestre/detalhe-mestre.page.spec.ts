@@ -6,6 +6,7 @@ import { Subject, of } from 'rxjs';
 import { signal } from '@angular/core';
 import {
   ArquetipoEnum,
+  CategoriaNpcEnum,
   ClasseEnum,
   ComportamentoCriaturaEnum,
   NivelAmeacaEnum,
@@ -19,7 +20,7 @@ import type { FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
 import { CampanhaDetalheMestre } from './detalhe-mestre.page';
 import { BibliotecaFlutuante } from '../../../documento/componentes/biblioteca-flutuante/biblioteca-flutuante.component';
 import { EspectadorFichaCard } from '../../componentes/espectador-ficha-card/espectador-ficha-card.component';
-import { CampanhaFichasEspeciais } from '../../componentes/campanha-fichas-especiais/campanha-fichas-especiais.component';
+import { CriaturaEsquadraoCard } from '../../componentes/criatura-esquadrao-card/criatura-esquadrao-card.component';
 import { CampanhaDetalheDadosService } from '../detalhe/campanha-detalhe-dados.service';
 import { CampanhaService } from '../../campanha.service';
 import { FichaService } from '../../../ficha/ficha.service';
@@ -97,6 +98,69 @@ describe('CampanhaDetalheMestre', () => {
       registro: 'SCP-049',
       porte: PorteCriaturaEnum.GRANDE,
       comportamento: ComportamentoCriaturaEnum.CACADORA,
+    } as FichaResumoDto,
+    {
+      id: 10,
+      campanhaId: CAMPANHA_ID,
+      campanhaNome: null,
+      imagemUrl: null,
+      usuarioId: 1,
+      nome: 'abismo',
+      tipo: TipoFichaEnum.CRIATURA,
+      classe: ClasseEnum.COMBATENTE,
+      arquetipo: null,
+      nivel: 1,
+      vidaAtual: 5,
+      vidaMaxima: 40,
+      energiaAtual: 0,
+      energiaMaxima: 0,
+      morrendo: false,
+      machucado: false,
+      inconsciente: false,
+    } as FichaResumoDto,
+    {
+      id: 11,
+      campanhaId: CAMPANHA_ID,
+      campanhaNome: null,
+      imagemUrl: null,
+      usuarioId: 1,
+      nome: 'Zélia',
+      tipo: TipoFichaEnum.NPC,
+      categoria: CategoriaNpcEnum.VETERANO,
+      classe: ClasseEnum.COMBATENTE,
+      arquetipo: null,
+      nivel: 4,
+      vidaAtual: 22,
+      vidaMaxima: 30,
+      energiaAtual: 9,
+      energiaMaxima: 12,
+      defesa: 14,
+      esquiva: 9,
+      bloqueio: 11,
+      morrendo: false,
+      machucado: false,
+      inconsciente: false,
+    } as FichaResumoDto,
+    {
+      id: 12,
+      campanhaId: CAMPANHA_ID,
+      campanhaNome: null,
+      imagemUrl: null,
+      usuarioId: 1,
+      nome: 'Álvaro',
+      tipo: TipoFichaEnum.NPC,
+      categoria: CategoriaNpcEnum.CIVIL,
+      classe: ClasseEnum.CIVIL,
+      arquetipo: null,
+      nivel: 1,
+      vidaAtual: 12,
+      vidaMaxima: 12,
+      energiaAtual: 0,
+      energiaMaxima: 0,
+      defesa: 8,
+      morrendo: false,
+      machucado: false,
+      inconsciente: false,
     } as FichaResumoDto,
   ];
 
@@ -248,6 +312,14 @@ describe('CampanhaDetalheMestre', () => {
     fixture.detectChanges();
   }
 
+  function abrirAba(raiz: HTMLElement, fixture: ReturnType<typeof montar>['fixture'], rotulo: string) {
+    const aba = Array.from(raiz.querySelectorAll<HTMLButtonElement>('button[app-aba]')).find(
+      (el) => el.textContent?.trim() === rotulo,
+    );
+    aba!.click();
+    fixture.detectChanges();
+  }
+
   it('enquanto carrega, mostra a casca real com a silhueta de cabeçalho, cartões e painel lateral', () => {
     const { fixture, raiz, dados } = montar();
     dados.carregando.set(true);
@@ -257,7 +329,8 @@ describe('CampanhaDetalheMestre', () => {
     expect(conteudo?.getAttribute('role')).toBe('status');
     expect(conteudo?.getAttribute('aria-label')).toBe('Carregando campanha');
     expect(raiz.querySelectorAll('app-coluna-acoes app-esqueleto').length).toBeGreaterThan(0);
-    expect(raiz.querySelectorAll('.detalhe-mestre__esqueleto-card').length).toBeGreaterThan(0);
+    expect(raiz.querySelectorAll('.fichas-abas__esqueleto-card').length).toBeGreaterThan(0);
+    expect(raiz.querySelector('app-abas')).toBeNull();
     expect(raiz.querySelector('.detalhe-mestre__painel-lateral app-esqueleto')).not.toBeNull();
     expect(raiz.querySelector('app-espectador-ficha-card')).toBeNull();
   });
@@ -386,17 +459,118 @@ describe('CampanhaDetalheMestre', () => {
     expect(cartao.componentInstance.ultimaRolagem()?.id).toBe(77);
   });
 
-  it('integra criaturas/NPCs com registro, classificação, NA e vitalidade persistida', () => {
-    const { raiz, fixture } = montar();
-    const cartao = fixture.debugElement.query(By.directive(CampanhaFichasEspeciais));
-    expect(cartao).not.toBeNull();
-    expect(raiz.querySelector('.acervo__cartao-nome')?.textContent).toContain('Aberração');
-    const classificacao = raiz.querySelector('app-campanha-fichas-especiais')?.textContent ?? '';
-    expect(classificacao).toContain('SCP-049');
-    expect(classificacao).toContain('Grande');
-    expect(classificacao).toContain('Caçadora');
-    expect(classificacao).toContain('Média');
-    expect(raiz.querySelector('.acervo__cartao-vitais')?.textContent).toContain('Vida');
+  describe('abas Esquadrão · Criaturas · NPCs (m4-15)', () => {
+    it('mostra as três abas, com o Esquadrão ativo e sem filtro nem "Criaturas e NPCs"', () => {
+      const { raiz } = montar();
+      const abas = Array.from(raiz.querySelectorAll<HTMLButtonElement>('button[app-aba]'));
+      expect(abas.map((aba) => aba.textContent?.trim())).toEqual(['Esquadrão', 'Criaturas', 'NPCs']);
+      expect(abas.map((aba) => aba.getAttribute('aria-selected'))).toEqual(['true', 'false', 'false']);
+      expect(raiz.querySelector('app-campanha-fichas-especiais')).toBeNull();
+      expect(raiz.querySelector('select')).toBeNull();
+      expect(raiz.textContent).not.toContain('Criaturas e NPCs');
+    });
+
+    it('cada aba tem o mesmo cabeçalho de seção, com contagem e o botão de criar da aba', () => {
+      const { raiz, fixture } = montar();
+      const cabecalho = () => ({
+        contagem: raiz.querySelector('.fichas-abas__secao-contagem')?.textContent?.trim(),
+        botao: raiz.querySelector('.fichas-abas__secao [app-botao]')?.textContent?.trim(),
+      });
+      expect(cabecalho()).toEqual({ contagem: '1', botao: 'Novo Agente' });
+      abrirAba(raiz, fixture, 'Criaturas');
+      expect(cabecalho()).toEqual({ contagem: '2', botao: 'Nova criatura' });
+      expect(raiz.querySelector('.fichas-abas__secao a')?.getAttribute('href')).toBe(
+        `/campanhas/${CAMPANHA_ID}/criatura/nova`,
+      );
+      abrirAba(raiz, fixture, 'NPCs');
+      expect(cabecalho()).toEqual({ contagem: '2', botao: 'Novo NPC' });
+      expect(raiz.querySelector('.fichas-abas__secao a')?.getAttribute('href')).toBe(
+        `/campanhas/${CAMPANHA_ID}/npc/novo`,
+      );
+    });
+
+    it('"Novo Agente" abre o assistente de criação de ficha', () => {
+      const { raiz, navegar } = montar();
+      (raiz.querySelector('.fichas-abas__secao [app-botao]') as HTMLButtonElement).click();
+      expect(navegar).toHaveBeenCalledWith(['/campanhas', CAMPANHA_ID, 'ficha', 'nova']);
+    });
+
+    it('Criaturas e NPCs aparecem em ordem A–Z, ignorando acento e caixa', () => {
+      const { raiz, fixture } = montar();
+      abrirAba(raiz, fixture, 'Criaturas');
+      expect(
+        Array.from(raiz.querySelectorAll('.criatura-card__nome')).map((el) => el.textContent?.trim()),
+      ).toEqual(['Aberração', 'abismo']);
+      abrirAba(raiz, fixture, 'NPCs');
+      expect(
+        Array.from(raiz.querySelectorAll('.espectador-ficha__nome')).map((el) => el.textContent?.trim()),
+      ).toEqual(['Álvaro', 'Zélia']);
+    });
+
+    it('a criatura usa o cartão de criatura, com registro, classificação, NA, Vida e só a Defesa', () => {
+      const { raiz, fixture } = montar();
+      abrirAba(raiz, fixture, 'Criaturas');
+      expect(fixture.debugElement.queryAll(By.directive(CriaturaEsquadraoCard))).toHaveLength(2);
+      expect(fixture.debugElement.queryAll(By.directive(EspectadorFichaCard))).toHaveLength(0);
+      const cartoes = raiz.querySelector('.fichas-abas__grade')?.textContent ?? '';
+      expect(cartoes).toContain('SCP-049');
+      expect(cartoes).toContain('Grande');
+      expect(cartoes).toContain('Caçadora');
+      expect(cartoes).toContain('Média');
+      expect(cartoes).toContain('Def');
+      expect(cartoes).not.toContain('Esq');
+      expect(cartoes).not.toContain('Blo');
+    });
+
+    it('o NPC usa o cartão do Esquadrão com categoria, nível, Vida, Energia e Def/Esq/Blo', () => {
+      const { raiz, fixture } = montar();
+      abrirAba(raiz, fixture, 'NPCs');
+      const cartoes = Array.from(raiz.querySelectorAll('app-espectador-ficha-card'));
+      expect(cartoes).toHaveLength(2);
+      const zelia = cartoes[1].textContent ?? '';
+      expect(zelia).toContain('Veterano');
+      expect(zelia).toContain('Nível 4');
+      expect(zelia).toContain('Energia');
+      expect(zelia).toContain('Def');
+      expect(zelia).toContain('Esq');
+      expect(zelia).toContain('Blo');
+      expect(cartoes[1].querySelector('.espectador-ficha__menu-botao')).not.toBeNull();
+    });
+
+    it('o NPC Civil não mostra barra de Energia nem valor fabricado; Def aparece', () => {
+      const { raiz, fixture } = montar();
+      abrirAba(raiz, fixture, 'NPCs');
+      const alvaro = Array.from(raiz.querySelectorAll('app-espectador-ficha-card'))[0];
+      expect(alvaro.textContent).toContain('Civil');
+      expect(alvaro.textContent).not.toContain('Energia');
+      expect(alvaro.querySelectorAll('app-barra-recurso')).toHaveLength(1);
+      expect(alvaro.textContent).toContain('Def');
+      expect(alvaro.textContent).not.toContain('Esq');
+    });
+
+    it('mostra o estado vazio da aba sem criaturas/NPCs, sem perder o botão de criar', () => {
+      const { raiz, fixture, dados } = montar();
+      dados.fichas.update((lista) => lista.filter((ficha) => ficha.tipo === undefined));
+      fixture.detectChanges();
+      abrirAba(raiz, fixture, 'Criaturas');
+      expect(raiz.querySelector('.fichas-abas__estado')?.textContent).toContain(
+        'Nenhuma criatura nesta campanha.',
+      );
+      expect(raiz.querySelector('.fichas-abas__secao-contagem')?.textContent?.trim()).toBe('0');
+      expect(raiz.querySelector('.fichas-abas__secao a')).not.toBeNull();
+      abrirAba(raiz, fixture, 'NPCs');
+      expect(raiz.querySelector('.fichas-abas__estado')?.textContent).toContain('Nenhum NPC nesta campanha.');
+    });
+
+    it('a seta do teclado troca de aba (primitivo app-abas)', () => {
+      const { raiz, fixture } = montar();
+      const primeira = raiz.querySelector('button[app-aba]') as HTMLButtonElement;
+      primeira.focus();
+      raiz.querySelector('app-abas')!.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+      fixture.detectChanges();
+      expect(raiz.querySelector('button[app-aba][aria-selected="true"]')?.textContent?.trim()).toBe('Criaturas');
+      expect(raiz.querySelector('.fichas-abas__secao-titulo')).toBeNull();
+    });
   });
 
   it('abre a ficha flutuante ao emitir abrirFicha do cartão do Esquadrão', () => {
@@ -408,44 +582,107 @@ describe('CampanhaDetalheMestre', () => {
   });
 
   it('abre a ficha flutuante ao emitir abrirFicha do cartão de criatura', () => {
-    const { fixture } = montar();
+    const { raiz, fixture } = montar();
     // `mockImplementation` — sem chamar through: `FichaFlutuante.abrir()` real dispara
     // `CriaturaVisualizacao`, que a fixture rasa `recuperarFichaCriatura: () => of({})` deste
     // spec não sustenta (crasha em `.vd` de documento vazio). Só a chamada em si prova o roteamento.
     const spy = vi
       .spyOn(fixture.componentInstance['fichaFlutuanteRef']()!, 'abrir')
       .mockImplementation(() => {});
-    const cartao = fixture.debugElement.query(By.directive(CampanhaFichasEspeciais));
-    cartao.componentInstance.abrirCriatura.emit({ id: 9, usuarioId: 1 });
+    abrirAba(raiz, fixture, 'Criaturas');
+    const cartao = fixture.debugElement.queryAll(By.directive(CriaturaEsquadraoCard))[0];
+    cartao.componentInstance.abrirFicha.emit();
     expect(spy).toHaveBeenCalledWith({ fichaId: 9, tipo: TipoFichaEnum.CRIATURA, usuarioIdDono: 1 });
   });
 
-  it('"Abrir ficha completa" do menu "⋯" vai pro acervo (jogador) ou pra rota de criatura da campanha (criatura)', () => {
+  it('"Abrir ficha" do NPC abre a ficha completa em nova aba — a janela flutuante não suporta NPC', () => {
     const { raiz, fixture } = montar();
+    const flutuante = vi.spyOn(fixture.componentInstance['fichaFlutuanteRef']()!, 'abrir');
     const abrir = vi.spyOn(window, 'open').mockImplementation(() => null);
-
-    (raiz.querySelector('.espectador-ficha__menu-botao') as HTMLButtonElement).click();
-    fixture.detectChanges();
-    (raiz.querySelector('.detalhe-mestre__ficha-menu-item') as HTMLButtonElement).click();
-    expect(abrir).toHaveBeenCalledWith(expect.stringContaining('/fichas/4'), '_blank', 'noopener');
-
-    abrir.mockClear();
-    (raiz.querySelector('app-campanha-fichas-especiais .acervo__menu-botao') as HTMLButtonElement).click();
-    fixture.detectChanges();
-    (raiz.querySelector('.detalhe-mestre__ficha-menu-item') as HTMLButtonElement).click();
+    abrirAba(raiz, fixture, 'NPCs');
+    (raiz.querySelector('.espectador-ficha__abrir-ficha') as HTMLButtonElement).click();
+    expect(flutuante).not.toHaveBeenCalled();
     expect(abrir).toHaveBeenCalledWith(
-      expect.stringContaining(`/campanhas/${CAMPANHA_ID}/criatura/9`),
+      expect.stringContaining(`/campanhas/${CAMPANHA_ID}/npc/12`),
       '_blank',
       'noopener',
     );
   });
 
+  it('"Abrir ficha completa" do menu "⋯" vai pro acervo (jogador) ou pra rota da campanha (criatura/NPC)', () => {
+    const { raiz, fixture } = montar();
+    const abrir = vi.spyOn(window, 'open').mockImplementation(() => null);
+    const abrirCompleta = () => {
+      (raiz.querySelector('.detalhe-mestre__ficha-menu-item') as HTMLButtonElement).click();
+    };
+
+    (raiz.querySelector('.espectador-ficha__menu-botao') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    abrirCompleta();
+    expect(abrir).toHaveBeenCalledWith(expect.stringContaining('/fichas/4'), '_blank', 'noopener');
+
+    abrir.mockClear();
+    abrirAba(raiz, fixture, 'Criaturas');
+    (raiz.querySelector('.criatura-card__menu-botao') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    abrirCompleta();
+    expect(abrir).toHaveBeenCalledWith(
+      expect.stringContaining(`/campanhas/${CAMPANHA_ID}/criatura/9`),
+      '_blank',
+      'noopener',
+    );
+
+    abrir.mockClear();
+    abrirAba(raiz, fixture, 'NPCs');
+    (raiz.querySelector('.espectador-ficha__menu-botao') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    abrirCompleta();
+    expect(abrir).toHaveBeenCalledWith(
+      expect.stringContaining(`/campanhas/${CAMPANHA_ID}/npc/12`),
+      '_blank',
+      'noopener',
+    );
+  });
+
+  it('o menu "⋯" de criatura e NPC tem "Acesso de jogadores"; o de jogador não', async () => {
+    const { raiz, fixture } = montar();
+    const itens = () =>
+      Array.from(raiz.querySelectorAll('.detalhe-mestre__ficha-menu-item')).map((el) => el.textContent?.trim());
+
+    (raiz.querySelector('.espectador-ficha__menu-botao') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(itens()).toEqual(['Abrir ficha completa', 'Duplicar ficha', 'Remover da campanha', 'Excluir ficha']);
+
+    abrirAba(raiz, fixture, 'NPCs');
+    (raiz.querySelector('.espectador-ficha__menu-botao') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(itens()).toEqual([
+      'Abrir ficha completa',
+      'Acesso de jogadores',
+      'Duplicar ficha',
+      'Remover da campanha',
+      'Excluir ficha',
+    ]);
+
+    (Array.from(raiz.querySelectorAll('.detalhe-mestre__ficha-menu-item')).find((el) =>
+      el.textContent?.includes('Acesso de jogadores'),
+    ) as HTMLButtonElement).click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(raiz.querySelector('.detalhe-mestre__ficha-menu')).toBeNull();
+    expect(raiz.querySelector('app-campanha-ficha-acesso app-modal')?.textContent).toContain('Álvaro');
+  });
+
   it('duplica uma criatura pelo mesmo menu "⋯" do cartão, sem exigir dono', () => {
     const { raiz, fixture, fichaService } = montar();
-    (raiz.querySelector('app-campanha-fichas-especiais .acervo__menu-botao') as HTMLButtonElement).click();
+    abrirAba(raiz, fixture, 'Criaturas');
+    (raiz.querySelectorAll('.criatura-card__menu-botao')[0] as HTMLButtonElement).click();
     fixture.detectChanges();
 
-    (raiz.querySelector('.detalhe-mestre__ficha-menu-item:nth-child(2)') as HTMLButtonElement).click();
+    const duplicar = Array.from(raiz.querySelectorAll('.detalhe-mestre__ficha-menu-item')).find((el) =>
+      el.textContent?.includes('Duplicar ficha'),
+    ) as HTMLButtonElement;
+    duplicar.click();
     fixture.detectChanges();
     expect(raiz.querySelector('.dialogo__aviso')?.textContent).not.toContain('de "');
 
@@ -455,6 +692,21 @@ describe('CampanhaDetalheMestre', () => {
     confirmar.click();
 
     expect(fichaService.duplicarFicha).toHaveBeenCalledWith(9);
+  });
+
+  it('duplica um NPC pelo menu "⋯" — o clone nasce na mesma campanha', () => {
+    const { raiz, fixture, fichaService } = montar();
+    abrirAba(raiz, fixture, 'NPCs');
+    (raiz.querySelector('.espectador-ficha__menu-botao') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    (Array.from(raiz.querySelectorAll('.detalhe-mestre__ficha-menu-item')).find((el) =>
+      el.textContent?.includes('Duplicar ficha'),
+    ) as HTMLButtonElement).click();
+    fixture.detectChanges();
+    (Array.from(raiz.querySelectorAll('app-modal button')).find((el) =>
+      el.textContent?.includes('Confirmar duplicação'),
+    ) as HTMLButtonElement).click();
+    expect(fichaService.duplicarFicha).toHaveBeenCalledWith(12);
   });
 
   it('esconde o gatilho flutuante próprio da calculadora e do caderno (consolidados na coluna de ações)', () => {

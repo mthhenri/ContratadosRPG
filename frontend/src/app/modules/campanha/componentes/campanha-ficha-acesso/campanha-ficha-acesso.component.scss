@@ -1,0 +1,51 @@
+@use "tema/breakpoints" as bp;
+
+.ficha-acesso {
+    &__acessos {
+        display: grid;
+        gap: var(--space-16);
+        min-width: 0;
+    }
+    &__concessao {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: var(--space-12);
+        > span {
+            overflow-wrap: anywhere;
+        }
+    }
+    &__nome {
+        margin: 0;
+        font-family: var(--font-mono);
+        font-weight: 600;
+        overflow-wrap: anywhere;
+    }
+    &__nota {
+        margin: 0;
+        color: var(--text-dim);
+        font-size: 12px;
+        overflow-wrap: anywhere;
+    }
+    &__carregando {
+        display: grid;
+        gap: var(--space-12);
+        app-esqueleto {
+            height: 48px;
+        }
+    }
+    @include bp.mobile {
+        &__concessao {
+            align-items: stretch;
+            flex-direction: column;
+        }
+    }
+}
+
+@include bp.mobile {
+    :host .campo__controle,
+    :host [app-botao] {
+        min-height: bp.$alvo-toque;
+    }
+}

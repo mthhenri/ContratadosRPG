@@ -1,0 +1,91 @@
+@if (fichaSelecionada(); as ficha) {
+    <app-modal [aberto]="true" titulo="Acesso de visualização" (fechou)="acesso.fechar()">
+        <div class="ficha-acesso__acessos">
+            <p class="ficha-acesso__nome">{{ ficha.nome }}</p>
+            <p class="ficha-acesso__nota">
+                Conceda a leitura a jogadores específicos. As anotações continuam privadas.
+            </p>
+            @if (acesso.carregando()) {
+                <div role="status" aria-label="Carregando acessos" class="ficha-acesso__carregando">
+                    <app-esqueleto /><app-esqueleto />
+                </div>
+            } @else {
+                @if (acesso.erro(); as erro) {
+                    <app-estado-vazio
+                        titulo="Não foi possível concluir"
+                        [linhaApoio]="erro"
+                        tamanho="compacto"
+                    >
+                        <button
+                            estadoVazioAcao
+                            app-botao
+                            type="button"
+                            variante="secundario"
+                            estilo="contorno"
+                            tamanho="medio"
+                            [disabled]="acesso.ocupado()"
+                            (click)="acesso.recarregar()"
+                        >
+                            Tentar novamente
+                        </button>
+                    </app-estado-vazio>
+                }
+                @if (acesso.pronto()) {
+                    <app-campo rotulo="Jogador" tamanho="padrao">
+                        <select
+                            class="campo__controle"
+                            aria-label="Jogador"
+                            [formControl]="jogador"
+                        >
+                            <option [ngValue]="null" disabled>Selecione um jogador…</option>
+                            @for (membro of elegiveis(); track membro.usuarioId) {
+                                <option [ngValue]="membro.usuarioId">{{ membro.nome }}</option>
+                            }
+                        </select>
+                    </app-campo>
+                    @if (elegiveis().length === 0) {
+                        <p class="ficha-acesso__nota">
+                            Nenhum outro jogador disponível para concessão.
+                        </p>
+                    }
+                    <button
+                        app-botao
+                        type="button"
+                        variante="primario"
+                        estilo="preenchido"
+                        tamanho="medio"
+                        [disabled]="acesso.usuarioSelecionado() === null || acesso.ocupado()"
+                        (click)="acesso.conceder()"
+                    >
+                        {{ acesso.ocupado() ? "Enviando…" : "Conceder acesso" }}
+                    </button>
+                    @for (concessao of acesso.acessos(); track concessao.usuarioId) {
+                        <app-cartao>
+                            <div class="ficha-acesso__concessao">
+                                <span>{{ concessao.nome }}</span>
+                                <button
+                                    app-botao
+                                    type="button"
+                                    variante="perigo"
+                                    estilo="contorno"
+                                    tamanho="medio"
+                                    [disabled]="acesso.ocupado()"
+                                    [attr.aria-label]="'Revogar acesso de ' + concessao.nome"
+                                    (click)="acesso.revogar(concessao.usuarioId)"
+                                >
+                                    Revogar acesso
+                                </button>
+                            </div>
+                        </app-cartao>
+                    } @empty {
+                        <app-estado-vazio
+                            icone="membros"
+                            titulo="Nenhum acesso concedido"
+                            tamanho="compacto"
+                        />
+                    }
+                }
+            }
+        </div>
+    </app-modal>
+}

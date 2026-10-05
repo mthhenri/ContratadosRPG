@@ -1,0 +1,238 @@
+@if (carregando()) {
+    <app-esqueleto class="fichas-abas__esqueleto-abas" />
+    <header class="fichas-abas__secao">
+        <span class="fichas-abas__secao-regua"></span>
+        <app-esqueleto class="fichas-abas__esqueleto-botao" />
+    </header>
+    <ul class="fichas-abas__grade">
+        @for (i of [0, 1, 2]; track i) {
+            <li class="fichas-abas__esqueleto-card">
+                <div class="fichas-abas__esqueleto-card-topo">
+                    <app-esqueleto class="fichas-abas__esqueleto-avatar" />
+                    <div class="fichas-abas__esqueleto-card-texto">
+                        <app-esqueleto class="fichas-abas__esqueleto-linha-curta" />
+                        <app-esqueleto class="fichas-abas__esqueleto-linha-nome" />
+                        <app-esqueleto class="fichas-abas__esqueleto-linha-curta" />
+                        <app-esqueleto class="fichas-abas__esqueleto-barra" />
+                        <app-esqueleto class="fichas-abas__esqueleto-barra" />
+                    </div>
+                </div>
+                <app-esqueleto class="fichas-abas__esqueleto-rodape" />
+            </li>
+        }
+    </ul>
+} @else {
+    <app-abas rotulo="Fichas da campanha" (navegou)="selecionarAba($event)">
+        <button
+            app-aba
+            valor="esquadrao"
+            id="fichas-aba-esquadrao"
+            aria-controls="fichas-painel"
+            [ativa]="abaAtiva() === 'esquadrao'"
+            (click)="selecionarAba('esquadrao')"
+        >
+            <app-icone nome="membros" />
+            <span class="abas__rotulo">Esquadrão</span>
+        </button>
+        <button
+            app-aba
+            valor="criaturas"
+            id="fichas-aba-criaturas"
+            aria-controls="fichas-painel"
+            [ativa]="abaAtiva() === 'criaturas'"
+            (click)="selecionarAba('criaturas')"
+        >
+            <app-icone nome="alerta" />
+            <span class="abas__rotulo">Criaturas</span>
+        </button>
+        <button
+            app-aba
+            valor="npcs"
+            id="fichas-aba-npcs"
+            aria-controls="fichas-painel"
+            [ativa]="abaAtiva() === 'npcs'"
+            (click)="selecionarAba('npcs')"
+        >
+            <app-icone nome="agente" />
+            <span class="abas__rotulo">NPCs</span>
+        </button>
+    </app-abas>
+
+    <section
+        class="fichas-abas__painel"
+        appAbaPainel
+        id="fichas-painel"
+        [attr.aria-labelledby]="'fichas-aba-' + abaAtiva()"
+    >
+        @switch (abaAtiva()) {
+            @case ("esquadrao") {
+                <header class="fichas-abas__secao">
+                    <span class="fichas-abas__secao-regua"></span>
+                    <span class="fichas-abas__secao-contagem" aria-hidden="true">{{
+                        fichasEsquadrao().length
+                    }}</span>
+                    <button
+                        app-botao
+                        type="button"
+                        variante="primario"
+                        estilo="preenchido"
+                        tamanho="medio"
+                        posicaoIcone="esquerda"
+                        (click)="criarAgente.emit()"
+                    >
+                        <app-icone nome="novo-agente" />
+                        Novo Agente
+                    </button>
+                    @if (textoAtualizacao(); as texto) {
+                        <span class="fichas-abas__secao-atualizado">{{ texto }}</span>
+                    }
+                </header>
+                @if (fichasEsquadrao().length === 0) {
+                    <p class="fichas-abas__estado">Nenhuma ficha na campanha ainda.</p>
+                } @else {
+                    <ul class="fichas-abas__grade" appOverflowFade>
+                        @for (ficha of fichasEsquadrao(); track ficha.id) {
+                            <li>
+                                <app-espectador-ficha-card
+                                    [ficha]="ficha"
+                                    [ultimaRolagem]="ultimaRolagem(ficha.id)"
+                                    [mostrarAcoes]="true"
+                                    [menuAberto]="menuFichaId() === ficha.id"
+                                    (avatarEntrou)="
+                                        avatarEntrou.emit({
+                                            evento: $event,
+                                            imagemUrl: ficha.imagemUrl,
+                                        })
+                                    "
+                                    (avatarSaiu)="avatarSaiu.emit()"
+                                    (abrirFicha)="
+                                        abrirFicha.emit({
+                                            ficha: alvo(ficha, ficha.donoNome),
+                                            tipo: TipoFichaEnum.JOGADOR,
+                                        })
+                                    "
+                                    (alternarMenu)="
+                                        alternarMenu.emit({
+                                            ficha: alvo(ficha, ficha.donoNome),
+                                            tipo: TipoFichaEnum.JOGADOR,
+                                            evento: $event,
+                                        })
+                                    "
+                                />
+                            </li>
+                        }
+                    </ul>
+                }
+            }
+            @case ("criaturas") {
+                <header class="fichas-abas__secao">
+                    <span class="fichas-abas__secao-regua"></span>
+                    <span class="fichas-abas__secao-contagem" aria-hidden="true">{{
+                        criaturas().length
+                    }}</span>
+                    <a
+                        app-botao
+                        variante="primario"
+                        estilo="preenchido"
+                        tamanho="medio"
+                        posicaoIcone="esquerda"
+                        [routerLink]="['/campanhas', campanhaId(), 'criatura', 'nova']"
+                    >
+                        <app-icone nome="alerta" />
+                        Nova criatura
+                    </a>
+                </header>
+                @if (criaturas().length === 0) {
+                    <p class="fichas-abas__estado">Nenhuma criatura nesta campanha.</p>
+                } @else {
+                    <ul class="fichas-abas__grade" appOverflowFade>
+                        @for (cartao of cartoesCriatura(); track cartao.ficha.id) {
+                            <li>
+                                <app-criatura-esquadrao-card
+                                    [criatura]="cartao.dados"
+                                    [ultimaRolagem]="ultimaRolagem(cartao.ficha.id)"
+                                    [menuAberto]="menuFichaId() === cartao.ficha.id"
+                                    (abrirFicha)="
+                                        abrirFicha.emit({
+                                            ficha: alvo(cartao.ficha),
+                                            tipo: TipoFichaEnum.CRIATURA,
+                                        })
+                                    "
+                                    (alternarMenu)="
+                                        alternarMenu.emit({
+                                            ficha: alvo(cartao.ficha),
+                                            tipo: TipoFichaEnum.CRIATURA,
+                                            evento: $event,
+                                        })
+                                    "
+                                />
+                            </li>
+                        }
+                    </ul>
+                }
+            }
+            @case ("npcs") {
+                <header class="fichas-abas__secao">
+                    <span class="fichas-abas__secao-regua"></span>
+                    <span class="fichas-abas__secao-contagem" aria-hidden="true">{{
+                        npcs().length
+                    }}</span>
+                    <a
+                        app-botao
+                        variante="primario"
+                        estilo="preenchido"
+                        tamanho="medio"
+                        posicaoIcone="esquerda"
+                        [routerLink]="['/campanhas', campanhaId(), 'npc', 'novo']"
+                    >
+                        <app-icone nome="agente" />
+                        Novo NPC
+                    </a>
+                </header>
+                @if (npcs().length === 0) {
+                    <p class="fichas-abas__estado">Nenhum NPC nesta campanha.</p>
+                } @else {
+                    <ul class="fichas-abas__grade" appOverflowFade>
+                        @for (cartao of cartoesNpc(); track cartao.ficha.id) {
+                            <li>
+                                <app-espectador-ficha-card
+                                    [ficha]="cartao.dados"
+                                    [ultimaRolagem]="ultimaRolagem(cartao.ficha.id)"
+                                    [mostrarAcoes]="true"
+                                    [mostrarEnergia]="cartao.mostrarEnergia"
+                                    [menuAberto]="menuFichaId() === cartao.ficha.id"
+                                    (avatarEntrou)="
+                                        avatarEntrou.emit({
+                                            evento: $event,
+                                            imagemUrl: cartao.ficha.imagemUrl,
+                                        })
+                                    "
+                                    (avatarSaiu)="avatarSaiu.emit()"
+                                    (abrirFicha)="
+                                        abrirFicha.emit({
+                                            ficha: alvo(cartao.ficha),
+                                            tipo: TipoFichaEnum.NPC,
+                                        })
+                                    "
+                                    (alternarMenu)="
+                                        alternarMenu.emit({
+                                            ficha: alvo(cartao.ficha),
+                                            tipo: TipoFichaEnum.NPC,
+                                            evento: $event,
+                                        })
+                                    "
+                                />
+                            </li>
+                        }
+                    </ul>
+                }
+            }
+        }
+    </section>
+}
+
+<app-campanha-ficha-acesso
+    [fichas]="especiais()"
+    [campanhaId]="campanhaId()"
+    [membros]="membros()"
+/>

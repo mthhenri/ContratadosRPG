@@ -8,10 +8,29 @@ import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import type { ItemFicha } from '../../campanha-equipe.util';
 
 /**
- * Ficha do painel de jogadores do espectador — mesmo recorte de `ItemFicha`, com o nome do dono já
- * anexado (`fichasEsquadrao` de `CampanhaDetalhe`).
+ * Recorte de ficha que o cartão realmente lê — um subconjunto de `ItemFicha` (todo `ItemFicha` serve),
+ * para o NPC da campanha do mestre (m4-15) usar o mesmo cartão sem fabricar condições/patente.
+ * `donoNome` é a linha superior do cartão: o dono no Esquadrão (`fichasEsquadrao` de
+ * `CampanhaDetalhe`), a categoria no NPC (que pertence ao mestre, não a um jogador).
  */
-export type EspectadorFichaCardDados = ItemFicha & { readonly donoNome: string };
+export type EspectadorFichaCardDados = Pick<
+  ItemFicha,
+  | 'id'
+  | 'usuarioId'
+  | 'imagemUrl'
+  | 'cor'
+  | 'nome'
+  | 'classeTexto'
+  | 'vidaAtual'
+  | 'vidaMaxima'
+  | 'energiaAtual'
+  | 'energiaMaxima'
+  | 'critico'
+  | 'defesa'
+  | 'esquiva'
+  | 'bloqueio'
+  | 'contraAtaque'
+> & { readonly donoNome: string };
 
 /**
  * Cartão de ficha do Painel do espectador (m8-07) — análogo aprovado `.detalhe__ficha-card`
@@ -53,6 +72,8 @@ export class EspectadorFichaCard {
    * cena sem iniciativa (m7-24) só abre a ficha e não tem menu: desliga para não deixar um "⋯" mudo.
    */
   readonly mostrarMenu = input(true);
+  /** Barra de Energia — `false` no NPC Civil, que não tem Energia (m4-15); nada é exibido no lugar. */
+  readonly mostrarEnergia = input(true);
   /** Se o menu "⋯" DESTE cartão está aberto — controlado pelo pai, como o antigo `menuFichaAberto`. */
   readonly menuAberto = input(false);
 

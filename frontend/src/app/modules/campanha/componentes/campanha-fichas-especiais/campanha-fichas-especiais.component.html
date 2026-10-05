@@ -1,4 +1,4 @@
-@if (gerenciavel() || itens().length || filtro.value !== "TODOS") {
+@if (itens().length || filtro.value !== "TODOS") {
     <app-cartao titulo="Criaturas e NPCs" [cabecalhoQuebravel]="true">
         <span cartaoIndice>//</span>
         <div class="fichas-especiais__acoes">
@@ -9,26 +9,6 @@
                     <option [value]="TipoFichaEnum.NPC">NPCs</option>
                 </select>
             </app-campo>
-            @if (gerenciavel()) {
-                <a
-                    app-botao
-                    variante="secundario"
-                    estilo="contorno"
-                    tamanho="medio"
-                    [routerLink]="['/campanhas', campanhaId(), 'criatura', 'nova']"
-                >
-                    <app-icone nome="alerta" /> Nova criatura
-                </a>
-                <a
-                    app-botao
-                    variante="primario"
-                    estilo="preenchido"
-                    tamanho="medio"
-                    [routerLink]="['/campanhas', campanhaId(), 'npc', 'novo']"
-                >
-                    <app-icone nome="agente" /> Novo NPC
-                </a>
-            }
         </div>
         <ul class="fichas-especiais__grade">
             @for (entrada of itens(); track entrada.item.id) {
@@ -36,159 +16,18 @@
                     <app-cartao-ficha-acervo
                         [item]="entrada.item"
                         [campanhaDestino]="campanhaId()"
-                        [mostrarMenu]="
-                            gerenciavel() && entrada.ficha.tipo === TipoFichaEnum.CRIATURA
-                        "
-                        [menuAberto]="menuFichaId() === entrada.ficha.id"
-                        (menu)="menuCriatura.emit({ ficha: entrada.ficha, evento: $event })"
-                    >
-                        <div cartaoFichaAcoes class="fichas-especiais__ficha-acoes">
-                            @if (gerenciavel()) {
-                                <button
-                                    app-botao
-                                    type="button"
-                                    variante="secundario"
-                                    estilo="contorno"
-                                    tamanho="medio"
-                                    [attr.aria-label]="'Gerenciar acesso de ' + entrada.ficha.nome"
-                                    (click)="abrirAcesso(entrada.ficha.id)"
-                                >
-                                    <app-icone nome="membros" /> Acesso de jogadores
-                                </button>
-                                @if (entrada.ficha.tipo === TipoFichaEnum.CRIATURA) {
-                                    <button
-                                        app-botao
-                                        type="button"
-                                        variante="secundario"
-                                        estilo="texto"
-                                        tamanho="medio"
-                                        (click)="abrirCriatura.emit(entrada.ficha)"
-                                    >
-                                        <app-icone nome="visao-geral" /> Ficha rápida
-                                    </button>
-                                    @if (ultimaRolagem(entrada.ficha.id); as rolagem) {
-                                        <p class="fichas-especiais__nota">
-                                            Última rolagem: {{ rolagem.rotulo }} —
-                                            {{ rolagem.resultado.total }}
-                                        </p>
-                                    } @else {
-                                        <p class="fichas-especiais__nota">
-                                            Nenhuma rolagem carregada ainda
-                                        </p>
-                                    }
-                                }
-                            }
-                        </div>
-                    </app-cartao-ficha-acervo>
+                        [mostrarMenu]="false"
+                    />
                 </li>
             } @empty {
                 <li class="fichas-especiais__vazio">
                     <app-estado-vazio
                         icone="agente"
                         titulo="Nenhuma ficha neste recorte"
-                        [linhaApoio]="
-                            gerenciavel()
-                                ? 'Crie uma criatura ou NPC para esta campanha.'
-                                : 'Criaturas e NPCs aparecem aqui conforme o acesso concedido.'
-                        "
+                        linhaApoio="Criaturas e NPCs aparecem aqui conforme o acesso concedido."
                     />
                 </li>
             }
         </ul>
     </app-cartao>
-}
-@if (gerenciavel() && fichaSelecionada(); as ficha) {
-    <app-modal [aberto]="true" titulo="Acesso de visualização" (fechou)="acesso.fechar()">
-        <div class="fichas-especiais__acessos">
-            <p class="fichas-especiais__nome">{{ ficha.nome }}</p>
-            <p class="fichas-especiais__nota">
-                Conceda a leitura a jogadores específicos. As anotações continuam privadas.
-            </p>
-            @if (acesso.carregando()) {
-                <div
-                    role="status"
-                    aria-label="Carregando acessos"
-                    class="fichas-especiais__carregando"
-                >
-                    <app-esqueleto /><app-esqueleto />
-                </div>
-            } @else {
-                @if (acesso.erro(); as erro) {
-                    <app-estado-vazio
-                        titulo="Não foi possível concluir"
-                        [linhaApoio]="erro"
-                        tamanho="compacto"
-                    >
-                        <button
-                            estadoVazioAcao
-                            app-botao
-                            type="button"
-                            variante="secundario"
-                            estilo="contorno"
-                            tamanho="medio"
-                            [disabled]="acesso.ocupado()"
-                            (click)="acesso.recarregar()"
-                        >
-                            Tentar novamente
-                        </button>
-                    </app-estado-vazio>
-                }
-                @if (acesso.pronto()) {
-                    <app-campo rotulo="Jogador" tamanho="padrao">
-                        <select
-                            class="campo__controle"
-                            aria-label="Jogador"
-                            [formControl]="jogador"
-                        >
-                            <option [ngValue]="null" disabled>Selecione um jogador…</option>
-                            @for (membro of elegiveis(); track membro.usuarioId) {
-                                <option [ngValue]="membro.usuarioId">{{ membro.nome }}</option>
-                            }
-                        </select>
-                    </app-campo>
-                    @if (elegiveis().length === 0) {
-                        <p class="fichas-especiais__nota">
-                            Nenhum outro jogador disponível para concessão.
-                        </p>
-                    }
-                    <button
-                        app-botao
-                        type="button"
-                        variante="primario"
-                        estilo="preenchido"
-                        tamanho="medio"
-                        [disabled]="acesso.usuarioSelecionado() === null || acesso.ocupado()"
-                        (click)="acesso.conceder()"
-                    >
-                        {{ acesso.ocupado() ? "Enviando…" : "Conceder acesso" }}
-                    </button>
-                    @for (concessao of acesso.acessos(); track concessao.usuarioId) {
-                        <app-cartao>
-                            <div class="fichas-especiais__concessao">
-                                <span>{{ concessao.nome }}</span>
-                                <button
-                                    app-botao
-                                    type="button"
-                                    variante="perigo"
-                                    estilo="contorno"
-                                    tamanho="medio"
-                                    [disabled]="acesso.ocupado()"
-                                    [attr.aria-label]="'Revogar acesso de ' + concessao.nome"
-                                    (click)="acesso.revogar(concessao.usuarioId)"
-                                >
-                                    Revogar acesso
-                                </button>
-                            </div>
-                        </app-cartao>
-                    } @empty {
-                        <app-estado-vazio
-                            icone="membros"
-                            titulo="Nenhum acesso concedido"
-                            tamanho="compacto"
-                        />
-                    }
-                }
-            }
-        </div>
-    </app-modal>
 }

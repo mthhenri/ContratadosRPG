@@ -6,15 +6,11 @@
     margin-top: var(--space-16);
 }
 .fichas-especiais {
-    &__acoes,
-    &__ficha-acoes,
-    &__concessao {
+    &__acoes {
         display: flex;
         align-items: center;
         flex-wrap: wrap;
         gap: var(--space-12);
-    }
-    &__acoes {
         margin-bottom: var(--space-16);
     }
     &__grade {
@@ -35,49 +31,8 @@
     &__vazio {
         grid-column: 1 / -1;
     }
-    &__ficha-acoes {
-        margin-block: var(--space-8);
-    }
-    &__acessos {
-        display: grid;
-        gap: var(--space-16);
-        min-width: 0;
-    }
-    &__concessao {
-        justify-content: space-between;
-        > span {
-            overflow-wrap: anywhere;
-        }
-    }
-    &__nome {
-        margin: 0;
-        font-family: var(--font-mono);
-        font-weight: 600;
-        overflow-wrap: anywhere;
-    }
-    &__nota {
-        margin: 0;
-        color: var(--text-dim);
-        font-size: 12px;
-        overflow-wrap: anywhere;
-    }
-    &__carregando {
-        display: grid;
-        gap: var(--space-12);
-        app-esqueleto {
-            height: 48px;
-        }
-    }
     @include bp.mobile {
         &__acoes {
-            align-items: stretch;
-            flex-direction: column;
-        }
-        &__ficha-acoes {
-            flex-direction: column;
-            align-items: stretch;
-        }
-        &__concessao {
             align-items: stretch;
             flex-direction: column;
         }
@@ -85,8 +40,7 @@
 }
 
 @include bp.mobile {
-    :host .campo__controle,
-    :host [app-botao] {
+    :host .campo__controle {
         min-height: bp.$alvo-toque;
     }
 }

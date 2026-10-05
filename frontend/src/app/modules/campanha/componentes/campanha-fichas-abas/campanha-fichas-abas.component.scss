@@ -1,0 +1,147 @@
+@use "tema/breakpoints" as bp;
+
+// Abas Esquadrão · Criaturas · NPCs do corpo da campanha do mestre (m4-15). Cabeçalho de seção e
+// grade vieram de `detalhe-mestre.page.scss` (`__secao*`, `__esquadrao-grid`), onde serviam só ao
+// Esquadrão; o esqueleto de carga espelha `.espectador-ficha` (avatar 128px + coluna de texto/
+// barras + faixa "Última rolagem") e fica aqui junto da grade que ele imita.
+:host {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-12);
+    min-height: 0;
+}
+
+.fichas-abas {
+    &__painel {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+    }
+
+    &__secao {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 12px;
+        flex-wrap: wrap;
+    }
+
+    &__secao-regua {
+        flex: 1;
+        min-width: 20px;
+        height: 1px;
+        background: var(--border);
+    }
+
+    &__secao-contagem {
+        flex: none;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-mute);
+    }
+
+    &__secao-atualizado {
+        flex: none;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--text-mute);
+    }
+
+    &__estado {
+        margin: 0;
+        padding: var(--space-16);
+        font-family: var(--font-sans);
+        font-size: 13px;
+        color: var(--text-mute);
+        text-align: center;
+    }
+
+    // Grid de 3 colunas — colapsa a 2 no tablet, 1 no mobile (mesmo padrão de
+    // `.espectador__ficha-grid`).
+    &__grade {
+        list-style: none;
+        margin: 0 0 var(--space-16);
+        padding: 2px;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: var(--space-8);
+        align-items: start;
+
+        @include bp.tablet {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        @include bp.mobile {
+            grid-template-columns: minmax(0, 1fr);
+        }
+    }
+
+    // Alvo de toque dos botões de criar no mobile.
+    @include bp.mobile {
+        &__secao [app-botao] {
+            min-height: bp.$alvo-toque;
+        }
+    }
+
+    // === Esqueleto de carga — só a geometria de cada bloco; a identidade (cor/raio/pulso) é de
+    // `app-esqueleto`.
+    &__esqueleto-abas {
+        height: 42px;
+    }
+
+    &__esqueleto-botao {
+        flex: none;
+        width: 118px;
+        height: 30px;
+    }
+
+    &__esqueleto-card {
+        display: flex;
+        flex-direction: column;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-card);
+        overflow: hidden;
+    }
+
+    &__esqueleto-card-topo {
+        display: flex;
+        gap: var(--space-12);
+        padding: var(--space-12);
+    }
+
+    &__esqueleto-card-texto {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-8);
+    }
+
+    &__esqueleto-avatar {
+        flex: none;
+        width: 128px;
+        height: 128px;
+    }
+
+    &__esqueleto-linha-curta {
+        width: 45%;
+        height: 10px;
+    }
+
+    &__esqueleto-linha-nome {
+        width: 75%;
+        height: 16px;
+    }
+
+    &__esqueleto-barra {
+        width: 100%;
+        height: 22px;
+    }
+
+    &__esqueleto-rodape {
+        height: 30px;
+        margin: 0 var(--space-12) var(--space-12);
+    }
+}

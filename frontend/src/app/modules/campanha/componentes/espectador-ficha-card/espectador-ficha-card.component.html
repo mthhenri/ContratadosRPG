@@ -41,14 +41,16 @@
                     [atual]="ficha().vidaAtual"
                     [maximo]="ficha().vidaMaxima ?? 0"
                 />
-                <app-barra-recurso
-                    class="espectador-ficha__recurso-primitivo"
-                    rotulo="Energia"
-                    recurso="energia"
-                    tamanho="compacto"
-                    [atual]="ficha().energiaAtual"
-                    [maximo]="ficha().energiaMaxima ?? 0"
-                />
+                @if (mostrarEnergia()) {
+                    <app-barra-recurso
+                        class="espectador-ficha__recurso-primitivo"
+                        rotulo="Energia"
+                        recurso="energia"
+                        tamanho="compacto"
+                        [atual]="ficha().energiaAtual"
+                        [maximo]="ficha().energiaMaxima ?? 0"
+                    />
+                }
             </div>
 
             @if (
