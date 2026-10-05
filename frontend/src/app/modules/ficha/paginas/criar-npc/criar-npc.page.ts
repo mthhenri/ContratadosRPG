@@ -1,13 +1,13 @@
 import { Component, HostListener, inject, signal, viewChild, ElementRef } from "@angular/core";
-import { NgTemplateOutlet } from "@angular/common";
+import { NgTemplateOutlet, UpperCasePipe } from "@angular/common";
 import { Modal } from "../../../../shared/ui/modal/modal.component";
 import { ActivatedRoute, Router } from "@angular/router";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { DestroyRef } from "@angular/core";
 import { finalize } from "rxjs";
 import { Botao } from "../../../../shared/ui/botao/botao.component";
+import { BotaoIcone } from "../../../../shared/ui/botao-icone/botao-icone.component";
 import { Cartao } from "../../../../shared/ui/cartao/cartao.component";
-import { Chip } from "../../../../shared/ui/chip/chip.component";
 import { Stat } from "../../../../shared/ui/stat/stat.component";
 import { ConfirmacaoService } from "../../../../shared/ui/confirmacao/confirmacao.service";
 import { NotificacaoService } from "../../../../shared/ui/notificacao/notificacao.service";
@@ -21,10 +21,13 @@ import { NpcConduta } from "./npc-conduta.component";
 import { NpcRevisao } from "./npc-revisao.component";
 import { Icone } from "../../../../shared/icone/icone.component";
 
-/** Shell do guia; composição e estado dedicados, sem branches no assistente de jogador. */
+/**
+ * Shell do guia; composição e estado dedicados, sem branches no assistente de jogador. O casco
+ * (`guia__*`) é o mesmo dos guias de Jogador e Criatura (m4-13); contrato, validação e envio não mudam.
+ */
 @Component({
     selector: "app-npc-criar", providers: [NpcCriacaoFormulario],
-    imports: [Botao, Cartao, Chip, Stat, Icone, Modal, NgTemplateOutlet,
+    imports: [Botao, BotaoIcone, Cartao, Stat, Icone, Modal, NgTemplateOutlet, UpperCasePipe,
         NpcIdentidade, NpcAtributos, NpcHabilidades, NpcConduta, NpcRevisao],
     templateUrl: "./criar-npc.page.html", styleUrl: "./criar-npc.page.scss",
 })
@@ -41,7 +44,9 @@ export class NpcCriar {
     readonly etapas = ["Identidade", "Atributos e recursos", "Habilidades",
         "Conduta e sanidade", "Revisão"] as const;
     readonly etapa = signal(0);
-    readonly mostrarResumo = signal(false);
+    readonly resumoAberto = signal(false);
+    /** Etapa mais distante já alcançada — o Roteiro só libera até ela (como nos guias de Jogador/Criatura). */
+    readonly visitado = signal(0);
     readonly mostrarErros = signal(false);
     readonly enviando = signal(false);
     readonly registrado = signal(false);
@@ -52,8 +57,14 @@ export class NpcCriar {
     irEtapa(indice: number): void {
         if (this.enviando() || indice < 0 || indice >= this.etapas.length) return;
         this.etapa.set(indice);
+        this.visitado.update((atual) => Math.max(atual, indice));
         this.mostrarErros.set(false);
         this.tituloEtapa()?.nativeElement.focus();
+    }
+
+    /** Número de etapa com dois dígitos ("01"), como no Roteiro dos outros guias. */
+    numero(valor: number): string {
+        return String(valor).padStart(2, "0");
     }
 
     /** A validação é apresentada na etapa atual antes de avançar. */

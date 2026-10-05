@@ -1,9 +1,12 @@
-<div class="npc-etapa">
-    <p class="npc-etapa__apoio">
-        Distribua {{ criacao.pontos().pontosDistribuir }} pontos adicionais. Limite de
-        {{ criacao.pontos().limite }} por atributo.
-    </p>
-    <div class="npc-etapa__recursos" aria-live="polite">
+<div class="guia__etapa">
+    <div class="guia__introducao">
+        <span class="guia__introducao-codigo">ATRIBUTOS // RECURSOS</span>
+        <p>
+            Distribua {{ criacao.pontos().pontosDistribuir }} pontos adicionais. Limite de
+            {{ criacao.pontos().limite }} por atributo.
+        </p>
+    </div>
+    <div class="guia__metricas" aria-live="polite">
         <app-stat
             rotulo="Restantes"
             [valor]="criacao.distribuicao().restantes"
@@ -40,23 +43,26 @@
             tamanho="compacto"
             variante="energia"
             [nota]="
-                criacao.ehCivil() ? '' : criacao.dados().energia.recargaPorTurno === null
-                    ? 'Reserva'
-                    : '+' + criacao.dados().energia.recargaPorTurno + ' por turno'
+                criacao.ehCivil()
+                    ? ''
+                    : criacao.dados().energia.recargaPorTurno === null
+                      ? 'Reserva'
+                      : '+' + criacao.dados().energia.recargaPorTurno + ' por turno'
             "
         />
     </div>
-    <div class="npc-etapa__dupla">
+    <div class="guia__campos guia__campos--duas-colunas">
         @for (grupo of grupos; track grupo.nome) {
-            <section>
-                <h3 class="npc-etapa__titulo">{{ grupo.nome }}</h3>
+            <section class="atributo__grupo">
+                <div class="guia__subsecao">
+                    <span>{{ grupo.nome }}</span>
+                    <i></i>
+                </div>
                 @for (campo of grupo.campos; track campo.chave) {
-                    <div class="npc-etapa__atributo">
-                        <div>
-                            <strong>{{ campo.nome }}</strong>
-                            <span class="npc-etapa__dica"
-                                >DT {{ criacao.calcularDt(campo.chave) }}</span
-                            >
+                    <div class="atributo">
+                        <div class="atributo__identidade">
+                            <span>{{ campo.nome }}</span>
+                            <small>DT {{ criacao.calcularDt(campo.chave) }}</small>
                         </div>
                         <app-step-input
                             [formControl]="
@@ -99,5 +105,5 @@
             </section>
         }
     </div>
-    <p class="npc-etapa__apoio">DT é contextual: consulte o atributo usado em cada teste.</p>
+    <p class="guia__ajuda">DT é contextual: consulte o atributo usado em cada teste.</p>
 </div>

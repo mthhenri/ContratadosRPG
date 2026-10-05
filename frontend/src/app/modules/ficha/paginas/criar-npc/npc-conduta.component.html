@@ -1,9 +1,12 @@
-<div class="npc-etapa">
-    <p class="npc-etapa__apoio">
-        Defina respostas rápidas para conduzir o NPC em cena. Para Civil, descreva como evita o
-        confronto e busca segurança.
-    </p>
-    <app-campo rotulo="Gatilhos de fuga" tamanho="padrao">
+<div class="guia__etapa">
+    <div class="guia__introducao">
+        <span class="guia__introducao-codigo">CONDUTA // SANIDADE</span>
+        <p>
+            Defina respostas rápidas para conduzir o NPC em cena. Para Civil, descreva como evita o
+            confronto e busca segurança.
+        </p>
+    </div>
+    <app-campo rotulo="Gatilhos de fuga" tamanho="compacto">
         <textarea
             class="campo__controle campo__controle--area"
             rows="2"
@@ -11,7 +14,7 @@
             placeholder="Quando abandona o confronto?"
         ></textarea>
     </app-campo>
-    <app-campo rotulo="Prioridades de alvo" tamanho="padrao">
+    <app-campo rotulo="Prioridades de alvo" tamanho="compacto">
         <textarea
             class="campo__controle campo__controle--area"
             rows="2"
@@ -19,7 +22,7 @@
             placeholder="Quem enfrenta, protege ou evita?"
         ></textarea>
     </app-campo>
-    <app-campo rotulo="Reação a ferimento severo" tamanho="padrao">
+    <app-campo rotulo="Reação a ferimento severo" tamanho="compacto">
         <textarea
             class="campo__controle campo__controle--area"
             rows="2"
@@ -28,7 +31,7 @@
         ></textarea>
     </app-campo>
     @for (grupo of grupos; track grupo.chave) {
-        <section class="npc-etapa">
+        <section class="guia__etapa">
             <app-cartao
                 [titulo]="grupo.nome + ' (opcional)'"
                 [semCaixa]="true"
@@ -62,7 +65,7 @@
                     [cabecalhoQuebravel]="true"
                 >
                     <span cartaoIndice>{{ indice + 1 }}</span>
-                    <div class="npc-etapa">
+                    <div class="guia__etapa">
                         <app-campo rotulo="Nome" tamanho="compacto">
                             <input class="campo__controle" [formControl]="registro.controls.nome" />
                         </app-campo>
@@ -101,14 +104,17 @@
             }
         </section>
     }
-    <section class="npc-etapa">
-        <h3 class="npc-etapa__titulo">Anotações privadas (opcional)</h3>
+    <section class="guia__etapa">
+        <div class="guia__subsecao">
+            <span>Anotações privadas (opcional)</span>
+            <i></i>
+        </div>
         <app-editor-markdown
             [formControl]="controles.anotacoes"
             [compacto]="true"
             rotulo="Anotações privadas"
         />
-        <p class="npc-etapa__apoio">
+        <p class="guia__ajuda">
             Privadas para o mestre; não aparecem para jogadores com acesso ao NPC.
         </p>
     </section>

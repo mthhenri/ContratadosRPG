@@ -1,8 +1,12 @@
-<div class="npc-etapa">
+<div class="guia__etapa">
+    <div class="guia__introducao">
+        <span class="guia__introducao-codigo">REVISÃO // REGISTRO</span>
+        <p>Confira o que foi definido antes de registrar o NPC.</p>
+    </div>
     @if (criacao.pendencias().length) {
         <app-cartao titulo="Antes de registrar" [cabecalhoQuebravel]="true">
             <app-icone cartaoIndice nome="alerta" />
-            <div class="npc-etapa__lista">
+            <div class="guia__lista">
                 @for (pendencia of criacao.pendencias(); track $index) {
                     <button
                         app-botao
@@ -18,16 +22,16 @@
             </div>
         </app-cartao>
     }
-    <div class="npc-revisao">
-        <div class="npc-etapa">
+    <div class="guia__revisao-colunas">
+        <div>
             <section>
-                <h3 class="npc-revisao__nome">
+                <h3 class="guia__revisao-nome">
                     {{ criacao.dados().identidadeNarrativa.nome || "Nome a definir" }}
                 </h3>
-                <p class="npc-etapa__texto">
+                <p class="guia__texto">
                     {{ criacao.dados().identidadeNarrativa.funcao || "Função a definir" }}
                 </p>
-                <div class="npc-etapa__acoes">
+                <div class="guia__acoes">
                     <app-chip variante="sutil"
                         >{{ criacao.referenciaCategoria().rotulo }} · N{{
                             criacao.dados().nivel
@@ -39,7 +43,7 @@
                     >
                 </div>
             </section>
-            <div class="npc-etapa__recursos">
+            <div class="guia__metricas">
                 <app-stat
                     rotulo="Vida"
                     [valor]="criacao.dados().vidaMaxima"
@@ -77,25 +81,29 @@
                 />
             </div>
             @for (grupo of grupos; track grupo.nome) {
-                <section>
-                    <h3 class="npc-etapa__titulo">{{ grupo.nome }}</h3>
+                <section class="atributo__grupo">
+                    <div class="guia__subsecao">
+                        <span>{{ grupo.nome }}</span>
+                        <i></i>
+                    </div>
                     @for (campo of grupo.campos; track campo.chave) {
-                        <div class="npc-etapa__atributo">
-                            <span
-                                >{{ campo.nome }}
-                                <span class="npc-etapa__dica"
-                                    >DT {{ criacao.calcularDt(campo.chave) }}</span
-                                ></span
-                            >
+                        <div class="atributo atributo--leitura">
+                            <div class="atributo__identidade">
+                                <span>{{ campo.nome }}</span>
+                                <small>DT {{ criacao.calcularDt(campo.chave) }}</small>
+                            </div>
                             <strong>{{ criacao.dados().atributos[campo.chave] }}</strong>
                         </div>
                     }
                 </section>
             }
         </div>
-        <div class="npc-etapa">
-            <section class="npc-etapa">
-                <h3 class="npc-etapa__titulo">Habilidades</h3>
+        <div>
+            <section class="guia__etapa">
+                <div class="guia__subsecao">
+                    <span>Habilidades</span>
+                    <i></i>
+                </div>
                 @if (!criacao.dados().habilidades.length) {
                     <app-estado-vazio titulo="Sem habilidades especiais" tamanho="compacto" />
                 }
@@ -111,64 +119,73 @@
                                 : "Passiva"
                         }}</app-chip>
                         @if (habilidade.nomeNarrativo) {
-                            <p class="npc-etapa__apoio">{{ habilidade.nomeNarrativo }}</p>
+                            <p class="guia__ajuda">{{ habilidade.nomeNarrativo }}</p>
                         }
-                        <p class="npc-etapa__texto">{{ habilidade.descricao }}</p>
+                        <p class="guia__texto">{{ habilidade.descricao }}</p>
                         @if (habilidade.restricao) {
-                            <p class="npc-etapa__apoio">Restrição: {{ habilidade.restricao }}</p>
+                            <p class="guia__ajuda">Restrição: {{ habilidade.restricao }}</p>
                         }
                     </app-cartao>
                 }
             </section>
-            <section class="npc-etapa">
-                <h3 class="npc-etapa__titulo">Conduta</h3>
+            <section class="guia__etapa">
+                <div class="guia__subsecao">
+                    <span>Conduta</span>
+                    <i></i>
+                </div>
                 <div>
-                    <h4 class="npc-etapa__dica">Gatilhos de fuga</h4>
-                    <p class="npc-etapa__texto">
+                    <h4 class="guia__dica">Gatilhos de fuga</h4>
+                    <p class="guia__texto">
                         {{ criacao.dados().condutaCombate.gatilhosFuga || "A definir" }}
                     </p>
                 </div>
                 <div>
-                    <h4 class="npc-etapa__dica">Prioridades de alvo</h4>
-                    <p class="npc-etapa__texto">
+                    <h4 class="guia__dica">Prioridades de alvo</h4>
+                    <p class="guia__texto">
                         {{ criacao.dados().condutaCombate.prioridadesAlvo || "A definir" }}
                     </p>
                 </div>
                 <div>
-                    <h4 class="npc-etapa__dica">Reação a ferimento severo</h4>
-                    <p class="npc-etapa__texto">
+                    <h4 class="guia__dica">Reação a ferimento severo</h4>
+                    <p class="guia__texto">
                         {{ criacao.dados().condutaCombate.reacaoFerimentoSevero || "A definir" }}
                     </p>
                 </div>
             </section>
-            <section class="npc-etapa">
-                <h3 class="npc-etapa__titulo">Sanidade</h3>
+            <section class="guia__etapa">
+                <div class="guia__subsecao">
+                    <span>Sanidade</span>
+                    <i></i>
+                </div>
                 @for (sequela of criacao.dados().sanidade.sequelas; track $index) {
                     <div>
                         <strong>{{ sequela.nome }}</strong>
-                        <p class="npc-etapa__texto">{{ sequela.descricao }}</p>
+                        <p class="guia__texto">{{ sequela.descricao }}</p>
                     </div>
                 } @empty {
-                    <p class="npc-etapa__apoio">Sem sequelas (opcional)</p>
+                    <p class="guia__ajuda">Sem sequelas (opcional)</p>
                 }
                 @for (trauma of criacao.dados().sanidade.traumas; track $index) {
                     <div>
                         <strong>{{ trauma.nome }}</strong>
-                        <p class="npc-etapa__dica">
+                        <p class="guia__dica">
                             {{ trauma.tratado ? "Tratado" : "Não tratado" }}
                         </p>
-                        <p class="npc-etapa__texto">{{ trauma.descricao }}</p>
+                        <p class="guia__texto">{{ trauma.descricao }}</p>
                     </div>
                 } @empty {
-                    <p class="npc-etapa__apoio">Sem traumas (opcional)</p>
+                    <p class="guia__ajuda">Sem traumas (opcional)</p>
                 }
             </section>
-            <section>
-                <h3 class="npc-etapa__titulo">Anotações privadas</h3>
+            <section class="guia__etapa">
+                <div class="guia__subsecao">
+                    <span>Anotações privadas</span>
+                    <i></i>
+                </div>
                 @if (criacao.dados().anotacoes) {
-                    <div class="npc-etapa__texto" [innerHTML]="anotacoesHtml()"></div>
+                    <div class="guia__texto" [innerHTML]="anotacoesHtml()"></div>
                 } @else {
-                    <p class="npc-etapa__apoio">Sem anotações (opcional)</p>
+                    <p class="guia__ajuda">Sem anotações (opcional)</p>
                 }
             </section>
         </div>

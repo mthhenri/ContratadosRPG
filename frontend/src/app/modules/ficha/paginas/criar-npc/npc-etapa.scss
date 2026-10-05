@@ -1,92 +1,197 @@
 @use "tema/breakpoints" as bp;
 
+// Campos das etapas do guia de NPC — subconjunto da receita `.guia__*` dos guias de Jogador e de
+// Criatura (`criar-criatura.page.scss`: `__introducao`, `__campos`, `__metricas`, `__subsecao`,
+// `.atributo`), copiado aqui porque cada componente de etapa tem o próprio escopo de estilos e o
+// SCSS da página não alcança o template deles (m4-13). O casco (cabeçalho, Roteiro, resumo,
+// rodapé) mora em `criar-npc.page.scss`.
+
 :host {
     display: block;
     min-width: 0;
 }
-.npc-etapa {
-    display: grid;
-    align-content: start;
-    gap: var(--space-16);
-    &__apoio,
-    &__dica {
-        color: var(--text-dim);
-        font-size: 12px;
-        line-height: 1.6;
+
+.guia {
+    &__etapa {
+        display: grid;
+        align-content: start;
+        gap: 18px;
+        min-width: 0;
+    }
+    &__introducao {
+        padding-bottom: 15px;
+        border-bottom: 1px solid var(--border);
+        p {
+            margin: 6px 0 0;
+            max-width: 620px;
+            font: 13px/1.55 var(--font-sans);
+            color: var(--text-dim);
+        }
+    }
+    &__introducao-codigo {
+        font: 600 9px var(--font-mono);
+        letter-spacing: 0.14em;
+        color: var(--accent);
+    }
+    &__campos {
+        display: grid;
+        gap: 18px;
+        align-items: start;
+        &--duas-colunas {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+    // Resumo numérico da etapa (Vida/Defesa/Energia…) — `.stat` do primitivo em grade, como o
+    // "Base / Limite / Pontos de Ajuste" do passo Atributos da criatura.
+    &__metricas {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+    }
+    &__subsecao {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 8px 0 -6px;
+        span {
+            font: 600 9px var(--font-mono);
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--text-mute);
+        }
+        i {
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+    }
+    &__ajuda {
+        margin: 0;
+        font: 11px/1.45 var(--font-sans);
+        color: var(--text-mute);
     }
     &__dica {
         display: block;
-        font-size: 10px;
-        font-family: var(--font-mono);
+        font: 10px var(--font-mono);
+        color: var(--text-mute);
     }
-    &__dupla {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: var(--space-20);
+    &__texto {
+        margin: 0;
+        font: 13px/1.7 var(--font-sans);
+        white-space: pre-line;
+        overflow-wrap: anywhere;
     }
-    &__recursos {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: var(--space-12);
-    }
-    &__titulo,
-    &__referencia h3 {
-        font: 600 11px var(--font-mono);
-        text-transform: uppercase;
-        color: var(--text);
-        margin-bottom: var(--space-12);
-    }
+    // Bloco de referência do sistema (Cooperação, assinatura mecânica): sem equivalente nos outros
+    // guias, mantido com o risco de destaque do projeto.
     &__referencia {
+        padding-left: 16px;
         border-left: 2px solid var(--accent);
-        padding-left: var(--space-16);
-        p {
-            color: var(--text-dim);
-            font-size: 12px;
-            line-height: 1.6;
-        }
-        strong {
+        h3 {
+            margin: 0 0 8px;
+            font: 700 11px var(--font-mono);
+            text-transform: uppercase;
             color: var(--text);
-            margin-right: var(--space-8);
         }
-    }
-    &__atributo {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: var(--space-8);
-        padding: var(--space-8) 0;
-        border-bottom: 1px solid var(--border);
+        p {
+            margin: 0 0 6px;
+            font: 12px/1.6 var(--font-sans);
+            color: var(--text-dim);
+        }
         strong {
-            font: 500 12px var(--font-sans);
+            margin-right: 8px;
+            color: var(--text);
         }
     }
     &__lista {
         display: grid;
-        gap: var(--space-16);
+        gap: 14px;
     }
     &__acoes {
         display: flex;
         flex-wrap: wrap;
         gap: var(--space-8);
     }
-    &__texto {
-        font-size: 13px;
-        line-height: 1.7;
-        white-space: pre-wrap;
+    &__revisao-colunas {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+        gap: 22px;
+        > div {
+            display: grid;
+            align-content: start;
+            gap: 18px;
+            min-width: 0;
+        }
+    }
+    &__revisao-nome {
+        margin: 0 0 8px;
+        font: 700 16px var(--font-mono);
         overflow-wrap: anywhere;
     }
-    @include bp.mobile {
-        &__atributo app-step-input {
-            min-width: calc(#{bp.$alvo-toque} * 3 + var(--space-8));
+}
+
+// Linha de atributo (nome + DT, passo do stepper) — mesma receita do `.atributo` da criatura.
+.atributo {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 116px;
+    align-items: center;
+    gap: 10px;
+    min-height: 56px;
+    padding: 8px 9px 8px 12px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+    &--leitura {
+        grid-template-columns: minmax(0, 1fr) auto;
+        min-height: 44px;
+        > strong {
+            font: 700 13px var(--font-mono);
         }
-        .campo__controle {
-            min-height: bp.$alvo-toque;
+    }
+    &__grupo {
+        display: grid;
+        gap: 8px;
+        align-content: start;
+    }
+    &__identidade {
+        display: grid;
+        gap: 3px;
+        span {
+            font: 600 10px var(--font-mono);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
         }
-        &__dupla {
+        small {
+            font: 9px var(--font-mono);
+            color: var(--text-mute);
+        }
+    }
+}
+
+@include bp.tablet {
+    .guia__revisao-colunas {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@include bp.mobile {
+    .guia {
+        &__campos--duas-colunas,
+        &__revisao-colunas {
             grid-template-columns: minmax(0, 1fr);
         }
-        &__recursos {
+        &__metricas {
             grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+    .campo__controle {
+        min-height: bp.$alvo-toque;
+    }
+    // A 2ª coluna fixa de 116px do desktop cortaria o stepper mobile (2×44px + 48px = 136px).
+    .atributo {
+        grid-template-columns: minmax(0, 1fr) 136px;
+        min-height: bp.$alvo-toque;
+        &--leitura {
+            grid-template-columns: minmax(0, 1fr) auto;
         }
     }
 }

@@ -29,6 +29,16 @@
 
 ## Ativos
 
+### P-095 — Teste de reconexão do feed é intermitente por empate de milissegundo · `ABERTO` · frontend/testes
+
+- **Sintoma:** `campanha-detalhe-dados.service.spec.ts` › "reconexao$ traz uma rolagem feita durante a queda para o
+  feed" falha às vezes com `expected [ 1, 2 ] to deeply equal [ 2, 1 ]`; passa isolado (3/3) e em outras rodadas da suíte
+  completa.
+- **Causa:** a fixture `rolagem()` usa `createdDate: new Date().toISOString()`; as rolagens `id: 1` e `id: 2` nascem no mesmo
+  milissegundo e a ordenação decrescente do feed empata.
+- **Contorno:** rodar o spec isolado. **Correção:** datas fixas e distintas na fixture (sem relógio real).
+- **Desde:** 2026-10-05, achado na suíte completa do `m4-13` (arquivo não tocado por ela).
+
 ### P-093 — Sistema contradiz a si mesmo no arredondamento de bônus · `ACEITO` · docs/core
 
 - **Sintoma:** `docs/core/sistema-v4.1.0.md:2045` (Ordem de Bônus) diz "assim como dito acima, quaisquer valores

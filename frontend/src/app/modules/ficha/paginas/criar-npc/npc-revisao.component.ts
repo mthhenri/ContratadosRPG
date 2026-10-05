@@ -14,7 +14,7 @@ import { GRUPOS_ATRIBUTOS } from "../../npc-atributos-campos";
 @Component({
     selector: "app-npc-revisao",
     imports: [Botao, Cartao, Chip, Stat, EstadoVazio, Icone],
-    templateUrl: "./npc-revisao.component.html", styleUrls: ["./npc-etapa.scss", "./npc-revisao.scss"],
+    templateUrl: "./npc-revisao.component.html", styleUrl: "./npc-etapa.scss",
 })
 export class NpcRevisao {
     readonly criacao = inject(NpcCriacaoFormulario);

@@ -1,4 +1,16 @@
-<div class="npc-etapa">
+<div class="guia__etapa">
+    <div class="guia__introducao">
+        <span class="guia__introducao-codigo">PASSIVAS // ATIVAS</span>
+        @if (criacao.ehCivil()) {
+            <p>Civil não possui habilidades especiais.</p>
+        } @else {
+            <p>
+                {{ criacao.volume().totalMinimo }}–{{ criacao.volume().totalMaximo }} habilidades ·
+                ao menos {{ criacao.volume().passivasMinimas }} Passivas · até
+                {{ criacao.volume().ativasMaximas }} Ativas.
+            </p>
+        }
+    </div>
     @if (criacao.ehCivil()) {
         <app-estado-vazio
             titulo="Civil não possui habilidades especiais"
@@ -7,17 +19,10 @@
             linhaApoio="Sua presença em cena se apoia na identidade e na conduta."
         />
         @if (criacao.habilidades.length) {
-            <p class="npc-etapa__apoio">
-                Remova as habilidades anteriores para registrar como Civil.
-            </p>
+            <p class="guia__ajuda">Remova as habilidades anteriores para registrar como Civil.</p>
         }
     } @else {
-        <p class="npc-etapa__apoio">
-            {{ criacao.volume().totalMinimo }}–{{ criacao.volume().totalMaximo }} habilidades · ao
-            menos {{ criacao.volume().passivasMinimas }} Passivas · até
-            {{ criacao.volume().ativasMaximas }} Ativas.
-        </p>
-        <div class="npc-etapa__referencia">
+        <div class="guia__referencia">
             <h3>Assinatura mecânica</h3>
             <p>
                 Escolha um verbo principal. Na descrição, diga o efeito, o alvo, o alcance e a
@@ -32,7 +37,7 @@
                 repetições permitidas. Passivas não consomem esse limite.
             </p>
         </div>
-        <div class="npc-etapa__acoes">
+        <div class="guia__acoes">
             <button
                 app-botao
                 type="button"
@@ -65,15 +70,15 @@
             />
         }
     }
-    <div class="npc-etapa__lista">
+    <div class="guia__lista">
         @for (habilidade of criacao.habilidades.controls; track habilidade; let indice = $index) {
             <app-cartao
                 [titulo]="habilidade.controls.tipo.value === tipos.ATIVA ? 'Ativa' : 'Passiva'"
                 [cabecalhoQuebravel]="true"
             >
                 <span cartaoIndice>{{ indice + 1 }}</span>
-                <div class="npc-etapa">
-                    <div class="npc-etapa__dupla">
+                <div class="guia__etapa">
+                    <div class="guia__campos guia__campos--duas-colunas">
                         <app-campo rotulo="Nome neutro" tamanho="compacto">
                             <input
                                 class="campo__controle"

@@ -1,46 +1,80 @@
-<div class="npc-guia">
-    <header class="npc-guia__cabecalho">
-        <div class="npc-guia__marca">//</div>
-        <div>
-            <p class="npc-guia__kicker">
-                GUIA DE CRIAÇÃO · {{ campanhaId === null ? 'ACERVO' : 'CAMPANHA' }}
-            </p>
-            <h1>Novo NPC</h1>
-            <p class="npc-guia__subtitulo">Uma pessoa pronta para entrar em cena.</p>
+<main class="ficha-pagina guia">
+    <header class="guia__cabecalho">
+        <div class="guia__cabecalho-titulo">
+            <button
+                app-botao-icone
+                class="guia__sair"
+                type="button"
+                [attr.aria-label]="
+                    campanhaId === null ? 'Voltar ao acervo' : 'Voltar à campanha'
+                "
+                [disabled]="enviando()"
+                (click)="voltarAoDestino()"
+            >
+                <app-icone nome="voltar" />
+            </button>
+            <span class="guia__indice">//</span>
+            <div class="guia__titulo-grupo">
+                <span class="guia__kicker">Guia de criação de NPCs</span>
+                <h1>Novo NPC</h1>
+            </div>
+            <span class="guia__regua"></span>
         </div>
-        <app-chip variante="padrao">NPC · MESTRE</app-chip>
-    </header>
-    @if (registrado()) {
-    <app-cartao titulo="NPC registrado">
-        <app-icone cartaoIndice nome="check" />
-        <p class="npc-guia__sucesso" role="status">
-            {{ criacao.dados().identidadeNarrativa.nome }} foi registrado com seus atributos,
-            recursos e detalhes.
-        </p>
+        @if (!registrado()) {
         <button
             app-botao
-            tamanho="medio"
-            variante="primario"
-            estilo="preenchido"
-            (click)="abrirNpc()"
-        >
-            Abrir NPC
-        </button>
-        <button
-            app-botao
-            type="button"
             tamanho="medio"
             variante="secundario"
             estilo="contorno"
-            (click)="voltarAoDestino()"
+            posicaoIcone="esquerda"
+            class="guia__resumo-abrir"
+            type="button"
+            [class.guia__resumo-abrir--ativo]="resumoAberto()"
+            [attr.aria-expanded]="resumoAberto()"
+            aria-label="Abrir resumo do NPC"
+            (click)="resumoAberto.set(!resumoAberto())"
         >
-            {{ campanhaId === null ? 'Voltar ao acervo' : 'Voltar à campanha' }}
+            <app-icone nome="visao-geral" /> <span>Resumo</span>
         </button>
+        }
+        <span class="guia__classificacao"
+            >NPC // {{ campanhaId === null ? 'ACERVO' : 'CAMPANHA' }}</span
+        >
+    </header>
+
+    @if (registrado()) {
+    <app-cartao titulo="NPC registrado">
+        <app-icone cartaoIndice nome="check" />
+        <p class="guia__sucesso" role="status">
+            {{ criacao.dados().identidadeNarrativa.nome }} foi registrado com seus atributos,
+            recursos e detalhes.
+        </p>
+        <div class="guia__sucesso-acoes">
+            <button
+                app-botao
+                type="button"
+                tamanho="medio"
+                variante="primario"
+                estilo="preenchido"
+                (click)="abrirNpc()"
+            >
+                Abrir NPC
+            </button>
+            <button
+                app-botao
+                type="button"
+                tamanho="medio"
+                variante="secundario"
+                estilo="contorno"
+                (click)="voltarAoDestino()"
+            >
+                {{ campanhaId === null ? 'Voltar ao acervo' : 'Voltar à campanha' }}
+            </button>
+        </div>
     </app-cartao>
     } @else {
-    <!-- Mesmo indicador informativo do guia de criatura; não altera a navegação/validação. -->
     <div
-        class="npc-guia__progresso-mobile"
+        class="guia__progresso-mobile"
         role="progressbar"
         aria-label="Progresso da criação do NPC"
         aria-valuemin="0"
@@ -48,139 +82,122 @@
         [attr.aria-valuenow]="etapa() + 1"
         [attr.aria-valuetext]="etapas[etapa()]"
     >
-        <div class="npc-guia__progresso-topo">
-            <span>NPC · {{ etapa() + 1 }}/{{ etapas.length }}</span>
+        <div class="guia__progresso-mobile-topo">
+            <span>NPC · {{ numero(etapa() + 1) }}/{{ numero(etapas.length) }}</span>
             <strong>{{ etapas[etapa()] }}</strong>
         </div>
-        <div class="npc-guia__progresso-trilho">
+        <div class="guia__progresso-trilho">
             <i [style.width.%]="((etapa() + 1) / etapas.length) * 100"></i>
         </div>
     </div>
-    <div class="npc-guia__layout">
-        <nav class="npc-guia__trilha" aria-label="Etapas da criação">
-            <p class="npc-guia__kicker">ETAPA {{ etapa() + 1 }} DE 5</p>
-            @for (nome of etapas; track nome; let indice = $index) {
-            <button
-                app-botao
-                type="button"
-                tamanho="medio"
-                estilo="texto"
-                variante="secundario"
-                class="npc-guia__passo"
-                [class.npc-guia__passo--ativo]="etapa() === indice"
-                [attr.aria-current]="etapa() === indice ? 'step' : null"
-                [disabled]="enviando()"
-                (click)="irEtapa(indice)"
-            >
-                <span class="npc-guia__numero">0{{ indice + 1 }}</span>{{ nome }}
-            </button>
-            }
-            <p class="npc-guia__nota">
-                Cinco etapas para preparar a presença, os recursos e a conduta do NPC.
-            </p>
+
+    <div class="guia__layout">
+        <nav class="guia__trilha" aria-label="Etapas da criação">
+            <header class="guia__painel-cabecalho">
+                <span>Roteiro</span>
+                <b>{{ numero(etapa() + 1) }}/{{ numero(etapas.length) }}</b>
+            </header>
+            <div class="guia__passos">
+                @for (nome of etapas; track nome; let indice = $index) {
+                <button
+                    class="guia__passo"
+                    type="button"
+                    [class.guia__passo--ativo]="indice === etapa()"
+                    [class.guia__passo--concluido]="indice <= visitado() && indice !== etapa()"
+                    [disabled]="indice > visitado() || enviando()"
+                    [attr.aria-current]="indice === etapa() ? 'step' : null"
+                    (click)="irEtapa(indice)"
+                >
+                    <span class="guia__passo-indice">{{ numero(indice + 1) }}</span>
+                    <span class="guia__passo-texto">
+                        <b>{{ nome }}</b>
+                        <small
+                            >{{ indice === etapa() ? 'Em preenchimento' : indice <= visitado() ?
+                            'Disponível' : 'Aguardando' }}</small
+                        >
+                    </span>
+                    @if (indice <= visitado() && indice !== etapa()) {
+                    <app-icone nome="check" />
+                    }
+                </button>
+                }
+            </div>
         </nav>
-        <main class="npc-guia__conteudo" [attr.aria-busy]="enviando()">
-            <app-cartao>
-                <h2 #tituloEtapa tabindex="-1" class="npc-guia__titulo">
-                    <span>0{{ etapa() + 1 }}</span>{{ etapas[etapa()] }}
-                </h2>
-                <fieldset [disabled]="enviando()" class="m-0 min-w-0 border-0 p-0">
+
+        <section class="guia__conteudo" [attr.aria-busy]="enviando()">
+            <header class="guia__secao">
+                <span class="guia__secao-indice">{{ numero(etapa() + 1) }}</span>
+                <div>
+                    <span>Etapa atual</span>
+                    <h2 #tituloEtapa tabindex="-1">{{ etapas[etapa()] }}</h2>
+                </div>
+                <span class="guia__secao-regua"></span>
+            </header>
+            <div class="guia__corpo">
+                <fieldset [disabled]="enviando()" class="guia__etapa-campos">
                     @switch (etapa()) { @case (0) { <app-npc-identidade /> } @case (1) {
                     <app-npc-atributos /> } @case (2) { <app-npc-habilidades /> } @case (3) {
                     <app-npc-conduta /> } @case (4) {
                     <app-npc-revisao (corrigir)="irEtapa($event)" /> } }
                 </fieldset>
                 @if (mostrarErros() && criacao.violacoesEtapa(etapa()).length) {
-                <div class="npc-guia__erros" role="alert">
-                    @for (mensagem of criacao.violacoesEtapa(etapa()); track $index) {
-                    <p>{{ mensagem }}</p>
-                    }
+                <div class="guia__erro" role="alert">
+                    <app-icone nome="alerta" />
+                    <div>
+                        @for (mensagem of criacao.violacoesEtapa(etapa()); track $index) {
+                        <p>{{ mensagem }}</p>
+                        }
+                    </div>
                 </div>
                 } @if (erroEnvio()) {
-                <p class="npc-guia__erros" role="alert">{{ erroEnvio() }}</p>
+                <p class="guia__erro" role="alert"><app-icone nome="alerta" /> {{ erroEnvio() }}</p>
                 }
-            </app-cartao>
-            <footer class="npc-guia__rodape">
-                <button
-                    app-botao
-                    type="button"
-                    tamanho="medio"
-                    estilo="contorno"
-                    variante="secundario"
-                    posicaoIcone="esquerda"
-                    [disabled]="enviando()"
-                    (click)="etapa() === 0 ? voltarAoDestino() : irEtapa(etapa() - 1)"
-                >
-                    <app-icone nome="voltar" />
-                    {{ etapa() === 0 ? 'Cancelar' : 'Voltar' }}
-                </button>
-                @if (etapa() < 4) {
-                <button
-                    app-botao
-                    type="button"
-                    tamanho="medio"
-                    estilo="preenchido"
-                    variante="primario"
-                    posicaoIcone="direita"
-                    [disabled]="enviando()"
-                    (click)="avancar()"
-                >
-                    <app-icone nome="chevron-direita" />Continuar
-                </button>
-                } @else {
-                <button
-                    app-botao
-                    type="button"
-                    tamanho="medio"
-                    estilo="preenchido"
-                    variante="primario"
-                    [carregando]="enviando()"
-                    [disabled]="enviando()"
-                    (click)="registrar()"
-                >
-                    Registrar NPC
-                </button>
-                }
-            </footer>
-        </main>
-        <aside class="npc-guia__resumo">
-            <button
-                app-botao
-                type="button"
-                tamanho="medio"
-                estilo="contorno"
-                variante="secundario"
-                class="npc-guia__resumo-toggle"
-                [attr.aria-expanded]="mostrarResumo()"
-                posicaoIcone="esquerda"
-                (click)="mostrarResumo.set(!mostrarResumo())"
-            >
-                <app-icone nome="visao-geral" />Resumo do NPC
-            </button>
-            @if (!mostrarResumo()) {
-            <app-cartao titulo="Resumo do NPC">
-                <app-icone cartaoIndice nome="ficha" />
-                <ng-container *ngTemplateOutlet="conteudoResumo" />
-            </app-cartao>
-            }
+            </div>
+        </section>
+
+        <aside class="guia__resumo">
+            <div class="guia__resumo-toggle">Resumo do NPC</div>
+            <div class="guia__resumo-corpo">
+                @if (!resumoAberto()) { <ng-container *ngTemplateOutlet="conteudoResumo" /> }
+            </div>
         </aside>
-    </div>
-    <ng-template #conteudoResumo>
-        <div class="npc-guia__resumo-corpo" aria-live="polite">
-            <h3>{{ criacao.estado().nome || 'Nome a definir' }}</h3>
-            <p class="npc-guia__funcao">
-                {{ criacao.estado().funcao || 'Função narrativa a definir' }}
-            </p>
-            <app-chip variante="sutil"
-                >{{ criacao.referenciaCategoria().rotulo }} · N{{ criacao.estado().nivel
-                }}</app-chip
-            >
-            <p>
-                Cooperação {{ criacao.estado().cooperacao }} · {{
-                criacao.referenciaCooperacao()?.rotulo }}
-            </p>
-            @if (etapa() >= 1) {
-            <div class="npc-guia__stats" [class.npc-guia__stats--civil]="criacao.ehCivil()">
+        <ng-template #conteudoResumo>
+            <div class="guia__resumo-progresso" aria-live="polite">
+                <div class="guia__resumo-progresso-topo">
+                    <span>Progresso</span>
+                    <b
+                        >{{ numero(etapa() + 1) }}/{{ numero(etapas.length) }} · {{ etapas[etapa()]
+                        }}</b
+                    >
+                </div>
+                <div class="guia__resumo-trilho">
+                    <i [style.width.%]="((etapa() + 1) / etapas.length) * 100"></i>
+                </div>
+            </div>
+            <div class="guia__agente">
+                <span class="guia__agente-avatar"><app-icone nome="agente" /></span>
+                <div>
+                    <small>NPC em registro</small>
+                    <strong>{{ criacao.estado().nome || 'Nome a definir' }}</strong>
+                    <span
+                        >{{ criacao.referenciaCategoria().rotulo }} · N{{ criacao.estado().nivel
+                        }}</span
+                    >
+                </div>
+            </div>
+            <div class="guia__resumo-linha guia__resumo-linha--texto">
+                <span>Função</span>
+                <b>{{ criacao.estado().funcao || 'Função narrativa a definir' }}</b>
+            </div>
+            <div class="guia__resumo-linha">
+                <span>Cooperação</span>
+                <b
+                    >{{ criacao.estado().cooperacao }} · {{ criacao.referenciaCooperacao()?.rotulo
+                    }}</b
+                >
+            </div>
+            @if (etapa() >= 1 || visitado() >= 1) {
+            <div class="guia__stats">
                 <app-stat
                     rotulo="Vida"
                     [valor]="criacao.dados().vidaMaxima"
@@ -203,44 +220,105 @@
                 }
             </div>
             @if (criacao.ehCivil()) {
-            <p>Sem Energia</p>
-            } } @if (etapa() >= 1 && !criacao.ehCivil()) {
-            <p>
-                {{ criacao.dados().energia.recargaPorTurno === null ? 'Reserva fixa' : 'Pool +
-                Recarga · +' + criacao.dados().energia.recargaPorTurno + ' por turno' }}
-            </p>
-            } @if (etapa() >= 2) {
-            <p>{{ criacao.passivas() }} Passivas · {{ criacao.ativas() }} Ativas</p>
+            <div class="guia__resumo-linha"><span>Energia</span><b>Sem Energia</b></div>
+            } @else {
+            <div class="guia__resumo-linha">
+                <span>Recarga</span>
+                <b
+                    >{{ criacao.dados().energia.recargaPorTurno === null ? 'Reserva fixa' : 'Pool +
+                    Recarga · +' + criacao.dados().energia.recargaPorTurno + ' por turno' }}</b
+                >
+            </div>
+            } } @if (etapa() >= 2 || visitado() >= 2) {
+            <div class="guia__resumo-linha">
+                <span>Habilidades</span
+                ><b>{{ criacao.passivas() }} Passivas · {{ criacao.ativas() }} Ativas</b>
+            </div>
             @if (!criacao.ehCivil()) {
-            <p>{{ criacao.volume().limitePorTurno }} usos de Ativas por turno</p>
-            } } @if (etapa() >= 3) {
-            <p class="npc-guia__conduta">
-                Fuga: {{ criacao.estado().gatilhosFuga || 'A definir' }}
-            </p>
-            <p class="npc-guia__conduta">
-                Alvo: {{ criacao.estado().prioridadesAlvo || 'A definir' }}
-            </p>
-            <p class="npc-guia__conduta">
-                Ferimento: {{ criacao.estado().reacaoFerimentoSevero || 'A definir' }}
-            </p>
-            <p>
-                {{ criacao.estado().sequelas.length }} sequelas · {{ criacao.estado().traumas.length
-                }} traumas
-            </p>
-            <p>
-                {{ criacao.estado().anotacoes ? 'Anotações preenchidas' : 'Sem anotações (opcional)'
-                }}
-            </p>
+            <div class="guia__resumo-linha">
+                <span>Ativas por turno</span><b>{{ criacao.volume().limitePorTurno }} usos</b>
+            </div>
+            } } @if (etapa() >= 3 || visitado() >= 3) {
+            <div class="guia__resumo-linha guia__resumo-linha--texto">
+                <span>Fuga</span><b>{{ criacao.estado().gatilhosFuga || 'A definir' }}</b>
+            </div>
+            <div class="guia__resumo-linha guia__resumo-linha--texto">
+                <span>Alvo</span><b>{{ criacao.estado().prioridadesAlvo || 'A definir' }}</b>
+            </div>
+            <div class="guia__resumo-linha guia__resumo-linha--texto">
+                <span>Ferimento</span
+                ><b>{{ criacao.estado().reacaoFerimentoSevero || 'A definir' }}</b>
+            </div>
+            <div class="guia__resumo-linha">
+                <span>Sanidade</span>
+                <b
+                    >{{ criacao.estado().sequelas.length }} sequelas · {{
+                    criacao.estado().traumas.length }} traumas</b
+                >
+            </div>
+            <div class="guia__resumo-linha">
+                <span>Anotações</span>
+                <b>{{ criacao.estado().anotacoes ? 'Preenchidas' : 'Sem anotações (opcional)' }}</b>
+            </div>
             }
-        </div>
-    </ng-template>
+        </ng-template>
+    </div>
+
     <app-modal
-        [aberto]="mostrarResumo()"
+        [aberto]="resumoAberto()"
         titulo="Resumo do NPC"
         posicao="inferior"
-        (fechou)="mostrarResumo.set(false)"
+        (fechou)="resumoAberto.set(false)"
     >
-        @if (mostrarResumo()) { <ng-container *ngTemplateOutlet="conteudoResumo" /> }
+        @if (resumoAberto()) { <ng-container *ngTemplateOutlet="conteudoResumo" /> }
     </app-modal>
+
+    <footer class="guia__rodape">
+        <button
+            app-botao
+            type="button"
+            tamanho="medio"
+            variante="secundario"
+            estilo="contorno"
+            posicaoIcone="esquerda"
+            class="guia__acao"
+            [disabled]="enviando()"
+            (click)="etapa() === 0 ? voltarAoDestino() : irEtapa(etapa() - 1)"
+        >
+            <app-icone nome="voltar" /> {{ etapa() === 0 ? 'Cancelar' : 'Voltar' }}
+        </button>
+        <span class="guia__rodape-status"
+            >ETAPA {{ numero(etapa() + 1) }} // {{ etapas[etapa()] | uppercase }}</span
+        >
+        @if (etapa() < etapas.length - 1) {
+        <button
+            app-botao
+            type="button"
+            tamanho="medio"
+            variante="primario"
+            estilo="preenchido"
+            posicaoIcone="direita"
+            class="guia__acao"
+            [disabled]="enviando()"
+            (click)="avancar()"
+        >
+            <app-icone nome="chevron-direita" /> Continuar
+        </button>
+        } @else {
+        <button
+            app-botao
+            type="button"
+            tamanho="medio"
+            variante="primario"
+            estilo="preenchido"
+            class="guia__acao"
+            [carregando]="enviando()"
+            [disabled]="enviando()"
+            (click)="registrar()"
+        >
+            Registrar NPC
+        </button>
+        }
+    </footer>
     }
-</div>
+</main>

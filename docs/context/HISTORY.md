@@ -1,5 +1,61 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-05 — `m4-13-guia-criacao-npc-casco-guia`: guia de criação de NPC no casco dos guias de Jogador e Criatura
+
+Segunda spec fechada da revisão do NPC (`m4-12` ✔, `m4-15` ✔, `m4-14` ainda no backlog). Pedido do autor: o guia de NPC
+"tem que assimilar mais" ao de Jogador/Criatura. Só apresentação; contrato, passos, validação por etapa, saída protegida e
+envio (`criarFichaNpc`) intactos. Frontend apenas.
+
+**O que mudou.** `criar-npc.page.html` saiu do casco próprio (`npc-guia__*`) para o `main.ficha-pagina.guia` dos outros dois
+guias: cabeçalho (`guia__cabecalho`: voltar com `app-botao-icone`, `//`, kicker "Guia de criação de NPCs", `h1` "Novo NPC",
+régua, botão "Resumo" só no mobile e a etiqueta `NPC // ACERVO|CAMPANHA` no lugar do `CLASSE-E // CONFIDENCIAL` da
+criatura), progresso mobile, Roteiro (`guia__trilha`: índice, título, legenda Em preenchimento / Disponível / Aguardando,
+check nos já visitados), cabeçalho da seção (`guia__secao`: índice, "Etapa atual", título — o `h2` continua recebendo foco ao
+trocar de etapa), rodapé em grade (`guia__rodape`: Voltar/Cancelar · "ETAPA 03 // HABILIDADES" · Continuar/Registrar NPC) e
+resumo (`guia__resumo*`, painel lateral no desktop e modal inferior no mobile). O estado "NPC registrado" ficou no
+`app-cartao`, só trocando o casco. **Roteiro com bloqueio:** `NpcCriar.visitado` (etapa mais distante já alcançada) libera o
+Roteiro até ela; `irEtapa()` segue público e sem bloqueio para o `avancar()`, o "corrigir" da revisão e os testes — o
+bloqueio é do botão, e a validação por etapa de `NpcCriacaoFormulario` continua ao avançar. `mostrarResumo` virou
+`resumoAberto`; `numero()` formata "01". Os cinco componentes de etapa trocaram `npc-etapa__*` pela receita dos análogos:
+`guia__introducao`/`__introducao-codigo` (frase curta do passo, textos antigos preservados; só a Revisão ganhou uma frase nova,
+"Confira o que foi definido antes de registrar o NPC."), `guia__campos--duas-colunas`, `guia__metricas` (stats), `guia__subsecao`,
+linhas `.atributo` (mesma receita da criatura, inclusive o recuo do stepper no mobile) e `app-campo tamanho="compacto"` (o
+degrau de 9px dos guias, via o primitivo — não `label[app-campo]`). `npc-etapa.scss` virou a receita de campos das etapas
+(o Angular encapsula por componente, então o SCSS da página não alcança os templates delas) e `npc-revisao.scss` foi removido.
+O SCSS da página copiou só o subconjunto do casco (sem `__retomar*` nem `__sair-dialog*`: o NPC não tem rascunho local nem
+diálogo — a proteção de saída continua sendo o `canDeactivate`/`podeSair`). Saíram o chip "NPC · MESTRE" e o subtítulo.
+
+**Decisões fora do texto literal da spec.** (1) O contexto Acervo × Campanha foi para a etiqueta do canto do cabeçalho
+(`NPC // ACERVO|CAMPANHA`), que some no mobile — o mesmo que a criatura faz com a dela; no mobile o contexto fica só no
+`aria-label` do voltar. (2) Resumo sem o estado vazio "preencha o nome": o resumo sempre mostra o bloco do NPC com "Nome a
+definir", porque Categoria/Nível/Cooperação já existiam desde a etapa 1 e não podiam sumir. (3) Texto livre do resumo (função,
+conduta) mantém o limite de 2 linhas, agora numa variante da linha (`--texto`). (4) `white-space: pre-line` nos textos da
+revisão: o `pre-wrap` herdado deixava um espaço de indentação do template visível. (5) Ordem do ícone no "Continuar": com
+`posicaoIcone="direita"` o ícone entra antes do texto no DOM (o primitivo inverte), o contrário do que escrevi na primeira versão
+(achado na captura).
+
+**Imagem de registro.** A spec mandava conferir se o NPC já tinha upload: **não tem** (`criarFichaNpc` recebe só nome e dados),
+então nada foi criado e a lacuna virou `I-046`. A extração do casco para um SCSS compartilhado virou `I-045`.
+
+**Testes.** `criar-npc.page.spec.ts` ganhou o bloco "casco guia__*" (cabeçalho e voltar por contexto, Roteiro com bloqueio e
+as três legendas, progresso mobile/seção/rodapé acompanhando a etapa, resumo em painel e em modal, introdução de cada etapa);
+os testes de comportamento existentes ficaram como estavam e passam; `npc-criacao-formulario.service.spec.ts` não mudou
+(18 → 24 testes nos dois arquivos). Suíte completa do `frontend`: 2822 testes, 2821 verdes — **1 falha intermitente alheia**,
+`campanha-detalhe-dados.service.spec.ts` ("reconexao$ traz uma rolagem…"), que não pertence a esta task, passa isolada (3/3) e
+vem de empate de milissegundo na fixture; registrada como `P-095`. `lint` 0 erros (warnings de aspas preexistentes), `tsc` do
+app e `ng build` limpos, Prettier aplicado só aos HTML/SCSS do guia.
+
+**Verificado ao vivo** (stack já no ar; mestre e campanha de teste por REST; o NPC registrado pelo teste foi removido por soft
+delete ao fim), `1920×1080` e `360×800`: caminho completo Civil em campanha até "NPC registrado" (identidade → atributos →
+habilidades → conduta → revisão → registrar), com o NPC realmente criado; caminho Operativo em acervo até a etapa 4 com
+cartões de habilidade Passiva/Ativa e sequela; erro de validação visível nas etapas 1, 2 e 3; Roteiro bloqueando passos à
+frente e liberando os visitados (navegação pela trilha); resumo em painel (desktop) e em modal inferior (mobile, aberto pelo
+botão "Resumo" do cabeçalho); etiqueta de contexto nos dois destinos; sem overflow horizontal e sem erro de console em nenhum
+estado. Comparação lado a lado com o guia de Criatura: mesmo cabeçalho, mesmo Roteiro e cabeçalho de seção, mesma densidade e
+mesmos campos; diferenças que ficam: o NPC não tem a caixa de imagem nem "Retomar rascunho". **Não coberto:** NPC Civil e
+Operativo com 100% das variações de habilidade (só o necessário para exercitar o casco), o modal de resumo no desktop (o botão
+só existe no mobile) e o estado de envio em andamento (`[carregando]` do "Registrar NPC", coberto só por teste).
+
 ## 2026-10-04 — `m4-15-campanha-mestre-abas-esquadrao-criaturas-npcs`: Esquadrão · Criaturas · NPCs em abas na campanha do mestre
 
 Terceira spec da revisão do NPC (`m4-12` acervo ✔, `m4-13` guia e `m4-14` ficha ainda no backlog). Pedido do autor: a

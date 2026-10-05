@@ -112,6 +112,79 @@ describe("NpcCriar", () => {
         expect(evento.preventDefault).toHaveBeenCalled();
     });
 
+    describe("casco guia__* (m4-13)", () => {
+        const passos = (raiz: HTMLElement) => Array.from(raiz.querySelectorAll<HTMLButtonElement>(".guia__passo"));
+        const legendas = (raiz: HTMLElement) => passos(raiz).map((p) => p.querySelector("small")?.textContent?.trim());
+
+        it("cabeçalho com voltar, kicker, título e contexto do destino", () => {
+            const acervo = montar();
+            const raiz = acervo.fixture.nativeElement as HTMLElement;
+            expect(raiz.querySelector(".guia__kicker")?.textContent).toContain("Guia de criação de NPCs");
+            expect(raiz.querySelector("h1")?.textContent).toContain("Novo NPC");
+            expect(raiz.querySelector(".guia__classificacao")?.textContent).toContain("ACERVO");
+            expect(raiz.querySelector(".guia__sair")?.getAttribute("aria-label")).toBe("Voltar ao acervo");
+        });
+
+        it("contexto de campanha aparece no cabeçalho e o voltar vai à campanha", () => {
+            TestBed.resetTestingModule();
+            const { fixture, router } = montar("7");
+            const raiz = fixture.nativeElement as HTMLElement;
+            expect(raiz.querySelector(".guia__classificacao")?.textContent).toContain("CAMPANHA");
+            (raiz.querySelector(".guia__sair") as HTMLButtonElement).click();
+            expect(router.navigate).toHaveBeenCalledWith(["/campanhas", 7]);
+        });
+
+        it("Roteiro bloqueia passos à frente e marca Em preenchimento / Disponível / Aguardando", () => {
+            const { fixture, pagina } = montar();
+            const raiz = fixture.nativeElement as HTMLElement;
+            expect(legendas(raiz)).toEqual(["Em preenchimento", "Aguardando", "Aguardando", "Aguardando", "Aguardando"]);
+            expect(passos(raiz).map((p) => p.disabled)).toEqual([false, true, true, true, true]);
+            pagina.criacao.formulario.patchValue({ nome: "Helena", funcao: "Contato" });
+            pagina.avancar(); fixture.detectChanges();
+            expect(legendas(raiz)).toEqual(["Disponível", "Em preenchimento", "Aguardando", "Aguardando", "Aguardando"]);
+            expect(passos(raiz).map((p) => p.disabled)).toEqual([false, false, true, true, true]);
+            expect(passos(raiz)[0].querySelector("app-icone")).not.toBeNull();
+            passos(raiz)[0].click(); fixture.detectChanges();
+            expect(pagina.etapa()).toBe(0);
+            expect(passos(raiz)[1].disabled).toBe(false);
+        });
+
+        it("progresso mobile, cabeçalho da seção e rodapé acompanham a etapa", () => {
+            const { fixture, pagina } = montar();
+            const raiz = fixture.nativeElement as HTMLElement;
+            pagina.irEtapa(2); fixture.detectChanges();
+            expect(raiz.querySelector(".guia__progresso-mobile")?.getAttribute("aria-valuenow")).toBe("3");
+            expect(raiz.querySelector(".guia__secao-indice")?.textContent?.trim()).toBe("03");
+            expect(raiz.querySelector(".guia__secao h2")?.textContent).toContain("Habilidades");
+            expect(raiz.querySelector(".guia__rodape-status")?.textContent).toContain("ETAPA 03 // HABILIDADES");
+        });
+
+        it("resumo mostra o NPC em registro e abre em modal pelo botão do cabeçalho", () => {
+            const { fixture, pagina } = montar();
+            const raiz = fixture.nativeElement as HTMLElement;
+            expect(raiz.querySelector(".guia__resumo .guia__agente strong")?.textContent).toContain("Nome a definir");
+            pagina.criacao.formulario.patchValue({ nome: "Helena" });
+            fixture.detectChanges();
+            expect(raiz.querySelector(".guia__resumo .guia__agente strong")?.textContent).toContain("Helena");
+            (raiz.querySelector(".guia__resumo-abrir") as HTMLButtonElement).click();
+            fixture.detectChanges();
+            expect(pagina.resumoAberto()).toBe(true);
+            expect(raiz.querySelector("app-modal .guia__agente")).not.toBeNull();
+        });
+
+        it("cada etapa abre com a introdução curta do passo", () => {
+            const { fixture, pagina } = montar();
+            const raiz = fixture.nativeElement as HTMLElement;
+            const codigos: string[] = [];
+            for (let indice = 0; indice < 5; indice++) {
+                pagina.irEtapa(indice); fixture.detectChanges();
+                codigos.push(raiz.querySelector(".guia__introducao-codigo")?.textContent?.trim() ?? "");
+            }
+            expect(codigos).toEqual(["IDENTIDADE // PESSOA", "ATRIBUTOS // RECURSOS",
+                "PASSIVAS // ATIVAS", "CONDUTA // SANIDADE", "REVISÃO // REGISTRO"]);
+        });
+    });
+
     it("mantém valor acima do teto visível até correção ao trocar Categoria", () => {
         const { pagina, fixture } = montar();
         pagina.criacao.formulario.patchValue({ categoria: CategoriaNpcEnum.LENDARIO,

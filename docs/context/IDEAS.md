@@ -228,6 +228,28 @@
 
 ## Abertas
 
+### I-046 — Imagem de registro no guia de criação de NPC · frontend/ficha
+
+- **Ideia:** o guia de NPC passa a ter a caixa de imagem de registro (`guia__avatar-campo`) que os guias de Jogador e de
+  Criatura têm, com envio logo após registrar.
+- **Origem:** `m4-13` — a spec mandava conferir se o NPC já tinha upload; **não tem** (o `criarFichaNpc` só recebe `nome` e
+  `dados`), então nada foi criado.
+- **Por quê:** paridade entre os três guias; o cartão do NPC (acervo e campanha) já mostra o avatar quando há imagem, mas
+  hoje ela só entra depois, pela ficha.
+- **Custo aparente:** baixo a médio — o endpoint de imagem de ficha já existe e é genérico; falta o campo no guia e o
+  envio em sequência ao POST, como na criatura.
+
+### I-045 — Extrair o casco `guia__*` para um SCSS compartilhado · frontend/estilo
+
+- **Ideia:** um parcial único com o casco dos guias (cabeçalho, Roteiro, seção, resumo, rodapé, progresso mobile) em vez
+  de três cópias (`criar.page.scss`, `criar-criatura.page.scss`, `criar-npc.page.scss`).
+- **Origem:** `m4-13` — a decisão de abertura foi copiar só o subconjunto no NPC para não mexer em duas telas aprovadas;
+  as três cópias já divergem em detalhes (rascunho/"Retomar" e diálogo de sair só em Jogador/Criatura).
+- **Por quê:** uma mudança de casco hoje exige três edições idênticas; o NPC já tem os campos das etapas em
+  `npc-etapa.scss` por causa da encapsulação por componente.
+- **Custo aparente:** médio — exige regressão visual dos três guias; a encapsulação do Angular pede um parcial `@use`d, não
+  uma classe global.
+
 ### I-044 — Ficha de NPC na janela flutuante da campanha · frontend/campanha
 
 - **Ideia:** a janela flutuante de ficha (`FichaFlutuante`) passa a suportar `NPC`, como suporta jogador e criatura, para o

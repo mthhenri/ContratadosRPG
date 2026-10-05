@@ -1,6 +1,9 @@
-<div class="npc-etapa">
-    <p class="npc-etapa__apoio">Quem é esta pessoa e qual papel ela ocupa na história?</p>
-    <app-campo rotulo="Nome" tamanho="padrao">
+<div class="guia__etapa">
+    <div class="guia__introducao">
+        <span class="guia__introducao-codigo">IDENTIDADE // PESSOA</span>
+        <p>Quem é esta pessoa e qual papel ela ocupa na história?</p>
+    </div>
+    <app-campo rotulo="Nome" tamanho="compacto">
         <input
             class="campo__controle"
             [formControl]="controles.nome"
@@ -8,7 +11,7 @@
             placeholder="Ex.: Dra. Helena Mota"
         />
     </app-campo>
-    <app-campo rotulo="Função narrativa" tamanho="padrao">
+    <app-campo rotulo="Função narrativa" tamanho="compacto">
         <textarea
             class="campo__controle"
             [formControl]="controles.funcao"
@@ -16,10 +19,10 @@
             placeholder="Ex.: médica da Fundação e contato do esquadrão"
         ></textarea>
     </app-campo>
-    <div class="npc-etapa__dupla">
+    <div class="guia__campos guia__campos--duas-colunas">
         <app-campo
             rotulo="Categoria"
-            tamanho="padrao"
+            tamanho="compacto"
             [dica]="criacao.referenciaCategoria().perfil"
         >
             <select class="campo__controle" [formControl]="controles.categoria">
@@ -30,7 +33,7 @@
         </app-campo>
         <app-campo
             rotulo="Nível"
-            tamanho="padrao"
+            tamanho="compacto"
             [dica]="
                 'Faixa sugerida: ' +
                 criacao.referenciaCategoria().nivelSugerido +
@@ -48,7 +51,7 @@
     </div>
     <app-campo
         rotulo="Cooperação"
-        tamanho="padrao"
+        tamanho="compacto"
         dica="Postura diante do grupo, independente da Categoria."
     >
         <app-step-input
@@ -60,7 +63,7 @@
         />
     </app-campo>
     @if (criacao.referenciaCooperacao(); as referencia) {
-        <div class="npc-etapa__referencia" aria-live="polite">
+        <div class="guia__referencia" aria-live="polite">
             <h3>{{ referencia.rotulo }}</h3>
             <p><strong>Social</strong> {{ referencia.social }}</p>
             <p><strong>Combate</strong> {{ referencia.combate }}</p>
