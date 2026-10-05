@@ -1,5 +1,26 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-05 — Specs `m4-16`, `m4-17` e `m4-18`: segunda rodada da revisão da ficha de NPC (só especificação)
+
+Pedido do autor depois de ver a ficha de NPC entregue pela `m4-14`: (a) os atributos devem ser exibidos **iguais aos do
+Jogador**; (b) a primeira coluna está **grande demais** — foto menor, Defesa/Bloquear/Esquivar menores e mais finos,
+Cooperação como **barra de vermelho a verde** sob a foto; (c) a **usabilidade da edição** precisa ser revista ("quando você clica
+no editar, ele não tem um cancelar"). O autor pediu **só as specs**, para um modelo maior executar; nenhum código foi alterado.
+
+Leitura do código que sustenta as specs: o Salvar/Cancelar do NPC mora num `app-cartao` de rascunho em `visualizar-npc.page.html`
+**depois** das duas colunas (longe do bloco editado; no mobile, no fim da página); o lápis não muda ao editar; "Editar identidade" e
+"Alterar Cooperação" abrem o mesmo grupo `identidade`; o rascunho acumula grupos (`mesclarDocumento`) com o texto "Salvar confirma
+todos os grupos editados". Jogador e Criatura usam lápis que some/vira ✕ e Salvar/Cancelar no cabeçalho do próprio card de Atributos.
+O retrato do NPC chega a 230px (Jogador 175, Criatura 215 com foto de 175). O ladrilho de atributo do Jogador é receita local
+(`.ficha-atributo`), com cópia na Criatura; `shared/ui/` não tem ladrilho de atributo, ladrilho "fino" nem barra de escala.
+
+Decisões: **uma spec por tema, em ordem** — `m4-16` (padrão de edição, antes porque as outras consomem), `m4-17` (coluna
+compacta + Cooperação), `m4-18` (atributos); cada uma abre com **decisões que dependem do autor** (salvar por bloco × rascunho
+acumulado; primitivo novo `app-barra-escala` × variante × bloco local; tamanho `fino` do `Stat`; ladrilho de atributo como
+primitivo novo × cópia × unificação; NPC rola ou não teste de atributo) e manda o executor **perguntar antes de implementar**,
+porque criar/ampliar primitivo é decisão do autor. A `I-047` foi promovida à `m4-18`. Nenhuma mecânica de Jogador (Maestria,
+modificador, dados, lesão, rolagem) entra no NPC (regra vence o mockup).
+
 ## 2026-10-05 — P-096: reações do cartão de espectador sem "·" no começo da linha no mobile
 
 Correção pedida pelo autor (opção A da conversa). `espectador-ficha-card.component.scss`: cada reação (`Def 24`) ganhou

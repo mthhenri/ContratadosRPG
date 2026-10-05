@@ -814,9 +814,15 @@
 
 ## 1. Próxima Task
 
-**Revisão do NPC (pedido do autor, 2026-10-04) — concluída: `m4-12`, `m4-13`, `m4-14` e `m4-15` em `done/`.** Sem task
-aberta nesta frente; pendências do autor no fim do bloco da `m4-14` em `HISTORY.md` (título dos cartões em caixa alta × baixa,
-ladrilho de atributo, `I-043`/`I-044`/`I-045`/`I-046`). **Ficha de NPC (`m4-14`):** `visualizar-npc.page.*` usa `ficha-pagina__*`
+**Segunda rodada da revisão do NPC (pedido do autor, 2026-10-05) — três specs no `backlog/`, executar nesta ordem:**
+[`m4-16`](../specs/backlog/m4-16-ficha-npc-usabilidade-edicao.spec.md) (usabilidade da edição: Salvar/Cancelar no próprio
+bloco, foco/teclado, erro no bloco; decide salvar por bloco × rascunho acumulado),
+[`m4-17`](../specs/backlog/m4-17-ficha-npc-coluna-identidade-compacta.spec.md) (coluna Identidade compacta: foto menor,
+ladrilhos finos, Cooperação como barra de escala vermelho→verde; pede decisão do autor sobre primitivos) e
+[`m4-18`](../specs/backlog/m4-18-ficha-npc-atributos-como-jogador.spec.md) (atributos do NPC iguais aos do Jogador; promove
+`I-047`). Cada uma exige **perguntar ao autor** as decisões de abertura antes de implementar.
+**Revisão do NPC, primeira rodada (pedido do autor, 2026-10-04) — concluída: `m4-12`, `m4-13`, `m4-14` e `m4-15` em `done/`.**
+Pendências do autor no fim do bloco da `m4-14` em `HISTORY.md` (`I-043`/`I-044`/`I-045`/`I-046`). **Ficha de NPC (`m4-14`):** `visualizar-npc.page.*` usa `ficha-pagina__*`
 (campanha em chip, `textoPersistencia`); `npc-visualizacao` edita por lápis (Identidade, Recursos, Cooperação, Atributos,
 Conduta) e por selos redondos no retrato; `NpcHabilidadesLista`/`NpcSanidadeLista` têm cabeçalho com lápis e "+", itens em linhas
 e ícones por item só em `modoEdicao()` (o lápis só chama `formulario.iniciar(grupo)` — o modelo de edição não mudou).

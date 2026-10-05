@@ -27,6 +27,12 @@
 
 ## Promovidas
 
+### I-047 — Ladrilho de atributo do NPC igual ao da Criatura · frontend/ficha
+
+- **Promovida em 2026-10-05** a `docs/specs/backlog/m4-18-ficha-npc-atributos-como-jogador.spec.md`: o autor pediu que os
+  atributos do NPC sejam exibidos **iguais aos do Jogador** (a ideia original citava a Criatura). A spec decide o
+  primitivo/receita e deixa a rolagem de atributo do NPC e a migração de Jogador/Criatura como ideias novas.
+
 ### I-041 — Montador de rolagem enxuto: ações base + guias · frontend/rolagem
 
 - **Promovida em 2026-10-02** (o autor pediu a spec depois da E3.3 e das decisões abaixo): duas specs —
@@ -227,16 +233,6 @@
   só Chromium) continua descartada como via principal; pode voltar como upgrade opcional.
 
 ## Abertas
-
-### I-047 — Ladrilho de atributo do NPC igual ao da Criatura · frontend/ficha
-
-- **Ideia:** os atributos da ficha de NPC passarem a usar o ladrilho da ficha de Criatura (sigla DES/FOR…, bônus e, se o
-  autor quiser, ícone de rolagem) em vez do `app-stat` com o nome inteiro e a DT.
-- **Origem:** `m4-14` — o NPC manteve o `app-stat` só centralizado; o autor deixou o ajuste para depois ("vamos ajustar isso").
-- **Por quê:** é a divergência de estrutura que sobra entre as duas fichas; a rolagem de atributo do NPC estava fora do
-  escopo da `m4-14`, então a decisão inclui se o ladrilho rola ou só exibe.
-- **Custo aparente:** médio — pede ampliar o `Stat` ou criar um ladrilho em `shared/ui/` (decisão do autor, regra de
-  primitivos) e, se rolar, ligar ao fluxo de rolagem do NPC.
 
 ### I-046 — Imagem de registro no guia de criação de NPC · frontend/ficha
 
