@@ -53,4 +53,79 @@ describe("NpcVisualizacao", () => {
         expect(raiz.textContent).toContain("Reserva Fixa");
         expect(raiz.textContent).not.toContain("Recarga 13");
     });
+    describe("casco da ficha de Criatura (m4-14)", () => {
+        const botoesComTexto = (raiz: HTMLElement) => Array.from(
+            raiz.querySelectorAll<HTMLButtonElement>("button[app-botao]"),
+        ).map((botao) => botao.textContent?.trim());
+        const rotulos = (raiz: HTMLElement) => Array.from(
+            raiz.querySelectorAll("[aria-label]"),
+        ).map((elemento) => elemento.getAttribute("aria-label"));
+
+        it("mestre edita por ícone (lápis) e não há botão de contorno solto no corpo", () => {
+            const { raiz } = montar(true);
+            expect(rotulos(raiz)).toEqual(expect.arrayContaining(["Editar identidade",
+                "Editar recursos", "Alterar Cooperação", "Editar atributos", "Escolher retrato"]));
+            const textos = botoesComTexto(raiz);
+            for (const solto of ["Editar recursos", "Alterar Cooperação", "Escolher retrato",
+                "Editar conduta", "Adicionar habilidade"]) {
+                expect(textos).not.toContain(solto);
+            }
+        });
+
+        it("leitor não recebe nenhum lápis nem selo do retrato", () => {
+            const { raiz } = montar(false);
+            const lista = rotulos(raiz);
+            for (const rotulo of ["Editar identidade", "Editar recursos", "Alterar Cooperação",
+                "Editar atributos", "Escolher retrato", "Editar habilidades"]) {
+                expect(lista).not.toContain(rotulo);
+            }
+        });
+
+        it("selos do retrato ficam sobre o avatar; enquadrar e remover só com imagem", () => {
+            const { raiz, edicao, fixture } = montar(true);
+            expect(raiz.querySelectorAll(".npc__avatar button")).toHaveLength(1);
+            edicao.definirFicha({ ...criarFichaNpcTeste(), imagemUrl: "/uploads/npc.png" });
+            fixture.detectChanges();
+            expect(Array.from(raiz.querySelectorAll(".npc__avatar button"))
+                .map((botao) => botao.getAttribute("aria-label")))
+                .toEqual(["Enquadrar retrato", "Remover retrato", "Escolher retrato"]);
+        });
+
+        it("abas têm ícone e rótulo colapsável", () => {
+            const { raiz } = montar(true);
+            const abas = Array.from(raiz.querySelectorAll("button[app-aba]"));
+            expect(abas.map((aba) => aba.textContent?.trim()))
+                .toEqual(["Habilidades", "Conduta", "Sanidade"]);
+            for (const aba of abas) {
+                expect(aba.querySelector("app-icone")).not.toBeNull();
+                expect(aba.querySelector(".abas__rotulo")).not.toBeNull();
+            }
+        });
+
+        it("ícones por item de Habilidades só aparecem depois do lápis do cabeçalho", () => {
+            const { raiz, edicao, fixture } = montar(true);
+            const ficha = criarFichaNpcTeste();
+            edicao.definirFicha({ ...ficha, dados: { ...ficha.dados,
+                categoria: CategoriaNpcEnum.VETERANO, habilidades: [{
+                    nomeNeutro: "Cobertura", nomeNarrativo: "", tipo: "PASSIVA" as never,
+                    custoEnergia: 0, descricao: "Protege o grupo", restricao: "" }] } });
+            fixture.detectChanges();
+            expect(raiz.querySelectorAll(".npc-lista__acoes")).toHaveLength(0);
+            (raiz.querySelector('button[aria-label="Editar habilidades"]') as HTMLButtonElement).click();
+            fixture.detectChanges();
+            expect(Array.from(raiz.querySelectorAll(".npc-lista__acoes button"))
+                .map((botao) => botao.getAttribute("aria-label")))
+                .toEqual(["Editar habilidade", "Remover habilidade"]);
+        });
+
+        it("Conduta e Sanidade editam por lápis, sem botão de contorno no corpo", () => {
+            const { raiz, pagina, fixture } = montar(true);
+            pagina.aba.set("conduta"); fixture.detectChanges();
+            expect(rotulos(raiz)).toContain("Editar conduta");
+            expect(botoesComTexto(raiz)).not.toContain("Editar conduta");
+            pagina.aba.set("sanidade"); fixture.detectChanges();
+            expect(rotulos(raiz)).toEqual(expect.arrayContaining(["Editar sequelas",
+                "Adicionar sequela", "Adicionar trauma"]));
+        });
+    });
 });

@@ -104,4 +104,18 @@ describe("NpcVisualizar — acesso e recuperação", () => {
         expect(tempoReal.sairSalaCampanha).toHaveBeenCalledWith(2);
         expect(pagina.edicao.ficha()).toBeNull();
     });
+    it("cabeçalho no casco da criatura: campanha em chip e estado de persistência sem texto ocioso", async () => {
+        const { fixture, pagina } = await montar();
+        fixture.detectChanges();
+        const raiz = fixture.nativeElement as HTMLElement;
+        expect(raiz.querySelector(".ficha-pagina__campanha")).not.toBeNull();
+        expect(raiz.querySelector(".ficha-pagina__voltar")?.getAttribute("aria-label"))
+            .toBe("Voltar à campanha");
+        expect(raiz.querySelector(".ficha-pagina__persistencia")).toBeNull();
+        expect(pagina.textoPersistencia()).toBe("");
+        pagina.formulario.iniciar("conduta");
+        fixture.detectChanges();
+        expect(raiz.querySelector(".ficha-pagina__persistencia")?.textContent).toContain("Rascunho");
+        expect(raiz.querySelector("[class*=npc-pagina]")).toBeNull();
+    });
 });

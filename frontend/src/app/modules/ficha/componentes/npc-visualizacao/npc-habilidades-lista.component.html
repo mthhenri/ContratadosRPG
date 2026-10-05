@@ -1,134 +1,155 @@
-<div class="npc__lista">
+<section class="npc-lista">
+    <header class="npc-lista__cabecalho">
+        <h3 class="npc-lista__titulo">Habilidades</h3>
+        <span class="npc-lista__contagem">{{ ficha()!.dados.habilidades.length }}</span>
+        <span class="npc-lista__regua"></span>
+        @if (gerenciavel()) {
+            <button
+                app-botao-icone
+                class="npc-lista__cabecalho-acao"
+                type="button"
+                [class.npc-lista__cabecalho-acao--ativo]="modoEdicao()"
+                [attr.aria-pressed]="modoEdicao()"
+                aria-label="Editar habilidades"
+                appTooltip="Editar habilidades"
+                [disabled]="formulario.edicao.salvando() || modoEdicao()"
+                (click)="formulario.iniciar('habilidades')"
+            >
+                <app-icone nome="editar" />
+            </button>
+            <button
+                app-botao-icone
+                class="npc-lista__cabecalho-acao npc-lista__cabecalho-acao--adicionar"
+                type="button"
+                aria-label="Adicionar habilidade"
+                appTooltip="Adicionar habilidade"
+                [disabled]="formulario.edicao.salvando()"
+                (click)="adicionar()"
+            >
+                <app-icone nome="mais" />
+            </button>
+        }
+    </header>
     <p class="npc__nota">
         {{ volume().totalMinimo }}–{{ volume().totalMaximo }} habilidades · mínimo
         {{ volume().passivasMinimas }} Passivas · até {{ volume().ativasMaximas }} Ativas. Limite de
         {{ volume().limitePorTurno }} usos de Ativas por turno.
     </p>
-    @for (habilidade of ficha()!.dados.habilidades; track $index; let indice = $index) {
-        <app-cartao
-            [titulo]="habilidade.nomeNarrativo || habilidade.nomeNeutro || 'Nova habilidade'"
-            [cabecalhoQuebravel]="true"
-        >
-            <app-icone cartaoIndice nome="habilidades" />
-            <app-chip cartaoFim variante="sutil">
-                {{ habilidade.tipo === tipos.PASSIVA ? "Passiva" : "Ativa" }}
-                @if (habilidade.tipo === tipos.ATIVA) {
-                    · {{ habilidade.custoEnergia ?? 0 }} Energia
-                }
-            </app-chip>
-            @if (
-                gerenciavel() && formulario.grupo() === "habilidades" && indiceEditando() === indice
-            ) {
-                @let registro = formulario.habilidades.at(indice);
-                <div class="npc__campos" [formGroup]="registro">
-                    <app-campo rotulo="Nome neutro">
-                        <input class="campo__controle" formControlName="nomeNeutro" />
-                    </app-campo>
-                    <app-campo rotulo="Nome narrativo (opcional)">
-                        <input class="campo__controle" formControlName="nomeNarrativo" />
-                    </app-campo>
-                    <app-campo rotulo="Tipo">
-                        <select class="campo__controle" formControlName="tipo">
-                            <option [value]="tipos.PASSIVA">Passiva</option>
-                            <option [value]="tipos.ATIVA">Ativa</option>
-                        </select>
-                    </app-campo>
-                    @if (registro.controls.tipo.value === tipos.ATIVA) {
-                        <app-campo rotulo="Custo de Energia">
-                            <input
-                                class="campo__controle"
-                                type="number"
-                                min="0"
-                                step="1"
-                                formControlName="custoEnergia"
-                            />
+    <ul class="npc-lista__itens">
+        @for (habilidade of ficha()!.dados.habilidades; track $index; let indice = $index) {
+            <li class="npc-lista__item" [class.npc-lista__item--editando]="emEdicao(indice)">
+                @if (emEdicao(indice)) {
+                    @let registro = formulario.habilidades.at(indice);
+                    <div class="npc__campos" [formGroup]="registro">
+                        <app-campo rotulo="Nome neutro" tamanho="compacto">
+                            <input class="campo__controle" formControlName="nomeNeutro" />
                         </app-campo>
-                    }
-                    <app-campo rotulo="Descrição">
-                        <textarea
-                            class="campo__controle"
-                            rows="4"
-                            formControlName="descricao"
-                        ></textarea>
-                    </app-campo>
-                    <app-campo rotulo="Restrição (opcional)">
-                        <textarea
-                            class="campo__controle"
-                            rows="2"
-                            formControlName="restricao"
-                        ></textarea>
-                    </app-campo>
-                    @if (registro.invalid && registro.touched) {
-                        <p class="npc__erro" role="alert">
-                            Informe nome e descrição; custo deve ser inteiro não negativo.
-                        </p>
-                    }
-                    <button
-                        app-botao
-                        type="button"
-                        variante="secundario"
-                        estilo="contorno"
-                        tamanho="medio"
-                        (click)="concluir()"
-                    >
-                        Concluir
-                    </button>
-                </div>
-            } @else {
-                @if (habilidade.nomeNarrativo) {
-                    <p class="npc__nota">{{ habilidade.nomeNeutro }}</p>
-                }
-                <p class="npc__texto">{{ habilidade.descricao }}</p>
-                @if (habilidade.restricao) {
-                    <p class="npc__texto"><strong>Restrição:</strong> {{ habilidade.restricao }}</p>
-                }
-                @if (gerenciavel()) {
-                    <div class="npc__acoes">
+                        <app-campo rotulo="Nome narrativo (opcional)" tamanho="compacto">
+                            <input class="campo__controle" formControlName="nomeNarrativo" />
+                        </app-campo>
+                        <app-campo rotulo="Tipo" tamanho="compacto">
+                            <select class="campo__controle" formControlName="tipo">
+                                <option [value]="tipos.PASSIVA">Passiva</option>
+                                <option [value]="tipos.ATIVA">Ativa</option>
+                            </select>
+                        </app-campo>
+                        @if (registro.controls.tipo.value === tipos.ATIVA) {
+                            <app-campo rotulo="Custo de Energia" tamanho="compacto">
+                                <input
+                                    class="campo__controle"
+                                    type="number"
+                                    min="0"
+                                    step="1"
+                                    formControlName="custoEnergia"
+                                />
+                            </app-campo>
+                        }
+                        <app-campo rotulo="Descrição" tamanho="compacto">
+                            <textarea
+                                class="campo__controle"
+                                rows="4"
+                                formControlName="descricao"
+                            ></textarea>
+                        </app-campo>
+                        <app-campo rotulo="Restrição (opcional)" tamanho="compacto">
+                            <textarea
+                                class="campo__controle"
+                                rows="2"
+                                formControlName="restricao"
+                            ></textarea>
+                        </app-campo>
+                        @if (registro.invalid && registro.touched) {
+                            <p class="npc__erro" role="alert">
+                                Informe nome e descrição; custo deve ser inteiro não negativo.
+                            </p>
+                        }
                         <button
                             app-botao
                             type="button"
-                            variante="secundario"
-                            estilo="contorno"
-                            tamanho="medio"
-                            [disabled]="formulario.edicao.salvando()"
-                            (click)="editar(indice)"
+                            variante="primario"
+                            estilo="preenchido"
+                            tamanho="pequeno"
+                            (click)="concluir()"
                         >
-                            <app-icone nome="editar" />Editar
-                        </button>
-                        <button
-                            app-botao
-                            type="button"
-                            variante="perigo"
-                            estilo="contorno"
-                            tamanho="medio"
-                            [disabled]="formulario.edicao.salvando()"
-                            (click)="remover(indice)"
-                        >
-                            <app-icone nome="excluir" />Remover
+                            Concluir
                         </button>
                     </div>
+                } @else {
+                    <div class="npc-lista__cabecalho-item">
+                        <span class="npc-lista__nome">{{
+                            habilidade.nomeNarrativo || habilidade.nomeNeutro || "Nova habilidade"
+                        }}</span>
+                        <app-chip variante="sutil">
+                            {{ habilidade.tipo === tipos.PASSIVA ? "Passiva" : "Ativa" }}
+                            @if (habilidade.tipo === tipos.ATIVA) {
+                                · {{ habilidade.custoEnergia ?? 0 }} Energia
+                            }
+                        </app-chip>
+                    </div>
+                    @if (habilidade.nomeNarrativo) {
+                        <p class="npc__nota">{{ habilidade.nomeNeutro }}</p>
+                    }
+                    <p class="npc__texto">{{ habilidade.descricao }}</p>
+                    @if (habilidade.restricao) {
+                        <p class="npc__texto">
+                            <strong>Restrição:</strong> {{ habilidade.restricao }}
+                        </p>
+                    }
+                    @if (gerenciavel() && modoEdicao()) {
+                        <div class="npc-lista__acoes">
+                            <button
+                                app-botao-icone
+                                type="button"
+                                aria-label="Editar habilidade"
+                                appTooltip="Editar habilidade"
+                                [disabled]="formulario.edicao.salvando()"
+                                (click)="editar(indice)"
+                            >
+                                <app-icone nome="editar" />
+                            </button>
+                            <button
+                                app-botao-icone
+                                type="button"
+                                aria-label="Remover habilidade"
+                                appTooltip="Remover habilidade"
+                                [disabled]="formulario.edicao.salvando()"
+                                (click)="remover(indice)"
+                            >
+                                <app-icone nome="excluir" />
+                            </button>
+                        </div>
+                    }
                 }
-            }
-        </app-cartao>
-    } @empty {
-        <app-estado-vazio
-            titulo="Nenhuma habilidade"
-            icone="habilidades"
-            tamanho="compacto"
-            linhaApoio="Civil não usa Passivas ou Ativas de combate."
-        />
-    }
-    @if (gerenciavel()) {
-        <button
-            app-botao
-            type="button"
-            variante="secundario"
-            estilo="contorno"
-            tamanho="medio"
-            [disabled]="formulario.edicao.salvando()"
-            (click)="adicionar()"
-        >
-            <app-icone nome="mais" />Adicionar habilidade
-        </button>
-    }
-</div>
+            </li>
+        } @empty {
+            <li>
+                <app-estado-vazio
+                    titulo="Nenhuma habilidade"
+                    icone="habilidades"
+                    tamanho="compacto"
+                    linhaApoio="Civil não usa Passivas ou Ativas de combate."
+                />
+            </li>
+        }
+    </ul>
+</section>

@@ -3,16 +3,17 @@ import { ReactiveFormsModule } from "@angular/forms";
 import { HabilidadeTipoNpcEnum } from "@contratados-rpg/shared/enums";
 import { obterVolumeHabilidadesPorCategoria } from "@contratados-rpg/shared/regras/npc";
 import { Icone } from "../../../../shared/icone/icone.component";
+import { Tooltip } from "../../../../shared/tooltip/tooltip.directive";
 import { Botao } from "../../../../shared/ui/botao/botao.component";
+import { BotaoIcone } from "../../../../shared/ui/botao-icone/botao-icone.component";
 import { Campo } from "../../../../shared/ui/campo/campo.component";
-import { Cartao } from "../../../../shared/ui/cartao/cartao.component";
 import { Chip } from "../../../../shared/ui/chip/chip.component";
 import { EstadoVazio } from "../../../../shared/ui/estado-vazio/estado-vazio.component";
 import { NpcEdicaoFormulario, criarHabilidadeFormulario } from "../../npc-edicao-formulario.service";
 
 @Component({
     selector: "app-npc-habilidades-lista",
-    imports: [ReactiveFormsModule, Icone, Botao, Campo, Cartao, Chip, EstadoVazio],
+    imports: [ReactiveFormsModule, Icone, Tooltip, Botao, BotaoIcone, Campo, Chip, EstadoVazio],
     templateUrl: "./npc-habilidades-lista.component.html", styleUrl: "./npc-visualizacao.scss",
 })
 export class NpcHabilidadesLista {
@@ -25,6 +26,13 @@ export class NpcHabilidadesLista {
     readonly volume = computed(() => obterVolumeHabilidadesPorCategoria({
         categoria: this.ficha()!.dados.categoria,
     }));
+
+    /** Itens só ganham editar/remover depois que o grupo entra em edição (lápis do cabeçalho). */
+    readonly modoEdicao = computed(() => this.formulario.grupo() === "habilidades");
+
+    emEdicao(indice: number): boolean {
+        return this.gerenciavel() && this.modoEdicao() && this.indiceEditando() === indice;
+    }
 
     editar(indice: number): void {
         if (!this.gerenciavel() || this.formulario.edicao.salvando()) return;

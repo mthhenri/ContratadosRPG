@@ -1,4 +1,4 @@
-<section class="npc-pagina" [class.npc-pagina--lateral-aberta]="historicoAberto()">
+<section class="ficha-pagina" [class.ficha-pagina--lateral-aberta]="historicoAberto()">
     <app-coluna-acoes id="ficha-npc" rotulo="Ações da ficha de NPC">
         @if (edicao.ficha()) {
         <div class="coluna-acoes__categoria">Ficha</div>
@@ -58,28 +58,38 @@
         </button>
         } }
     </app-coluna-acoes>
-    <div class="npc-pagina__conteudo">
-        <header class="npc-pagina__cabecalho">
+    <div class="ficha-pagina__conteudo">
+        <header class="ficha-pagina__cabecalho">
             <a
                 app-botao-icone
-                tamanho="padrao"
+                class="ficha-pagina__voltar"
                 [routerLink]="rotaSaida()"
-                aria-label="Voltar"
-                appTooltip="Voltar"
+                [attr.aria-label]="campanhaId() === null ? 'Voltar ao acervo' : 'Voltar à campanha'"
+                [appTooltip]="campanhaId() === null ? 'Voltar ao acervo' : 'Voltar à campanha'"
                 ><app-icone nome="voltar"
             /></a>
-            <span class="npc-pagina__indice">//</span>
-            <h1 class="npc-pagina__titulo">{{ edicao.ficha()?.nome || 'Ficha de NPC' }}</h1>
-            @if (campanhaNome()) { <span class="npc-pagina__campanha">{{ campanhaNome() }}</span> }
-            <span class="npc-pagina__regua"></span>
-            <span class="npc-pagina__estado" role="status">
-                {{ edicao.estadoPersistencia() === 'salvando' ? 'Salvando…' :
-                edicao.estadoPersistencia() === 'salvo' ? 'Salvo' : edicao.estadoPersistencia() ===
-                'erro' ? 'Falha ao salvar' : edicao.edicaoPendente() ? 'Rascunho' : '' }}
-            </span>
+            <span class="ficha-pagina__cabecalho-indice">//</span>
+            <h1 class="ficha-pagina__titulo">{{ edicao.ficha()?.nome || 'Ficha de NPC' }}</h1>
+            @if (campanhaNome(); as nomeCampanha) {
+            <span class="ficha-pagina__campanha">{{ nomeCampanha }}</span>
+            }
+            <span class="ficha-pagina__cabecalho-regua"></span>
+            @if (textoPersistencia(); as texto) {
+            <div class="ficha-pagina__acoes">
+                <span
+                    class="ficha-pagina__persistencia"
+                    [class.ficha-pagina__persistencia--salvo]="edicao.estadoPersistencia() === 'salvo'"
+                    [class.ficha-pagina__persistencia--erro]="edicao.estadoPersistencia() === 'erro'"
+                    role="status"
+                    >{{ texto }}</span
+                >
+            </div>
+            } @else {
+            <span class="sr-only" role="status"></span>
+            }
         </header>
         @if (carregando()) {
-        <div class="npc-pagina__esqueleto" role="status" aria-label="Carregando NPC">
+        <div class="ficha-pagina__esqueleto" role="status" aria-label="Carregando NPC">
             @for (item of [0, 1, 2]; track item) { <app-esqueleto /> }
         </div>
         } @else if (erroCarga()) {
@@ -109,22 +119,22 @@
             (imagemRemovida)="removerImagem()"
         />
         @if (edicao.erro() || formulario.erroFormulario()) {
-        <p class="npc-pagina__erro" role="alert">
+        <p class="ficha-pagina__erro" role="alert">
             {{ edicao.erro() || formulario.erroFormulario() }}
         </p>
         } @if (gerenciavel() && edicao.edicaoPendente()) {
-        <app-cartao class="npc-pagina__rascunho">
-            <p class="npc-pagina__nota">
+        <app-cartao class="ficha-pagina__rascunho">
+            <p class="ficha-pagina__nota">
                 Alterações em rascunho. Salvar confirma todos os grupos editados.
             </p>
             @if (edicao.violacoes().length) {
-            <ul class="npc-pagina__pendencias">
+            <ul class="ficha-pagina__pendencias">
                 @for (pendencia of edicao.violacoes(); track $index) {
                 <li>{{ pendencia }}</li>
                 }
             </ul>
             }
-            <div class="npc-pagina__acoes">
+            <div class="ficha-pagina__rascunho-acoes">
                 <button
                     app-botao
                     type="button"
@@ -151,7 +161,7 @@
             </div>
         </app-cartao>
         } @if (erroImagem()) {
-        <p class="npc-pagina__erro" role="alert">{{ erroImagem() }}</p>
+        <p class="ficha-pagina__erro" role="alert">{{ erroImagem() }}</p>
         @if (imagemPendente(); as alteracao) {
         <button
             app-botao
@@ -193,7 +203,7 @@
     [pisoX]="56"
     (fechar)="anotacoesAbertas.set(false)"
 >
-    <div class="npc-pagina__anotacoes">
+    <div class="ficha-pagina__anotacoes">
         @if (formulario.grupo() === 'anotacoes') {
         <app-editor-markdown
             #editorAnotacoes
@@ -201,7 +211,7 @@
             [formControl]="formulario.formulario.controls.anotacoes"
             [somenteLeitura]="edicao.salvando()"
         />
-        <div class="npc-pagina__acoes">
+        <div class="ficha-pagina__rascunho-acoes">
             <button
                 app-botao
                 type="button"
@@ -226,7 +236,7 @@
             </button>
         </div>
         @if (edicao.erro()) {
-        <p role="alert" class="npc-pagina__erro">{{ edicao.erro() }}</p>
+        <p role="alert" class="ficha-pagina__erro">{{ edicao.erro() }}</p>
         } } @else {
         <app-editor-markdown
             rotulo="Anotações privadas"
@@ -250,8 +260,8 @@
 </app-painel-flutuante>
 } @if (gerenciavel() && dialogAcesso()) {
 <app-modal [aberto]="true" titulo="Acesso de visualização" (fechou)="dialogAcesso.set(false)">
-    <div class="npc-pagina__acessos">
-        <p class="npc-pagina__nota">
+    <div class="ficha-pagina__acessos">
+        <p class="ficha-pagina__nota">
             Jogadores com acesso podem ler a ficha. As anotações continuam privadas.
         </p>
         <app-campo rotulo="Jogador">
@@ -279,7 +289,7 @@
         </button>
         @for (acesso of acessos(); track acesso.usuarioId) {
         <app-cartao>
-            <div class="npc-pagina__acesso">
+            <div class="ficha-pagina__acesso">
                 <span>{{ acesso.nome }}</span>
                 <button
                     app-botao
@@ -297,7 +307,7 @@
         } @empty {
         <app-estado-vazio titulo="Nenhum acesso concedido" icone="membros" tamanho="compacto" /> }
         @if (erroAcesso()) {
-        <p class="npc-pagina__erro" role="alert">{{ erroAcesso() }}</p>
+        <p class="ficha-pagina__erro" role="alert">{{ erroAcesso() }}</p>
         }
     </div>
 </app-modal>

@@ -1,5 +1,70 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-05 — `m4-14-ficha-npc-aparencia-estrutura`: ficha completa de NPC no casco e na estrutura da ficha de Criatura
+
+Última spec da revisão do NPC (`m4-12`, `m4-13`, `m4-15` ✔). Pedido do autor: a ficha completa de NPC "tem que ser ajustada";
+escopo fechado em **aparência e estrutura** — ficam como estavam os itens da coluna de ações, o conteúdo/regras, o modelo de
+edição (por grupo, rascunho, Salvar/Descartar), as rolagens e o tempo real. Frontend apenas.
+
+**Diagnóstico visual (passo 1 da spec) — lista de divergências, o contrato desta task.** Ficha de NPC × ficha de Criatura,
+`1920×1080` e `360×800`: (D1) casco da página com vocabulário próprio (`npc-pagina__*`); campanha em texto solto em vez do chip
+com borda; estado de persistência em texto simples sempre presente; botão voltar sem o tamanho do análogo e sem rótulo por
+destino. (D2) Identidade: quatro botões de contorno soltos no corpo ("Alterar Cooperação", "Editar recursos", "Escolher
+retrato", "Enquadrar"/"Remover retrato") em vez de lápis/selos; perfil alinhado à esquerda enquanto o da criatura é centrado;
+chips de classificação sob o retrato em vez da faixa de rodapé do cartão. (D3) Atributos: ladrilhos e rótulos de grupo
+alinhados à esquerda; os da criatura são centrados. (D4) Abas sem ícone nem rótulo colapsável (a criatura colapsa para só-ícone
+no mobile). (D5) Painéis: Habilidades/Sequelas/Traumas em um `app-cartao` por item, botões "Editar"/"Remover" sempre visíveis e
+"Adicionar" solto no fim, e "Editar conduta" solto; a criatura usa cabeçalho com título, contagem, régua, lápis e "+" em ícone,
+itens em linhas e ícones por item só depois do modo de edição (regra de projeto, memória "botões sob demanda").
+
+**O que mudou.** *Página* (`visualizar-npc.page.*`): `npc-pagina__*` → `ficha-pagina__*` (SCSS copiado do subconjunto usado pela
+criatura; o que é só do NPC — rascunho, anotações, acessos — ficou no fim); campanha em chip; `textoPersistencia` (computed na
+página: Salvando…/Salvo/Falha ao salvar/Rascunho, vazio quando ocioso; cores `--salvo`/`--erro`); voltar com o rótulo por destino
+("Voltar ao acervo"/"Voltar à campanha"); a ação de rascunho virou `ficha-pagina__rascunho-acoes` para não colidir com o
+`ficha-pagina__acoes` do cabeçalho. *Visualização* (`npc-visualizacao.*`): Identidade com perfil centrado (rótulo, nome com
+`alinhamento="centro"`, função), retrato com **selos redondos** sobre o avatar no desenho da criatura (enquadrar no canto
+superior esquerdo, remover no superior direito, trocar no inferior direito, `app-botao-icone [redondo]`, só para o mestre; o
+`<input type=file>` oculto e o fluxo de upload/enquadramento não mudaram), subcabeçalhos com régua e lápis ("Recursos" abre o
+grupo `recursos`, "Cooperação" abre `identidade`, onde o campo mora), chips de categoria/nível numa faixa própria no fim do
+cartão; "Confirmar socorro" ficou como ação condicional do estado "Morrendo", agora `tamanho="pequeno"` ao lado do chip;
+atributos com rótulo de grupo e ladrilhos centrados (`text-align` no host do `app-stat`, sem tocar o primitivo); abas com ícone
+(`habilidades`, `combate`, `sanidade`) e `abas__rotulo`; Conduta com cabeçalho e lápis. `NpcHabilidadesLista` e
+`NpcSanidadeLista` ganharam cabeçalho (título, contagem, régua, lápis, "+"), itens em linhas e ícones por item só quando
+`modoEdicao()` (`formulario.grupo() === 'habilidades'|'sanidade'`) — o lápis **só chama `formulario.iniciar(grupo)`**, o mesmo
+que o antigo "Editar" já fazia, então o modelo de edição não mudou; "Concluir" do item ficou como botão primário pequeno dentro
+do formulário. SCSS: `npc-visualizacao.scss` ganhou `npc__avatar*`, `npc__subcabecalho`/`__lapis`, `npc__funcao`,
+`npc__metas--rodape` e o bloco `.npc-lista*` (copiado de `criatura-habilidade-lista`, já que a encapsulação do Angular não
+deixa o estilo vazar); nenhuma classe sem uso nos dois SCSS (conferido por script).
+
+**Decisões fora do texto literal da spec / pendências para o autor.** (1) **Título dos cartões:** o NPC usa o `app-cartao`
+(primitivo: título em caixa alta) e a criatura usa um cartão feito à mão com o título em caixa baixa ("Identidade"). Mantive o
+primitivo — copiar o cartão à mão da criatura contraria a regra de `shared/ui` e ampliar o primitivo é decisão do autor; é a
+única divergência visível de hierarquia que sobra. Se quiser a caixa baixa, a decisão é: ampliar `app-cartao` com uma variante de
+título ou migrar os cartões da criatura para o primitivo. (2) **Ladrilhos de atributo:** a criatura tem ladrilho próprio com
+sigla (DES/FOR…), bônus e ícone de rolagem; o NPC mantém `app-stat` (primitivo) com o nome inteiro e a DT, só centralizado — a
+rolagem está fora do escopo (decisão de abertura) e a sigla pediria um ladrilho novo ou ampliar o `Stat`. (3) **Mobile:** com
+três abas em 360px o rótulo ativo ("Habilidades") aparece truncado, o que o primitivo `app-abas` já faz também na criatura —
+não alterado. (4) A `ficha-pagina__campanha` como chip e o `ficha-pagina` herdado do criatura duplicam SCSS entre as duas páginas
+(mesma razão das outras cópias do projeto).
+
+**Testes.** `npc-visualizacao.component.spec.ts` ganhou o bloco "casco da ficha de Criatura (m4-14)": mestre edita por ícones e
+não há botão de contorno solto com os textos antigos; leitor sem nenhum lápis/selo; selos do retrato (só "Escolher retrato" sem
+imagem; os três com imagem); abas com ícone e `abas__rotulo`; ícones por item de Habilidades só depois do lápis do cabeçalho;
+Conduta e Sanidade por lápis. `visualizar-npc.page.spec.ts`: cabeçalho (chip de campanha, voltar por destino, persistência sem
+texto ocioso, "Rascunho" ao editar, nenhum `npc-pagina` restante). As asserções de comportamento existentes (rascunho, Salvar,
+Vida/Energia, "Confirmar socorro", modo leitor, reconexão, revogação) não mudaram e passam. Suíte completa do `frontend`: 209
+arquivos / 2829 testes verdes; `lint` 0 erros (warnings de aspas preexistentes); `ng build` e `tsc` limpos; Prettier só nos
+HTML/SCSS tocados.
+
+**Verificado ao vivo** (stack já no ar; mestre e campanha de teste por REST, oito fichas clonadas por SQL e **removidas por soft
+delete ao fim**), `1920×1080` e `360×800`: NPC combatente (Elite) e NPC Civil; as três abas (Habilidades, Conduta, Sanidade) com
+dados e vazias; modo de edição de Habilidades (dez ícones por item só depois do lápis, zero depois de "Cancelar", estado
+"Rascunho" no cabeçalho); edição de Recursos e de Identidade com o cartão de rascunho; selos do retrato; Civil sem barra de
+Energia. Sem overflow horizontal e sem erro de console. Comparação com a ficha de Criatura (análoga): mesmo casco, mesma
+densidade e mesmos controles (lápis e selos redondos), com as exceções listadas acima. **Não coberto:** modo leitor ao vivo (só
+no teste), NPC com imagem real (o selo "Enquadrar/Remover" só foi exercitado no teste) e painel de histórico aberto (a coluna
+lateral não mudou).
+
 ## 2026-10-05 — `m4-13-guia-criacao-npc-casco-guia`: guia de criação de NPC no casco dos guias de Jogador e Criatura
 
 Segunda spec fechada da revisão do NPC (`m4-12` ✔, `m4-15` ✔, `m4-14` ainda no backlog). Pedido do autor: o guia de NPC

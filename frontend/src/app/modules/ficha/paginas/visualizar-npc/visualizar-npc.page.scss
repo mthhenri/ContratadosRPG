@@ -1,5 +1,10 @@
 @use "tema/breakpoints" as bp;
 
+// Casco da ficha de NPC — mesmo vocabulário `.ficha-pagina__*` da ficha de Criatura
+// (`visualizar-criatura.page.scss`, ui-34) e da de Jogador, copiado só no que o NPC usa (m4-14): o
+// encapsulamento de estilo do Angular não compartilha `.scss` entre componentes. Só o que é do
+// NPC (rascunho, anotações, acessos) fica no fim.
+
 :host {
     display: block;
     margin: -24px -20px;
@@ -9,102 +14,207 @@
         --piso-flutuante: 57px;
     }
 }
-.npc-pagina {
+
+.ficha-pagina {
     display: flex;
+    width: 100%;
     min-height: calc(100dvh - var(--altura-topbar));
     align-items: stretch;
-    &--lateral-aberta {
-        margin-right: calc(var(--largura-painel-lateral) + var(--space-20));
+    transition:
+        width 0.26s cubic-bezier(0.22, 1, 0.36, 1),
+        margin 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+
+    @media (prefers-reduced-motion: reduce) {
+        transition: none;
     }
+
+    // O histórico ocupa uma coluna de apoio em desktop; a ficha usa somente a largura livre.
+    &--lateral-aberta {
+        width: auto;
+        margin: 0 calc(var(--largura-painel-lateral) + var(--space-20)) 0 0;
+
+        @include bp.mobile {
+            width: 100%;
+            max-width: 100%;
+            margin: 0;
+        }
+    }
+
+    @include bp.mobile {
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        min-height: 0;
+    }
+
     &__conteudo {
         flex: 1 1 0;
         min-width: 0;
         align-self: flex-start;
-        padding: 24px var(--space-20);
+        padding: 24px var(--space-20) var(--space-20);
+
+        @include bp.mobile {
+            padding: 10px 12px calc(28px + var(--piso-flutuante) + env(safe-area-inset-bottom, 0px));
+        }
     }
+
     &__cabecalho {
         display: flex;
-        min-width: 0;
         align-items: center;
         gap: var(--space-12);
+        min-width: 0;
         margin-bottom: var(--space-20);
+
+        @include bp.mobile {
+            flex-wrap: wrap;
+        }
     }
-    &__indice {
-        display: inline-flex;
+
+    &__cabecalho-indice {
+        display: flex;
+        flex: none;
         align-items: center;
         justify-content: center;
-        flex: none;
         width: 22px;
         height: 22px;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--accent);
         border: 1px solid var(--accent);
         border-radius: var(--radius-compact);
-        font: 700 12px var(--font-mono);
-        color: var(--accent);
     }
+
     &__titulo {
         min-width: 0;
         margin: 0;
         overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        font: 700 20px var(--font-mono);
+        font-family: var(--font-mono);
+        font-size: 20px;
+        font-weight: 700;
         color: var(--text);
-    }
-    &__campanha {
-        flex-shrink: 0;
-        max-width: 25%;
-        font: 10px var(--font-mono);
-        color: var(--text-dim);
-        overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
     }
-    &__regua {
-        flex: 1;
+
+    &__campanha {
+        flex: 0 1 auto;
+        padding: var(--space-4) var(--space-8);
+        overflow: hidden;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--text-dim);
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+    }
+
+    &__cabecalho-regua {
+        flex: 1 1 auto;
+        min-width: var(--space-12);
         height: 1px;
         background: var(--border);
     }
-    &__estado {
-        font: 11px var(--font-mono);
-        color: var(--text-dim);
+
+    &__persistencia {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        color: var(--text-mute);
+        white-space: nowrap;
+
+        &--salvo {
+            color: var(--positive);
+        }
+
+        &--erro {
+            color: var(--erro);
+        }
     }
+
+    &__acoes {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-left: auto;
+
+        @include bp.mobile {
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+    }
+
+    &__voltar {
+        flex: none;
+        width: 30px;
+        height: 26px;
+        text-decoration: none;
+
+        app-icone {
+            font-size: 13px;
+        }
+
+        @include bp.mobile {
+            width: bp.$alvo-toque;
+            height: bp.$alvo-toque;
+        }
+    }
+
+    // === Só do NPC: rascunho por grupo, erro, anotações privadas e acesso de visualização.
     &__rascunho {
         display: block;
         margin-top: var(--space-16);
     }
-    &__acoes {
+
+    &__rascunho-acoes {
         display: flex;
         gap: var(--space-12);
         flex-wrap: wrap;
         margin-top: var(--space-12);
     }
+
     &__nota,
     &__pendencias {
         font: 12px/1.6 var(--font-mono);
         color: var(--text-dim);
     }
+
     &__erro {
         font: 13px/1.6 var(--font-sans);
         color: var(--erro);
         overflow-wrap: anywhere;
     }
+
     &__esqueleto {
         display: grid;
         gap: var(--gap-grid);
         grid-template-columns: repeat(2, minmax(0, 1fr));
+
+        @include bp.mobile {
+            grid-template-columns: 1fr;
+        }
     }
+
     &__esqueleto app-esqueleto {
         height: 280px;
     }
+
     &__acessos,
     &__anotacoes {
         display: grid;
         gap: var(--space-16);
         min-width: 0;
     }
+
     &__anotacoes {
         padding: var(--space-16);
     }
+
     &__acesso {
         display: flex;
         flex-wrap: wrap;
@@ -113,27 +223,5 @@
         justify-content: space-between;
         font: 14px var(--font-mono);
         color: var(--text);
-    }
-    @include bp.mobile {
-        display: block;
-        min-height: 0;
-        margin-right: 0;
-        &__conteudo {
-            padding: var(--space-12) var(--space-12)
-                calc(var(--space-20) + var(--piso-flutuante) + env(safe-area-inset-bottom, 0px));
-        }
-        &__cabecalho {
-            flex-wrap: wrap;
-        }
-        &__titulo {
-            flex: 1;
-        }
-        &__campanha {
-            flex-basis: 100%;
-            max-width: 100%;
-        }
-        &__esqueleto {
-            grid-template-columns: 1fr;
-        }
     }
 }

@@ -59,6 +59,14 @@ export class NpcVisualizar {
     readonly fichaId = Number(lerParamRota(inject(ActivatedRoute), "id"));
     readonly campanhaId = computed(() => this.edicao.ficha()?.campanhaId ?? null);
     readonly campanhaNome = signal("");
+    /** Estado de persistência do cabeçalho — vazio quando não há o que dizer (como na criatura). */
+    readonly textoPersistencia = computed(() => {
+        const estado = this.edicao.estadoPersistencia();
+        if (estado === "salvando") return "Salvando…";
+        if (estado === "salvo") return "Salvo";
+        if (estado === "erro") return "Falha ao salvar";
+        return this.edicao.edicaoPendente() ? "Rascunho" : "";
+    });
     readonly membros = signal<readonly CampanhaMembroResumoDto[]>([]);
     readonly acessos = signal<readonly FichaAcessoResumoDto[]>([]);
     readonly carregando = signal(true);

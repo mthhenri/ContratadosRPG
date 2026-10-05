@@ -25,6 +25,45 @@
         grid-template-columns: 230px minmax(0, 1fr);
         gap: var(--space-16);
     }
+    // Perfil centralizado (rótulo, nome, função, retrato) — mesma composição da Identidade da
+    // criatura; os chips de classificação descem para uma faixa própria no fim do cartão.
+    &__perfil {
+        justify-items: center;
+        text-align: center;
+    }
+    &__funcao {
+        margin: 0;
+        font: 13px/1.5 var(--font-sans);
+        color: var(--text-dim);
+        overflow-wrap: anywhere;
+    }
+    &__metas--rodape {
+        margin-top: var(--space-16);
+        padding-top: var(--space-16);
+        border-top: 1px solid var(--border);
+    }
+    // Cabeçalho de subseção com régua e lápis — mesmo desenho de "Resistências/Fraquezas" da
+    // criatura; o lápis é o único gatilho de edição do bloco (nada de botão solto no corpo).
+    &__subcabecalho {
+        display: flex;
+        align-items: center;
+        gap: var(--space-8);
+        span {
+            font: 600 10px var(--font-mono);
+            letter-spacing: var(--tracking-label);
+            text-transform: uppercase;
+            color: var(--text-mute);
+        }
+        i {
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+    }
+    &__lapis {
+        flex: none;
+        font-size: 12px;
+    }
     &__campos {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -78,6 +117,12 @@
         text-transform: uppercase;
         color: var(--text-dim);
     }
+    &__subtitulo--centro {
+        text-align: center;
+    }
+    &__atributos app-stat {
+        text-align: center;
+    }
     &__texto {
         margin: 0;
         font: 14px/1.65 var(--font-sans);
@@ -95,6 +140,43 @@
         margin: 0;
         font: 13px/1.5 var(--font-sans);
         color: var(--erro);
+    }
+    // Caixa do retrato com os selos de ação (enquadrar no canto superior esquerdo, remover no
+    // superior direito, trocar no inferior direito) — mesma disposição do avatar da criatura.
+    &__avatar {
+        position: relative;
+        width: 100%;
+        max-width: 230px;
+    }
+    &__avatar-enquadrar,
+    &__avatar-remover,
+    &__avatar-upload {
+        position: absolute;
+        z-index: 1;
+        font-size: 9px;
+    }
+    &__avatar-enquadrar,
+    &__avatar-remover {
+        top: 5px;
+        width: 16px;
+        height: 16px;
+        background: color-mix(in srgb, var(--bg) 75%, transparent);
+    }
+    &__avatar-enquadrar {
+        left: 5px;
+    }
+    &__avatar-remover {
+        right: 5px;
+        &:hover {
+            color: var(--vida);
+            border-color: var(--vida);
+        }
+    }
+    &__avatar-upload {
+        right: -8px;
+        bottom: -8px;
+        width: 20px;
+        height: 20px;
     }
     // Retrato decorativo: mesmo enquadramento do análogo, sem reinvenção de controle.
     &__retrato {
@@ -147,5 +229,92 @@
         &__atributos {
             grid-template-columns: repeat(2, minmax(0, 1fr));
         }
+    }
+}
+
+// Listas do painel (Habilidades, Sequelas, Traumas) — cabeçalho com título/contagem/régua e
+// lápis + "adicionar" como ícones, itens em linhas; os ícones por item só existem depois que o
+// grupo entra em edição (`.npc-lista__acoes`). Mesmo desenho de `criatura-habilidade-lista`,
+// copiado porque o encapsulamento do Angular não deixa o estilo de outro componente vazar.
+.npc-lista {
+    display: grid;
+    gap: var(--space-12);
+    min-width: 0;
+
+    &__cabecalho {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    &__titulo {
+        margin: 0;
+        font: 700 11px var(--font-mono);
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        color: var(--text);
+    }
+    &__contagem {
+        font: 11px var(--font-mono);
+        color: var(--text-mute);
+    }
+    &__regua {
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+    }
+    &__cabecalho-acao {
+        flex: none;
+        font-size: 12px;
+        &--ativo {
+            color: var(--accent);
+            background: var(--accent-dim);
+            border-color: var(--accent);
+        }
+        &--adicionar {
+            width: 20px;
+            height: 20px;
+            color: var(--accent);
+            border-color: var(--accent-border);
+            &:hover {
+                background: var(--accent-dim);
+            }
+        }
+    }
+    &__itens {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 11px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        @include bp.mobile {
+            grid-template-columns: 1fr;
+        }
+    }
+    &__item {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+        min-width: 0;
+        padding: 13px 15px;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-control);
+    }
+    &__cabecalho-item {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        flex-wrap: wrap;
+    }
+    &__nome {
+        font: 600 14px var(--font-sans);
+        color: var(--text);
+        overflow-wrap: anywhere;
+    }
+    &__acoes {
+        display: flex;
+        gap: var(--space-8);
+        justify-content: flex-end;
     }
 }

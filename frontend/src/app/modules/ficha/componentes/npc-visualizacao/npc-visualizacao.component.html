@@ -33,6 +33,7 @@
                                     [valor]="documento.nome"
                                     [editando]="false"
                                     [bloco]="true"
+                                    [alinhamento]="'centro'"
                                     rotuloAria="identidade"
                                     class="npc__nome"
                                     (editarSolicitado)="iniciar('identidade')"
@@ -40,22 +41,104 @@
                             } @else {
                                 <h2 class="npc__nome">{{ documento.nome }}</h2>
                             }
-                            <p class="npc__texto">{{ dados().identidadeNarrativa.funcao }}</p>
-                            <div class="npc__retrato">
-                                @if (documento.imagemUrl) {
-                                    <img
-                                        [src]="documento.imagemUrl"
-                                        [alt]="documento.nome"
-                                        [appFocoImagem]="documento.imagemFoco"
+                            <p class="npc__funcao">{{ dados().identidadeNarrativa.funcao }}</p>
+                            <div class="npc__avatar">
+                                <div class="npc__retrato">
+                                    @if (documento.imagemUrl) {
+                                        <img
+                                            [src]="documento.imagemUrl"
+                                            [alt]="documento.nome"
+                                            [appFocoImagem]="documento.imagemFoco"
+                                        />
+                                    }
+                                </div>
+                                @if (gerenciavel()) {
+                                    @if (documento.imagemUrl) {
+                                        <button
+                                            app-botao-icone
+                                            [redondo]="true"
+                                            type="button"
+                                            class="npc__avatar-enquadrar"
+                                            aria-label="Enquadrar retrato"
+                                            appTooltip="Ajustar enquadramento"
+                                            [disabled]="edicao.edicaoPendente()"
+                                            (click)="reenquadrar()"
+                                        >
+                                            <app-icone nome="busca" />
+                                        </button>
+                                        <button
+                                            app-botao-icone
+                                            [redondo]="true"
+                                            type="button"
+                                            class="npc__avatar-remover"
+                                            aria-label="Remover retrato"
+                                            appTooltip="Remover retrato"
+                                            [disabled]="edicao.edicaoPendente()"
+                                            (click)="imagemRemovida.emit()"
+                                        >
+                                            <app-icone nome="excluir" />
+                                        </button>
+                                    }
+                                    <input
+                                        #entradaRetato
+                                        class="sr-only"
+                                        type="file"
+                                        tabindex="-1"
+                                        aria-label="Retrato"
+                                        [accept]="tiposImagemAceitos"
+                                        [disabled]="edicao.edicaoPendente()"
+                                        (change)="escolherImagem($event)"
                                     />
+                                    <button
+                                        app-botao-icone
+                                        [redondo]="true"
+                                        type="button"
+                                        class="npc__avatar-upload"
+                                        aria-label="Escolher retrato"
+                                        appTooltip="Escolher retrato"
+                                        [disabled]="edicao.edicaoPendente()"
+                                        (click)="entradaRetato.click()"
+                                    >
+                                        <app-icone nome="editar" />
+                                    </button>
                                 }
-                            </div>
-                            <div class="npc__metas">
-                                <app-chip variante="sutil">{{ referencia().rotulo }}</app-chip>
-                                <app-chip variante="sutil">Nível {{ dados().nivel }}</app-chip>
                             </div>
                         </div>
                         <div class="npc__combate">
+                            <div class="npc__subcabecalho">
+                                <span>Recursos</span>
+                                <i></i>
+                                @if (gerenciavel()) {
+                                    <button
+                                        app-botao-icone
+                                        class="npc__lapis"
+                                        type="button"
+                                        aria-label="Editar recursos"
+                                        appTooltip="Editar recursos"
+                                        [disabled]="edicao.salvando()"
+                                        (click)="iniciar('recursos')"
+                                    >
+                                        <app-icone nome="editar" />
+                                    </button>
+                                }
+                            </div>
+                            <div class="npc__stats">
+                                <app-stat
+                                    rotulo="Defesa"
+                                    [valor]="dados().defesaBase"
+                                    tamanho="compacto"
+                                />
+                                <app-stat
+                                    rotulo="Bloquear"
+                                    [valor]="dados().bloquear"
+                                    tamanho="compacto"
+                                />
+                                <app-stat
+                                    rotulo="Esquivar"
+                                    [valor]="dados().esquivar"
+                                    tamanho="compacto"
+                                />
+                            </div>
                             <app-barra-recurso
                                 rotulo="Vida"
                                 recurso="vida"
@@ -67,20 +150,24 @@
                                 (maximoAlterado)="ajustarMaximo('vidaMaxima', $event)"
                             />
                             @if (dados().condicoes?.morrendo) {
-                                <app-chip severidade="perigo" variante="sutil">Morrendo</app-chip>
-                                @if (gerenciavel()) {
-                                    <button
-                                        app-botao
-                                        type="button"
-                                        variante="secundario"
-                                        estilo="contorno"
-                                        tamanho="medio"
-                                        [disabled]="dados().vidaAtual <= 0"
-                                        (click)="edicao.ajustarVitalidade({ morrendo: false })"
+                                <div class="npc__acoes">
+                                    <app-chip severidade="perigo" variante="sutil"
+                                        >Morrendo</app-chip
                                     >
-                                        Confirmar socorro
-                                    </button>
-                                }
+                                    @if (gerenciavel()) {
+                                        <button
+                                            app-botao
+                                            type="button"
+                                            variante="secundario"
+                                            estilo="contorno"
+                                            tamanho="pequeno"
+                                            [disabled]="dados().vidaAtual <= 0"
+                                            (click)="edicao.ajustarVitalidade({ morrendo: false })"
+                                        >
+                                            Confirmar socorro
+                                        </button>
+                                    }
+                                </div>
                             }
                             @if (civil()) {
                                 <p class="npc__nota">Sem Energia</p>
@@ -104,22 +191,22 @@
                                     }
                                 </p>
                             }
-                            <div class="npc__stats">
-                                <app-stat
-                                    rotulo="Defesa"
-                                    [valor]="dados().defesaBase"
-                                    tamanho="compacto"
-                                />
-                                <app-stat
-                                    rotulo="Bloquear"
-                                    [valor]="dados().bloquear"
-                                    tamanho="compacto"
-                                />
-                                <app-stat
-                                    rotulo="Esquivar"
-                                    [valor]="dados().esquivar"
-                                    tamanho="compacto"
-                                />
+                            <div class="npc__subcabecalho">
+                                <span>Cooperação</span>
+                                <i></i>
+                                @if (gerenciavel()) {
+                                    <button
+                                        app-botao-icone
+                                        class="npc__lapis"
+                                        type="button"
+                                        aria-label="Alterar Cooperação"
+                                        appTooltip="Alterar Cooperação"
+                                        [disabled]="edicao.salvando()"
+                                        (click)="iniciar('identidade')"
+                                    >
+                                        <app-icone nome="editar" />
+                                    </button>
+                                }
                             </div>
                             <div class="npc__cooperacao">
                                 <app-stat
@@ -129,32 +216,12 @@
                                     tamanho="compacto"
                                 />
                                 <p class="npc__nota">{{ cooperacao()?.social }}</p>
-                                @if (gerenciavel()) {
-                                    <button
-                                        app-botao
-                                        type="button"
-                                        variante="secundario"
-                                        estilo="contorno"
-                                        tamanho="medio"
-                                        (click)="iniciar('identidade')"
-                                    >
-                                        Alterar Cooperação
-                                    </button>
-                                }
                             </div>
-                            @if (gerenciavel()) {
-                                <button
-                                    app-botao
-                                    type="button"
-                                    variante="secundario"
-                                    estilo="contorno"
-                                    tamanho="medio"
-                                    (click)="iniciar('recursos')"
-                                >
-                                    <app-icone nome="editar" />Editar recursos
-                                </button>
-                            }
                         </div>
+                    </div>
+                    <div class="npc__metas npc__metas--rodape">
+                        <app-chip variante="sutil">{{ referencia().rotulo }}</app-chip>
+                        <app-chip variante="sutil">Nível {{ dados().nivel }}</app-chip>
                     </div>
                     @if (gerenciavel() && formulario.grupo() === "identidade") {
                         <div class="npc__editor npc__campos" [formGroup]="formulario.formulario">
@@ -265,55 +332,6 @@
                             </p>
                         </div>
                     }
-                    @if (gerenciavel()) {
-                        <div class="npc__editor npc__acoes">
-                            <input
-                                #entradaRetrato
-                                class="sr-only"
-                                type="file"
-                                tabindex="-1"
-                                aria-label="Retrato"
-                                [accept]="tiposImagemAceitos"
-                                [disabled]="edicao.edicaoPendente()"
-                                (change)="escolherImagem($event)"
-                            />
-                            <button
-                                app-botao
-                                type="button"
-                                variante="secundario"
-                                estilo="contorno"
-                                tamanho="medio"
-                                [disabled]="edicao.edicaoPendente()"
-                                (click)="entradaRetrato.click()"
-                            >
-                                <app-icone nome="imagem" />Escolher retrato
-                            </button>
-                            @if (documento.imagemUrl) {
-                                <button
-                                    app-botao
-                                    type="button"
-                                    variante="secundario"
-                                    estilo="contorno"
-                                    tamanho="medio"
-                                    [disabled]="edicao.edicaoPendente()"
-                                    (click)="reenquadrar()"
-                                >
-                                    Enquadrar
-                                </button>
-                                <button
-                                    app-botao
-                                    type="button"
-                                    variante="perigo"
-                                    estilo="contorno"
-                                    tamanho="medio"
-                                    [disabled]="edicao.edicaoPendente()"
-                                    (click)="imagemRemovida.emit()"
-                                >
-                                    Remover retrato
-                                </button>
-                            }
-                        </div>
-                    }
                 </fieldset>
             </app-cartao>
             <app-cartao titulo="Atributos" [cabecalhoQuebravel]="true">
@@ -334,7 +352,7 @@
                 }
                 <div class="npc__lista">
                     @for (grupo of grupos; track grupo.nome) {
-                        <h3 class="npc__subtitulo">{{ grupo.nome }}</h3>
+                        <h3 class="npc__subtitulo npc__subtitulo--centro">{{ grupo.nome }}</h3>
                         <div class="npc__atributos">
                             @for (campo of grupo.campos; track campo.chave) {
                                 @if (gerenciavel() && formulario.grupo() === "atributos") {
@@ -383,13 +401,22 @@
                         [attr.aria-controls]="'npc-painel-' + destino"
                         (click)="aba.set(destino)"
                     >
-                        {{
+                        <app-icone
+                            [nome]="
+                                destino === 'habilidades'
+                                    ? 'habilidades'
+                                    : destino === 'conduta'
+                                      ? 'combate'
+                                      : 'sanidade'
+                            "
+                        />
+                        <span class="abas__rotulo">{{
                             destino === "habilidades"
                                 ? "Habilidades"
                                 : destino === "conduta"
                                   ? "Conduta"
                                   : "Sanidade"
-                        }}
+                        }}</span>
                     </button>
                 }
             </app-abas>
@@ -409,6 +436,23 @@
                             }
                             @case ("conduta") {
                                 <div class="npc__lista">
+                                    <div class="npc__subcabecalho">
+                                        <span>Conduta</span>
+                                        <i></i>
+                                        @if (gerenciavel()) {
+                                            <button
+                                                app-botao-icone
+                                                class="npc__lapis"
+                                                type="button"
+                                                aria-label="Editar conduta"
+                                                appTooltip="Editar conduta"
+                                                [disabled]="edicao.salvando()"
+                                                (click)="iniciar('conduta')"
+                                            >
+                                                <app-icone nome="editar" />
+                                            </button>
+                                        }
+                                    </div>
                                     <h3 class="npc__subtitulo">Função narrativa</h3>
                                     <p class="npc__texto">
                                         {{ dados().identidadeNarrativa.funcao }}
@@ -430,18 +474,6 @@
                                                 {{ dados().condutaCombate[campo.chave] }}
                                             </p>
                                         }
-                                    }
-                                    @if (gerenciavel()) {
-                                        <button
-                                            app-botao
-                                            type="button"
-                                            variante="secundario"
-                                            estilo="contorno"
-                                            tamanho="medio"
-                                            (click)="iniciar('conduta')"
-                                        >
-                                            <app-icone nome="editar" />Editar conduta
-                                        </button>
                                     }
                                 </div>
                             }
