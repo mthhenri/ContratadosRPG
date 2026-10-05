@@ -814,13 +814,17 @@
 
 ## 1. Próxima Task
 
-**Segunda rodada da revisão do NPC (pedido do autor, 2026-10-05) — três specs no `backlog/`, executar nesta ordem:**
-[`m4-16`](../specs/backlog/m4-16-ficha-npc-usabilidade-edicao.spec.md) (usabilidade da edição: Salvar/Cancelar no próprio
-bloco, foco/teclado, erro no bloco; decide salvar por bloco × rascunho acumulado),
+**Segunda rodada da revisão do NPC (pedido do autor, 2026-10-05) — quatro specs no `backlog/`, executar nesta ordem:**
+[`m4-16`](../specs/backlog/m4-16-ficha-npc-usabilidade-edicao.spec.md) (edição como Criatura/Jogador: valor avulso por
+`app-valor-editavel` e bloco por lápis + Salvar/Cancelar; **salvar por bloco, um de cada vez**, sem rascunho acumulado),
 [`m4-17`](../specs/backlog/m4-17-ficha-npc-coluna-identidade-compacta.spec.md) (coluna Identidade compacta: foto menor,
-ladrilhos finos, Cooperação como barra de escala vermelho→verde; pede decisão do autor sobre primitivos) e
-[`m4-18`](../specs/backlog/m4-18-ficha-npc-atributos-como-jogador.spec.md) (atributos do NPC iguais aos do Jogador; promove
-`I-047`). Cada uma exige **perguntar ao autor** as decisões de abertura antes de implementar.
+`Stat` com `tamanho="fino"`, Cooperação como **novo primitivo `app-barra-escala`** — slider editável ou não, com cor de início,
+meio opcional e fim),
+[`m4-18`](../specs/backlog/m4-18-ficha-npc-atributos-como-jogador.spec.md) (ladrilho de atributo do Jogador **extraído** para
+`app-atributo-ficha` e usado também pelo NPC, com linhas opcionais; promove `I-047`) e
+[`m4-19`](../specs/backlog/m4-19-npc-testes-de-atributo-regra-e-rolagem.spec.md) (**auditoria da regra de teste do NPC**, com
+parada obrigatória para o autor decidir a fórmula; modificador de teste/ajuste de dados no NPC; rolagem de atributo). Decisões
+de abertura **já tomadas pelo autor** estão dentro de cada spec; o que sobra para perguntar é só o que cada uma marca como tal.
 **Revisão do NPC, primeira rodada (pedido do autor, 2026-10-04) — concluída: `m4-12`, `m4-13`, `m4-14` e `m4-15` em `done/`.**
 Pendências do autor no fim do bloco da `m4-14` em `HISTORY.md` (`I-043`/`I-044`/`I-045`/`I-046`). **Ficha de NPC (`m4-14`):** `visualizar-npc.page.*` usa `ficha-pagina__*`
 (campanha em chip, `textoPersistencia`); `npc-visualizacao` edita por lápis (Identidade, Recursos, Cooperação, Atributos,

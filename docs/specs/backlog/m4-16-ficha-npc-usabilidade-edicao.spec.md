@@ -6,10 +6,18 @@
 > usabilidade desse cara."* Retoma o que a `m4-14` deixou de fora de propósito — o **modelo e o
 > fluxo de edição** (decisão 1 da `m4-14`) — agora a pedido do autor.
 >
-> **Ordem das três specs desta frente:** `m4-16` (esta) → `m4-17`
+> **Ordem das specs desta frente:** `m4-16` (esta) → `m4-17`
 > (`m4-17-ficha-npc-coluna-identidade-compacta.spec.md`) → `m4-18`
-> (`m4-18-ficha-npc-atributos-como-jogador.spec.md`). As duas últimas **consomem o padrão de
+> (`m4-18-ficha-npc-atributos-como-jogador.spec.md`) → `m4-19`
+> (`m4-19-npc-testes-de-atributo-regra-e-rolagem.spec.md`). As seguintes **consomem o padrão de
 > edição definido aqui**; por isso esta vem primeiro.
+>
+> **Decisão do autor (2026-10-05):** *"a gente tem que seguir o mesmo que a gente tem lá na
+> criatura e no jogador. Que é a questão de editar blocos. Eu edito uma coisa de cada vez,
+> usando os inputs — é um texto que, quando clicado, se torna um input… sobre a edição do NPC,
+> eu sigo a sua opinião de salvar e cancelar por blocos."* Está **resolvida** a escolha de
+> modelo: **salvar por bloco**, sem rascunho acumulado, **um bloco/valor em edição por vez**,
+> com os mesmos dois mecanismos que Criatura e Jogador já usam (item 2).
 
 > **Antes de qualquer UI:** ler `docs/design/DESIGN.md` e o handoff em `docs/design/tema/`.
 > **Análogos aprovados obrigatórios** (registrar no fecho qual serviu para quê):
@@ -35,28 +43,25 @@ Esta task faz toda edição da ficha de NPC ter **entrada, saída e confirmaçã
 com o mesmo desenho que Jogador e Criatura já usam, e revisa a usabilidade ponta a ponta
 (foco, teclado, erro, estado de salvando, saída da página).
 
-## Decisões de abertura (confirmar com o autor **antes** de implementar)
+## Decisões do autor (já tomadas — não perguntar de novo)
 
-O modelo atual (`NpcEdicaoFormulario` + `FichaEdicaoNpcService`) tem **um** rascunho de ficha e
-**um** `grupo` ativo por vez, mas o rascunho **acumula** os grupos já editados (`mesclarDocumento`)
-e o texto do cartão diz *"Salvar confirma todos os grupos editados"* — o autor não vê quais
-blocos estão alterados. Há duas formas de resolver; **pergunte** (`AskUserQuestion`) e só
-implemente a escolhida:
-
-1. **Salvar por bloco (recomendada).** Cada bloco (Identidade, Recursos, Cooperação, Atributos,
-   Conduta, Habilidades, Sequelas/Traumas) edita sozinho: **Salvar** grava só aquele bloco e
-   **Cancelar** descarta só aquele bloco. Um bloco em edição por vez; clicar no lápis de outro
-   enquanto um está em edição é bloqueado com explicação (lápis desabilitado + `appTooltip`
-   "Conclua ou cancele a edição de <bloco>"). O cartão de rascunho global some. É o mesmo modelo
-   do card de Atributos de Jogador e Criatura. O PUT continua sendo da ficha inteira
-   (`alterarFichaNpc`), com o `dados` completo e a validação de `shared/regras/npc` — só muda
-   **quando** e **o que** o formulário monta.
-2. **Manter o rascunho acumulado**, mas tornar visível: Salvar/Cancelar no bloco ativo, um
-   indicador (ponto/etiqueta "Alterado") nos blocos que têm mudança pendente e o cartão global
-   reduzido a um resumo ("2 blocos com alterações — Salvar tudo / Descartar tudo").
-
-Se o autor escolher a 1, `NpcEdicaoFormulario`/`FichaEdicaoNpcService` mudam (ver item 2). Em
-qualquer escolha, **contrato, DTO, endpoint, permissão, regra de domínio e tempo real não mudam**.
+1. **Modelo: salvar por bloco, um de cada vez.** O rascunho acumulado entre grupos
+   (`mesclarDocumento`, "Salvar confirma todos os grupos editados") **sai**. Cada edição
+   termina — salvando ou cancelando — antes de outra começar. O PUT continua sendo da ficha
+   inteira (`alterarFichaNpc`), com o `dados` completo e a validação de `shared/regras/npc`; só
+   muda **quando** e **o que** o formulário monta.
+2. **Mesmos dois mecanismos de Criatura e Jogador:**
+   - **Valor avulso** (nome, nível, Vida/Energia atuais e máximas, Defesa etc.): o **texto é um
+     `app-valor-editavel`** — clica, vira input no lugar, **Enter confirma e salva**, **Esc
+     cancela**, perder o foco cancela (é o contrato do primitivo; ver seu spec). Sem
+     Salvar/Cancelar visíveis: a confirmação **é** o Enter.
+   - **Bloco de vários campos** (Atributos, Conduta, Habilidades, Sequelas/Traumas e qualquer
+     grupo em que hoje a edição abre vários campos juntos): **lápis** no cabeçalho → o lápis some
+     e **Salvar + Cancelar** (`app-botao`) aparecem sob o cabeçalho do próprio bloco, como no card
+     Atributos do Jogador/Criatura.
+   A **classificação de cada campo do NPC** em "avulso" ou "bloco" segue o **análogo mais
+   próximo** (Criatura para Identidade/Recursos, Jogador para Atributos) e é registrada na
+   tabela da auditoria (item 1) — **não inventar** um terceiro mecanismo.
 
 ## Entregáveis
 
@@ -65,7 +70,8 @@ qualquer escolha, **contrato, DTO, endpoint, permissão, regra de domínio e tem
 Com o app real rodando (**pedir autorização ao autor antes de subir o stack**; ver `verify`),
 percorrer **todo ponto de edição** da ficha de NPC em `1920×1080` e `360×800` e registrar uma
 **tabela** no fecho: *ponto de entrada → como cancela → como salva → onde o botão aparece na tela
-→ foco depois de entrar/sair → onde o erro de validação aparece*. Pontos: Identidade (nome,
+→ foco depois de entrar/sair → onde o erro de validação aparece → **mecanismo-alvo** (valor avulso
+com `app-valor-editavel` ou bloco com lápis + Salvar/Cancelar) e o análogo que o justifica*. Pontos: Identidade (nome,
 função, categoria, nível, cooperação, cor), Recursos (Vida/Defesa/Bloquear/Esquivar/Energia/
 Recarga), Cooperação, Atributos, Conduta (3 campos), Habilidades (adicionar/editar/remover item),
 Sequelas/Traumas, retrato (escolher/enquadrar/remover — já imediato, fora do rascunho), ajuste
@@ -83,40 +89,54 @@ não esteja nela**. Hipóteses já vistas no código, a confirmar ao vivo:
   confirmação.
 - Sem foco gerenciado, sem Esc para cancelar, sem aviso de qual bloco está editando.
 
-### 2. Padrão único de edição por bloco
+### 2. Os dois mecanismos de edição, aplicados ao NPC
 
-Seguindo a decisão de abertura escolhida (recomendada: 1):
+Aplicar a classificação da tabela do item 1:
 
-- Cabeçalho do bloco: com o bloco **fora** de edição, lápis (`app-botao-icone`, `app-icone
-  nome="editar"`, `appTooltip`); em edição, o lápis **some** (padrão Jogador) e, logo abaixo do
-  cabeçalho **do próprio bloco**, aparece a linha de ações com **Salvar** (`app-botao
-  variante="primario"`) e **Cancelar** (`app-botao variante="secundario"`), `tamanho="pequeno"` no
-  desktop e alvo ≥ 44 px no mobile, na mesma ordem e com a mesma classe de receita do análogo.
-  Nada de botão nativo estilizado à mão; usar a API completa dos primitivos (`[variante]`,
-  `[estilo]`, `[tamanho]`, `[carregando]`).
-- Salvar: `[carregando]` + `[disabled]` enquanto `edicao.salvando()`; desabilitado quando há
-  violação conhecida. Cancelar: desabilitado só enquanto salvando.
-- Erro de validação e violações de `validarFichaNpc` aparecem **dentro do bloco editado**,
-  logo abaixo da linha de ações (como `criatura__atributos-aviso`), com `role="alert"`; o
+- **Valor avulso → `app-valor-editavel`.** O texto exibido vira o campo (`<input>`/`<select>`
+  projetado, tipo conforme o dado) ao clicar; Enter confirma e **persiste só aquele valor**
+  (merge no `dados` e PUT, no estilo de `confirmarCampoIdentidade` da Criatura); Esc/blur
+  cancela e restaura o valor. O NPC já usa o primitivo no nome e nos ajustes rápidos de
+  Vida/Energia — estender ao resto do que for avulso (nível, categoria, função, Defesa/
+  Bloquear/Esquivar, máximos de Vida/Energia, recarga) **na mesma receita** dos análogos. Uso
+  completo da API (`[bloco]`, `[alinhamento]`, `[tooltip]`, `[desabilitado]` enquanto salva).
+- **Bloco → lápis + Salvar/Cancelar no próprio bloco.** Com o bloco fora de edição, lápis
+  (`app-botao-icone`, `app-icone nome="editar"`, `appTooltip`); em edição o lápis **some** e,
+  sob o cabeçalho do **próprio bloco**, aparece a linha de ações com **Salvar** (`app-botao
+  variante="primario"`) e **Cancelar** (`app-botao variante="secundario"`), `tamanho="pequeno"`
+  no desktop e alvo ≥ 44 px no mobile, na mesma ordem e classe de receita do análogo. Salvar:
+  `[carregando]` + `[disabled]` enquanto `edicao.salvando()` ou com violação conhecida;
+  Cancelar: desabilitado só enquanto salvando. Sem botão nativo estilizado à mão.
+- **Um por vez.** Enquanto um valor avulso ou um bloco está em edição, os demais gatilhos
+  (outros lápis, outros valores clicáveis) ficam desabilitados com `appTooltip` "Conclua ou
+  cancele a edição de <nome>" — nunca duas edições abertas, nunca estado acumulado.
+- **Erro dentro do que se edita.** Violações de `validarFichaNpc`, `edicao.erro()` e
+  `formulario.erroFormulario()` aparecem **no bloco/valor editado**, logo abaixo da linha de
+  ações ou do campo (como `criatura__atributos-aviso`), com `role="alert"`. O
   `ficha-pagina__erro` global fica só para falha de carga/rede sem bloco associado.
-- Cooperação e Identidade deixam de compartilhar sem aviso o mesmo formulário: ou viram **um**
-  bloco com **um** lápis (a Cooperação passa a ser editada na própria Identidade, ver `m4-17`),
-  ou cada lápis abre só os campos do seu bloco. Registrar a escolha no fecho.
-- Habilidades, Sequelas e Traumas: o lápis do cabeçalho da lista liga o modo de edição **da
-  lista** com Salvar/Cancelar no cabeçalho da lista; o "Concluir" por item deixa de existir como
-  segundo nível de confirmação (o item editado é parte do rascunho da lista), mantendo editar/
-  remover por item **somente** depois do lápis (memória do projeto: "botões sob demanda").
-- Se a decisão for a 1: remover `ficha-pagina__rascunho` e `ficha-pagina__rascunho-acoes` da
-  página (e o SCSS morto); `visualizar-npc.page.ts` perde `salvar()`/`textoPersistencia` do
-  rascunho global, ou o reduz ao estado "Salvando…/Salvo/Falha ao salvar" do cabeçalho.
+- **Identidade × Cooperação sem grupo oculto.** Hoje "Editar identidade" e "Alterar Cooperação"
+  abrem o mesmo grupo `identidade`. Cada gatilho passa a abrir **só o que o rótulo promete**
+  (Cooperação como valor avulso/controle próprio — a forma final do controle é da `m4-17`, que
+  a transforma em barra editável); nenhum lápis abre campos de outro bloco.
+- **Habilidades, Sequelas e Traumas.** Seguem o análogo `criatura-habilidade-lista`: o lápis do
+  cabeçalho da lista liga o modo de edição **da lista**, com Salvar/Cancelar no cabeçalho
+  da lista; editar/remover por item **somente** depois do lápis (memória do projeto "botões
+  sob demanda"); o "Concluir" por item deixa de ser um segundo nível de confirmação.
+- **Remoções.** `ficha-pagina__rascunho`, `ficha-pagina__rascunho-acoes` e o texto "Salvar
+  confirma todos os grupos editados" saem da página (e o SCSS morto). O rascunho global do
+  `FichaEdicaoNpcService`/`NpcEdicaoFormulario` é substituído por um estado **por edição**
+  (qual valor/bloco está aberto + seu rascunho local); `visualizar-npc.page.ts` perde o
+  `salvar()` global e `textoPersistencia` fica só com "Salvando…/Salvo/Falha ao salvar" no
+  cabeçalho.
 
 ### 3. Teclado, foco e acessibilidade
 
-- Ao entrar em edição, o foco vai para o primeiro campo do bloco; ao salvar ou cancelar, volta
-  ao lápis do bloco (ou ao próprio bloco, se o lápis sumiu — usar `tabindex="-1"` no cabeçalho).
-- **Esc** dentro do bloco em edição cancela (mesma ação do botão), exceto com um menu/seleção
-  aberto; **Ctrl/Cmd+Enter** salva; **Enter** em campo de uma linha não salva sozinho (evita
-  salvar sem querer), a menos que o análogo já faça diferente — nesse caso seguir o análogo.
+- Ao entrar em edição, o foco vai para o primeiro campo (valor avulso: o input já recebe foco
+  e seleção pelo primitivo); ao salvar ou cancelar, volta ao lápis do bloco/ao texto do valor (ou ao próprio bloco, se o lápis sumiu — usar `tabindex="-1"` no cabeçalho).
+- **Valor avulso:** Enter confirma, Esc cancela, blur cancela (contrato do `app-valor-editavel`).
+  **Bloco:** **Esc** cancela (mesma ação do botão), exceto com menu/seleção aberto; **Ctrl/Cmd+
+  Enter** salva; **Enter** em campo de uma linha dentro de bloco não salva sozinho, a menos que o
+  análogo já faça diferente — nesse caso seguir o análogo.
 - O bloco em edição ganha estado visual de "editando" (borda/realce de acento já usados por
   `criatura__lapis--ativo` ou pelo card de Atributos em edição — **sem inventar token**) e
   `aria-busy` enquanto salva; o resumo para leitor de tela anuncia "Editando <bloco>".
@@ -124,8 +144,8 @@ Seguindo a decisão de abertura escolhida (recomendada: 1):
 
 ### 4. Saída da página e perda de dados
 
-- Manter o guard de saída existente (`canDeactivate`, `edicaoPendente`/`imagemPendente`) —
-  agora disparado quando **há bloco em edição com alteração**, não só rascunho global.
+- Manter o guard de saída existente (`canDeactivate`, `imagemPendente`) — agora disparado
+  quando **há valor ou bloco em edição com alteração não salva**, não mais um rascunho global.
 - Cancelar um bloco **sem alterações** não pergunta nada; cancelar com alterações descarta sem
   confirmação (padrão Jogador/Criatura) — **a menos que o autor peça confirmação**; registrar.
 - Falha de salvamento mantém o bloco aberto com o erro dentro dele e os valores digitados
@@ -138,18 +158,18 @@ Seguindo a decisão de abertura escolhida (recomendada: 1):
 - Revogação de acesso, exclusão da ficha por outro mestre e reconexão **durante** a edição:
   comportamento atual preservado (testes existentes de reconexão/revogação continuam
   passando); se o bloco em edição perder a ficha, sair do modo de edição com mensagem no bloco.
-- Dois blocos nunca editam ao mesmo tempo (decisão 1) ou o indicador deixa claro quais estão
-  alterados (decisão 2).
+- Dois valores/blocos nunca editam ao mesmo tempo (decisão 1 do autor).
 
 ## Critérios de Aceite
 
 - Em `1920×1080` e `360×800`, **todo** bloco editável mostra Salvar e Cancelar **dentro do
   próprio bloco**, visíveis sem rolar além do bloco; nenhum Salvar/Cancelar fica no fim da
-  página (decisão 1) e o texto *"Salvar confirma todos os grupos editados"* não existe mais.
+  página e o texto *"Salvar confirma todos os grupos editados"* não existe mais.
 - Tabela da auditoria (item 1) no fecho com cada linha marcada como resolvida.
 - Comparação lado a lado com o card de Atributos de Jogador/Criatura em edição: mesmo desenho
   de ações, mesma densidade, mesmos controles; **não parece HTML genérico**.
-- Esc/Ctrl+Enter/foco funcionam e estão cobertos por teste; erro de validação aparece no bloco.
+- Valores avulsos editam por clique → input → Enter/Esc (como Criatura/Jogador); Esc/Ctrl+Enter/
+  foco funcionam e estão cobertos por teste; erro de validação aparece no bloco/valor editado.
 - Nenhuma mudança de conteúdo, regra, fórmula, permissão, DTO, endpoint, rolagem ou tempo real;
   os mesmos campos editam e persistem como antes (conferir `alterarFichaNpc` por teste).
 - Nenhum SCSS/template morto (`ficha-pagina__rascunho*` se removidos); sem hardcode; sem overflow.
@@ -161,8 +181,8 @@ Seguindo a decisão de abertura escolhida (recomendada: 1):
   **sem enfraquecer** as asserções de comportamento (edição por bloco, ajuste de Vida/Energia,
   "Confirmar socorro", modo leitor, salvar/cancelar, reconexão, revogação, guard de saída).
   Novos testes: Salvar/Cancelar dentro do bloco, lápis some em edição, erro dentro do bloco,
-  Esc cancela, foco volta ao lápis, bloqueio de segundo bloco (decisão 1), falha de salvamento
-  preserva valores. Rodar o spec focado a cada passo e a suíte completa + lint no fecho.
+  Esc cancela, foco volta ao lápis, bloqueio de segunda edição, valor avulso salva só aquele campo
+  no Enter, falha de salvamento preserva valores. Rodar o spec focado a cada passo e a suíte completa + lint no fecho.
 - **Gate visual obrigatório** (`AGENTS.md`, skills `verify` e `design-fidelity`), em
   `1920×1080` **e** `360×800`, percorrendo cada bloco em edição com: valor válido, valor
   inválido (violação), salvando (atraso simulado de rede), falha de rede, cancelar com e sem
@@ -193,7 +213,7 @@ Seguindo a decisão de abertura escolhida (recomendada: 1):
 
 - **Mexer no modelo de edição quebra a reconexão/revogação.** Há testes de reconexão e revogação
   em `visualizar-npc.page.spec.ts`; reutilizá-los como rede de segurança e **não** enfraquecer.
-- **Salvar por bloco com PUT da ficha inteira** pode sobrescrever alteração concorrente de outro
+- **Salvar por valor/bloco com PUT da ficha inteira** pode sobrescrever alteração concorrente de outro
   bloco feita por outro cliente. Hoje já é assim (rascunho da ficha inteira); manter a mesma
   garantia e **registrar**, não resolver aqui. Se aparecer, `PROBLEMS.md`.
 - **Atalho tentador:** esconder o cartão de rascunho por CSS ou duplicar botões Salvar/Cancelar

@@ -8,8 +8,9 @@
 > cooperação poderia ser uma barra abaixo da foto, talvez como uma barrinha que vai de
 > vermelho até verde, e mostra onde está a cooperação dele."*
 >
-> Segunda das três specs desta frente: `m4-16` (usabilidade da edição, **deve estar em `done/`
-> antes**) → **`m4-17` (esta)** → `m4-18` (`m4-18-ficha-npc-atributos-como-jogador.spec.md`).
+> Segunda das specs desta frente: `m4-16` (usabilidade da edição, **deve estar em `done/`
+> antes**) → **`m4-17` (esta)** → `m4-18` (`m4-18-ficha-npc-atributos-como-jogador.spec.md`)
+> → `m4-19` (`m4-19-npc-testes-de-atributo-regra-e-rolagem.spec.md`).
 > Esta task muda **como a coluna de identidade se vê em leitura**; **como ela se edita** é da
 > `m4-16` (padrão de lápis + Salvar/Cancelar no bloco), que esta apenas consome.
 
@@ -33,33 +34,35 @@ X/turno", "Sem Energia"), e a **Cooperação** como subseção com ladrilho + fr
 **compacta toda a coluna** e troca a Cooperação por uma **barra de escala de vermelho a verde**
 sob a foto, sem alterar o que a ficha mostra, calcula ou edita.
 
-## Decisões de abertura (confirmar com o autor **antes** de implementar)
+## Decisões do autor (2026-10-05 — já tomadas, não perguntar de novo)
 
-`shared/ui/` hoje **não** cobre dois itens desta task; pela regra do projeto, ampliar um
-primitivo ou criar um novo é decisão do autor — **pergunte** (`AskUserQuestion`, com os
-trade-offs abaixo) e implemente só a escolhida. As duas perguntas podem ir juntas.
-
-1. **Barra de Cooperação (escala 0–10, vermelho → verde com marcador).** Não existe primitivo:
-   `app-barra-recurso` é um recurso atual/máximo (preenche da esquerda) e usa as cores
-   fixas de Vida/Energia.
-   - **A (recomendada): novo primitivo `app-barra-escala`** em `shared/ui/barra-escala/`
-     (entrada: `valor`, `minimo`, `maximo`, `rotulo`, `textoValor`; gradiente
-     `var(--vida)` → `var(--warning)` → `var(--positive)`; marcador na posição do valor;
-     `role="meter"` com `aria-valuemin/max/now` e `aria-valuetext`). Reutilizável e dentro da
-     regra de primitivos. Custo: um primitivo novo + spec + registro em `DESIGN.md`.
-   - **B: variante de `app-barra-recurso`** (`recurso="escala"`). Menos arquivos, mas mistura
-     duas semânticas (preenchimento × posição) num primitivo de recurso.
-   - **C: bloco local no componente NPC.** Mais rápido, mas é exatamente o "receita local que
-     reinventa o primitivo" que a regra proíbe — só com autorização expressa.
-2. **Ladrilhos mais finos de Defesa/Bloquear/Esquivar.** `app-stat` só tem `tamanho`
-   `compacto | padrao | hero`; "mais fino" que `compacto` não existe.
-   - **A (recomendada): novo tamanho `'fino'`** em `Stat` (`StatTamanho`) — menos padding
-     vertical, rótulo e valor na mesma linha ou rótulo colado ao valor — consumido só aqui por
-     enquanto.
-   - **B: trocar o ladrilho por uma linha "Def 24 · Blo 27 · Esq 27"** no desenho já usado em
-     `EspectadorFichaCard` (`espectador-ficha__reacoes`). Mais compacto ainda, mas deixa de ser
-     "ladrilho" e perde o rótulo por extenso (pode ir no `appTooltip`).
-   - **C: sobrescrever o padding do `Stat` por CSS local.** Proibido sem o autor aprovar.
+1. **Barra de Cooperação = novo primitivo de "barra de escala", editável ou não.** Palavras do
+   autor: *"uma barra que pode ser editável ou não… um slider… que exibe, podendo ter uma cor
+   de início, uma cor de fim, que faz um degradê no meio"*. Fica decidido criar o primitivo em
+   `shared/ui/barra-escala/` (`app-barra-escala`), genérico, **sem nada de NPC dentro**:
+   - entradas: `valor`, `minimo`, `maximo`, `passo` (default 1), `editavel` (default `false`),
+     `corInicio` e `corFim` (cores do degradê; o consumidor passa tokens — ex.:
+     `var(--vida)` e `var(--positive)`), `corMeio` opcional (ex.: `var(--warning)`; sem ela, o
+     degradê vai direto de início a fim), `rotulo`, `textoValor` (texto curto exibido ao lado do
+     número, ex.: "Neutro") e `descricao` (vai ao `appTooltip` e ao `aria-valuetext`);
+   - saída: `valorConfirmado` (number). Em modo `editavel`, o controle é um slider acessível
+     (`<input type="range">` estilizado **dentro do primitivo** — o primitivo é dono do elemento
+     nativo; o consumidor nunca usa `<input type=range>` solto), teclado completo (setas,
+     Home/End, PageUp/PageDown), **confirma ao soltar o ponteiro ou ao Enter** (não a cada
+     movimento) e **Esc restaura** o valor anterior; enquanto o consumidor sinaliza ocupado
+     (`desabilitado`), não responde;
+   - em modo somente leitura é `role="meter"` com `aria-valuemin/max/now` e `aria-valuetext`;
+     em edição é o próprio `role="slider"` nativo;
+   - marcador na posição do valor com **forma** (não só cor) e número sempre visível; ticks
+     opcionais (`marcadores: number[]`) para os limites de faixa;
+   - spec próprio (valor, limites, arredondamento ao passo, teclado, confirmar/Esc, ARIA, cores) e
+     **entrada no `docs/design/DESIGN.md`**.
+   Não é variante de `app-barra-recurso` nem bloco local. O autor quer que seja reutilizável
+   (outras escalas futuras); **não** acoplar às cores de Cooperação.
+2. **Ladrilhos de Defesa/Bloquear/Esquivar mais finos = novo tamanho do `Stat`.** Decidido:
+   acrescentar `'fino'` a `StatTamanho` (`shared/ui/stat/`) — menos padding vertical,
+   rótulo e valor colados — com spec do primitivo ampliado e registro em `DESIGN.md`. Sem
+   sobrescrever o padding do `Stat` por CSS local e sem trocar o ladrilho por linha de texto.
 
 ## Entregáveis
 
@@ -92,26 +95,31 @@ em qualquer tamanho.
 - As notas "Pool + Recarga · Recarga X/turno", "Reserva Fixa" e "Sem Energia" deixam de ocupar
   linhas próprias: vão para um `app-chip variante="sutil"` ao lado do rótulo da barra ou para o
   `appTooltip` da barra (conferir com o autor qual lê melhor), sem perder a informação.
-- Defesa/Bloquear/Esquivar: o ladrilho fino da decisão de abertura 2, em uma só fileira de 3,
+- Defesa/Bloquear/Esquivar: o ladrilho `Stat` `tamanho="fino"` (decisão 2 do autor), em uma só fileira de 3,
   **sem** o subcabeçalho "Recursos" separado se a fileira já estiver agrupada visualmente; o lápis
   de edição de recursos segue o padrão da `m4-16` (no bloco, sem botão solto).
 
 ### 4. Cooperação como barra de escala sob a foto
 
-- Remover o subcabeçalho "Cooperação", o ladrilho `app-stat` e a frase social do corpo da
-  coluna; remover o lápis "Alterar Cooperação" (a edição vive no **mesmo** bloco de Identidade,
-  campo "Cooperação" já existente com `app-step-input`, conforme a `m4-16`).
-- Sob a foto, a barra de escala 0–10 (primitivo da decisão 1) com o **marcador** na posição de
-  `dados().cooperacao`; gradiente de `var(--vida)` (hostil) a `var(--positive)` (amigável),
-  passando por `var(--warning)`; **nenhum hex**. Fora do contrato 0–10 (`obterReferenciaCooperacao`
+- Remover o subcabeçalho "Cooperação", o ladrilho `app-stat`, a frase social do corpo da coluna
+  e o lápis "Alterar Cooperação". O campo "Cooperação" com `app-step-input` **sai do bloco de
+  edição de Identidade**: a Cooperação passa a ser editada **na própria barra** (valor avulso,
+  mecanismo da `m4-16`): `[editavel]="gerenciavel()"`, `valorConfirmado` persiste **só** a
+  Cooperação (merge em `dados.cooperacao` + `alterarFichaNpc`, com a validação 0–10 de
+  `shared/regras/npc`), `desabilitado` enquanto `edicao.salvando()` ou outra edição aberta.
+  Modo leitor: a mesma barra, não editável.
+- Sob a foto, `app-barra-escala` (primitivo da decisão 1 do autor) com `minimo=0`, `maximo=10`,
+  `valor=dados().cooperacao`, `corInicio="var(--vida)"` (hostil), `corMeio="var(--warning)"` e
+  `corFim="var(--positive)"` (amigável); **nenhum hex**. Fora do contrato 0–10 (`obterReferenciaCooperacao`
   lança `RangeError`) mantém o fallback atual ("Valor inválido") sem quebrar a tela.
 - Rótulo curto da faixa ("Hostil", "Evasivo", "Desconfiado", "Neutro", "Colaborativo",
   "Amigável" — `shared/regras/npc/referencia.ts`, **não duplicar** a tabela no frontend) ao lado
   do número, e a frase social/de combate no `appTooltip`/`aria-valuetext` da barra. A cor do
   marcador **não** é a única informação (rótulo e número sempre presentes — contraste e
   daltonismo).
-- Marcação de faixas (opcional, a confirmar com o autor): ticks discretos nos limites 1/2/4/7/10
-  para que a posição se leia como categoria, não só como número.
+- Marcadores de faixa: `marcadores` nos limites 1/2/4/7/10 (as faixas de
+  `obterReferenciaCooperacao`) para que a posição se leia como categoria, não só como número;
+  se ficar poluído no mobile, esconder abaixo do breakpoint e registrar.
 
 ### 5. Reduzir o resto da coluna
 
@@ -140,12 +148,13 @@ em qualquer tamanho.
 - Lado a lado com os cards Identidade de Jogador e de Criatura em `1920×1080` e `360×800`: mesma
   escala de foto, mesma densidade e hierarquia, mesmos selos e controles; **não parece HTML
   genérico**; sem overflow; foco, contraste e alvos de toque corretos.
-- A barra de Cooperação mostra a posição certa para 0, 1, 2, 4, 7 e 10 (testes) e lê bem sem
-  depender só da cor.
+- A barra de Cooperação mostra a posição certa para 0, 1, 2, 4, 7 e 10 (testes), lê bem sem
+  depender só da cor, e (mestre) edita por arrasto/teclado confirmando ao soltar/Enter e
+  persistindo só a Cooperação; no modo leitor não edita.
 - Nenhuma mudança de conteúdo, regra, fórmula, permissão, DTO, endpoint, rolagem ou tempo real;
   Vida/Energia, "Morrendo"/"Confirmar socorro" e Civil sem Energia comportam-se como antes.
-- Primitivo novo/ampliado (se escolhido) tem spec, entrada em `docs/design/DESIGN.md` e é usado
-  por ao menos esta tela; nenhum estilo morto.
+- `app-barra-escala` (novo) e `Stat` com `tamanho="fino"` têm spec próprio, entrada em
+  `docs/design/DESIGN.md` e são usados por esta tela; nenhum estilo morto.
 
 ## Verificação exigida
 
@@ -153,7 +162,8 @@ em qualquer tamanho.
   **sem enfraquecer** as asserções de comportamento. Novos: tamanho de recursos compacto,
   Cooperação como barra (valor, faixa, `aria-valuetext`, fallback inválido), ausência do
   ladrilho/subcabeçalho antigos, chips de Pool/Reserva presentes, Civil sem Energia. Spec do
-  primitivo novo (valor, limites, ARIA). Spec focado a cada passo; suíte completa + lint no fecho.
+  `app-barra-escala` (valor, limites, passo, teclado, confirmar/Esc, ARIA, cores) e do tamanho
+  `fino` do `Stat`. Spec focado a cada passo; suíte completa + lint no fecho.
 - **Gate visual obrigatório** (`AGENTS.md`, skills `verify` e `design-fidelity`), em
   `1920×1080` **e** `360×800` (e `960×1080`, que exerce a zona antes do mobile): combatente e
   Civil; modo mestre e leitor; foto vazia e com imagem; Cooperação 0, 5 e 10; edição de
@@ -183,6 +193,8 @@ em qualquer tamanho.
 
 ## Riscos e Mitigação
 
+- **Slider salvando a cada movimento:** o primitivo só emite `valorConfirmado` ao soltar/Enter;
+  testar arrasto longo e teclado com repetição para não disparar vários PUT.
 - **Gradiente vermelho→verde e daltonismo:** vermelho/verde são justamente o par de pior
   contraste para deuteranopia. Mitigação já no desenho: rótulo e número sempre visíveis, marcador
   com forma (não só cor), ticks de faixa. Validar com o autor.

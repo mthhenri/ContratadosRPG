@@ -30,8 +30,9 @@
 ### I-047 — Ladrilho de atributo do NPC igual ao da Criatura · frontend/ficha
 
 - **Promovida em 2026-10-05** a `docs/specs/backlog/m4-18-ficha-npc-atributos-como-jogador.spec.md`: o autor pediu que os
-  atributos do NPC sejam exibidos **iguais aos do Jogador** (a ideia original citava a Criatura). A spec decide o
-  primitivo/receita e deixa a rolagem de atributo do NPC e a migração de Jogador/Criatura como ideias novas.
+  atributos do NPC sejam exibidos **iguais aos do Jogador** (a ideia original citava a Criatura). A spec extrai o ladrilho do
+  Jogador para `app-atributo-ficha` (o NPC usa o mesmo, com linhas opcionais); a rolagem/modificador/dados do NPC viraram a
+  `m4-19`; **unificar a Criatura** ao mesmo ladrilho segue como ideia a abrir quando a `m4-18` fechar.
 
 ### I-041 — Montador de rolagem enxuto: ações base + guias · frontend/rolagem
 

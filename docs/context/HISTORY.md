@@ -21,6 +21,20 @@ primitivo novo × cópia × unificação; NPC rola ou não teste de atributo) e 
 porque criar/ampliar primitivo é decisão do autor. A `I-047` foi promovida à `m4-18`. Nenhuma mecânica de Jogador (Maestria,
 modificador, dados, lesão, rolagem) entra no NPC (regra vence o mockup).
 
+**Decisões do autor logo depois (2026-10-05), incorporadas às specs:** (1) **edição** — seguir Criatura e Jogador: edita-se uma
+coisa de cada vez, valor avulso clicando no texto que vira input (`app-valor-editavel`) e bloco com Salvar/Cancelar; **salvar por
+bloco** (opção recomendada), sem rascunho acumulado (`m4-16`); (2) **Cooperação** — novo primitivo `app-barra-escala`, "um slider"
+editável ou não, com cor de início, cor de fim e degradê no meio, reutilizável (`m4-17`); (3) **ladrilhos finos** — novo tamanho
+`fino` do `Stat` (`m4-17`); (4) **ladrilho de atributo** — o autor não quer primitivo "só do NPC": usar o mesmo do Jogador e,
+se preciso, expandi-lo com opção de esconder dados/modificadores; como o do Jogador é receita local, a `m4-18` o **extrai** para
+`app-atributo-ficha` e migra o Jogador (diferença visual zero, com parada para perguntar se arriscar regressão); (5) **dados e
+modificador no NPC** — o autor acha que ele deve ter (ex.: habilidade passiva "+10 nos testes"), e **suspeita que a regra atual
+(só d20, maior dado) é fraca demais** — nova spec `m4-19`: auditoria do Sistema/Guia (sem fórmula escrita de teste de NPC; teto
+de atributo 2–6 por Categoria; o Guia diz "Nível funciona como Proficiência em todos os contextos"), parada obrigatória para o
+autor escolher a fórmula, depois modelo de dados (`modificadoresTeste`/`dadosTeste` como no Jogador), regra pura em
+`shared/regras/npc`, ladrilho ligado e rolagem registrada. Conta de apoio: sem bônus fixo, um NPC nunca passa DT 25 (dado máximo
+20) e um Lendário (6d20) passa DT 20 em ~26 %.
+
 ## 2026-10-05 — P-096: reações do cartão de espectador sem "·" no começo da linha no mobile
 
 Correção pedida pelo autor (opção A da conversa). `espectador-ficha-card.component.scss`: cada reação (`Def 24`) ganhou
