@@ -29,15 +29,6 @@
 
 ## Ativos
 
-### P-096 — Reações do cartão da campanha quebram linha com "·" no começo no mobile · `ABERTO` · frontend/campanha
-
-- **Sintoma:** em `360×800`, o rodapé de reações de `EspectadorFichaCard` ("Def · Esq · Blo", visível no cartão de NPC da
-  aba NPCs e no do Jogador) quebra no meio e a linha de baixo começa com o separador "·".
-- **Causa:** os itens e o separador são texto em fluxo corrido; a quebra cai entre o item e o "·" seguinte.
-- **Contorno:** nenhum necessário — só estético. **Correção:** a opção A discutida com o autor (remover o "·" no mobile e
-  separar por espaço/gap) ou manter cada item inteiro por `white-space: nowrap`; o autor pediu só anotar, sem aplicar agora.
-- **Desde:** 2026-10-05, achado na verificação visual da `m4-15`.
-
 ### P-095 — Teste de reconexão do feed é intermitente por empate de milissegundo · `ABERTO` · frontend/testes
 
 - **Sintoma:** `campanha-detalhe-dados.service.spec.ts` › "reconexao$ traz uma rolagem feita durante a queda para o

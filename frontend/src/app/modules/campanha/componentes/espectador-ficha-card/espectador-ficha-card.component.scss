@@ -164,8 +164,21 @@
             color: var(--text-dim);
         }
 
+        // Cada reação é indivisível ("Def 4" nunca quebra no meio).
+        span {
+            white-space: nowrap;
+        }
+
         span:not(:first-child)::before {
             content: "· ";
+        }
+
+        // No mobile as reações quebram de linha; o separador "·" ficaria no começo da linha de
+        // baixo, então some e o `gap` separa os itens (P-096).
+        @include bp.mobile {
+            span:not(:first-child)::before {
+                content: none;
+            }
         }
     }
 

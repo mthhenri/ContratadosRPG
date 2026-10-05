@@ -1,5 +1,17 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-05 — P-096: reações do cartão de espectador sem "·" no começo da linha no mobile
+
+Correção pedida pelo autor (opção A da conversa). `espectador-ficha-card.component.scss`: cada reação (`Def 24`) ganhou
+`white-space: nowrap` — o par rótulo+valor nunca se parte — e, abaixo de `bp.mobile`, o separador `span:not(:first-child)::before`
+some (`content: none`); o `gap` do flex separa os itens. No desktop o "·" continua como antes. Só CSS: o spec do componente (13
+testes) não muda e segue verde; Prettier limpo.
+
+**Verificado ao vivo** (stack no ar; campanha de teste com quatro NPCs, removida por soft delete ao fim): aba NPCs em `1920×1080`
+(uma linha, separadores `"· "` presentes) e `360×800` (duas linhas — `Def 24 Esq 27` / `Blo 27` —, nenhum separador, itens
+inteiros), sem overflow horizontal e sem erro de console. **Não coberto:** cartão de Jogador com a reação "Con" (mesmo CSS, não
+capturado) e Firefox/Edge (CSS sem recurso específico de navegador).
+
 ## 2026-10-05 — `m4-14-ficha-npc-aparencia-estrutura`: ficha completa de NPC no casco e na estrutura da ficha de Criatura
 
 Última spec da revisão do NPC (`m4-12`, `m4-13`, `m4-15` ✔). Pedido do autor: a ficha completa de NPC "tem que ser ajustada";
