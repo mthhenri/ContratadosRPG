@@ -41,6 +41,25 @@ describe('MontadorRolagem', () => {
     return fixture;
   }
 
+  it('Maximizar ocupa a viewport e esconde a alça; Restaurar devolve a janela ao normal', () => {
+    const fixture = montar();
+    const raiz = fixture.nativeElement as HTMLElement;
+    const janela = () => document.querySelector<HTMLElement>('.painel-flutuante__janela')!;
+    const rotulo = (texto: string) => document.querySelector<HTMLButtonElement>(`[aria-label="${texto}"]`)!;
+    expect(raiz.querySelector('.montador-rolagem__redimensionar')).not.toBeNull();
+
+    rotulo('Maximizar montador').click();
+    fixture.detectChanges();
+    expect(janela().classList).toContain('painel-flutuante__janela--maximizada');
+    expect(janela().style.width).toBe(`${window.innerWidth}px`);
+    expect(raiz.querySelector('.montador-rolagem__redimensionar')).toBeNull();
+
+    rotulo('Restaurar tamanho do montador').click();
+    fixture.detectChanges();
+    expect(janela().classList).not.toContain('painel-flutuante__janela--maximizada');
+    expect(raiz.querySelector('.montador-rolagem__redimensionar')).not.toBeNull();
+  });
+
   function botao(
     fixture: ReturnType<typeof montar>,
     secao: string,

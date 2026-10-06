@@ -4,6 +4,7 @@ import { TipoDanoEnum } from '@contratados-rpg/shared/enums';
 import { ABREVIACOES_ATRIBUTO, REPETICOES_MAXIMA } from '@contratados-rpg/shared/regras/rolagem';
 
 import { Icone, type IconeNome } from '../icone/icone.component';
+import { JanelaMontador } from '../janela-montador/janela-montador';
 import { Botao } from '../ui/botao/botao.component';
 import { BotaoIcone } from '../ui/botao-icone/botao-icone.component';
 import type { PainelFlutuantePosicao } from '../ui/painel-flutuante/painel-flutuante.component';
@@ -66,7 +67,7 @@ const SEM_SINAL_NECESSARIO = new Set(['+', '-', '(']);
  *  `FichaVisualizacao.verificarAnotacoesMobile`) em vez de duplicado como número mágico aqui. */
 const BREAKPOINT_MOBILE = 560;
 
-const POSICAO_INICIAL: PainelFlutuantePosicao = { x: 24, y: 120 };
+const POSICAO_INICIAL: PainelFlutuantePosicao = { x: 40, y: 136 };
 
 /** Tamanho de base 380×580 (ui-35) +50% horizontal/+25% vertical — pedido do autor, a caixa
  *  original ficava apertada demais pra composição de fórmulas compostas. */
@@ -74,11 +75,6 @@ const LARGURA_INICIAL = 570;
 const ALTURA_INICIAL = 725;
 const LARGURA_MINIMA = 320;
 const ALTURA_MINIMA = 420;
-
-interface Tamanho {
-  readonly largura: number;
-  readonly altura: number;
-}
 
 /**
  * Caixa flutuante de tokens para montar uma fórmula de rolagem sem decorar a sintaxe do motor
@@ -110,8 +106,8 @@ interface Tamanho {
   host: {
     '(window:resize)': 'aoRedimensionarViewport()',
     '(window:pointermove)': 'aoMoverPonteiroRedimensionar($event)',
-    '(window:pointerup)': 'encerrarRedimensionamento()',
-    '(window:pointercancel)': 'encerrarRedimensionamento()',
+    '(window:pointerup)': 'janela.encerrarRedimensionamento()',
+    '(window:pointercancel)': 'janela.encerrarRedimensionamento()',
   },
 })
 export class MontadorRolagem {
@@ -179,6 +175,7 @@ export class MontadorRolagem {
   }
 
   protected fechar(): void {
+    this.janela.restaurar(this.painelRef());
     this.aberto.set(false);
   }
 
@@ -187,6 +184,7 @@ export class MontadorRolagem {
   // como breakpoint próprio). ===
   protected readonly mobileAtivo = signal(this.verificarMobile());
   protected aoRedimensionarViewport(): void {
+    this.janela.atualizarViewport();
     this.mobileAtivo.set(this.verificarMobile());
   }
   private verificarMobile(): boolean {
@@ -198,38 +196,22 @@ export class MontadorRolagem {
       : window.innerWidth <= BREAKPOINT_MOBILE;
   }
 
-  // === Redimensionar (desktop): sem maximizar — só a alça no canto, mesmo padrão de
-  // `CadernoFlutuante.iniciarRedimensionamento`/`aoMoverPonteiro`, mas com estado local (não há
-  // store aqui) e sem persistência entre sessões. ===
-  protected readonly tamanho = signal<Tamanho>({ largura: LARGURA_INICIAL, altura: ALTURA_INICIAL });
-  private redimensionando = false;
-  private origemRedimensionamento = { ponteiroX: 0, ponteiroY: 0, tamanho: this.tamanho() };
+  // === Tamanho, redimensionar (desktop) e maximizar: `JanelaMontador`, comum ao `MontadorRolagemExperimental`;
+  // estado local (não há store aqui) e sem persistência entre sessões. ===
+  protected readonly janela = new JanelaMontador({
+    largura: LARGURA_INICIAL,
+    altura: ALTURA_INICIAL,
+    larguraMinima: LARGURA_MINIMA,
+    alturaMinima: ALTURA_MINIMA,
+    posicaoInicial: POSICAO_INICIAL,
+  });
 
-  protected iniciarRedimensionamento(evento: PointerEvent): void {
-    if (this.mobileAtivo() || evento.button !== 0) return;
-    evento.preventDefault();
-    this.redimensionando = true;
-    this.origemRedimensionamento = {
-      ponteiroX: evento.clientX,
-      ponteiroY: evento.clientY,
-      tamanho: this.tamanho(),
-    };
+  protected alternarMaximizar(): void {
+    this.janela.alternarMaximizar(this.painelRef());
   }
 
   protected aoMoverPonteiroRedimensionar(evento: PointerEvent): void {
-    if (!this.redimensionando) return;
-    const largura =
-      this.origemRedimensionamento.tamanho.largura + evento.clientX - this.origemRedimensionamento.ponteiroX;
-    const altura =
-      this.origemRedimensionamento.tamanho.altura + evento.clientY - this.origemRedimensionamento.ponteiroY;
-    this.tamanho.set({
-      largura: limitarDimensao(largura, LARGURA_MINIMA, window.innerWidth),
-      altura: limitarDimensao(altura, ALTURA_MINIMA, window.innerHeight),
-    });
-  }
-
-  protected encerrarRedimensionamento(): void {
-    this.redimensionando = false;
+    this.janela.moverRedimensionamento(evento, this.painelRef());
   }
 
   // === Ação composta 1: "Dado por Propriedade + Ajuste" → `(ATR±n)dM` ===
@@ -324,11 +306,4 @@ export class MontadorRolagem {
     }
     this.formula.update((atual) => `(${atual})#${this.repeticoesN()}`);
   }
-}
-
-/** Nunca menor que o mínimo nem maior que o viewport disponível — mesmo racional de
- *  `caderno-flutuante.store.ts:limitarDimensao`. */
-function limitarDimensao(valor: number, minimo: number, viewport: number): number {
-  if (viewport <= minimo) return viewport;
-  return Math.min(Math.max(valor, minimo), viewport);
 }

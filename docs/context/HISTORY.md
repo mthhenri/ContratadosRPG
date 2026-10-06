@@ -1,5 +1,25 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-05 — `montador-janela-notebook-tela-cheia`: janela do montador cabe no Notebook e ganha Maximizar
+
+**O que mudou.** Pedido do autor (fora do guarda-chuva `montador-rolagem-experimento`, que segue em avaliação). Ao vivo em
+`1366×768`, as quatro versões (Atual e Essencial/Completo/Blocos) estouravam a base: 700–725px de altura em `y≈84`, base em
+`784 > 768` — Rolar colado na borda e alça de redimensionar fora da tela. **Causa**: a margem de 16px do SCSS não entra no
+limite de posição de `app-painel-flutuante` (ele clampa só o retângulo sem margem). **Correção**: a margem saiu do SCSS;
+nova classe `JanelaMontador` (`shared/janela-montador/`, sem DI) é dona de tamanho efetivo (≤ viewport − 32), alça de
+redimensionar (limitada ao espaço entre a janela e a borda) e Maximizar/Restaurar, e **substitui a mecânica duplicada** dos
+dois componentes. Tamanho inicial reduzido para caber abaixo da posição inicial (`40,136`): no Notebook a janela fica em
+`y 136 → 752`. Botão Maximizar/Restaurar em `[painelAcoesExtras]` (padrão do Caderno), oculto no mobile (já folha cheia);
+maximizada = viewport inteiro, `0,0` sem persistir, sem alça; Restaurar e fechar devolvem a posição de antes.
+
+**Verificado.** `verify` ao vivo (usuário TESTER descartável, `ficha 180`): `1366×768` e `1920×1080` nas quatro versões —
+janela inteira dentro do viewport, Rolar visível, maximizar/restaurar voltando à mesma caixa; `360×800` inalterado (folha
+cheia, sem Maximizar nem alça). Testes: `janela-montador.spec.ts` (novo), um caso de Maximizar em cada componente; 151 + 53
+verdes nos montadores, `rolagem-rapida` e `janela-montador`; `tsc` limpo, ESLint sem erros (avisos de aspas preexistentes).
+
+**Fica de fora.** A janela maximizada só ganha largura (os editores seguem em coluna única); sem Fullscreen API; sem
+persistir o tamanho entre sessões. Se o autor quiser um arranjo próprio para a janela maximizada, é spec nova.
+
 ## 2026-10-05 — `m4-17`: coluna Identidade do NPC compacta — foto 175, `Stat` fino e Cooperação como barra de escala
 
 **O que mudou.** O cartão Identidade saiu de `npc-visualizacao` para `npc-visualizacao/npc-identidade.component.*`

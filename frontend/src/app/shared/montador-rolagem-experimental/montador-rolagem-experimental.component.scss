@@ -8,14 +8,6 @@
     display: contents;
 }
 
-// Mesma margem/recuo da janela do `MontadorRolagem` (desktop com margem, mobile em folha cheia).
-:host ::ng-deep .painel-flutuante__janela:not(.painel-flutuante__janela--mobile) {
-    margin: max(var(--space-16), env(safe-area-inset-top))
-        max(var(--space-16), env(safe-area-inset-right))
-        max(var(--space-16), env(safe-area-inset-bottom))
-        max(var(--space-16), env(safe-area-inset-left));
-}
-
 :host ::ng-deep .painel-flutuante__janela--mobile {
     inset: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
         env(safe-area-inset-left);

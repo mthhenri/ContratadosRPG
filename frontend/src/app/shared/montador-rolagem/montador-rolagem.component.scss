@@ -10,15 +10,8 @@
     display: contents;
 }
 
-// A margem só se aplica à janela arrastável do desktop — no mobile a caixa preenche a tela toda
-// (só recuando pelo notch/home indicator via `safe-area-inset`, não por uma margem decorativa).
-:host ::ng-deep .painel-flutuante__janela:not(.painel-flutuante__janela--mobile) {
-    margin: max(var(--space-16), env(safe-area-inset-top))
-        max(var(--space-16), env(safe-area-inset-right))
-        max(var(--space-16), env(safe-area-inset-bottom))
-        max(var(--space-16), env(safe-area-inset-left));
-}
-
+// No mobile a caixa preenche a tela toda (só recuando pelo notch/home indicator via `safe-area-inset`).
+// No desktop, a folga das bordas é do `JanelaMontador` (tamanho limitado ao viewport), não de margem em CSS.
 :host ::ng-deep .painel-flutuante__janela--mobile {
     inset: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
         env(safe-area-inset-left);
@@ -52,7 +45,7 @@
         padding: 14px;
     }
 
-    // Alça de redimensionar (desktop only — sem maximizar) — mesma receita visual de
+    // Alça de redimensionar (desktop only, some maximizada) — mesma receita visual de
     // `.caderno__redimensionar`.
     &__redimensionar {
         position: absolute;

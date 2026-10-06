@@ -4,6 +4,7 @@ import type { FichaAtributosDto } from '@contratados-rpg/shared/dtos/ficha';
 import { expandirAtalhosDano, type ResultadoRolagemDto } from '@contratados-rpg/shared/regras/rolagem';
 
 import { Icone } from '../icone/icone.component';
+import { JanelaMontador } from '../janela-montador/janela-montador';
 import { OverflowFade } from '../overflow-fade/overflow-fade.directive';
 import { ResultadoRolagem } from '../resultado-rolagem/resultado-rolagem.component';
 import { Tooltip } from '../tooltip/tooltip.directive';
@@ -39,17 +40,12 @@ export interface MontadorUltimaRolagem {
 /** Mesmo limiar de `$bp-mobile` (`_breakpoints.scss`), lido por `matchMedia` como no `MontadorRolagem`. */
 const BREAKPOINT_MOBILE = 560;
 
-/** Desktop: posição e tamanho iniciais, e mínimos do redimensionar (mesma mecânica do `MontadorRolagem`). */
-const POSICAO_INICIAL: PainelFlutuantePosicao = { x: 24, y: 120 };
+/** Desktop: posição e tamanho iniciais, e mínimos do redimensionar (`JanelaMontador`, comum ao `MontadorRolagem`). */
+const POSICAO_INICIAL: PainelFlutuantePosicao = { x: 40, y: 136 };
 const LARGURA_INICIAL = 520;
 const ALTURA_INICIAL = 700;
 const LARGURA_MINIMA = 360;
 const ALTURA_MINIMA = 440;
-
-interface Tamanho {
-  readonly largura: number;
-  readonly altura: number;
-}
 
 /**
  * Casca das versões novas do montador de rolagem (`montador-exp-02`; Essencial/Completo em `03`, Blocos em `04`):
@@ -81,8 +77,8 @@ interface Tamanho {
   host: {
     '(window:resize)': 'aoRedimensionarViewport()',
     '(window:pointermove)': 'aoMoverPonteiroRedimensionar($event)',
-    '(window:pointerup)': 'encerrarRedimensionamento()',
-    '(window:pointercancel)': 'encerrarRedimensionamento()',
+    '(window:pointerup)': 'janela.encerrarRedimensionamento()',
+    '(window:pointercancel)': 'janela.encerrarRedimensionamento()',
   },
 })
 export class MontadorRolagemExperimental {
@@ -239,6 +235,7 @@ export class MontadorRolagemExperimental {
   }
 
   protected fechar(): void {
+    this.janela.restaurar(this.painelRef());
     this.aberto.set(false);
   }
 
@@ -246,6 +243,7 @@ export class MontadorRolagemExperimental {
   protected readonly mobileAtivo = signal(this.verificarMobile());
 
   protected aoRedimensionarViewport(): void {
+    this.janela.atualizarViewport();
     this.mobileAtivo.set(this.verificarMobile());
   }
 
@@ -258,34 +256,20 @@ export class MontadorRolagemExperimental {
       : window.innerWidth <= BREAKPOINT_MOBILE;
   }
 
-  // === Redimensionar (desktop), mesma mecânica do `MontadorRolagem` ===
-  protected readonly tamanho = signal<Tamanho>({ largura: LARGURA_INICIAL, altura: ALTURA_INICIAL });
-  private redimensionando = false;
-  private origemRedimensionamento = { ponteiroX: 0, ponteiroY: 0, tamanho: this.tamanho() };
+  // === Tamanho, redimensionar (desktop) e maximizar: `JanelaMontador`, a mesma mecânica do `MontadorRolagem` ===
+  protected readonly janela = new JanelaMontador({
+    largura: LARGURA_INICIAL,
+    altura: ALTURA_INICIAL,
+    larguraMinima: LARGURA_MINIMA,
+    alturaMinima: ALTURA_MINIMA,
+    posicaoInicial: POSICAO_INICIAL,
+  });
 
-  protected iniciarRedimensionamento(evento: PointerEvent): void {
-    if (this.mobileAtivo() || evento.button !== 0) return;
-    evento.preventDefault();
-    this.redimensionando = true;
-    this.origemRedimensionamento = { ponteiroX: evento.clientX, ponteiroY: evento.clientY, tamanho: this.tamanho() };
+  protected alternarMaximizar(): void {
+    this.janela.alternarMaximizar(this.painelRef());
   }
 
   protected aoMoverPonteiroRedimensionar(evento: PointerEvent): void {
-    if (!this.redimensionando) return;
-    const origem = this.origemRedimensionamento;
-    this.tamanho.set({
-      largura: limitarDimensao(origem.tamanho.largura + evento.clientX - origem.ponteiroX, LARGURA_MINIMA, window.innerWidth),
-      altura: limitarDimensao(origem.tamanho.altura + evento.clientY - origem.ponteiroY, ALTURA_MINIMA, window.innerHeight),
-    });
+    this.janela.moverRedimensionamento(evento, this.painelRef());
   }
-
-  protected encerrarRedimensionamento(): void {
-    this.redimensionando = false;
-  }
-}
-
-/** Nunca menor que o mínimo nem maior que o viewport (mesmo racional do `MontadorRolagem`). */
-function limitarDimensao(valor: number, minimo: number, viewport: number): number {
-  if (viewport <= minimo) return viewport;
-  return Math.min(Math.max(valor, minimo), viewport);
 }

@@ -20,12 +20,28 @@
     id="montador-rolagem"
     titulo="Montador de rolagem"
     [aberto]="aberto()"
-    [largura]="mobileAtivo() ? null : tamanho().largura"
-    [altura]="mobileAtivo() ? null : tamanho().altura"
+    [largura]="mobileAtivo() ? null : janela.tamanho().largura"
+    [altura]="mobileAtivo() ? null : janela.tamanho().altura"
     [mobile]="mobileAtivo()"
+    [maximizada]="janela.maximizada()"
     [posicaoInicial]="posicaoInicial"
     (fechar)="fechar()"
 >
+    @if (!mobileAtivo()) {
+        <button
+            painelAcoesExtras
+            app-botao-icone
+            type="button"
+            [attr.aria-label]="
+                janela.maximizada() ? 'Restaurar tamanho do montador' : 'Maximizar montador'
+            "
+            [appTooltip]="janela.maximizada() ? 'Restaurar tamanho' : 'Maximizar'"
+            (pointerdown)="$event.stopPropagation()"
+            (click)="alternarMaximizar()"
+        >
+            <span aria-hidden="true">{{ janela.maximizada() ? "❐" : "□" }}</span>
+        </button>
+    }
     <div class="montador-rolagem__caixa">
         <input
             class="montador-rolagem__visor"
@@ -451,12 +467,12 @@
         </div>
     </div>
 
-    @if (!mobileAtivo()) {
+    @if (!mobileAtivo() && !janela.maximizada()) {
         <span
             painelRedimensionar
             class="montador-rolagem__redimensionar"
             aria-hidden="true"
-            (pointerdown)="iniciarRedimensionamento($event)"
+            (pointerdown)="janela.iniciarRedimensionamento($event)"
         ></span>
     }
 </app-painel-flutuante>

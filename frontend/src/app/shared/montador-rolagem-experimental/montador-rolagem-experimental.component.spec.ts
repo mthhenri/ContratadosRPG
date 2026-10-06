@@ -84,6 +84,32 @@ describe('MontadorRolagemExperimental', () => {
     expect(botaoPorTexto('Desfazer').disabled).toBe(true);
   });
 
+  it('Maximizar ocupa a viewport e esconde a alça; Restaurar e fechar devolvem a janela ao normal', () => {
+    const { fixture, raiz } = montar();
+    const janela = () => document.querySelector<HTMLElement>('.painel-flutuante__janela')!;
+    const botao = (rotulo: string) => document.querySelector<HTMLButtonElement>(`[aria-label="${rotulo}"]`)!;
+    expect(raiz.querySelector('.montador-exp__redimensionar')).not.toBeNull();
+
+    botao('Maximizar montador').click();
+    fixture.detectChanges();
+    expect(janela().classList).toContain('painel-flutuante__janela--maximizada');
+    expect(janela().style.width).toBe(`${window.innerWidth}px`);
+    expect(janela().style.height).toBe(`${window.innerHeight}px`);
+    expect(raiz.querySelector('.montador-exp__redimensionar')).toBeNull();
+
+    botao('Restaurar tamanho do montador').click();
+    fixture.detectChanges();
+    expect(janela().classList).not.toContain('painel-flutuante__janela--maximizada');
+    expect(raiz.querySelector('.montador-exp__redimensionar')).not.toBeNull();
+
+    botao('Maximizar montador').click();
+    botao('Fechar Montador de rolagem').click();
+    fixture.detectChanges();
+    raiz.querySelector<HTMLButtonElement>('.montador-exp__gatilho')!.click();
+    fixture.detectChanges();
+    expect(janela().classList).not.toContain('painel-flutuante__janela--maximizada');
+  });
+
   it('sincroniza nos dois sentidos: a barra muda o visor, o visor muda a barra', () => {
     const { fixture, hospedeiro, raiz } = montar();
     hospedeiro.formula.set('3d6 - 2');
