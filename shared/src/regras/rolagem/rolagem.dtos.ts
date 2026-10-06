@@ -10,7 +10,7 @@ import type { AmplificadorAplicadoDto } from '../compras';
  * v4: **atributo+valor como quantidade de dados** `(ATR±n)dM` e **repetição** `(<fórmula>)#N`. Não há
  * mais "modo": um teste é a expressão explícita `LUTd20kh1 + PROF` (m3-29). Funções puras em
  * `rolagem.ts` — a única brecha a `Math.random` é a função de rolagem injetável (SYSTEM.SPEC §6.6).
- * Fonte: docs/core/sistema-v4.1.0.md — "Atributos"/"Testes"/"Tipos de Dano".
+ * Fonte: docs/core/sistema-v4.1.3.md — "Atributos"/"Testes"/"Tipos de Dano".
  */
 
 /** Par de tipos de um dano **Composto** (`[A-B]`): a soma do segmento é dividida 50/50 (resto → A). */
@@ -20,7 +20,7 @@ export type ParTipoDano = readonly [TipoDanoEnum, TipoDanoEnum];
  * Fonte de um valor escalar numa fórmula (m3-22): um dos 10 atributos **ou** a **Proficiência**
  * (`PROF`) **ou** o **Nível** (`NIV`) do agente. Todas se usam igual — modificador (`+PROF`), fonte de
  * dados (`PROFd6`) ou escalada (`NIV*2`). Proficiência/Nível vêm como escalares no `rolarFormula`
- * (`proficiencia`/`nivel`), fora do `FichaAtributosDto`. Fonte: docs/core/sistema-v4.1.0.md — "Testes".
+ * (`proficiencia`/`nivel`), fora do `FichaAtributosDto`. Fonte: docs/core/sistema-v4.1.3.md — "Testes".
  */
 export type FonteEscalar = keyof FichaAtributosDto | 'proficiencia' | 'nivel';
 
@@ -44,7 +44,7 @@ export type NoContaDto =
 /**
  * Conta aritmética já lida (value object): `+ − × ÷` e parênteses sobre números e fontes escalares, ex.:
  * `(FOR+VIG)*2`. Avaliada na rolagem com frações exatas e **arredondada para baixo uma única vez, no fim**
- * (docs/core/sistema-v4.1.0.md:2027-2033). Serve à quantidade de dados (`quantidadeConta`) e ao bônus
+ * (docs/core/sistema-v4.1.3.md, “Arredondamentos”). Serve à quantidade de dados (`quantidadeConta`) e ao bônus
  * fixo (`TermoContaDto`).
  */
 export interface ContaDto {
@@ -87,7 +87,7 @@ export interface TermoDadoDto {
   readonly manterMaior?: number;
   /** `klN` (m3-29): mantém os N **menores** do pool. */
   readonly manterMenor?: number;
-  /** `cmN` (m3-29): margem de crítico — limiar = `faces − N + 1`; conta os mantidos ≥ limiar (informativo). */
+  /** `cmN`: limiar = `faces − N + 1`; conta mantidos ≥ limiar. Em teste, concede +2 uma vez; em pools genéricos, informativo. */
   readonly margemCritico?: number;
   /** `!`/`!>=N` (m3-29, não-canônico): explode ao rolar um valor ≥ este limiar (bare `!` = `faces`). */
   readonly explosao?: number;
@@ -262,7 +262,7 @@ export interface RolagemDto {
   readonly proficiencia?: number | null;
   /** Nível do agente — resolvido pela fonte `NIV` nas fórmulas (m3-22). Ausente = 0. */
   readonly nivel?: number;
-  /** Rolagem de crítico (m3-30): dobra dados/fixos/atributos (exceto PROF/NIV). Ausente = `false`. */
+  /** Crítico: em teste, +2 uma vez; em resultado de dados, dobra dados/fixos/atributos (exceto PROF/NIV). Ausente = `false`. */
   readonly critico?: boolean;
 }
 
@@ -278,7 +278,7 @@ export interface DadosRoladosDto {
   readonly mantidos?: readonly number[];
   /** Dados descartados pelo `kh`/`kl` (m3-29); ausente quando não há keep. */
   readonly descartados?: readonly number[];
-  /** Quantos dados **mantidos** atingiram a margem de crítico `cm` (m3-29); ausente sem `cm`. */
+  /** Quantos mantidos atingiram a margem. Testes têm margem natural 1; pools genéricos só contam com `cm`. */
   readonly criticos?: number;
   /** `true` quando a desvantagem intrínseca disparou (atributo ≤ 0 num pool de teste; m3-29, regra 270). */
   readonly desvantagem?: boolean;

@@ -18,9 +18,9 @@ import { interpretarFormula, rolarFormula, rolarInterpretada, validarFormula } f
 /**
  * Conta aritmética nas fórmulas de rolagem (I-041, spec `rolagem-expressao-quantidade-dados`): quantidade de
  * dados `((INT+SOC)/2)d20` e bônus fixo `(FOR+VIG)*2` como conta `+ − × ÷` com parênteses, **arredondada para
- * baixo uma única vez, no fim** — docs/core/sistema-v4.1.0.md:2027-2033 ("arredondar para baixo após a
- * conclusão do cálculo"; 27,5 → 27). Crítico: sistema-v4.1.0.md:1810 (dobra dados e valores fixos, flat ou
- * atributo) e :1965 (exceto o que vem de Patente/Nível — `PROF`/`NIV`). A rolagem é determinística via
+ * baixo uma única vez, no fim** — Sistema v4.1.3, “Arredondamentos” (27,5 → 27).
+ * Crítico: “Crítico e Margem de Crítico” (+2 no teste; dobra dados e valores no resultado) e
+ * “Cura” (exceto o que vem de Patente/Nível — `PROF`/`NIV`). A rolagem é determinística via
  * `rolarDado` injetado.
  */
 
@@ -193,7 +193,7 @@ describe('quantidade de dados por conta `(<conta>)dM` (I-041)', () => {
     const resultado = rolar('((Int+soc)/2)d20kh1cm1+prof', { intelecto: 7, social: 4 }, { proficiencia: 2 });
     expect(resultado.dados[0].valores).toHaveLength(5); // (7+4)/2 = 5,5 → 5, não 6
     expect(resultado.dados[0].mantidos).toEqual([20]);
-    expect(resultado.total).toBe(20 + 2);
+    expect(resultado.total).toBe(20 + 2 + 2); // PROF 2 + crítico de teste 2 (Sistema v4.1.3).
     expect(resultado.dados[0].criticos).toBe(1);
   });
 
@@ -212,7 +212,7 @@ describe('quantidade de dados por conta `(<conta>)dM` (I-041)', () => {
     expect(rolar('((FOR+VIG)*50)d4').dados[0].valores).toHaveLength(QUANTIDADE_DADOS_MAXIMA);
   });
 
-  it('crítico dobra a quantidade (sistema-v4.1.0.md:1810), com o teto de 100', () => {
+  it('crítico dobra a quantidade do resultado em dados (Sistema v4.1.3), com o teto de 100', () => {
     expect(rolar('((FOR+VIG)*2)d4', {}, { critico: true }).dados[0].valores).toHaveLength(20);
     expect(rolar('((FOR+VIG)*20)d4', {}, { critico: true }).dados[0].valores).toHaveLength(QUANTIDADE_DADOS_MAXIMA);
   });
@@ -425,7 +425,7 @@ describe('legado intacto — DTO e resultado das formas antigas não mudam (I-04
   });
 });
 
-describe('snapshot do corpus do montador — fórmulas válidas antes da I-041 produzem o mesmo resultado', () => {
+describe('corpus do montador — gramática preservada, resultados conforme Sistema v4.1.3', () => {
   interface ItemSnapshot {
     readonly formula: string;
     readonly interpretacao: { readonly valida: boolean; readonly formula?: FormulaInterpretadaDto; readonly erro?: string };
@@ -590,7 +590,7 @@ describe('dado dentro da conta de quantidade `(1d6)d20`', () => {
   });
 
   it('combina com operadores, sinal, tag de dano e #N; cada repetição rola a conta de novo', () => {
-    expect(rolarRoteiro('(1d6)d20kh1cm1 + PROF', [3, 20, 2, 5]).resultado.total).toBe(22);
+    expect(rolarRoteiro('(1d6)d20kh1cm1 + PROF', [3, 20, 2, 5]).resultado.total).toBe(24);
     expect(rolarRoteiro('10 - (1d4)d6', [2, 6, 6]).resultado.total).toBe(-2);
     expect(interpretarFormula('(1d6)d8 [F-Q]').formula?.dados[0].composto).toEqual([
       TipoDanoEnum.FISICO,

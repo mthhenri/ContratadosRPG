@@ -168,6 +168,23 @@ function resumirFormulaFixada(formula: FormulaInterpretadaDto, ambiente: Ambient
   const minimo = rolarFormulaCom(formula, ambiente, dadoTravado(dadosPorTermo, 'MINIMO'));
   const maximo = rolarFormulaCom(formula, ambiente, dadoTravado(dadosPorTermo, 'MAXIMO'));
 
+  // Com um mantido, percorre seus valores possíveis e pesa a distribuição do maior/menor.
+  // O motor resolve o total de cada valor, incluindo qualquer bônus dependente do resultado;
+  // a UI não replica a regra de crítico nem presume que todo máximo recebe +2.
+  if (formula.dados.length === 1 && base.dados[0].mantidos?.length === 1) {
+    const termo = formula.dados[0];
+    const quantidade = base.dados[0].valores.length;
+    const maiores = termo.manterMaior !== undefined && !base.dados[0].desvantagem;
+    let media = 0;
+    for (let valor = 1; valor <= termo.faces; valor += 1) {
+      const probabilidade = maiores
+        ? (valor / termo.faces) ** quantidade - ((valor - 1) / termo.faces) ** quantidade
+        : ((termo.faces - valor + 1) / termo.faces) ** quantidade - ((termo.faces - valor) / termo.faces) ** quantidade;
+      media += probabilidade * rolarFormulaCom(formula, ambiente, () => valor).total;
+    }
+    return { minimo: minimo.total, maximo: maximo.total, media };
+  }
+
   let media = base.total;
   formula.dados.forEach((termo, indice) => {
     const rolado = base.dados[indice];

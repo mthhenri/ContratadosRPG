@@ -23,7 +23,7 @@ const NOTA_EXTRA = 'Também PROF (proficiência), NIV (nível), CORPO (dano corp
 
 /**
  * Guia da gramática de fórmula, redigido a partir do motor `shared/regras/rolagem` (m3-16/18/27) e
- * conferido contra `docs/core/sistema-v4.1.0.md` — "Atributos"/"Testes"/"Tipos de Dano". Não há "modo":
+ * conferido contra `docs/core/sistema-v4.1.3.md` — "Atributos"/"Testes"/"Tipos de Dano". Não há "modo":
  * a fórmula especifica tudo. Texto de interface (não é regra nova).
  */
 const SECOES: readonly SecaoGuia[] = [
@@ -51,8 +51,8 @@ const SECOES: readonly SecaoGuia[] = [
   {
     titulo: 'Margem de crítico',
     linhas: [
-      { codigo: 'cm1', texto: 'Conta os dados no valor máximo (d20 → só o 20). Só informa; não altera o total.' },
-      { codigo: 'cm2', texto: 'Abre a margem (d20 → 19 e 20).' },
+      { codigo: 'cm1', texto: 'Margem natural do teste: 20 no d20 mantido soma +2 uma vez, mesmo sem escrever cm1. Dados descartados não contam.' },
+      { codigo: 'cm2', texto: 'No teste, 19 ou 20 mantido soma +2 uma vez. Em pools de dano ou cura, cm só informa a margem; não dobra o resultado.' },
     ],
   },
   {

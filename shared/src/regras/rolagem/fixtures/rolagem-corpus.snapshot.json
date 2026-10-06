@@ -155,18 +155,14 @@
        "faces": 20,
        "valores": [
         11,
-        18,
-        5,
-        12
+        18
        ],
        "subtotal": 18,
        "mantidos": [
         18
        ],
        "descartados": [
-        11,
-        5,
-        12
+        11
        ],
        "criticos": 0
       }
@@ -175,11 +171,14 @@
       {
        "rotulo": "PROF",
        "valor": 2
+      },
+      {
+       "rotulo": "CRÍTICO",
+       "valor": 2
       }
      ],
-     "constante": 16,
-     "total": 36,
-     "critico": true,
+     "constante": 8,
+     "total": 30,
      "subResultados": [
       {
        "dados": [
@@ -188,18 +187,14 @@
          "faces": 20,
          "valores": [
           11,
-          18,
-          5,
-          12
+          18
          ],
          "subtotal": 18,
          "mantidos": [
           18
          ],
          "descartados": [
-          11,
-          5,
-          12
+          11
          ],
          "criticos": 0
         }
@@ -208,11 +203,14 @@
         {
          "rotulo": "PROF",
          "valor": 2
+        },
+        {
+         "rotulo": "CRÍTICO",
+         "valor": 2
         }
        ],
-       "constante": 16,
-       "total": 36,
-       "critico": true
+       "constante": 8,
+       "total": 30
       },
       {
        "dados": [
@@ -220,32 +218,31 @@
          "sinal": 1,
          "faces": 20,
          "valores": [
-          19,
-          6,
-          13,
-          20
+          5,
+          12
          ],
-         "subtotal": 20,
+         "subtotal": 12,
          "mantidos": [
-          20
+          12
          ],
          "descartados": [
-          19,
-          6,
-          13
+          5
          ],
-         "criticos": 1
+         "criticos": 0
         }
        ],
        "atributos": [
         {
          "rotulo": "PROF",
          "valor": 2
+        },
+        {
+         "rotulo": "CRÍTICO",
+         "valor": 2
         }
        ],
-       "constante": 16,
-       "total": 38,
-       "critico": true
+       "constante": 8,
+       "total": 24
       }
      ]
     },
@@ -332,16 +329,13 @@
        "sinal": 1,
        "faces": 20,
        "valores": [
-        11,
-        18
-       ],
-       "subtotal": 18,
-       "mantidos": [
-        18
-       ],
-       "descartados": [
         11
        ],
+       "subtotal": 11,
+       "mantidos": [
+        11
+       ],
+       "descartados": [],
        "criticos": 0
       }
      ],
@@ -349,11 +343,14 @@
       {
        "rotulo": "PROF",
        "valor": 0
+      },
+      {
+       "rotulo": "CRÍTICO",
+       "valor": 2
       }
      ],
-     "constante": 16,
-     "total": 34,
-     "critico": true,
+     "constante": 8,
+     "total": 21,
      "subResultados": [
       {
        "dados": [
@@ -361,16 +358,13 @@
          "sinal": 1,
          "faces": 20,
          "valores": [
-          11,
-          18
-         ],
-         "subtotal": 18,
-         "mantidos": [
-          18
-         ],
-         "descartados": [
           11
          ],
+         "subtotal": 11,
+         "mantidos": [
+          11
+         ],
+         "descartados": [],
          "criticos": 0
         }
        ],
@@ -378,11 +372,14 @@
         {
          "rotulo": "PROF",
          "valor": 0
+        },
+        {
+         "rotulo": "CRÍTICO",
+         "valor": 2
         }
        ],
-       "constante": 16,
-       "total": 34,
-       "critico": true
+       "constante": 8,
+       "total": 21
       },
       {
        "dados": [
@@ -390,16 +387,13 @@
          "sinal": 1,
          "faces": 20,
          "valores": [
-          5,
-          12
+          18
          ],
-         "subtotal": 12,
+         "subtotal": 18,
          "mantidos": [
-          12
+          18
          ],
-         "descartados": [
-          5
-         ],
+         "descartados": [],
          "criticos": 0
         }
        ],
@@ -407,11 +401,14 @@
         {
          "rotulo": "PROF",
          "valor": 0
+        },
+        {
+         "rotulo": "CRÍTICO",
+         "valor": 2
         }
        ],
-       "constante": 16,
-       "total": 28,
-       "critico": true
+       "constante": 8,
+       "total": 28
       }
      ]
     }
@@ -2402,21 +2399,15 @@
        "valores": [
         11,
         18,
-        5,
-        12,
-        19,
-        6
+        5
        ],
-       "subtotal": 19,
+       "subtotal": 18,
        "mantidos": [
-        19
+        18
        ],
        "descartados": [
         11,
-        18,
-        5,
-        12,
-        6
+        5
        ],
        "criticos": 0
       }
@@ -2425,11 +2416,14 @@
       {
        "rotulo": "PROF",
        "valor": 2
+      },
+      {
+       "rotulo": "CRÍTICO",
+       "valor": 2
       }
      ],
-     "constante": 10,
-     "total": 31,
-     "critico": true
+     "constante": 5,
+     "total": 27
     },
     "zerado": {
      "dados": [
@@ -2462,16 +2456,13 @@
        "sinal": 1,
        "faces": 20,
        "valores": [
-        11,
-        18
-       ],
-       "subtotal": 18,
-       "mantidos": [
-        18
-       ],
-       "descartados": [
         11
        ],
+       "subtotal": 11,
+       "mantidos": [
+        11
+       ],
+       "descartados": [],
        "criticos": 0
       }
      ],
@@ -2479,11 +2470,14 @@
       {
        "rotulo": "PROF",
        "valor": 0
+      },
+      {
+       "rotulo": "CRÍTICO",
+       "valor": 2
       }
      ],
-     "constante": 10,
-     "total": 28,
-     "critico": true
+     "constante": 5,
+     "total": 18
     }
    }
   },
@@ -2549,18 +2543,14 @@
        "faces": 20,
        "valores": [
         11,
-        18,
-        5,
-        12
+        18
        ],
        "subtotal": 18,
        "mantidos": [
         18
        ],
        "descartados": [
-        11,
-        5,
-        12
+        11
        ],
        "criticos": 0
       }
@@ -2569,11 +2559,14 @@
       {
        "rotulo": "PROF",
        "valor": 2
+      },
+      {
+       "rotulo": "CRÍTICO",
+       "valor": 2
       }
      ],
-     "constante": 12,
-     "total": 32,
-     "critico": true
+     "constante": 6,
+     "total": 28
     },
     "zerado": {
      "dados": [
@@ -2606,16 +2599,13 @@
        "sinal": 1,
        "faces": 20,
        "valores": [
-        11,
-        18
-       ],
-       "subtotal": 18,
-       "mantidos": [
-        18
-       ],
-       "descartados": [
         11
        ],
+       "subtotal": 11,
+       "mantidos": [
+        11
+       ],
+       "descartados": [],
        "criticos": 0
       }
      ],
@@ -2623,11 +2613,14 @@
       {
        "rotulo": "PROF",
        "valor": 0
+      },
+      {
+       "rotulo": "CRÍTICO",
+       "valor": 2
       }
      ],
-     "constante": 12,
-     "total": 30,
-     "critico": true
+     "constante": 6,
+     "total": 19
     }
    }
   },
@@ -3330,7 +3323,8 @@
        "descartados": [
         11,
         5
-       ]
+       ],
+       "criticos": 0
       }
      ],
      "atributos": [
@@ -3350,33 +3344,31 @@
        "valores": [
         11,
         18,
-        5,
-        12,
-        19,
-        6
+        5
        ],
-       "subtotal": 19,
+       "subtotal": 18,
        "mantidos": [
-        19
+        18
        ],
        "descartados": [
         11,
-        18,
-        5,
-        12,
-        6
-       ]
+        5
+       ],
+       "criticos": 0
       }
      ],
      "atributos": [
       {
        "rotulo": "PROF",
        "valor": 2
+      },
+      {
+       "rotulo": "CRÍTICO",
+       "valor": 2
       }
      ],
      "constante": 0,
-     "total": 21,
-     "critico": true
+     "total": 22
     },
     "zerado": {
      "dados": [
@@ -3394,6 +3386,7 @@
        "descartados": [
         18
        ],
+       "criticos": 0,
        "desvantagem": true
       }
      ],
@@ -3413,19 +3406,16 @@
        "faces": 20,
        "valores": [
         11,
-        18,
-        5,
-        12
+        18
        ],
-       "subtotal": 5,
+       "subtotal": 11,
        "mantidos": [
-        5
+        11
        ],
        "descartados": [
-        11,
-        18,
-        12
+        18
        ],
+       "criticos": 0,
        "desvantagem": true
       }
      ],
@@ -3433,11 +3423,14 @@
       {
        "rotulo": "PROF",
        "valor": 0
+      },
+      {
+       "rotulo": "CRÍTICO",
+       "valor": 2
       }
      ],
      "constante": 0,
-     "total": 5,
-     "critico": true
+     "total": 13
     }
    }
   },
@@ -3505,34 +3498,31 @@
        "valores": [
         11,
         18,
-        5,
-        12,
-        19,
-        6
+        5
        ],
-       "subtotal": 19,
+       "subtotal": 18,
        "mantidos": [
-        19
+        18
        ],
        "descartados": [
         11,
-        18,
-        5,
-        12,
-        6
+        5
        ],
-       "criticos": 1
+       "criticos": 0
       }
      ],
      "atributos": [
       {
        "rotulo": "PROF",
        "valor": 2
+      },
+      {
+       "rotulo": "CRÍTICO",
+       "valor": 2
       }
      ],
      "constante": 0,
-     "total": 21,
-     "critico": true
+     "total": 22
     },
     "zerado": {
      "dados": [
@@ -3570,18 +3560,14 @@
        "faces": 20,
        "valores": [
         11,
-        18,
-        5,
-        12
+        18
        ],
-       "subtotal": 5,
+       "subtotal": 11,
        "mantidos": [
-        5
+        11
        ],
        "descartados": [
-        11,
-        18,
-        12
+        18
        ],
        "criticos": 0,
        "desvantagem": true
@@ -3591,11 +3577,14 @@
       {
        "rotulo": "PROF",
        "valor": 0
+      },
+      {
+       "rotulo": "CRÍTICO",
+       "valor": 2
       }
      ],
      "constante": 0,
-     "total": 5,
-     "critico": true
+     "total": 13
     }
    }
   },
@@ -3641,7 +3630,8 @@
        "mantidos": [
         11
        ],
-       "descartados": []
+       "descartados": [],
+       "criticos": 0
       }
      ],
      "atributos": [
@@ -3663,16 +3653,14 @@
        "sinal": 1,
        "faces": 20,
        "valores": [
-        11,
-        18
-       ],
-       "subtotal": 18,
-       "mantidos": [
-        18
-       ],
-       "descartados": [
         11
-       ]
+       ],
+       "subtotal": 11,
+       "mantidos": [
+        11
+       ],
+       "descartados": [],
+       "criticos": 0
       }
      ],
      "atributos": [
@@ -3683,11 +3671,14 @@
       {
        "rotulo": "NIV",
        "valor": 3
+      },
+      {
+       "rotulo": "CRÍTICO",
+       "valor": 2
       }
      ],
      "constante": 0,
-     "total": 23,
-     "critico": true
+     "total": 18
     },
     "zerado": {
      "dados": [
@@ -3705,6 +3696,7 @@
        "descartados": [
         18
        ],
+       "criticos": 0,
        "desvantagem": true
       }
      ],
@@ -3728,19 +3720,16 @@
        "faces": 20,
        "valores": [
         11,
-        18,
-        5,
-        12
+        18
        ],
-       "subtotal": 5,
+       "subtotal": 11,
        "mantidos": [
-        5
+        11
        ],
        "descartados": [
-        11,
-        18,
-        12
+        18
        ],
+       "criticos": 0,
        "desvantagem": true
       }
      ],
@@ -3752,11 +3741,14 @@
       {
        "rotulo": "NIV",
        "valor": 0
+      },
+      {
+       "rotulo": "CRÍTICO",
+       "valor": 2
       }
      ],
      "constante": 0,
-     "total": 5,
-     "critico": true
+     "total": 13
     }
    }
   },
@@ -3876,7 +3868,8 @@
        ],
        "descartados": [
         18
-       ]
+       ],
+       "criticos": 0
       }
      ],
      "atributos": [],
@@ -3890,25 +3883,26 @@
        "faces": 20,
        "valores": [
         11,
-        18,
-        5,
-        12
+        18
        ],
-       "subtotal": 5,
+       "subtotal": 11,
        "mantidos": [
-        5
+        11
        ],
        "descartados": [
-        11,
-        18,
-        12
-       ]
+        18
+       ],
+       "criticos": 0
       }
      ],
-     "atributos": [],
+     "atributos": [
+      {
+       "rotulo": "CRÍTICO",
+       "valor": 2
+      }
+     ],
      "constante": 0,
-     "total": 5,
-     "critico": true
+     "total": 13
     },
     "zerado": {
      "dados": [
@@ -3925,7 +3919,8 @@
        ],
        "descartados": [
         18
-       ]
+       ],
+       "criticos": 0
       }
      ],
      "atributos": [],
@@ -3939,25 +3934,26 @@
        "faces": 20,
        "valores": [
         11,
-        18,
-        5,
-        12
+        18
        ],
-       "subtotal": 5,
+       "subtotal": 11,
        "mantidos": [
-        5
+        11
        ],
        "descartados": [
-        11,
-        18,
-        12
-       ]
+        18
+       ],
+       "criticos": 0
       }
      ],
-     "atributos": [],
+     "atributos": [
+      {
+       "rotulo": "CRÍTICO",
+       "valor": 2
+      }
+     ],
      "constante": 0,
-     "total": 5,
-     "critico": true
+     "total": 13
     }
    }
   },
@@ -3994,7 +3990,8 @@
        ],
        "descartados": [
         11
-       ]
+       ],
+       "criticos": 0
       }
      ],
      "atributos": [],
@@ -4008,25 +4005,26 @@
        "faces": 20,
        "valores": [
         11,
-        18,
-        5,
-        12
+        18
        ],
        "subtotal": 18,
        "mantidos": [
         18
        ],
        "descartados": [
-        11,
-        5,
-        12
-       ]
+        11
+       ],
+       "criticos": 0
       }
      ],
-     "atributos": [],
+     "atributos": [
+      {
+       "rotulo": "CRÍTICO",
+       "valor": 2
+      }
+     ],
      "constante": 0,
-     "total": 18,
-     "critico": true
+     "total": 20
     },
     "zerado": {
      "dados": [
@@ -4043,7 +4041,8 @@
        ],
        "descartados": [
         11
-       ]
+       ],
+       "criticos": 0
       }
      ],
      "atributos": [],
@@ -4057,25 +4056,26 @@
        "faces": 20,
        "valores": [
         11,
-        18,
-        5,
-        12
+        18
        ],
        "subtotal": 18,
        "mantidos": [
         18
        ],
        "descartados": [
-        11,
-        5,
-        12
-       ]
+        11
+       ],
+       "criticos": 0
       }
      ],
-     "atributos": [],
+     "atributos": [
+      {
+       "rotulo": "CRÍTICO",
+       "valor": 2
+      }
+     ],
      "constante": 0,
-     "total": 18,
-     "critico": true
+     "total": 20
     }
    }
   },
@@ -8690,7 +8690,8 @@
         18,
         5,
         12
-       ]
+       ],
+       "criticos": 0
       }
      ],
      "atributos": [],
@@ -8707,34 +8708,29 @@
         18,
         5,
         12,
-        19,
-        6,
-        13,
-        20,
-        7,
-        14
+        19
        ],
-       "subtotal": 20,
+       "subtotal": 19,
        "mantidos": [
-        20
+        19
        ],
        "descartados": [
         11,
         18,
         5,
-        12,
-        19,
-        6,
-        13,
-        7,
-        14
-       ]
+        12
+       ],
+       "criticos": 0
       }
      ],
-     "atributos": [],
+     "atributos": [
+      {
+       "rotulo": "CRÍTICO",
+       "valor": 2
+      }
+     ],
      "constante": 0,
-     "total": 20,
-     "critico": true
+     "total": 21
     },
     "zerado": {
      "dados": [
@@ -8751,7 +8747,8 @@
        ],
        "descartados": [
         11
-       ]
+       ],
+       "criticos": 0
       }
      ],
      "atributos": [],
@@ -8765,25 +8762,26 @@
        "faces": 20,
        "valores": [
         11,
-        18,
-        5,
-        12
+        18
        ],
        "subtotal": 18,
        "mantidos": [
         18
        ],
        "descartados": [
-        11,
-        5,
-        12
-       ]
+        11
+       ],
+       "criticos": 0
       }
      ],
-     "atributos": [],
+     "atributos": [
+      {
+       "rotulo": "CRÍTICO",
+       "valor": 2
+      }
+     ],
      "constante": 0,
-     "total": 18,
-     "critico": true
+     "total": 20
     }
    }
   },
@@ -11586,7 +11584,8 @@
         5,
         12,
         6
-       ]
+       ],
+       "criticos": 0
       }
      ],
      "atributos": [],
@@ -11604,37 +11603,30 @@
         5,
         12,
         19,
-        6,
-        13,
-        20,
-        7,
-        14,
-        1,
-        8
+        6
        ],
-       "subtotal": 20,
+       "subtotal": 19,
        "mantidos": [
-        20
+        19
        ],
        "descartados": [
         11,
         18,
         5,
         12,
-        19,
-        6,
-        13,
-        7,
-        14,
-        1,
-        8
-       ]
+        6
+       ],
+       "criticos": 0
       }
      ],
-     "atributos": [],
+     "atributos": [
+      {
+       "rotulo": "CRÍTICO",
+       "valor": 2
+      }
+     ],
      "constante": 0,
-     "total": 20,
-     "critico": true
+     "total": 21
     },
     "zerado": {
      "dados": [
@@ -11654,6 +11646,7 @@
         11,
         18
        ],
+       "criticos": 0,
        "desvantagem": true
       }
      ],
@@ -11669,10 +11662,7 @@
        "valores": [
         11,
         18,
-        5,
-        12,
-        19,
-        6
+        5
        ],
        "subtotal": 5,
        "mantidos": [
@@ -11680,18 +11670,20 @@
        ],
        "descartados": [
         11,
-        18,
-        12,
-        19,
-        6
+        18
        ],
+       "criticos": 0,
        "desvantagem": true
       }
      ],
-     "atributos": [],
+     "atributos": [
+      {
+       "rotulo": "CRÍTICO",
+       "valor": 2
+      }
+     ],
      "constante": 0,
-     "total": 5,
-     "critico": true
+     "total": 7
     }
    }
   },
@@ -11737,7 +11729,8 @@
        "descartados": [
         11,
         5
-       ]
+       ],
+       "criticos": 0
       }
      ],
      "atributos": [
@@ -11757,33 +11750,31 @@
        "valores": [
         11,
         18,
-        5,
-        12,
-        19,
-        6
+        5
        ],
-       "subtotal": 19,
+       "subtotal": 18,
        "mantidos": [
-        19
+        18
        ],
        "descartados": [
         11,
-        18,
-        5,
-        12,
-        6
-       ]
+        5
+       ],
+       "criticos": 0
       }
      ],
      "atributos": [
       {
        "rotulo": "PROF",
        "valor": 2
+      },
+      {
+       "rotulo": "CRÍTICO",
+       "valor": 2
       }
      ],
-     "constante": 4,
-     "total": 25,
-     "critico": true
+     "constante": 2,
+     "total": 24
     },
     "zerado": {
      "dados": [
@@ -11801,6 +11792,7 @@
        "descartados": [
         18
        ],
+       "criticos": 0,
        "desvantagem": true
       }
      ],
@@ -11820,19 +11812,16 @@
        "faces": 20,
        "valores": [
         11,
-        18,
-        5,
-        12
+        18
        ],
-       "subtotal": 5,
+       "subtotal": 11,
        "mantidos": [
-        5
+        11
        ],
        "descartados": [
-        11,
-        18,
-        12
+        18
        ],
+       "criticos": 0,
        "desvantagem": true
       }
      ],
@@ -11840,11 +11829,14 @@
       {
        "rotulo": "PROF",
        "valor": 0
+      },
+      {
+       "rotulo": "CRÍTICO",
+       "valor": 2
       }
      ],
-     "constante": 4,
-     "total": 9,
-     "critico": true
+     "constante": 2,
+     "total": 15
     }
    }
   },
@@ -11885,7 +11877,8 @@
        "mantidos": [
         11
        ],
-       "descartados": []
+       "descartados": [],
+       "criticos": 0
       }
      ],
      "atributos": [
@@ -11903,27 +11896,28 @@
        "sinal": 1,
        "faces": 20,
        "valores": [
-        11,
-        18
-       ],
-       "subtotal": 18,
-       "mantidos": [
-        18
-       ],
-       "descartados": [
         11
-       ]
+       ],
+       "subtotal": 11,
+       "mantidos": [
+        11
+       ],
+       "descartados": [],
+       "criticos": 0
       }
      ],
      "atributos": [
       {
        "rotulo": "NIV",
        "valor": 3
+      },
+      {
+       "rotulo": "CRÍTICO",
+       "valor": 2
       }
      ],
      "constante": 0,
-     "total": 21,
-     "critico": true
+     "total": 16
     },
     "zerado": {
      "dados": [
@@ -11941,6 +11935,7 @@
        "descartados": [
         18
        ],
+       "criticos": 0,
        "desvantagem": true
       }
      ],
@@ -11960,19 +11955,16 @@
        "faces": 20,
        "valores": [
         11,
-        18,
-        5,
-        12
+        18
        ],
-       "subtotal": 5,
+       "subtotal": 11,
        "mantidos": [
-        5
+        11
        ],
        "descartados": [
-        11,
-        18,
-        12
+        18
        ],
+       "criticos": 0,
        "desvantagem": true
       }
      ],
@@ -11980,11 +11972,14 @@
       {
        "rotulo": "NIV",
        "valor": 0
+      },
+      {
+       "rotulo": "CRÍTICO",
+       "valor": 2
       }
      ],
      "constante": 0,
-     "total": 5,
-     "critico": true
+     "total": 13
     }
    }
   },
@@ -12030,7 +12025,8 @@
        "descartados": [
         11,
         5
-       ]
+       ],
+       "criticos": 0
       }
      ],
      "atributos": [
@@ -12050,33 +12046,31 @@
        "valores": [
         11,
         18,
-        5,
-        12,
-        19,
-        6
+        5
        ],
-       "subtotal": 19,
+       "subtotal": 18,
        "mantidos": [
-        19
+        18
        ],
        "descartados": [
         11,
-        18,
-        5,
-        12,
-        6
-       ]
+        5
+       ],
+       "criticos": 0
       }
      ],
      "atributos": [
       {
        "rotulo": "FOR",
-       "valor": 12
+       "valor": 6
+      },
+      {
+       "rotulo": "CRÍTICO",
+       "valor": 2
       }
      ],
      "constante": 0,
-     "total": 31,
-     "critico": true
+     "total": 26
     },
     "zerado": {
      "dados": [
@@ -12094,6 +12088,7 @@
        "descartados": [
         18
        ],
+       "criticos": 0,
        "desvantagem": true
       }
      ],
@@ -12113,31 +12108,31 @@
        "faces": 20,
        "valores": [
         11,
-        18,
-        5,
-        12
+        18
        ],
-       "subtotal": 5,
+       "subtotal": 11,
        "mantidos": [
-        5
+        11
        ],
        "descartados": [
-        11,
-        18,
-        12
+        18
        ],
+       "criticos": 0,
        "desvantagem": true
       }
      ],
      "atributos": [
       {
        "rotulo": "FOR",
-       "valor": -2
+       "valor": -1
+      },
+      {
+       "rotulo": "CRÍTICO",
+       "valor": 2
       }
      ],
      "constante": 0,
-     "total": 3,
-     "critico": true
+     "total": 12
     }
    }
   },
@@ -12194,29 +12189,27 @@
        "valores": [
         11,
         18,
-        5,
-        12,
-        19,
-        6
+        5
        ],
-       "subtotal": 19,
+       "subtotal": 18,
        "mantidos": [
-        19
+        18
        ],
        "descartados": [
         11,
-        18,
-        5,
-        12,
-        6
+        5
        ],
-       "criticos": 1
+       "criticos": 0
       }
      ],
-     "atributos": [],
+     "atributos": [
+      {
+       "rotulo": "CRÍTICO",
+       "valor": 2
+      }
+     ],
      "constante": 0,
-     "total": 19,
-     "critico": true
+     "total": 20
     },
     "zerado": {
      "dados": [
@@ -12249,27 +12242,27 @@
        "faces": 20,
        "valores": [
         11,
-        18,
-        5,
-        12
+        18
        ],
-       "subtotal": 5,
+       "subtotal": 11,
        "mantidos": [
-        5
+        11
        ],
        "descartados": [
-        11,
-        18,
-        12
+        18
        ],
        "criticos": 0,
        "desvantagem": true
       }
      ],
-     "atributos": [],
+     "atributos": [
+      {
+       "rotulo": "CRÍTICO",
+       "valor": 2
+      }
+     ],
      "constante": 0,
-     "total": 5,
-     "critico": true
+     "total": 13
     }
    }
   },
@@ -14561,7 +14554,8 @@
        ],
        "descartados": [
         18
-       ]
+       ],
+       "criticos": 0
       }
      ],
      "atributos": [
@@ -14580,30 +14574,30 @@
        "faces": 20,
        "valores": [
         11,
-        18,
-        5,
-        12
+        18
        ],
-       "subtotal": 5,
+       "subtotal": 11,
        "mantidos": [
-        5
+        11
        ],
        "descartados": [
-        11,
-        18,
-        12
-       ]
+        18
+       ],
+       "criticos": 0
       }
      ],
      "atributos": [
       {
        "rotulo": "PROF",
        "valor": 2
+      },
+      {
+       "rotulo": "CRÍTICO",
+       "valor": 2
       }
      ],
      "constante": 0,
-     "total": 7,
-     "critico": true
+     "total": 15
     },
     "zerado": {
      "dados": [
@@ -14620,7 +14614,8 @@
        ],
        "descartados": [
         18
-       ]
+       ],
+       "criticos": 0
       }
      ],
      "atributos": [
@@ -14639,30 +14634,30 @@
        "faces": 20,
        "valores": [
         11,
-        18,
-        5,
-        12
+        18
        ],
-       "subtotal": 5,
+       "subtotal": 11,
        "mantidos": [
-        5
+        11
        ],
        "descartados": [
-        11,
-        18,
-        12
-       ]
+        18
+       ],
+       "criticos": 0
       }
      ],
      "atributos": [
       {
        "rotulo": "PROF",
        "valor": 0
+      },
+      {
+       "rotulo": "CRÍTICO",
+       "valor": 2
       }
      ],
      "constante": 0,
-     "total": 5,
-     "critico": true
+     "total": 13
     }
    }
   }

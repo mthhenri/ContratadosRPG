@@ -16,7 +16,7 @@ import {
 /**
  * Motor de rolagem (m3-15; gramática v3 m3-29): interpretação e rolagem de fórmulas de preset. A
  * rolagem é determinística nos testes via `rolarDado` injetado. Conferido contra a notação de
- * docs/core/sistema-v4.1.0.md — "Testes" (`(Atributo)d20`, pega o maior; +Proficiência explícita).
+ * docs/core/sistema-v4.1.3.md — "Testes" (`(Atributo)d20`, pega o maior; +Proficiência explícita).
  */
 
 const atributos: FichaAtributosDto = {
@@ -332,8 +332,8 @@ describe('teste de atributo — pool d20 + kh1 + PROF explícita (m3-29)', () =>
 
   it('Proficiência nula (Civil) conta como 0', () => {
     const resultado = rolarFormula({ formula: 'lutad20kh1 + PROF', atributos, proficiencia: null }, rolarMaximo);
-    expect(resultado?.atributos).toEqual([{ rotulo: 'PROF', valor: 0 }]);
-    expect(resultado?.total).toBe(20);
+    expect(resultado?.atributos).toEqual([{ rotulo: 'PROF', valor: 0 }, { rotulo: 'CRÍTICO', valor: 2 }]);
+    expect(resultado?.total).toBe(22); // 20 mantido + crítico 2; PROF continua 0.
   });
 
   it('bônus plano (constante) soma ao teste', () => {
@@ -349,9 +349,9 @@ describe('teste de atributo — pool d20 + kh1 + PROF explícita (m3-29)', () =>
   });
 
   it('sem PROF na fórmula, a Proficiência não entra sozinha', () => {
-    // luta=3 → 3 D20 no máximo (20), sem +PROF → total 20 (não soma prof por baixo dos panos).
+    // luta=3 → mantém 20 + crítico 2, sem +PROF → total 22; não soma prof por baixo dos panos.
     const resultado = rolarFormula({ formula: 'lutad20kh1', atributos, proficiencia: 5 }, rolarMaximo);
-    expect(resultado?.total).toBe(20);
+    expect(resultado?.total).toBe(22);
   });
 
   it('atributo 0 → desvantagem intrínseca: 2 dados, mantém o menor', () => {
@@ -456,7 +456,7 @@ describe('validação de operadores (m3-29)', () => {
   });
 });
 
-describe('crítico — dobra o dano (m3-30; sistema-v4.1.0 1217/1303)', () => {
+describe('crítico — dobra o dano (Sistema v4.1.3, Crítico e Cura)', () => {
   it('dobra o número de dados, os fixos e os atributos (FOR=6, dados no máximo)', () => {
     const formula = interpretarFormula('2d8 + FOR*3 + 5').formula!;
     const normal = rolarInterpretada(formula, atributos, undefined, undefined, rolarMaximo);
@@ -560,7 +560,7 @@ describe('presets + runner encadeado — resolverPreset/rolarPasso (m3-21)', () 
     expect(resultado?.grupos).toEqual([{ tipoDano: TipoDanoEnum.FISICO, total: 16 }]);
   });
 
-  it('aplica o desconto de Conservador (sistema-v4.1.0, amplificadores) à energia de cada ocorrência', () => {
+  it('aplica o desconto de Conservador (sistema-v4.1.3, amplificadores) à energia de cada ocorrência', () => {
     const preset: FichaRolagemDto = {
       nome: 'Ataque',
       formula: '2d8 [Físico]',
@@ -782,14 +782,14 @@ describe('gramática v5 — multiplicador de atributo e grupo de dados tipado', 
   });
 
   it('rola atributo multiplicado sem desvantagem intrínseca', () => {
-    // Luta=3, multiplicador 2: seis d20. Fonte: sistema-v4.1.0.md — Testes.
+    // Luta=3, multiplicador 2: seis d20. Fonte: sistema-v4.1.3.md — Testes.
     const resultado = rolarFormula({ formula: '(LUT*2)d20', atributos }, rolarMaximo);
     expect(resultado?.dados[0].valores).toHaveLength(6);
     expect(resultado?.dados[0].desvantagem).toBeUndefined();
   });
 
   it('aceita grupo de pools de dado e estampa seu tipo em todos os termos', () => {
-    // Fonte: sistema-v4.1.0.md — Tipos de Dano.
+    // Fonte: sistema-v4.1.3.md — Tipos de Dano.
     expect(validarFormula('(2d12+2d6)[F]')).toBe(true);
     const resultado = rolarFormula({ formula: '(2d12+2d6)[F]', atributos }, rolarMaximo);
     expect(resultado?.dados.every((dado) => dado.tipoDano === TipoDanoEnum.FISICO)).toBe(true);

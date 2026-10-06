@@ -1,0 +1,46 @@
+[
+  {
+    "largura": 1920,
+    "altura": 1080,
+    "total": 31,
+    "bonus": 2,
+    "normal": 22,
+    "margemAmpliada": 30,
+    "persistidos": true,
+    "overflow": false,
+    "pdfIdentico": true
+  },
+  {
+    "largura": 360,
+    "altura": 800,
+    "total": 31,
+    "bonus": 2,
+    "normal": 22,
+    "margemAmpliada": 30,
+    "persistidos": true,
+    "overflow": false,
+    "pdfIdentico": true
+  },
+  {
+    "largura": 960,
+    "altura": 1080,
+    "total": 31,
+    "bonus": 2,
+    "normal": 22,
+    "margemAmpliada": 30,
+    "persistidos": true,
+    "overflow": false,
+    "pdfIdentico": true
+  },
+  {
+    "largura": 1366,
+    "altura": 768,
+    "total": 31,
+    "bonus": 2,
+    "normal": 22,
+    "margemAmpliada": 30,
+    "persistidos": true,
+    "overflow": false,
+    "pdfIdentico": true
+  }
+]

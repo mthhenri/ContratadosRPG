@@ -38,18 +38,23 @@ describe('montador-leitura', () => {
       expect(resumirFormula('10 - 1d4', ambiente)).toEqual({ minimo: 6, maximo: 9, media: 7.5 });
     });
 
-    it('manter o maior de 2d20: média 13,825', () => {
+    it('teste de 2d20: inclui o crítico natural na média e no máximo', () => {
       const resumo = resumirFormula('2d20kh1', ambiente)!;
       expect(resumo.minimo).toBe(1);
-      expect(resumo.maximo).toBe(20);
-      expect(resumo.media).toBeCloseTo(13.825, 6);
+      expect(resumo.maximo).toBe(22);
+      expect(resumo.media).toBeCloseTo(14.02, 6); // 13,825 + 2 × (1 − (19/20)²).
     });
 
     it('teste com atributo negativo usa a regra do motor (rola 3 d20 e fica com o menor)', () => {
       const resumo = resumirFormula('VONd20kh1', ambiente)!;
       expect(contarDadosDoPool('VONd20kh1', ambiente)).toBe(3);
-      // E[menor de 3d20] = Σ ((21−k)/20)³ = 5,5125.
-      expect(resumo.media).toBeCloseTo(5.5125, 6);
+      // E[menor de 3d20] = 5,5125; crítico apenas quando todos são 20: +2/20³.
+      expect(resumo.media).toBeCloseTo(5.51275, 6);
+    });
+
+    it('margem ampliada muda a média; dano tipado conserva sua média sem bônus de teste', () => {
+      expect(resumirFormula('2d20kh1cm2', ambiente)!.media).toBeCloseTo(14.205, 6);
+      expect(resumirFormula('2d20kh1cm2 [Físico]', ambiente)!.media).toBeCloseTo(13.825, 6);
     });
 
     it('manter os 2 maiores de 3d6 (estatística de ordem)', () => {
@@ -77,7 +82,7 @@ describe('montador-leitura', () => {
       // 1d6−3 dá 0,0,0,1,2,3 dados de 6 (sem kh, trava em 0).
       expect(resumirFormula('(1d6-3)d6', ambiente)).toEqual({ minimo: 0, maximo: 18, media: 3.5 });
       const teste = resumirFormula('(1d6)d20kh1', ambiente)!;
-      expect([teste.minimo, teste.maximo]).toEqual([1, 20]);
+      expect([teste.minimo, teste.maximo]).toEqual([1, 22]);
       expect(teste.media).toBeGreaterThan(10.5);
       expect(teste.media).toBeLessThan(resumirFormula('6d20kh1', ambiente)!.media);
     });

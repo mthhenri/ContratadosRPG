@@ -704,6 +704,20 @@ export function rolarInterpretada(
   return { ...primeiro, subResultados };
 }
 
+/**
+ * A notação de teste mantém um único d20 e soma modificadores sem tipo de dano.
+ * `cm` sozinho não identifica teste: também é informativo em pools de dano/cura.
+ * Fonte: Sistema v4.1.3, “Testes” e “Crítico e Margem de Crítico” (1227–1233).
+ */
+function ehFormulaTeste(formula: FormulaInterpretadaDto): boolean {
+  const pool = formula.dados[0];
+  return formula.dados.length === 1 && pool.sinal === 1 && pool.faces === 20 &&
+    (pool.manterMaior === 1 || pool.manterMenor === 1) &&
+    pool.explosao === undefined && pool.implosao === undefined &&
+    [...formula.dados, ...formula.atributos, ...(formula.contas ?? []), ...(formula.constantesTipadas ?? [])]
+      .every((termo) => termo.tipoDano === undefined && termo.composto === undefined);
+}
+
 /** Rola uma única passada de uma fórmula já interpretada — o corpo de `rolarInterpretada` sem repetição. */
 function rolarInterpretadaUnica(
   formula: FormulaInterpretadaDto,
@@ -720,13 +734,18 @@ function rolarInterpretadaUnica(
     nivel: nivel ?? 0,
   };
 
-  const dados: DadosRoladosDto[] = formula.dados.map((termo) => rolarTermo(termo, ambiente, rolarDado, critico));
+  const teste = ehFormulaTeste(formula);
+  const dobrarResultado = critico && !teste;
+  const dados: DadosRoladosDto[] = formula.dados.map((termo) => rolarTermo(
+    teste ? { ...termo, margemCritico: termo.margemCritico ?? 1 } : termo,
+    ambiente, rolarDado, dobrarResultado,
+  ));
 
   const atributosAplicados: AtributoAplicadoDto[] = formula.atributos.map((termo) => {
     const base = ambiente[termo.atributo] ?? 0;
     const escalado = Math.floor((base * (termo.multiplicador ?? 1)) / (termo.divisor ?? 1));
     // Crítico (m3-30): dobra o atributo, **exceto** valores de Patente/Nível (PROF/NIV) — regra 1303.
-    const dobra = critico && termo.atributo !== 'proficiencia' && termo.atributo !== 'nivel' ? 2 : 1;
+    const dobra = dobrarResultado && termo.atributo !== 'proficiencia' && termo.atributo !== 'nivel' ? 2 : 1;
     return {
       rotulo: termo.rotulo,
       valor: termo.sinal * escalado * dobra,
@@ -738,7 +757,7 @@ function rolarInterpretadaUnica(
   // dobra o que vem de atributos e de números fixos; o que vem de PROF/NIV fica como está.
   const contasAplicadas: AtributoAplicadoDto[] = (formula.contas ?? []).map((termo) => {
     const valor = avaliarConta(termo.conta, ambiente);
-    const valorFinal = critico ? valor + avaliarConta(termo.conta, ambiente, true) : valor;
+    const valorFinal = dobrarResultado ? valor + avaliarConta(termo.conta, ambiente, true) : valor;
     return {
       rotulo: termo.rotulo,
       valor: termo.sinal * valorFinal,
@@ -747,8 +766,14 @@ function rolarInterpretadaUnica(
   });
   atributosAplicados.push(...contasAplicadas);
 
+  // Crítico de teste: +2 uma vez, aplicado após os demais bônus, somente pelo mantido.
+  // O comando explícito de crítico também respeita a distinção entre teste e resultado.
+  if (teste && (critico || dados.some((termo) => (termo.criticos ?? 0) > 0))) {
+    atributosAplicados.push({ rotulo: 'CRÍTICO', valor: 2 });
+  }
+
   // Crítico dobra também as constantes (fixos), tipadas e sem tag (dados já vêm dobrados de `rolarTermo`).
-  const fatorFixo = critico ? 2 : 1;
+  const fatorFixo = dobrarResultado ? 2 : 1;
   const contribuicoes: Contribuicao[] = [
     ...dados.map((termo) => ({ valor: termo.subtotal, tipoDano: termo.tipoDano, composto: termo.composto })),
     ...atributosAplicados.map((termo) => ({ valor: termo.valor, tipoDano: termo.tipoDano, composto: termo.composto })),
@@ -772,7 +797,7 @@ function rolarInterpretadaUnica(
     constante,
     ...(grupos.length > 0 ? { grupos } : {}),
     total,
-    ...(critico ? { critico: true } : {}),
+    ...(dobrarResultado ? { critico: true } : {}),
   };
 }
 
