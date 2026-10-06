@@ -22,6 +22,7 @@ import {
   type AmbienteMontador,
   avaliarExpressaoMontador,
   contarDadosDoPool,
+  escreverValorExpressao,
   type ExpressaoAvaliada,
   normalizarExpressao,
 } from './montador-leitura';
@@ -404,4 +405,5 @@ export class MontadorEditorPecas {
   }
 
   protected siglaDaFonte = siglaDaFonte;
+  protected escreverValorExpressao = escreverValorExpressao;
 }

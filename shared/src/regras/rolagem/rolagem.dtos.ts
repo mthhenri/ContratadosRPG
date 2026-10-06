@@ -31,11 +31,13 @@ export type OperadorConta = '+' | '-' | '*' | '/';
 
 /**
  * Nó da árvore de uma conta: um número inteiro, uma fonte escalar (atributo/`PROF`/`NIV`, resolvida na
- * rolagem), a negação de um nó (`-FOR` no início de um grupo) ou uma operação binária.
+ * rolagem), um **dado** `NdM` (só na quantidade de dados, `(1d6)d20`; rolado antes da conta, vale a soma), a
+ * negação de um nó (`-FOR` no início de um grupo) ou uma operação binária.
  */
 export type NoContaDto =
   | { readonly numero: number }
   | { readonly fonte: FonteEscalar }
+  | { readonly quantidade: number; readonly faces: number }
   | { readonly negar: NoContaDto }
   | { readonly operador: OperadorConta; readonly esquerda: NoContaDto; readonly direita: NoContaDto };
 
@@ -76,7 +78,8 @@ export interface TermoDadoDto {
    * `(<conta>)dM` (I-041): a quantidade de dados é o **piso** da conta no momento da rolagem, ex.:
    * `((INT+SOC)/2)d20kh1`, `((FOR+VIG)*2)d4` — `quantidade` fica em 1 e é ignorada. Em pool de teste
    * (`kh`) com resultado ≤ 0 vale a regra de atributo zerado (2+|n| dados, mantém o menor); sem `kh` a
-   * quantidade trava em 0. As formas `(ATR±n)dM`/`(ATR*Y)dM` seguem nos campos acima, sem mudança.
+   * quantidade trava em 0. As formas `(ATR±n)dM`/`(ATR*Y)dM` seguem nos campos acima, sem mudança. A conta
+   * pode ter dados (`(1d6)d20`, `(1d4+FOR)d6`): eles são rolados primeiro e entram na conta pela soma.
    */
   readonly quantidadeConta?: ContaDto;
   readonly faces: number;

@@ -117,6 +117,7 @@ const SECOES: readonly SecaoGuia[] = [
     linhas: [
       { codigo: '((INT+SOC)/2)d20kh1', texto: 'A média de Intelecto e Social (para baixo) é quantos d20 rolar no teste.' },
       { codigo: '((FOR+VIG)*2)d4', texto: 'Soma Força com Vigor, multiplica por dois e rola esse tanto de dados de quatro. Vale para qualquer dado.' },
+      { codigo: '(1d6)d20', texto: 'A conta da quantidade aceita dados: rola 1d6 e depois esse tanto de d20. Vale com atributos: (1d4+FOR)d6.' },
       { codigo: '(FOR-VIG)d20kh1', texto: 'Num teste (kh), conta de 0 ou menos vale o atributo zerado: rola 2 + |n| dados e mantém o menor. Em dano (sem kh), a quantidade para em 0.' },
     ],
   },

@@ -1,5 +1,34 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-05 — Dado na conta da quantidade de dados: `(1d6)d20` passa a rolar
+
+**O que mudou.** Pedido do autor, sem spec: `(1d6)d20` dava "Fonte desconhecida "d"" porque a conta de quantidade (I-041)
+só aceitava números e fontes. **Motor** (`shared/regras/rolagem`): a conta ganhou o nó de dado `{ quantidade, faces }`
+(`NoContaDto`); `analisarConta` lê `NdM`/`dM` só com `permitirDados` — ligado apenas na quantidade `(<conta>)dM`; no bônus
+fixo e no grupo tipado `(2d6)[F]` o comportamento não muda. Na rolagem, `rolarTermo` rola os dados da conta **antes** do
+pool, na ordem do texto, troca cada um pela soma (`listarDadosDaConta`/`substituirDadosDaConta`, novos e exportados) e
+segue a regra de hoje: piso uma vez no fim, teto de 100, `≤ 0` trava em 0 sem `kh` e vira atributo zerado com `kh`, divisor
+zero na rolagem vale 0. O crítico dobra só o pool, não os dados da conta; cada repetição `#N` rola a conta de novo. Os
+mesmos limites de um `NdM` literal valem dentro da conta (`0d6`, `1d0`, `101d6` são erro; `FORd6` dentro da conta segue
+inválido). Nenhuma fórmula válida antes mudou de resultado (snapshot do corpus verde).
+
+**Montadores Essencial/Completo/Blocos** (o Atual ficou intocado, como pede o experimento): o campo de expressão aceita
+dados no uso "Quantidade de dados" e lê a faixa (`1D6 = 1 a 6 dados`; dica do campo menciona dados); no "Bônus fixo" a
+mensagem diz que ele não aceita dados. A frase sob o visor lê `1 a 6 d20 (1D6)`. A faixa e a média do visor percorrem cada
+soma possível dos dados da conta com a sua probabilidade (`(1d6)d20` → 1 a 120, média 36,75), com teto de 2000
+combinações (acima disso o visor fica sem faixa). A Blocos continua tratando qualquer conta de quantidade como fórmula
+avançada (já era assim com `((FOR+VIG)*2)d4`); ela só ganha a faixa no visor. `ExpressaoAvaliada` trocou `valor` por
+`minimo`/`maximo`; novo `escreverValorExpressao`. O Guia de fórmula ganhou a linha `(1d6)d20`.
+
+**Verificado.** Rodado num worktree isolado só com estas mudanças (havia trabalho do `m4-18` de outra sessão quebrando o
+build da árvore principal): `shared` 1073 testes, frontend 2909 testes (212 arquivos), backend `encontro` 96 e `tsc` limpo,
+`shared` build ok, ESLint sem erros (avisos de aspas preexistentes). Novos casos em `rolagem.conta.spec.ts`,
+`rolagem.pecas.spec.ts` e `montador-leitura.spec.ts`.
+
+**Fica aberto.** O gate visual (`verify` em `1920×1080` e `360×800`) do campo de expressão não foi feito — a mudança de
+tela é só texto em elementos existentes, mas o gate não foi cumprido. O cartão de resultado não mostra o valor rolado
+no dado da conta (dá para ver pela quantidade de d20); se o autor quiser, é um campo novo em `DadosRoladosDto`.
+
 ## 2026-10-05 — `montador-janela-notebook-tela-cheia`: janela do montador cabe no Notebook e ganha Maximizar
 
 **O que mudou.** Pedido do autor (fora do guarda-chuva `montador-rolagem-experimento`, que segue em avaliação). Ao vivo em

@@ -124,6 +124,15 @@ describe('tokenizarFormula — peças', () => {
     ]);
   });
 
+  it('dado dentro da conta de quantidade vira peça de dado e volta igual', () => {
+    const tokenizada = tokenizarFormula('(1d6)d20 + (2d4+FOR)d6 [F]');
+    expect(tokenizada?.pecas.map((peca) => peca.tipo === 'DADO' && peca.quantidade)).toEqual([
+      { tipo: 'CONTA', texto: '1D6' },
+      { tipo: 'CONTA', texto: '2D4+FOR' },
+    ]);
+    expect(montarFormula(tokenizada!)).toBe('(1D6)d20 + (2D4+FOR)d6 [F]');
+  });
+
   it('conta de bônus fixo, inclusive tipada em grupo', () => {
     expect(tokenizarFormula('2d6 + (FOR+VIG)*2')?.pecas[1]).toEqual({ tipo: 'CONTA', sinal: 1, texto: '(FOR+VIG)*2' });
     expect(tokenizarFormula('(for+vig)[Q]')?.pecas).toEqual([

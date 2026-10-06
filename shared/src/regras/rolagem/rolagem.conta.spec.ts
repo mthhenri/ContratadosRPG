@@ -3,7 +3,14 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import type { FichaAtributosDto } from '../../dtos/ficha';
 import { TipoDanoEnum } from '../../enums';
-import { analisarConta, avaliarConta, contaTemFonte } from './rolagem.conta';
+import {
+  analisarConta,
+  avaliarConta,
+  contaTemDado,
+  contaTemFonte,
+  listarDadosDaConta,
+  substituirDadosDaConta,
+} from './rolagem.conta';
 import { CONTA_PROFUNDIDADE_MAXIMA, CONTA_TAMANHO_MAXIMO, QUANTIDADE_DADOS_MAXIMA } from './rolagem.dados';
 import type { FonteEscalar, FormulaInterpretadaDto, ResultadoRolagemDto } from './rolagem.dtos';
 import { interpretarFormula, rolarFormula, rolarInterpretada, validarFormula } from './rolagem';
@@ -502,5 +509,115 @@ describe('snapshot do corpus do montador — fórmulas válidas antes da I-041 p
         formula,
       ).not.toBeNull();
     }
+  });
+});
+
+describe('dado dentro da conta de quantidade `(1d6)d20`', () => {
+  /** Rolagem roteirizada: devolve os valores na ordem e registra as faces pedidas. */
+  function roteiro(valores: readonly number[]): { rolarDado: (faces: number) => number; faces: number[] } {
+    const faces: number[] = [];
+    let indice = 0;
+    return {
+      faces,
+      rolarDado: (facesPedidas) => {
+        faces.push(facesPedidas);
+        const valor = valores[indice] ?? 1;
+        indice += 1;
+        return valor;
+      },
+    };
+  }
+
+  function rolarRoteiro(formula: string, valores: readonly number[], critico = false) {
+    const { rolarDado, faces } = roteiro(valores);
+    const resultado = rolarFormula({ formula, atributos: base, proficiencia: 2, nivel: 3, critico }, rolarDado);
+    if (!resultado) {
+      throw new Error(`fórmula inválida em teste: ${formula} (${interpretarFormula(formula).erro})`);
+    }
+    return { resultado, faces };
+  }
+
+  it('(1d6)d20 é válida e rola primeiro o 1d6, depois tantos d20 quanto ele deu', () => {
+    expect(validarFormula('(1d6)d20')).toBe(true);
+    const { resultado, faces } = rolarRoteiro('(1d6)d20', [4, 10, 11, 12, 13]);
+    expect(faces).toEqual([6, 20, 20, 20, 20]);
+    expect(resultado.dados[0].valores).toEqual([10, 11, 12, 13]);
+    expect(resultado.total).toBe(46);
+  });
+
+  it('a interpretação guarda o dado na conta (quantidade só existe na rolagem)', () => {
+    const formula = interpretarFormula('(1d6)d20').formula;
+    expect(formula?.dados[0].quantidadeConta).toEqual({ raiz: { quantidade: 1, faces: 6 } });
+  });
+
+  it('aceita dM sem quantidade, caixa alta, espaços e vários dados com fontes', () => {
+    expect(rolarRoteiro('(d6)d20', [2, 5, 5]).resultado.dados[0].valores).toHaveLength(2);
+    expect(rolarRoteiro('(1D6)D20', [3]).resultado.dados[0].valores).toHaveLength(3);
+    // 2d4 = 3+1 = 4; + FOR (3) = 7 dados de 6.
+    const { resultado, faces } = rolarRoteiro('( 2d4 + FOR ) d6', [3, 1]);
+    expect(faces.slice(0, 2)).toEqual([4, 4]);
+    expect(resultado.dados[0].valores).toHaveLength(7);
+    // Ordem do texto: o 1d4 antes do 1d8.
+    expect(rolarRoteiro('(1d4*1d8)d6', [2, 3]).faces.slice(0, 2)).toEqual([4, 8]);
+    expect(rolarRoteiro('(1d4*1d8)d6', [2, 3]).resultado.dados[0].valores).toHaveLength(6);
+  });
+
+  it('arredonda para baixo uma vez, no fim: (1d6/2)d20 com 5 → 2 dados', () => {
+    expect(rolarRoteiro('(1d6/2)d20', [5]).resultado.dados[0].valores).toHaveLength(2);
+  });
+
+  it('resultado ≤ 0 sem kh trava em 0 dados; com kh vale a regra de atributo zerado', () => {
+    expect(rolarRoteiro('(1d6-6)d20', [2]).resultado.dados[0].valores).toHaveLength(0);
+    const desvantagem = rolarRoteiro('(1d6-6)d20kh1', [2]).resultado.dados[0]; // −4 → 6 dados, mantém o menor
+    expect(desvantagem.desvantagem).toBe(true);
+    expect(desvantagem.valores).toHaveLength(6);
+  });
+
+  it('divisor que vale 0 na rolagem não lança: a conta vale 0', () => {
+    expect(validarFormula('(6/(1d6-1))d20')).toBe(true);
+    expect(rolarRoteiro('(6/(1d6-1))d20', [1]).resultado.dados[0].valores).toHaveLength(0);
+  });
+
+  it('crítico dobra só o pool, não os dados da conta', () => {
+    const { resultado, faces } = rolarRoteiro('(1d6)d20', [3], true);
+    expect(faces.filter((face) => face === 6)).toHaveLength(1);
+    expect(resultado.dados[0].valores).toHaveLength(6);
+  });
+
+  it('teto de 100 dados no pool e no dado da conta', () => {
+    expect(rolar('(1d200)d4').dados[0].valores).toHaveLength(QUANTIDADE_DADOS_MAXIMA);
+    expect(validarFormula('(101d6)d4')).toBe(false);
+  });
+
+  it('combina com operadores, sinal, tag de dano e #N; cada repetição rola a conta de novo', () => {
+    expect(rolarRoteiro('(1d6)d20kh1cm1 + PROF', [3, 20, 2, 5]).resultado.total).toBe(22);
+    expect(rolarRoteiro('10 - (1d4)d6', [2, 6, 6]).resultado.total).toBe(-2);
+    expect(interpretarFormula('(1d6)d8 [F-Q]').formula?.dados[0].composto).toEqual([
+      TipoDanoEnum.FISICO,
+      TipoDanoEnum.QUIMICO,
+    ]);
+    const repetida = rolarRoteiro('((1d4)d6)#2', [1, 6, 2, 6, 6]).resultado;
+    expect(repetida.subResultados?.map((sub) => sub.dados[0].valores.length)).toEqual([1, 2]);
+  });
+
+  it('dado continua fora do bônus fixo e erros de dado na conta são claros', () => {
+    expect(validarFormula('2d6 + (1d6)*2')).toBe(false);
+    expect(analisarConta('1d6+FOR', resolverDeTeste).erro).toMatch(/quantidade de dados/);
+    expect(analisarConta('1d6+FOR', resolverDeTeste, { permitirDados: true }).conta).toBeDefined();
+    expect(validarFormula('(0d6)d20')).toBe(false);
+    expect(validarFormula('(1d0)d20')).toBe(false);
+    expect(validarFormula('(FORd6)d20')).toBe(false);
+  });
+
+  it('listar e substituir os dados da conta seguem a ordem do texto', () => {
+    const conta = analisarConta('(1d4+2d6)*1d8', resolverDeTeste, { permitirDados: true }).conta!;
+    expect(contaTemDado(conta.raiz)).toBe(true);
+    expect(contaTemFonte(conta.raiz)).toBe(false);
+    expect(listarDadosDaConta(conta)).toEqual([
+      { quantidade: 1, faces: 4 },
+      { quantidade: 2, faces: 6 },
+      { quantidade: 1, faces: 8 },
+    ]);
+    expect(avaliarConta(substituirDadosDaConta(conta, [3, 7, 2]), {})).toBe(20);
   });
 });

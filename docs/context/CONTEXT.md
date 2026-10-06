@@ -37,7 +37,8 @@
 > tasks do experimento do montador (`montador-exp-01`…`04`) concluídas, guarda-chuva em `active/` à espera da avaliação
 > do autor (ver "Próxima Task"). Antes: `rolagem-expressao-quantidade-dados` concluída
 > (spec em `done/`; ver `HISTORY.md`): a quantidade de dados e o bônus fixo de uma fórmula aceitam uma **conta**
-> `+ − * /` com parênteses (`((FOR+VIG)*2)d4`, `2d6+(FOR+VIG)*2`), piso uma vez no fim, para todos os usuários.
+> `+ − * /` com parênteses (`((FOR+VIG)*2)d4`, `2d6+(FOR+VIG)*2`), piso uma vez no fim, para todos os usuários; desde
+> 2026-10-05 a conta da **quantidade** também aceita dados (`(1d6)d20`, `(1d4+FOR)d6`), rolados antes do pool.
 > Antes: `P-075`, `P-078`, `P-087` e `P-088`
 > corrigidos (ver `HISTORY.md`): jogador sem ficha vê o painel lateral no mobile; `tsc` completo do
 > backend limpo e dentro do `lint`; upload de avatar sem arquivo responde 400. Antes:

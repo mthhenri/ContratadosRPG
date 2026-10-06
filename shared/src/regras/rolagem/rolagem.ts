@@ -1,5 +1,12 @@
 import { QUANTIDADE_DADOS_MAXIMA, REPETICOES_MAXIMA } from './rolagem.dados';
-import { analisarConta, avaliarConta, contaTemFonte } from './rolagem.conta';
+import {
+  analisarConta,
+  avaliarConta,
+  contaTemDado,
+  contaTemFonte,
+  listarDadosDaConta,
+  substituirDadosDaConta,
+} from './rolagem.conta';
 import {
   DestinoDano,
   dividirTermosNivelSuperior,
@@ -51,7 +58,8 @@ import type { FichaAtributosDto, FichaHabilidadeDto, FichaRolagemDto, FichaRolag
  *
  * **Parênteses só existem em formas sancionadas**: `(ATR±n)dM` e `(ATR*Y)dM` (legadas) e, desde a I-041,
  * `(<conta>)dM` para a quantidade de dados e `(<conta>)`/`<conta>` para o **bônus fixo** — uma **conta**
- * `+ − × ÷` com parênteses sobre números e fontes escalares (`rolagem.conta.ts`; piso uma vez, no fim);
+ * `+ − × ÷` com parênteses sobre números e fontes escalares (`rolagem.conta.ts`; piso uma vez, no fim), e na
+ * quantidade de dados também sobre dados `NdM` (`(1d6)d20`: rola 1d6 e rola tantos d20);
  * `(<dados>)[Tipo]` para tipar pools de dado, e `(<fórmula>)#N` para repetir a fórmula **inteira** N vezes
  * independentes. Qualquer outro uso de parênteses é erro de parse.
  *
@@ -188,7 +196,7 @@ function interpretarSegmento(
     const fechamentoConta = encontrarFechamento(corpo);
     const dadoConta = fechamentoConta > 0 ? corpo.slice(fechamentoConta + 1).match(/^[dD](\d+)(.*)$/) : null;
     if (dadoConta) {
-      const analise = analisarConta(corpo.slice(1, fechamentoConta), resolverFonte);
+      const analise = analisarConta(corpo.slice(1, fechamentoConta), resolverFonte, { permitirDados: true });
       if (!analise.conta) {
         return { constante, erro: analise.erro };
       }
@@ -200,7 +208,8 @@ function interpretarSegmento(
       if (erro) {
         return { constante, erro };
       }
-      if (contaTemFonte(analise.conta.raiz)) {
+      if (contaTemFonte(analise.conta.raiz) || contaTemDado(analise.conta.raiz)) {
+        // Fonte ou dado na conta (`(FOR+VIG)d6`, `(1d6)d20`): a quantidade só existe na hora de rolar.
         acc.dados.push({ sinal, quantidade: 1, quantidadeConta: analise.conta, faces, ...ops, ...destino });
       } else {
         // Conta só de números (`(2*3)d6`): a quantidade já é conhecida — mesmas regras do `NdM` literal.
@@ -560,8 +569,12 @@ function rolarTermo(
   let quantidade: number;
   if (termo.quantidadeConta) {
     // `(<conta>)dM` (I-041): quantidade = piso da conta. Em pool de teste (`kh`) com resultado ≤ 0 vale a
-    // regra de atributo zerado (D1: 2+|n| dados, mantém o menor); sem `kh` a quantidade trava em 0.
-    const valorConta = avaliarConta(termo.quantidadeConta, ambiente);
+    // regra de atributo zerado (D1: 2+|n| dados, mantém o menor); sem `kh` a quantidade trava em 0. Dados
+    // da conta (`(1d6)d20`) são rolados antes do pool, na ordem do texto, e entram pela soma.
+    const somasDados = listarDadosDaConta(termo.quantidadeConta).map(({ quantidade: dadosConta, faces }) =>
+      Array.from({ length: dadosConta }, () => rolarDado(faces)).reduce((soma, valor) => soma + valor, 0),
+    );
+    const valorConta = avaliarConta(substituirDadosDaConta(termo.quantidadeConta, somasDados), ambiente);
     if (manterMaior !== undefined && valorConta <= 0) {
       desvantagem = true;
       quantidade = Math.min(QUANTIDADE_DADOS_MAXIMA, 2 - valorConta);

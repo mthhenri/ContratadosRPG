@@ -611,7 +611,11 @@
                 rotulo="Conta"
                 tamanho="compacto"
                 class="editor__campo editor__campo--largo"
-                dica="+ − * / e parênteses; arredonda para baixo no fim"
+                [dica]="
+                    expressaoUso() === 'QUANTIDADE'
+                        ? '+ − * /, parênteses e dados (1d6); arredonda para baixo no fim'
+                        : '+ − * / e parênteses; arredonda para baixo no fim'
+                "
             >
                 <input
                     class="campo__controle"
@@ -640,11 +644,7 @@
             @if (avaliada.valida) {
                 <p class="editor__leitura-expressao" aria-live="polite">
                     {{ avaliada.texto }} =
-                    <strong>{{
-                        expressaoUso() === "QUANTIDADE"
-                            ? avaliada.valor + (avaliada.valor === 1 ? " dado" : " dados")
-                            : (avaliada.valor >= 0 ? "+" : "") + avaliada.valor
-                    }}</strong>
+                    <strong>{{ escreverValorExpressao(avaliada, expressaoUso()) }}</strong>
                 </p>
             } @else {
                 <p

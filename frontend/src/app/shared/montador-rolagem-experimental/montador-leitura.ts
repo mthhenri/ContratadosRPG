@@ -1,11 +1,15 @@
 import type { FichaAtributosDto } from '@contratados-rpg/shared/dtos/ficha';
 import {
+  type FormulaInterpretadaDto,
   type FormulaTokenizadaDto,
   interpretarFormula,
+  listarDadosDaConta,
   type PecaDadoDto,
   type PecaFormulaDto,
   rolarFormula,
+  rolarInterpretada,
   type RolarDado,
+  substituirDadosDaConta,
 } from '@contratados-rpg/shared/regras/rolagem';
 
 import { nomeDaFonte, TIPOS_DANO_MONTADOR } from './montador-pecas';
@@ -14,7 +18,8 @@ import { nomeDaFonte, TIPOS_DANO_MONTADOR } from './montador-pecas';
  * Leitura das versões novas do montador (`montador-exp-03`/`04`): a frase em português sob o visor, a faixa e a média
  * de uma rolagem e o valor ao vivo do campo de expressão. **Tudo que depende de regra vem do motor**: a faixa é a
  * própria rolagem do motor com o dado travado no mínimo e no máximo, e a quantidade de dados de uma conta é a que o
- * motor rolaria (inclusive a regra de atributo zerado). Aqui só há apresentação e probabilidade de dados.
+ * motor rolaria (inclusive a regra de atributo zerado). Aqui só há apresentação e probabilidade de dados — inclusive
+ * a dos dados dentro da conta de quantidade (`(1d6)d20`), percorrida soma a soma.
  */
 
 /** Valores da ficha que alimentam as fontes da fórmula. */
@@ -38,6 +43,70 @@ function rolarCom(texto: string, ambiente: AmbienteMontador, rolarDado: RolarDad
     { formula: texto, atributos: ambiente.atributos, proficiencia: ambiente.proficiencia, nivel: ambiente.nivel },
     rolarDado,
   );
+}
+
+function rolarFormulaCom(formula: FormulaInterpretadaDto, ambiente: AmbienteMontador, rolarDado: RolarDado) {
+  return rolarInterpretada(formula, ambiente.atributos, ambiente.proficiencia, ambiente.nivel, rolarDado);
+}
+
+/** Teto de combinações de somas dos dados das contas de quantidade que a faixa, a média e a leitura percorrem. */
+const COMBINACOES_DADOS_CONTA_MAXIMO = 2000;
+
+/** Distribuição exata da soma de `quantidade` dados de `faces` faces: soma → probabilidade. */
+function distribuicaoSoma(quantidade: number, faces: number): Map<number, number> {
+  let atual = new Map<number, number>([[0, 1]]);
+  for (let dado = 0; dado < quantidade; dado += 1) {
+    const proxima = new Map<number, number>();
+    for (const [soma, probabilidade] of atual) {
+      for (let valor = 1; valor <= faces; valor += 1) {
+        proxima.set(soma + valor, (proxima.get(soma + valor) ?? 0) + probabilidade / faces);
+      }
+    }
+    atual = proxima;
+  }
+  return atual;
+}
+
+/** Uma das formas que a fórmula toma depois de rolados os dados das contas de quantidade. */
+interface FormulaFixada {
+  readonly formula: FormulaInterpretadaDto;
+  readonly probabilidade: number;
+}
+
+/**
+ * A fórmula com os dados das contas de quantidade (`(1d6)d20`) trocados por cada combinação possível de somas, com a
+ * probabilidade de cada uma — a mesma troca que o motor faz na rolagem (`substituirDadosDaConta`). Sem esses dados, a
+ * própria fórmula com probabilidade 1. `null` quando as combinações passam do teto.
+ */
+function fixarDadosDaQuantidade(formula: FormulaInterpretadaDto): FormulaFixada[] | null {
+  const dadosPorTermo = formula.dados.map((termo) =>
+    termo.quantidadeConta ? listarDadosDaConta(termo.quantidadeConta) : [],
+  );
+  const todos = dadosPorTermo.flat();
+  const tamanho = todos.reduce((produto, dado) => produto * (dado.quantidade * (dado.faces - 1) + 1), 1);
+  if (tamanho > COMBINACOES_DADOS_CONTA_MAXIMO) return null;
+
+  let combinacoes: { somas: number[]; probabilidade: number }[] = [{ somas: [], probabilidade: 1 }];
+  for (const dado of todos) {
+    const distribuicao = [...distribuicaoSoma(dado.quantidade, dado.faces)];
+    combinacoes = combinacoes.flatMap((combinacao) =>
+      distribuicao.map(([soma, probabilidade]) => ({
+        somas: [...combinacao.somas, soma],
+        probabilidade: combinacao.probabilidade * probabilidade,
+      })),
+    );
+  }
+  return combinacoes.map(({ somas, probabilidade }) => {
+    let usadas = 0;
+    const dados = formula.dados.map((termo, indice) => {
+      const quantos = dadosPorTermo[indice].length;
+      if (!termo.quantidadeConta || quantos === 0) return termo;
+      const quantidadeConta = substituirDadosDaConta(termo.quantidadeConta, somas.slice(usadas, usadas + quantos));
+      usadas += quantos;
+      return { ...termo, quantidadeConta };
+    });
+    return { formula: { ...formula, dados }, probabilidade };
+  });
 }
 
 /**
@@ -89,25 +158,15 @@ function esperancaPool(n: number, faces: number, mantidos: number, maiores: bool
   return soma;
 }
 
-/**
- * Faixa e média de uma rolagem da fórmula (texto **já com atalhos expandidos**), ou `null` se o motor a recusa ou se
- * ela explode/implode (sem teto ou piso definidos). Mínimo e máximo são rolagens do próprio motor com o dado travado
- * no extremo certo de cada termo; a média troca cada pool pela sua esperança (com manter maior/menor).
- */
-export function resumirFormula(texto: string, ambiente: AmbienteMontador): ResumoFormulaMontador | null {
-  const interpretacao = interpretarFormula(texto);
-  const formula = interpretacao.formula;
-  if (!interpretacao.valida || !formula) return null;
-  if (formula.dados.some((termo) => termo.explosao !== undefined || termo.implosao !== undefined)) return null;
-  const base = rolarCom(texto, ambiente, dadoMinimo);
-  if (!base) return null;
+/** Faixa e média de uma fórmula sem dados nas contas de quantidade (já fixados por `fixarDadosDaQuantidade`). */
+function resumirFormulaFixada(formula: FormulaInterpretadaDto, ambiente: AmbienteMontador): ResumoFormulaMontador {
+  const base = rolarFormulaCom(formula, ambiente, dadoMinimo);
   const dadosPorTermo = base.dados.map((rolado, indice) => ({
     quantidade: rolado.valores.length,
     sinal: formula.dados[indice].sinal,
   }));
-  const minimo = rolarCom(texto, ambiente, dadoTravado(dadosPorTermo, 'MINIMO'));
-  const maximo = rolarCom(texto, ambiente, dadoTravado(dadosPorTermo, 'MAXIMO'));
-  if (!minimo || !maximo) return null;
+  const minimo = rolarFormulaCom(formula, ambiente, dadoTravado(dadosPorTermo, 'MINIMO'));
+  const maximo = rolarFormulaCom(formula, ambiente, dadoTravado(dadosPorTermo, 'MAXIMO'));
 
   let media = base.total;
   formula.dados.forEach((termo, indice) => {
@@ -121,6 +180,31 @@ export function resumirFormula(texto: string, ambiente: AmbienteMontador): Resum
   return { minimo: minimo.total, maximo: maximo.total, media };
 }
 
+/**
+ * Faixa e média de uma rolagem da fórmula (texto **já com atalhos expandidos**), ou `null` se o motor a recusa, se
+ * ela explode/implode (sem teto ou piso definidos) ou se os dados das contas de quantidade passam do teto de
+ * combinações. Mínimo e máximo são rolagens do próprio motor com o dado travado no extremo certo de cada termo; a
+ * média troca cada pool pela sua esperança (com manter maior/menor). Com dados na quantidade (`(1d6)d20`), cada soma
+ * possível desses dados entra com a sua probabilidade.
+ */
+export function resumirFormula(texto: string, ambiente: AmbienteMontador): ResumoFormulaMontador | null {
+  const interpretacao = interpretarFormula(texto);
+  const formula = interpretacao.formula;
+  if (!interpretacao.valida || !formula) return null;
+  if (formula.dados.some((termo) => termo.explosao !== undefined || termo.implosao !== undefined)) return null;
+  const fixadas = fixarDadosDaQuantidade(formula);
+  if (!fixadas) return null;
+  const parciais = fixadas.map(({ formula: fixada, probabilidade }) => ({
+    resumo: resumirFormulaFixada(fixada, ambiente),
+    probabilidade,
+  }));
+  return {
+    minimo: Math.min(...parciais.map(({ resumo }) => resumo.minimo)),
+    maximo: Math.max(...parciais.map(({ resumo }) => resumo.maximo)),
+    media: parciais.reduce((soma, { resumo, probabilidade }) => soma + probabilidade * resumo.media, 0),
+  };
+}
+
 /** Quantos dados o primeiro pool da fórmula rola com estes valores (0 se o motor a recusa). */
 export function contarDadosDoPool(texto: string, ambiente: AmbienteMontador): number {
   return rolarCom(texto, ambiente, dadoMinimo)?.dados[0]?.valores.length ?? 0;
@@ -129,9 +213,12 @@ export function contarDadosDoPool(texto: string, ambiente: AmbienteMontador): nu
 /** Uso do campo de expressão: quantidade de dados de um dado, ou bônus fixo. */
 export type UsoExpressaoMontador = { readonly tipo: 'QUANTIDADE'; readonly faces: number } | { readonly tipo: 'BONUS' };
 
-/** Leitura ao vivo do campo de expressão: o valor que o motor daria agora, ou o motivo de não aceitar. */
+/**
+ * Leitura ao vivo do campo de expressão: o valor que o motor daria agora — uma faixa (`minimo` a `maximo`) quando a
+ * quantidade tem dados (`1d6` = 1 a 6 dados); sem dados, `minimo` = `maximo` — ou o motivo de não aceitar.
+ */
 export type ExpressaoAvaliada =
-  | { readonly valida: true; readonly valor: number; readonly texto: string }
+  | { readonly valida: true; readonly minimo: number; readonly maximo: number; readonly texto: string }
   | { readonly valida: false; readonly erro: string };
 
 /** Texto da expressão como entra na fórmula: sem espaços, em maiúsculas. */
@@ -141,7 +228,8 @@ export function normalizarExpressao(expressao: string): string {
 
 /**
  * Valor da expressão (`(FOR+VIG)*2`) com os valores da ficha — o que o motor faria com ela como quantidade de dados
- * (`(<conta>)dN`) ou como bônus fixo. Só números, atributos, `PROF` e `NIV` com `+ − * /` e parênteses.
+ * (`(<conta>)dN`) ou como bônus fixo: números, atributos, `PROF` e `NIV` com `+ − * /` e parênteses. Na quantidade
+ * a conta também aceita dados (`1d6`, `1d4+FOR`): a leitura é a faixa de dados que ela pode dar.
  */
 export function avaliarExpressaoMontador(
   expressao: string,
@@ -150,14 +238,32 @@ export function avaliarExpressaoMontador(
 ): ExpressaoAvaliada {
   const texto = normalizarExpressao(expressao);
   if (!texto) return { valida: false, erro: 'Escreva uma conta, ex.: (FOR+VIG)*2.' };
-  if (/D\d/.test(texto)) return { valida: false, erro: 'A conta não aceita dados — só números, atributos, PROF e NIV.' };
+  if (uso.tipo === 'BONUS' && /D\d/.test(texto)) {
+    return { valida: false, erro: 'O bônus fixo não aceita dados — só números, atributos, PROF e NIV.' };
+  }
   const formula = uso.tipo === 'QUANTIDADE' ? `(${texto})d${uso.faces}` : `0+(${texto})`;
   const interpretacao = interpretarFormula(formula);
-  if (!interpretacao.valida) return { valida: false, erro: interpretacao.erro ?? 'Conta inválida.' };
-  const resultado = rolarCom(formula, ambiente, dadoMinimo);
-  if (!resultado) return { valida: false, erro: 'Conta inválida.' };
-  const valor = uso.tipo === 'QUANTIDADE' ? resultado.dados[0].valores.length : resultado.total;
-  return { valida: true, valor, texto };
+  if (!interpretacao.valida || !interpretacao.formula) {
+    return { valida: false, erro: interpretacao.erro ?? 'Conta inválida.' };
+  }
+  if (uso.tipo === 'BONUS') {
+    const valor = rolarFormulaCom(interpretacao.formula, ambiente, dadoMinimo).total;
+    return { valida: true, minimo: valor, maximo: valor, texto };
+  }
+  const fixadas = fixarDadosDaQuantidade(interpretacao.formula);
+  if (!fixadas) return { valida: false, erro: 'Dados demais na conta para ler a quantidade.' };
+  const quantidades = fixadas.map(
+    ({ formula: fixada }) => rolarFormulaCom(fixada, ambiente, dadoMinimo).dados[0].valores.length,
+  );
+  return { valida: true, minimo: Math.min(...quantidades), maximo: Math.max(...quantidades), texto };
+}
+
+/** Valor lido do campo de expressão, para a tela: `14 dados`, `1 a 6 dados`, `+5`. */
+export function escreverValorExpressao(avaliada: Extract<ExpressaoAvaliada, { valida: true }>, uso: UsoExpressaoMontador['tipo']): string {
+  if (uso === 'BONUS') return `${avaliada.minimo >= 0 ? '+' : ''}${avaliada.minimo}`;
+  const { minimo, maximo } = avaliada;
+  if (minimo !== maximo) return `${minimo} a ${maximo} dados`;
+  return `${minimo} ${minimo === 1 ? 'dado' : 'dados'}`;
 }
 
 // ── Frase em português ───────────────────────────────────────────────────────
@@ -191,9 +297,15 @@ function lerDado(peca: PecaDadoDto, ambiente?: AmbienteMontador): string {
     const avaliada = ambiente
       ? avaliarExpressaoMontador(peca.quantidade.texto, { tipo: 'QUANTIDADE', faces: peca.faces }, ambiente)
       : null;
+    const quantidade =
+      avaliada?.valida !== true
+        ? null
+        : avaliada.minimo === avaliada.maximo
+          ? `${avaliada.minimo}`
+          : `${avaliada.minimo} a ${avaliada.maximo}`;
     base =
-      avaliada?.valida === true
-        ? `${avaliada.valor} d${peca.faces} (${peca.quantidade.texto})`
+      quantidade !== null
+        ? `${quantidade} d${peca.faces} (${peca.quantidade.texto})`
         : `d${peca.faces} × (${peca.quantidade.texto})`;
   }
   const opcoes: string[] = [];
@@ -221,7 +333,7 @@ function lerPeca(peca: PecaFormulaDto, ambiente?: AmbienteMontador, atalhos?: { 
       return `${peca.valor}${sufixoTipo(peca)}`;
     case 'CONTA': {
       const avaliada = ambiente ? avaliarExpressaoMontador(peca.texto, { tipo: 'BONUS' }, ambiente) : null;
-      return `${peca.texto}${avaliada?.valida === true ? ` (${avaliada.valor})` : ''}${sufixoTipo(peca)}`;
+      return `${peca.texto}${avaliada?.valida === true ? ` (${avaliada.minimo})` : ''}${sufixoTipo(peca)}`;
     }
     case 'ATALHO': {
       const expansao = peca.atalho === 'CORPO' ? atalhos?.corpo : atalhos?.furtivo;
