@@ -1,138 +1,85 @@
 # pn-revisao-pagina-patchnotes.spec.md
 
-> Guarda-chuva da revisão da página pública `/patchnotes` (continuação de
-> `patchnotes-versao-sistema.spec.md`; `pn-06` concluída). Pedido do autor em 2026-10-05: a página
-> está "muito central" e sobra espaço lateral vazio; distribuir melhor a informação e ter
-> **capítulos dinâmicos** dentro da nota. **Dividir em tasks antes de implementar**: `pn-07`…`pn-09`
-> abaixo, cada uma vira um arquivo próprio em `backlog/` ao ser aberta.
+> Guarda-chuva da revisão da página pública `/patchnotes`. Continua
+> `patchnotes-versao-sistema.spec.md`; a `pn-06` está concluída.
+>
+> - **Pedido do autor (2026-10-05):** a página está "muito central" e sobra espaço lateral vazio;
+>   ele quer distribuir melhor a informação e ter capítulos dinâmicos dentro da nota.
+> - **Escopo fechado (2026-10-06):** depois de comparar as features ao vivo numa bancada
+>   interativa com as notas reais. O protótipo aprovado é o conjunto **Definido** da bancada
+>   (artifact privado do autor: <https://claude.ai/artifact/1ZSaLeRyHe3Hq41WRr39rr>).
+> - **Divisão:** cinco tasks, `pn-07` a `pn-11`, cada uma num arquivo próprio em `backlog/`.
 
 ## Diagnóstico (estado atual, `1920×1080`)
 
-- `.patchnotes` tem `max-width: 1120px` centralizado: em FullHD sobram cerca de **400px vazios de
-  cada lado**, e o cabeçalho, a lista de versões e a nota se espremem no meio.
-- A lista de versões (coluna de ~220px) mostra só número e data, não o título da versão. Ela rola
-  junto com a página e some logo depois da primeira dobra.
-- A nota é um texto longo (a `1.4.0` tem 2 grupos e 10 blocos `##`) sem nenhum mapa. Para chegar a
-  "Para o mestre" é preciso rolar tudo, e não há link direto para um bloco.
-- A coluna da nota ocupa ~810px, mas o texto do Markdown já para em ~550px (medida de leitura). A
-  sobra está **dentro** do cartão também.
+- **Página espremida no centro.** `.patchnotes` tem `max-width: 1120px` centralizado, o que deixa
+  cerca de 400px vazios de cada lado.
+- **Lista de versões pobre.** A coluna de ~220px mostra só número e data, sem título, e não há
+  marca do que é novo.
+- **Nota sem mapa.** É um texto longo (a `1.4.0` tem 2 grupos e 10 blocos `##`) sem sumário e sem
+  link direto para um trecho.
+- **Resumo no lugar errado.** O resumo da versão fica no fim, onde quem lê por cima não chega.
 
-## Objetivo
+## Escopo decidido
 
-Ocupar a largura disponível **distribuindo informação em trilhos laterais**, sem esticar o texto. A
-medida de leitura do Markdown (~65–75ch) continua sendo a regra. Cada nota ganha um sumário de
-capítulos gerado do próprio Markdown, sem mudar o formato publicado.
+| Feature | Task |
+|---|---|
+| Capítulos derivados do Markdown, âncoras estáveis e "copiar link" por capítulo | `pn-07` |
+| Layout amplo em trilhos (três zonas), cabeçalho compacto e botão do ADMIN preservado | `pn-08` |
+| Sumário "Nesta versão" e destaque do capítulo visível | `pn-09` |
+| Lista de versões com título, agrupada por linha, e "Novo desde a última visita" | `pn-10` |
+| Resumo em destaque no topo, anterior e próxima no rodapé, e fechamento | `pn-11` |
 
-## Decisões de desenho
+Ordem: `pn-07` e `pn-08` podem correr em paralelo. `pn-09` precisa das duas, `pn-10` precisa da
+`pn-08`, e a `pn-11` é a última.
 
-1. **Três zonas em telas largas**:
-   - à esquerda, um trilho de versões fixo (`sticky`) com número, data **e título**;
-   - no centro, a nota com medida de leitura;
-   - à direita, um trilho "Nesta versão" fixo (`sticky`) com os capítulos.
+## Decisões de desenho (valem para todas as tasks)
 
-   O contêiner sai do `max-width: 1120px` para uma largura maior (alvo ~1600px, a confirmar na
-   verificação). Nenhum parágrafo fica mais largo que hoje.
-2. **Capítulos são derivados, não autorados.** Eles saem da estrutura que `estruturarPatchnote` já
-   produz: os grupos `# PARA OS PLAYERS` / `# PARA O MESTRE` são capítulos e os blocos `## <emoji> …`
-   são subcapítulos. O resumo final `# RESUMO…` vira o último capítulo. Os blocos de balanço
-   Novidades/Melhorias/Correções também entram. Nenhuma mudança em `docs/patchnotes/*.md`, no R2,
-   no backend nem na skill `publicar-versao`.
-3. **Âncoras estáveis e compartilháveis**: cada capítulo tem um `id` derivado do título (slug sem
-   emoji/acento, com desambiguação de repetidos). `/patchnotes/1.4.0#biblioteca-de-documentos`
-   abre já posicionado. O sumário destaca o capítulo visível (*scroll-spy*).
-4. **Breakpoints**:
-   - `1920×1080`: três zonas.
-   - `1366×768` e `960×1080`: duas zonas, com as versões no trilho esquerdo e o sumário recolhido
-     no topo da nota.
-   - `360×800`: versões em faixa horizontal (como hoje) e sumário como seção recolhível "Nesta
-     versão" acima da nota.
+1. **Três zonas a partir de ~1240px**: à esquerda as versões, no centro a nota e à direita
+   "Nesta versão". **`1366×768` também tem três zonas**; a versão anterior desta spec previa duas,
+   e a bancada mostrou que cabem.
+   - Entre ~720px e 1239px: duas zonas, e o sumário vira uma seção recolhível no topo da nota.
+   - Abaixo de 720px: uma coluna, com as versões em faixa horizontal.
+2. **Largura vem dos trilhos, nunca do parágrafo.** O Markdown vai no máximo a `15px`/`70ch` em
+   três zonas.
+3. **Capítulos são derivados, não autorados.** Nada muda em `docs/patchnotes/*.md`, no R2, na API
+   nem na skill `publicar-versao`.
+4. **Só tokens e primitivos de `shared/ui/`.** Duas lacunas já identificadas, ambas decisão do
+   autor ao abrir a task:
+   - não existe um primitivo de sumário (TOC), em `pn-09`;
+   - o `app-chip` não tem severidade positiva para o "Novo", em `pn-10`.
+5. **Análogos aprovados:**
+   - trilho fixo: `.criar__resumo` (`criar.page.scss`);
+   - leitura longa: a Biblioteca de documentos;
+   - item ativo: o `.patchnotes__item--ativo` atual;
+   - composição: o conjunto Definido da bancada.
 
-   Os pontos exatos de quebra são decididos no corte visual de `pn-08`.
-5. **Cabeçalho mais compacto**: eyebrow + título + apresentação deixam de ocupar uma faixa própria
-   acima de tudo. Eles podem morar no topo do trilho esquerdo ou numa linha mais baixa. O botão do
-   ADMIN (`pn-06`) continua no canto superior direito da página.
-6. **Análogos aprovados** (registrar o escolhido em cada task, via `design-fidelity`):
-   - trilho fixo lateral: `.criar__resumo` da criação de ficha
-     (`frontend/src/app/modules/ficha/paginas/criar/criar.page.scss`);
-   - leitura longa: a Biblioteca de documentos (`modules/documento/paginas/biblioteca*`);
-   - item de lista ativo: o próprio `.patchnotes__item--ativo` atual.
+## Critérios de Aceite (do guarda-chuva)
 
-   Só tokens e primitivos de `shared/ui/`. Se faltar um primitivo (por exemplo, um sumário/TOC
-   reutilizável), **parar e perguntar ao autor** antes de criar receita local (regra da biblioteca
-   de componentes do `CLAUDE.md`).
-
-## Tasks
-
-### pn-07 — Capítulos derivados e âncoras
-
-1. Função pura em `frontend/src/app/modules/patchnotes/patchnote-formato.ts` que devolve a árvore
-   de capítulos (`titulo`, `id`, `filhos`) a partir da estrutura de `estruturarPatchnote`. Inclui
-   o slug sem emoji e acento e a desambiguação de títulos repetidos.
-2. `id` nos títulos de grupo e bloco renderizados. Ao abrir uma URL com fragmento, a página rola até
-   o capítulo depois que a nota carrega, inclusive na troca de versão.
-3. Testes: slug com emoji/acento/pontuação, títulos repetidos, nota sem grupos (só balanço),
-   introdução sem título, fragmento inexistente (ignorado sem erro).
-
-### pn-08 — Layout amplo em trilhos (desktop e intermediários)
-
-1. Grid de três zonas em `1920×1080`, com trilhos `sticky` sob a topbar e rolagem interna quando o
-   trilho passa da altura (atenção ao `1366×768`; precedente no commit `69725c87`, lista que rola por dentro no Notebook).
-2. Trilho de versões com título da versão (texto truncado com `appTooltip` no completo) e o selo
-   "Atual".
-3. Trilho "Nesta versão" com os capítulos de `pn-07` e *scroll-spy* via `IntersectionObserver`
-   (destacar o capítulo ativo e manter `aria-current`). Clique navega pela âncora, com rolagem suave
-   que respeita `prefers-reduced-motion`.
-4. Cabeçalho compacto (decisão 5); o botão do ADMIN preservado.
-
-### pn-09 — Telas estreitas e fechamento
-
-1. `960×1080`, `1366×768` e `360×800`: sumário recolhível "Nesta versão" acima da nota. Versões
-   continuam acessíveis (faixa horizontal no mobile). Alvos de toque de 44px.
-2. Estados preservados em todos os viewports: carregando, índice vazio, 404 e 503 (documento de
-   contenção, que continua centralizado) e visitante vs. ADMIN.
-3. `docs/design/DESIGN.md`: registrar o padrão de trilho de capítulos (se virar primitivo, o
-   registro vai no primitivo).
-
-## Critérios de Aceite
-
-1. Testes unitários de `pn-07` (função pura) e da página: sumário renderizado a partir da nota,
-   fragmento posiciona, troca de versão refaz o sumário.
-2. Suítes e lint de `frontend` verdes; `shared`/`backend` intocados.
-3. Gate visual (`verify` + `design-fidelity`) em `1920×1080`, `1366×768`, `960×1080` e `360×800`,
-   com rolagem real da nota (*scroll-spy* trocando de capítulo), link com fragmento, troca de versão
-   e os estados de erro. Medir a largura útil antes/depois e confirmar que nenhum parágrafo passou
-   da medida de leitura atual.
-4. Nenhum overflow horizontal; foco visível no sumário e na lista de versões; contraste conforme os
-   tokens.
+1. As cinco tasks estão em `done/`, cada uma com o seu próprio gate cumprido.
+2. O gate visual final da `pn-11` passa nos quatro viewports, comparando com o conjunto Definido.
+3. `shared` e `backend` ficam intocados, com uma exceção: a `pn-10` só lê a chave existente do
+   `VersaoService`, que é código de frontend.
 
 ## Fora de Escopo
 
-- Mudar o formato dos patchnotes, o índice, o R2, a API ou a skill `publicar-versao`.
-- Busca dentro das notas, filtro por público (players/mestre) e comparação entre versões. Se o
-  autor quiser, vão para `IDEAS.md`.
+As features abaixo foram avaliadas na bancada e **não entram**:
+
+- Filtro Players / Mestre.
+- Contagem de seções por público. As notas reais não usam os blocos
+  Novidades/Melhorias/Correções, então a ideia original de "contagem por tipo" não se aplicava.
+- Resumo no trilho direito.
+
+E as que ficaram fora desde o início:
+
+- Busca dentro das notas e comparação entre versões.
+- Agrupar a lista por mês.
+- Mudar o formato dos patchnotes, o índice, o R2 ou a API.
 - Editor de patchnotes na interface (descartado desde `patchnotes-versao-sistema`).
 
-## Dependências
+## Questões resolvidas
 
-`pn-04` e `pn-06` concluídas. Fontes: `docs/design/DESIGN.md`, `docs/design/tema/`,
-`patchnote-formato.ts` (estrutura atual dos grupos/blocos).
-
-## Riscos e Mitigação
-
-- **"Mais amplo" virar texto esticado.** É o atalho óbvio e piora a leitura. A regra é ocupar
-  largura com trilhos, nunca com a medida do parágrafo; o critério 3 mede isso.
-- **Trilho fixo cortado em `1366×768`.** Trilhos `sticky` mais altos que a viewport precisam de
-  rolagem interna própria.
-- **Slug instável quebra links compartilhados.** O algoritmo de `id` fica numa função pura testada;
-  mudar o título de um bloco numa nota publicada muda a âncora, o que é aceitável e deve ser
-  documentado.
-
-## Questões em aberto para o autor
-
-1. Milestone próprio (`m10-*`) ou guarda-chuva `pn-*`? Recomendação: guarda-chuva `pn-*`, porque é
-   uma página só, sem backend, e os `M10`–`M12` sugeridos em `IDEAS.md` são temas de produto
-   maiores.
-2. O resumo final (`# RESUMO…`) também aparece destacado no trilho direito, além de ser o último
-   capítulo?
-3. O trilho de versões deve agrupar por mês quando a lista crescer, ou a lista simples basta por
-   ora?
+1. **Milestone próprio ou série `pn-*`?** A revisão continua na série `pn-*`: é uma página só e
+   não mexe no backend.
+2. **Resumo destacado?** Sim, no topo da nota, em todas as larguras (`pn-11`).
+3. **Agrupar a lista de versões?** Sim, por linha `MAJOR.MINOR`, e não por mês (`pn-10`).
