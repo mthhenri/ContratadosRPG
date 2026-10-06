@@ -93,7 +93,7 @@ describe("LeitorPdfMobile", () => {
     });
 
     async function montar(
-        url = "/documentos/sistema-v4.1.0.pdf",
+        url = "/documentos/sistema-v4.1.3.pdf",
         titulo = "Sistema",
     ): Promise<void> {
         await TestBed.configureTestingModule({ imports: [LeitorPdfMobile] }).compileComponents();

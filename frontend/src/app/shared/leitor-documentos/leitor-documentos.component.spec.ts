@@ -34,7 +34,7 @@ describe('LeitorDocumentos', () => {
   it('abre o PDF do Sistema no visualizador nativo sem camada textual própria', () => {
     abrir();
     const iframe = obter<HTMLIFrameElement>('iframe');
-    expect(iframe.getAttribute('src')).toContain('/documentos/sistema-v4.1.0.pdf');
+    expect(iframe.getAttribute('src')).toContain('/documentos/sistema-v4.1.3.pdf');
     expect(iframe.title).toBe('Sistema');
     expect(fixture.nativeElement.querySelector('canvas')).toBeNull();
     expect(fixture.nativeElement.querySelector('.leitor-pagina__texto')).toBeNull();
@@ -52,7 +52,7 @@ describe('LeitorDocumentos', () => {
     abrir();
     clicar('[aria-label="Selecionar Guia do Mestre"]');
     expect(obter<HTMLIFrameElement>('iframe').getAttribute('src')).toContain(
-      '/documentos/guia_de_mestre-v4.0.0.pdf',
+      '/documentos/guia_de_mestre-v4.2.0.pdf',
     );
     expect(servico.estado().documentoAtivo).toBe('guia-mestre');
   });

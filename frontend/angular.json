@@ -33,17 +33,17 @@
                 "glob": "**/*",
                 "input": "public",
                 "ignore": [
-                  "documentos/sistema-v4.1.0.pdf",
-                  "documentos/guia_de_mestre-v4.0.0.pdf"
+                  "documentos/sistema-v4.1.3.pdf",
+                  "documentos/guia_de_mestre-v4.2.0.pdf"
                 ]
               },
               {
-                "glob": "sistema-v4.1.0.pdf",
+                "glob": "sistema-v4.1.3.pdf",
                 "input": "public/documentos",
                 "output": "documentos"
               },
               {
-                "glob": "guia_de_mestre-v4.0.0.pdf",
+                "glob": "guia_de_mestre-v4.2.0.pdf",
                 "input": "public/documentos",
                 "output": "documentos"
               }

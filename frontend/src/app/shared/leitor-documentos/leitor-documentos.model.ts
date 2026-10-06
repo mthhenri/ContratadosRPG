@@ -1,10 +1,10 @@
 export type DocumentoRegrasId = 'sistema' | 'guia-mestre';
 
 export const DOCUMENTOS_REGRAS = {
-  sistema: { titulo: 'Sistema', url: '/documentos/sistema-v4.1.0.pdf' },
+  sistema: { titulo: 'Sistema', url: '/documentos/sistema-v4.1.3.pdf' },
   'guia-mestre': {
     titulo: 'Guia do Mestre',
-    url: '/documentos/guia_de_mestre-v4.0.0.pdf',
+    url: '/documentos/guia_de_mestre-v4.2.0.pdf',
   },
 } as const;
 

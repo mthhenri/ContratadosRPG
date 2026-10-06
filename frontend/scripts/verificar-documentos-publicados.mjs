@@ -4,8 +4,8 @@ import { join } from 'node:path';
 
 const diretorioSaida = join(fileURLToPath(new URL('../', import.meta.url)), 'dist', 'frontend', 'browser');
 const arquivosPublicados = [
-  join(diretorioSaida, 'documentos', 'sistema-v4.1.0.pdf'),
-  join(diretorioSaida, 'documentos', 'guia_de_mestre-v4.0.0.pdf'),
+  join(diretorioSaida, 'documentos', 'sistema-v4.1.3.pdf'),
+  join(diretorioSaida, 'documentos', 'guia_de_mestre-v4.2.0.pdf'),
   join(diretorioSaida, 'pdf-worker', 'pdf.worker.min.mjs'),
 ];
 

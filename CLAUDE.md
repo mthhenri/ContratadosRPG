@@ -63,8 +63,8 @@ tela sobre um tema PrimeNG vazio ou padrão.
 
 ## Fontes da verdade
 
-As regras do jogo estão em `docs/core/sistema-v4.1.0.md` e
-`docs/core/guia_de_mestre-v4.0.0.md`. Antes de alterar fórmulas, progressão ou
+As regras do jogo estão em `docs/core/sistema-v4.1.3.md` e
+`docs/core/guia_de_mestre-v4.2.0.md`. Antes de alterar fórmulas, progressão ou
 regras de domínio, consulte esses documentos; em caso de conflito, o documento
 vence o código.
 

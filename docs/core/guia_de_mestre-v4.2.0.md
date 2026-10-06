@@ -67,81 +67,87 @@
 
 [⬥ Valores	15](#⬥-valores)
 
-[⬡ Saúde	16](#⬡-saúde)
+[⬥ DTs de Atributos	15](#⬥-dts-de-atributos)
 
-[⬡ Defesa	17](#⬡-defesa)
+[⬡ Saúde	17](#⬡-saúde)
 
-[⬥ Contra-Ataque	17](#⬥-contra-ataque)
+[⬡ Defesa	18](#⬡-defesa)
 
-[⬡ Resistências e Fraquezas	18](#⬡-resistências-e-fraquezas)
+[⬥ Contra-Ataque	18](#⬥-contra-ataque)
 
-[⬥ Limite de Resistências	18](#⬥-limite-de-resistências)
+[⬡ Resistências e Fraquezas	19](#⬡-resistências-e-fraquezas)
 
-[⬥ Fraquezas	18](#⬥-fraquezas)
+[⬥ Limite de Resistências	19](#⬥-limite-de-resistências)
 
-[⬥ Crítico em Fraquezas	18](#⬥-crítico-em-fraquezas)
+[⬥ Fraquezas	19](#⬥-fraquezas)
 
-[⬥ Múltiplas Fraquezas	18](#⬥-múltiplas-fraquezas)
+[⬥ Crítico em Fraquezas	19](#⬥-crítico-em-fraquezas)
 
-[⬡ Regeneração Natural	19](#⬡-regeneração-natural)
+[⬥ Múltiplas Fraquezas	19](#⬥-múltiplas-fraquezas)
 
-[⬥ Intensidades	19](#⬥-intensidades)
+[⬡ Regeneração Natural	20](#⬡-regeneração-natural)
 
-[⬥ Regeneração Passiva	19](#⬥-regeneração-passiva)
+[⬥ Intensidades	20](#⬥-intensidades)
 
-[⬥ Regeneração Condicional	19](#⬥-regeneração-condicional)
+[⬥ Regeneração Passiva	20](#⬥-regeneração-passiva)
 
-[⬥ Supressão por Fraqueza	19](#⬥-supressão-por-fraqueza)
+[⬥ Regeneração Condicional	20](#⬥-regeneração-condicional)
 
-[⬡ Porte	20](#⬡-porte)
+[⬥ Supressão por Fraqueza	20](#⬥-supressão-por-fraqueza)
 
-[⬡ Deslocamento	21](#⬡-deslocamento)
+[⬡ Porte	21](#⬡-porte)
 
-[⬡ Ações e Habilidades	23](#⬡-ações-e-habilidades)
+[⬡ Deslocamento	22](#⬡-deslocamento)
 
-[⬥ Cadência	23](#⬥-cadência)
+[⬡ Ações e Habilidades	24](#⬡-ações-e-habilidades)
 
-[⬥ Ataques	24](#⬥-ataques)
+[⬥ Cadência	24](#⬥-cadência)
 
-[⬥ Habilidades	26](#⬥-habilidades)
+[⬥ Ataques	25](#⬥-ataques)
 
-[⬡ Exemplo de Ficha Completa	28](#⬡-exemplo-de-ficha-completa)
+[⬥ Habilidades	27](#⬥-habilidades)
 
-[**⬢ Guia de Criação de NPCs	31**](#⬢-guia-de-criação-de-npcs)
+[⬡ Exemplo de Ficha Completa	29](#⬡-exemplo-de-ficha-completa)
 
-[⬡ Roteiro de Criação	31](#⬡-roteiro-de-criação-1)
+[**⬢ Guia de Criação de NPCs	32**](#⬢-guia-de-criação-de-npcs)
 
-[⬡ Identidade	32](#⬡-identidade)
+[⬡ Roteiro de Criação	32](#⬡-roteiro-de-criação-1)
 
-[⬥ Categoria	32](#⬥-categoria)
+[⬡ Identidade	33](#⬡-identidade)
 
-[⬥ Nível de Cooperação	33](#⬥-nível-de-cooperação)
+[⬥ Categoria	33](#⬥-categoria)
 
-[⬡ Construção Mecânica	34](#⬡-construção-mecânica)
+[⬥ Nível de Cooperação	34](#⬥-nível-de-cooperação)
 
-[⬥ Nível	34](#⬥-nível)
+[⬡ Construção Mecânica	35](#⬡-construção-mecânica)
 
-[⬥ Atributos	34](#⬥-atributos)
+[⬥ Nível	35](#⬥-nível)
 
-[⬥ Vida	34](#⬥-vida)
+[⬥ Atributos	35](#⬥-atributos)
 
-[⬥ Energia	35](#⬥-energia)
+[⬥ Modificadores	35](#⬥-modificadores)
 
-[⬥ Defesa	35](#⬥-defesa)
+[⬥ Vida	36](#⬥-vida)
 
-[⬥ DTs de Atributos	35](#⬥-dts-de-atributos)
+[⬥ Energia	36](#⬥-energia)
 
-[⬥ Sanidade	35](#⬥-sanidade)
+[⬥ Sanidade	36](#⬥-sanidade)
 
-[⬡ Habilidades	36](#⬡-habilidades)
+[⬥ Defesa	36](#⬥-defesa)
 
-[⬥ Volume de Habilidades	36](#⬥-volume-de-habilidades)
+[⬥ DTs de Atributos	36](#⬥-dts-de-atributos-1)
 
-[⬥ Criando Habilidades Únicas	36](#⬥-criando-habilidades-únicas)
+[⬥ Ataques e Equipamentos	37](#⬥-ataques-e-equipamentos)
 
-[⬥ Biblioteca de Referência	38](#⬥-biblioteca-de-referência)
+[⬡ Habilidades	38](#⬡-habilidades)
 
-[**⬢ Guia de Criação de Missões	41**](#⬢-guia-de-criação-de-missões)
+[⬥ Volume de Habilidades	38](#⬥-volume-de-habilidades)
+
+[⬥ Criando Habilidades Únicas	38](#⬥-criando-habilidades-únicas)
+
+[⬥ Biblioteca de Referência	40](#⬥-biblioteca-de-referência)
+
+[**⬢ Guia de Criação de Missões	43**](#⬢-guia-de-criação-de-missões)
 
 # **⬢ Introdução** {#⬢-introdução}
 
@@ -172,6 +178,9 @@ Um registro da ordem de decisão. Cada etapa depende das anteriores: não avance
 
 **Modificadores**  
 *Dois Fortes, três Médios, três Fracos, dois Frágeis. Distribua de acordo com a identidade da criatura.*
+
+***DTs de Atributo***  
+*Calcule as DTs necessárias para ataques e habilidades a partir dos Atributos e seus respectivos Modificadores.*
 
 **Saúde**  
 *Escolha a Tenacidade e calcule a Vida Máxima (VD × Multiplicador).*
@@ -401,7 +410,7 @@ Processo sugerido:
 * **Gancho único**: Imóvel enquanto observada. Mata em frações de segundo quando não é.  
 * **Tema**: Paranoia, atenção dividida, cooperação forçada.  
 * **NA**: Médio (pode matar dezenas num espaço fechado; contida facilmente com iluminação).  
-* **VD Alvo**: 30 (para grupo nível 5).
+* **VD Alvo**: 30 (para grupo nível 5 contendo 6 agentes).
 
 ## **⬡ Atributos** {#⬡-atributos}
 
@@ -423,9 +432,7 @@ Especialmente nos casos de VD 80-100 e 100+ o limite não é base \+ 3, sendo, r
 
 ### **⬥ Realocação de Pontos** {#⬥-realocação-de-pontos}
 
-Além dos Pontos de Ajuste, a criatura pode **realocar até 3 pontos de um atributo** para os demais. Esse atributo de origem pode cair abaixo da base, inclusive até zero.
-
-**Exemplo**: Uma Ameaça Alta (base 4, limite 7\) retira 3 pontos de Social, deixando-o em 1\. Redistribui: \+2 em Força (vai para 6\) e \+1 em Sentidos (vai para 5). Ambos dentro do limite.
+Além dos Pontos de Ajuste, a criatura pode **realocar até 3 pontos dos atributos** para os demais. Esse atributo de origem pode cair abaixo da base, inclusive podendo ser zerado ou negativado. Também é possível remover pontos de mais de um atributo por vez, contanto que não extrapole o limite de 3 pontos realocados..
 
 ### **⬥ Relevância dos Atributos** {#⬥-relevância-dos-atributos}
 
@@ -446,7 +453,12 @@ Nem todo atributo é relevante para toda criatura. Um predador sem fala não pre
 
 ## **⬡ Modificadores** {#⬡-modificadores}
 
-Os Pontos de Ajuste definem o teto de cada atributo. Os Modificadores definem **onde a criatura se destaca e onde ela é vulnerável**. Eles são aplicados sobre o valor final (base \+ ajuste \+ realocação) e criam o Atributo Efetivo, que é usado em testes, reações, ataques, etc. Os modificadores afetam apenas e unicamente os **testes de atributo** da criatura.
+Os Pontos de Ajuste definem o valor dos Atributos da criatura. Os Modificadores definem **onde ela se destaca e onde possui menor competência**. Cada Modificador é um bônus ou penalidade fixa aplicada ao resultado final dos testes daquele Atributo.
+
+*Teste da Criatura \= \[Atributo\]D20 \+ Modificador*
+
+O Modificador não altera o valor do Atributo e não modifica a quantidade de D20 rolados. Uma criatura com Luta 5 e Modificador Forte \+12 realiza um teste de Luta rolando **5D20**, utilizando o **maior resultado** e **somando \+12** ao final.  
+Os Modificadores afetam apenas testes de Atributo, salvo quando uma regra declarar explicitamente o contrário.
 
 ### **⬥ Distribuição** {#⬥-distribuição}
 
@@ -463,12 +475,21 @@ Toda criatura possui exatamente 10 modificadores, um por atributo. A distribuiç
 
 Já os valores de cada modificador **são atrelados ao VD** da criatura sendo montada, tendo um valor calculado para a VD, recebendo um valor X à cada 5 de VD da criatura. Sendo:
 
-| Nível de Ameaça | Forte | Médio | Fraco | Frágil |
+| Referência de VD | Forte | Médio | Fraco | Frágil |
 | :---- | :---: | :---: | :---: | :---: |
 | por padrão (VD 5\) é… | \+0 | \-1 | \-2 | \-3 |
 | à cada \+5 de VD… | \+2,5 | \+2 | \+1,5 | \+1 |
 
 ***Valores não-inteiros são arredondados para baixo.***
+
+### **⬥ DTs de Atributos** {#⬥-dts-de-atributos}
+
+Sempre que uma ação, ataque ou habilidade de uma criatura exigir que outro ser realize um teste para resistir a um efeito, a criatura utiliza uma DT baseada no Atributo responsável por causar esse efeito.
+
+*DT de \[Atributo\] \= 10 \+ Atributo \+ (Modificador ÷ 2\)*
+
+O Atributo utilizado é seu valor normal, sem somar o Modificador. Em seguida, metade do Modificador daquele Atributo é adicionada à DT. Caso a divisão resulte em um valor não inteiro, descarte as casas decimais, aproximando o valor em direção a zero.  
+Exemplo: uma criatura com **Força 5 \[Forte \+12\]** possui **DT Força 21**: 10 \+ 5 \+ 6\. Uma criatura com **Vontade 2 \[Frágil \-3\]** possui **DT Vontade 11**: 10 \+ 2 \- 1\.
 
 ## **⬡ Saúde** {#⬡-saúde}
 
@@ -581,7 +602,7 @@ Quando a criatura recebe dano de sua Fraqueza durante um turno, a Regeneração 
 ## **⬡ Porte** {#⬡-porte}
 
 O Porte define o espaço físico que a criatura ocupa no campo de combate e seu alcance natural em ataques físicos. Deve ser declarado durante a criação da criatura, com base na **Natureza Física** definida na Ficha de Identidade.  
-O sistema de combate usa quadrados de 1m × 1m como unidade base. O porte indica o lado desse espaço, então criaturas Gigantes ocupam 3m × 3m, ou seja, nove quadrados totais.
+O sistema de combate usa quadrados de 1m × 1m como unidade base. O porte indica o lado desse espaço, então criaturas Enomes ocupam 3m × 3m, ou seja, nove quadrados totais.
 
 | Porte | Espaço Ocupado | Alcance Natural | Referência |
 | :---- | :---: | :---: | :---- |
@@ -671,11 +692,11 @@ Este valor é definido diretamente pelo Mestre, mas em caso de dúvidas, a VD se
 **Este valor adicional com base na VD é uma sugestão.**
 
 **⬦ Intercalação na Iniciativa**  
-Os turnos extras de uma criatura não se acumulam em sequência: eles são distribuídos entre os turnos dos agentes. O segundo turno de uma criatura cai sempre no **próximo slot disponível** abaixo de sua posição na ordem de iniciativa, independente de qual seja.
+Os turnos extras de uma criatura não se acumulam em sequência: eles são distribuídos entre os turnos dos agentes. O segundo turno de uma criatura cai sempre no **próximo slot disponível** abaixo de sua posição na ordem de iniciativa, independente de qual seja. E se não houver espaço para intercalar, as outras ações ficam por último na iniciativa.
 
 *Exemplo: Criatura com Cadência Dupla e iniciativa 18, em combate com Agente A \[17\] e Agente B \[3\]. A ordem fica: Criatura \[18\] → Agente A \[17\] → Criatura \[segundo turno\] → Agente B \[3\].*
 
-**⬦ Cadência ≠ Poder**  
+**⬦ Cadência ≠ VD**  
 A Cadência não escala com VD e não deve ser tratada como recompensa por nível de ameaça. Uma criatura colossal e lenta pode ter Cadência Singular. Uma aberração minúscula e caótica pode ter Cadência Tríplice. O critério é sempre o **conceito e a identidade** da criatura.
 
 ### **⬥ Ataques** {#⬥-ataques}
@@ -683,7 +704,9 @@ A Cadência não escala com VD e não deve ser tratada como recompensa por níve
 Todo ataque de uma criatura possui quatro elementos registrados na ficha: **nome**, **atributo de teste**, **dano** e **custo de ação**. Esses elementos juntos descrevem o que a criatura faz, como ela acerta e o quanto isso dói.
 
 **⬦ Atributo de Teste**  
-O atributo usado no teste define o que a criatura está fazendo mecanicamente. Luta é o padrão para corpo a corpo, Pontaria para ataques à distância, mas qualquer atributo pode ser usado se o conceito justificar. O valor do teste é o **Atributo Efetivo** da criatura naquele atributo, já com o modificador aplicado.
+O atributo usado no teste define o que a criatura está fazendo mecanicamente. **Luta** é o padrão para corpo a corpo, **Pontaria** para ataques à distância, mas qualquer atributo pode ser usado se o conceito justificar. O teste é o mesmo definido em **Modificadores**, sendo:
+
+*Teste \= \[Atributo\]D20 \+ Modificador*
 
 *Exemplos: Força para esmagamento e investida, Intelecto para projeções psíquicas, Social para ataques de manipulação ou terror.*
 
@@ -705,7 +728,7 @@ O tipo de dano é livre e deve refletir a natureza física da criatura. Físico 
 Um ataque pode carregar um efeito além do dano: uma condição aplicada em caso de acerto, um teste exigido do alvo ou uma alteração de estado. Esses efeitos são registrados junto com o ataque na ficha.  
 Ao incluir um efeito relevante em um ataque, reduza o dano em um patamar em relação à referência. O efeito já é parte do valor do golpe: um ataque que atordoa automaticamente não precisa também devastar.
 
-*Exemplo: "Mordida Paralisante | Luta | 3D12+4 Físico. Em caso de acerto, o alvo realiza um teste de Vigor (DT 18\) ou fica Atordoado por 1 turno."*
+*Exemplo: "Mordida Paralisante | Luta | 3D12+4 Físico. Em caso de acerto, o alvo realiza um teste de Vigor contra a DT Força da criatura ou fica Atordoado por 1 turno."*
 
 **⬦ Ataques de Área**  
 Criaturas podem ter ataques que atingem uma área em vez de um único alvo. Ataques de área exigem **Ação Completa** salvo indicação contrária na ficha e não são testados contra a Defesa de cada alvo individualmente. Em vez disso, cada alvo na área realiza um teste de **Destreza ou Vigor** (definido no ataque) cuja DT é o resultado do teste de ataque da criatura.  
@@ -805,11 +828,11 @@ Defesa
 *Defesa Base \= 15 \+ VD ÷ 2 \= 30*
 
 Resistências e Fraquezas  
-*Limite total: 60 (VD × 2). A natureza pétrea da criatura justifica alta resistência a dano físico e balístico. Ácido e explosivos são sua abertura óbvia.*  
+*Limite total: 60 (VD × 2). A natureza pétrea da criatura justifica alta resistência a dano físico e balístico. Explosivos são sua abertura óbvia.*  
 *Resistências escolhidas: Físico 36 e Balístico 16*
 
-*Fraquezas: Explosão: 20\.*  
-*Quando atingida por dano de Explosão, sofre 20 de dano adicional após o cálculo normal. Em caso de crítico na fraqueza de subtipo, o valor é multiplicado em três vezes.*
+*Fraquezas: Explosão: 26\.*  
+*Quando atingida por dano de Explosão, sofre 26 de dano adicional após o cálculo normal.*
 
 **⬦ Regeneração e Deslocamento**  
 Regeneração Natural  
@@ -828,8 +851,8 @@ A Estátua age uma vez por rodada, exclusivamente quando não está sendo observ
 *Ataques*  
 *Pancada | Ação de Movimento | Luta 5D20+12 | 3D12+4 \[Físico\]*
 
-*Esmagamento | Ação Padrão | Luta 5D20+12 | 4D12+10 \[Físico\]*  
-*O alvo realiza um teste de Vigor (DT 20\) ou fica Imobilizado por 1 turno.*
+*Esmagamento | Ação Padrão | Luta 5D20+12 | 3D12+4 \[Físico\]*  
+*O alvo realiza um teste de Vigor contra a DT Força da criatura (17) ou fica Imobilizado por 1 turno.*
 
 Habilidades Especiais  
 Imobilidade Absoluta \[Passiva\]  
@@ -844,7 +867,7 @@ Ruptura de Observação \[De Gatilho\]
 # **⬢ Guia de Criação de NPCs** {#⬢-guia-de-criação-de-npcs}
 
 Os **NPCs** representam o componente humano que compartilha a realidade de *Contratados \- RPG* com os agentes. Enquanto **Ameaças** surgem de naturezas anômalas e jogadores operam sob progressão contínua, estas figuras possuem propósitos narrativos flexíveis: podem ser desde **civis irrelevantes** em relatórios de campo até **líderes de facções** que ditam o ritmo de um arco inteiro.  
-Em termos de sistema, eles operam como uma **versão otimizada** da estrutura dos agentes. Possuem os mesmos dez atributos, saúde e reações, mas são projetados para **simplificar o controle** por parte do **SUPERVISOR**. O objetivo é permitir que indivíduos relevantes sejam gerados com agilidade, preservando a tensão mecânica necessária para que cada interação tenha impacto e propósito dentro da operação.
+Em termos de sistema, eles operam como uma **versão otimizada** da estrutura dos agentes. Possuem os mesmos dez atributos, saúde e reações, mas são projetados para **simplificar o controle** por parte do **Mestre**. O objetivo é permitir que indivíduos relevantes sejam gerados com agilidade, preservando a tensão mecânica necessária para que cada interação tenha impacto e propósito dentro da operação.
 
 ## **⬡ Roteiro de Criação** {#⬡-roteiro-de-criação-1}
 
@@ -860,17 +883,22 @@ Em termos de sistema, eles operam como uma **versão otimizada** da estrutura do
 **Atributos**  
 *Distribuição de pontos respeitando o limite e o cap de cada Categoria.*
 
-**Saúde**  
-*Cálculo da Vida Máxima: Base \+ (Nível \+ VIG) × Multiplicador de Categoria.*
+***Competências***  
+*Escolher os Atributos de Competência de acordo com a Categoria e registrar o respectivo Modificador de Categoria.*
 
-**Defesa**  
-*Estabelecer a Defesa Base (10 \+ Nível) e calcular Bloqueio e Esquiva.*
+**Vida**  
+*Cálculo da Vida Máxima: Base \+ (Nível \+ VIG) × Multiplicador de Categoria.*
 
 **Energia**  
 *Definir o modelo de recurso (Reserva Fixa ou Pool \+ Recarga) conforme a Categoria.*
 
+**Defesa**  
+*Estabelecer a Defesa Base (10 \+ Nível) e calcular Bloqueio e Esquiva.*  
 **Dificuldade de Teste (DT)**  
 *10 \+ Nível \+ (Atributo × 2\) para cada contexto de interação relevante.*
+
+***Ataques e Equipamentos***  
+*Definir armamentos, proteções e modificações relevantes, utilizando a Categoria e sua Patente Equivalente como limite de acesso.*
 
 **Habilidades**  
 *Criação de Passivas e Ativas respeitando o volume e o limite por turno.*
@@ -927,7 +955,7 @@ O Nível do NPC funciona como **Proficiência** em todos os contextos, seja para
 
 ### **⬥ Atributos** {#⬥-atributos}
 
-Todos os dez atributos partem de 1\. O Mestre distribui os pontos abaixo livremente, respeitando o cap por Categoria. Civis têm **Luta** e **Pontaria** bloqueados em 0 por padrão.
+Todos os dez atributos partem de 1\. O Mestre distribui os pontos abaixo livremente, respeitando o cap por Categoria. Civis têm **Luta** e **Pontaria** iniciados em 0 por padrão. NPCs também podem remover 1 ponto de atributo para deixá-lo como zero assim como Agentes.
 
 | Categoria | Pontos a distribuir | Limite por Atributo |
 | :---- | :---: | :---: |
@@ -938,6 +966,23 @@ Todos os dez atributos partem de 1\. O Mestre distribui os pontos abaixo livreme
 | Lendário | \+24 | 6 |
 
 Se a narrativa exigir um Civil com treinamento de combate, como um ex-militar pressionado, o Mestre pode desbloquear **Luta** ou **Pontaria** como exceção justificada.
+
+### **⬥ Modificadores** {#⬥-modificadores}
+
+O Nível representa a experiência geral acumulada pelo NPC, enquanto seus Atributos representam suas capacidades naturais e técnicas. A Categoria adiciona uma terceira camada: suas **Competências**.  
+As competências representam os campos nos quais aquele indivíduo possui treinamento, experiência ou talento suficiente para se destacar mesmo entre pessoas de Nível semelhante.
+
+| Categoria | Modificador de Categoria | Quantidade de Competências |
+| :---- | :---: | :---: |
+| Civil | \- | 0 |
+| Operativo | \+1D4 | 2 |
+| Veterano | \+1D6 | 3 |
+| Elite | \+2D6 | 4 |
+| Lendário | \+3D6 | 5 |
+
+*Teste com Competência \= \[Atributo\]D20 \+ Nível \+ Modificador de Categoria*
+
+O Modificador de Categoria **não altera o valor do Atributo** e não adiciona D20 ao teste. **Habilidades não podem aumentar a quantidade ou o tipo** dos dados provenientes do Modificador de Categoria. Um Atributo de **valor 0 não pode ser escolhido** como Competência. Os dados da Competência não são afetados por Críticos.
 
 ### **⬥ Vida** {#⬥-vida}
 
@@ -965,27 +1010,37 @@ NPCs entram na condição **Morrendo** ao chegar a **0 de Vida**, seguindo as me
 | Elite | Pool \+ Recarga | Pool: 18 \+ **DES** × 3 / Recarga: **DES** por turno |
 | Lendário | Pool \+ Recarga | Pool: 25 \+ **DES** × 4 / Recarga: (**DES** × 2\) por turno |
 
+### **⬥ Sanidade** {#⬥-sanidade}
+
+NPCs possuem um esquema de sanidade extremamente similar aos agentes, mas seus efeitos mecânicos e narrativos podem se diferenciar de acordo com a interpretação do mestre perante seu efeito sob aquele NPC.
+
 ### **⬥ Defesa** {#⬥-defesa}
 
 *Defesa Base \= 10 \+ Nível*  
 *Bloquear \= Defesa Base \+ **VIG***  
 *Esquivar \= Defesa Base \+ **DES***
 
-### **⬥ DTs de Atributos** {#⬥-dts-de-atributos}
+### **⬥ DTs de Atributos** {#⬥-dts-de-atributos-1}
 
 *DT \= 10 \+ Nível \+ (Atributo × 2\)*
 
-O atributo usado é sempre o relevante para a situação: **Vontade** para resistir a manipulação, **VIG** para suportar pressão física, **Intelecto** para detectar blefes, e assim por diante.
+O atributo usado é sempre o relevante para a situação: **Social** para manipulação**, Força** para imposição física, **Intelecto** para intervenção intelectual ou técnica, e assim por diante.
 
-### **⬥ Sanidade** {#⬥-sanidade}
+**Competências e Modificadores de Categoria não alteram DTs.**
 
-NPCs possuem um esquema de sanidade extremamente similar aos agentes, mas seus efeitos mecânicos e narrativos podem se diferenciar de acordo com a interpretação do mestre perante seu efeito sob aquele NPC.
+### **⬥ Ataques e Equipamentos** {#⬥-ataques-e-equipamentos}
+
+NPCs utilizam as mesmas regras de ataques e equipamentos dos agentes. Diferente das criaturas, seu dano não é definido por Categoria ou Nível, mas pelo equipamento utilizado.  
+Ataques corpo a corpo utilizam **Luta** por padrão e ataques à distância utilizam **Pontaria**. Caso o Atributo utilizado seja uma Competência, o Modificador de Categoria é aplicado normalmente ao teste.  
+O dano, alcance, modificações, munição e demais propriedades são definidos pelo equipamento utilizado. Proteções e Escudos também funcionam normalmente.  
+A Patente Equivalente da Categoria representa o limite de acesso do NPC a equipamentos e modificações, não uma obrigação de utilizá-lo ao máximo. Escolha apenas equipamentos coerentes com sua função, recursos e identidade.  
+NPCs não possuem Dano Furtivo por padrão. Caso esse seja um elemento importante do indivíduo, deve ser concedido por uma habilidade específica.
 
 ## **⬡ Habilidades** {#⬡-habilidades}
 
 As habilidades especiais de um **NPC** constituem o diferencial que o torna memorável na ordem narrativa. Enquanto em ameaças tais recursos emanam de uma **natureza anômala**, nos indivíduos humanos elas são **extensões de sua biografia**, treinamento e método operacional. Tais perícias devem descrever a identidade do sujeito antes mesmo de sua designação ser revelada ao esquadrão.
 
-**Passiva**: Funciona sempre ou quando uma condição específica é satisfeita. Não tem custo de Energia e não consome o limite de habilidades por turno. Passivas com condição de ativação funcionam como De Gatilho: acontecem como resposta automática, sem declaração ou ação.
+**Passiva**: Funciona sempre ou quando uma condição específica é satisfeita. Não tem custo de Energia e não consome o limite de habilidades por turno. Passivas com condição de ativação funcionam como **De Gatilho**: acontecem como resposta automática, sem declaração ou ação.
 
 **Ativa**: Requer declaração e consome Energia. É uma ação especial que o NPC escolhe usar no turno.
 
@@ -1078,7 +1133,7 @@ Alerta Constante \[Ex.: Olhos nas Costas\]
 Passiva — Quando alvo de um ataque Furtivo, este NPC realiza um teste de Sentidos DT 14\. Em caso de sucesso, o atacante perde a vantagem Furtiva para esse ataque.
 
 Disparo de Supressão \[Ex.: Cabeça Abaixada\] \[4 E\]  
-Ativa — O NPC dispara em direção ao alvo sem necessariamente acertá-lo. O alvo realiza um teste de Vontade DT 12 \+ Pontaria do NPC. Em caso de falha, sua próxima ação deve ser mover-se para cobertura em vez de atacar.
+Ativa — O NPC dispara em direção ao alvo sem necessariamente acertá-lo. O alvo realiza um teste de Vontade contra a DT Pontaria do NPC. Em caso de falha, sua próxima ação deve ser mover-se para cobertura em vez de atacar.
 
 Reposicionamento Tático \[Ex.: Sombra em Movimento\] \[3 E\]  
 Ativa — O NPC se move até DES metros sem provocar reações. Pode realizar um ataque padrão ao fim deste deslocamento com \-1 dado.
@@ -1103,7 +1158,7 @@ Condicionamento Extremo \[Ex.: Corpo de Elite\]
 Passiva — Este NPC possui resistência igual a Nível ÷ 3 (mínimo 2\) a um tipo de dano definido na criação.
 
 Presença de Comando \[Ex.: O Nome Que Paralisa\]  
-Passiva — Quando este NPC entra em combate ou derrota um oponente, todos os inimigos com Nível de Cooperação 2 ou menos realizam um teste de Vontade DT 16 \+ Social do NPC. Em caso de falha, perdem a primeira reação desta rodada.
+Passiva — Quando este NPC entra em combate ou derrota um oponente, todos os inimigos com Nível de Cooperação 2 ou menos realizam um teste de Vontade contra a DT Social do NPC. Em caso de falha, perdem a primeira reação desta rodada.
 
 Reflexos Superiores \[Ex.: Sétimo Sentido\]  
 Passiva (uma vez por rodada) — Quando este NPC normalmente não poderia reagir a um ataque (surpresa, Furtivo sem chance de Sentidos), ainda pode tentar uma reação de Defesa com \-2.
@@ -1115,7 +1170,7 @@ Zona de Controle \[Ex.: Território Marcado\] \[12 E\]
 Ativa — O NPC designa uma área de até 6 metros de raio visível a ele. Por 2 turnos, todos os inimigos dentro ou que entrem nessa área sofrem \-1 dado em testes de ataque.
 
 Pressão Interrogatória \[Ex.: Sem Saída\] \[8 E\]  
-Ativa (uma vez por cena) — O alvo realiza um teste de Vontade DT 18 \+ Social do NPC. Em caso de falha, seu Nível de Cooperação cai em 3 ou ele revela involuntariamente uma informação definida pelo Mestre. Pode ser usada em combate ou fora dele.
+Ativa (uma vez por cena) — O alvo realiza um teste de Vontade contra a DT Social do NPC. Em caso de falha, seu Nível de Cooperação cai em 3 ou ele revela involuntariamente uma informação definida pelo Mestre. Pode ser usada em combate ou fora dele.
 
 **⬦ Lendário**
 
@@ -1141,7 +1196,7 @@ Foco de Predador \[Ex.: Alvo Marcado\] \[14 E\]
 Ativa — O Lendário designa um alvo como objetivo primário pelo resto da cena. Todos os ataques contra esse alvo ganham \+2 dados e Nível de dano adicional. O foco só pode ser redirecionado se o alvo for derrotado ou escapar da cena.
 
 Presença Devastadora \[Ex.: O Peso de um Legado\] \[20 E\]  
-Ativa (uma vez por combate) — Todos os inimigos com Nível de Cooperação 4 ou menos realizam um teste de Vontade DT 20 \+ Social do NPC. Em caso de falha, perdem seu próximo turno. Em caso de falha crítica (falhar por 5 ou mais), o Nível de Cooperação cai para 1 pelo resto da cena.
+Ativa (uma vez por combate) — Todos os inimigos com Nível de Cooperação 4 ou menos realizam um teste de Vontade contra a DT Social do NPC. Em caso de falha, perdem seu próximo turno. Em caso de falha crítica (falhar por 5 ou mais), o Nível de Cooperação cai para 1 pelo resto da cena.
 
 # **⬢ Guia de Criação de Missões** {#⬢-guia-de-criação-de-missões}
 

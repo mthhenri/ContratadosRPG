@@ -198,7 +198,7 @@ Nome do enum TS = nome da tabela em PascalCase + `Enum`.
 
 **Enums de CONTEÚDO DE JOGO (dentro do JSONB `ficha.dados`) NÃO viram tabela `tipo_*`:**
 `ClasseEnum`, `PatenteEnum`, categorias de item etc. existem só como enum TS no shared,
-validados via `@IsEnum`. A fonte da verdade deles é `docs/core/sistema-v4.1.0.md`.
+validados via `@IsEnum`. A fonte da verdade deles é `docs/core/sistema-v4.1.3.md`.
 
 ---
 

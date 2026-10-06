@@ -21,8 +21,8 @@ Estas são as fontes da verdade. Em conflito entre código e documento, **o docu
 |---|---|---|
 | Constituição do projeto — precede tudo | [`docs/SYSTEM.SPEC.md`](../SYSTEM.SPEC.md) | qualquer implementação |
 | Convenções de código (referência rápida) | [`docs/CONVENTIONS.md`](../CONVENTIONS.md) | escrever qualquer arquivo |
-| **Regras do jogo — jogador** | [`docs/core/sistema-v4.1.0.md`](../core/sistema-v4.1.0.md) | tocar em **qualquer** fórmula, tabela de progressão ou regra de domínio |
-| **Regras do jogo — ameaças/criaturas** | [`docs/core/guia_de_mestre-v4.0.0.md`](../core/guia_de_mestre-v4.0.0.md) | criar ou alterar criatura/NPC (M4) |
+| **Regras do jogo — jogador** | [`docs/core/sistema-v4.1.3.md`](../core/sistema-v4.1.3.md) | tocar em **qualquer** fórmula, tabela de progressão ou regra de domínio |
+| **Regras do jogo — ameaças/criaturas** | [`docs/core/guia_de_mestre-v4.2.0.md`](../core/guia_de_mestre-v4.2.0.md) | criar ou alterar criatura/NPC (M4) |
 | Leitor global e publicação dos PDFs de regras | [`docs/specs/done/m3-72-leitor-global-documentos-regras.spec.md`](../specs/done/m3-72-leitor-global-documentos-regras.spec.md) + `frontend/src/app/shared/leitor-documentos/` (iframe nativo no desktop) + `frontend/src/app/shared/leitor-documentos/leitor-pdf-mobile/` (leitor próprio via `pdfjs-dist`, só mobile — ajuste avulso 2026-08-25, Edge mobile não incorpora PDF em iframe) | alterar acesso, viewer ou publicação dos documentos |
 | **Identidade visual** — guia e mapa de tokens | [`docs/design/DESIGN.md`](../design/DESIGN.md) | **qualquer** trabalho de frontend/UI/estilo |
 | **NPC — contrato visual na M4** | [`docs/design/FICHA-NPC.md`](../design/FICHA-NPC.md); `m4-08`/`m4-08b` em `docs/specs/done/`; `docs/reviews/m4-08b-verificacao.md`; `m4-09` em `done/`, `docs/reviews/m4-09-verificacao.md`; `m4-10` em `done/`, `docs/reviews/m4-10-verificacao.md` | manter criação e ficha de consulta/edição, listagem/revelação e responsividade; regras/JSONB continuam no guia de mestre e `SCHEMA.md` |
