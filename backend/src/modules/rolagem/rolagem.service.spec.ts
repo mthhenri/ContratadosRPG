@@ -58,7 +58,7 @@ function criarResumo(overrides: Partial<RolagemResumoDto> = {}): RolagemResumoDt
     formula: null,
     visibilidade: RolagemVisibilidadeEnum.PUBLICA,
     resultado,
-    createdDate: new Date().toISOString(),
+    createdDate: "2026-10-05T12:00:00.000Z",
     corFicha: null,
     ...overrides,
   };
@@ -369,7 +369,8 @@ describe('RolagemService', () => {
       campanhaRepositorio.recuperarMembro.mockResolvedValue({
         papel: TipoCampanhaMembroPapelEnum.ESPECTADOR,
       });
-      rolagemRepositorio.listarPorCampanha.mockResolvedValue([criarResumo()]);
+      const resumoRolagem = criarResumo();
+      rolagemRepositorio.listarPorCampanha.mockResolvedValue([resumoRolagem]);
 
       const resultado = await service.listarPorCampanha({ campanhaId: 5 }, usuarioAtivo);
 
@@ -378,7 +379,7 @@ describe('RolagemService', () => {
         usuarioId: usuarioAtivo.sub,
         ehMestre: false,
       });
-      expect(resultado).toEqual([criarResumo()]);
+      expect(resultado).toEqual([resumoRolagem]);
     });
   });
 });
