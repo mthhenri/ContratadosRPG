@@ -1,0 +1,40 @@
+<nav class="sumario" aria-label="Nesta versão">
+    <ol class="sumario__lista">
+        @for (capitulo of capitulos(); track capitulo.id) {
+        <li>
+            @if (capitulo.filhos.length > 0) {
+            <div class="sumario__grupo" [class.sumario__grupo--ativo]="capitulo.id === grupoAtivo()">
+                <a
+                    class="sumario__rotulo"
+                    [href]="href(capitulo.id)"
+                    [attr.aria-current]="capitulo.id === ativo() ? 'location' : null"
+                    (click)="aoClicar($event, capitulo.id)"
+                    >{{ capitulo.titulo }}</a
+                >
+                <ol class="sumario__lista">
+                    @for (filho of capitulo.filhos; track filho.id) {
+                    <li>
+                        <a
+                            class="sumario__item"
+                            [href]="href(filho.id)"
+                            [attr.aria-current]="filho.id === ativo() ? 'location' : null"
+                            (click)="aoClicar($event, filho.id)"
+                            >{{ filho.titulo }}</a
+                        >
+                    </li>
+                    }
+                </ol>
+            </div>
+            } @else {
+            <a
+                class="sumario__item"
+                [href]="href(capitulo.id)"
+                [attr.aria-current]="capitulo.id === ativo() ? 'location' : null"
+                (click)="aoClicar($event, capitulo.id)"
+                >{{ capitulo.titulo }}</a
+            >
+            }
+        </li>
+        }
+    </ol>
+</nav>

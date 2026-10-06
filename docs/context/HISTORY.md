@@ -1,5 +1,25 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-06 — pn-09: sumário "Nesta versão" e capítulo visível
+
+**Pedido do autor.** Terceira task da revisão. Decisão do autor: o sumário é **componente local**
+(`sumario-patchnote`), não primitivo de `shared/ui/`; promove-se a `app-sumario` se houver segundo uso.
+
+**Entrega.** `SumarioPatchnote` (grupos como rótulos, blocos como itens, links com `href` de fragmento);
+trilho direito `sticky` em três zonas e `<details>` recolhível (fechado, fecha ao navegar) abaixo de
+1240px. `observarCapituloAtivo` (`capitulo-ativo.ts`): `IntersectionObserver` numa faixa de 1px na linha
+de leitura, escolhe o último título que a cruzou; o clique no sumário destaca na hora e silencia o
+observador por 900ms (o último capítulo nem sempre alcança a linha). O observador é refeito na troca de
+versão e desconectado ao destruir. DESIGN.md registra o padrão.
+
+**Verificado.** 8 testes novos (suíte completa do frontend 2967 verde), lint sem erros. Ao vivo em
+1920/1366/960/360 com rolagem real da `1.4.0` e da `1.0.0`: destaque troca de capítulo conforme a
+rolagem, clique no último item destaca e põe o fragmento, recolhível fechado/aberto (summary 44px no
+mobile) e fecha ao navegar, sem overflow horizontal. A lista cabe inteira no trilho mesmo em 1366×768
+(491px), então a rolagem interna do trilho direito só se exerce com listas maiores.
+
+**Nota.** O `# RESUMO…` aparece como último item do sumário; vira o primeiro, "Resumo", na `pn-11`.
+
 ## 2026-10-06 — pn-08: layout em trilhos da página de patchnotes
 
 **Pedido do autor.** Segunda task da revisão (`pn-07`…`pn-11`), conjunto "Definido" da bancada.

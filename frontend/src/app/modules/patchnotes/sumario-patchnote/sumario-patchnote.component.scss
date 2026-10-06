@@ -1,0 +1,75 @@
+@use "tema/breakpoints" as bp;
+
+// Sumário "Nesta versão" (pn-09). Análogo: o item ativo da lista de versões (`.patchnotes__item--ativo`)
+// e o rótulo mono dos grupos da nota. Só tokens.
+.sumario {
+    display: block;
+
+    &__lista {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-4);
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    &__grupo {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-4);
+        padding-top: var(--space-8);
+    }
+
+    // Rótulo do grupo: mono em caixa alta, como o título do grupo na nota.
+    &__rotulo {
+        display: block;
+        padding: var(--space-4) var(--space-8);
+        font: 700 10.5px/1.3 var(--font-mono);
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        text-decoration: none;
+        color: var(--text-mute);
+
+        &:hover {
+            color: var(--text);
+        }
+
+        @include bp.mobile {
+            display: flex;
+            align-items: center;
+            min-height: bp.$alvo-toque;
+        }
+    }
+
+    &__grupo--ativo > &__rotulo {
+        color: var(--text);
+    }
+
+    &__item {
+        display: block;
+        padding: 6px var(--space-8);
+        font: 500 12.5px/1.4 var(--font-sans);
+        text-decoration: none;
+        color: var(--text-dim);
+        border-left: 2px solid transparent;
+        border-radius: var(--radius-tight);
+
+        &:hover {
+            color: var(--text);
+            background: var(--surface-2);
+        }
+
+        &[aria-current="location"] {
+            color: var(--text);
+            background: var(--surface-2);
+            border-left-color: var(--accent);
+        }
+
+        @include bp.mobile {
+            display: flex;
+            align-items: center;
+            min-height: bp.$alvo-toque;
+        }
+    }
+}

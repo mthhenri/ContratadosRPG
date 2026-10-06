@@ -131,6 +131,18 @@
                         }
                     </header>
 
+                    @if (conteudo(); as c) { @if (c.capitulos.length > 0) {
+                    <details #recolhivel class="patchnotes__sumario-recolhivel">
+                        <summary>Nesta versão · {{ c.totalCapitulos }} capítulos</summary>
+                        <app-sumario-patchnote
+                            [capitulos]="c.capitulos"
+                            [versao]="notaAtual.versao"
+                            [ativo]="capituloAtivo()"
+                            (navegar)="irParaCapitulo($event); recolhivel.open = false"
+                        />
+                    </details>
+                    } }
+
                     @for (grupo of conteudo()?.grupos; track $index) {
                     <section class="patchnotes__grupo">
                         @if (grupo.titulo) {
@@ -199,6 +211,18 @@
                 }
             }
         </div>
+
+        @if (nota(); as notaAtual) { @if (conteudo(); as c) { @if (c.capitulos.length > 0) {
+        <aside class="patchnotes__trilho-direito" data-rolagem-sumario>
+            <span class="patchnotes__rotulo">Nesta versão</span>
+            <app-sumario-patchnote
+                [capitulos]="c.capitulos"
+                [versao]="notaAtual.versao"
+                [ativo]="capituloAtivo()"
+                (navegar)="irParaCapitulo($event)"
+            />
+        </aside>
+        } } }
     </div>
     }
 </main>

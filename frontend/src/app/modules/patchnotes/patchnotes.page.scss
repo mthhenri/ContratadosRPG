@@ -410,6 +410,50 @@
         }
     }
 
+    // "Nesta versão" (pn-09): trilho direito em três zonas; abaixo disso, seção recolhível no topo da
+    // nota, fechada por padrão. Cada forma só existe na sua faixa de largura.
+    &__trilho-direito {
+        display: none;
+    }
+
+    &__sumario-recolhivel {
+        padding: var(--space-4) var(--space-12);
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-control);
+
+        > summary {
+            display: flex;
+            align-items: center;
+            min-height: 36px;
+            font: 600 11px var(--font-mono);
+            text-transform: uppercase;
+            letter-spacing: var(--tracking-label);
+            color: var(--text-dim);
+            cursor: pointer;
+            list-style: none;
+
+            &::after {
+                content: "+";
+                margin-left: auto;
+                color: var(--text-mute);
+            }
+
+            @include bp.mobile {
+                min-height: bp.$alvo-toque;
+            }
+        }
+
+        &[open] > summary {
+            margin-bottom: var(--space-4);
+            color: var(--text);
+
+            &::after {
+                content: "−";
+            }
+        }
+    }
+
     // Duas colunas (versões | nota) quando a página comporta. Container query, e não a largura do
     // viewport: vale igual com a tela dividida ao lado de outro painel.
     @container (min-width: 720px) {
@@ -448,6 +492,21 @@
         &__markdown {
             max-width: 70ch;
             font-size: 15px;
+        }
+
+        &__sumario-recolhivel {
+            display: none;
+        }
+
+        &__trilho-direito {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-8);
+            position: sticky;
+            top: calc(var(--altura-topbar) + var(--space-16));
+            max-height: calc(100dvh - var(--altura-topbar) - 2 * var(--space-16));
+            overflow-y: auto;
+            scrollbar-width: thin;
         }
     }
 }

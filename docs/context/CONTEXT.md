@@ -3182,7 +3182,7 @@ conteúdo **projetado** pelo consumidor, precisa de `:host ::ng-deep` para o col
 alcançá-lo — um seletor simples no `.scss` do `Aba` nunca bate no `<span>` de fora (encapsulamento
 de view aplica o atributo do TEMPLATE DO CONSUMIDOR, não o do componente).
 
-### Versão e patchnotes — `shared/versao`, `backend/patchnote`, `frontend/patchnotes` (pn-01…pn-08)
+### Versão e patchnotes — `shared/versao`, `backend/patchnote`, `frontend/patchnotes` (pn-01…pn-09)
 
 A **versão do sistema** tem fonte única: o `version` do `package.json` da raiz (hoje `1.4.0`).
 `npm run versao:sincronizar` alinha os três workspaces e o lock e gera `shared/src/versao.ts`
@@ -3209,7 +3209,7 @@ esvaziada. A página `/patchnotes[/:versao]` renderiza com
 `publicar-versao` + `npm run patchnotes:publicar` (local, com credencial de escrita do R2 no ambiente
 do comando; `--dry-run` mostra o destino). `pn-05` segue aberta até a publicação no R2 real.
 Revisão da página: guarda-chuva `pn-revisao-pagina-patchnotes.spec.md` (backlog), cinco tasks `pn-07`…`pn-11` (capítulos,
-trilhos, sumário, lista de versões, resumo no topo). **`pn-08` (layout em trilhos) pronta:** três colunas a partir de 1240px de contêiner (trilho direito reservado ao sumário da `pn-09`), cabeçalho compacto no trilho esquerdo, padrão em `docs/design/DESIGN.md`. **`pn-07` (capítulos e âncoras) pronta:** `capitularPatchnote` em
+trilhos, sumário, lista de versões, resumo no topo). **`pn-09` (sumário "Nesta versão" local, com *scroll-spy*) pronta.** **`pn-08` (layout em trilhos) pronta:** três colunas a partir de 1240px de contêiner (trilho direito reservado ao sumário da `pn-09`), cabeçalho compacto no trilho esquerdo, padrão em `docs/design/DESIGN.md`. **`pn-07` (capítulos e âncoras) pronta:** `capitularPatchnote` em
 `patchnote-formato.ts` deriva do Markdown os capítulos (grupo `#` → filhos `##`) com slug estável (sem emoji/acento, `-2`… nos
 repetidos) e `publico`; os títulos da nota têm `id`, o fragmento da URL (`/patchnotes/1.4.0#para-o-mestre`) rola até o capítulo
 depois que a nota renderiza (espera `document.fonts.ready`, senão mira o texto de reserva) e cada título tem "copiar link".

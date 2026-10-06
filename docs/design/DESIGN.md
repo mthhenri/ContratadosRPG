@@ -473,6 +473,17 @@ com a tela dividida:
 - **Medida de leitura**: o Markdown sobe de 14px/66ch para no máximo **15px/70ch**, e só em três zonas.
 - Estados de contenção (404/503) ficam centralizados **fora** do grid.
 
+### Sumário "Nesta versão" (`sumario-patchnote`, pn-09)
+
+Componente **local** dos patchnotes (decisão do autor: vira `app-sumario` em `shared/ui/` só se surgir um
+segundo uso). Grupos viram rótulo mono em caixa alta (`10.5px`, `--tracking-label`) e blocos viram
+itens sans `12.5px` com o título completo; o item ativo usa `aria-current="location"`, fundo
+`--surface-2` e filete `--accent` à esquerda, e o grupo dele sobe para `--text`. Posição: trilho direito
+`sticky` em três zonas; abaixo de `1240px` do contêiner, `<details>` "Nesta versão · N capítulos" no
+topo da nota, fechado por padrão (fecha ao navegar). No mobile, `summary`, rótulos e itens têm `44px`.
+*Scroll-spy*: `IntersectionObserver` numa faixa de 1px na linha de leitura (`scroll-margin-top` + 1px) —
+vale o último título que a cruzou. O item ativo é mantido visível rolando só o trilho.
+
 ### Biblioteca de documentos (`m9-04`)
 
 A página **Biblioteca** (`/campanhas/:id/documentos`; o rótulo não é "Documentos" porque esse é o

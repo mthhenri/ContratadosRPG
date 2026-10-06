@@ -326,6 +326,172 @@ describe('PatchnotesPage', () => {
     });
   });
 
+  describe('sumário "Nesta versão" (pn-09)', () => {
+    const MARKDOWN_SUMARIO = [
+      '# PARA OS PLAYERS',
+      '',
+      '## 🎬 Cenas',
+      '',
+      'Texto das cenas.',
+      '',
+      '## Fichas',
+      '',
+      'Texto.',
+      '',
+      '# PARA O MESTRE',
+      '',
+      '## 📚 Biblioteca',
+      '',
+      'Texto da biblioteca.',
+    ].join('\n');
+
+    class ObservadorFalso {
+      static instancias: ObservadorFalso[] = [];
+      readonly observe = vi.fn();
+      readonly unobserve = vi.fn();
+      readonly disconnect = vi.fn();
+      constructor(readonly aoCruzar: () => void) {
+        ObservadorFalso.instancias.push(this);
+      }
+    }
+
+    let rolarAte: ReturnType<typeof vi.fn>;
+    let posicoes: Record<string, number>;
+
+    beforeEach(() => {
+      ObservadorFalso.instancias = [];
+      vi.stubGlobal('IntersectionObserver', ObservadorFalso);
+      rolarAte = vi.fn();
+      Element.prototype.scrollIntoView = rolarAte as unknown as Element['scrollIntoView'];
+      // jsdom não tem layout: o topo de cada título vem desta tabela (padrão: abaixo da linha).
+      posicoes = {};
+      vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (this: Element) {
+        const top = posicoes[this.id] ?? 900;
+        return { top, bottom: top + 20, left: 0, right: 0, width: 0, height: 20, x: 0, y: top } as DOMRect;
+      });
+    });
+
+    afterEach(() => {
+      vi.unstubAllGlobals();
+      vi.restoreAllMocks();
+    });
+
+    function trilho(): HTMLElement {
+      return raiz().querySelector<HTMLElement>('.patchnotes__trilho-direito')!;
+    }
+
+    function itensTrilho(): string[] {
+      return Array.from(trilho().querySelectorAll('.sumario__item')).map((item) => item.textContent!.trim());
+    }
+
+    function ativoNoTrilho(): string | null {
+      return trilho().querySelector('[aria-current="location"]')?.textContent?.trim() ?? null;
+    }
+
+    async function abrirNota(markdown = MARKDOWN_SUMARIO): Promise<void> {
+      await abrir('/patchnotes/1.1.0');
+      await responderIndice();
+      await responderNota(nota('1.1.0', markdown));
+    }
+
+    it('lista grupos como rótulos e blocos como itens, no trilho e na seção recolhível', async () => {
+      await abrirNota();
+
+      expect(Array.from(trilho().querySelectorAll('.sumario__rotulo')).map((r) => r.textContent!.trim())).toEqual([
+        'PARA OS PLAYERS',
+        'PARA O MESTRE',
+      ]);
+      expect(itensTrilho()).toEqual(['🎬 Cenas', 'Fichas', '📚 Biblioteca']);
+      expect(trilho().querySelector('.patchnotes__rotulo')?.textContent).toContain('Nesta versão');
+      expect(trilho().querySelector<HTMLAnchorElement>('.sumario__item')!.getAttribute('href')).toBe(
+        '/patchnotes/1.1.0#cenas',
+      );
+    });
+
+    it('a seção recolhível diz quantos capítulos tem e começa fechada', async () => {
+      await abrirNota();
+
+      const recolhivel = raiz().querySelector<HTMLDetailsElement>('.patchnotes__sumario-recolhivel')!;
+      expect(recolhivel.open).toBe(false);
+      expect(recolhivel.querySelector('summary')?.textContent).toContain('Nesta versão · 3 capítulos');
+      expect(recolhivel.querySelectorAll('.sumario__item')).toHaveLength(3);
+    });
+
+    it('nota sem títulos não tem sumário', async () => {
+      await abrirNota('Só um texto de abertura.');
+
+      expect(raiz().querySelector('.patchnotes__trilho-direito')).toBeNull();
+      expect(raiz().querySelector('.patchnotes__sumario-recolhivel')).toBeNull();
+    });
+
+    it('clicar num item rola até o capítulo, atualiza o fragmento e o destaca', async () => {
+      await abrirNota();
+
+      trilho().querySelectorAll<HTMLAnchorElement>('.sumario__item')[2].click();
+      await harness.fixture.whenStable();
+      harness.detectChanges();
+
+      expect(rolarAte.mock.contexts.map((contexto) => (contexto as HTMLElement).id)).toEqual(['biblioteca']);
+      expect(TestBed.inject(Router).url).toBe('/patchnotes/1.1.0#biblioteca');
+      expect(ativoNoTrilho()).toBe('📚 Biblioteca');
+    });
+
+    it('clicar num item da seção recolhível a fecha', async () => {
+      await abrirNota();
+      const recolhivel = raiz().querySelector<HTMLDetailsElement>('.patchnotes__sumario-recolhivel')!;
+      recolhivel.open = true;
+
+      recolhivel.querySelectorAll<HTMLAnchorElement>('.sumario__item')[1].click();
+      harness.detectChanges();
+
+      expect(recolhivel.open).toBe(false);
+    });
+
+    it('o observador destaca o último título que passou da linha de leitura e o grupo dele', async () => {
+      await abrirNota();
+      expect(ativoNoTrilho()).toBeNull();
+      expect(ObservadorFalso.instancias).toHaveLength(1);
+
+      posicoes = { 'para-os-players': -300, cenas: -200, fichas: -40, 'para-o-mestre': 700, biblioteca: 800 };
+      ObservadorFalso.instancias[0].aoCruzar();
+      harness.detectChanges();
+
+      expect(ativoNoTrilho()).toBe('Fichas');
+      const grupos = Array.from(trilho().querySelectorAll('.sumario__grupo'));
+      expect(grupos.map((grupo) => grupo.classList.contains('sumario__grupo--ativo'))).toEqual([true, false]);
+
+      posicoes = { 'para-os-players': -900, cenas: -800, fichas: -700, 'para-o-mestre': -100, biblioteca: -10 };
+      ObservadorFalso.instancias[0].aoCruzar();
+      harness.detectChanges();
+      expect(ativoNoTrilho()).toBe('📚 Biblioteca');
+      expect(grupos.map((grupo) => grupo.classList.contains('sumario__grupo--ativo'))).toEqual([false, true]);
+    });
+
+    it('a troca de versão refaz o sumário, zera o destaque e desconecta o observador anterior', async () => {
+      await abrirNota();
+      posicoes = { 'para-os-players': -300, cenas: -200 };
+      ObservadorFalso.instancias[0].aoCruzar();
+      harness.detectChanges();
+      expect(ativoNoTrilho()).toBe('🎬 Cenas');
+
+      await abrir('/patchnotes/1.0.0');
+      await responderNota(nota('1.0.0', '## Novidades\n\n- Base.\n\n## Correções\n\n- X.'));
+
+      expect(itensTrilho()).toEqual(['Novidades', 'Correções']);
+      expect(ativoNoTrilho()).toBeNull();
+      expect(ObservadorFalso.instancias[0].disconnect).toHaveBeenCalled();
+      expect(ObservadorFalso.instancias).toHaveLength(2);
+    });
+
+    it('desconecta o observador ao destruir a página', async () => {
+      await abrirNota();
+
+      harness.fixture.destroy();
+
+      expect(ObservadorFalso.instancias[0].disconnect).toHaveBeenCalled();
+    });
+  });
+
   describe('capítulos e âncoras (pn-07)', () => {
     const MARKDOWN_CAPITULOS = [
       '# PARA OS PLAYERS',
