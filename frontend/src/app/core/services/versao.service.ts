@@ -20,11 +20,24 @@ export class VersaoService {
 
   private readonly versaoVista = signal<string | null>(this.restaurar());
 
+  private readonly vistaAnteriorSinal = signal<string | null>(null);
+
+  /**
+   * Última versão vista **antes** da marcação que a visita atual fez (pn-10): é com ela que a página
+   * decide o que é "novo". `marcarVista` a guarda antes de sobrescrever; sem visita anterior (primeira
+   * vez ou storage indisponível) fica `null`. Reabrir a página na mesma sessão a mantém — as marcas
+   * somem só na próxima visita.
+   */
+  readonly vistaAnterior = this.vistaAnteriorSinal.asReadonly();
+
   /** Se existe uma versão que este navegador ainda não viu em `/patchnotes`. */
   readonly versaoNova = computed(() => this.versaoVista() !== this.versao);
 
   /** Registra a versão atual como vista neste navegador. */
   marcarVista(): void {
+    if (this.versaoVista() !== this.versao) {
+      this.vistaAnteriorSinal.set(this.versaoVista());
+    }
     this.versaoVista.set(this.versao);
     try {
       this.documento.defaultView?.localStorage.setItem(CHAVE_PERSISTENCIA, this.versao);

@@ -56,3 +56,14 @@ describe('Chip', () => {
     expect(chip?.querySelector('app-icone')).not.toBeNull();
   });
 });
+
+describe('Chip — severidade sucesso', () => {
+  it('aplica a classe da severidade de sucesso (pn-10)', () => {
+    TestBed.configureTestingModule({ imports: [Hospedeiro] });
+    const fixture = TestBed.createComponent(Hospedeiro);
+    fixture.componentInstance.severidade.set('sucesso');
+    fixture.detectChanges();
+
+    expect((fixture.nativeElement as HTMLElement).querySelector('.chip--severidade-sucesso')).not.toBeNull();
+  });
+});

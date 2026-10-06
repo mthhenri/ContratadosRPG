@@ -102,7 +102,8 @@
         flex: none;
         flex-direction: column;
         gap: 2px;
-        min-width: 112px;
+        min-width: 168px;
+        max-width: 220px;
         padding: 9px var(--space-12);
         text-decoration: none;
         background: var(--surface);
@@ -112,11 +113,6 @@
         b {
             font: 700 13px var(--font-mono);
             color: var(--text);
-        }
-
-        span {
-            font: 500 11px var(--font-mono);
-            color: var(--text-mute);
         }
 
         &:hover {
@@ -142,6 +138,53 @@
         @include bp.mobile {
             min-height: bp.$alvo-toque;
         }
+    }
+
+    &__item-topo {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
+    }
+
+    &__item-data {
+        font: 500 11px var(--font-mono);
+        color: var(--text-mute);
+    }
+
+    // Título da versão: até duas linhas; o texto cortado ganha `appTooltip` com o título inteiro.
+    &__item-titulo {
+        display: -webkit-box;
+        overflow: hidden;
+        font: 500 12.5px/1.35 var(--font-sans);
+        color: var(--text-dim);
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+    }
+
+    // Rótulo da linha (`v1.4.x`): só no trilho vertical; a faixa horizontal do mobile não tem.
+    &__linha-rotulo {
+        display: none;
+        margin: var(--space-8) 0 0;
+        font: 600 10.5px var(--font-mono);
+        letter-spacing: var(--tracking-label);
+        color: var(--text-mute);
+
+        &:first-child {
+            margin-top: 0;
+        }
+    }
+
+    // "N versões novas desde a sua última visita" (só com N > 0).
+    &__novas {
+        margin: 0;
+        padding: 7px 10px;
+        font: 600 11.5px/1.35 var(--font-sans);
+        color: var(--positive);
+        background: color-mix(in srgb, var(--positive) 12%, transparent);
+        border: 1px solid color-mix(in srgb, var(--positive) 40%, transparent);
+        border-radius: var(--radius-control);
     }
 
     &__nota {
@@ -478,6 +521,11 @@
 
         &__item {
             min-width: 0;
+            max-width: none;
+        }
+
+        &__linha-rotulo {
+            display: block;
         }
     }
 

@@ -29,6 +29,8 @@ import { DocumentoContencao } from '../../shared/documento-contencao/documento-c
 import { renderizarMarkdownSeguro } from '../../shared/markdown/markdown-seguro';
 import { Botao } from '../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../shared/ui/botao-icone/botao-icone.component';
+import { ClampTruncado } from '../../shared/clamp-truncado/clamp-truncado.directive';
+import { Tooltip } from '../../shared/tooltip/tooltip.directive';
 import { Chip } from '../../shared/ui/chip/chip.component';
 import { Esqueleto } from '../../shared/ui/esqueleto/esqueleto.component';
 import { EstadoVazio } from '../../shared/ui/estado-vazio/estado-vazio.component';
@@ -36,11 +38,13 @@ import { NotificacaoService } from '../../shared/ui/notificacao/notificacao.serv
 import { Icone } from '../../shared/icone/icone.component';
 import { observarCapituloAtivo } from './capitulo-ativo';
 import {
+  agruparPatchnotesPorLinha,
   capitularPatchnote,
   estruturarPatchnote,
   formatarDataPatchnote,
   formatarDataPatchnoteCurta,
   type PatchnoteCapitulo,
+  versoesNovasPatchnote,
 } from './patchnote-formato';
 import { PatchnoteService } from './patchnote.service';
 import { SumarioPatchnote } from './sumario-patchnote/sumario-patchnote.component';
@@ -69,6 +73,8 @@ type EstadoNota = 'carregando' | 'ok' | 'inexistente' | 'falha';
     Icone,
     DocumentoContencao,
     SumarioPatchnote,
+    ClampTruncado,
+    Tooltip,
   ],
   templateUrl: './patchnotes.page.html',
   styleUrl: './patchnotes.page.scss',
@@ -124,6 +130,20 @@ export class PatchnotesPage {
 
   /** Versão mais recente publicada — a que leva o selo "Atual". */
   protected readonly versaoAtual = computed(() => this.indice()?.[0]?.versao ?? null);
+
+  /** Índice agrupado por linha `MAJOR.MINOR` (`v1.4.x`) para o trilho de versões (pn-10). */
+  protected readonly linhas = computed(() => agruparPatchnotesPorLinha(this.indice() ?? []));
+
+  /**
+   * Versões publicadas depois da última visita. Lê a "vista anterior" que o `VersaoService` guardou
+   * antes de `marcarVista()` sobrescrevê-la — depois da marcação a chave já é a atual e nada seria novo.
+   */
+  protected readonly versoesNovas = computed(() =>
+    versoesNovasPatchnote(
+      (this.indice() ?? []).map((item) => item.versao),
+      this.versaoService.vistaAnterior(),
+    ),
+  );
 
   /** A versão imediatamente mais antiga que a exibida, para o atalho do rodapé da nota. */
   protected readonly versaoAnterior = computed(() => {

@@ -163,7 +163,7 @@ describe('PatchnotesPage', () => {
     ]);
     expect(itens[1].classList.contains('patchnotes__item--ativo')).toBe(true);
     expect(itens[1].getAttribute('aria-current')).toBe('page');
-    expect(raiz().querySelector('app-chip')).toBeNull();
+    expect(raiz().querySelector('.patchnotes__nota app-chip')).toBeNull();
     expect(raiz().querySelector('.patchnotes__nota-rodape')).toBeNull();
   });
 
@@ -323,6 +323,111 @@ describe('PatchnotesPage', () => {
 
       expect(raiz().querySelector('.patchnotes__contencao app-documento-contencao')).not.toBeNull();
       expect(raiz().querySelector('.patchnotes__corpo')).toBeNull();
+    });
+  });
+
+  describe('lista de versões (pn-10)', () => {
+    const CHAVE_VISTA = 'contratados-rpg.versao-vista';
+
+    function itens(): HTMLAnchorElement[] {
+      return Array.from(raiz().querySelectorAll<HTMLAnchorElement>('.patchnotes__item'));
+    }
+
+    function chipsNovo(): string[] {
+      return itens()
+        .filter((item) => item.querySelector('app-chip[severidade="sucesso"], .chip--severidade-sucesso'))
+        .map((item) => item.querySelector('b')!.textContent!.trim());
+    }
+
+    async function abrirLista(): Promise<void> {
+      await abrir('/patchnotes/1.1.0');
+      await responderIndice();
+      await responderNota(nota('1.1.0', MARKDOWN_1_1_0));
+    }
+
+    it('mostra o título de cada versão e o selo "Atual" só na mais recente', async () => {
+      await abrirLista();
+
+      expect(itens().map((item) => item.querySelector('.patchnotes__item-titulo')?.textContent?.trim())).toEqual([
+        'Cenas e Biblioteca',
+        'O começo',
+      ]);
+      expect(itens()[0].querySelector('app-chip')?.textContent).toContain('Atual');
+      expect(itens()[1].querySelector('app-chip')).toBeNull();
+    });
+
+    it('agrupa por linha MAJOR.MINOR com um rótulo por linha', async () => {
+      await abrirLista();
+
+      const rotulos = Array.from(raiz().querySelectorAll('.patchnotes__linha-rotulo')).map((rotulo) =>
+        rotulo.textContent?.trim(),
+      );
+      expect(rotulos).toEqual(['v1.1.x', 'v1.0.x']);
+    });
+
+    it('marca como "Novo" as versões depois da última vista, lida antes de marcarVista', async () => {
+      localStorage.setItem(CHAVE_VISTA, '1.0.0');
+      await abrirLista();
+
+      // A página já marcou a versão atual como vista, e mesmo assim a marca de "Novo" continua.
+      expect(localStorage.getItem(CHAVE_VISTA)).toBe(TestBed.inject(VersaoService).versao);
+      expect(chipsNovo()).toEqual(['v1.1.0']);
+      expect(raiz().querySelector('.patchnotes__novas')?.textContent).toContain(
+        '1 versão nova desde a sua última visita',
+      );
+    });
+
+    it('versão vista igual à mais recente: nenhuma marca e nenhuma linha de aviso', async () => {
+      localStorage.setItem(CHAVE_VISTA, '1.1.0');
+      await abrirLista();
+
+      expect(chipsNovo()).toEqual([]);
+      expect(raiz().querySelector('.patchnotes__novas')).toBeNull();
+    });
+
+    it('primeira visita (sem versão vista): nada é "novo"', async () => {
+      await abrirLista();
+
+      expect(chipsNovo()).toEqual([]);
+      expect(raiz().querySelector('.patchnotes__novas')).toBeNull();
+    });
+
+    it('storage que lança: sem marcas e sem erro', async () => {
+      const lerOriginal = Storage.prototype.getItem;
+      const gravarOriginal = Storage.prototype.setItem;
+      // Só a chave da versão vista falha; o resto da página (sessão, tema) usa o storage normalmente.
+      vi.spyOn(Storage.prototype, 'getItem').mockImplementation(function (this: Storage, chave: string) {
+        if (chave === CHAVE_VISTA) {
+          throw new Error('bloqueado');
+        }
+        return lerOriginal.call(this, chave);
+      });
+      vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (
+        this: Storage,
+        chave: string,
+        valor: string,
+      ) {
+        if (chave === CHAVE_VISTA) {
+          throw new Error('bloqueado');
+        }
+        gravarOriginal.call(this, chave, valor);
+      });
+      await abrirLista();
+
+      expect(itens()).toHaveLength(2);
+      expect(chipsNovo()).toEqual([]);
+    });
+
+    afterEach(() => vi.restoreAllMocks());
+
+    it('as marcas não somem ao clicar noutra versão', async () => {
+      localStorage.setItem(CHAVE_VISTA, '1.0.0');
+      await abrirLista();
+
+      await abrir('/patchnotes/1.0.0');
+      await responderNota(nota('1.0.0', '## Novidades\n\n- Base.'));
+
+      expect(chipsNovo()).toEqual(['v1.1.0']);
     });
   });
 

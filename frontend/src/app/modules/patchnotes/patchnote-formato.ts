@@ -1,3 +1,5 @@
+import { compararVersoesPatchnote, ehVersaoPatchnoteValida } from '@contratados-rpg/shared/validators';
+
 /**
  * Apresentação de um patchnote (pn-04): separa o Markdown da nota em introdução, grupos e blocos e
  * formata a data. Funções puras — a renderização segura de cada trecho fica com
@@ -15,7 +17,6 @@
  *
  * Nota só com `##` (sem `#`) vira um grupo único sem título — o formato original continua valendo.
  */
-
 /**
  * Tom visual do bloco. `novidades`/`melhorias`/`correcoes` são os blocos de balanço, decididos pelo
  * título; qualquer outro título é uma funcionalidade (`neutro`), exibida como título de seção.
@@ -219,4 +220,50 @@ export function formatarDataPatchnote(data: string): string {
 export function formatarDataPatchnoteCurta(data: string): string {
   const partes = partesDaData(data);
   return partes ? `${String(partes.dia).padStart(2, '0')} ${MESES[partes.mes].slice(0, 3)} ${partes.ano}` : data;
+}
+
+export interface PatchnoteLinha<TItem extends { readonly versao: string }> {
+  /** Rótulo da linha: `v1.4.x`. */
+  readonly rotulo: string;
+  readonly itens: readonly TItem[];
+}
+
+/**
+ * Agrupa as versões do índice por linha `MAJOR.MINOR` (pn-10), mantendo a ordem em que vieram — o
+ * índice já vem da mais recente para a mais antiga, então as linhas também.
+ */
+export function agruparPatchnotesPorLinha<TItem extends { readonly versao: string }>(
+  itens: readonly TItem[],
+): PatchnoteLinha<TItem>[] {
+  const linhas: { rotulo: string; itens: TItem[] }[] = [];
+  for (const item of itens) {
+    const [maior, menor] = item.versao.split('.');
+    const rotulo = `v${maior}.${menor}.x`;
+    const linha = linhas.find((existente) => existente.rotulo === rotulo);
+    if (linha) {
+      linha.itens.push(item);
+    } else {
+      linhas.push({ rotulo, itens: [item] });
+    }
+  }
+  return linhas;
+}
+
+/**
+ * Versões publicadas depois da última que o leitor viu (pn-10). Sem versão vista anterior — primeira
+ * visita, storage indisponível ou valor inválido — não há marcas: nem tudo é "novo".
+ */
+export function versoesNovasPatchnote(
+  versoes: readonly string[],
+  vistaAnterior: string | null,
+): Set<string> {
+  if (vistaAnterior === null || !ehVersaoPatchnoteValida(vistaAnterior)) {
+    return new Set();
+  }
+  return new Set(
+    versoes.filter(
+      (versao) =>
+        ehVersaoPatchnoteValida(versao) && compararVersoesPatchnote(versao, vistaAnterior) > 0,
+    ),
+  );
 }

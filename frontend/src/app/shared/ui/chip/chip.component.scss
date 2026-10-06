@@ -11,6 +11,11 @@ $severidades: (
         fundo: var(--surface-2),
         borda: var(--border-strong),
     ),
+    "sucesso": (
+        cor: var(--positive),
+        fundo: color-mix(in srgb, var(--positive) 12%, transparent),
+        borda: color-mix(in srgb, var(--positive) 40%, transparent),
+    ),
     "aviso": (
         cor: var(--warning),
         fundo: color-mix(in srgb, var(--warning) 12%, transparent),

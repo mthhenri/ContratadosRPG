@@ -55,3 +55,65 @@ describe('VersaoService', () => {
     expect(servico.versaoNova()).toBe(false);
   });
 });
+
+describe('VersaoService — vistaAnterior (pn-10)', () => {
+  beforeEach(() => localStorage.clear());
+  afterEach(() => {
+    vi.restoreAllMocks();
+    localStorage.clear();
+  });
+
+  function criar(): VersaoService {
+    TestBed.resetTestingModule();
+    return TestBed.inject(VersaoService);
+  }
+
+  it('guarda a versão vista antes de marcarVista sobrescrevê-la', () => {
+    localStorage.setItem(CHAVE, '1.2.0');
+    const servico = criar();
+
+    expect(servico.vistaAnterior()).toBeNull();
+    servico.marcarVista();
+
+    expect(servico.vistaAnterior()).toBe('1.2.0');
+    expect(localStorage.getItem(CHAVE)).toBe(VERSAO_SISTEMA);
+  });
+
+  it('marcar de novo na mesma sessão não apaga a anterior', () => {
+    localStorage.setItem(CHAVE, '1.2.0');
+    const servico = criar();
+
+    servico.marcarVista();
+    servico.marcarVista();
+
+    expect(servico.vistaAnterior()).toBe('1.2.0');
+  });
+
+  it('primeira visita: sem anterior', () => {
+    const servico = criar();
+    servico.marcarVista();
+
+    expect(servico.vistaAnterior()).toBeNull();
+  });
+
+  it('versão atual já vista: a anterior é a própria atual só se nada mudou — ou seja, nula', () => {
+    localStorage.setItem(CHAVE, VERSAO_SISTEMA);
+    const servico = criar();
+    servico.marcarVista();
+
+    expect(servico.vistaAnterior()).toBeNull();
+  });
+
+  it('storage que lança: sem anterior e sem erro', () => {
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('bloqueado');
+    });
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('bloqueado');
+    });
+    const servico = criar();
+
+    expect(() => servico.marcarVista()).not.toThrow();
+    expect(servico.vistaAnterior()).toBeNull();
+  });
+});

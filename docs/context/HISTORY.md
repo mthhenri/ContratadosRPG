@@ -1,5 +1,22 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-06 — pn-10: lista de versões com título, linha e "Novo"
+
+**Pedido do autor.** Quarta task da revisão. Decisão do autor: o "Novo" usa uma nova severidade
+`sucesso` (`--positive`) no `app-chip`, ampliando o primitivo.
+
+**Entrega.** `app-chip` ganha `sucesso` (DESIGN.md "Escolha de chip"). `VersaoService.vistaAnterior`
+guarda a versão vista antes de `marcarVista()` sobrescrevê-la (só captura quando a vista era outra;
+reabrir a página na mesma sessão mantém as marcas). `agruparPatchnotesPorLinha` e
+`versoesNovasPatchnote` (puras, `patchnote-formato.ts`; compara com `compararVersoesPatchnote` do
+`shared`, vista inválida/ausente = sem marcas). A lista mostra título (2 linhas + tooltip se cortado),
+"Atual", "Novo", rótulos `v1.4.x` (só no trilho vertical) e a linha "N versões novas…".
+
+**Verificado.** Testes (inclui a trava da ordem: a chave já é a atual e o "Novo" persiste) e lint; suíte
+completa 2989 verde. Ao vivo em 1920/1366/960/360 com `versao-vista` plantada em `1.2.0` (marca em 1.4.0
+e 1.3.0, "2 versões novas") e sem chave (nenhuma marca); tooltip no título cortado (360); o ponto da
+topbar continua apagando depois de abrir `/patchnotes`; sem overflow horizontal.
+
 ## 2026-10-06 — pn-09: sumário "Nesta versão" e capítulo visível
 
 **Pedido do autor.** Terceira task da revisão. Decisão do autor: o sumário é **componente local**

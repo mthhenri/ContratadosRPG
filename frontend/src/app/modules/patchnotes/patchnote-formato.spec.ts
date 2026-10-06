@@ -1,7 +1,9 @@
 import {
+  agruparPatchnotesPorLinha,
   capitularPatchnote,
   estruturarPatchnote,
   gerarSlugPatchnote,
+  versoesNovasPatchnote,
   formatarDataPatchnote,
   formatarDataPatchnoteCurta,
 } from './patchnote-formato';
@@ -178,5 +180,48 @@ describe('capitularPatchnote', () => {
     const [capitulo] = capitularPatchnote(estruturarPatchnote('# SOBRE A VERSÃO\n\nTexto.'));
 
     expect(capitulo.publico).toBe('geral');
+  });
+});
+
+describe('agruparPatchnotesPorLinha', () => {
+  it('agrupa por MAJOR.MINOR na ordem do índice', () => {
+    const linhas = agruparPatchnotesPorLinha([
+      { versao: '1.4.1' },
+      { versao: '1.4.0' },
+      { versao: '1.3.0' },
+      { versao: '1.10.2' },
+      { versao: '1.0.0' },
+    ]);
+
+    expect(linhas.map((linha) => [linha.rotulo, linha.itens.map((item) => item.versao)])).toEqual([
+      ['v1.4.x', ['1.4.1', '1.4.0']],
+      ['v1.3.x', ['1.3.0']],
+      ['v1.10.x', ['1.10.2']],
+      ['v1.0.x', ['1.0.0']],
+    ]);
+  });
+
+  it('índice vazio não tem linhas', () => {
+    expect(agruparPatchnotesPorLinha([])).toEqual([]);
+  });
+});
+
+describe('versoesNovasPatchnote', () => {
+  const versoes = ['1.4.1', '1.4.0', '1.3.0', '1.2.0', '1.0.0'];
+
+  it('marca as versões depois da última vista', () => {
+    expect([...versoesNovasPatchnote(versoes, '1.2.0')]).toEqual(['1.4.1', '1.4.0', '1.3.0']);
+  });
+
+  it('compara numericamente (1.10.0 é maior que 1.9.0)', () => {
+    expect([...versoesNovasPatchnote(['1.10.0', '1.9.0'], '1.9.0')]).toEqual(['1.10.0']);
+  });
+
+  it('vista igual à mais recente: nenhuma', () => {
+    expect(versoesNovasPatchnote(versoes, '1.4.1').size).toBe(0);
+  });
+
+  it.each([null, '', 'abc', '1.2'])('sem vista válida (%j): nenhuma, nunca "tudo novo"', (vista) => {
+    expect(versoesNovasPatchnote(versoes, vista).size).toBe(0);
   });
 });

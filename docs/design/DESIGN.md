@@ -204,7 +204,8 @@ interação deles representa valor, navegação ou estado de domínio, não uma 
 
 Use o chip de **rótulo** (`variante="padrao"`/`"sutil"`) para classificação, código ou identidade
 sem estado do domínio. Use o chip de **severidade** para informar um estado curto: as severidades
-aceitas hoje são `primario` (estado ativo), `secundario` (informação neutra), `aviso` e `perigo`.
+aceitas hoje são `primario` (estado ativo), `secundario` (informação neutra), `sucesso` (novidade ou
+ganho, `--positive`; o "Novo" da lista de versões, pn-10), `aviso` e `perigo`.
 O tom `sutil` é a receita padrão, com fundo a 12% e borda a 40% da cor; `contorno` preserva um
 aviso contextual que não deve competir com o conteúdo. Ícones `app-icone` podem ser projetados no
 chip de severidade quando acrescentam significado; chip não é botão, nem controle removível — para um termo removível, `app-ficha-termo` (abaixo).
@@ -472,6 +473,15 @@ com a tela dividida:
   apresentação. O `h1` continua único.
 - **Medida de leitura**: o Markdown sobe de 14px/66ch para no máximo **15px/70ch**, e só em três zonas.
 - Estados de contenção (404/503) ficam centralizados **fora** do grid.
+
+### Lista de versões dos patchnotes (pn-10)
+
+Cada item: número mono, selos `app-chip` (`primario` "Atual" na mais recente; `sucesso` "Novo" nas
+versões depois da última visita), data e título em até duas linhas (`appClampTruncado` + `appTooltip` só
+quando cortado). No trilho vertical os itens se agrupam por `MAJOR.MINOR` sob um rótulo mono `v1.4.x`; a
+faixa horizontal do mobile não tem rótulos e os itens ficam mais largos (168–220px). Com versões novas,
+uma linha `--positive` no topo ("N versões novas desde a sua última visita"). O "Novo" vem da chave
+`versao-vista` lida **antes** de `marcarVista()` (`VersaoService.vistaAnterior`).
 
 ### Sumário "Nesta versão" (`sumario-patchnote`, pn-09)
 
