@@ -1,6 +1,6 @@
 {
   "name": "frontend",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "scripts": {
     "ng": "ng",
     "prestart": "node scripts/preparar-documentos.mjs && node scripts/preparar-pdf-worker.mjs",
