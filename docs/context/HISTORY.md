@@ -25,10 +25,12 @@ Spec movida para `done/` — a investigação em si está completa.
 
 Autor decidiu, na mesma data: a Categoria Civil do NPC segue a mesma restrição de categoria
 do Civil jogador (sem Proteções/Explosivos no catálogo — espelha `civil-guia-criacao`, mas
-como decisão própria do NPC, não herança de `ClasseEnum`). Segue pendente apenas qual
-patente usar dentro da faixa de "Patente Equivalente" por Categoria (piso ou teto — exemplo
-com números concretos no documento) e o timing versus m4-19; sem gerar task executável
-ainda. Nenhum código, DTO ou migração alterado nesta rodada.
+como decisão própria do NPC, não herança de `ClasseEnum`); e, para a ambiguidade da faixa de
+"Patente Equivalente" (cada Categoria cobre 2–3 patentes do agente), nem piso nem teto fixo
+— o **mestre escolhe, por NPC, qual patente da faixa vale** (`patenteEquivalente?:
+PatenteEnum` proposto, lido direto de `LIMITES_MODIFICACAO` sem Prestígio). Com as três
+decisões resolvidas, falta só escrever a spec executável numerada; sem gerar task executável
+nesta rodada. Nenhum código, DTO ou migração alterado.
 
 ## 2026-10-06 — P-102: versionamento autorizado da conclusão documental
 

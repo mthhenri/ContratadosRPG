@@ -44,10 +44,10 @@
 > e documentação P-098 concluídas por autorizações próprias.
 > Ataques/equipamentos NPC: [investigação concluída](../reviews/npc-ataques-equipamentos-investigacao.md)
 > (spec em `done/`) — matriz de reaproveitamento do motor de compras do agente, sem
-> implementação. Autor confirmou que a Categoria Civil do NPC segue a mesma restrição de
-> categoria do Civil jogador (sem Proteções/Explosivos). Falta decidir qual patente usar
-> dentro da faixa de Patente Equivalente por Categoria (cada Categoria cobre 2–3 patentes
-> do agente, não uma só) antes de virar task executável.
+> implementação. Autor decidiu: Categoria Civil do NPC segue a mesma restrição de categoria
+> do Civil jogador (sem Proteções/Explosivos); e, na faixa de Patente Equivalente por
+> Categoria (cada Categoria cobre 2–3 patentes do agente), o mestre escolhe a patente exata
+> por NPC, em vez de um piso/teto fixo. Falta só escrever a spec executável numerada.
 > Autor autorizou versionar a preparação documental das specs.
 > [P-095](../specs/done/p-095-fixture-rolagens-feed-deterministica.spec.md) e
 > [P-096](../specs/done/p-096-fixture-resumo-rolagem-deterministica.spec.md) concluídas:

@@ -69,23 +69,24 @@ A tabela do Guia mapeia cada Categoria a uma **faixa** de 2–3 patentes do agen
 | Lendário | Líder Operacional (única; "ou superior" já é o topo da tabela) | 5/20 |
 
 `obterLimiteModificacoes` recebe um único Prestígio e devolve uma única patente — não serve
-de entrada direta para uma faixa. Duas opções, nenhuma implementada nesta rodada:
+de entrada direta para uma faixa.
 
-1. Nova tabela `CategoriaNpcEnum → PatenteEnum` fixando **um** ponto da faixa (ex.: o teto —
-   Operador, Veterano, Operações Especiais, Líder Operacional), e uma função
-   `obterLimiteModificacoesNpc`/sobrecarga de `obterLimiteModificacoes` que aceite
-   `PatenteEnum` direto (sem recalcular por Prestígio).
-2. Mesma tabela, mas fixando o **piso** da faixa (Agente, Experiente, Força Tarefa).
+**Decisão do autor (2026-10-06):** nem piso nem teto fixo — o **mestre escolhe, por NPC, qual
+patente da faixa da Categoria vale** (ex.: um Elite específico pode ser "Força Tarefa" ou
+"Operações Especiais", à escolha de quem o cria). Contrato proposto para a task executável:
+`FichaNpcDadosDto` ganha `patenteEquivalente?: PatenteEnum`, restrito na validação
+(`shared/regras/npc`) ao subconjunto de `PatenteEnum` válido para a `categoria` daquele NPC
+(tabela acima). O limite de modificação vem **direto** de
+`LIMITES_MODIFICACAO[patenteEquivalente]` (`compras.dados.ts`, já indexada por `PatenteEnum`)
+— não precisa de `obterLimiteModificacoes` nem de Prestígio, então nenhuma função nova no
+motor de compras, só a leitura direta da tabela existente. Civil não tem o campo (ou fica
+`null`/ausente): sem patente, sem acesso a modificações — coerente com não ter Competências
+(Guia `:977`). NPC antigo sem `patenteEquivalente` deve tratar como "sem modificação
+permitida" até o mestre escolher, nunca assumir o teto ou o piso silenciosamente.
 
-A ficha de Civil não tem patente equivalente alguma — "limite de acesso" para essa Categoria
-precisa ser definido como ausência de modificação (equivalente a não reusar
-`obterLimiteModificacoes`, e sim travar o acesso a `MODIFICACOES`/catálogo avançado direto no
-fluxo do NPC Civil), não como uma extrapolação abaixo de `AGENTE` (que não existe no enum).
-
-**Decisão do autor necessária:** piso ou teto da faixa (ou outro critério) antes de codar a
-tabela de mapeamento; o "não equipar automaticamente no máximo" do Guia sugere que o limite
-pode ser generoso (teto) já que é só um teto de acesso, não um equipamento padrão — mas é
-escolha de produto, não dedução técnica.
+UI futura: um seletor (dropdown/chips) com as patentes válidas da Categoria escolhida —
+mesmo padrão de seleção já usado pelas Competências da m4-19 (contagem/seleção restrita por
+Categoria), não um campo livre.
 
 ## Fluxo de duas operações — teste e dano
 
@@ -155,26 +156,20 @@ acesso a modificações — coerente com não ter Competências nem Energia (Gui
 `guia-equipamento-loja.component.ts` ganharia o mesmo `input()` de categorias vetadas já
 proposto para o Civil jogador, reusado (não duplicado) para o NPC Civil na task executável.
 
-## Decisões pendentes do autor (antes de qualquer task executável)
+## Decisões do autor — todas resolvidas (2026-10-06)
 
-1. **Patente Equivalente — qual patente usar dentro da faixa.** A tabela do Guia não dá uma
-   patente só por Categoria, dá uma faixa de 2–3. Exemplo concreto, Categoria **Elite**
-   ("Força Tarefa / Operações Especiais"):
+1. ~~Patente Equivalente — qual patente usar dentro da faixa~~ — **resolvida**: o mestre
+   escolhe por NPC (`patenteEquivalente?: PatenteEnum`, restrito ao subconjunto válido da
+   Categoria). Ver seção "Patente Equivalente" acima.
+2. ~~Forma do contrato / restrição de categoria do Civil~~ — **resolvida**: Civil segue a
+   mesma restrição do Civil jogador (sem Proteções/Explosivos). Ver seção acima.
+3. **Timing (observação, não decisão pendente):** esta investigação não depende de m4-19
+   estar implementada, mas a task executável de ataques/equipamento deveria vir depois (ou
+   junto) da m4-19, já que o teste de ataque é o mesmo motor de teste de atributo.
 
-   | Patente da faixa | Empilhamentos por mod. | Mods por item |
-   |---|---:|---:|
-   | Força Tarefa (piso) | 3 | 12 |
-   | Força Tarefa Especial (meio) | 4 | 15 |
-   | Operações Especiais (teto) | 4 | 18 |
-
-   Preciso que você escolha: um NPC Elite pode equipar um item com até **12** modificações
-   (piso da faixa) ou até **18** (teto da faixa)? O mesmo vale para Operativo (Agente/Operador:
-   2 ou 4 mods) e Veterano (Experiente/Veterano: 6 ou 9 mods). Lendário não tem ambiguidade
-   (só Líder Operacional, 20 mods).
-2. ~~Forma do contrato / restrição de categoria do Civil~~ — **resolvida acima.**
-3. **Timing:** esta investigação não depende de m4-19 estar implementada para ser decidida,
-   mas a task executável de ataques/equipamento deveria vir depois (ou junto) da m4-19, já
-   que o teste de ataque é o mesmo motor de teste de atributo.
+Com as três resolvidas, falta só escrever a spec executável numerada (fora desta
+investigação documental) para codar `patenteEquivalente`, o veto de categoria do Civil e o
+campo `inventario` no `FichaNpcDadosDto`.
 
 ## Fora de Escopo (preservado da spec original)
 
