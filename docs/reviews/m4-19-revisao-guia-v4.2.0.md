@@ -5,8 +5,9 @@ quer specs antes de novas correções. Fontes autorais e código de aplicação 
 
 **Esclarecimento posterior do autor, na mesma data:** teste e rolagem resultante
 posterior (Medicina→cura, ataque→dano) são operações distintas. A API não pode deduzir
-a segunda pela fórmula da primeira. Proposta global P-099 retirada da execução;
-caso específico de Competência, incluído pelo Guia no próprio teste de NPC, fica
+a segunda pela fórmula da primeira. P-099 foi descartada expressamente pelo autor;
+arquivo preservado só como memória, sem trabalho de implementação futuro.
+O caso específico de Competência, incluído pelo Guia no próprio teste de NPC, fica
 na revisão desse fluxo. [Fila consolidada das specs](../specs/backlog/revisao-documentos-sistema-v4.1.3-guia-v4.2.0.spec.md).
 
 ## O que já foi corrigido e o que ainda não foi
@@ -62,7 +63,7 @@ fluxo de ataque/inventário de passagem na m4-19.
 
 ## Defeitos confirmados para execução futura
 
-### P-099 — Observação da fórmula e proposta global retirada
+### P-099 — Observação histórica da fórmula; proposta descartada
 
 Leitura de `shared/src/regras/rolagem/rolagem.ts:712`: `ehFormulaTeste` exige
 `formula.dados.length === 1`. Reprodução somente em memória com o shared já construído:
@@ -77,7 +78,7 @@ A fórmula livre não informa se ela é teste, bonificação ou resultado; tampo
 uma rolagem futura. O total32 na tabela foi a hipótese para um teste NPC explicitamente
 competente, não aprovação de um classificador global. Autor rejeitou inferência de
 resultado posterior. [P-099](../specs/backlog/p-099-critico-teste-com-dados-adicionais.spec.md)
-agora registra essa distinção, sem execução como correção/dependência da m4-19.
+registra agora o descarte e seu motivo, sem execução ou dependência da m4-19.
 Aplicação do crítico e média do fluxo NPC serão revistas dentro do contrato escolhido,
 sem estender o escopo automaticamente a Formação ou fórmulas arbitrárias.
 
@@ -87,7 +88,12 @@ sem estender o escopo automaticamente a Formação ou fórmulas arbitrárias.
 `paginas/criar-npc/npc-atributos.component.html` fixa mínimo1 para controles habilitados.
 A validação da ficha pronta já aceita inteiro não negativo, portanto não tratar todo
 o modelo de NPC como incompatível. O defeito está no distribuidor/assistente de criação.
-[Spec P-100](../specs/backlog/p-100-npc-criacao-atributo-zero.spec.md).
+[Spec P-100](../specs/done/p-100-npc-criacao-atributo-zero.spec.md).
+
+**Fecho posterior (2026-10-06):** P-100 executada e concluída após autorização do autor;
+zero/redistribuição, troca de Categoria e foco do StepInput corrigidos. Gates e app real
+nos quatro viewports em [P-100 — verificação](p-100-verificacao.md). Achado acima registra
+o estado anterior à correção.
 
 ## Outras alterações observadas no Guia de Criaturas
 

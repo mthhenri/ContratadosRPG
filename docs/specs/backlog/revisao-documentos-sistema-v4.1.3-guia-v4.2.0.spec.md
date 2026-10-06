@@ -5,6 +5,8 @@
 > Autor autorizou commitar a preparação destas specs em 2026-10-06;
 > autorização restrita à documentação, sem execução das correções.
 > Correções de P-097-01 já realizadas permanecem como estão; nenhum rollback implícito.
+> P-095/P-096/P-098/P-100 tiveram execução autorizada separadamente e foram concluídas em 2026-10-06;
+> demais tasks conservam suas autorizações e pendências próprias.
 
 ## Objetivo
 
@@ -17,8 +19,8 @@ Este arquivo coordena tasks; não é uma implementação única.
 1. Manter a fila abaixo com origem, escopo e dependências verificáveis. Fontes autorais
    preservadas nesta rodada; specs em done são registro histórico.
 2. Distinguir teste de atributo, dado de bonificação dentro do teste e rolagem posterior
-   de dano/cura. A API não deduz a próxima ação pela fórmula. P-099 anterior não é
-   uma correção aprovada nem dependência executável da m4-19.
+   de dano/cura. A API não deduz a próxima ação pela fórmula. P-099 foi descartada;
+   seu arquivo é memória, sem execução ou dependência da m4-19.
 3. Revisar com o autor as decisões restantes antes de implementar seus recortes; depois
    executar tasks numeradas, com gates compartilhados quando o recorte integrado permitir.
    Commit desta preparação autorizado após apresentação das specs; commits de
@@ -26,11 +28,11 @@ Este arquivo coordena tasks; não é uma implementação única.
 
 | Task | Escopo preparado | Dependência/estado |
 |---|---|---|
-| [P-095](p-095-fixture-rolagens-feed-deterministica.spec.md) | Datas determinísticas e ordem do teste de reconexão | Testes apenas; execução futura |
-| [P-096](p-096-fixture-resumo-rolagem-deterministica.spec.md) | Data estável e fixture única no teste de espectador | Testes apenas; execução futura |
-| [P-098](p-098-ponteiros-auditoria-ficha-oculta.spec.md) | Ponteiros/estado da auditoria encerrada | Documental; execução futura |
-| [P-099](p-099-critico-teste-com-dados-adicionais.spec.md) | Registro/revisão da distinção teste e resultado | Proposta global retirada; sem execução como correção |
-| [P-100](p-100-npc-criacao-atributo-zero.spec.md) | Zero e redistribuição na criação de NPC | Antes do fecho integrado da m4-19 |
+| [P-095](../done/p-095-fixture-rolagens-feed-deterministica.spec.md) | Datas determinísticas e ordem do teste de reconexão | Concluída; testes e documentação |
+| [P-096](../done/p-096-fixture-resumo-rolagem-deterministica.spec.md) | Data estável e fixture única no teste de espectador | Concluída; testes e documentação |
+| [P-098](../done/p-098-ponteiros-auditoria-ficha-oculta.spec.md) | Ponteiros da spec arquivada; cobertura parcial da auditoria preservada | Concluída; documental |
+| [P-099](p-099-critico-teste-com-dados-adicionais.spec.md) | Memória da proposta e motivo do descarte | DESCARTADA — NÃO EXECUTAR; arquivo preservado |
+| [P-100](../done/p-100-npc-criacao-atributo-zero.spec.md) | Zero e redistribuição na criação de NPC | Concluída; gates e criação/reabertura em quatro viewports |
 | [m4-19](../active/m4-19-npc-testes-de-atributo-regra-e-rolagem.spec.md) | Competências, ajustes, dadinho, leitura/privacidade | Regra publicada; crítico no fluxo explícito e controle visual sujeitos à revisão |
 | [P-101-01](p-101-01-criatura-realocacao-atributos.spec.md) | Realocação total3, várias origens e negativo | Shared/criação/integração |
 | [P-101-02](p-101-02-criatura-dt-e-modificadores.spec.md) | DT e consumidores do modificador fixo | Integração com negativos da 01 |
@@ -73,7 +75,7 @@ Comparação contra os livros anteriores no Git, normalizando espaços, `&nbsp;`
 
 - Cada alteração mecânica localizada tem task, evidência de compatibilidade existente
   ou decisão pendente explícita. Nenhuma mudança de livro é chamada de correção automática.
-- Proposta global P-099 retirada; P-095/P-096 continuam independentes de regras do jogo.
+- P-099 descartada e excluída da fila executável; P-095/P-096 independentes de regras do jogo.
 - Tasks têm objetivo, entregáveis, critérios, fora de escopo e dependências, com gates
   adequados à implementação futura; links conferidos.
 - Nenhuma nova mudança funcional, teste, banco ou publicação nesta rodada.

@@ -1,5 +1,167 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-06 — Commits separados das correções e limpeza dos resíduos de verificação
+
+Após o fecho da P-100, o autor pediu versionar P-095/P-096/P-098/P-100 preferencialmente
+em commits separados, incluir as demais alterações desta frente e limpar os resíduos.
+Criados e conferidos: `2b947120` (P-095, fixture do feed), `58821848` (P-096, resumo do
+espectador), `21b9643c` (P-098, ponteiros da auditoria), `aaf687b7` (P-100, atributo zero
+e foco autorizado), `0e96e224` (P-097, crítico/média/ajuda e evidências) e `11cd8dab`
+(livros v4.1.3/v4.2.0, fontes canônicas, leitor e pipeline). Cada commit foi conferido
+com sua mensagem efetivamente gravada e trailer `Co-authored-by: Codex <noreply@openai.com>`.
+Os arquivos comuns de contexto/fila, descarte P-099 e abertura do guarda-chuva M4 ficam
+em um commit documental integrado desta rodada, preservando a separação do código.
+
+Os gates já executados e registrados nas tasks cobrem o conteúdo versionado: último
+gate integrado com 5.061 testes aprovados + 1 skip, builds/lint dos três workspaces
+sem erros; após o foco, StepInput 11/11, build/lint frontend e observação real novamente
+aprovados. Não houve nova mudança de código ao preparar commits, portanto não se
+repetiram os mesmos gates. AGENTS/CLAUDE e as duas árvores de skills conferidos idênticos;
+PDFs canônicos, servidos e do build comparados byte a byte. Quebras de linha Markdown
+na exportação autoral preservadas; diff-check dos consumidores sem erros.
+
+Inventário da pasta local ignorada `.superpowers`: removidos 142 arquivos anteriores a
+2026-10-06, total 21.359.537 bytes: 96 logs, 25 helpers CJS, 2 PowerShell, 3 Python,
+2 mensagens TXT, 2 auxiliares de commit e 12 JSON transitórios (lint, cenário/sessão/pid).
+Alvos absolutos conferidos dentro dessa pasta, sem links/reparse points nem remoção
+recursiva. Também removidos o patch temporário de preparação P-098 e a captura intermediária
+`p-097/mobile-diagnostico.png`, sem referência no relatório. Os 13 helpers/logs/sessão da
+P-100 já haviam sido removidos no fecho anterior; dados sintéticos já excluídos por soft
+delete. Nenhum arquivo `.tmp-*` ficou na raiz. Planos, propostas, evidências finais e
+imagens de comparação foram preservados; referências históricas a scripts/logs locais
+descrevem a rodada original e não significam retenção permanente desses descartáveis.
+
+Autor escolheu deixar `docs/design/propostas/m10-regras-exemplao.html` para a conversa
+da M10: arquivo preservado e fora dos commits. Não houve push, publicação ou mudança
+de versão. P-099 continua descartada e M4-19/P-101/P-102 mantêm seus estados próprios.
+
+## 2026-10-06 — P-100: zero e redistribuição na criação de NPC
+
+Execução autorizada pelo autor. Guia v4.2.0 permite retirar o ponto inicial do atributo;
+o saldo compartilhado já o devolvia, mas uma validação e o mínimo do controle impediam
+zero. Removida somente essa rejeição em `shared/regras/npc/criacao`; validação continua
+exigindo inteiros não negativos, teto da Categoria e distribuição exata. StepInput do
+assistente aceita 0 e explica a redistribuição. Civil mantém combate bloqueado de base 0,
+sem saldo fictício e com liberação independente. Mudança de Categoria preserva zeros
+escolhidos; ao sair de Civil só restaura 1 no atributo anteriormente bloqueado.
+
+Revisão, snapshot, registro e leitura mantêm zero. Recursos calculados continuam na
+regra compartilhada; API, permissões, DTOs e edição da ficha pronta preservados.
+Durante o gate visual apareceu defeito preexistente: input numérico do StepInput
+sem indicador de foco. Autor autorizou expressamente corrigir no primitivo; aplicado
+`:focus-visible` com tokens e outline interno à cápsula, sem API ou variante nova.
+
+Teste de shared reproduziu 3 falhas/8 passes antes e 11 passes depois. Focados do
+assistente 29/29. Suítes completas: shared 1.096, backend 959 + 1 skip, frontend 3.006;
+total 5.061 passes. Builds dos 3 workspaces e lint dos 3 passaram sem erros; warnings existentes
+de lint, Canvas no leitor PDF e budget do bundle reportados separadamente. Após SCSS
+de foco: StepInput 11/11, build/lint frontend novamente verdes. Diff lido contra spec,
+arquitetura e convenções; HTML/SCSS formatados e `git diff --check` limpo.
+
+`verify`/`design-fidelity` na aplicação real, comparação pessoal com assistente m4-13,
+1920×1080/360×800/960×1080/1366×768: redução a 0, redistribuição, saldo/teto inválidos,
+mudanças de Categoria, Civil bloqueado/liberado, revisão/registro, GET, recarga e ficha
+pronta; edição/cancelamento preserva 0. Mesma identidade/densidade/hierarquia/controles,
+sem overflow; alvos mobile 44×44 e foco de teclado da cápsula/discreto reinspecionados.
+Operativo do aceite registrado com Social 0 e saldo 0, Vida 55/Energia 12. Civil com
+Social 0 redistribuído, Nível 0, Vida 16 e sem Energia. NPCs 187–195, campanha 34 e conta 56
+sintéticos excluídos por soft delete; GET confirmou 404 de fichas/campanha. Helpers,
+logs e sessão temporários removidos; evidências sem credenciais preservadas.
+
+Spec movida para done; P-100 removida de PROBLEMS, CONTEXT/fila/dependência m4-19
+alinhados. [Relatório completo](../reviews/p-100-verificacao.md). Nenhuma pendência
+desta task. M4-19 continua aberta; P-101/P-102 seguem suas specs, P-099 descartada.
+Sem commit nesta rodada; alterações anteriores e arquivos de outras tarefas preservados.
+
+## 2026-10-06 — P-099 descartada; arquivo preservado como memória
+
+O autor confirmou que o sistema não rastreia um teste até os dados resultantes de outra
+rolagem e que descarta a proposta P-099. Medicina→cura e ataque→dano são operações
+separadas; fórmula e quantidade de pools não identificam intenção futura. A decisão
+encerra a proposta, sem código, rastreamento novo ou compensação de crítico.
+
+O arquivo P-099 foi preservado no caminho existente, com estado DESCARTADA/NÃO EXECUTAR,
+motivo, exemplos, limite da reprodução histórica e regra de reabertura só por nova decisão
+expressa do autor. Permanecer em backlog conserva referências e não significa trabalho
+executável. CONTEXT, PROBLEMS (ACEITO), fila consolidada, revisão do Guia e m4-19 alinhados:
+P-099 não será executada e não é dependência da m4-19. Competência dentro do próprio teste
+NPC permanece no contrato específico dessa task, sem reativar a proposta descartada.
+
+O autor levantou a possibilidade de uma pilha de descarte `trash`/`discard`; por enquanto
+pediu apenas documentar. Ideia registrada como I-049 em IDEAS, sem criar pasta, mover ou
+apagar arquivos, nem alterar o fluxo canônico AGENTS/CLAUDE. Nenhuma spec histórica
+em done foi reescrita. Verificação documental: revisão do diff, estado e referências,
+links relativos conferidos e `git diff --check` sem erros. Testes/build/lint de aplicação
+não repetidos, pois nenhum código ou estilo mudou. Sem novo commit nesta rodada.
+
+## 2026-10-06 — P-096/P-098: fixture de espectador e ponteiros da auditoria corrigidos
+
+O autor autorizou executar P-096/P-098 e pediu conversar sobre P-099 em seguida, antes
+do fecho da m4-19. Esta rodada altera somente o teste de rolagem do backend e documentação;
+as demais frentes de NPC, Criaturas, livros e código preexistente foram preservadas.
+
+**P-096.** `backend/src/modules/rolagem/rolagem.service.spec.ts`: `criarResumo()` passou
+a ter `createdDate` fixa, com sobrescritas preservadas. O cenário de ESPECTADOR constrói
+`resumoRolagem` uma vez e o reutiliza no mock de repository e na expectativa `toEqual`
+do DTO inteiro. Mantidos `campanhaId`, `usuarioId` e `ehMestre: false`, sem afrouxar
+asserção, ignorar datas, introduzir espera/retry ou mudar permissão/produção.
+
+Comando focado `npm run test --workspace=backend -- rolagem.service.spec.ts`: 16/16
+antes e depois da alteração. `npm run test --workspace=backend`: 52 arquivos, 959
+passando e 1 ignorado. `npm run lint --workspace=backend`, incluindo `tsc --noEmit` das
+specs: zero erros, 4440 avisos preexistentes, mesma contagem do gate anterior. A primeira
+tentativa focada no isolamento falhou antes de coletar testes por `EPERM` no `realpath`;
+execução autorizada fora do isolamento passou. Shared e frontend mantêm a evidência do
+gate amplo da P-095 imediatamente anterior (1089 e 3001 testes, lint sem erros), pois
+nenhum código desses workspaces foi alterado nesta rodada. Sem alteração de produção
+que exigisse build de entrega ou gate visual. Revisão de diff/convenções aprovada.
+
+**P-098.** MEMORY tinha link inexistente para `active/auditoria-ficha-oculta-todos-consumidores`;
+agora aponta a spec em `done/`, com descrição de arquivamento. CONTEXT e relatório
+explicitam a diferença entre localização e cobertura: a spec histórica conserva o registro
+de execução aberta e o relatório permanece parcial; não foi encontrado fecho integral.
+O cabeçalho antigo do relatório foi datado como estado da rodada inicial e recebeu nota
+de conferência atual. Nenhuma reescrita da spec histórica, nem nova investigação/correção
+de ficha oculta. As observações FO-01/02/03 e m7-27 permanecem, assim como D-01/D-02/H-02
+e a cobertura adicional de H-01. Arquivar a spec não encerra essas pendências.
+
+Links afetados, localizações e diff conferidos; P-096/P-098 removidos de Ativos, specs
+movidas para `done/` e fila/contexto alinhados. `git diff --check` sem erros. Logs próprios
+removidos após registro dos resultados. P-099 preservada, com proposta global retirada,
+aguardando conversa solicitada pelo autor. Sem novo commit nesta rodada.
+
+## 2026-10-06 — P-095: cronologia determinística no teste de reconexão do feed
+
+O autor autorizou começar pela P-095 após o commit de preparação das specs. A m4-19
+permanece aberta, com implementação e gates futuros, apresentação de ocultação e revisão
+do crítico no contexto de Competência pendentes; esse pedido não executa a frente de NPC.
+
+Em `campanha-detalhe-dados.service.spec.ts`, a fixture `rolagem()` passou a usar uma data
+fixa, preservando `sobrescritas.createdDate`. A reconexão reutiliza a mesma rolagem anterior
+no boot e na resposta posterior, e recebe uma segunda rolagem com data fixa estritamente
+posterior. A expectativa `[2, 1]` permanece. A chegada normal por socket também declara
+data posterior; exclusão durante GET, queda total e registro durante GET mantêm suas
+provas existentes. O caso de socket durante GET já tinha data futura explícita. Nenhuma
+mudança no serviço, em `mesclarFeedRolagens`, na ordenação do produto ou na UI.
+
+**Verificação.** Teste focado, antes e depois da alteração: 38/38. Comando:
+`npm run test --workspace=frontend -- --include=src/app/modules/campanha/paginas/detalhe/campanha-detalhe-dados.service.spec.ts`.
+Gate `npm run test --workspaces --if-present`: shared 1089/1089 (65 arquivos), backend
+959 passando + 1 ignorado (52 arquivos), frontend 3001/3001 (213 arquivos), total 5049
+passando e 1 ignorado. `npm run lint`: zero erros nos três workspaces; avisos de convenção
+preexistentes (shared 5887, backend 4440, frontend 26990). A compilação de testes Angular
+passou. Não houve mudança de produção que exigisse build de entrega ou gate visual.
+
+A primeira tentativa focada no isolamento falhou antes de coletar testes por `EPERM`
+ao renomear um temporário do Vitest; a execução autorizada fora do isolamento passou.
+Os avisos de Canvas no jsdom da suíte ampla não impediram a execução. Revisão manual
+do diff contra a spec e `convencoes-check`: nenhuma regra de produção alterada, nenhuma
+asserção removida, nenhuma espera/retry adicionada e nenhum relógio real na fixture.
+`git diff --check` e os links operacionais da P-095 conferidos. P-095 removido dos
+problemas ativos, spec movida para `done/`, fila consolidada e contexto alinhados.
+Logs temporários próprios removidos após registrar os resultados. P-096 não alterada;
+mudanças de outras frentes preservadas. Implementação sem novo commit nesta rodada.
+
 ## 2026-10-06 — Versionamento da preparação de specs autorizado
 
 Após receber a explicação de cada task, o autor autorizou commitar a criação das specs.
@@ -68,6 +230,58 @@ abertas, pois mudanças de livro não corrigem fixtures que consultam relógio r
 Relatório em `docs/reviews/m4-19-revisao-guia-v4.2.0.md`. Verificação documental e
 reproduções sem persistência; nenhum gate de aplicação repetido sem implementação.
 Limpeza dos 14 logs temporários `.tmp-p097-*.log`; evidências e documentos preservados.
+
+## 2026-10-06 — P-097-01: Sistema v4.1.3 incorporado e crítico de teste corrigido
+
+O autor publicou `sistema-v4.1.3.md/pdf` e autorizou conferir e corrigir o Sistema
+do Jogador; Guia de Mestre será publicado posteriormente. Comparação por parágrafo
+contra a versão anterior identificou três alterações de conteúdo, na seção Crítico;
+demais diferenças são formatação. A regra nova substitui a hipótese de +2 por cada
+crítico: teste, incluindo ataque, ganha +2 uma vez no resultado; dano/cura dobram
+dados/valores, preservando a exceção PROF/NIV. Revisão P-097 concluída e spec de
+implementação separada executada; ambas em `done/`. Fontes autorais preservadas.
+
+Motor `shared/regras/rolagem` identifica a notação existente de teste, aplica margem
+natural ou explícita e adiciona contribuição `CRÍTICO 2`. Críticos descartados não
+contam; repetições são independentes. `[20,20,9] + PROF 9` agora retorna 31; total
+33 era interpretação anterior superada. Comando de crítico em teste não dobra
+pool ou modificadores; resultados genéricos e tipados mantêm a mecânica existente.
+Sem modo/DTO novo, cálculo compensatório no frontend ou migração de resultados.
+
+Integração revelou que a média prevista no montador precisava incluir o bônus.
+Correção pesa cada valor do mantido e consulta o motor, sem reimplementar a regra
+no frontend: `2d20kh1` → média 14,02, máximo 22; cm2 → média 14,205. Ajuda corrigida
+na estrutura existente. Leitor, scripts de preparação/verificação, assets e ignore
+passam ao PDF novo. Ponteiros em SYSTEM.SPEC, CONVENTIONS, MEMORY, instruções e skill
+de regras corrigidos; AGENTS/CLAUDE e todas as skills das duas pastas idênticos.
+
+Verificação: novo teste reproduziu seis falhas esperadas antes da correção. Motor e
+corpus focados 93/93; montador 20/20. Suítes: shared 1.089, backend 959 (+1 ignorado),
+frontend 2.956 — 5.004 testes passaram. Builds dos três workspaces, typecheck shared,
+lint dos três workspaces e revisão de diff passaram; lint tem avisos de estilo e
+build frontend mantém o aviso de bundle inicial já conhecido (P-004). Corpus:
+50 casos de 15 fórmulas de teste alterados; demais resultados/interpretações preservados.
+
+Skills `verify`/`design-fidelity`: app real em 1920×1080, 360×800, 960×1080 e 1366×768,
+com estados crítico/normal/margem ampliada, ajuda e PDF renderizado; POST/201 grava
+os mesmos totais. Capturas pessoalmente inspecionadas contra os componentes atuais,
+sem overflow ou divergência visual. PDF servido e de build idênticos ao canônico;
+leitor nativo observado com renderização completa, mobile com canvas. Ficha de teste
+186 removida por soft delete. Relato completo em [verificação P-097](../reviews/p-097-verificacao.md).
+
+P-097 retirado dos ativos. P-095/P-096 passaram nesta rodada, mas permanecem abertos
+e sem alteração de fixture. m4-19 continua em `active/` aguardando o novo Guia de
+Mestre: nenhum item de implementação específica de NPC iniciou. Auditoria anterior
+marcada como datada; sua contagem de vários críticos não rege o Sistema atual.
+
+**Publicação recebida no fecho:** `guia_de_mestre-v4.2.0.md/pdf` entrou no workspace
+e substituiu o Guia v4.0.0 enquanto esta tarefa era verificada. Ponteiros atuais,
+pipeline e leitor alinhados também à publicação nova, para preservar o build.
+m4-19 passa a aguardar a revisão desse documento recebido, em vez do envio do
+arquivo; nenhum contrato ou comportamento específico de NPC foi implementado.
+Teste final do leitor 11/11 e build final com os dois PDFs novos publicados;
+comparação byte a byte com as fontes passou. Na conferência documental, registrada
+P-098: ponteiro preexistente de MEMORY para a auditoria já em `done/`, fora deste recorte.
 
 ## 2026-10-06 — pn-11: resumo no topo, anterior/próxima, voltar ao topo — fecha a revisão da página
 
@@ -170,6 +384,74 @@ Reserva o espaço do botão por opacidade, então o título não se desloca; no 
 `#para-o-mestre` posiciona abaixo da topbar, link copiado abre no mesmo ponto em aba nova, fragmento
 inexistente não rola nem lança, 13 ids únicos na `1.4.0`, botão 16 px no desktop e 44 px no toque.
 Sem `docs/design/` nesta task (o padrão de trilhos entra na `pn-08`).
+
+## 2026-10-06 — m4-19 e P-095/P-096/P-097: decisões registradas, somente especificação
+
+**Pedido do autor.** Nenhuma correção imediata: preparar specs e conversar sobre P-095/P-096.
+O autor providenciará nova versão de testes/atributos de NPC; a m4-19 aguarda esse documento,
+sem implementar a fórmula recomendada pela auditoria nem aplicar o diff proposto no Guia.
+Skill `task-flow` aplicada na preparação documental, sem abrir tasks de implementação.
+
+**Decisões de produto.** NPC deve ter dadinho em cada atributo. Leitor com acesso vê os
+valores apresentados (incluindo ajustes/modificadores), sem edição; Anotações continuam
+privadas. Isso substitui a recomendação de esconder os mapas novos. Ocultar rolagens
+aprovado, com a declaração “sempre ocultas, assim como nas criaturas”; não convertida
+automaticamente em permissão de publicação. Na retomada, a alternância do análogo precisará
+respeitar essa declaração; eventual distinção entre padrão e trava permanente fica explícita
+na spec. Civil foi descrito como Nível 0 (“em tese não” soma Nível); não autoriza zerar
+fichas nem resolver o caso de outro Nível sem consultar a nova fonte.
+
+**Crítico.** O autor quer revisar abrangência (todos os testes ou recorte, inclusive ataque)
+e se múltiplos críticos somam +2 antes do descarte. P-097 permanece aberto como revisão de
+regra, sem correção automática; o exemplo 33 e a contagem do pool inteiro são a interpretação
+da auditoria anterior, não uma nova escolha do autor. Spec
+`p-097-revisao-critico-testes.spec.md` em backlog: mapear consumidores, comparar documentos,
+obter contrato explícito e preparar implementação posterior. Nada alterado em `docs/core/`.
+
+**Fixtures.** Fonte conferido: P-095 gera datas reais na fixture `rolagem()` e o cenário de
+reconexão pode empatar ids 1/2; a spec propõe datas fixas distintas e mantém `[2,1]`.
+P-096 chama `criarResumo()` duas vezes, com relógio real, e compara DTO completo; spec
+propõe data fixa e reutilizar o resumo no mock/expectativa, preservando `ehMestre: false`.
+Criadas `p-095-fixture-rolagens-feed-deterministica.spec.md` e
+`p-096-fixture-resumo-rolagem-deterministica.spec.md` em backlog. Problemas continuam ativos.
+
+**Validação desta rodada.** Leitura dos casos concretos e registro documental; revisão de
+diff, integridade dos links novos e seções obrigatórias das specs. Testes, build, lint e
+verificação visual de implementação não executados: nenhum código/estilo foi alterado.
+m4-19 permanece aberta em `active/`; três specs futuras em `backlog/`.
+
+## 2026-10-05 — m4-19: auditoria de teste do NPC, aguardando decisões do autor
+
+**Recorte executado.** Spec movida de `backlog/` para `active/`; dependências m4-16/17/18
+confirmadas em `done/`. Executado somente o item 1, conforme a parada obrigatória antes de
+contrato/regra/UI. Skills `task-flow` e `regras-do-jogo` aplicadas. Relatório completo em
+[m4-19-auditoria](../reviews/m4-19-auditoria.md), com trechos/linhas das duas fontes canônicas,
+quatro tabelas de probabilidades exatas, alternativas e impacto nos consumidores.
+
+**Conclusões e proposta, ainda sem decisão do autor.** Guia define Nível como Proficiência
+“em todos os contextos”, sem excluir NPC Civil. Recomendação B: atributo + ajuste de dados
+no pool; Nível + modificador manual no resultado, inclusive Civil. Sem fusão automática de
+habilidades, preservando m3-31. Propostos mapas de bônus privados para leitor e toggle de
+rolagem, começando privado como Criatura; diff de esclarecimento do Guia mostrado no relatório,
+mas não aplicado. Defesa/DT/Vida/Energia e Proficiência do jogador não foram alteradas.
+
+**Achados.** A hipótese de que o motor já soma +2 por crítico é falsa: `[20,20,9]`, atributo 3,
+Proficiência 9 retorna 29 e um crítico; Sistema prevê 33 e dois. Registrado `P-097` para
+correção separada, sem compensação exclusiva do NPC. A hipótese “sem bônus nunca passa DT 25”
+também não vale pela regra escrita: seis dados passam DT 25 em 0,222984375% e DT 30 em
+0,0001796875%; no motor atual ambas são zero. Não há faixas/validador compartilhado de
+`modificadoresTeste`/`dadosTeste` do Jogador para reutilizar: seus steppers são livres.
+Recorte privado atual omite História/Anotações, mas não Conduta; não assumir sigilo existente
+de Conduta nem alterar privacidade de Jogador ao tratar os dois novos mapas do NPC.
+
+**Verificado.** Fórmulas combinatórias em inteiros confrontadas com contagem dinâmica exata
+em 792 comparações (sem simulação). Três reproduções determinísticas contra o fonte atual,
+transpilado em memória: dois críticos, pool zero e pool −1. Teste focado
+`npm run test --workspace=shared -- rolagem.spec.ts`: 107/107, um arquivo. Primeira tentativa
+restrita falhou ao carregar configuração por acesso negado do sandbox; execução autorizada
+fora dele passou. Sem implementação, não houve build/lint/suítes completas nem gates de
+UI/REST/socket da m4-19. Documentos canônicos e código de aplicação intactos; alterações
+concorrentes de patchnotes preservadas. **Task aberta:** itens 2–5 dependem da resposta do autor.
 
 ## 2026-10-05 — pn-06: ADMIN reinicia o cache dos patchnotes sem reiniciar a API
 

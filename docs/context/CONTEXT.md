@@ -1,12 +1,13 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Auditoria de ficha oculta em andamento:** [matriz e evidências](../auditorias/ficha-oculta-todos-consumidores.md).
-> Spec em `active/`, exclusivamente investigativa. As três divergências confirmadas (eventos FO-02,
+> **Auditoria de ficha oculta — cobertura ainda parcial:** [matriz e evidências](../auditorias/ficha-oculta-todos-consumidores.md).
+> [Spec investigativa arquivada em `done/`](../specs/done/auditoria-ficha-oculta-todos-consumidores.spec.md);
+> o relatório não comprova fecho integral. As três divergências confirmadas (eventos FO-02,
 > concessão/leitura FO-03, identidade no encontro FO-01) estão corrigidas. Regras decididas
 > (SYSTEM.SPEC §14): ocultar ficha de jogador **suspende** a concessão; no encontro, o agente
 > oculto some do recorte de terceiros e, durante o turno dele, a vez aparece no próximo visível.
 > Seguem abertas as decisões de rolagem pública (D-01) e médias (D-02) e a hipótese de URL de
-> avatar já conhecida (H-02).
+> avatar já conhecida (H-02); H-01 tem recortes verificados, com demais consumidores pendentes.
 
 > **Requests — revisão de 2026-09-26 fechada:** as seis tasks do guarda-chuva
 > [requests-correcoes](../specs/done/requests-correcoes.spec.md) (`p-082`…`p-086` +
@@ -22,9 +23,27 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-10-06 · Preparação de specs de NPC, Criaturas, fixtures e
-> documentação concluída; autor autorizou seu versionamento, sem executar correções.
-> [Fila consolidada](../specs/backlog/revisao-documentos-sistema-v4.1.3-guia-v4.2.0.spec.md).
+> **Última revisão:** 2026-10-06 · P-095/P-096/P-098/P-100 versionadas em commits
+> separados após autorização do autor; P-097 e livros/leitor em grupos próprios.
+> Gates das implementações aprovados; resíduos antigos de verificação limpos e
+> evidências finais preservadas. Proposta M10 fica para sua conversa própria.
+> **Última decisão registrada:** Sistema do Jogador v4.1.3
+> incorporado em `p-097-01`: crítico soma +2 uma vez no teste; dano/cura continuam
+> dobrando dados e valores. Motor, média do montador e leitor de documentos corrigidos.
+> Guia de Mestre v4.2.0 revisado; m4-19 reespecificada para Nível + Competências,
+> dadinho, ajustes e privacidade, sem implementação. Autor esclareceu que deseja
+> specs antes de novas correções. Proposta global P-099 retirada após esclarecer teste
+> e dano/cura posteriores; contrato do fluxo específico NPC ainda será revisado.
+> [Fila consolidada de specs](../specs/backlog/revisao-documentos-sistema-v4.1.3-guia-v4.2.0.spec.md):
+> NPC, Criaturas (P-101-01/02/03), fixtures P-095/096 e documentação P-098/102.
+> Ataques/equipamentos NPC têm spec investigativa separada; sem execução das correções.
+> Autor autorizou versionar a preparação documental das specs.
+> [P-095](../specs/done/p-095-fixture-rolagens-feed-deterministica.spec.md) e
+> [P-096](../specs/done/p-096-fixture-resumo-rolagem-deterministica.spec.md) concluídas:
+> fixtures com datas fixas, ordem `[2, 1]` e comparação completa de espectador preservadas.
+> [P-098](../specs/done/p-098-ponteiros-auditoria-ficha-oculta.spec.md) concluída:
+> ponteiros da auditoria alinhados; investigação parcial e decisões reais permanecem abertas.
+> P-099 descartada pelo autor: arquivo preservado como memória, sem execução futura.
 > Antes: `m4-18-ficha-npc-atributos-como-jogador` concluída
 > (spec em `done/`): Jogador e NPC usam `app-atributo-ficha`; no NPC, siglas/DT e steppers com a
 > mesma caixa/grade do Jogador, sem Maestria, lesão, modificador, dados ou rolagem. Regressão do
@@ -387,7 +406,7 @@
 > reload, em `1920×1080` e `360×800`. Detalhe completo em `HISTORY.md`.
 > Antes: Brainstorming aprovado (2026-09-21): o M7 "Encontro de Combate" amplia para um módulo de
 > **Cenas** — pedido do autor para tipar a cena na criação (Combate/Investigação/Furtiva/
-> Perseguição/Resistência, `docs/core/sistema-v4.1.0.md` "⬡ Cenas") e abrir caminho para uma cena de
+> Perseguição/Resistência, `docs/core/sistema-v4.1.3.md` "⬡ Cenas") e abrir caminho para uma cena de
 > Investigação que organiza documentos e fichas dos jogadores numa mesma tela. `cena` nasce como
 > raiz nova (tipo, status `PLANEJADA→ATIVA→ENCERRADA`, ordem); `encontro` continua intocado em
 > nome/código, passando a pendurar numa `cena_id` — é a estrutura que só Combate/Furtiva/
@@ -837,21 +856,28 @@ além dos ajustes manuais; Competência não altera DT e seus dados não recebem
 Civil Nível0 soma zero, sem zerar fichas ou criar exceção para outros Níveis.
 Dadinho requerido; leitor vê bônus apresentados sem editar/rolar; Anotações privadas.
 Rolagens privadas sempre; apresentação do controle de ocultação ainda deve ser fechada,
-sem presumir autorização de transição pública. Autor esclareceu: nenhuma nova execução
-agora. Fontes autorais preservadas. P-097-01 corrigiu crítico de teste com um pool;
+sem presumir autorização de transição pública. Autor pediu encerrar as pendências antes
+do fecho da m4-19. Fontes autorais preservadas. P-097-01 corrigiu crítico de teste com um pool;
 [P-099](../specs/backlog/p-099-critico-teste-com-dados-adicionais.spec.md) teve a proposta
-global retirada pelo autor; API não deduz dano/cura posteriores. Revisar crítico pelo
-contexto escolhido da ação; não é dependência executável. [P-100](../specs/backlog/p-100-npc-criacao-atributo-zero.spec.md)
-adapta criação zero, antes do fecho integrado de m4-19. Adequações de Criaturas
+global descartada pelo autor; arquivo preservado como memória, sem execução. Revisar crítico pelo
+contexto escolhido da ação; não é dependência executável. [P-100](../specs/done/p-100-npc-criacao-atributo-zero.spec.md)
+concluída: criação aceita zero, devolve o ponto e preserva teto/orçamento, exceções Civil
+e zeros escolhidos na troca de Categoria. Foco do StepInput corrigido com autorização;
+[gates e app real nos quatro viewports](../reviews/p-100-verificacao.md) aprovados.
+Adequações de Criaturas
 [P-101](../specs/backlog/p-101-criaturas-guia-v4.2.0.spec.md) divididas em 01/02/03;
 Cadência já drena turnos excedentes ao fim, sem correção necessária confirmada.
-Ponteiros P-098/102 e investigação de equipamento/ataques NPC em tasks próprias;
+Ponteiros P-098 concluídos; P-102 e investigação de equipamento/ataques NPC em tasks próprias;
 [fila consolidada](../specs/backlog/revisao-documentos-sistema-v4.1.3-guia-v4.2.0.spec.md)
-tem versionamento documental autorizado; execução das correções aguarda revisão. Specs
-[P-095](../specs/backlog/p-095-fixture-rolagens-feed-deterministica.spec.md),
-[P-096](../specs/backlog/p-096-fixture-resumo-rolagem-deterministica.spec.md) em `backlog/`;
-as fixtures continuam aguardando execução própria; os livros novos não corrigem relógio
-dos testes. Revisão P-097 em `done/`; correção anterior mantida pelo autor.
+tem versionamento documental autorizado; demais correções aguardam revisão.
+[P-095](../specs/done/p-095-fixture-rolagens-feed-deterministica.spec.md) concluída:
+fixture determinística, datas distintas na reconexão e expectativa `[2, 1]` preservada.
+[P-096](../specs/done/p-096-fixture-resumo-rolagem-deterministica.spec.md) concluída:
+data fixa, resumo único no mock/expectativa e permissão de espectador preservada.
+[P-098](../specs/done/p-098-ponteiros-auditoria-ficha-oculta.spec.md) concluída:
+MEMORY/CONTEXT apontam a spec histórica em `done/`, sem declarar a cobertura integral
+da auditoria encerrada. P-099 descartada; demais adequações permanecem em suas specs.
+Revisão P-097 em `done/`; correção anterior mantida pelo autor.
 Decisões de abertura **já tomadas pelo autor** estão dentro de cada spec; o que sobra para
 perguntar é só o que cada uma marca como tal.
 **Revisão do NPC, primeira rodada (pedido do autor, 2026-10-04) — concluída: `m4-12`, `m4-13`, `m4-14` e `m4-15` em `done/`.**
@@ -873,7 +899,9 @@ existentes preservados. Criatura ainda tem receita própria (`I-048`).
 **Guia de NPC (`m4-13`):**
 `criar-npc.page.*` usa `main.ficha-pagina.guia` (cabeçalho com `NPC // ACERVO|CAMPANHA`, Roteiro com `visitado` liberando só
 até a etapa mais distante, `guia__secao`, rodapé em grade, resumo em painel/modal); campos das etapas em `npc-etapa.scss`
-(subconjunto de `guia__introducao`/`__campos`/`__metricas`/`.atributo`); sem rascunho local nem diálogo de sair (a saída é o
+(subconjunto de `guia__introducao`/`__campos`/`__metricas`/`.atributo`); P-100 permite zero e
+redistribuição, preserva orçamento/tetos e a base Civil, com foco de teclado no StepInput.
+Sem rascunho local nem diálogo de sair (a saída é o
 `canDeactivate`); sem imagem de registro (`I-046`); casco copiado, não compartilhado (`I-045`). **Campanha do mestre (`m4-15`):**
 `CampanhaFichasAbas` (`campanha/componentes/campanha-fichas-abas/`) traz as três abas (`app-abas`), cada uma com o mesmo
 cabeçalho de seção (contagem + botão de criar) e a mesma grade; Esquadrão e NPC usam `EspectadorFichaCard` (generalizado: dados
@@ -1582,7 +1610,7 @@ cada botão marcado com `[modalAcoes]`) e sem tamanho (`app-botao` não herda um
 
 **`ui-16-barra-de-recurso-e-cartao-de-combatente` concluída** (spec em `docs/specs/done/`). A spec
 herdada da auditoria foi corrigida antes de implementar (commit `9bdad49`): Sanidade não é um
-recurso numérico (`sistema-v4.1.0.md` §Sanidade: "não é uma barra de valor convencional"), o
+recurso numérico (`sistema-v4.1.3.md` §Sanidade: "não é uma barra de valor convencional"), o
 "painel do mestre" não tinha marcação própria de recurso (só embrulha `app-cartao-combatente`) e
 `app-chip` nunca teve severidade `info`. Novo primitivo `app-barra-recurso`
 (`shared/ui/barra-recurso/`) — rótulo + valor atual/máximo + trilho, cor fixa por recurso
@@ -2093,7 +2121,7 @@ Dez domínios implementados e testados: `agente/` (15 fórmulas — vida, energi
 defesa/esquiva/bloqueio, proficiência, deslocamento, dano de corpo/furtivo, inventário),
 `compras/` (catálogo, limites por patente, modificações, amplificadores, fragmentos, venda),
 `dados/`, `descanso/`, `dt/`, `identidade/`, `novo-agente/`, `patente/`, `rolagem/` — todos
-contra `docs/core/sistema-v4.1.0.md` — e `criatura/` (`m4-02`, 10 módulos de fórmula do "Guia
+contra `docs/core/sistema-v4.1.3.md` — e `criatura/` (`m4-02`, 10 módulos de fórmula do "Guia
 de Criação de Ameaças" — atributos, modificadores, saúde, defesa, resistências/fraquezas,
 regeneração, deslocamento, cadência/iniciativa (Frenética declara `turnosPorRodada` >= 4, inclusive
 para combatentes avulsos; após o cálculo, a Iniciativa desenha um cartão por slot intercalado de
@@ -2441,7 +2469,7 @@ Na visualização completa, o menu de dono/mestre oferece **Remover da campanha*
 vinculada; a desatribuição é direta e retorna ao acervo após o backend confirmar.
 
 Item custom ganhou a categoria de sistema `SEM_CATEGORIA` (`ItemCategoriaEnum`, sem capítulo
-correspondente em `sistema-v4.1.0.md` — bucket organizacional puro, nunca ganha item de catálogo):
+correspondente em `sistema-v4.1.3.md` — bucket organizacional puro, nunca ganha item de catálogo):
 disponível só no seletor de categoria do form de item custom (ficha, esquadrão, calculadora
 "Compras"), nunca como aba do catálogo navegável. Item dessa categoria é sempre empilhável (cai na
 grade dupla, junto de Medicinal/Operacional) e nunca modificável (sem Dano/Resistência/"encaixa em"
@@ -3206,7 +3234,7 @@ conteúdo **projetado** pelo consumidor, precisa de `:host ::ng-deep` para o col
 alcançá-lo — um seletor simples no `.scss` do `Aba` nunca bate no `<span>` de fora (encapsulamento
 de view aplica o atributo do TEMPLATE DO CONSUMIDOR, não o do componente).
 
-### Versão e patchnotes — `shared/versao`, `backend/patchnote`, `frontend/patchnotes` (pn-01…pn-11)
+### Versão e patchnotes — `shared/versao`, `backend/patchnote`, `frontend/patchnotes` (pn-01…pn-07)
 
 A **versão do sistema** tem fonte única: o `version` do `package.json` da raiz (hoje `1.4.0`).
 `npm run versao:sincronizar` alinha os três workspaces e o lock e gera `shared/src/versao.ts`
@@ -3232,7 +3260,12 @@ esvaziada. A página `/patchnotes[/:versao]` renderiza com
 `DocumentoContencao` compartilhado com a tela de Acesso negado. **Publicar** é ação externa: skill
 `publicar-versao` + `npm run patchnotes:publicar` (local, com credencial de escrita do R2 no ambiente
 do comando; `--dry-run` mostra o destino). `pn-05` segue aberta até a publicação no R2 real.
-**Revisão da página concluída (pn-07…pn-11, guarda-chuva em `done/`).** Página em três zonas por container query (versões | nota | sumário "Nesta versão" com *scroll-spy*), cabeçalho compacto, capítulos com âncora e "copiar link", lista de versões com título, linha `v1.4.x` e "Novo" (chip `sucesso`; lido de `VersaoService.vistaAnterior` antes de `marcarVista()`), resumo em cartão no topo, rodapé anterior/próxima e botão de voltar ao topo. Padrões em `docs/design/DESIGN.md`. **Renomear um título de grupo ou bloco numa nota já publicada muda o slug e quebra os links já compartilhados.**
+Revisão da página: guarda-chuva `pn-revisao-pagina-patchnotes.spec.md` (backlog), cinco tasks `pn-07`…`pn-11` (capítulos,
+trilhos, sumário, lista de versões, resumo no topo). **`pn-07` (capítulos e âncoras) pronta:** `capitularPatchnote` em
+`patchnote-formato.ts` deriva do Markdown os capítulos (grupo `#` → filhos `##`) com slug estável (sem emoji/acento, `-2`… nos
+repetidos) e `publico`; os títulos da nota têm `id`, o fragmento da URL (`/patchnotes/1.4.0#para-o-mestre`) rola até o capítulo
+depois que a nota renderiza (espera `document.fonts.ready`, senão mira o texto de reserva) e cada título tem "copiar link".
+**Renomear um título de grupo ou bloco numa nota já publicada muda o slug e quebra os links já compartilhados.**
 
 ### Tema — `frontend/tema`
 
@@ -3270,6 +3303,10 @@ incluídos, que o build exclui): checagem de tipos completa faz parte do gate do
 
 Decisões que **continuam governando código novo**. Não as re-litigue sem falar com o autor.
 
+- **P-099 descartada (2026-10-06):** não rastrear nem inferir dano/cura futuros a partir
+  de um teste para executar essa proposta. Spec preservada como memória, sem execução
+  ou dependência da m4-19; reabrir só por nova decisão expressa do autor. Pasta de
+  descarte é apenas ideia registrada em `IDEAS.md` I-049, sem mudar o fluxo das specs.
 - **DTOs são `interface readonly`, não classes** — o projeto não instala `class-validator` e o
   backend **não liga o `ValidationPipe`**. A validação estrutural fica documentada campo a campo na
   spec; a validação real é de regra de negócio, no service. Não converter DTOs em classes nem
@@ -3401,7 +3438,7 @@ Armadilhas que já custaram retrabalho neste repositório. Cada uma tem um epis�
 - **Amplificadores e Modificações escalam por COMPRA, não por stack bruto** — a 1ª compra em ■■
   (Flexível/Resistente/Potente/Conservador/Veloz) **não** dobra o bônus; a penalidade continua no
   bruto.
-- Se código e `docs/core/sistema-v4.1.0.md` divergirem, **o documento vence** (proibição #27).
+- Se código e `docs/core/sistema-v4.1.3.md` divergirem, **o documento vence** (proibição #27).
 - **`docs/core/guia_de_mestre-v4.0.0.md` — "Guia de Criação de Ameaças" tem duas divergências
   internas entre a fórmula geral e o exemplo "A Estátua"**: o modificador Fraco em VD 30 (fórmula
   dá +5, o exemplo mostra "+6") e o mínimo de Fraqueza (fórmula exige 26 — metade da soma de
@@ -3439,10 +3476,11 @@ presumir alternância pública do análogo. [Revisão e pendências autorais](..
 **Crítico — contexto da operação para revisão:** a publicação define +2 no teste
 sem dado resultante e dobra no dano/cura. Autor esclareceu que teste e rolagem
 resultante posterior são separados; API não pode deduzir a segunda da primeira.
-Proposta global P-099 retirada/ACEITO; correção P-097-01 mantida, sem rollback.
+Proposta global P-099 descartada/ACEITO; nenhum trabalho de implementação pendente nela.
+Correção P-097-01 mantida, sem rollback.
 Revisar aplicação no fluxo explicitamente escolhido de NPC antes de novo código,
 distinguindo Competência dentro do teste de dano/cura posteriores.
-P-095/096/098/100/101-01/02/03/102 têm specs preparadas; sem execução das correções.
+P-095/096/098/100 concluídas; P-101-01/02/03/102 têm specs preparadas, sem execução.
 Versionamento da preparação documental autorizado pelo autor.
 NPC ataques/equipamento é investigação separada. Exemplos autorais incoerentes
 registrados para revisão, sem alterar fontes; fórmula geral prevalece sobre exemplo.

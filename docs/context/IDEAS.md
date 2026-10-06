@@ -235,6 +235,17 @@
 
 ## Abertas
 
+### I-049 — Pasta de descarte de specs com memória da decisão · processo/documentação
+
+- **Ideia:** considerar uma pasta `discard` ou `trash` junto de `backlog`, `active` e `done`
+  para propostas descartadas que devem permanecer consultáveis, com motivo e data da decisão.
+- **Origem:** conversa de 2026-10-06 sobre descartar P-099. O autor preferiu, por enquanto,
+  documentar claramente que ela não será executada; nenhuma pasta nova foi autorizada.
+- **Por quê:** preservar o raciocínio e evitar reabrir propostas descartadas como tarefas
+  pendentes. A localização deixaria de confundir memória de descarte com fila executável.
+- **Custo aparente:** mudança documental no fluxo das specs e nos seus ponteiros; definir
+  nome, critérios e política com o autor antes de criar/mover arquivos. Não é compromisso.
+
 ### I-048 — Unificar o ladrilho de atributo da Criatura · frontend/ficha
 
 - **Ideia:** consumir `app-atributo-ficha` também na Criatura, hoje com receita própria

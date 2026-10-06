@@ -26,7 +26,7 @@ com leitor autorizado sem edição e rolagens privadas.
   teste e dano/cura resultantes são operações separadas; API não deduz a segunda.
   Dados de Competência pertencem ao teste pelo contrato explícito do NPC, não são
   a rolagem posterior. Revisar crítico nesse fluxo antes de implementá-lo;
-  proposta global P-099 retirada, sem dependência executável desta task.
+  proposta global P-099 descartada, preservada só como memória, sem execução nesta task.
 - Bônus de habilidade/item manuais, conforme m3-31; nenhuma interpretação automática de texto.
 - Leitor vê valores, ajustes e Competências apresentados; não edita nem rola.
   Anotações privadas; sem concessão, sem acesso. Não ocultar mapas nem alterar Conduta.
@@ -113,12 +113,13 @@ impede preparar regras/dados quando houver autorização futura de execução.
 - Implementar agora; alterar fontes autorais ou specs históricas em done.
 - Vida/Energia/Defesa/DT/Proficiência do agente; Maestria/Lesão/Formação de NPC.
 - Automatizar habilidades/equipamento, fluxo novo de ataque/dano/inventário ou Dano Furtivo.
-- P-095/P-096, crítico P-099, criação zero P-100 e Criaturas P-101: tasks separadas.
+- P-095/P-096, criação zero P-100 e Criaturas P-101: tasks separadas.
+- P-099 descartada: não rastrear ou inferir rolagens futuras como parte desta task.
 
 ## Dependências
 
 - m4-16/17/18 e P-097-01 concluídas.
-- [P-100](../backlog/p-100-npc-criacao-atributo-zero.spec.md) antes do fecho integrado;
+- [P-100](../done/p-100-npc-criacao-atributo-zero.spec.md) concluída antes do fecho integrado;
   revisão do contrato de crítico no fluxo explicitamente escolhido, sem executar P-099.
 - Fontes novas, SCHEMA, CONVENTIONS e docs/design; decisão m3-31.
 - [Auditoria histórica](../../reviews/m4-19-auditoria.md) e
