@@ -1,5 +1,82 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-05 — `m4-17`: coluna Identidade do NPC compacta — foto 175, `Stat` fino e Cooperação como barra de escala
+
+**O que mudou.** O cartão Identidade saiu de `npc-visualizacao` para `npc-visualizacao/npc-identidade.component.*`
+(o template do pai passava de 750 linhas; foram com ele a lógica de valores avulsos de Identidade/Recursos, cor, retrato e o
+modal de enquadramento — `NpcVisualizacao` ficou com Atributos, abas e foco de bloco, e o SCSS dele caiu de 435 para 218
+linhas, sem estilo morto). Composição do card Identidade da Criatura: perfil centralizado numa coluna de 215px (foto
+**175×175** + 20px de cada lado, variável local `--npc-identidade-retrato`), rótulo/nome/função colados como
+`criatura__ident-texto` (nome 21px mono, função 12px mono nos dois modos), combate à direita, faixa de chips no rodapé em uma
+linha com a **Cor da ficha** à direita (era uma linha sob o retrato). Categoria/Nível e Defesa/Bloquear/Esquivar viraram
+`app-stat tamanho="fino"` (sem o subcabeçalho "Recursos"); Vida/Energia em `app-barra-recurso` `compacto`; "Pool · Recarga
+X/turno"/"Reserva Fixa" viraram chip sutil no `[barraRecursoAcao]` (a recarga continua editável dentro do chip) e o Civil mostra
+um chip "Sem Energia" no lugar da barra. A Cooperação perdeu subcabeçalho, ladrilho, frase solta e lápis: é uma
+`app-barra-escala` sob a foto (`--vida` → `--warning` → `--positive`, ticks em 1/2/4/7, faixa ao lado do número e frases
+social + combate no tooltip/`aria-valuetext`), editável pelo mestre na própria barra (persiste só `dados.cooperacao`).
+
+**Primitivos (decisões do autor nesta sessão).**
+- `Stat`: tamanho `fino` e slot `[appStatValor]` (diretiva marcadora `StatValor`). **Perguntado ao autor**: o `Stat` era só
+  leitura e o mestre edita esses valores no lugar; ele escolheu ampliar o primitivo com o slot (em vez de `Stat` só no leitor e
+  caixa local no mestre). O seletor nasceu `[statValor]` e virou `[appStatValor]` porque o lint exige o prefixo `app`.
+- `app-barra-escala` (`shared/ui/barra-escala/`), genérico: `role="meter"` em leitura; em edição, `<input type="range">` nativo
+  invisível sobre o trilho (teclado completo), que emite `valorConfirmado` **uma vez** ao soltar/Enter/blur e restaura no Esc;
+  marcador em losango (forma, não só cor) e número/faixa sempre visíveis. Entrada na tabela de componentes do `DESIGN.md`.
+- Notas de Energia: **perguntado ao autor** chip × tooltip — escolheu chip sutil no rótulo da barra. O texto ficou "Pool ·
+  Recarga X/turno" (curto para caber no mobile sem esconder o tipo; um tooltip seria inacessível por teclado).
+
+**Achados só na verificação ao vivo / nos testes:**
+1. **A faixa contradizia o número durante o arrasto** (número 9, faixa "Neutro" do valor salvo). `textoValor`/`descricao` do
+   primitivo passaram a aceitar uma função do valor exibido; o NPC passa `rotuloCooperacao`/`descricaoCooperacao`.
+2. **Uma falha de salvamento deixava o marcador na posição não gravada**: num erro rápido nenhum input da barra muda entre dois
+   ciclos, e a ressincronização por `[desabilitado]` não dispara. Entrou `descartar()` (que também reescreve o `value` do nativo,
+   porque o `[value]` não reescreve quando o valor ligado não mudou); o NPC chama ao falhar ou se a edição estava bloqueada, libera
+   a trava de "um por vez" e mostra o erro sob a barra.
+3. **Nome e função alinhados à esquerda** sob uma foto centralizada (já era assim antes): o `[bloco]` do `app-valor-editavel` força
+   `text-align: left`. Saiu de nome/função (a designação da Criatura também não usa).
+4. O `<select>` de Categoria esticava o ladrilho fino de 51 para 60px; o campo foi fixado em uma linha do valor (fica 54px, por
+   causa da borda nativa do select).
+5. Overlay de HMR "`app-npc-identidade` is not a known element" na primeira captura: estado intermediário da edição, que sumiu ao
+   recompilar (conferido: sem overlay e sem erro de console nas capturas finais).
+
+**Medidas (antes → depois), mestre, Playwright:**
+
+| | 1920×1080 | 960×1080 | 360×800 |
+|---|---|---|---|
+| Retrato NPC | 230×230 → **175×175** | idem | idem |
+| Identidade NPC Veterano/Civil (nome em 1 linha) | 598/555 → **425/425** | idem | 1155/1103 → 813/787 |
+| Identidade NPC Elite (nome em 2 linhas; no mobile, com Morrendo) | 598 → 449 | idem | 1182 → 927 |
+| Ladrilhos Defesa/Bloquear/Esquivar | 64 → **51** | idem | 85 → 76 (alvo de 44px do valor editável) |
+| Barras Vida/Energia | 27/27 → 23/35 (chip) | idem | 54/54 → 52/52 (Elite: Energia 110 — o chip editável com alvo de 44px quebra a linha) |
+| Fim da coluna 1 (Identidade + Atributos) | 1103 → **930–954** (cabe em 1080) | idem | — |
+| Criatura (análogo) | Identidade 425, foto 215 (moldura) | 425 | 1126 |
+| Jogador (análogo) | Identidade 420, foto 175 | 652 | 1077 |
+
+Alvo cumprido: Identidade do NPC = 425px = Criatura com nome em uma linha (um nome de 2 linhas soma 24px, o que também acontece
+na Criatura). Leitor: 425/449 no desktop, 614–622 no mobile.
+
+**Análogos:** card Identidade da **Criatura** (composição, escala tipográfica do perfil, selos redondos, faixa de rodapé) e da
+**ficha de Jogador** (foto 175). Comparados lado a lado ao vivo em 1920×1080, 960×1080 e 360×800. Diferença deliberada: a coluna
+de combate do NPC é mais curta que a da Criatura (sem Resistências/Fraquezas), o que deixa um vão sob Energia no desktop.
+
+**Testes:** frontend **2894/2894** (211 arquivos). Novos: `barra-escala.component.spec.ts` (posição em 0/1/2/4/7/10, limite,
+ARIA de meter/slider, ticks, degradê com e sem meio, arrasto e teclado sem emissão por passo, Enter, Esc, blur após soltar, passo,
+desabilitado, `descartar()`, texto em função do valor), `npc-identidade.component.spec.ts` (barras compactas, chips
+Pool/Reserva, recarga no chip, Civil sem Energia, ladrilhos finos e edição no slot, ausência do ladrilho/subcabeçalho antigos,
+Cooperação em 0/1/2/4/7/10 com faixa, `aria-valuetext`, ticks, fallback "Valor inválido", posição sob a foto, PUT único só de
+`cooperacao`, barra desabilitada com outra edição, falha que libera a trava) e `stat.component.spec.ts` (+2: `fino` e slot).
+`npc-visualizacao.component.spec.ts` foi ajustado sem afrouxar (a Cooperação deixou de ter "Editar cooperação" e passou a exigir
+o slider/meter; cor e máximo agora estão no filho). `npm run lint`: 0 erros nos três workspaces (só avisos preexistentes);
+`npm run build --workspace=frontend` ok. Backend e `shared` intocados.
+
+**Verificação ao vivo** (stack do autor já no ar; Playwright, mestre e jogador com acesso): NPC Elite (Pool, com retrato
+enquadrado `{x:40,y:60,escala:1.5}` — `transform` aplicado no 175px), Veterano (Reserva, sem foto) e Civil; Criatura e Jogador
+como análogos. Teclado: 5 setas = 0 PUT, Enter = 1 PUT; Home/End/PageUp mexem só o rascunho; Esc + Tab = 0 PUT. Arrasto longo:
+1 PUT ao soltar, 0 no blur seguinte. Toque (`hasTouch`) em 360: 1 PUT; área do slider 304×44. Cooperação 0, 5, 9 e 10 vistas;
+anel de foco no losango; slider desabilitado com Defesa aberta; Categoria em edição; Morrendo + Confirmar socorro em 1920 e 360;
+histórico aberto sem overflow; leitor só com `meter`. Sem overflow nem controle fora da viewport em nenhum NPC nos três
+viewports; console sem erro. Dados removidos por soft delete (fichas 175–179, campanha 32, usuários 49–50).
+
 ## 2026-10-05 — `m4-16`: a ficha de NPC edita como Criatura/Jogador — valor avulso por Enter, bloco com Salvar/Cancelar no próprio bloco
 
 **O que mudou.** Saiu o rascunho acumulado: o cartão `ficha-pagina__rascunho` (Salvar/Cancelar depois das duas colunas, "Salvar

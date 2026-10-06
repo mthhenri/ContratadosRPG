@@ -1,0 +1,67 @@
+<div
+    class="barra-escala"
+    [class.barra-escala--editavel]="editavel()"
+    [class.barra-escala--desabilitada]="editavel() && desabilitado()"
+    [style.--barra-escala-degrade]="degrade()"
+>
+    <div
+        class="barra-escala__topo"
+        [appTooltip]="descricaoExibida() || null"
+        [appTooltipAcionavel]="false"
+        [class.barra-escala__topo--dica]="descricaoExibida()"
+    >
+        <span class="barra-escala__rotulo">{{ rotulo() }}</span>
+        <span class="barra-escala__valor">
+            <strong class="barra-escala__numero">{{ exibido() }}</strong>
+            @if (texto()) {
+                <span class="barra-escala__texto">{{ texto() }}</span>
+            }
+        </span>
+    </div>
+
+    @if (editavel()) {
+        <div class="barra-escala__area">
+            <span class="barra-escala__trilho">
+                @for (tick of ticks(); track tick) {
+                    <span class="barra-escala__tick" [style.left.%]="tick"></span>
+                }
+            </span>
+            <!-- Antes do cursor de propósito: o anel de foco do cursor sai de `:focus-visible + `. -->
+            <input
+                #entrada
+                class="barra-escala__entrada"
+                type="range"
+                [min]="minimo()"
+                [max]="maximo()"
+                [step]="passo()"
+                [value]="rascunho()"
+                [disabled]="desabilitado()"
+                [attr.aria-label]="rotulo()"
+                [attr.aria-valuetext]="textoAcessivel()"
+                (input)="aoMover(entrada)"
+                (pointerup)="confirmar()"
+                (keydown.enter)="confirmar()"
+                (keydown.escape)="restaurar(entrada)"
+                (blur)="confirmar()"
+            />
+            <span class="barra-escala__cursor" [style.left.%]="percentual()"></span>
+        </div>
+    } @else {
+        <div
+            class="barra-escala__area"
+            role="meter"
+            [attr.aria-label]="rotulo()"
+            [attr.aria-valuemin]="minimo()"
+            [attr.aria-valuemax]="maximo()"
+            [attr.aria-valuenow]="valor()"
+            [attr.aria-valuetext]="textoAcessivel()"
+        >
+            <span class="barra-escala__trilho">
+                @for (tick of ticks(); track tick) {
+                    <span class="barra-escala__tick" [style.left.%]="tick"></span>
+                }
+            </span>
+            <span class="barra-escala__cursor" [style.left.%]="percentual()"></span>
+        </div>
+    }
+</div>

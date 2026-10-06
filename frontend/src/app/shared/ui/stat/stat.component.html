@@ -4,7 +4,9 @@
         <ng-content select="[statInfo]" />
     </div>
     <div class="stat__valor" #nodoValor>
-        @if (temValor()) {
+        @if (valorProjetado()) {
+            <ng-content select="[appStatValor]" />
+        } @else if (temValor()) {
             {{ valor() }}
         } @else {
             <span class="stat__valor--sem-valor" aria-label="Não preenchido">—</span>

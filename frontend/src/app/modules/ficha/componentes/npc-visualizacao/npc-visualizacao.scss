@@ -10,37 +10,15 @@
     gap: var(--gap-grid);
     align-items: start;
     color: var(--text);
+    // Container das consultas de largura da ficha — inclusive a do cartão Identidade
+    // (`npc-identidade.component.scss`), que empilha perfil e combate abaixo de 570px.
     container-type: inline-size;
     &__coluna,
-    &__lista,
-    &__combate,
-    &__perfil {
+    &__lista {
         display: grid;
         min-width: 0;
         gap: var(--space-16);
         align-content: start;
-    }
-    &__identidade {
-        display: grid;
-        grid-template-columns: 230px minmax(0, 1fr);
-        gap: var(--space-16);
-    }
-    // Perfil centralizado (rótulo, nome, função, retrato) — mesma composição da Identidade da
-    // criatura; os chips de classificação descem para uma faixa própria no fim do cartão.
-    &__perfil {
-        justify-items: center;
-        text-align: center;
-    }
-    &__funcao {
-        margin: 0;
-        font: 13px/1.5 var(--font-sans);
-        color: var(--text-dim);
-        overflow-wrap: anywhere;
-    }
-    &__metas--rodape {
-        margin-top: var(--space-16);
-        padding-top: var(--space-16);
-        border-top: 1px solid var(--border);
     }
     // Cabeçalho de subseção com régua e lápis — mesmo desenho de "Resistências/Fraquezas" da
     // criatura; o lápis é o único gatilho de edição do bloco (nada de botão solto no corpo).
@@ -74,130 +52,8 @@
     &__campos .npc__erro {
         grid-column: 1 / -1;
     }
-    &__editor {
-        margin-top: var(--space-16);
-        padding-top: var(--space-16);
-        border-top: 1px solid var(--border);
-    }
-    &__acoes,
-    &__metas {
-        display: flex;
-        gap: var(--space-8);
-        flex-wrap: wrap;
-        align-items: center;
-    }
-    &__lista > button,
-    &__combate > button,
-    &__perfil > button {
+    &__lista > button {
         justify-self: start;
-    }
-    &__stats {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: var(--space-8);
-        &--classificacao {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-        &--cooperacao {
-            grid-template-columns: 1fr;
-        }
-    }
-    // Caixa editável de valor avulso (Categoria/Nível/Defesa/Bloquear/Esquivar/Cooperação) —
-    // mesmo racional de `.criatura__stat`: `app-stat` é só leitura (CONVENTIONS "Composição
-    // visual"), então o campo que vira input inline precisa da própria caixa local.
-    &__stat {
-        min-width: 0;
-        background: var(--surface-2);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-control);
-        padding: var(--space-12);
-        // À esquerda como `.criatura__stat`: o `[bloco]` do `app-valor-editavel` alinha o valor à
-        // esquerda, e rótulo centralizado sobre valor à esquerda desalinhava a caixa.
-        text-align: left;
-    }
-    &__stat-rotulo {
-        display: block;
-        font: 600 9px var(--font-mono);
-        text-transform: uppercase;
-        letter-spacing: var(--tracking-label);
-        color: var(--text-mute);
-        margin-bottom: var(--space-4);
-    }
-    &__stat-valor {
-        display: block;
-        font: 700 19px/1.2 var(--font-mono);
-        color: var(--text);
-    }
-    // Identidade (cursor/hover/disabled) e moldura são do `app-valor-editavel` (`P-057`); aqui só
-    // sobra a tipografia, que atravessa o `display: contents` do host por herança.
-    &__stat-botao {
-        font-family: var(--font-mono);
-        font-size: 19px;
-        font-weight: 700;
-        color: var(--text);
-        line-height: 1.2;
-    }
-    &__stat-nota {
-        display: block;
-        margin-top: var(--space-4);
-        font: 9px/1.35 var(--font-sans);
-        color: var(--text-mute);
-    }
-    &__entrada-nome,
-    &__entrada-funcao,
-    &__entrada-numero,
-    &__entrada-select {
-        width: 100%;
-        padding: 6px 8px;
-        font: 13px var(--font-sans);
-        color: var(--text);
-        background: var(--surface);
-        border: 1px solid var(--accent);
-        border-radius: var(--radius-control);
-        outline: 0;
-    }
-    &__entrada-nome {
-        font: 700 20px/1.3 var(--font-mono);
-        text-align: center;
-    }
-    &__entrada-funcao {
-        font: 13px/1.5 var(--font-sans);
-        text-align: center;
-        resize: vertical;
-    }
-    &__entrada-numero {
-        font-family: var(--font-mono);
-        font-weight: 700;
-        text-align: left;
-        padding: 2px 6px;
-        font-size: 19px;
-    }
-    &__entrada-numero--inline {
-        display: inline-block;
-        text-align: center;
-        width: 56px;
-        padding: 0 4px;
-        font-size: 11px;
-    }
-    &__cor {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: var(--space-8);
-        margin-top: var(--space-8);
-    }
-    &__entrada-cor {
-        width: 28px;
-        height: 28px;
-        padding: 0;
-        background: none;
-        border: 1px solid var(--border);
-        border-radius: var(--radius-control);
-        cursor: pointer;
-        &:disabled {
-            opacity: 0.55;
-            cursor: default;
-        }
     }
     // Bloco em edição (Atributos/Conduta) — realce de acento já usado no lápis ativo da Criatura
     // (`criatura__lapis--ativo`); nenhum token novo.
@@ -215,15 +71,6 @@
         display: grid;
         grid-template-columns: repeat(5, minmax(0, 1fr));
         gap: var(--space-8);
-    }
-    &__cooperacao {
-        display: grid;
-        gap: var(--space-8);
-    }
-    &__nome {
-        margin: 0;
-        font: 700 22px/1.3 var(--font-mono);
-        overflow-wrap: anywhere;
     }
     &__subtitulo {
         margin: 0;
@@ -256,62 +103,6 @@
         font: 13px/1.5 var(--font-sans);
         color: var(--erro);
     }
-    // Caixa do retrato com os selos de ação (enquadrar no canto superior esquerdo, remover no
-    // superior direito, trocar no inferior direito) — mesma disposição do avatar da criatura.
-    &__avatar {
-        position: relative;
-        width: 100%;
-        max-width: 230px;
-    }
-    &__avatar-enquadrar,
-    &__avatar-remover,
-    &__avatar-upload {
-        position: absolute;
-        z-index: 1;
-        font-size: 9px;
-    }
-    &__avatar-enquadrar,
-    &__avatar-remover {
-        top: 5px;
-        width: 16px;
-        height: 16px;
-        background: color-mix(in srgb, var(--bg) 75%, transparent);
-    }
-    &__avatar-enquadrar {
-        left: 5px;
-    }
-    &__avatar-remover {
-        right: 5px;
-        &:hover {
-            color: var(--vida);
-            border-color: var(--vida);
-        }
-    }
-    &__avatar-upload {
-        right: -8px;
-        bottom: -8px;
-        width: 20px;
-        height: 20px;
-    }
-    // Retrato decorativo: mesmo enquadramento do análogo, sem reinvenção de controle.
-    &__retrato {
-        width: 100%;
-        aspect-ratio: 1;
-        overflow: hidden;
-        border: 1px solid var(--border-strong);
-        border-color: var(--cor-ficha, var(--border-strong));
-        border-radius: var(--radius-control);
-        background: repeating-linear-gradient(
-            135deg,
-            var(--surface-2) 0 3px,
-            var(--surface) 3px 9px
-        );
-    }
-    &__retrato img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
     @include bp.tablet {
         grid-template-columns: 1fr;
     }
@@ -325,22 +116,14 @@
         [app-botao] {
             min-height: bp.$alvo-toque;
         }
-        &__identidade,
         &__campos {
             grid-template-columns: 1fr;
-        }
-        &__retrato {
-            max-width: 230px;
-            justify-self: center;
         }
         &__atributos {
             grid-template-columns: repeat(2, minmax(0, 1fr));
         }
     }
     @container (max-width: 570px) {
-        &__identidade {
-            grid-template-columns: 1fr;
-        }
         &__atributos {
             grid-template-columns: repeat(2, minmax(0, 1fr));
         }

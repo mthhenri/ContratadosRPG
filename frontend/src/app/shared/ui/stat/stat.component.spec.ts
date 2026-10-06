@@ -1,7 +1,7 @@
 import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 
-import { Stat, StatTamanho, StatVariante } from './stat.component';
+import { Stat, StatTamanho, StatValor, StatVariante } from './stat.component';
 
 /** Prova rótulo/valor e as três variantes de cor auditadas na `ui-03` (nenhuma por padrão). */
 @Component({
@@ -26,6 +26,15 @@ class Hospedeiro {
   readonly pulso = signal(0);
   readonly comInfo = signal(false);
 }
+
+/** Consumidor que troca o texto do valor por um controle próprio (slot `[appStatValor]`). */
+@Component({
+  imports: [Stat, StatValor],
+  template: `<app-stat rotulo="Defesa" [valor]="99" tamanho="fino">
+    <button appStatValor type="button">24</button>
+  </app-stat>`,
+})
+class HospedeiroComValor {}
 
 describe('Stat', () => {
   function montar() {
@@ -97,6 +106,30 @@ describe('Stat', () => {
     const stat = raiz(fixture).querySelector('.stat') as HTMLElement;
 
     expect(stat.classList.contains('stat--hero')).toBe(true);
+  });
+
+  it('aplica o modificador fino de tamanho (m4-17)', () => {
+    const fixture = montar();
+    fixture.componentInstance.tamanho.set('fino');
+    fixture.detectChanges();
+
+    const stat = raiz(fixture).querySelector('.stat') as HTMLElement;
+
+    expect(stat.classList.contains('stat--fino')).toBe(true);
+    expect(stat.classList.contains('stat--compacto')).toBe(false);
+  });
+
+  it('projeta [appStatValor] no lugar do texto do valor, mantendo a caixa e o rótulo (m4-17)', () => {
+    TestBed.configureTestingModule({ imports: [HospedeiroComValor] });
+    const fixture = TestBed.createComponent(HospedeiroComValor);
+    fixture.detectChanges();
+    const elemento = fixture.nativeElement as HTMLElement;
+
+    const valor = elemento.querySelector('.stat__valor');
+    expect(valor?.querySelector('button')?.textContent?.trim()).toBe('24');
+    expect(valor?.textContent?.trim()).toBe('24');
+    expect(elemento.querySelector('.stat__rotulo')?.textContent?.trim()).toBe('Defesa');
+    expect(elemento.querySelector('.stat--fino')).not.toBeNull();
   });
 
   it('projeta [statInfo] ao lado do rótulo (P-054)', () => {

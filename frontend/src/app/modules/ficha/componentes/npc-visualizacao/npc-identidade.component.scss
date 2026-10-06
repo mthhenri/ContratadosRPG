@@ -1,0 +1,280 @@
+@use "tema/breakpoints" as bp;
+
+// Cartão Identidade do NPC (m4-17). Análogos: card Identidade da Criatura (composição — perfil
+// centralizado à esquerda, combate à direita, faixa de chips no rodapé, selos redondos sobre o
+// retrato) e da ficha de Jogador (escala — foto 175×175). Só tokens; tamanho dos ladrilhos e das
+// barras vem dos primitivos (`app-stat` fino, `app-barra-recurso` compacta, `app-barra-escala`).
+:host {
+    display: block;
+    min-width: 0;
+    // Foto 175×175 dos dois análogos. A coluna do perfil soma a margem de 20px de cada lado que a
+    // moldura da Criatura dá à foto (215px) — o nome e a barra de Cooperação usam essa largura.
+    --npc-identidade-retrato: 175px;
+}
+
+.npc-identidade {
+    display: grid;
+    grid-template-columns: calc(var(--npc-identidade-retrato) + 2 * var(--space-20)) minmax(0, 1fr);
+    gap: var(--gap-grid);
+    align-items: start;
+
+    &__perfil,
+    &__combate {
+        display: grid;
+        min-width: 0;
+        gap: var(--space-12);
+        align-content: start;
+    }
+
+    &__perfil {
+        justify-items: center;
+        text-align: center;
+        gap: var(--space-8);
+    }
+
+    // Rótulo, nome e função colados (`criatura__ident-texto`): uma unidade acima do retrato.
+    &__texto {
+        display: grid;
+        justify-items: center;
+        gap: var(--space-4);
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    // Mesma escala do perfil da Criatura (`criatura__ident-rotulo`/`__designacao`/`__registro`).
+    &__subtitulo {
+        margin: 0;
+        font: 9px var(--font-mono);
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        color: var(--text-mute);
+    }
+
+    &__nome {
+        margin: 0;
+        font: 700 21px/1.15 var(--font-mono);
+        color: var(--text);
+        overflow-wrap: anywhere;
+    }
+
+    // Mono como `criatura__registro` — e igual nos dois modos: o botão do `app-valor-editavel`
+    // do mestre já sai em mono, então o `<p>` do leitor acompanha.
+    &__funcao {
+        margin: 0;
+        font: 12px/1.4 var(--font-mono);
+        color: var(--text-dim);
+        overflow-wrap: anywhere;
+    }
+
+    // Caixa do retrato com os selos (enquadrar no canto superior esquerdo, remover no superior
+    // direito, trocar no inferior direito) — mesma disposição do avatar da Criatura.
+    &__avatar {
+        position: relative;
+        width: var(--npc-identidade-retrato);
+        // O selo de troca sai 8px abaixo do retrato; a margem evita que ele encoste na barra.
+        margin-bottom: var(--space-4);
+    }
+
+    &__retrato {
+        width: 100%;
+        aspect-ratio: 1;
+        overflow: hidden;
+        border: 1px solid var(--cor-ficha, var(--border-strong));
+        border-radius: var(--radius-control);
+        background: repeating-linear-gradient(
+            135deg,
+            var(--surface-2) 0 3px,
+            var(--surface) 3px 9px
+        );
+
+        img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+    }
+
+    // `app-botao-icone[redondo]` — raio, cor, borda e hover são do primitivo; só sobram posição e
+    // tamanho do selo (mesma receita de `criatura__avatar-*`).
+    &__selo {
+        position: absolute;
+        z-index: 1;
+        font-size: 9px;
+
+        &--enquadrar,
+        &--remover {
+            top: 5px;
+            width: 16px;
+            height: 16px;
+            background: color-mix(in srgb, var(--bg) 75%, transparent);
+        }
+
+        &--enquadrar {
+            left: 5px;
+        }
+
+        &--remover {
+            right: 5px;
+
+            &:hover {
+                color: var(--vida);
+                border-color: var(--vida);
+            }
+        }
+
+        &--upload {
+            right: -8px;
+            bottom: -8px;
+            width: 20px;
+            height: 20px;
+        }
+    }
+
+    &__cooperacao {
+        width: 100%;
+        text-align: left;
+    }
+
+    &__stats {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: var(--space-8);
+
+        &--duas {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    &__linha {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--space-8);
+    }
+
+    // Campos que o `app-valor-editavel` projeta ao clicar no valor (mesma receita das entradas
+    // inline da m4-16; a borda de acento marca o campo aberto).
+    &__entrada {
+        width: 100%;
+        padding: 2px 6px;
+        font: 13px var(--font-sans);
+        color: var(--text);
+        background: var(--surface);
+        border: 1px solid var(--accent);
+        border-radius: var(--radius-control);
+        outline: 0;
+
+        &--nome {
+            font: 700 19px/1.3 var(--font-mono);
+            text-align: center;
+        }
+
+        &--funcao {
+            font: 12px/1.4 var(--font-mono);
+            text-align: center;
+            resize: vertical;
+        }
+
+        // Mesmo corpo do valor do `app-stat` fino (16px mono bold), para o ladrilho não mudar de
+        // altura ao virar campo.
+        &--valor {
+            // Uma linha do valor + a borda: o `<select>` nativo tem altura intrínseca maior.
+            height: calc(1lh + 2px);
+            padding-block: 0;
+            font: 700 16px/1.2 var(--font-mono);
+        }
+
+        &--recarga {
+            display: inline-block;
+            width: 48px;
+            padding: 0 4px;
+            font: 700 10px var(--font-mono);
+            text-align: center;
+        }
+    }
+
+    &__erro {
+        margin: 0;
+        font: 12px/1.5 var(--font-sans);
+        color: var(--erro);
+    }
+
+    // Faixa de rodapé em uma linha: chips de classificação e, à direita, a cor da ficha (era uma
+    // linha própria sob o retrato).
+    &__rodape {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--space-8);
+        margin-top: var(--space-12);
+        padding-top: var(--space-8);
+        border-top: 1px solid var(--border);
+    }
+
+    &__cor {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-8);
+        margin-left: auto;
+        cursor: pointer;
+    }
+
+    &__cor-rotulo {
+        font: 600 9px var(--font-mono);
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        color: var(--text-mute);
+    }
+
+    &__cor-entrada {
+        width: 24px;
+        height: 24px;
+        padding: 0;
+        background: none;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-control);
+        cursor: pointer;
+
+        &:disabled {
+            opacity: 0.55;
+            cursor: default;
+        }
+    }
+}
+
+// Coluna estreita (painel lateral aberto, tela dividida): perfil em cima, combate embaixo — mesmo
+// limiar de container que a ficha usava para a Identidade (`npc-visualizacao.scss`).
+@container (max-width: 570px) {
+    .npc-identidade {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .npc-identidade__perfil {
+        justify-self: center;
+        width: min(100%, calc(var(--npc-identidade-retrato) + 2 * var(--space-20)));
+    }
+}
+
+@include bp.mobile {
+    .npc-identidade {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .npc-identidade__perfil {
+        justify-self: stretch;
+        width: auto;
+    }
+
+    .npc-identidade__entrada {
+        min-height: bp.$alvo-toque;
+    }
+
+    .npc-identidade__cor-entrada {
+        width: bp.$alvo-toque;
+        height: bp.$alvo-toque;
+    }
+
+    [app-botao] {
+        min-height: bp.$alvo-toque;
+    }
+}

@@ -8,6 +8,7 @@ import { FichaEdicaoNpcService } from "../../ficha-edicao-npc.service";
 import { NpcEdicaoFormulario } from "../../npc-edicao-formulario.service";
 import { criarFichaNpcTeste } from "../../testing/ficha-npc.fixture";
 import { NpcHabilidadesLista } from "./npc-habilidades-lista.component";
+import { NpcIdentidade } from "./npc-identidade.component";
 import { NpcVisualizacao } from "./npc-visualizacao.component";
 
 const aguardarMicrotarefas = () => new Promise((resolve) => setTimeout(resolve));
@@ -26,6 +27,8 @@ describe("NpcVisualizacao", () => {
         const fixture = TestBed.createComponent(NpcVisualizacao);
         fixture.componentRef.setInput("gerenciavel", gerenciavel); fixture.detectChanges();
         return { fixture, edicao, api, ficha, pagina: fixture.componentInstance,
+            identidade: fixture.debugElement.query(By.directive(NpcIdentidade))
+                .componentInstance as NpcIdentidade,
             formulario: fixture.componentInstance.formulario,
             raiz: fixture.nativeElement as HTMLElement };
     }
@@ -79,8 +82,12 @@ describe("NpcVisualizacao", () => {
                 const { raiz } = montar(true);
                 expect(rotulos(raiz)).toEqual(expect.arrayContaining(["Editar nome",
                     "Editar função narrativa", "Editar categoria", "Editar nível",
-                    "Editar cooperação", "Editar defesa", "Editar bloquear", "Editar esquivar",
+                    "Editar defesa", "Editar bloquear", "Editar esquivar",
                     "Editar atributos", "Escolher retrato"]));
+                // Cooperação edita na própria barra de escala (m4-17), sem lápis/valor avulso.
+                expect(raiz.querySelector('input[type="range"][aria-label="Cooperação"]'))
+                    .not.toBeNull();
+                expect(rotulos(raiz)).not.toContain("Editar cooperação");
                 const textos = botoesComTexto(raiz);
                 for (const solto of ["Editar nome", "Editar categoria", "Escolher retrato",
                     "Editar conduta", "Adicionar habilidade"]) {
@@ -96,14 +103,16 @@ describe("NpcVisualizacao", () => {
                 "Editar habilidades"]) {
                 expect(lista).not.toContain(rotulo);
             }
+            expect(raiz.querySelector('input[type="range"]')).toBeNull();
+            expect(raiz.querySelector('[role="meter"][aria-label="Cooperação"]')).not.toBeNull();
         });
 
         it("selos do retrato ficam sobre o avatar; enquadrar e remover só com imagem", () => {
             const { raiz, edicao, fixture } = montar(true);
-            expect(raiz.querySelectorAll(".npc__avatar button")).toHaveLength(1);
+            expect(raiz.querySelectorAll(".npc-identidade__avatar button")).toHaveLength(1);
             edicao.definirFicha({ ...criarFichaNpcTeste(), imagemUrl: "/uploads/npc.png" });
             fixture.detectChanges();
-            expect(Array.from(raiz.querySelectorAll(".npc__avatar button"))
+            expect(Array.from(raiz.querySelectorAll(".npc-identidade__avatar button"))
                 .map((botao) => botao.getAttribute("aria-label")))
                 .toEqual(["Enquadrar retrato", "Remover retrato", "Escolher retrato"]);
         });
@@ -239,14 +248,14 @@ describe("NpcVisualizacao", () => {
         });
 
         it("com um bloco aberto, máximo de Vida e cor não salvam o rascunho do bloco", async () => {
-            const { pagina, fixture, formulario, api } = montar(true);
+            const { pagina, identidade, fixture, formulario, api } = montar(true);
             pagina.iniciar("conduta"); fixture.detectChanges();
             formulario.formulario.controls.gatilhosFuga.setValue("Rascunho ainda aberto");
-            await pagina.ajustarMaximo("vidaMaxima", 90);
-            pagina.corSelecionada.setValue("#123456");
+            await identidade.ajustarMaximo("vidaMaxima", 90);
+            identidade.corSelecionada.setValue("#123456");
             await aguardarMicrotarefas();
             expect(api.alterarFichaNpc).not.toHaveBeenCalled();
-            expect(pagina.corSelecionada.disabled).toBe(true);
+            expect(identidade.corSelecionada.disabled).toBe(true);
             expect(formulario.grupo()).toBe("conduta");
         });
 

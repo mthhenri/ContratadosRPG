@@ -1,4 +1,4 @@
-import { Component, ElementRef, computed, effect, input, viewChild } from '@angular/core';
+import { Component, Directive, ElementRef, computed, contentChild, effect, input, viewChild } from '@angular/core';
 
 /**
  * Cor semântica do valor. Auditoria da `ui-03` sobre as 3 famílias que replicam o padrão puro de
@@ -19,8 +19,20 @@ import { Component, ElementRef, computed, effect, input, viewChild } from '@angu
 // valor" usada por compras.page ("Total de Venda"), migrada do `.calc-stat` local que existia só
 // por essa lacuna no primitivo.
 export type StatVariante = 'vida' | 'energia' | 'positivo' | 'alerta' | 'destaque';
-/** `hero` (`P-054`) é o degrau de destaque das simulações — valor maior que `padrao`. */
-export type StatTamanho = 'compacto' | 'padrao' | 'hero';
+/**
+ * `hero` (`P-054`) é o degrau de destaque das simulações — valor maior que `padrao`. `fino`
+ * (`m4-17`) é o degrau abaixo de `compacto`: menos padding vertical, rótulo e valor colados —
+ * ladrilhos de apoio numa coluna densa (Defesa/Bloquear/Esquivar da ficha de NPC).
+ */
+export type StatTamanho = 'fino' | 'compacto' | 'padrao' | 'hero';
+
+/**
+ * Marca o conteúdo projetado no lugar do valor (`m4-17`). O `Stat` continua dono da caixa, do
+ * rótulo e da tipografia; o consumidor só troca o texto do valor por um controle seu — o caso é o
+ * `app-valor-editavel` do mestre, que vira campo ao clicar. Sem o slot, vale `[valor]`.
+ */
+@Directive({ selector: '[appStatValor]' })
+export class StatValor {}
 
 /**
  * Primitivo de caixa de estatística (`ui-03` · `P-034` · `P-054`): rótulo pequeno uppercase +
@@ -47,7 +59,7 @@ export class Stat {
   /** Cor semântica. Sem valor, o valor usa a cor de texto neutra. */
   readonly variante = input<StatVariante>();
 
-  /** Densidade compacta ou destaque `hero`. Sem valor, usa `padrao`. */
+  /** Densidade `fino`/`compacto` ou destaque `hero`. Sem valor, usa `padrao`. */
   readonly tamanho = input<StatTamanho>('padrao');
 
   /**
@@ -56,6 +68,9 @@ export class Stat {
    * componente) nunca pulsa; só incrementos depois disso.
    */
   readonly pulso = input(0);
+
+  /** Presença do slot `[appStatValor]` — quando projetado, substitui o texto de `[valor]`. */
+  protected readonly valorProjetado = contentChild(StatValor);
 
   protected readonly temValor = computed(() => {
     const valor = this.valor();
