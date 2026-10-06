@@ -218,29 +218,29 @@
                     </section>
                     } @if (versaoAnterior() || versaoProxima()) {
                     <footer class="patchnotes__nota-rodape">
-                        @if (versaoAnterior(); as anterior) {
+                        @if (versaoProxima(); as proxima) {
                         <a
                             app-botao
                             variante="secundario"
                             estilo="link"
                             tamanho="pequeno"
                             class="patchnotes__rodape-link"
-                            [routerLink]="['/patchnotes', anterior.versao]"
+                            [routerLink]="['/patchnotes', proxima.versao]"
                         >
-                            <span><app-icone nome="voltar" /> v{{ anterior.versao }}</span>
-                            <small>{{ anterior.titulo }}</small>
+                            <span><app-icone nome="voltar" /> v{{ proxima.versao }}</span>
+                            <small>{{ proxima.titulo }}</small>
                         </a>
-                        } @if (versaoProxima(); as proxima) {
+                        } @if (versaoAnterior(); as anterior) {
                         <a
                             app-botao
                             variante="secundario"
                             estilo="link"
                             tamanho="pequeno"
-                            class="patchnotes__rodape-link patchnotes__rodape-link--proxima"
-                            [routerLink]="['/patchnotes', proxima.versao]"
+                            class="patchnotes__rodape-link patchnotes__rodape-link--direita"
+                            [routerLink]="['/patchnotes', anterior.versao]"
                         >
-                            <span>v{{ proxima.versao }} <app-icone nome="chevron-direita" /></span>
-                            <small>{{ proxima.titulo }}</small>
+                            <span>v{{ anterior.versao }} <app-icone nome="chevron-direita" /></span>
+                            <small>{{ anterior.titulo }}</small>
                         </a>
                         }
                     </footer>

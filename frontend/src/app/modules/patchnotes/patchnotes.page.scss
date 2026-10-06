@@ -423,7 +423,8 @@
 
     }
 
-    // Anterior à esquerda e próxima à direita, cada uma com o título da versão como linha de apoio.
+    // A mais nova à esquerda (←) e a mais antiga à direita (→), na ordem de leitura da lista de versões
+    // (a mais recente primeiro), cada uma com o título da versão como linha de apoio.
     &__rodape-link {
         flex-direction: column;
         align-items: flex-start;
@@ -449,7 +450,7 @@
             color: var(--text-dim);
         }
 
-        &--proxima {
+        &--direita {
             align-items: flex-end;
             margin-left: auto;
             margin-right: calc(-1 * var(--space-12));
@@ -461,7 +462,7 @@
             max-width: none;
             min-height: bp.$alvo-toque;
 
-            &--proxima {
+            &--direita {
                 align-items: flex-start;
                 margin-left: calc(-1 * var(--space-12));
                 text-align: left;

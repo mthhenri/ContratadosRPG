@@ -422,25 +422,26 @@ describe('PatchnotesPage', () => {
       expect(raiz().querySelector('.patchnotes__resumo')).toBeNull();
     });
 
-    it('rodapé da versão do meio leva à anterior e à próxima, com títulos', async () => {
+    it('rodapé da versão do meio: a mais nova à esquerda e a mais antiga à direita, com títulos', async () => {
       await abrirTres('1.1.0');
 
       const links = Array.from(raiz().querySelectorAll<HTMLAnchorElement>('.patchnotes__nota-rodape a'));
-      expect(links.map((link) => link.getAttribute('href'))).toEqual(['/patchnotes/1.0.0', '/patchnotes/1.2.0']);
-      expect(links[0].textContent).toContain('O começo');
-      expect(links[1].textContent).toContain('Terceira');
+      expect(links.map((link) => link.getAttribute('href'))).toEqual(['/patchnotes/1.2.0', '/patchnotes/1.0.0']);
+      expect(links[0].textContent).toContain('Terceira');
+      expect(links[1].textContent).toContain('O começo');
+      expect(links[1].classList).toContain('patchnotes__rodape-link--direita');
     });
 
-    it('na versão mais antiga o rodapé só tem a próxima', async () => {
+    it('na versão mais antiga o rodapé só tem a mais nova, à esquerda', async () => {
       await abrirTres('1.0.0');
 
       const links = Array.from(raiz().querySelectorAll<HTMLAnchorElement>('.patchnotes__nota-rodape a'));
       expect(links.map((link) => link.getAttribute('href'))).toEqual(['/patchnotes/1.1.0']);
     });
 
-    it('clicar na próxima abre a versão de destino e sobe ao topo', async () => {
+    it('clicar na mais nova abre a versão de destino e sobe ao topo', async () => {
       await abrirTres('1.1.0');
-      const proxima = raiz().querySelector<HTMLAnchorElement>('.patchnotes__rodape-link--proxima')!;
+      const proxima = raiz().querySelector<HTMLAnchorElement>('.patchnotes__nota-rodape a:first-child')!;
 
       await abrir(proxima.getAttribute('href')!);
       await responderNota(notaTres('1.2.0'));

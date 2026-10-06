@@ -488,7 +488,7 @@ uma linha `--positive` no topo ("N versões novas desde a sua última visita"). 
 - **Resumo** (`# RESUMO…` só com texto): cartão logo após o cabeçalho da nota — `--bg`, filete `--accent` à
   esquerda, rótulo mono `// Resumo da versão`. Sai do fim da nota; a âncora do capítulo é a mesma e, no
   sumário, ele é o primeiro item ("Resumo").
-- **Rodapé**: anterior à esquerda e próxima à direita, `app-botao` `estilo="link"` `tamanho="pequeno"` com o
+- **Rodapé**: a versão mais nova à esquerda (`←`) e a mais antiga à direita (`→`), na ordem da lista, `app-botao` `estilo="link"` `tamanho="pequeno"` com o
   número sublinhado e o título como linha de apoio (sem sublinhado nem caixa alta); empilham no mobile.
   Trocar de versão sem fragmento volta ao topo da nota.
 - **Voltar ao topo** (aparece depois de ~400px de rolagem): em três zonas, `app-botao` `secundario`/
