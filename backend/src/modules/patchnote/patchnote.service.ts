@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type {
+  PatchnoteCacheReiniciadoDto,
   PatchnoteRecuperadoDto,
   PatchnoteRecuperarDto,
   PatchnoteResumoDto,
@@ -31,7 +32,8 @@ interface EntradaCache<T> {
  * Patchnotes públicos (pn-03) — lê do armazenamento (R2 em produção), que é a fonte de verdade
  * única: não há tabela nem repository. Cada leitura (o índice e cada nota) fica em memória por 24 h
  * (`PATCHNOTE_CACHE_TTL_MS`); o deploy sobe processo novo e esvazia o cache, então uma nota
- * publicada junto do deploy aparece na hora, e só uma correção sem deploy espera o TTL.
+ * publicada junto do deploy aparece na hora; uma correção sem deploy espera o TTL ou o `ADMIN`
+ * esvazia o cache por `reiniciarCache()` (pn-06) — só nesta instância do processo.
  *
  * O cache guarda a **promessa** da leitura: requisições simultâneas compartilham um único acesso ao
  * R2, e uma leitura que falha (ou uma versão inexistente) sai do cache na hora — nunca se cacheia
@@ -80,6 +82,16 @@ export class PatchnoteService {
       }
       return leitura.patchnote;
     });
+  }
+
+  /**
+   * Esvazia o cache inteiro (índice e notas) — a próxima leitura volta ao armazenamento. Uma leitura
+   * em voo não é afetada: quem já a aguarda recebe o resultado, mas ela não volta ao cache.
+   */
+  reiniciarCache(): PatchnoteCacheReiniciadoDto {
+    const entradasRemovidas = this.cache.size;
+    this.cache.clear();
+    return { entradasRemovidas };
   }
 
   private memorizar<T>(chave: string, carregar: () => Promise<T>): Promise<T> {

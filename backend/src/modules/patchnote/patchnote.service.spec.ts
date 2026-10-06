@@ -139,4 +139,31 @@ describe('PatchnoteService (pn-03)', () => {
       await expect(servico.recuperarPatchnote({ versao: '1.1.0' })).rejects.toThrow('malformado');
     });
   });
+
+  describe('reiniciarCache (pn-06)', () => {
+    it('esvazia índice e notas e a próxima leitura volta ao armazenamento', async () => {
+      await servico.recuperarPatchnote({ versao: '1.1.0' });
+      expect(lerTexto).toHaveBeenCalledTimes(2);
+
+      expect(servico.reiniciarCache()).toEqual({ entradasRemovidas: 2 });
+
+      arquivos['1.1.0.md'] = nota('1.1.0', 'Corrigida');
+      const recarregada = await servico.recuperarPatchnote({ versao: '1.1.0' });
+      expect(recarregada.titulo).toBe('Corrigida');
+      expect(lerTexto).toHaveBeenCalledTimes(4);
+    });
+
+    it('com o cache vazio não remove nada', () => {
+      expect(servico.reiniciarCache()).toEqual({ entradasRemovidas: 0 });
+    });
+
+    it('uma leitura em voo durante o reinício não volta ao cache', async () => {
+      const emVoo = servico.listarPatchnotes();
+      servico.reiniciarCache();
+      await emVoo;
+
+      await servico.listarPatchnotes();
+      expect(lerTexto).toHaveBeenCalledTimes(2);
+    });
+  });
 });

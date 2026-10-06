@@ -27,3 +27,11 @@ export interface PatchnoteRecuperadoDto {
   readonly titulo: string;
   readonly conteudoMarkdown: string;
 }
+
+/**
+ * Saída do reinício do cache em memória dos patchnotes (pn-06) — só `ADMIN`. Sem DTO de entrada: a
+ * operação não recebe dados. `entradasRemovidas` conta o índice e cada nota que estavam em cache.
+ */
+export interface PatchnoteCacheReiniciadoDto {
+  readonly entradasRemovidas: number;
+}

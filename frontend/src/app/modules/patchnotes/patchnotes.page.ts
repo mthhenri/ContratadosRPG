@@ -17,15 +17,19 @@ import type {
   PatchnoteRecuperadoDto,
   PatchnoteResumoDto,
 } from '@contratados-rpg/shared/dtos/patchnote';
-import { Subscription } from 'rxjs';
+import { TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
+import { Subscription, finalize, map, switchMap } from 'rxjs';
 
+import { SessaoService } from '../../core/services/sessao.service';
 import { VersaoService } from '../../core/services/versao.service';
 import { DocumentoContencao } from '../../shared/documento-contencao/documento-contencao.component';
 import { renderizarMarkdownSeguro } from '../../shared/markdown/markdown-seguro';
 import { Botao } from '../../shared/ui/botao/botao.component';
+import { BotaoIcone } from '../../shared/ui/botao-icone/botao-icone.component';
 import { Chip } from '../../shared/ui/chip/chip.component';
 import { Esqueleto } from '../../shared/ui/esqueleto/esqueleto.component';
 import { EstadoVazio } from '../../shared/ui/estado-vazio/estado-vazio.component';
+import { NotificacaoService } from '../../shared/ui/notificacao/notificacao.service';
 import { Icone } from '../../shared/icone/icone.component';
 import {
   estruturarPatchnote,
@@ -42,7 +46,8 @@ type EstadoNota = 'carregando' | 'ok' | 'inexistente' | 'falha';
  * dividido nos blocos Novidades/Melhorias/Correções e renderizado por `renderizarMarkdownSeguro`
  * (sem HTML cru, imagem nem esquema perigoso). Versão inexistente e falha de carga usam o documento
  * de contenção da tela de Acesso negado. Abrir a página registra a versão atual como vista
- * (`VersaoService`), o que apaga o ponto da topbar.
+ * (`VersaoService`), o que apaga o ponto da topbar. O `ADMIN` ganha, no canto do cabeçalho, o
+ * reinício do cache dos patchnotes na API (pn-06), seguido de recarga sem o cache do navegador.
  */
 @Component({
   selector: 'app-patchnotes-page',
@@ -50,6 +55,7 @@ type EstadoNota = 'carregando' | 'ok' | 'inexistente' | 'falha';
     RouterLink,
     RouterLinkActive,
     Botao,
+    BotaoIcone,
     Chip,
     Esqueleto,
     EstadoVazio,
@@ -66,10 +72,14 @@ export class PatchnotesPage {
 
   private readonly patchnoteService = inject(PatchnoteService);
   private readonly versaoService = inject(VersaoService);
+  private readonly sessaoService = inject(SessaoService);
+  private readonly notificacaoService = inject(NotificacaoService);
   private readonly router = inject(Router);
   private readonly sanitizer = inject(DomSanitizer);
   private readonly destroyRef = inject(DestroyRef);
   private assinaturaNota: Subscription | undefined;
+  /** Liga a leitura da próxima nota aberta sem o cache do navegador (recarga pós-reinício, pn-06). */
+  private proximaNotaSemCache = false;
 
   protected readonly avisosFalha = [
     'Nenhum dado seu foi perdido. A interrupção é do arquivo, não da sua credencial.',
@@ -82,6 +92,12 @@ export class PatchnotesPage {
   protected readonly falhaIndice = signal(false);
   protected readonly nota = signal<PatchnoteRecuperadoDto | null>(null);
   protected readonly estadoNota = signal<EstadoNota>('carregando');
+  protected readonly reiniciandoCache = signal(false);
+
+  /** Só o `ADMIN` vê o reinício do cache — a página é pública e a sessão pode nem existir. */
+  protected readonly podeReiniciarCache = computed(
+    () => this.sessaoService.usuario()?.tipo === TipoUsuarioEnum.ADMIN,
+  );
 
   /** Versão mais recente publicada — a que leva o selo "Atual". */
   protected readonly versaoAtual = computed(() => this.indice()?.[0]?.versao ?? null);
@@ -149,6 +165,42 @@ export class PatchnotesPage {
     this.abrirVersao(itens, this.versao());
   }
 
+  /**
+   * Esvazia o cache dos patchnotes na API e recarrega índice e nota aberta furando o cache do
+   * navegador — sem isso a cópia de até 5 min (`max-age=300`) esconderia a correção. Erro HTTP cai
+   * no toast global do interceptor.
+   */
+  protected reiniciarCache(): void {
+    if (this.reiniciandoCache()) {
+      return;
+    }
+    this.reiniciandoCache.set(true);
+    this.patchnoteService
+      .reiniciarCache()
+      .pipe(
+        switchMap((resultado) =>
+          this.patchnoteService
+            .listar({ semCacheNavegador: true })
+            .pipe(map((itens) => ({ resultado, itens }))),
+        ),
+        finalize(() => this.reiniciandoCache.set(false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(({ resultado, itens }) => {
+        this.falhaIndice.set(false);
+        this.proximaNotaSemCache = true;
+        this.indice.set(itens);
+        this.notificacaoService.notificar({
+          severidade: 'sucesso',
+          resumo: 'Cache dos patchnotes reiniciado',
+          detalhe:
+            resultado.entradasRemovidas === 1
+              ? '1 entrada descartada; as notas foram relidas do arquivo.'
+              : `${resultado.entradasRemovidas} entradas descartadas; as notas foram relidas do arquivo.`,
+        });
+      });
+  }
+
   private carregarIndice(): void {
     this.falhaIndice.set(false);
     this.patchnoteService
@@ -165,6 +217,8 @@ export class PatchnotesPage {
 
   private abrirVersao(itens: readonly PatchnoteResumoDto[], versao: string | undefined): void {
     this.assinaturaNota?.unsubscribe();
+    const semCacheNavegador = this.proximaNotaSemCache;
+    this.proximaNotaSemCache = false;
     if (itens.length === 0) {
       this.nota.set(null);
       this.estadoNota.set('ok');
@@ -181,7 +235,7 @@ export class PatchnotesPage {
     }
 
     this.estadoNota.set('carregando');
-    this.assinaturaNota = this.patchnoteService.recuperar(versao).subscribe({
+    this.assinaturaNota = this.patchnoteService.recuperar(versao, { semCacheNavegador }).subscribe({
       next: (nota) => {
         this.nota.set(nota);
         this.estadoNota.set('ok');

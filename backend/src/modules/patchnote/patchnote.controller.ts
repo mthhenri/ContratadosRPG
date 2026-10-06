@@ -1,9 +1,11 @@
-import { Controller, Get, Header, Param } from '@nestjs/common';
+import { Controller, Get, Header, Param, Post } from '@nestjs/common';
 import type {
+  PatchnoteCacheReiniciadoDto,
   PatchnoteRecuperadoDto,
   PatchnoteResumoDto,
 } from '@contratados-rpg/shared/dtos/patchnote';
-import { Public } from '../../core/decorators';
+import { TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
+import { Public, TiposPermitidos } from '../../core/decorators';
 import { DocumentarController } from '../../core/openapi';
 import { PatchnoteService } from './patchnote.service';
 
@@ -11,8 +13,9 @@ import { PatchnoteService } from './patchnote.service';
 const CACHE_NAVEGADOR = 'public, max-age=300';
 
 /**
- * Endpoints dos patchnotes (pn-03) — rotas **públicas** (`@Public()`): a página `/patchnotes`
- * abre sem login. Controller burra: só repassa o `versao` da rota à service.
+ * Endpoints dos patchnotes (pn-03) — leituras **públicas** (`@Public()`): a página `/patchnotes`
+ * abre sem login. O reinício do cache (pn-06) é a exceção: autenticado e só `ADMIN`. Controller
+ * burra: só repassa o `versao` da rota à service.
  */
 @Controller('patchnote')
 @DocumentarController('Patchnotes')
@@ -31,5 +34,11 @@ export class PatchnoteController {
   @Get(':versao')
   recuperar(@Param('versao') versao: string): Promise<PatchnoteRecuperadoDto> {
     return this.patchnoteService.recuperarPatchnote({ versao });
+  }
+
+  @TiposPermitidos(TipoUsuarioEnum.ADMIN)
+  @Post('cache/reiniciar')
+  reiniciarCache(): PatchnoteCacheReiniciadoDto {
+    return this.patchnoteService.reiniciarCache();
   }
 }

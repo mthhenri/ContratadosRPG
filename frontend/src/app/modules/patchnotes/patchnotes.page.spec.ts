@@ -5,8 +5,12 @@ import { Router, provideRouter, withComponentInputBinding } from '@angular/route
 import { RouterTestingHarness } from '@angular/router/testing';
 
 import type { PatchnoteRecuperadoDto, PatchnoteResumoDto } from '@contratados-rpg/shared/dtos/patchnote';
+import type { UsuarioAutenticadoDto } from '@contratados-rpg/shared/dtos/usuario';
+import { TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
 
+import { SessaoService } from '../../core/services/sessao.service';
 import { VersaoService } from '../../core/services/versao.service';
+import { NotificacaoService } from '../../shared/ui/notificacao/notificacao.service';
 import { PatchnotesPage } from './patchnotes.page';
 import { patchnotesRoutes } from './patchnotes.routes';
 
@@ -283,5 +287,76 @@ describe('PatchnotesPage', () => {
     await responderNota(nota('1.0.0', '## Novidades\n\n- Base.'));
 
     expect(raiz().querySelector('.patchnotes__nota-versao b')?.textContent).toContain('v1.0.0');
+  });
+
+  describe('reiniciar cache (pn-06)', () => {
+    function logarComo(tipo: TipoUsuarioEnum): void {
+      TestBed.inject(SessaoService).substituirSessao({
+        token: 't',
+        id: 1,
+        login: 'a',
+        nome: 'A',
+        tipo,
+      } as UsuarioAutenticadoDto);
+    }
+
+    function botaoReiniciar(): HTMLButtonElement | null {
+      return raiz().querySelector<HTMLButtonElement>('.patchnotes__reiniciar-cache');
+    }
+
+    it('não aparece para visitante nem para conta NORMAL', async () => {
+      await abrir('/patchnotes/1.1.0');
+      await responderIndice();
+      await responderNota(nota('1.1.0', MARKDOWN_1_1_0));
+      expect(botaoReiniciar()).toBeNull();
+
+      logarComo(TipoUsuarioEnum.NORMAL);
+      harness.detectChanges();
+      expect(botaoReiniciar()).toBeNull();
+    });
+
+    it('o ADMIN reinicia, recarrega índice e nota sem cache do navegador e é notificado', async () => {
+      logarComo(TipoUsuarioEnum.ADMIN);
+      const notificar = vi.spyOn(TestBed.inject(NotificacaoService), 'notificar');
+      await abrir('/patchnotes/1.1.0');
+      await responderIndice();
+      await responderNota(nota('1.1.0', MARKDOWN_1_1_0));
+
+      const botao = botaoReiniciar()!;
+      expect(botao.getAttribute('aria-label')).toBe('Reiniciar o cache dos patchnotes');
+      botao.click();
+      harness.detectChanges();
+      expect(botao.disabled).toBe(true);
+
+      const reinicio = http.expectOne('/patchnote/cache/reiniciar');
+      expect(reinicio.request.method).toBe('POST');
+      reinicio.flush({ sucesso: true, dados: { entradasRemovidas: 2 }, mensagem: 'ok' });
+
+      const indice = http.expectOne('/patchnote');
+      expect(indice.request.headers.get('Cache-Control')).toBe('no-cache');
+      // Cópia: a resposta HTTP real é sempre um array novo (o mesmo objeto não muda o signal).
+      indice.flush({ sucesso: true, dados: [...INDICE], mensagem: 'ok' });
+      await harness.fixture.whenStable();
+      harness.detectChanges();
+
+      const recarga = http.expectOne('/patchnote/1.1.0');
+      expect(recarga.request.headers.get('Cache-Control')).toBe('no-cache');
+      recarga.flush({
+        sucesso: true,
+        dados: { ...nota('1.1.0', MARKDOWN_1_1_0), titulo: 'Corrigida' },
+        mensagem: 'ok',
+      });
+      await harness.fixture.whenStable();
+      harness.detectChanges();
+
+      expect(raiz().querySelector('.patchnotes__nota-titulo')?.textContent).toContain('Corrigida');
+      expect(botao.disabled).toBe(false);
+      expect(notificar).toHaveBeenCalledWith(
+        expect.objectContaining({ severidade: 'sucesso', resumo: 'Cache dos patchnotes reiniciado' }),
+      );
+
+      await abrir('/patchnotes/1.0.0');
+      expect(http.expectOne('/patchnote/1.0.0').request.headers.has('Cache-Control')).toBe(false);
+    });
   });
 });

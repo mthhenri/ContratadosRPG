@@ -1,5 +1,43 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-05 — pn-06: ADMIN reinicia o cache dos patchnotes sem reiniciar a API
+
+**Pedido e recorte.** O autor pediu, na página de patchnotes, um botão discreto só para
+administrador que reinicie o cache da API sem reiniciar o processo. Antes, uma correção de nota
+publicada no R2 sem deploy só aparecia depois do TTL de 24 h do `PatchnoteService`. Spec nova
+`pn-06-reiniciar-cache-patchnotes.spec.md`; skills `task-flow` e `verify` exercitadas.
+
+**Implementação.** `PatchnoteCacheReiniciadoDto { entradasRemovidas }` em `shared` (sem DTO de
+entrada). `PatchnoteService.reiniciarCache()` esvazia o `Map` e devolve a contagem; uma leitura
+em voo durante o reinício termina para quem a aguarda, mas não volta ao cache. Rota
+`POST /patchnote/cache/reiniciar` com `@TiposPermitidos(ADMIN)`, sem `@Public` nem `Cache-Control`.
+No frontend, `PatchnoteService` ganhou `reiniciarCache()` e a opção `semCacheNavegador` nas
+leituras: sem ela o `max-age=300` das rotas públicas serviria a cópia antiga por até 5 min.
+A página mostra, só para `ADMIN`, um `app-botao-icone tamanho="padrao"` com `atualizar` no canto
+superior direito do cabeçalho (análogo: "Regenerar convite" de `detalhe-mestre`). O cabeçalho
+passou de flex em coluna para grid de duas colunas. O clique desabilita o botão, chama o
+endpoint, relê índice e nota aberta com `Cache-Control: no-cache` e notifica o número de entradas
+descartadas. O erro HTTP vai para o toast global. Os contratos OpenAPI foram regenerados; o
+arquivo também estava defasado em cinco DTOs de NPC (`NpcAtributosCriacao*`,
+`NpcCategoriaReferenciaDto`, `NpcCooperacao*`) já commitados em `shared`, que entraram junto.
+
+**Gates.** Testes focados: backend patchnote 44/44, frontend patchnotes 37/37. Suítes completas:
+shared 1073 (64 arquivos), backend 959 + 1 skip (52 arquivos), frontend 213 arquivos verdes.
+`npm run lint` saiu com 0 erros; os warnings são preexistentes. O lint pegou um `unbound-method`
+no spec novo do controller, corrigido no padrão `prototype[metodo]` do próprio arquivo.
+
+**Ao vivo** (stack do autor em 3100/4300, nada iniciado ou encerrado): `POST` sem token → 401,
+conta `NORMAL` → 403, `ADMIN` → 201 com `entradasRemovidas: 2` e, em seguida, 0. Contas de teste
+criadas por REST, uma promovida a ADMIN no Postgres local. Playwright em `1920×1080` e
+`360×800`, como ADMIN e como visitante. O visitante não vê o botão; o ADMIN o vê no canto, com
+32px no desktop e 44px no toque. O tooltip abre no hover. Durante o pedido o botão fica
+desabilitado com `aria-label` "Reiniciando…". Os pedidos depois do clique são `POST`,
+`GET /patchnote` e `GET /patchnote/1.4.0`, os dois `GET` com `no-cache`. A página não recarrega
+(sentinela preservada), o toast aparece nos dois viewports e não há overflow horizontal.
+
+**Limite aceito.** O cache é por processo: com várias instâncias (Cloud Run escalando), só a
+instância que atendeu o `POST` é esvaziada. Isso está documentado em `CONTEXT.md`.
+
 ## 2026-10-05 — m4-18: NPC e Jogador compartilham o ladrilho de atributo
 
 **Pedido e recorte.** Atributos do NPC iguais aos do Jogador, sem antecipar mecânica da

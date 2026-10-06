@@ -60,4 +60,29 @@ describe('PatchnoteService', () => {
       requisicao.flush({ sucesso: true, dados: [], mensagem: 'ok' });
     }
   });
+
+  it('lê sem o cache do navegador só quando pedido (pn-06)', () => {
+    servico.listar().subscribe();
+    expect(http.expectOne('/patchnote').request.headers.has('Cache-Control')).toBe(false);
+
+    servico.listar({ semCacheNavegador: true }).subscribe();
+    servico.recuperar('1.1.0', { semCacheNavegador: true }).subscribe();
+    const indice = http.expectOne('/patchnote');
+    const nota = http.expectOne('/patchnote/1.1.0');
+    expect(indice.request.headers.get('Cache-Control')).toBe('no-cache');
+    expect(nota.request.headers.get('Cache-Control')).toBe('no-cache');
+    expect(tratados(nota.request.context)).toContain(404);
+  });
+
+  it('reinicia o cache da API por POST, com o toast global de erro (pn-06)', () => {
+    let recebido: { entradasRemovidas: number } | undefined;
+    servico.reiniciarCache().subscribe((resultado) => (recebido = resultado));
+
+    const requisicao = http.expectOne('/patchnote/cache/reiniciar');
+    expect(requisicao.request.method).toBe('POST');
+    expect(tratados(requisicao.request.context)).toEqual([]);
+    requisicao.flush({ sucesso: true, dados: { entradasRemovidas: 3 }, mensagem: 'ok' });
+
+    expect(recebido).toEqual({ entradasRemovidas: 3 });
+  });
 });

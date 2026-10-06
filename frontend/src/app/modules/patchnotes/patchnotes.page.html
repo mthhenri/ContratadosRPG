@@ -60,6 +60,20 @@
         <p class="patchnotes__apresentacao">
             O que mudou no ContratadosRPG, do jeito que você percebe na mesa.
         </p>
+        @if (podeReiniciarCache()) {
+        <button
+            app-botao-icone
+            tamanho="padrao"
+            type="button"
+            class="patchnotes__reiniciar-cache"
+            [disabled]="reiniciandoCache()"
+            [attr.aria-label]="reiniciandoCache() ? 'Reiniciando o cache dos patchnotes' : 'Reiniciar o cache dos patchnotes'"
+            [appTooltip]="'Reiniciar o cache dos patchnotes'"
+            (click)="reiniciarCache()"
+        >
+            <app-icone nome="atualizar" />
+        </button>
+        }
     </header>
 
     @if (indice() === null) {

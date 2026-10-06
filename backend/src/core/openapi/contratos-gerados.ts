@@ -3808,6 +3808,62 @@ export const schemasContratosPublicos = {
         ],
         "additionalProperties": false
     },
+    "NpcAtributosCriacaoConsultarDto": {
+        "type": "object",
+        "properties": {
+            "categoria": {
+                "type": "string",
+                "enum": [
+                    "CIVIL",
+                    "OPERATIVO",
+                    "VETERANO",
+                    "ELITE",
+                    "LENDARIO"
+                ]
+            },
+            "atributos": {
+                "$ref": "#/components/schemas/FichaAtributosDto"
+            },
+            "lutaCivilLiberada": {
+                "type": "boolean"
+            },
+            "pontariaCivilLiberada": {
+                "type": "boolean"
+            }
+        },
+        "required": [
+            "categoria",
+            "atributos",
+            "lutaCivilLiberada",
+            "pontariaCivilLiberada"
+        ],
+        "additionalProperties": false,
+        "description": "Estado de criação; liberações narrativas de Civil não são persistidas no documento."
+    },
+    "NpcAtributosCriacaoDto": {
+        "type": "object",
+        "properties": {
+            "distribuidos": {
+                "type": "number"
+            },
+            "restantes": {
+                "type": "number"
+            },
+            "violacoes": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                }
+            }
+        },
+        "required": [
+            "distribuidos",
+            "restantes",
+            "violacoes"
+        ],
+        "additionalProperties": false,
+        "description": "Saldo de distribuição da criação; edição posterior usa apenas validação de cap."
+    },
     "NpcAtributosValidarDto": {
         "type": "object",
         "properties": {
@@ -4263,6 +4319,72 @@ export const schemasContratosPublicos = {
         "additionalProperties": false,
         "description": "Ajuste pontual dos recursos e remoção explícita de Morrendo pelo mestre."
     },
+    "NpcCategoriaReferenciaDto": {
+        "type": "object",
+        "properties": {
+            "categoria": {
+                "type": "string",
+                "enum": [
+                    "CIVIL",
+                    "OPERATIVO",
+                    "VETERANO",
+                    "ELITE",
+                    "LENDARIO"
+                ]
+            },
+            "rotulo": {
+                "type": "string"
+            },
+            "perfil": {
+                "type": "string"
+            },
+            "nivelSugerido": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "categoria",
+            "rotulo",
+            "perfil",
+            "nivelSugerido"
+        ],
+        "additionalProperties": false,
+        "description": "Orientação narrativa da Categoria; faixa de Nível é sugestão, nunca trava."
+    },
+    "NpcCooperacaoConsultarDto": {
+        "type": "object",
+        "properties": {
+            "cooperacao": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "cooperacao"
+        ],
+        "additionalProperties": false,
+        "description": "Consulta do eixo social independente da Categoria."
+    },
+    "NpcCooperacaoReferenciaDto": {
+        "type": "object",
+        "properties": {
+            "rotulo": {
+                "type": "string"
+            },
+            "social": {
+                "type": "string"
+            },
+            "combate": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "rotulo",
+            "social",
+            "combate"
+        ],
+        "additionalProperties": false,
+        "description": "Faixa social e conduta tática inicial conforme o guia de mestre."
+    },
     "FichaNpcDadosDto": {
         "type": "object",
         "properties": {
@@ -4610,6 +4732,17 @@ export const schemasContratosPublicos = {
                     "NPC"
                 ],
                 "description": "Tipo da ficha (`m4-04`) — `JOGADOR`/`CRIATURA`/`NPC`. Alimenta a divisão da coluna\n\"Esquadrão\" (jogador) × \"Criaturas\" no painel da campanha; os campos abaixo (`classe`/\n`arquetipo`/`nivel`) só fazem sentido para `JOGADOR` — numa `CRIATURA` saem `null`/`0` e o\nmini-card usa `na` no lugar. Opcional (não `undefined` em produção — a query sempre resolve\nvia `JOIN tipo_ficha`) só para não obrigar todo fixture de teste pré-m4-04 a declarar o campo;\no front trata ausência como \"não é criatura\" (mesmo efeito de `JOGADOR`)."
+            },
+            "categoria": {
+                "type": "string",
+                "enum": [
+                    "CIVIL",
+                    "OPERATIVO",
+                    "VETERANO",
+                    "ELITE",
+                    "LENDARIO"
+                ],
+                "description": "Categoria do NPC; ausente nos outros tipos. Não altera o snapshot da ficha."
             },
             "na": {
                 "type": "string",
@@ -6503,6 +6636,19 @@ export const schemasContratosPublicos = {
         "additionalProperties": false,
         "description": "Saída da recuperação — a nota completa, com o Markdown para o leitor renderizar."
     },
+    "PatchnoteCacheReiniciadoDto": {
+        "type": "object",
+        "properties": {
+            "entradasRemovidas": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "entradasRemovidas"
+        ],
+        "additionalProperties": false,
+        "description": "Saída do reinício do cache em memória dos patchnotes (pn-06) — só `ADMIN`. Sem DTO de entrada: a\noperação não recebe dados. `entradasRemovidas` conta o índice e cada nota que estavam em cache."
+    },
     "RolagemRegistrarDto": {
         "type": "object",
         "properties": {
@@ -8287,6 +8433,14 @@ export const operacoesContratosPublicos = {
         "tag": "Patchnotes",
         "publica": true,
         "responseSchema": "PatchnoteRecuperadoDto"
+    },
+    "PatchnoteController_reiniciarCache": {
+        "controller": "PatchnoteController",
+        "metodo": "post",
+        "caminho": "/patchnote/cache/reiniciar",
+        "tag": "Patchnotes",
+        "publica": false,
+        "responseSchema": "PatchnoteCacheReiniciadoDto"
     },
     "RolagemController_registrar": {
         "controller": "RolagemController",

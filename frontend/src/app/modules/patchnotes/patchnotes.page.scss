@@ -20,10 +20,22 @@
         padding-top: var(--space-16);
     }
 
+    // Texto na primeira coluna; a segunda só ganha conteúdo para o ADMIN (reiniciar cache, pn-06).
     &__cabecalho {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        column-gap: var(--space-12);
+        row-gap: 6px;
+
+        > :not(.patchnotes__reiniciar-cache) {
+            grid-column: 1;
+        }
+    }
+
+    &__reiniciar-cache {
+        grid-column: 2;
+        grid-row: 1 / span 3;
+        align-self: start;
     }
 
     &__eyebrow,

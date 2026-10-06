@@ -3182,7 +3182,7 @@ conteúdo **projetado** pelo consumidor, precisa de `:host ::ng-deep` para o col
 alcançá-lo — um seletor simples no `.scss` do `Aba` nunca bate no `<span>` de fora (encapsulamento
 de view aplica o atributo do TEMPLATE DO CONSUMIDOR, não o do componente).
 
-### Versão e patchnotes — `shared/versao`, `backend/patchnote`, `frontend/patchnotes` (pn-01…pn-05)
+### Versão e patchnotes — `shared/versao`, `backend/patchnote`, `frontend/patchnotes` (pn-01…pn-06)
 
 A **versão do sistema** tem fonte única: o `version` do `package.json` da raiz (hoje `1.4.0`).
 `npm run versao:sincronizar` alinha os três workspaces e o lock e gera `shared/src/versao.ts`
@@ -3198,12 +3198,18 @@ Os **patchnotes** são públicos e sem tabela: `patchnotes/<versao>.md` (front m
 e `# RESUMO…` final; os blocos de balanço Novidades/Melhorias/Correções seguem aceitos) e `patchnotes/indice.json` no
 armazenamento — as notas são **versionadas** em `docs/patchnotes/` (front matter com `commit:` nas retroativas) e o **R2 é a
 cópia servida**, publicada pelo workflow `versao.yml`. O backend (`PatchnoteService`, sem repository) serve `GET /patchnote` e
-`GET /patchnote/:versao` (`@Public()`) com cache em memória de 24 h (o deploy o zera; uma correção
-de nota sem deploy espera o TTL). A página `/patchnotes[/:versao]` renderiza com
+`GET /patchnote/:versao` (`@Public()`) com cache em memória de 24 h (o deploy o zera). Uma correção
+de nota sem deploy espera o TTL **ou** o `ADMIN` usa o botão "Reiniciar o cache dos patchnotes" no
+canto do cabeçalho da página (`POST /patchnote/cache/reiniciar`, `@TiposPermitidos(ADMIN)`, pn-06),
+que esvazia o cache e relê índice e nota furando o cache do navegador (`Cache-Control: no-cache` no
+pedido). O cache é **por processo**: com mais de uma instância da API, só a que atendeu o `POST` é
+esvaziada. A página `/patchnotes[/:versao]` renderiza com
 `renderizarMarkdownSeguro` e, para versão inexistente (404) e falha (503), usa o
 `DocumentoContencao` compartilhado com a tela de Acesso negado. **Publicar** é ação externa: skill
 `publicar-versao` + `npm run patchnotes:publicar` (local, com credencial de escrita do R2 no ambiente
 do comando; `--dry-run` mostra o destino). `pn-05` segue aberta até a publicação no R2 real.
+Próximo passo da página: guarda-chuva `pn-revisao-pagina-patchnotes.spec.md` (backlog) — layout
+amplo em trilhos e capítulos dinâmicos (`pn-07`…`pn-09`).
 
 ### Tema — `frontend/tema`
 
