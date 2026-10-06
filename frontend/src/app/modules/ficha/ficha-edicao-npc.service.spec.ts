@@ -137,6 +137,30 @@ describe("FichaEdicaoNpcService", () => {
         expect(edicao.estadoPersistencia()).toBe("erro");
     });
 
+    it("salvarCampo confirma um valor avulso com um único PUT da ficha inteira (m4-16)", async () => {
+        const { edicao, ficha, api, resposta } = montar();
+        const salvo = edicao.salvarCampo((atual) => ({ ...atual,
+            dados: { ...atual.dados, nivel: 12 } }));
+        expect(api.alterarFichaNpc).toHaveBeenCalledExactlyOnceWith(ficha.id, {
+            nome: ficha.nome, cor: null, imagemFoco: null, oculta: true,
+            dados: { ...ficha.dados, nivel: 12 },
+        });
+        resposta.next({ ...ficha, dados: { ...ficha.dados, nivel: 12 } });
+        expect(await salvo).toBe(true);
+        expect(edicao.ficha()?.dados.nivel).toBe(12);
+        expect(edicao.rascunho()).toBeNull();
+    });
+
+    it("salvarCampo inválido mantém o rascunho com o valor digitado para corrigir", async () => {
+        const { edicao, api } = montar();
+        const salvo = await edicao.salvarCampo((atual) => ({ ...atual,
+            dados: { ...atual.dados, cooperacao: 11 } }));
+        expect(salvo).toBe(false);
+        expect(api.alterarFichaNpc).not.toHaveBeenCalled();
+        expect(edicao.rascunho()?.dados.cooperacao).toBe(11);
+        expect(edicao.erro()).toBeTruthy();
+    });
+
     it("limpeza por perda de acesso impede resposta tardia de repor dados privados", async () => {
         const { edicao, ficha, resposta } = montar();
         edicao.iniciarEdicao();

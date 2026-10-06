@@ -1,5 +1,80 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-05 — `m4-16`: a ficha de NPC edita como Criatura/Jogador — valor avulso por Enter, bloco com Salvar/Cancelar no próprio bloco
+
+**O que mudou.** Saiu o rascunho acumulado: o cartão `ficha-pagina__rascunho` (Salvar/Cancelar depois das duas colunas, "Salvar
+confirma todos os grupos editados") e o `salvar()` global da página. `NpcEdicaoFormulario` passou a ter dois mecanismos, um de
+cada vez (`ocupado`, `bloqueadoPorOutro`, `tooltipBloqueio` "Conclua ou cancele a edição de X"):
+- **Valor avulso** (`campoAvulso` + `confirmarAvulso`/`cancelarAvulso`, PUT só daquele campo via
+  `FichaEdicaoNpcService.salvarCampo`): nome, função, categoria (select), nível, Defesa, Bloquear, Esquivar, recarga e
+  Cooperação, todos em `app-valor-editavel` com a receita da Criatura (Enter/blur confirmam, Esc cancela). Máximos de
+  Vida/Energia seguem o `app-barra-recurso` e salvam na hora. Cooperação deixou de abrir o grupo Identidade.
+- **Bloco** (`grupo`): Atributos, Conduta, Habilidades, Sequelas, Traumas (Sanidade virou dois blocos) e Anotações. O lápis some
+  e Salvar + Cancelar aparecem sob o cabeçalho do próprio bloco, pelo novo subcomponente local
+  `npc-visualizacao/npc-bloco-acoes.component.*` (mesma receita de `criatura__atributos-acoes`; `[cabecalho]` encaixa nas
+  listas e, no mobile, desce para baixo do título em largura total). Salvar fica desabilitado com violação conhecida. Erro
+  (violação, formulário, rede) aparece dentro do bloco/valor; `ficha-pagina__erro` ficou para falha sem bloco (ex.: ajuste
+  rápido de Vida). Habilidades/Sequelas/Traumas perderam o "Concluir" por item: o Salvar da lista é a única confirmação, e um
+  Salvar com item inválido reabre esse item para o erro aparecer nele.
+- **Teclado e foco:** entrar foca o primeiro campo (contêiner `tabindex="-1"` quando não há campo); Esc cancela, Ctrl/Cmd+Enter
+  salva; ao sair o foco volta ao lápis/valor (reencontrado por `aria-label`, porque o `@if` recria o nó). Bloco em edição ganha
+  borda de acento (`npc__editor--ativo`) e `aria-busy`; um `role="status"` anuncia "Editando <bloco>".
+- **Saída e estados raros:** guard e `beforeunload` também disparam com valor avulso aberto. Cancelar descarta sem confirmar
+  (padrão Jogador/Criatura — o autor não pediu confirmação). Falha de salvamento mantém o bloco aberto com o texto digitado. Com
+  um bloco aberto, cor, retrato, máximos de Vida/Energia e ajuste rápido ficam travados: antes, `salvarCampo` levaria o rascunho
+  do bloco junto no mesmo PUT. O cabeçalho perdeu o rótulo "Rascunho" (ficou Salvando…/Salvo/Falha ao salvar). Modo leitor,
+  reconexão e revogação continuam como antes.
+
+**Achados só na verificação ao vivo:**
+1. **Corrigir uma violação não liberava o Salvar.** Já existia antes desta task: a assinatura `valueChanges` mesclava
+   `mesclarDocumento(base, local, atual)` usando o **rascunho** como 3º lado. Voltar um campo ao valor salvo (Luta 99 → 1, base
+   1) era lido como "sem edição local" e o 99 ficava no rascunho. Agora o 3º lado é `edicao.ficha()`. Teste de regressão em
+   `npc-edicao-formulario.service.spec.ts`. Só o NPC tinha o padrão.
+2. **Overflow no mobile:** Salvar + Cancelar + "+" no cabeçalho das listas passavam de 360px (o cartão recortava, e
+   `scrollWidth` do documento dava 0). Corrigido com quebra de linha. O roteiro passou a medir controles além da borda da viewport.
+3. **Caixas de valor desalinhadas:** a `.npc__stat` centralizava o rótulo, mas o `[bloco]` do `app-valor-editavel` força o
+   valor à esquerda. Agora fica tudo à esquerda, como `.criatura__stat` (o análogo de Identidade/Recursos). É a única mudança
+   visível em leitura.
+4. Foco ao entrar caía no contêiner do bloco (anel branco em volta do card), e a spec pede o primeiro campo. Corrigido. O
+   `appAutoFocus` das listas não funcionava por falta do import de `AutoFocus`.
+
+**Análogos:** card Atributos da Criatura (`criatura__atributos-acoes`) para a linha de ações, comparado lado a lado ao vivo em
+1920×1080 e 360×800 com "A Estátua" (mesma linha preenchido/contorno, largura dividida, logo sob o cabeçalho). A grade de
+campos difere; isso é escopo da `m4-18`. `app-valor-editavel` da Criatura para os valores avulsos; `criatura-habilidade-lista`
+para lápis/ícones por item sob demanda.
+
+**Auditoria (item 1), estado final:**
+
+| Ponto | Entrada | Salva | Cancela | Onde aparece | Erro | Mecanismo / análogo |
+|---|---|---|---|---|---|---|
+| Nome, função | clique no texto | Enter/blur (função: blur) | Esc; nome vazio | no lugar | sob o perfil | avulso / Criatura designação |
+| Categoria | clique | change | Esc/blur | caixa | sob as caixas | avulso / Criatura tenacidade |
+| Nível, Cooperação | clique | Enter/blur | Esc | caixa | violação da regra no valor | avulso / Criatura |
+| Defesa, Bloquear, Esquivar, Recarga | clique | Enter/blur | Esc | caixa / nota | sob a linha | avulso / Criatura |
+| Vida/Energia máx. e atual | barra | Enter (imediato) | Esc | barra | global (sem bloco) | `app-barra-recurso` |
+| Cor | seletor | imediato | — | perfil | global | `criatura__cor-entrada` |
+| Atributos | lápis | Salvar / Ctrl+Enter | Cancelar / Esc | sob o cabeçalho do card | no card | bloco / Atributos Criatura/Jogador |
+| Conduta | lápis | idem | idem | sob o subcabeçalho | no bloco | bloco |
+| Habilidades, Sequelas, Traumas | lápis ou "+" | Salvar da lista | Cancelar / Esc | cabeçalho da lista (mobile: abaixo) | no bloco/item | bloco / `criatura-habilidade-lista` |
+| Anotações | painel flutuante | Salvar anotações | Cancelar | painel | no painel | inalterado (fora de escopo) |
+| Retrato | selos | imediato | modal | avatar | global | inalterado |
+
+**Testes:** frontend 2853/2853 (209 arquivos), dos quais 85 nos specs do NPC. São novos: Ctrl+Enter, Salvar desabilitado
+com violação, tooltip de bloqueio, foco no primeiro campo, máximo/cor travados com bloco aberto, Enter+blur = um PUT, nome
+vazio, lista sem "Concluir" reabrindo item inválido, Esc de lista fora de edição, regressão do merge, e "Salvo" sem
+"Rascunho". `npm run lint` com 0 erros (só warnings pré-existentes de aspas); `npm run build --workspace=frontend` ok. Backend
+e `shared` intocados.
+
+**Verificação ao vivo** (stack do autor já no ar, Playwright): NPC Veterano e Civil, 1920×1080 e 360×800. Percorridos: valor
+válido, inválido (nível 25 barrado sem PUT), violação de atributo e correção, salvando (atraso de 1,5 s, `aria-busy`), falha de
+rede (bloco aberto, valor preservado), Esc com e sem alteração, Ctrl+Enter, foco de entrada/saída, bloqueio de segunda edição
+com tooltip, Conduta com campo vazio, Habilidades/Sequelas, Anotações, histórico aberto com bloco em edição, e modo leitor
+(jogador com acesso: nenhum lápis, ação, campo ou foco forçado). Sem overflow nem erro de console além da falha simulada. Dados
+de teste removidos por soft delete (fichas pela API; campanha 30 e usuários 42–44 por SQL).
+
+**Risco registrado, não resolvido (como pede a spec):** cada valor/bloco ainda faz PUT da ficha inteira. A mesma garantia de
+antes vale (merge de três vias contra a ficha confirmada), e nenhum conflito novo apareceu.
+
 ## 2026-10-05 — Specs `m4-16`, `m4-17` e `m4-18`: segunda rodada da revisão da ficha de NPC (só especificação)
 
 Pedido do autor depois de ver a ficha de NPC entregue pela `m4-14`: (a) os atributos devem ser exibidos **iguais aos do

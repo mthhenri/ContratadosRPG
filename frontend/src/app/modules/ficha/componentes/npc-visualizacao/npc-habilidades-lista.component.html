@@ -1,35 +1,65 @@
-<section class="npc-lista">
+<section
+    #secaoLista
+    class="npc-lista"
+    tabindex="-1"
+    [class.npc__editor--ativo]="modoEdicao()"
+    [attr.aria-busy]="modoEdicao() && formulario.edicao.salvando() ? true : null"
+    (keydown)="modoEdicao() && aoTecla($event)"
+>
     <header class="npc-lista__cabecalho">
         <h3 class="npc-lista__titulo">Habilidades</h3>
         <span class="npc-lista__contagem">{{ ficha()!.dados.habilidades.length }}</span>
         <span class="npc-lista__regua"></span>
         @if (gerenciavel()) {
-            <button
-                app-botao-icone
-                class="npc-lista__cabecalho-acao"
-                type="button"
-                [class.npc-lista__cabecalho-acao--ativo]="modoEdicao()"
-                [attr.aria-pressed]="modoEdicao()"
-                aria-label="Editar habilidades"
-                appTooltip="Editar habilidades"
-                [disabled]="formulario.edicao.salvando() || modoEdicao()"
-                (click)="formulario.iniciar('habilidades')"
-            >
-                <app-icone nome="editar" />
-            </button>
+            @if (modoEdicao()) {
+                <app-npc-bloco-acoes
+                    [cabecalho]="true"
+                    [salvando]="formulario.edicao.salvando()"
+                    [bloquearSalvar]="violacoes().length > 0"
+                    (salvar)="salvar()"
+                    (cancelar)="cancelar()"
+                />
+            } @else {
+                <button
+                    app-botao-icone
+                    class="npc-lista__cabecalho-acao"
+                    type="button"
+                    aria-label="Editar habilidades"
+                    [appTooltip]="formulario.tooltipBloqueio('habilidades') ?? 'Editar habilidades'"
+                    [disabled]="
+                        formulario.edicao.salvando() || formulario.bloqueadoPorOutro('habilidades')
+                    "
+                    (click)="iniciar()"
+                >
+                    <app-icone nome="editar" />
+                </button>
+            }
             <button
                 app-botao-icone
                 class="npc-lista__cabecalho-acao npc-lista__cabecalho-acao--adicionar"
                 type="button"
                 aria-label="Adicionar habilidade"
-                appTooltip="Adicionar habilidade"
-                [disabled]="formulario.edicao.salvando()"
+                [appTooltip]="formulario.tooltipBloqueio('habilidades') ?? 'Adicionar habilidade'"
+                [disabled]="
+                    formulario.edicao.salvando() || formulario.bloqueadoPorOutro('habilidades')
+                "
                 (click)="adicionar()"
             >
                 <app-icone nome="mais" />
             </button>
         }
     </header>
+    @if (modoEdicao()) {
+        @for (violacao of violacoes(); track violacao) {
+            <p class="npc__erro" role="alert">{{ violacao }}</p>
+        }
+        @if (formulario.erroFormulario()) {
+            <p class="npc__erro" role="alert">{{ formulario.erroFormulario() }}</p>
+        }
+        @if (formulario.edicao.erro()) {
+            <p class="npc__erro" role="alert">{{ formulario.edicao.erro() }}</p>
+        }
+    }
     <p class="npc__nota">
         {{ volume().totalMinimo }}–{{ volume().totalMaximo }} habilidades · mínimo
         {{ volume().passivasMinimas }} Passivas · até {{ volume().ativasMaximas }} Ativas. Limite de
@@ -42,7 +72,11 @@
                     @let registro = formulario.habilidades.at(indice);
                     <div class="npc__campos" [formGroup]="registro">
                         <app-campo rotulo="Nome neutro" tamanho="compacto">
-                            <input class="campo__controle" formControlName="nomeNeutro" />
+                            <input
+                                class="campo__controle"
+                                appAutoFocus
+                                formControlName="nomeNeutro"
+                            />
                         </app-campo>
                         <app-campo rotulo="Nome narrativo (opcional)" tamanho="compacto">
                             <input class="campo__controle" formControlName="nomeNarrativo" />
@@ -83,16 +117,6 @@
                                 Informe nome e descrição; custo deve ser inteiro não negativo.
                             </p>
                         }
-                        <button
-                            app-botao
-                            type="button"
-                            variante="primario"
-                            estilo="preenchido"
-                            tamanho="pequeno"
-                            (click)="concluir()"
-                        >
-                            Concluir
-                        </button>
                     </div>
                 } @else {
                     <div class="npc-lista__cabecalho-item">

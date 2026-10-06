@@ -165,21 +165,17 @@
         }
     }
 
-    // === Só do NPC: rascunho por grupo, erro, anotações privadas e acesso de visualização.
-    &__rascunho {
-        display: block;
-        margin-top: var(--space-16);
-    }
-
-    &__rascunho-acoes {
+    // === Só do NPC: ações de bloco (Anotações), erro, anotações privadas e acesso de visualização.
+    // `__rascunho`/`__rascunho-acoes`/`__pendencias` saíram com o rascunho global (m4-16) — cada
+    // bloco/valor avulso salva e mostra erro no próprio lugar agora (ver `npc-visualizacao.scss`).
+    &__bloco-acoes {
         display: flex;
         gap: var(--space-12);
         flex-wrap: wrap;
         margin-top: var(--space-12);
     }
 
-    &__nota,
-    &__pendencias {
+    &__nota {
         font: 12px/1.6 var(--font-mono);
         color: var(--text-dim);
     }

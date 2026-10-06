@@ -1,5 +1,6 @@
 @if (ficha(); as documento) {
     <article class="npc" [class.npc--apertado]="apertado()" [style.--cor-ficha]="documento.cor">
+        <span class="sr-only" role="status">{{ resumoEdicaoAtiva() }}</span>
         <div class="npc__coluna">
             <app-cartao titulo="Identidade" [cabecalhoQuebravel]="true">
                 <span cartaoIndice>//</span>
@@ -7,41 +8,72 @@
                     <app-chip variante="sutil">{{
                         gerenciavel() ? "Gestão do mestre" : "Somente leitura"
                     }}</app-chip>
-                    @if (gerenciavel()) {
-                        <button
-                            app-botao-icone
-                            tamanho="padrao"
-                            type="button"
-                            aria-label="Editar identidade"
-                            appTooltip="Editar identidade"
-                            [disabled]="edicao.salvando()"
-                            (click)="iniciar('identidade')"
-                        >
-                            <app-icone nome="editar" />
-                        </button>
-                    }
                 </div>
-                <fieldset
-                    [disabled]="edicao.salvando() || imagemOcupada()"
-                    class="m-0 min-w-0 border-0 p-0"
-                >
+                <fieldset [disabled]="imagemOcupada()" class="m-0 min-w-0 border-0 p-0">
                     <div class="npc__identidade">
                         <div class="npc__perfil">
                             <p class="npc__subtitulo">NPC</p>
                             @if (gerenciavel()) {
                                 <app-valor-editavel
                                     [valor]="documento.nome"
-                                    [editando]="false"
+                                    [editando]="formulario.emEdicaoDe('nome')"
+                                    [desabilitado]="formulario.bloqueadoPorOutro('nome')"
+                                    [tooltip]="formulario.tooltipBloqueio('nome')"
                                     [bloco]="true"
                                     [alinhamento]="'centro'"
-                                    rotuloAria="identidade"
+                                    rotuloAria="nome"
                                     class="npc__nome"
-                                    (editarSolicitado)="iniciar('identidade')"
-                                />
+                                    (editarSolicitado)="formulario.editarAvulso('nome')"
+                                >
+                                    <input
+                                        #entradaNome
+                                        appAutoFocus
+                                        class="npc__entrada-nome"
+                                        type="text"
+                                        [value]="documento.nome"
+                                        aria-label="Nome"
+                                        (keydown.enter)="confirmarNome(entradaNome.value)"
+                                        (keydown.escape)="formulario.cancelarAvulso()"
+                                        (blur)="confirmarNome(entradaNome.value)"
+                                    />
+                                </app-valor-editavel>
                             } @else {
                                 <h2 class="npc__nome">{{ documento.nome }}</h2>
                             }
-                            <p class="npc__funcao">{{ dados().identidadeNarrativa.funcao }}</p>
+                            @if (gerenciavel()) {
+                                <app-valor-editavel
+                                    [valor]="
+                                        dados().identidadeNarrativa.funcao || 'Função narrativa'
+                                    "
+                                    [editando]="formulario.emEdicaoDe('funcao')"
+                                    [desabilitado]="formulario.bloqueadoPorOutro('funcao')"
+                                    [tooltip]="formulario.tooltipBloqueio('funcao')"
+                                    variante="herdado"
+                                    [bloco]="true"
+                                    [alinhamento]="'centro'"
+                                    rotuloAria="função narrativa"
+                                    class="npc__funcao"
+                                    (editarSolicitado)="formulario.editarAvulso('funcao')"
+                                >
+                                    <textarea
+                                        #entradaFuncao
+                                        appAutoFocus
+                                        class="npc__entrada-funcao"
+                                        rows="2"
+                                        aria-label="Função narrativa"
+                                        (keydown.escape)="formulario.cancelarAvulso()"
+                                        (blur)="confirmarFuncao(entradaFuncao.value)"
+                                        >{{ dados().identidadeNarrativa.funcao }}</textarea>
+                                </app-valor-editavel>
+                            } @else {
+                                <p class="npc__funcao">{{ dados().identidadeNarrativa.funcao }}</p>
+                            }
+                            @if (
+                                (formulario.emEdicaoDe("nome") && edicao.erro()) ||
+                                (formulario.emEdicaoDe("funcao") && edicao.erro())
+                            ) {
+                                <p class="npc__erro" role="alert">{{ edicao.erro() }}</p>
+                            }
                             <div class="npc__avatar">
                                 <div class="npc__retrato">
                                     @if (documento.imagemUrl) {
@@ -61,7 +93,9 @@
                                             class="npc__avatar-enquadrar"
                                             aria-label="Enquadrar retrato"
                                             appTooltip="Ajustar enquadramento"
-                                            [disabled]="edicao.edicaoPendente()"
+                                            [disabled]="
+                                                formulario.ocupado() || edicao.edicaoPendente()
+                                            "
                                             (click)="reenquadrar()"
                                         >
                                             <app-icone nome="busca" />
@@ -73,7 +107,9 @@
                                             class="npc__avatar-remover"
                                             aria-label="Remover retrato"
                                             appTooltip="Remover retrato"
-                                            [disabled]="edicao.edicaoPendente()"
+                                            [disabled]="
+                                                formulario.ocupado() || edicao.edicaoPendente()
+                                            "
                                             (click)="imagemRemovida.emit()"
                                         >
                                             <app-icone nome="excluir" />
@@ -86,7 +122,7 @@
                                         tabindex="-1"
                                         aria-label="Retrato"
                                         [accept]="tiposImagemAceitos"
-                                        [disabled]="edicao.edicaoPendente()"
+                                        [disabled]="formulario.ocupado() || edicao.edicaoPendente()"
                                         (change)="escolherImagem($event)"
                                     />
                                     <button
@@ -96,56 +132,259 @@
                                         class="npc__avatar-upload"
                                         aria-label="Escolher retrato"
                                         appTooltip="Escolher retrato"
-                                        [disabled]="edicao.edicaoPendente()"
+                                        [disabled]="formulario.ocupado() || edicao.edicaoPendente()"
                                         (click)="entradaRetato.click()"
                                     >
                                         <app-icone nome="editar" />
                                     </button>
                                 }
                             </div>
+                            @if (gerenciavel()) {
+                                <div class="npc__cor">
+                                    <span class="npc__stat-rotulo">Cor da ficha</span>
+                                    <input
+                                        type="color"
+                                        class="npc__entrada-cor"
+                                        aria-label="Cor de identificação do NPC"
+                                        [formControl]="corSelecionada"
+                                    />
+                                </div>
+                            }
                         </div>
                         <div class="npc__combate">
+                            <div class="npc__stats npc__stats--classificacao">
+                                <div class="npc__stat">
+                                    <span class="npc__stat-rotulo">Categoria</span>
+                                    @if (gerenciavel()) {
+                                        <app-valor-editavel
+                                            [valor]="referencia().rotulo"
+                                            [editando]="formulario.emEdicaoDe('categoria')"
+                                            [desabilitado]="
+                                                formulario.bloqueadoPorOutro('categoria')
+                                            "
+                                            [tooltip]="formulario.tooltipBloqueio('categoria')"
+                                            [bloco]="true"
+                                            rotuloAria="categoria"
+                                            class="npc__stat-valor npc__stat-botao"
+                                            (editarSolicitado)="
+                                                formulario.editarAvulso('categoria')
+                                            "
+                                        >
+                                            <select
+                                                #entradaCategoria
+                                                appAutoFocus
+                                                class="npc__entrada-select"
+                                                aria-label="Categoria"
+                                                (change)="
+                                                    confirmarCategoria(entradaCategoria.value)
+                                                "
+                                                (keydown.escape)="formulario.cancelarAvulso()"
+                                                (blur)="formulario.cancelarAvulso()"
+                                            >
+                                                @for (
+                                                    categoria of categorias;
+                                                    track categoria.categoria
+                                                ) {
+                                                    <option
+                                                        [value]="categoria.categoria"
+                                                        [selected]="
+                                                            categoria.categoria ===
+                                                            dados().categoria
+                                                        "
+                                                    >
+                                                        {{ categoria.rotulo }}
+                                                    </option>
+                                                }
+                                            </select>
+                                        </app-valor-editavel>
+                                    } @else {
+                                        <span class="npc__stat-valor">{{
+                                            referencia().rotulo
+                                        }}</span>
+                                    }
+                                </div>
+                                <div class="npc__stat">
+                                    <span class="npc__stat-rotulo">Nível</span>
+                                    @if (gerenciavel()) {
+                                        <app-valor-editavel
+                                            [valor]="dados().nivel"
+                                            [editando]="formulario.emEdicaoDe('nivel')"
+                                            [desabilitado]="formulario.bloqueadoPorOutro('nivel')"
+                                            [tooltip]="formulario.tooltipBloqueio('nivel')"
+                                            [bloco]="true"
+                                            rotuloAria="nível"
+                                            class="npc__stat-valor npc__stat-botao"
+                                            (editarSolicitado)="formulario.editarAvulso('nivel')"
+                                        >
+                                            <input
+                                                #entradaNivel
+                                                appAutoFocus
+                                                class="npc__entrada-numero"
+                                                type="number"
+                                                min="0"
+                                                max="20"
+                                                [value]="dados().nivel"
+                                                aria-label="Nível"
+                                                (keydown.enter)="
+                                                    confirmarNivel(entradaNivel.valueAsNumber)
+                                                "
+                                                (keydown.escape)="formulario.cancelarAvulso()"
+                                                (blur)="confirmarNivel(entradaNivel.valueAsNumber)"
+                                            />
+                                        </app-valor-editavel>
+                                    } @else {
+                                        <span class="npc__stat-valor">{{ dados().nivel }}</span>
+                                    }
+                                </div>
+                            </div>
+                            @if (formulario.emEdicaoDe("nivel")) {
+                                @for (violacao of violacoesNivel(); track violacao) {
+                                    <p class="npc__erro" role="alert">{{ violacao }}</p>
+                                }
+                            }
+                            @if (
+                                (formulario.emEdicaoDe("categoria") ||
+                                    formulario.emEdicaoDe("nivel")) &&
+                                edicao.erro() &&
+                                !violacoesNivel().length
+                            ) {
+                                <p class="npc__erro" role="alert">{{ edicao.erro() }}</p>
+                            }
                             <div class="npc__subcabecalho">
                                 <span>Recursos</span>
                                 <i></i>
-                                @if (gerenciavel()) {
-                                    <button
-                                        app-botao-icone
-                                        class="npc__lapis"
-                                        type="button"
-                                        aria-label="Editar recursos"
-                                        appTooltip="Editar recursos"
-                                        [disabled]="edicao.salvando()"
-                                        (click)="iniciar('recursos')"
-                                    >
-                                        <app-icone nome="editar" />
-                                    </button>
-                                }
                             </div>
                             <div class="npc__stats">
-                                <app-stat
-                                    rotulo="Defesa"
-                                    [valor]="dados().defesaBase"
-                                    tamanho="compacto"
-                                />
-                                <app-stat
-                                    rotulo="Bloquear"
-                                    [valor]="dados().bloquear"
-                                    tamanho="compacto"
-                                />
-                                <app-stat
-                                    rotulo="Esquivar"
-                                    [valor]="dados().esquivar"
-                                    tamanho="compacto"
-                                />
+                                <div class="npc__stat">
+                                    <span class="npc__stat-rotulo">Defesa</span>
+                                    @if (gerenciavel()) {
+                                        <app-valor-editavel
+                                            [valor]="dados().defesaBase"
+                                            [editando]="formulario.emEdicaoDe('defesaBase')"
+                                            [desabilitado]="
+                                                formulario.bloqueadoPorOutro('defesaBase')
+                                            "
+                                            [tooltip]="formulario.tooltipBloqueio('defesaBase')"
+                                            [bloco]="true"
+                                            rotuloAria="defesa"
+                                            class="npc__stat-valor npc__stat-botao"
+                                            (editarSolicitado)="
+                                                formulario.editarAvulso('defesaBase')
+                                            "
+                                        >
+                                            <input
+                                                #entradaDefesa
+                                                appAutoFocus
+                                                class="npc__entrada-numero"
+                                                type="number"
+                                                min="0"
+                                                [value]="dados().defesaBase"
+                                                aria-label="Defesa"
+                                                (keydown.enter)="
+                                                    confirmarDefesa(entradaDefesa.valueAsNumber)
+                                                "
+                                                (keydown.escape)="formulario.cancelarAvulso()"
+                                                (blur)="
+                                                    confirmarDefesa(entradaDefesa.valueAsNumber)
+                                                "
+                                            />
+                                        </app-valor-editavel>
+                                    } @else {
+                                        <span class="npc__stat-valor">{{
+                                            dados().defesaBase
+                                        }}</span>
+                                    }
+                                </div>
+                                <div class="npc__stat">
+                                    <span class="npc__stat-rotulo">Bloquear</span>
+                                    @if (gerenciavel()) {
+                                        <app-valor-editavel
+                                            [valor]="dados().bloquear"
+                                            [editando]="formulario.emEdicaoDe('bloquear')"
+                                            [desabilitado]="
+                                                formulario.bloqueadoPorOutro('bloquear')
+                                            "
+                                            [tooltip]="formulario.tooltipBloqueio('bloquear')"
+                                            [bloco]="true"
+                                            rotuloAria="bloquear"
+                                            class="npc__stat-valor npc__stat-botao"
+                                            (editarSolicitado)="formulario.editarAvulso('bloquear')"
+                                        >
+                                            <input
+                                                #entradaBloquear
+                                                appAutoFocus
+                                                class="npc__entrada-numero"
+                                                type="number"
+                                                min="0"
+                                                [value]="dados().bloquear"
+                                                aria-label="Bloquear"
+                                                (keydown.enter)="
+                                                    confirmarBloquear(entradaBloquear.valueAsNumber)
+                                                "
+                                                (keydown.escape)="formulario.cancelarAvulso()"
+                                                (blur)="
+                                                    confirmarBloquear(entradaBloquear.valueAsNumber)
+                                                "
+                                            />
+                                        </app-valor-editavel>
+                                    } @else {
+                                        <span class="npc__stat-valor">{{ dados().bloquear }}</span>
+                                    }
+                                </div>
+                                <div class="npc__stat">
+                                    <span class="npc__stat-rotulo">Esquivar</span>
+                                    @if (gerenciavel()) {
+                                        <app-valor-editavel
+                                            [valor]="dados().esquivar"
+                                            [editando]="formulario.emEdicaoDe('esquivar')"
+                                            [desabilitado]="
+                                                formulario.bloqueadoPorOutro('esquivar')
+                                            "
+                                            [tooltip]="formulario.tooltipBloqueio('esquivar')"
+                                            [bloco]="true"
+                                            rotuloAria="esquivar"
+                                            class="npc__stat-valor npc__stat-botao"
+                                            (editarSolicitado)="formulario.editarAvulso('esquivar')"
+                                        >
+                                            <input
+                                                #entradaEsquivar
+                                                appAutoFocus
+                                                class="npc__entrada-numero"
+                                                type="number"
+                                                min="0"
+                                                [value]="dados().esquivar"
+                                                aria-label="Esquivar"
+                                                (keydown.enter)="
+                                                    confirmarEsquivar(entradaEsquivar.valueAsNumber)
+                                                "
+                                                (keydown.escape)="formulario.cancelarAvulso()"
+                                                (blur)="
+                                                    confirmarEsquivar(entradaEsquivar.valueAsNumber)
+                                                "
+                                            />
+                                        </app-valor-editavel>
+                                    } @else {
+                                        <span class="npc__stat-valor">{{ dados().esquivar }}</span>
+                                    }
+                                </div>
                             </div>
+                            @if (
+                                (formulario.emEdicaoDe("defesaBase") ||
+                                    formulario.emEdicaoDe("bloquear") ||
+                                    formulario.emEdicaoDe("esquivar")) &&
+                                edicao.erro()
+                            ) {
+                                <p class="npc__erro" role="alert">{{ edicao.erro() }}</p>
+                            }
                             <app-barra-recurso
                                 rotulo="Vida"
                                 recurso="vida"
                                 tamanho="padrao"
                                 [atual]="dados().vidaAtual"
                                 [maximo]="dados().vidaMaxima"
-                                [editavel]="gerenciavel() && !edicao.salvando()"
+                                [editavel]="
+                                    gerenciavel() && !edicao.salvando() && !formulario.ocupado()
+                                "
                                 (atualAlterado)="edicao.ajustarVitalidade({ vidaAtual: $event })"
                                 (maximoAlterado)="ajustarMaximo('vidaMaxima', $event)"
                             />
@@ -178,7 +417,9 @@
                                     tamanho="padrao"
                                     [atual]="dados().energia.atual"
                                     [maximo]="dados().energia.maxima"
-                                    [editavel]="gerenciavel() && !edicao.salvando()"
+                                    [editavel]="
+                                        gerenciavel() && !edicao.salvando() && !formulario.ocupado()
+                                    "
                                     (atualAlterado)="
                                         edicao.ajustarVitalidade({ energiaAtual: $event })
                                     "
@@ -186,7 +427,39 @@
                                 />
                                 <p class="npc__nota">
                                     {{ pool() ? "Pool + Recarga" : "Reserva Fixa" }}
-                                    @if (pool()) {
+                                    @if (pool() && gerenciavel()) {
+                                        · Recarga
+                                        <app-valor-editavel
+                                            [valor]="dados().energia.recargaPorTurno ?? 0"
+                                            [editando]="formulario.emEdicaoDe('recargaPorTurno')"
+                                            [desabilitado]="
+                                                formulario.bloqueadoPorOutro('recargaPorTurno')
+                                            "
+                                            [tooltip]="
+                                                formulario.tooltipBloqueio('recargaPorTurno')
+                                            "
+                                            variante="herdado"
+                                            rotuloAria="recarga por turno"
+                                            (editarSolicitado)="
+                                                formulario.editarAvulso('recargaPorTurno')
+                                            "
+                                            ><input
+                                                #entradaRecarga
+                                                appAutoFocus
+                                                class="npc__entrada-numero npc__entrada-numero--inline"
+                                                type="number"
+                                                min="0"
+                                                [value]="dados().energia.recargaPorTurno ?? 0"
+                                                aria-label="Recarga por turno"
+                                                (keydown.enter)="
+                                                    confirmarRecarga(entradaRecarga.valueAsNumber)
+                                                "
+                                                (keydown.escape)="formulario.cancelarAvulso()"
+                                                (blur)="
+                                                    confirmarRecarga(entradaRecarga.valueAsNumber)
+                                                " /></app-valor-editavel
+                                        >/turno
+                                    } @else if (pool()) {
                                         · Recarga {{ dados().energia.recargaPorTurno ?? 0 }}/turno
                                     }
                                 </p>
@@ -194,168 +467,122 @@
                             <div class="npc__subcabecalho">
                                 <span>Cooperação</span>
                                 <i></i>
-                                @if (gerenciavel()) {
-                                    <button
-                                        app-botao-icone
-                                        class="npc__lapis"
-                                        type="button"
-                                        aria-label="Alterar Cooperação"
-                                        appTooltip="Alterar Cooperação"
-                                        [disabled]="edicao.salvando()"
-                                        (click)="iniciar('identidade')"
-                                    >
-                                        <app-icone nome="editar" />
-                                    </button>
+                            </div>
+                            <div class="npc__stats npc__stats--cooperacao">
+                                <div class="npc__stat">
+                                    <span class="npc__stat-rotulo">Cooperação</span>
+                                    @if (gerenciavel()) {
+                                        <app-valor-editavel
+                                            [valor]="dados().cooperacao"
+                                            [editando]="formulario.emEdicaoDe('cooperacao')"
+                                            [desabilitado]="
+                                                formulario.bloqueadoPorOutro('cooperacao')
+                                            "
+                                            [tooltip]="formulario.tooltipBloqueio('cooperacao')"
+                                            [bloco]="true"
+                                            rotuloAria="cooperação"
+                                            class="npc__stat-valor npc__stat-botao"
+                                            (editarSolicitado)="
+                                                formulario.editarAvulso('cooperacao')
+                                            "
+                                        >
+                                            <input
+                                                #entradaCooperacao
+                                                appAutoFocus
+                                                class="npc__entrada-numero"
+                                                type="number"
+                                                min="0"
+                                                max="10"
+                                                [value]="dados().cooperacao"
+                                                aria-label="Cooperação"
+                                                (keydown.enter)="
+                                                    confirmarCooperacao(
+                                                        entradaCooperacao.valueAsNumber
+                                                    )
+                                                "
+                                                (keydown.escape)="formulario.cancelarAvulso()"
+                                                (blur)="
+                                                    confirmarCooperacao(
+                                                        entradaCooperacao.valueAsNumber
+                                                    )
+                                                "
+                                            />
+                                        </app-valor-editavel>
+                                    } @else {
+                                        <span class="npc__stat-valor">{{
+                                            dados().cooperacao
+                                        }}</span>
+                                    }
+                                    <span class="npc__stat-nota">{{
+                                        cooperacao()?.rotulo ?? "Valor inválido"
+                                    }}</span>
+                                </div>
+                            </div>
+                            @if (formulario.emEdicaoDe("cooperacao")) {
+                                @for (violacao of violacoesCooperacao(); track violacao) {
+                                    <p class="npc__erro" role="alert">{{ violacao }}</p>
                                 }
-                            </div>
-                            <div class="npc__cooperacao">
-                                <app-stat
-                                    rotulo="Cooperação"
-                                    [valor]="dados().cooperacao"
-                                    [nota]="cooperacao()?.rotulo ?? 'Valor inválido'"
-                                    tamanho="compacto"
-                                />
-                                <p class="npc__nota">{{ cooperacao()?.social }}</p>
-                            </div>
+                                @if (edicao.erro() && !violacoesCooperacao().length) {
+                                    <p class="npc__erro" role="alert">{{ edicao.erro() }}</p>
+                                }
+                            }
+                            <p class="npc__nota">{{ cooperacao()?.social }}</p>
                         </div>
                     </div>
                     <div class="npc__metas npc__metas--rodape">
                         <app-chip variante="sutil">{{ referencia().rotulo }}</app-chip>
                         <app-chip variante="sutil">Nível {{ dados().nivel }}</app-chip>
                     </div>
-                    @if (gerenciavel() && formulario.grupo() === "identidade") {
-                        <div class="npc__editor npc__campos" [formGroup]="formulario.formulario">
-                            <app-campo rotulo="Nome"
-                                ><input class="campo__controle" formControlName="nome"
-                            /></app-campo>
-                            <app-campo rotulo="Função narrativa">
-                                <textarea
-                                    class="campo__controle"
-                                    rows="3"
-                                    formControlName="funcao"
-                                ></textarea>
-                            </app-campo>
-                            <app-campo rotulo="Categoria"
-                                ><select class="campo__controle" formControlName="categoria">
-                                    @for (categoria of categorias; track categoria.categoria) {
-                                        <option [value]="categoria.categoria">
-                                            {{ categoria.rotulo }}
-                                        </option>
-                                    }
-                                </select></app-campo
-                            >
-                            <app-campo rotulo="Nível"
-                                ><app-step-input
-                                    formControlName="nivel"
-                                    [min]="0"
-                                    [max]="20"
-                                    [digitavel]="true"
-                                    tamanho="compacto"
-                                    variante="discreto"
-                                    ariaRotulo="Nível"
-                            /></app-campo>
-                            <app-campo rotulo="Cooperação"
-                                ><app-step-input
-                                    formControlName="cooperacao"
-                                    [min]="0"
-                                    [max]="10"
-                                    [digitavel]="true"
-                                    tamanho="compacto"
-                                    variante="discreto"
-                                    ariaRotulo="Cooperação"
-                            /></app-campo>
-                            <app-campo
-                                rotulo="Cor da ficha (opcional)"
-                                dica="Escolha a cor de identificação do NPC."
-                            >
-                                <input
-                                    class="campo__controle"
-                                    type="color"
-                                    [formControl]="corSelecionada"
-                                />
-                            </app-campo>
-                            <p class="npc__nota">
-                                Categoria e Nível não recalculam os recursos salvos. Ajuste também
-                                atributos e habilidades, se necessário, antes de Salvar.
-                            </p>
-                        </div>
-                    }
-                    @if (gerenciavel() && formulario.grupo() === "recursos") {
-                        <div class="npc__editor npc__campos" [formGroup]="formulario.formulario">
-                            @for (
-                                campo of ["vidaMaxima", "defesaBase", "bloquear", "esquivar"];
-                                track campo
-                            ) {
-                                <app-campo
-                                    [rotulo]="
-                                        campo === 'vidaMaxima'
-                                            ? 'Vida máxima'
-                                            : campo === 'defesaBase'
-                                              ? 'Defesa'
-                                              : campo === 'bloquear'
-                                                ? 'Bloquear'
-                                                : 'Esquivar'
-                                    "
-                                >
-                                    <input
-                                        class="campo__controle"
-                                        type="number"
-                                        min="0"
-                                        step="1"
-                                        [formControlName]="campo"
-                                    />
-                                </app-campo>
-                            }
-                            @if (!civil()) {
-                                <app-campo rotulo="Energia máxima"
-                                    ><input
-                                        class="campo__controle"
-                                        type="number"
-                                        min="0"
-                                        step="1"
-                                        formControlName="energiaMaxima"
-                                /></app-campo>
-                                @if (pool()) {
-                                    <app-campo rotulo="Recarga por turno"
-                                        ><input
-                                            class="campo__controle"
-                                            type="number"
-                                            min="0"
-                                            step="1"
-                                            formControlName="recargaPorTurno"
-                                    /></app-campo>
-                                }
-                            }
-                            <p class="npc__nota">
-                                Valores salvos pelo mestre. Alterar máximos não limita os recursos
-                                atuais.
-                            </p>
-                        </div>
-                    }
                 </fieldset>
             </app-cartao>
             <app-cartao titulo="Atributos" [cabecalhoQuebravel]="true">
                 <span cartaoIndice>//</span>
-                @if (gerenciavel()) {
+                @if (gerenciavel() && !formulario.emEdicaoDe("atributos")) {
                     <button
                         cartaoFim
                         app-botao-icone
                         tamanho="padrao"
                         type="button"
                         aria-label="Editar atributos"
-                        appTooltip="Editar atributos"
-                        [disabled]="edicao.salvando()"
+                        [appTooltip]="formulario.tooltipBloqueio('atributos') ?? 'Editar atributos'"
+                        [disabled]="edicao.salvando() || formulario.bloqueadoPorOutro('atributos')"
                         (click)="iniciar('atributos')"
                     >
                         <app-icone nome="editar" />
                     </button>
                 }
-                <div class="npc__lista">
+                <div
+                    #editorAtributos
+                    class="npc__lista"
+                    tabindex="-1"
+                    [class.npc__editor--ativo]="formulario.emEdicaoDe('atributos')"
+                    [attr.aria-busy]="
+                        edicao.salvando() && formulario.emEdicaoDe('atributos') ? true : null
+                    "
+                    (keydown)="formulario.emEdicaoDe('atributos') && aoTeclaBloco($event)"
+                >
+                    @if (formulario.emEdicaoDe("atributos")) {
+                        <app-npc-bloco-acoes
+                            [salvando]="edicao.salvando()"
+                            [bloquearSalvar]="violacoesAtributos().length > 0"
+                            (salvar)="formulario.salvar()"
+                            (cancelar)="formulario.cancelar()"
+                        />
+                        @for (violacao of violacoesAtributos(); track violacao) {
+                            <p class="npc__erro" role="alert">{{ violacao }}</p>
+                        }
+                        @if (formulario.erroFormulario()) {
+                            <p class="npc__erro" role="alert">{{ formulario.erroFormulario() }}</p>
+                        }
+                        @if (edicao.erro()) {
+                            <p class="npc__erro" role="alert">{{ edicao.erro() }}</p>
+                        }
+                    }
                     @for (grupo of grupos; track grupo.nome) {
                         <h3 class="npc__subtitulo npc__subtitulo--centro">{{ grupo.nome }}</h3>
                         <div class="npc__atributos">
                             @for (campo of grupo.campos; track campo.chave) {
-                                @if (gerenciavel() && formulario.grupo() === "atributos") {
+                                @if (gerenciavel() && formulario.emEdicaoDe("atributos")) {
                                     <app-campo [rotulo]="campo.nome">
                                         <app-step-input
                                             [formControl]="
@@ -435,30 +662,66 @@
                                 <app-npc-sanidade-lista [gerenciavel]="gerenciavel()" />
                             }
                             @case ("conduta") {
-                                <div class="npc__lista">
+                                <div
+                                    #editorConduta
+                                    class="npc__lista"
+                                    tabindex="-1"
+                                    [class.npc__editor--ativo]="formulario.emEdicaoDe('conduta')"
+                                    [attr.aria-busy]="
+                                        edicao.salvando() && formulario.emEdicaoDe('conduta')
+                                            ? true
+                                            : null
+                                    "
+                                    (keydown)="
+                                        formulario.emEdicaoDe('conduta') && aoTeclaBloco($event)
+                                    "
+                                >
                                     <div class="npc__subcabecalho">
                                         <span>Conduta</span>
                                         <i></i>
-                                        @if (gerenciavel()) {
+                                        @if (gerenciavel() && !formulario.emEdicaoDe("conduta")) {
                                             <button
                                                 app-botao-icone
                                                 class="npc__lapis"
                                                 type="button"
                                                 aria-label="Editar conduta"
-                                                appTooltip="Editar conduta"
-                                                [disabled]="edicao.salvando()"
+                                                [appTooltip]="
+                                                    formulario.tooltipBloqueio('conduta') ??
+                                                    'Editar conduta'
+                                                "
+                                                [disabled]="
+                                                    edicao.salvando() ||
+                                                    formulario.bloqueadoPorOutro('conduta')
+                                                "
                                                 (click)="iniciar('conduta')"
                                             >
                                                 <app-icone nome="editar" />
                                             </button>
                                         }
                                     </div>
+                                    @if (formulario.emEdicaoDe("conduta")) {
+                                        <app-npc-bloco-acoes
+                                            [salvando]="edicao.salvando()"
+                                            (salvar)="formulario.salvar()"
+                                            (cancelar)="formulario.cancelar()"
+                                        />
+                                        @if (formulario.erroFormulario()) {
+                                            <p class="npc__erro" role="alert">
+                                                {{ formulario.erroFormulario() }}
+                                            </p>
+                                        }
+                                        @if (edicao.erro()) {
+                                            <p class="npc__erro" role="alert">
+                                                {{ edicao.erro() }}
+                                            </p>
+                                        }
+                                    }
                                     <h3 class="npc__subtitulo">Função narrativa</h3>
                                     <p class="npc__texto">
                                         {{ dados().identidadeNarrativa.funcao }}
                                     </p>
                                     @for (campo of camposConduta; track campo.chave) {
-                                        @if (gerenciavel() && formulario.grupo() === "conduta") {
+                                        @if (gerenciavel() && formulario.emEdicaoDe("conduta")) {
                                             <app-campo [rotulo]="campo.nome">
                                                 <textarea
                                                     class="campo__controle"

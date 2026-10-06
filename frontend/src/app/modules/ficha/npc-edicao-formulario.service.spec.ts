@@ -1,9 +1,9 @@
 import { TestBed } from "@angular/core/testing";
 import { of, throwError } from "rxjs";
-import { CategoriaNpcEnum, HabilidadeTipoNpcEnum } from "@contratados-rpg/shared/enums";
+import { HabilidadeTipoNpcEnum } from "@contratados-rpg/shared/enums";
 import { FichaService } from "./ficha.service";
 import { FichaEdicaoNpcService } from "./ficha-edicao-npc.service";
-import { NpcEdicaoFormulario, criarHabilidadeFormulario } from "./npc-edicao-formulario.service";
+import { NpcEdicaoFormulario } from "./npc-edicao-formulario.service";
 import { criarFichaNpcTeste } from "./testing/ficha-npc.fixture";
 
 describe("NpcEdicaoFormulario", () => {
@@ -19,25 +19,28 @@ describe("NpcEdicaoFormulario", () => {
         return { formulario, edicao, ficha, api };
     }
 
-    it("troca de grupo conserva Categoria, atributos e listas no mesmo rascunho", async () => {
+    // === Bloco (lápis + Salvar/Cancelar no próprio bloco) ===
+
+    it("salva um bloco (Conduta) sozinho, sem grupo acumulado de outro bloco", async () => {
         const { formulario, edicao, api } = montar();
-        formulario.iniciar("identidade");
-        formulario.formulario.controls.categoria.setValue(CategoriaNpcEnum.OPERATIVO);
-        formulario.formulario.controls.nivel.setValue(20);
-        formulario.iniciar("atributos");
-        formulario.formulario.controls.atributos.controls.luta.setValue(3);
-        formulario.iniciar("habilidades");
-        formulario.habilidades.push(criarHabilidadeFormulario({ nomeNeutro: "Treino médico",
-            tipo: HabilidadeTipoNpcEnum.PASSIVA, descricao: "Reconhece o perigo" }));
-        formulario.habilidades.push(criarHabilidadeFormulario({ nomeNeutro: "Retirada",
-            tipo: HabilidadeTipoNpcEnum.ATIVA, custoEnergia: 2, descricao: "Busca abrigo" }));
+        formulario.iniciar("conduta");
+        formulario.formulario.controls.gatilhosFuga.setValue("Foge com Vida baixa");
         expect(await formulario.salvar()).toBe(true);
-        expect(api.alterarFichaNpc.mock.calls[0][1].dados).toMatchObject({
-            categoria: CategoriaNpcEnum.OPERATIVO, nivel: 20, atributos: { luta: 3 },
-            vidaMaxima: 77, defesaBase: 18, energia: { maxima: 0, atual: 0 },
-        });
-        expect(edicao.ficha()?.dados.habilidades).toHaveLength(2);
+        expect(api.alterarFichaNpc.mock.calls[0][1].dados.condutaCombate.gatilhosFuga)
+            .toBe("Foge com Vida baixa");
+        expect(edicao.rascunho()).toBeNull();
         expect(formulario.grupo()).toBeNull();
+    });
+
+    it("voltar um campo ao valor salvo também volta no rascunho (corrige a violação)", () => {
+        const { formulario, edicao, ficha } = montar();
+        formulario.iniciar("atributos");
+        const luta = formulario.formulario.controls.atributos.controls.luta;
+        luta.setValue(99);
+        expect(edicao.violacoes().length).toBeGreaterThan(0);
+        luta.setValue(ficha.dados.atributos.luta);
+        expect(edicao.rascunho()?.dados.atributos.luta).toBe(ficha.dados.atributos.luta);
+        expect(edicao.violacoes()).toEqual([]);
     });
 
     it("atualização de rascunho não apaga espaços enquanto o usuário escreve", () => {
@@ -49,41 +52,52 @@ describe("NpcEdicaoFormulario", () => {
         expect(edicao.rascunho()?.dados.condutaCombate.gatilhosFuga).toBe("Perigo para ");
     });
 
-    it("remoto chega ao formulário sem apagar Cooperação local nem notas privadas", async () => {
+    it("cancela o bloco sem enviar alterações", () => {
         const { formulario, edicao, ficha, api } = montar();
-        formulario.iniciar("identidade");
-        formulario.formulario.controls.cooperacao.setValue(9);
-        edicao.absorverRemoto({ ...ficha, dados: { ...ficha.dados, vidaAtual: 4,
-            identidadeNarrativa: { ...ficha.dados.identidadeNarrativa, funcao: "Função remota" } } });
-        TestBed.tick();
-        expect(formulario.formulario.controls.funcao.value).toBe("Função remota");
-        expect(formulario.formulario.controls.cooperacao.value).toBe(9);
-        formulario.formulario.controls.nome.setValue("Nome local");
-        expect(await formulario.salvar()).toBe(true);
-        expect(api.alterarFichaNpc.mock.calls[0][1].dados).toMatchObject({
-            vidaAtual: 4, anotacoes: "Informação privada do mestre",
-            identidadeNarrativa: { nome: "Nome local", funcao: "Função remota" },
-        });
-    });
-
-    it("cancela todos os grupos sem enviar alterações", () => {
-        const { formulario, edicao, ficha, api } = montar();
-        formulario.iniciar("identidade"); formulario.formulario.controls.nome.setValue("Rascunho");
-        formulario.iniciar("atributos"); formulario.formulario.controls.atributos.controls.luta.setValue(2);
+        formulario.iniciar("atributos");
+        formulario.formulario.controls.atributos.controls.luta.setValue(2);
         formulario.cancelar(); TestBed.tick();
         expect(edicao.ficha()).toEqual(ficha);
         expect(edicao.rascunho()).toBeNull();
         expect(api.alterarFichaNpc).not.toHaveBeenCalled();
     });
 
+    it("um bloco por vez: iniciar outro grupo enquanto um já edita é ignorado", () => {
+        const { formulario } = montar();
+        formulario.iniciar("conduta");
+        formulario.iniciar("atributos");
+        expect(formulario.grupo()).toBe("conduta");
+        formulario.cancelar();
+        formulario.iniciar("atributos");
+        expect(formulario.grupo()).toBe("atributos");
+    });
+
+    it("remoto chega ao bloco em edição sem apagar a alteração local nem notas privadas",
+        async () => {
+            const { formulario, edicao, ficha, api } = montar();
+            formulario.iniciar("conduta");
+            formulario.formulario.controls.gatilhosFuga.setValue("Gatilho local");
+            edicao.absorverRemoto({ ...ficha, dados: { ...ficha.dados, vidaAtual: 4,
+                condutaCombate: { ...ficha.dados.condutaCombate,
+                    prioridadesAlvo: "Prioridade remota" } } });
+            TestBed.tick();
+            expect(formulario.formulario.controls.gatilhosFuga.value).toBe("Gatilho local");
+            expect(formulario.formulario.controls.prioridadesAlvo.value).toBe("Prioridade remota");
+            expect(await formulario.salvar()).toBe(true);
+            expect(api.alterarFichaNpc.mock.calls[0][1].dados).toMatchObject({
+                vidaAtual: 4, anotacoes: "Informação privada do mestre",
+                condutaCombate: { gatilhosFuga: "Gatilho local",
+                    prioridadesAlvo: "Prioridade remota" },
+            });
+        });
+
     it("remoção remota de campos opcionais não reaparece no próximo editor", () => {
         const { formulario, edicao, ficha } = montar();
         const habilidade = { nomeNeutro: "Apoio", nomeNarrativo: "Socorro",
             restricao: "Apenas em abrigo", tipo: HabilidadeTipoNpcEnum.PASSIVA,
             descricao: "Organiza retirada" };
-        const base = { ...ficha, dados: { ...ficha.dados,
-            categoria: CategoriaNpcEnum.OPERATIVO, habilidades: [habilidade] } };
-        edicao.definirFicha(base); formulario.iniciar("identidade");
+        const base = { ...ficha, dados: { ...ficha.dados, habilidades: [habilidade] } };
+        edicao.definirFicha(base); formulario.iniciar("habilidades");
         const remota = { nomeNeutro: habilidade.nomeNeutro, tipo: habilidade.tipo,
             descricao: habilidade.descricao };
         edicao.absorverRemoto({ ...base, dados: { ...base.dados, habilidades: [remota] } });
@@ -92,7 +106,7 @@ describe("NpcEdicaoFormulario", () => {
         expect(formulario.habilidades.at(0).controls.restricao.value).toBe("");
     });
 
-    it("não envia item incompleto e conserva editor após falha de gravação", async () => {
+    it("não envia item incompleto e conserva o bloco após falha de gravação", async () => {
         const { formulario, edicao, api } = montar();
         formulario.iniciar("conduta");
         formulario.formulario.controls.gatilhosFuga.setValue("");
@@ -104,5 +118,61 @@ describe("NpcEdicaoFormulario", () => {
         TestBed.tick();
         expect(formulario.grupo()).toBe("conduta");
         expect(edicao.rascunho()?.dados.condutaCombate.gatilhosFuga).toBe("Proteger civis");
+    });
+
+    // === Valor avulso (clique → input → Enter confirma e persiste só aquele campo) ===
+
+    it("confirmarAvulso persiste só o campo editado, com um único PUT", async () => {
+        const { formulario, edicao, ficha, api } = montar();
+        formulario.editarAvulso("nivel");
+        expect(formulario.campoAvulso()).toBe("nivel");
+        await formulario.confirmarAvulso("nivel",
+            (atual) => ({ ...atual, dados: { ...atual.dados, nivel: 15 } }));
+        expect(api.alterarFichaNpc).toHaveBeenCalledExactlyOnceWith(ficha.id, {
+            nome: ficha.nome, cor: null, imagemFoco: null, oculta: true,
+            dados: { ...ficha.dados, nivel: 15 },
+        });
+        expect(edicao.ficha()?.dados.nivel).toBe(15);
+        expect(formulario.campoAvulso()).toBeNull();
+    });
+
+    it("cancelarAvulso não persiste nada", () => {
+        const { formulario, edicao, api } = montar();
+        formulario.editarAvulso("nome");
+        formulario.cancelarAvulso();
+        expect(formulario.campoAvulso()).toBeNull();
+        expect(edicao.rascunho()).toBeNull();
+        expect(api.alterarFichaNpc).not.toHaveBeenCalled();
+    });
+
+    it("confirmarAvulso com violação mantém o campo em edição com o valor e o erro", async () => {
+        const { formulario, edicao } = montar();
+        formulario.editarAvulso("cooperacao");
+        await formulario.confirmarAvulso("cooperacao",
+            (atual) => ({ ...atual, dados: { ...atual.dados, cooperacao: 11 } }));
+        expect(formulario.campoAvulso()).toBe("cooperacao");
+        expect(edicao.rascunho()?.dados.cooperacao).toBe(11);
+        expect(edicao.erro()).toBeTruthy();
+        formulario.cancelarAvulso();
+        expect(formulario.campoAvulso()).toBeNull();
+        expect(edicao.rascunho()).toBeNull();
+    });
+
+    // === Um por vez entre bloco e valor avulso (decisão 1) ===
+
+    it("um bloco ativo bloqueia um valor avulso, e vice-versa", () => {
+        const { formulario } = montar();
+        formulario.iniciar("atributos");
+        formulario.editarAvulso("nome");
+        expect(formulario.campoAvulso()).toBeNull();
+        expect(formulario.bloqueadoPorOutro("nome")).toBe(true);
+        expect(formulario.tooltipBloqueio("nome")).toContain("Atributos");
+        formulario.cancelar();
+
+        formulario.editarAvulso("nome");
+        formulario.iniciar("atributos");
+        expect(formulario.grupo()).toBeNull();
+        expect(formulario.bloqueadoPorOutro("atributos")).toBe(true);
+        expect(formulario.tooltipBloqueio("atributos")).toContain("nome");
     });
 });

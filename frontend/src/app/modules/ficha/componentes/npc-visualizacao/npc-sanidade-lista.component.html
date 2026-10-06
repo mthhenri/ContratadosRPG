@@ -1,6 +1,13 @@
 <div class="npc__lista">
     @for (lista of listas; track lista.chave) {
-        <section class="npc-lista">
+        <section
+            #secaoLista
+            class="npc-lista"
+            tabindex="-1"
+            [class.npc__editor--ativo]="modoEdicao(lista.chave)"
+            [attr.aria-busy]="modoEdicao(lista.chave) && formulario.edicao.salvando() ? true : null"
+            (keydown)="modoEdicao(lista.chave) && aoTecla($event)"
+        >
             <header class="npc-lista__cabecalho">
                 <h3 class="npc-lista__titulo">{{ lista.nome }}</h3>
                 <span class="npc-lista__contagem">{{
@@ -8,19 +15,32 @@
                 }}</span>
                 <span class="npc-lista__regua"></span>
                 @if (gerenciavel()) {
-                    <button
-                        app-botao-icone
-                        class="npc-lista__cabecalho-acao"
-                        type="button"
-                        [class.npc-lista__cabecalho-acao--ativo]="modoEdicao()"
-                        [attr.aria-pressed]="modoEdicao()"
-                        [attr.aria-label]="'Editar ' + lista.nome.toLowerCase()"
-                        [appTooltip]="'Editar ' + lista.nome.toLowerCase()"
-                        [disabled]="formulario.edicao.salvando() || modoEdicao()"
-                        (click)="formulario.iniciar('sanidade')"
-                    >
-                        <app-icone nome="editar" />
-                    </button>
+                    @if (modoEdicao(lista.chave)) {
+                        <app-npc-bloco-acoes
+                            [cabecalho]="true"
+                            [salvando]="formulario.edicao.salvando()"
+                            (salvar)="salvar()"
+                            (cancelar)="cancelar()"
+                        />
+                    } @else {
+                        <button
+                            app-botao-icone
+                            class="npc-lista__cabecalho-acao"
+                            type="button"
+                            [attr.aria-label]="'Editar ' + lista.nome.toLowerCase()"
+                            [appTooltip]="
+                                formulario.tooltipBloqueio(lista.chave) ??
+                                'Editar ' + lista.nome.toLowerCase()
+                            "
+                            [disabled]="
+                                formulario.edicao.salvando() ||
+                                formulario.bloqueadoPorOutro(lista.chave)
+                            "
+                            (click)="iniciar(lista.chave)"
+                        >
+                            <app-icone nome="editar" />
+                        </button>
+                    }
                     <button
                         app-botao-icone
                         class="npc-lista__cabecalho-acao npc-lista__cabecalho-acao--adicionar"
@@ -29,15 +49,27 @@
                             lista.chave === 'sequelas' ? 'Adicionar sequela' : 'Adicionar trauma'
                         "
                         [appTooltip]="
-                            lista.chave === 'sequelas' ? 'Adicionar sequela' : 'Adicionar trauma'
+                            formulario.tooltipBloqueio(lista.chave) ??
+                            (lista.chave === 'sequelas' ? 'Adicionar sequela' : 'Adicionar trauma')
                         "
-                        [disabled]="formulario.edicao.salvando()"
+                        [disabled]="
+                            formulario.edicao.salvando() ||
+                            formulario.bloqueadoPorOutro(lista.chave)
+                        "
                         (click)="adicionar(lista.chave)"
                     >
                         <app-icone nome="mais" />
                     </button>
                 }
             </header>
+            @if (modoEdicao(lista.chave)) {
+                @if (formulario.erroFormulario()) {
+                    <p class="npc__erro" role="alert">{{ formulario.erroFormulario() }}</p>
+                }
+                @if (formulario.edicao.erro()) {
+                    <p class="npc__erro" role="alert">{{ formulario.edicao.erro() }}</p>
+                }
+            }
             <ul class="npc-lista__itens">
                 @for (
                     registro of ficha()!.dados.sanidade[lista.chave];
@@ -54,6 +86,7 @@
                                 <app-campo rotulo="Nome" tamanho="compacto">
                                     <input
                                         class="campo__controle"
+                                        appAutoFocus
                                         [formControl]="controle.controls.nome"
                                     />
                                 </app-campo>
@@ -82,16 +115,6 @@
                                         Informe um nome para o registro.
                                     </p>
                                 }
-                                <button
-                                    app-botao
-                                    type="button"
-                                    variante="primario"
-                                    estilo="preenchido"
-                                    tamanho="pequeno"
-                                    (click)="concluir()"
-                                >
-                                    Concluir
-                                </button>
                             </div>
                         } @else {
                             <div class="npc-lista__cabecalho-item">
@@ -111,7 +134,7 @@
                             <p class="npc__texto">
                                 {{ registro.descricao || "Sem descrição adicional." }}
                             </p>
-                            @if (gerenciavel() && modoEdicao()) {
+                            @if (gerenciavel() && modoEdicao(lista.chave)) {
                                 <div class="npc-lista__acoes">
                                     <button
                                         app-botao-icone

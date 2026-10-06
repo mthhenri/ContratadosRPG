@@ -118,48 +118,10 @@
             (imagemAlterada)="alterarImagem($event)"
             (imagemRemovida)="removerImagem()"
         />
-        @if (edicao.erro() || formulario.erroFormulario()) {
-        <p class="ficha-pagina__erro" role="alert">
-            {{ edicao.erro() || formulario.erroFormulario() }}
-        </p>
-        } @if (gerenciavel() && edicao.edicaoPendente()) {
-        <app-cartao class="ficha-pagina__rascunho">
-            <p class="ficha-pagina__nota">
-                Alterações em rascunho. Salvar confirma todos os grupos editados.
-            </p>
-            @if (edicao.violacoes().length) {
-            <ul class="ficha-pagina__pendencias">
-                @for (pendencia of edicao.violacoes(); track $index) {
-                <li>{{ pendencia }}</li>
-                }
-            </ul>
-            }
-            <div class="ficha-pagina__rascunho-acoes">
-                <button
-                    app-botao
-                    type="button"
-                    variante="secundario"
-                    estilo="contorno"
-                    tamanho="medio"
-                    [disabled]="edicao.salvando()"
-                    (click)="formulario.cancelar()"
-                >
-                    Cancelar
-                </button>
-                <button
-                    app-botao
-                    type="button"
-                    variante="primario"
-                    estilo="preenchido"
-                    tamanho="medio"
-                    [carregando]="edicao.salvando()"
-                    [disabled]="edicao.salvando()"
-                    (click)="salvar()"
-                >
-                    Salvar alterações
-                </button>
-            </div>
-        </app-cartao>
+        @if (edicao.erro() && !formulario.ocupado()) {
+        <!-- Erro de carga/rede sem bloco associado (ex.: ajuste rápido de Vida/Energia falhou) —
+             erro de bloco/valor avulso em edição aparece dentro do próprio bloco (m4-16). -->
+        <p class="ficha-pagina__erro" role="alert">{{ edicao.erro() }}</p>
         } @if (erroImagem()) {
         <p class="ficha-pagina__erro" role="alert">{{ erroImagem() }}</p>
         @if (imagemPendente(); as alteracao) {
@@ -211,7 +173,7 @@
             [formControl]="formulario.formulario.controls.anotacoes"
             [somenteLeitura]="edicao.salvando()"
         />
-        <div class="ficha-pagina__rascunho-acoes">
+        <div class="ficha-pagina__bloco-acoes">
             <button
                 app-botao
                 type="button"
@@ -229,13 +191,16 @@
                 variante="primario"
                 estilo="preenchido"
                 tamanho="medio"
+                [carregando]="edicao.salvando()"
                 [disabled]="edicao.salvando()"
-                (click)="salvar()"
+                (click)="salvarAnotacoes()"
             >
                 Salvar anotações
             </button>
         </div>
-        @if (edicao.erro()) {
+        @if (formulario.erroFormulario()) {
+        <p role="alert" class="ficha-pagina__erro">{{ formulario.erroFormulario() }}</p>
+        } @if (edicao.erro()) {
         <p role="alert" class="ficha-pagina__erro">{{ edicao.erro() }}</p>
         } } @else {
         <app-editor-markdown
@@ -250,7 +215,8 @@
             variante="secundario"
             estilo="contorno"
             tamanho="medio"
-            [disabled]="edicao.salvando()"
+            [appTooltip]="formulario.tooltipBloqueio('anotacoes')"
+            [disabled]="edicao.salvando() || formulario.bloqueadoPorOutro('anotacoes')"
             (click)="formulario.iniciar('anotacoes')"
         >
             Editar anotações

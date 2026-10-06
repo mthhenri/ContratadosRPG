@@ -1,0 +1,32 @@
+@use "tema/breakpoints" as bp;
+
+// Mesma receita de `criatura__atributos-acoes`: largura toda, dividida igualmente.
+:host {
+    display: flex;
+    gap: 6px;
+    margin-bottom: var(--space-8);
+    > .botao {
+        flex: 1 1 0;
+    }
+    @include bp.mobile {
+        > .botao {
+            min-height: bp.$alvo-toque;
+        }
+    }
+}
+// No cabeçalho das listas a régua já empurra a linha pra direita — botões no próprio tamanho.
+:host(.npc-bloco-acoes--cabecalho) {
+    flex: none;
+    margin-bottom: 0;
+    > .botao {
+        flex: none;
+    }
+    // Abaixo do título, largura total — o cabeçalho da lista quebra linha no mobile.
+    @include bp.mobile {
+        flex: 1 0 100%;
+        order: 1;
+        > .botao {
+            flex: 1 1 0;
+        }
+    }
+}

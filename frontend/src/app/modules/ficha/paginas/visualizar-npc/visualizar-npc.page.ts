@@ -64,8 +64,8 @@ export class NpcVisualizar {
         const estado = this.edicao.estadoPersistencia();
         if (estado === "salvando") return "Salvando…";
         if (estado === "salvo") return "Salvo";
-        if (estado === "erro") return "Falha ao salvar";
-        return this.edicao.edicaoPendente() ? "Rascunho" : "";
+        // Sem "Rascunho" (m4-16): a edição em curso já se mostra no próprio bloco.
+        return estado === "erro" ? "Falha ao salvar" : "";
     });
     readonly membros = signal<readonly CampanhaMembroResumoDto[]>([]);
     readonly acessos = signal<readonly FichaAcessoResumoDto[]>([]);
@@ -182,14 +182,13 @@ export class NpcVisualizar {
         return this.campanhaId() === null ? ["/fichas"] : ["/campanhas", this.campanhaId()!];
     }
 
-    async salvar(): Promise<void> {
-        if (!this.gerenciavel()) return;
-        if (this.formulario.grupo() === "anotacoes") {
-            const texto = this.editorAnotacoes()?.confirmarValor();
-            if (texto !== undefined) this.formulario.formulario.controls.anotacoes.setValue(texto);
-        }
-        if (this.formulario.grupo()) await this.formulario.salvar();
-        else await this.edicao.salvar();
+    /** Só as Anotações (painel flutuante) ainda disparam Salvar pela página — os demais blocos e
+     * valores avulsos salvam direto no próprio bloco/campo (m4-16). */
+    async salvarAnotacoes(): Promise<void> {
+        if (!this.gerenciavel() || this.formulario.grupo() !== "anotacoes") return;
+        const texto = this.editorAnotacoes()?.confirmarValor();
+        if (texto !== undefined) this.formulario.formulario.controls.anotacoes.setValue(texto);
+        await this.formulario.salvar();
     }
 
     async abrirAcesso(): Promise<void> {
@@ -287,7 +286,8 @@ export class NpcVisualizar {
     podeSair(): boolean | Promise<boolean> {
         if (this.acessoPerdido) return true;
         if (this.edicao.salvando() || this.imagemOcupada()) return false;
-        if (!this.edicao.edicaoPendente() && !this.imagemPendente()) return true;
+        if (!this.edicao.edicaoPendente() && !this.imagemPendente()
+            && !this.formulario.ocupado()) return true;
         return this.confirmacao.confirmar({ titulo: "Sair da ficha?",
             mensagem: "As alterações não salvas serão descartadas.", severidade: "padrao",
             rotuloConfirmar: "Sair sem salvar", rotuloCancelar: "Continuar editando" });
@@ -298,7 +298,8 @@ export class NpcVisualizar {
 
     @HostListener("window:beforeunload", ["$event"])
     protegerFechamento(evento: BeforeUnloadEvent): void {
-        if (this.edicao.edicaoPendente() || this.edicao.salvando() || this.imagemPendente()) {
+        if (this.edicao.edicaoPendente() || this.edicao.salvando() || this.imagemPendente()
+            || this.formulario.ocupado()) {
             evento.preventDefault(); evento.returnValue = "";
         }
     }

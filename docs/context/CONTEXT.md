@@ -22,8 +22,10 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-10-05 · **Última decisão registrada:** `m4-14-ficha-npc-aparencia-estrutura` concluída (spec em
-> `done/`): a ficha completa de NPC usa o casco `ficha-pagina__*` e a estrutura da ficha de Criatura (lápis e selos no lugar de
+> **Última revisão:** 2026-10-05 · **Última decisão registrada:** `m4-16-ficha-npc-usabilidade-edicao` concluída (spec em
+> `done/`): a ficha de NPC edita como Criatura/Jogador — valor avulso por `app-valor-editavel` (Enter salva só aquele campo) e
+> bloco com lápis que some + Salvar/Cancelar no próprio bloco (`npc-bloco-acoes`), um de cada vez, sem rascunho acumulado.
+> Antes: `m4-14-ficha-npc-aparencia-estrutura` concluída: a ficha completa de NPC usa o casco `ficha-pagina__*` e a estrutura da ficha de Criatura (lápis e selos no lugar de
 > botões soltos, listas com modo de edição, abas com ícone) — **fecha a revisão do NPC** (`m4-12`…`m4-15`). Antes:
 > `m4-13-guia-criacao-npc-casco-guia` (guia de NPC no casco `guia__*`). Antes:
 > `m4-15-campanha-mestre-abas-esquadrao-criaturas-npcs` (campanha do mestre em abas). Antes: `m4-12-acervo-misto-alfabetico` (acervo misto A–Z com etiqueta de tipo). Antes:
@@ -814,9 +816,8 @@
 
 ## 1. Próxima Task
 
-**Segunda rodada da revisão do NPC (pedido do autor, 2026-10-05) — quatro specs no `backlog/`, executar nesta ordem:**
-[`m4-16`](../specs/backlog/m4-16-ficha-npc-usabilidade-edicao.spec.md) (edição como Criatura/Jogador: valor avulso por
-`app-valor-editavel` e bloco por lápis + Salvar/Cancelar; **salvar por bloco, um de cada vez**, sem rascunho acumulado),
+**Segunda rodada da revisão do NPC (pedido do autor, 2026-10-05) — `m4-16` concluída (`done/`); seguem três specs no
+`backlog/`, nesta ordem:**
 [`m4-17`](../specs/backlog/m4-17-ficha-npc-coluna-identidade-compacta.spec.md) (coluna Identidade compacta: foto menor,
 `Stat` com `tamanho="fino"`, Cooperação como **novo primitivo `app-barra-escala`** — slider editável ou não, com cor de início,
 meio opcional e fim),
@@ -827,9 +828,12 @@ parada obrigatória para o autor decidir a fórmula; modificador de teste/ajuste
 de abertura **já tomadas pelo autor** estão dentro de cada spec; o que sobra para perguntar é só o que cada uma marca como tal.
 **Revisão do NPC, primeira rodada (pedido do autor, 2026-10-04) — concluída: `m4-12`, `m4-13`, `m4-14` e `m4-15` em `done/`.**
 Pendências do autor no fim do bloco da `m4-14` em `HISTORY.md` (`I-043`/`I-044`/`I-045`/`I-046`). **Ficha de NPC (`m4-14`):** `visualizar-npc.page.*` usa `ficha-pagina__*`
-(campanha em chip, `textoPersistencia`); `npc-visualizacao` edita por lápis (Identidade, Recursos, Cooperação, Atributos,
-Conduta) e por selos redondos no retrato; `NpcHabilidadesLista`/`NpcSanidadeLista` têm cabeçalho com lápis e "+", itens em linhas
-e ícones por item só em `modoEdicao()` (o lápis só chama `formulario.iniciar(grupo)` — o modelo de edição não mudou).
+(campanha em chip, `textoPersistencia`); `npc-visualizacao` tem selos redondos no retrato; `NpcHabilidadesLista`/`NpcSanidadeLista` têm cabeçalho com lápis e "+",
+itens em linhas e ícones por item só em `modoEdicao()`. **Edição (`m4-16`):** `NpcEdicaoFormulario` tem `campoAvulso`
+(valores de Identidade/Recursos/Cooperação em `app-valor-editavel`, `confirmarAvulso` → `salvarCampo`, PUT só daquele campo) e
+`grupo` (blocos Atributos/Conduta/Habilidades/Sequelas/Traumas/Anotações com `app-npc-bloco-acoes` no próprio bloco); `ocupado`/
+`bloqueadoPorOutro`/`tooltipBloqueio` garantem um por vez, e erro aparece no bloco. O merge do formulário usa a ficha
+confirmada como 3º lado (`edicao.ficha()`), nunca o rascunho.
 **Guia de NPC (`m4-13`):**
 `criar-npc.page.*` usa `main.ficha-pagina.guia` (cabeçalho com `NPC // ACERVO|CAMPANHA`, Roteiro com `visitado` liberando só
 até a etapa mais distante, `guia__secao`, rodapé em grade, resumo em painel/modal); campos das etapas em `npc-etapa.scss`
@@ -2034,7 +2038,7 @@ reproduzem isoladas (arquivo único), não na suíte completa.
 | M1 | Calculadora com paridade | **concluído** (`m1-01`…`m1-20`), incluindo os 2 passos operacionais de plataforma (Cloudflare Pages no ar, repo antigo arquivado) |
 | M2 | Auth + Campanhas | **concluído**, incluindo o redesenho do painel (`m2-01`…`m2-09` + extensões `m2-10`…`m2-17`; `m2-18` lista, `m2-19` detalhe/mestre, `m2-20` detalhe/jogador, `m2-21` abas + Rolagens na lateral + menu de ficha do jogador) |
 | M3 | Ficha de Jogador | **em andamento** — CRUD, editores, tempo real e rolagens prontos; guia de criação completo (`m3-57`/`m3-58`/`m3-59` — base, melhorias de nível, equipamento inicial); cor (`m3-61`) e avatar (`m3-62`) de identidade por ficha prontos; falta só `m3-53` |
-| M4 | Ficha de Criatura/NPC | **tasks concluídas** — `m4-01`…`m4-08b`, ajustes de criatura, `m4-11`, `m4-12`, `m4-13`, `m4-14` e `m4-15` concluídos; revisão do NPC encerrada. NPC tem motor puro, API tipada, criação dedicada e ficha própria em `/fichas/npc/:id` e `/campanhas/:campanhaId/npc/:id`. Edição do mestre usa rascunho conjunto, Salvar/Cancelar e snapshots preservados; jogador concedido só lê. Notas privadas, retrato/cor/foco e utilitários compatíveis usam APIs existentes. Revogação limpa/redireciona; eventos e reconexão recuperam GET autorizado. Entradas por criação/acervo/painel funcionam; filtro/botão do acervo e revelação integrada concluídos na `m4-09`; refinamento mobile concluído na `m4-10`, incluindo os primitivos autorizados. Gates em `docs/reviews/m4-08b-verificacao.md`, `m4-09-verificacao.md` e `m4-10-verificacao.md`. Checagem global do shared limpa desde a correção do `P-092` (2026-10-04) |
+| M4 | Ficha de Criatura/NPC | **tasks concluídas** — `m4-01`…`m4-08b`, ajustes de criatura, `m4-11`, `m4-12`, `m4-13`, `m4-14` e `m4-15` concluídos; revisão do NPC encerrada. NPC tem motor puro, API tipada, criação dedicada e ficha própria em `/fichas/npc/:id` e `/campanhas/:campanhaId/npc/:id`. Edição do mestre por valor avulso (Enter) ou bloco (Salvar/Cancelar no próprio bloco), um de cada vez, snapshots preservados (`m4-16`); jogador concedido só lê. Notas privadas, retrato/cor/foco e utilitários compatíveis usam APIs existentes. Revogação limpa/redireciona; eventos e reconexão recuperam GET autorizado. Entradas por criação/acervo/painel funcionam; filtro/botão do acervo e revelação integrada concluídos na `m4-09`; refinamento mobile concluído na `m4-10`, incluindo os primitivos autorizados. Gates em `docs/reviews/m4-08b-verificacao.md`, `m4-09-verificacao.md` e `m4-10-verificacao.md`. Checagem global do shared limpa desde a correção do `P-092` (2026-10-04) |
 | M5 | Guia de Missão | não iniciado |
 | M6 | Gestão de Usuários e Papéis | **concluído** — `m6-01`…`m6-08` (`m6-08`: impersonação administrativa auditável) |
 | M7 | Encontro de Combate | **concluído** — 8 tasks originais (`m7-01` contrato, `m7-02` motor puro, `m7-03` backend de montagem, `m7-04` backend de condução/tempo real, `m7-05` painel do mestre, `m7-06` visão do jogador, `m7-07` log da rodada, `m7-08` refinamento mobile) + 9 ajustes de pós-milestone (`m7-09`…`m7-17`, ver seção 4 "Encontro de Combate"). Numeração M7 é sugestão, não decisão de roadmap |

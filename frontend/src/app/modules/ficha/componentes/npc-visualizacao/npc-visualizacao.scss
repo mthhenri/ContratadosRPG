@@ -95,6 +95,121 @@
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: var(--space-8);
+        &--classificacao {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        &--cooperacao {
+            grid-template-columns: 1fr;
+        }
+    }
+    // Caixa editável de valor avulso (Categoria/Nível/Defesa/Bloquear/Esquivar/Cooperação) —
+    // mesmo racional de `.criatura__stat`: `app-stat` é só leitura (CONVENTIONS "Composição
+    // visual"), então o campo que vira input inline precisa da própria caixa local.
+    &__stat {
+        min-width: 0;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-control);
+        padding: var(--space-12);
+        // À esquerda como `.criatura__stat`: o `[bloco]` do `app-valor-editavel` alinha o valor à
+        // esquerda, e rótulo centralizado sobre valor à esquerda desalinhava a caixa.
+        text-align: left;
+    }
+    &__stat-rotulo {
+        display: block;
+        font: 600 9px var(--font-mono);
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        color: var(--text-mute);
+        margin-bottom: var(--space-4);
+    }
+    &__stat-valor {
+        display: block;
+        font: 700 19px/1.2 var(--font-mono);
+        color: var(--text);
+    }
+    // Identidade (cursor/hover/disabled) e moldura são do `app-valor-editavel` (`P-057`); aqui só
+    // sobra a tipografia, que atravessa o `display: contents` do host por herança.
+    &__stat-botao {
+        font-family: var(--font-mono);
+        font-size: 19px;
+        font-weight: 700;
+        color: var(--text);
+        line-height: 1.2;
+    }
+    &__stat-nota {
+        display: block;
+        margin-top: var(--space-4);
+        font: 9px/1.35 var(--font-sans);
+        color: var(--text-mute);
+    }
+    &__entrada-nome,
+    &__entrada-funcao,
+    &__entrada-numero,
+    &__entrada-select {
+        width: 100%;
+        padding: 6px 8px;
+        font: 13px var(--font-sans);
+        color: var(--text);
+        background: var(--surface);
+        border: 1px solid var(--accent);
+        border-radius: var(--radius-control);
+        outline: 0;
+    }
+    &__entrada-nome {
+        font: 700 20px/1.3 var(--font-mono);
+        text-align: center;
+    }
+    &__entrada-funcao {
+        font: 13px/1.5 var(--font-sans);
+        text-align: center;
+        resize: vertical;
+    }
+    &__entrada-numero {
+        font-family: var(--font-mono);
+        font-weight: 700;
+        text-align: left;
+        padding: 2px 6px;
+        font-size: 19px;
+    }
+    &__entrada-numero--inline {
+        display: inline-block;
+        text-align: center;
+        width: 56px;
+        padding: 0 4px;
+        font-size: 11px;
+    }
+    &__cor {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--space-8);
+        margin-top: var(--space-8);
+    }
+    &__entrada-cor {
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        background: none;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-control);
+        cursor: pointer;
+        &:disabled {
+            opacity: 0.55;
+            cursor: default;
+        }
+    }
+    // Bloco em edição (Atributos/Conduta) — realce de acento já usado no lápis ativo da Criatura
+    // (`criatura__lapis--ativo`); nenhum token novo.
+    &__editor--ativo {
+        position: relative;
+        padding-left: var(--space-12);
+        border-left: 2px solid var(--accent);
+        // Container `tabindex="-1"` (fora da ordem de Tab) só recebe foco programático — o
+        // realce de acento já marca o bloco; o anel do navegador em volta dele todo era ruído.
+        &:focus {
+            outline: none;
+        }
     }
     &__atributos {
         display: grid;
@@ -245,6 +360,11 @@
         display: flex;
         align-items: center;
         gap: 12px;
+        // Mobile: Salvar/Cancelar (m4-16) não cabem ao lado do título — descem para a linha de
+        // baixo em largura total (`npc-bloco-acoes.component.scss`), como no card Atributos.
+        @include bp.mobile {
+            flex-wrap: wrap;
+        }
     }
     &__titulo {
         margin: 0;
@@ -265,11 +385,6 @@
     &__cabecalho-acao {
         flex: none;
         font-size: 12px;
-        &--ativo {
-            color: var(--accent);
-            background: var(--accent-dim);
-            border-color: var(--accent);
-        }
         &--adicionar {
             width: 20px;
             height: 20px;

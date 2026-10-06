@@ -82,6 +82,19 @@ export class FichaEdicaoNpcService {
         this.fichaSignal.set(remoto);
     }
 
+    /**
+     * Confirma um valor avulso (m4-16): abre edição, aplica só aquele campo e salva — um único
+     * PUT da ficha inteira, como {@link salvar}, mas disparado pela própria confirmação (Enter)
+     * em vez de um botão "Salvar" separado. Falha mantém o rascunho com o campo editado.
+     */
+    async salvarCampo(
+        mutar: (ficha: FichaNpcRecuperadaDto) => FichaNpcRecuperadaDto,
+    ): Promise<boolean> {
+        this.iniciarEdicao();
+        this.alterarRascunho(mutar);
+        return this.salvar();
+    }
+
     async salvar(): Promise<boolean> {
         const rascunho = this.rascunho();
         if (!rascunho || this.salvando()) return false;

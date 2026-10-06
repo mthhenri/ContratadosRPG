@@ -52,13 +52,14 @@ describe("NpcVisualizar — acesso e recuperação", () => {
 
     it("reconexão refaz GET tipado e mescla rascunho sem recomputar snapshots", async () => {
         const { pagina, ficha, api, reconexao, tempoReal } = await montar();
-        pagina.formulario.iniciar("identidade");
-        pagina.formulario.formulario.controls.cooperacao.setValue(9);
+        pagina.formulario.iniciar("conduta");
+        pagina.formulario.formulario.controls.gatilhosFuga.setValue("Gatilho local");
         api.recuperarFichaNpc.mockReturnValue(of({ ...ficha,
             dados: { ...ficha.dados, vidaAtual: 4 } }));
         reconexao.next(); await Promise.resolve();
         expect(api.recuperarFichaNpc).toHaveBeenCalledTimes(2);
-        expect(pagina.edicao.rascunho()?.dados).toMatchObject({ cooperacao: 9, vidaAtual: 4,
+        expect(pagina.edicao.rascunho()?.dados).toMatchObject({
+            condutaCombate: { gatilhosFuga: "Gatilho local" }, vidaAtual: 4,
             vidaMaxima: 77, defesaBase: 18 });
         expect(tempoReal.entrarSalaCampanha).toHaveBeenCalledWith(2);
     });
@@ -90,13 +91,13 @@ describe("NpcVisualizar — acesso e recuperação", () => {
         api.recuperarFichaNpc.mockReturnValueOnce(throwError(() => ({ status: 503 })));
         await pagina.carregar(); expect(pagina.erroCarga()).toBe(true);
         await pagina.carregar(); expect(pagina.erroCarga()).toBe(false);
-        await pagina.salvar(); expect(api.alterarFichaNpc).not.toHaveBeenCalled();
+        await pagina.salvarAnotacoes(); expect(api.alterarFichaNpc).not.toHaveBeenCalled();
     });
 
     it("protege saída com rascunho e abandona salas ao destruir", async () => {
         const { pagina, fixture, confirmacao, tempoReal } = await montar();
         expect(pagina.podeSair()).toBe(true);
-        pagina.formulario.iniciar("identidade");
+        pagina.formulario.iniciar("conduta");
         expect(await pagina.podeSair()).toBe(false);
         expect(confirmacao.confirmar).toHaveBeenCalled();
         fixture.destroy();
@@ -115,7 +116,27 @@ describe("NpcVisualizar — acesso e recuperação", () => {
         expect(pagina.textoPersistencia()).toBe("");
         pagina.formulario.iniciar("conduta");
         fixture.detectChanges();
-        expect(raiz.querySelector(".ficha-pagina__persistencia")?.textContent).toContain("Rascunho");
+        expect(raiz.querySelector(".ficha-pagina__persistencia")).toBeNull();
+        await pagina.formulario.salvar();
+        fixture.detectChanges();
+        expect(raiz.querySelector(".ficha-pagina__persistencia")?.textContent).toContain("Salvo");
         expect(raiz.querySelector("[class*=npc-pagina]")).toBeNull();
+    });
+
+    it("protege saída com um valor avulso aberto, mesmo sem rascunho de bloco (m4-16)", async () => {
+        const { pagina, confirmacao } = await montar();
+        pagina.formulario.editarAvulso("nome");
+        expect(pagina.edicao.edicaoPendente()).toBe(false);
+        expect(await pagina.podeSair()).toBe(false);
+        expect(confirmacao.confirmar).toHaveBeenCalled();
+    });
+
+    it("o rascunho global e seu texto saíram da página (m4-16)", async () => {
+        const { pagina, fixture } = await montar();
+        pagina.formulario.iniciar("conduta");
+        fixture.detectChanges();
+        const raiz = fixture.nativeElement as HTMLElement;
+        expect(raiz.querySelector(".ficha-pagina__rascunho")).toBeNull();
+        expect(raiz.textContent).not.toContain("Salvar confirma todos os grupos editados");
     });
 });
