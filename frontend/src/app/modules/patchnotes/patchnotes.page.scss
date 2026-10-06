@@ -606,7 +606,6 @@
             top: calc(var(--altura-topbar) + var(--space-16));
             max-height: calc(100dvh - var(--altura-topbar) - 2 * var(--space-16));
             overflow-y: auto;
-            scrollbar-width: thin;
         }
 
         &__lista {
@@ -650,7 +649,6 @@
             top: calc(var(--altura-topbar) + var(--space-16));
             max-height: calc(100dvh - var(--altura-topbar) - 2 * var(--space-16));
             overflow-y: auto;
-            scrollbar-width: thin;
         }
     }
 }
