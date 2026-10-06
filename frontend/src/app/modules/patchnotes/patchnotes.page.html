@@ -77,7 +77,16 @@
                 }
             </header>
 
-            @if (indice() !== null && indice()!.length > 0) {
+            @if (indice() === null) {
+                <div class="patchnotes__versoes" role="status" aria-label="Carregando versões">
+                    <span class="patchnotes__rotulo">Versões</span>
+                    <div class="patchnotes__lista">
+                        @for (_ of [1, 2, 3]; track _) {
+                        <app-esqueleto class="patchnotes__esqueleto-item" />
+                        }
+                    </div>
+                </div>
+            } @else if (indice()!.length > 0) {
                 <nav class="patchnotes__versoes" aria-label="Versões">
                     <span class="patchnotes__rotulo">Versões</span>
                     @if (versoesNovas().size > 0) {
@@ -123,6 +132,7 @@
         <div class="patchnotes__principal">
             @if (indice() === null) {
             <div class="patchnotes__carregando" role="status" aria-label="Carregando patchnotes">
+                <app-esqueleto class="patchnotes__esqueleto-versao" />
                 <app-esqueleto class="patchnotes__esqueleto-titulo" />
                 <app-esqueleto class="patchnotes__esqueleto-linha" />
                 <app-esqueleto class="patchnotes__esqueleto-linha patchnotes__esqueleto-linha--media" />

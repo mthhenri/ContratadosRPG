@@ -555,10 +555,26 @@
         padding: var(--space-16) 0;
     }
 
+    // Mesma silhueta da nota: linha de versão/data, título e introdução.
+    &__esqueleto-versao {
+        display: block;
+        width: 30%;
+        height: 22px;
+    }
+
     &__esqueleto-titulo {
         display: block;
-        width: 40%;
-        height: 28px;
+        width: 55%;
+        height: 20px;
+    }
+
+    // Cartão de versão do trilho: mesma largura/altura do `__item` carregado, sem salto no layout.
+    &__esqueleto-item {
+        display: block;
+        flex: none;
+        width: 168px;
+        height: 76px;
+        border-radius: var(--radius-control);
     }
 
     &__esqueleto-linha {
@@ -682,6 +698,10 @@
         &__item {
             min-width: 0;
             max-width: none;
+        }
+
+        &__esqueleto-item {
+            width: auto;
         }
 
         &__linha-rotulo {
