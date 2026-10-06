@@ -29,7 +29,7 @@ import type {
   FichaImagemFocoDto,
 } from '@contratados-rpg/shared/dtos/ficha';
 import {
-  calcularAtributoEfetivo,
+  calcularDtAtributoCriatura,
   calcularLimiteResistencias,
   calcularValorModificador,
   somarResistenciasCriaturaPorTipo,
@@ -312,7 +312,7 @@ export class CriaturaVisualizacao {
   /**
    * Rascunho da coluna de Atributos — mesmo gatilho/fluxo do lápis de `FichaVisualizacao` ("Editar
    * atributos" → rascunho → Salvar/Cancelar). Em leitura, o card é a grade compacta do mockup
-   * (sigla + valor + efetivo); ligado, vira uma lista vertical com o valor digitável e as
+   * (sigla com DT + valor + bônus); ligado, vira uma lista vertical com o valor digitável e as
    * barrinhas de Modificador (controles bem mais largos que um card de ~100px — dentro da grade
    * estouravam a coluna).
    *
@@ -350,7 +350,7 @@ export class CriaturaVisualizacao {
   protected definirAtributoRascunho(chave: ChaveAtributo, valor: number): void {
     const atual = this.rascunhoAtributos();
     if (atual && Number.isFinite(valor)) {
-      this.rascunhoAtributos.set({ ...atual, [chave]: Math.max(0, valor) });
+      this.rascunhoAtributos.set({ ...atual, [chave]: Math.trunc(valor) });
     }
   }
 
@@ -455,12 +455,12 @@ export class CriaturaVisualizacao {
     }),
   );
 
-  /** Atributo Efetivo = valor final + modificador (usado em testes/ataques) — nunca reimplementado aqui. */
-  protected atributoEfetivo(chave: ChaveAtributo): number {
+  /** DT contextual, inclusive durante o rascunho; não é snapshot nem bônus de teste. */
+  protected dtAtributo(chave: ChaveAtributo): number {
     const dados = this.dados();
-    return calcularAtributoEfetivo({
-      atributoFinal: dados.atributos[chave],
-      modificador: dados.modificadores[chave],
+    return calcularDtAtributoCriatura({
+      atributo: this.atributoRascunho(chave),
+      modificador: this.modificadorRascunho(chave),
       vd: dados.vd,
     });
   }
@@ -807,7 +807,7 @@ export class CriaturaVisualizacao {
     this.rolagemRegistro.registrar(executada);
   }
 
-  /** Rola um teste do Atributo Efetivo dessa chave e mostra/registra o resultado. */
+  /** Rola o atributo base com bônus fixo da chave e mostra/registra o resultado. */
   protected rolarTesteAtributo(chave: ChaveAtributo): void {
     if (!this.ajustavel()) {
       return;

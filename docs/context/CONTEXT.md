@@ -23,10 +23,12 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-10-06 · P-095/P-096/P-098/P-100 versionadas em commits
-> separados após autorização do autor; P-097 e livros/leitor em grupos próprios.
-> Gates das implementações aprovados; resíduos antigos de verificação limpos e
-> evidências finais preservadas. Proposta M10 fica para sua conversa própria.
+> **Última revisão:** 2026-10-06 · P-101 e tasks01/02/03 concluídas após autorização
+> de execução conjunta: realocação total3/negativos, DT compartilhada e referências
+> do Guia alinhadas. Gates e app real nos quatro viewports aprovados; evidências em
+> [P-101](../reviews/p-101-verificacao.md), sem commit desta execução. P-095/P-096/P-098/P-100
+> já versionadas separadamente; P-097 e livros/leitor em grupos próprios.
+> Dados sintéticos/resíduos limpos. Proposta M10 fica para sua conversa própria.
 > **Última decisão registrada:** Sistema do Jogador v4.1.3
 > incorporado em `p-097-01`: crítico soma +2 uma vez no teste; dano/cura continuam
 > dobrando dados e valores. Motor, média do montador e leitor de documentos corrigidos.
@@ -35,7 +37,8 @@
 > specs antes de novas correções. Proposta global P-099 retirada após esclarecer teste
 > e dano/cura posteriores; contrato do fluxo específico NPC ainda será revisado.
 > [Fila consolidada de specs](../specs/backlog/revisao-documentos-sistema-v4.1.3-guia-v4.2.0.spec.md):
-> NPC, Criaturas (P-101-01/02/03), fixtures P-095/096 e documentação P-098/102.
+> NPC e documentação P-102 pendentes; Criaturas P-101-01/02/03, fixtures P-095/096
+> e documentação P-098 concluídas por autorizações próprias.
 > Ataques/equipamentos NPC têm spec investigativa separada; sem execução das correções.
 > Autor autorizou versionar a preparação documental das specs.
 > [P-095](../specs/done/p-095-fixture-rolagens-feed-deterministica.spec.md) e
@@ -865,8 +868,13 @@ concluída: criação aceita zero, devolve o ponto e preserva teto/orçamento, e
 e zeros escolhidos na troca de Categoria. Foco do StepInput corrigido com autorização;
 [gates e app real nos quatro viewports](../reviews/p-100-verificacao.md) aprovados.
 Adequações de Criaturas
-[P-101](../specs/backlog/p-101-criaturas-guia-v4.2.0.spec.md) divididas em 01/02/03;
-Cadência já drena turnos excedentes ao fim, sem correção necessária confirmada.
+[P-101](../specs/done/p-101-criaturas-guia-v4.2.0.spec.md) e tasks01/02/03 concluídas:
+realocação de até três retirados no total, negativos e DT contextual centralizados;
+criação validada sem reaplicar orçamento na edição. Vida/Defesa/ataques livres preservados.
+Cadência já drena turnos excedentes ao fim; referências do exemplo alinhadas.
+[Gates e matriz](../reviews/p-101-verificacao.md) aprovados nos quatro viewports.
+Propostas editoriais Fraco+6→+5 e narrativa de Social três→dois aguardam o autor;
+fontes intactas, sem pendência técnica na P-101.
 Ponteiros P-098 concluídos; P-102 e investigação de equipamento/ataques NPC em tasks próprias;
 [fila consolidada](../specs/backlog/revisao-documentos-sistema-v4.1.3-guia-v4.2.0.spec.md)
 tem versionamento documental autorizado; demais correções aguardam revisão.
@@ -3480,7 +3488,7 @@ Proposta global P-099 descartada/ACEITO; nenhum trabalho de implementação pend
 Correção P-097-01 mantida, sem rollback.
 Revisar aplicação no fluxo explicitamente escolhido de NPC antes de novo código,
 distinguindo Competência dentro do teste de dano/cura posteriores.
-P-095/096/098/100 concluídas; P-101-01/02/03/102 têm specs preparadas, sem execução.
+P-095/096/098/100 e P-101-01/02/03 concluídas; P-102 tem spec preparada, sem execução.
 Versionamento da preparação documental autorizado pelo autor.
 NPC ataques/equipamento é investigação separada. Exemplos autorais incoerentes
 registrados para revisão, sem alterar fontes; fórmula geral prevalece sobre exemplo.

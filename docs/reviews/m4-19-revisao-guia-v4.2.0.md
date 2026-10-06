@@ -116,8 +116,10 @@ sumário/paginação não foram tratados como mudanças de regra. Também aparec
   motor; Esmagamento passa a3D12+4 e o teste de resistência usa DT Força17. Não migrar
   ataques livres de fichas antigas para o exemplo novo automaticamente.
 
-[Spec P-101](../specs/backlog/p-101-criaturas-guia-v4.2.0.spec.md) reúne a matriz e
+[Spec P-101](../specs/done/p-101-criaturas-guia-v4.2.0.spec.md) reúne a matriz e
 foi dividida em 01 (realocação), 02 (DT/modificadores), 03 (referências/Cadência).
+Execução posterior autorizada e concluída em 2026-10-06;
+[matriz final, gates e propostas editoriais](p-101-verificacao.md).
 Links operacionais antigos encontrados em README/SCHEMA/design/specs geraram
 [P-102](../specs/backlog/p-102-referencias-documentos-vigentes.spec.md).
 A seção de equipamentos/ataques NPC ganhou [spec investigativa própria](../specs/backlog/npc-ataques-e-equipamentos-guia-v4.2.0.spec.md),

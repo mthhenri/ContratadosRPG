@@ -1,11 +1,11 @@
 # p-101-criaturas-guia-v4.2.0.spec.md
 
 > Task avulsa de PROBLEMS P-101. Adequação das mudanças de Criaturas encontradas ao
-> revisar o Guia novo. **Somente especificação; nenhuma implementação nesta rodada.**
+> revisar o Guia novo. Execução conjunta autorizada e concluída em 2026-10-06.
 > Dividida em [P-101-01](p-101-01-criatura-realocacao-atributos.spec.md),
 > [P-101-02](p-101-02-criatura-dt-e-modificadores.spec.md) e
 > [P-101-03](p-101-03-criatura-referencias-e-cadencia.spec.md).
-> Executar as tasks numeradas futuramente, não este guarda-chuva diretamente.
+> Implementação realizada pelas três tasks numeradas; gate integrado neste guarda-chuva.
 
 ## Objetivo
 
@@ -54,7 +54,7 @@ os consumidores das regras confirmadas, preservando fichas antigas e decisões d
 
 ## Fora de Escopo
 
-- Executar nesta rodada; UI/regras de NPC (m4-19/P-100), mudanças autorais em docs/core,
+- UI/regras de NPC (m4-19/P-100), mudanças autorais em docs/core,
   reescrever specs em done ou migrar todos os ataques livres para o exemplo novo.
 - Mudar fórmulas gerais para encaixar números incoerentes do exemplo.
 
@@ -63,3 +63,14 @@ os consumidores das regras confirmadas, preservando fichas antigas e decisões d
 - Guia v4.2.0 > Criaturas > Realocação, Modificadores, DT, Cadência e A Estátua.
 - `docs/SYSTEM.SPEC.md`, `docs/CONVENTIONS.md`, `docs/SCHEMA.md`, `docs/design/`.
 - Decisão histórica de m4-02: fórmula geral vence exemplo; [revisão inicial](../../reviews/m4-19-revisao-guia-v4.2.0.md).
+
+## Fecho integrado — 2026-10-06
+
+P-101-01/02/03 concluídas. Realocação total3/negativos e DT centralizados em shared,
+consumidos pelo guia/ficha/validação de criação; edição conserva snapshots. Referências
+confirmadas atualizadas; Cadência e rolagem já corretas preservadas. Sem migration ou
+edição dos livros. Propostas editoriais apresentadas no relatório, sem pendência técnica.
+Gates: 5.089 testes aprovados + 1 skip existente, builds/lint sem erros e aplicação real
+nos quatro viewports, inspecionada pessoalmente. Contexto atualizado, P-101 retirada
+de PROBLEMS, dados sintéticos e resíduos temporários limpos; nenhum commit nesta execução.
+[Matriz completa, verificação e limites](../../reviews/p-101-verificacao.md).

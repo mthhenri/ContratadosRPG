@@ -73,7 +73,7 @@ import {
   resolverMachucadoPelaVida,
 } from '@contratados-rpg/shared/regras/agente';
 import { calcularResumoCompras, type CarrinhoItemDto } from '@contratados-rpg/shared/regras/compras';
-import { validarFichaCriatura } from '@contratados-rpg/shared/regras/criatura';
+import { validarFichaCriatura, validarRealocacaoAtributos } from '@contratados-rpg/shared/regras/criatura';
 import { resolverMorrendo } from "@contratados-rpg/shared/regras/npc";
 import {
   aplicarFormacaoAosDerivados,
@@ -928,6 +928,14 @@ export class FichaService {
     }
 
     this.validarDadosCriaturaContraRegras(dto.dados);
+    const violacoesDistribuicao = validarRealocacaoAtributos({
+        vd: dto.dados.vd, atributosFinal: dto.dados.atributos,
+    });
+    if (violacoesDistribuicao.length > 0) {
+        throw new BusinessException(
+            `Ficha de criatura inválida: ${violacoesDistribuicao.join('; ')}`,
+        );
+    }
     this.validarCor(dto.cor);
 
     const fichaCriada = await this.fichaRepositorio.criarFicha({

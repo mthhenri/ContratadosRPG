@@ -42,19 +42,6 @@
   preparada para revisão; sem correção nesta rodada.
 - **Desde:** revisão adicional de 2026-10-06 após pedido de preparar todas as specs.
 
-### P-101 — Realocação de Criatura ainda rejeita negativos permitidos no Guia novo · `ABERTO` · shared/frontend
-
-- **Sintoma:** `validarRealocacaoAtributos` retorna “social: valor abaixo de 0” para
-  atributo negativo, agora permitido pelo Guia v4.2.0 (`:435`) dentro da realocação.
-- **Causa:** regra anterior limitava o mínimo a zero. Guia também esclareceu DT,
-  modificador no resultado e sobra de turnos; seus consumidores ainda precisam de inventário.
-- **Contorno:** fichas com valores não negativos continuam usando o caminho existente.
-- **Correção:** adequar realocação e completar a matriz de consumidores das mudanças do Guia;
-  não marcar todos como defeituosos sem verificar nem alterar exemplos autorais incoerentes.
-- **Spec:** [P-101](../specs/backlog/p-101-criaturas-guia-v4.2.0.spec.md), preparada,
-  sem execução nesta rodada.
-- **Desde:** revisão documental de 2026-10-06; reprodução somente em memória.
-
 ### P-099 — Rastreamento de rolagem resultante: proposta descartada · `ACEITO` · rolagem/contrato
 
 - **Sintoma:** expressão genérica não informa se o usuário fará dano/cura depois;

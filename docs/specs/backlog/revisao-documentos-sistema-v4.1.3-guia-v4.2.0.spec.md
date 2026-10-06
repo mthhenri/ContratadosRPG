@@ -1,11 +1,11 @@
 # revisao-documentos-sistema-v4.1.3-guia-v4.2.0.spec.md
 
 > Guarda-chuva de revisão solicitado pelo autor em 2026-10-06.
-> **Somente specs. Implementação aguarda revisão conjunta do autor.**
+> Fila de specs; implementação de cada recorte depende de sua autorização própria.
 > Autor autorizou commitar a preparação destas specs em 2026-10-06;
 > autorização restrita à documentação, sem execução das correções.
 > Correções de P-097-01 já realizadas permanecem como estão; nenhum rollback implícito.
-> P-095/P-096/P-098/P-100 tiveram execução autorizada separadamente e foram concluídas em 2026-10-06;
+> P-095/P-096/P-098/P-100 e P-101-01/02/03 tiveram execução autorizada e foram concluídas em 2026-10-06;
 > demais tasks conservam suas autorizações e pendências próprias.
 
 ## Objetivo
@@ -34,9 +34,9 @@ Este arquivo coordena tasks; não é uma implementação única.
 | [P-099](p-099-critico-teste-com-dados-adicionais.spec.md) | Memória da proposta e motivo do descarte | DESCARTADA — NÃO EXECUTAR; arquivo preservado |
 | [P-100](../done/p-100-npc-criacao-atributo-zero.spec.md) | Zero e redistribuição na criação de NPC | Concluída; gates e criação/reabertura em quatro viewports |
 | [m4-19](../active/m4-19-npc-testes-de-atributo-regra-e-rolagem.spec.md) | Competências, ajustes, dadinho, leitura/privacidade | Regra publicada; crítico no fluxo explícito e controle visual sujeitos à revisão |
-| [P-101-01](p-101-01-criatura-realocacao-atributos.spec.md) | Realocação total3, várias origens e negativo | Shared/criação/integração |
-| [P-101-02](p-101-02-criatura-dt-e-modificadores.spec.md) | DT e consumidores do modificador fixo | Integração com negativos da 01 |
-| [P-101-03](p-101-03-criatura-referencias-e-cadencia.spec.md) | Exemplos/referências; Cadência já compatível | DT da 02; preservar algoritmo correto |
+| [P-101-01](../done/p-101-01-criatura-realocacao-atributos.spec.md) | Realocação total3, várias origens e negativo | Concluída; shared/criação/REST e edição preservada |
+| [P-101-02](../done/p-101-02-criatura-dt-e-modificadores.spec.md) | DT e consumidores do modificador fixo | Concluída; guia/ficha/leitor e preservação de snapshots |
+| [P-101-03](../done/p-101-03-criatura-referencias-e-cadencia.spec.md) | Exemplos/referências; Cadência já compatível | Concluída; algoritmo preservado e propostas editoriais registradas |
 | [P-102](p-102-referencias-documentos-vigentes.spec.md) | README/schema/design/specs operacionais e comentários | Não reescrever histórico nem trocar regra apenas por versão |
 | [NPC ataques/equipamentos](npc-ataques-e-equipamentos-guia-v4.2.0.spec.md) | Investigação da seção nova e proposta de integração | Revisão antes de gerar tasks de implementação; não expandir m4-19 |
 
@@ -78,14 +78,15 @@ Comparação contra os livros anteriores no Git, normalizando espaços, `&nbsp;`
 - P-099 descartada e excluída da fila executável; P-095/P-096 independentes de regras do jogo.
 - Tasks têm objetivo, entregáveis, critérios, fora de escopo e dependências, com gates
   adequados à implementação futura; links conferidos.
-- Nenhuma nova mudança funcional, teste, banco ou publicação nesta rodada.
+- A preparação documental não autoriza execução por si só. Tasks concluídas na tabela
+  receberam autorização própria; seus gates estão registrados nos respectivos fechos.
   O versionamento da preparação documental foi expressamente autorizado pelo autor.
 - Ao executar futuramente, não repetir gate amplo sem mudança; UI exige análogo,
   primitivo completo e inspeção pessoal nos quatro viewports definidos nas tasks.
 
 ## Fora de Escopo
 
-- Implementar agora, commitar código fora desta preparação, alterar fontes ou reescrever specs em done.
+- Executar recortes ainda sem autorização própria, alterar fontes ou reescrever specs em done.
 - Tratar todos os problemas históricos do repositório como escopo desta publicação.
 - Deduzir rolagens posteriores, gerar automático equipamento/habilidade ou refazer
   Cadência/rolagem de Criatura que já correspondem ao documento.

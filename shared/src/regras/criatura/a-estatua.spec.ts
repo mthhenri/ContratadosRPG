@@ -13,7 +13,7 @@ import {
 } from '../../enums';
 import type { FichaCriaturaDadosDto } from '../../dtos/ficha';
 import { obterBaseELimitePorVd, validarRealocacaoAtributos } from './atributos';
-import { calcularAtributoEfetivo } from './modificadores';
+import { calcularDtAtributoCriatura, calcularValorModificador } from './modificadores';
 import { calcularVidaMaxima } from './saude';
 import { calcularDefesaBase, possuiContraAtaque } from './defesa';
 import { calcularLimiteResistencias, validarFraqueza } from './resistencia';
@@ -23,7 +23,7 @@ import { validarFichaCriatura } from './validacao';
 
 /**
  * Caso de teste completo do critério de aceite do milestone `m4-02`: encadeia o motor de
- * regras inteiro reproduzindo "A Estátua" (docs/core/guia_de_mestre-v4.0.0.md — "Guia de
+ * regras inteiro reproduzindo "A Estátua" (docs/core/guia_de_mestre-v4.2.0.md — "Guia de
  * Criação de Ameaças" > "Exemplo de Ficha Completa").
  *
  * Duas divergências entre a fórmula geral do documento e os números literais do exemplo
@@ -33,10 +33,9 @@ import { validarFichaCriatura } from './validacao';
  * 1. Modificador Fraco em VD 30: a fórmula dá -2 + 5×1,5 = 5,5 → 5 (arredondado para baixo,
  *    regra explícita do documento); o exemplo mostra "+6" para os três atributos Fraco da
  *    Estátua. Forte, Médio e Frágil do mesmo exemplo batem exatamente com a fórmula.
- * 2. Mínimo de Fraqueza: a fórmula dá max(5, 52÷2) = 26 (soma de resistências 36+16=52); o
- *    exemplo declara a Fraqueza de Explosão em 20, abaixo do próprio mínimo que a fórmula do
- *    mesmo documento exige. `validarFraqueza(20, 52)` corretamente reporta `false`; a ficha
- *    completa abaixo usa 26 (valor mínimo real) para fechar sem violações.
+ * 2. Social de Base 2 para 0 retira dois pontos, embora a narrativa diga três.
+ *    Os valores finais distribuem oito acima da base, devolvem dois e gastam os seis de ajuste.
+ * O Guia v4.2.0 corrigiu Explosão para 26 e alterou Esmagamento para 3D12+4, com DT Força 17.
  *
  * O Deslocamento Terrestre da Estátua (9m) também cai fora da faixa sugerida para Destreza 4
  * (10–12m) — não é tratado como divergência: `sugerirDeslocamentoTerrestre` é uma sugestão
@@ -54,14 +53,16 @@ describe('Caso de teste completo — "A Estátua"', () => {
 
   it('Atributos: Base 2, Limite 5, 6 Pontos de Ajuste — atributos finais dentro do limite', () => {
     expect(obterBaseELimitePorVd({ vd })).toEqual({ base: 2, limite: 5, pontosAjuste: 6 });
-    expect(validarRealocacaoAtributos({ atributosFinal: atributosFinais, limite: 5 })).toEqual([]);
+    expect(validarRealocacaoAtributos({ atributosFinal: atributosFinais, vd })).toEqual([]);
   });
 
-  it('Modificadores: Atributo Efetivo de cada linha da ficha', () => {
-    expect(calcularAtributoEfetivo({ atributoFinal: 3, modificador: ModificadorCriaturaEnum.MEDIO, vd })).toBe(12); // Força 3 [Médio +9]
-    expect(calcularAtributoEfetivo({ atributoFinal: 4, modificador: ModificadorCriaturaEnum.FORTE, vd })).toBe(16); // Destreza 4 [Forte +12]
-    expect(calcularAtributoEfetivo({ atributoFinal: 5, modificador: ModificadorCriaturaEnum.FORTE, vd })).toBe(17); // Luta 5 [Forte +12]
-    expect(calcularAtributoEfetivo({ atributoFinal: 2, modificador: ModificadorCriaturaEnum.FRAGIL, vd })).toBe(4); // Pontaria 2 [Frágil +2]
+  it('Modificadores são bônus fixos; Força 3/Médio9 exige DT17', () => {
+    expect(calcularValorModificador({ tipo: ModificadorCriaturaEnum.MEDIO, vd })).toBe(9);
+    expect(calcularValorModificador({ tipo: ModificadorCriaturaEnum.FORTE, vd })).toBe(12);
+    expect(calcularValorModificador({ tipo: ModificadorCriaturaEnum.FRAGIL, vd })).toBe(2);
+    expect(calcularValorModificador({ tipo: ModificadorCriaturaEnum.FRACO, vd })).toBe(5);
+    expect(calcularDtAtributoCriatura({ atributo: 3, modificador: ModificadorCriaturaEnum.MEDIO, vd }))
+      .toBe(17);
   });
 
   it('Saúde: Vida Máxima = 30 × 35 (Tenacidade Padrão) = 1.050', () => {
@@ -77,7 +78,7 @@ describe('Caso de teste completo — "A Estátua"', () => {
     expect(calcularLimiteResistencias({ vd, quantidadeFraquezasExtras: 0 })).toBe(60);
   });
 
-  it('Fraqueza: mínimo real é 26 (divergência documentada — o exemplo do doc usa 20)', () => {
+  it('Fraqueza Explosão26 no Guia novo coincide com o mínimo da fórmula', () => {
     expect(validarFraqueza({ valor: 20, somaResistencias: 52 })).toBe(false);
     expect(validarFraqueza({ valor: 26, somaResistencias: 52 })).toBe(true);
   });
@@ -86,12 +87,12 @@ describe('Caso de teste completo — "A Estátua"', () => {
     expect(sugerirDeslocamentoTerrestre({ destreza: 4 })).toEqual({ minimo: 10, maximo: 12 });
   });
 
-  it('Ataques: dano de referência de Movimento e Padrão batem com "Pancada" e "Esmagamento"', () => {
+  it('referência Padrão continua 4D12+10; Esmagamento com efeito usa um patamar menor', () => {
     expect(obterDanoReferenciaPorVd({ vd, custoAcao: CustoAcaoEnum.MOVIMENTO })).toBe('3D12+4');
     expect(obterDanoReferenciaPorVd({ vd, custoAcao: CustoAcaoEnum.PADRAO })).toBe('4D12+10');
   });
 
-  it('Ficha completa (Fraqueza ajustada ao mínimo real de 26) não tem violações de coerência', () => {
+  it('Ficha completa conforme Guia v4.2.0 não tem violações de coerência', () => {
     const ficha: FichaCriaturaDadosDto = {
       identidade: {
         origem: OrigemCriaturaEnum.SCP_ADAPTADO,
@@ -132,20 +133,20 @@ describe('Caso de teste completo — "A Estátua"', () => {
       ataques: [
         {
           nome: 'Pancada',
-          teste: '5d20kh1+12', // Luta 5D20+12 (docs/core/guia_de_mestre-v4.0.0.md).
+          teste: '5d20kh1+12', // Luta 5D20+12 (docs/core/guia_de_mestre-v4.2.0.md).
           custoAcao: CustoAcaoEnum.MOVIMENTO,
           dano: '3D12+4',
-          danoCritico: '6D12+8', // Crítico dobra dados e fixo (sistema-v4.1.0.md § Crítico).
+          danoCritico: '6D12+8', // Crítico dobra dados e fixo (sistema-v4.1.3.md § Crítico).
           area: false,
         },
         {
           nome: 'Esmagamento',
-          teste: '5d20kh1+12', // Luta 5D20+12 (docs/core/guia_de_mestre-v4.0.0.md).
+          teste: '5d20kh1+12', // Luta 5D20+12 (docs/core/guia_de_mestre-v4.2.0.md).
           custoAcao: CustoAcaoEnum.PADRAO,
-          dano: '4D12+10',
-          danoCritico: '8D12+20', // Crítico dobra dados e fixo (sistema-v4.1.0.md § Crítico).
+          dano: '3D12+4',
+          danoCritico: '6D12+8', // Crítico dobra dados e fixo (sistema-v4.1.3.md § Crítico).
           area: false,
-          efeito: 'O alvo realiza um teste de Vigor (DT 20) ou fica Imobilizado por 1 turno.',
+          efeito: 'O alvo realiza um teste de Vigor contra a DT Força da criatura (17) ou fica Imobilizado por 1 turno.',
         },
       ],
       habilidades: [

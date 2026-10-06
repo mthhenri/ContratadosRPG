@@ -3381,6 +3381,35 @@ describe('FichaService', () => {
     } as unknown as FichaRecuperadaDto;
 
     describe('criarFichaCriatura', () => {
+      it('aceita realocação negativa válida e persiste o atributo escolhido', async () => {
+        campanhaRepositorio.recuperarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.MESTRE });
+        const dados = criarDadosCriatura({ vd: 5, resistencias: [],
+          fraquezas: [{ tipo: TipoDanoEnum.EXPLOSAO, subtipo: null, valor: 5 }], atributos: {
+          destreza: 1, forca: 4, luta: 2, pontaria: 1, vigor: 1,
+          intelecto: 1, medicina: 0, sentidos: 1, social: -1, vontade: 1,
+        } });
+        fichaRepositorio.criarFicha.mockResolvedValue({ ...fichaCriaturaPersistida, dados });
+        await service.criarFichaCriatura({ campanhaId: 3, nome: 'Negativo', dados }, usuarioMestre);
+        expect(fichaRepositorio.criarFicha).toHaveBeenCalledWith(expect.objectContaining({ dados }));
+      });
+
+      it.each([
+        { social: -1, medicina: -1, forca: 4, luta: 3 },
+        { social: -1, medicina: 0, forca: 4, luta: 3 },
+        { social: -1, medicina: 0, forca: 5, luta: 1 },
+      ])('rejeita retirada total, orçamento ou teto inválidos na criação', async (alteracoes) => {
+        campanhaRepositorio.recuperarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.MESTRE });
+        const dados = criarDadosCriatura({ vd: 5, resistencias: [],
+          fraquezas: [{ tipo: TipoDanoEnum.EXPLOSAO, subtipo: null, valor: 5 }], atributos: {
+          destreza: 1, pontaria: 1, vigor: 1,
+          intelecto: 1, sentidos: 1, vontade: 1,
+          ...alteracoes,
+        } });
+        await expect(service.criarFichaCriatura({ campanhaId: 3, nome: 'Inválida', dados }, usuarioMestre))
+          .rejects.toThrow(BusinessException);
+        expect(fichaRepositorio.criarFicha).not.toHaveBeenCalled();
+      });
+
       it('mestre cria a ficha "A Estátua" — dono é o próprio mestre, sem broadcast de criação', async () => {
         campanhaRepositorio.recuperarMembro.mockResolvedValue({
           papel: TipoCampanhaMembroPapelEnum.MESTRE,
@@ -3538,6 +3567,16 @@ describe('FichaService', () => {
     });
 
     describe('alterarFichaCriatura', () => {
+      it('preserva snapshot antigo fora do orçamento inicial, inclusive negativo', async () => {
+        fichaRepositorio.recuperarPorId.mockResolvedValue(fichaCriaturaPersistida);
+        const dados = criarDadosCriatura({ atributos: {
+          ...criarDadosCriatura().atributos, social: -4, forca: 12,
+        } });
+        fichaRepositorio.alterarFicha.mockResolvedValue({ ...fichaCriaturaPersistida, dados });
+        await service.alterarFichaCriatura({ id: 9, nome: 'Snapshot', dados }, usuarioMestre);
+        expect(fichaRepositorio.alterarFicha).toHaveBeenCalledWith(expect.objectContaining({ dados }));
+      });
+
       it('altera a ficha quando o autor é o dono (mestre) e emite ficha:alterada', async () => {
         fichaRepositorio.recuperarPorId.mockResolvedValue(fichaCriaturaPersistida);
         const fichaAlterada = { ...fichaCriaturaPersistida, nome: 'A Estátua (Ferida)' };

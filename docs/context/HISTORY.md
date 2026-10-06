@@ -1,5 +1,52 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-06 — P-101/01/02/03: realocação negativa, DT e referências de Criatura
+
+Autor autorizou executar P-101 e suas três tasks em conjunto. Implementada consulta pura
+de distribuição inicial com base/teto, orçamento de ajuste, retirada total limitada a três,
+negativos e violações; guia e criação REST usam a mesma regra. A edição posterior conserva
+snapshots, inclusive negativos e atributos fora do orçamento inicial. Novos contratos em
+shared/dtos/ficha, sem herança de negócio. O helper antigo de Atributo Efetivo foi inventariado
+e removido: DT contextual usa `10 + atributo + trunc(modificador/2)`, exibida no assistente
+e no nome/sigla da ficha, inclusive em edição/leitura concedida. Modificador permanece bônus
+fixo, sem alterar pool, Vida ou Defesa. Preview simbólico ativa o tratamento já existente de
+zero/negativo no motor; executor conservado e coberto para 2/3/4 D20, mantém menor.
+
+Referências de A Estátua alinhadas com Explosão26, Esmagamento3D12+4 e DT Força17; fórmula
+geral Padrão4D12+10 preservada. Cadência já drena a sobra no fim (Frenética/um agente:
+criatura→agente→criatura→criatura→criatura), confirmada pelo teste existente; só comentários
+canônicos alterados. Biblioteca NPC do produto não copia as condições/DTs mudadas no livro;
+Encontro/resumos não consomem a DT nova, sem campo/migration. Fórmula geral continua vencendo
+o exemplo. Propostas editoriais concretas no relatório: Fraco+6→+5 em Intelecto/Medicina/Vontade
+e narrativa de Social base2→0 de “três”→“dois pontos”. Revisão editorial permanece com o autor,
+fontes preservadas; não bloqueia esta implementação pela decisão histórica de m4-02.
+
+Gates amplos: shared66 arquivos/1.111 aprovados, backend52/964 aprovados+1 skip existente,
+frontend213/3.014 aprovados, total5.089+1 skip. Builds dos três workspaces e lint sem erros;
+lint backend incluiu tipos de specs. Avisos existentes ESLint/bundle/canvas separados no
+relatório. Novas fixtures corrigidas para resistências de VD5 e sem campos duplicados;
+backend focado final211/211. Frontend amplo/build/lint repetidos após a correção final.
+Diff completo, contratos, consumidores e primitivos revisados; diff-check sem erros.
+
+Skill verify/design-fidelity exercitada em app real com análogos do guia/ficha de Criatura
+e nome/DT de NPC/Jogador. Principal inspecionou pessoalmente1920×1080,360×800,960×1080 e
+1366×768: negativos de múltiplas origens, erros de saldo/teto/retirada, retomada, DT positiva/
+negativa/zero, confirmação, criação, consulta, edição/cancelamento/salvamento, reabertura e
+leitor. Sem overflow, mesma densidade/hierarquia e controles; foco input sólido2px por Tab,
+botão mobile44×54px. A verificação revelou clamp que deixava input mostrando9 e estado4:
+agora digitação finita permanece visível e a consulta rejeita os valores inválidos. Não foi
+necessário alterar StepInput. REST criou quatro fichas201, recusou três distribuições400,
+salvou/reabriu negativos200 e preservou snapshot livre Social−4/Força12/Vida777/Defesa43/
+ataques por igualdade integral. Leitor vê DT/bônus, sem editar/rolar ou receber anotações.
+
+Quatro specs movidas para done; P-101 retirada de PROBLEMS, contexto/fila/ponteiros atualizados.
+[Matriz, propostas e evidências](../reviews/p-101-verificacao.md). Fichas196–199, campanha35 e
+contas57/58 sintéticas excluídas por soft delete REST; fichas/campanha retornam404. Removidos
+17 arquivos transitórios da P-101 (5.643.337 bytes), com alvos regulares conferidos na raiz:
+helpers, logs e sessão; provas finais preservadas. Proposta M10 intocada
+para sua conversa. Nenhum commit, push, publicação ou mudança de versão nesta execução;
+m4-19, P-102 e investigação de ataques/equipamentos NPC conservam suas pendências próprias.
+
 ## 2026-10-06 — Commits separados das correções e limpeza dos resíduos de verificação
 
 Após o fecho da P-100, o autor pediu versionar P-095/P-096/P-098/P-100 preferencialmente

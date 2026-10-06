@@ -1,0 +1,64 @@
+{
+  "fichas": [
+    {
+      "id": 196,
+      "exclusao": "soft delete via REST",
+      "consultaPosterior": 404
+    },
+    {
+      "id": 197,
+      "exclusao": "soft delete via REST",
+      "consultaPosterior": 404
+    },
+    {
+      "id": 198,
+      "exclusao": "soft delete via REST",
+      "consultaPosterior": 404
+    },
+    {
+      "id": 199,
+      "exclusao": "soft delete via REST",
+      "consultaPosterior": 404
+    }
+  ],
+  "campanha": {
+    "id": 35,
+    "exclusao": "soft delete via REST",
+    "consultaPosterior": 404
+  },
+  "usuarios": [
+    {
+      "id": 58,
+      "exclusao": "soft delete via REST"
+    },
+    {
+      "id": 57,
+      "exclusao": "soft delete via REST"
+    }
+  ],
+  "dadosExistentesPreservados": true,
+  "arquivosTemporarios": {
+    "quantidade": 17,
+    "bytes": 5643337.0,
+    "nomes": [
+      ".tmp-p101-api-final.cjs",
+      ".tmp-p101-backend-final.log",
+      ".tmp-p101-backend-focado.log",
+      ".tmp-p101-build-backend.log",
+      ".tmp-p101-build-frontend-final.log",
+      ".tmp-p101-build-frontend.log",
+      ".tmp-p101-foco-salvar.cjs",
+      ".tmp-p101-frontend-final.log",
+      ".tmp-p101-frontend-focado.log",
+      ".tmp-p101-limpar.cjs",
+      ".tmp-p101-lint-backend-final.log",
+      ".tmp-p101-lint-frontend-final.log",
+      ".tmp-p101-lint.log",
+      ".tmp-p101-sessao.json",
+      ".tmp-p101-testes.log",
+      ".tmp-p101-verificar.cjs",
+      ".tmp-p101-visual.cjs"
+    ],
+    "criterio": "Somente arquivos regulares .tmp-p101-* na raiz conferida do workspace"
+  }
+}

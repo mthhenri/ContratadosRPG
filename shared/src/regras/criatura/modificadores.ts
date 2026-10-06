@@ -1,8 +1,9 @@
 import { ModificadorCriaturaEnum } from '../../enums';
-import type { AtributoEfetivoCalcularDto, ValorModificadorCalcularDto } from './criatura.dtos';
+import type { ValorModificadorCalcularDto } from './criatura.dtos';
+import type { CriaturaAtributoDtCalcularDto } from "../../dtos/ficha";
 
 /**
- * Valor de um Modificador de criatura para o VD informado (docs/core/guia_de_mestre-v4.0.0.md
+ * Valor de um Modificador de criatura para o VD informado (docs/core/guia_de_mestre-v4.2.0.md
  * — "Guia de Criação de Ameaças" > "Modificadores" > "Valores"). Base em VD 5, com incremento
  * a cada +5 de VD acima disso; valores não-inteiros são arredondados para baixo (regra
  * explícita do documento).
@@ -35,7 +36,8 @@ export function calcularValorModificador(dto: ValorModificadorCalcularDto): numb
   return Math.floor(valor);
 }
 
-/** Atributo Efetivo = Atributo Final + valor do Modificador — usado em testes, reações e ataques. */
-export function calcularAtributoEfetivo(dto: AtributoEfetivoCalcularDto): number {
-  return dto.atributoFinal + calcularValorModificador({ tipo: dto.modificador, vd: dto.vd });
+/** Guia v4.2.0 > DTs de Atributos: metade do bônus truncada em direção a zero. */
+export function calcularDtAtributoCriatura(dto: CriaturaAtributoDtCalcularDto): number {
+    const modificador = calcularValorModificador({ tipo: dto.modificador, vd: dto.vd });
+    return 10 + dto.atributo + Math.trunc(modificador / 2);
 }

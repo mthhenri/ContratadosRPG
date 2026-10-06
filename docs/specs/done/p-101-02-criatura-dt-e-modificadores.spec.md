@@ -1,6 +1,6 @@
 # p-101-02-criatura-dt-e-modificadores.spec.md
 
-> Task 2/3 da P-101. **Somente spec para revisão, sem execução/commit.**
+> Task 2/3 da P-101. Execução conjunta autorizada e concluída em 2026-10-06.
 
 ## Objetivo
 
@@ -36,7 +36,7 @@ usos mecânicos indevidos do antigo Atributo Efetivo, preservando o teste já co
 
 ## Fora de Escopo
 
-- Executar agora; alterar fórmulas de agente/NPC, tabela de modificadores ou fontes.
+- Alterar fórmulas de agente/NPC, tabela de modificadores ou fontes.
 - Deduzir/dobrar dano/cura posteriores a um teste; migrar fórmulas livres ou criar
   automação que lê condições/DT a partir de texto de ataque.
 
@@ -44,3 +44,12 @@ usos mecânicos indevidos do antigo Atributo Efetivo, preservando o teste já co
 
 - Guia v4.2.0 > Modificadores/DT (`:457–492`); SCHEMA/design/convenções.
 - P-101-01 antes do fecho integrado quando os consumidores precisarem de negativo.
+
+## Fecho — 2026-10-06
+
+Consulta pura de DT e DTO canônico implementados em shared; antigo Atributo Efetivo
+removido após inventário. Guia e ficha apresentam DT, inclusive durante edição e para
+leitor autorizado; bônus permanece separado do atributo/pool. Encontro e resumos não
+precisam de campo derivado novo. Vida/Defesa/fórmulas livres preservadas por provas REST
+e salvamento/reabertura real. Gates e comparação pessoal nos quatro viewports aprovados.
+[Fecho integrado e evidências](../../reviews/p-101-verificacao.md).

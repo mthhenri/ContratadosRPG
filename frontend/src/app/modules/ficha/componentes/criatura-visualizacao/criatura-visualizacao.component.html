@@ -673,13 +673,16 @@
                                     <span
                                         class="criatura__atributo-abrev"
                                         tabindex="0"
-                                        [appTooltip]="campo.nome"
-                                        [attr.aria-label]="campo.nome"
+                                        [appTooltip]="
+                                            campo.nome + ' — DT ' + dtAtributo(campo.chave)
+                                        "
+                                        [attr.aria-label]="
+                                            campo.nome + ' — DT ' + dtAtributo(campo.chave)
+                                        "
                                         >{{ campo.abrev }}</span
                                     >
                                     <app-step-input
                                         [valorExterno]="atributoRascunho(campo.chave)"
-                                        [min]="0"
                                         [digitavel]="false"
                                         tamanho="mini"
                                         [ariaRotulo]="campo.nome"
@@ -741,8 +744,12 @@
                                     <span
                                         class="criatura__atributo-abrev"
                                         tabindex="0"
-                                        [appTooltip]="campo.nome"
-                                        [attr.aria-label]="campo.nome"
+                                        [appTooltip]="
+                                            campo.nome + ' — DT ' + dtAtributo(campo.chave)
+                                        "
+                                        [attr.aria-label]="
+                                            campo.nome + ' — DT ' + dtAtributo(campo.chave)
+                                        "
                                         >{{ campo.abrev }}</span
                                     >
                                     <span class="criatura__atributo-valor">{{

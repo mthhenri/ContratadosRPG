@@ -28,7 +28,9 @@ import type {
   FichaCriaturaResistenciaDto,
 } from '@contratados-rpg/shared/dtos/ficha';
 import {
-  calcularAtributoEfetivo,
+  calcularDistribuicaoAtributosCriatura,
+  calcularDtAtributoCriatura,
+  calcularValorModificador,
   calcularBonusIniciativaSugerido,
   calcularCustoResistencia,
   calcularDefesaBase,
@@ -41,7 +43,6 @@ import {
   sugerirDeslocamentoTerrestre,
   validarFichaCriatura,
   validarFraqueza,
-  validarRealocacaoAtributos,
 } from '@contratados-rpg/shared/regras/criatura';
 import { FichaService } from '../../ficha.service';
 import { lerParamRota } from '../../ler-param-rota';
@@ -374,16 +375,10 @@ export class CriaturaCriar {
   }
 
   protected readonly baseLimite = computed(() => obterBaseELimitePorVd({ vd: this.estado().vd }));
-  /** Contador "gasto/total" dos Pontos de Ajuste (mesmo padrão do "Saldo de distribuição" do
-   * guia de agente, `criar.page.ts`) — gasto é a soma de cada atributo acima da Base; um
-   * atributo realocado abaixo da Base libera pontos extras para os demais. */
-  protected readonly pontosAjuste = computed(() => {
-    const base = this.baseLimite().base;
-    const total = this.baseLimite().pontosAjuste;
-    const atributos = this.estado().atributos;
-    const gastos = this.campos.reduce((soma, campo) => soma + (atributos[campo.chave] - base), 0);
-    return { gastos, total, saldo: total - gastos };
-  });
+  /** Consulta única da distribuição inicial; o guia só encaminha os valores escolhidos. */
+  protected readonly pontosAjuste = computed(() => calcularDistribuicaoAtributosCriatura({
+    vd: this.estado().vd, atributosFinal: this.estado().atributos,
+  }));
   protected readonly vidaMaxima = computed(() => {
     const tenacidade = this.estado().tenacidade;
     return tenacidade ? calcularVidaMaxima({ vd: this.estado().vd, tenacidade }) : 0;
@@ -413,7 +408,10 @@ export class CriaturaCriar {
   /** Dados completos, com valores-padrão nos campos ainda não preenchidos (só para preview e para a
    * validação final de coerência — `construirDados` nunca é enviado ao backend fora do passo //
    * Revisão, que já exige tudo preenchido via `passoValido`). */
-  protected readonly violacoesFinais = computed(() => validarFichaCriatura(this.construirDados()).violacoes);
+  protected readonly violacoesFinais = computed(() => [
+    ...this.pontosAjuste().violacoes,
+    ...validarFichaCriatura(this.construirDados()).violacoes,
+  ]);
 
   protected alterar(parcial: Partial<EstadoGuiaCriatura>): void {
     this.estado.update((atual) => ({ ...atual, ...parcial }));
@@ -460,37 +458,27 @@ export class CriaturaCriar {
     this.alterarRegeneracao({ intensidade: this.valor(evento) as RegeneracaoIntensidadeEnum });
   }
 
-  protected atributoEfetivo(chave: ChaveAtributo): number | null {
+  protected dtAtributo(chave: ChaveAtributo): number | null {
     const modificador = this.estado().modificadores[chave];
     return modificador
-      ? calcularAtributoEfetivo({ atributoFinal: this.estado().atributos[chave], modificador, vd: this.estado().vd })
+      ? calcularDtAtributoCriatura({ atributo: this.estado().atributos[chave], modificador, vd: this.estado().vd })
       : null;
   }
 
   /**
-   * Fórmula real do teste de atributo (`<valor>d20kh1±<modificador>`, mesma notação de
-   * `rolarTesteAtributoCriatura`) — "Atributo Efetivo" não é um número que a criatura carrega em
-   * lugar nenhum da ficha, é só um passo intermediário do cálculo; o guia mostra a fórmula que
-   * será de fato rolada, não esse intermediário.
+   * Fórmula com a mesma fonte de atributo do executor: negativo/zero ativa a desvantagem
+   * intrínseca do motor, sem transformar o modificador em quantidade de dados.
    */
   protected testeAtributoFormula(chave: ChaveAtributo): string | null {
-    const efetivo = this.atributoEfetivo(chave);
-    if (efetivo === null) {
+    const tipo = this.estado().modificadores[chave];
+    if (tipo === null) {
       return null;
     }
-    const atributoFinal = this.estado().atributos[chave];
-    const modificador = efetivo - atributoFinal;
+    const modificador = calcularValorModificador({ tipo, vd: this.estado().vd });
     const sinal = modificador < 0 ? '-' : '+';
-    return `${atributoFinal}d20kh1${sinal}${Math.abs(modificador)}`;
+    return `${chave}d20kh1${sinal}${Math.abs(modificador)}`;
   }
 
-  protected passoAtributo(chave: ChaveAtributo, delta: number): void {
-    const atual = this.estado();
-    // Realocação retira no máximo 3 pontos da Base (doc: "⬥ Realocação de Pontos"), sem nunca negativar.
-    const piso = Math.max(0, this.baseLimite().base - 3);
-    const valor = Math.max(piso, Math.min(this.baseLimite().limite, atual.atributos[chave] + delta));
-    this.alterar({ atributos: { ...atual.atributos, [chave]: valor } });
-  }
   protected definirModificador(chave: ChaveAtributo, tipo: ModificadorCriaturaEnum): void {
     const atual = this.estado().modificadores[chave];
     this.alterar({ modificadores: { ...this.estado().modificadores, [chave]: atual === tipo ? null : tipo } });
@@ -624,8 +612,7 @@ export class CriaturaCriar {
       case 'Ameaça':
         return e.vd > 0;
       case 'Atributos':
-        return validarRealocacaoAtributos({ atributosFinal: e.atributos, limite: this.baseLimite().limite }).length === 0
-          && this.pontosAjuste().saldo === 0;
+        return this.pontosAjuste().violacoes.length === 0;
       case 'Modificadores':
         return this.distribuicaoModificadoresCompleta();
       case 'Saúde':
@@ -666,7 +653,10 @@ export class CriaturaCriar {
   }
 
   protected definirAtributo(chave: ChaveAtributo, valor: number): void {
-    this.passoAtributo(chave, valor - this.estado().atributos[chave]);
+    if (!Number.isFinite(valor)) return;
+    // Digitação inválida permanece visível e é rejeitada pelo motor; nunca limita só o
+    // estado deixando o StepInput exibir outro valor. Os botões usam os limites da consulta.
+    this.alterar({ atributos: { ...this.estado().atributos, [chave]: valor } });
   }
   protected cancelarSaida(): void { this.confirmandoSaida.set(false); }
   /** Clique no `::backdrop` do `<dialog>` cai no próprio elemento (não num filho) — fecha como "Continuar aqui". */

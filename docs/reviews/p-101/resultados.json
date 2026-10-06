@@ -1,0 +1,133 @@
+{
+  "resultados": [
+    {
+      "viewport": "1920x1080",
+      "fichaId": 196,
+      "criacao": 201,
+      "social": -1,
+      "medicina": 0,
+      "realocados": 3,
+      "dtSocial": 8,
+      "dtForcaEstatua": 17,
+      "reabertura": true,
+      "cancelamentoPreserva": true,
+      "leitor": "somente leitura, notas privadas",
+      "overflow": false
+    },
+    {
+      "viewport": "360x800",
+      "fichaId": 197,
+      "criacao": 201,
+      "social": -1,
+      "medicina": 0,
+      "realocados": 3,
+      "dtSocial": 8,
+      "dtForcaEstatua": 17,
+      "reabertura": true,
+      "cancelamentoPreserva": true,
+      "leitor": "somente leitura, notas privadas",
+      "overflow": false
+    },
+    {
+      "viewport": "960x1080",
+      "fichaId": 198,
+      "criacao": 201,
+      "social": -1,
+      "medicina": 0,
+      "realocados": 3,
+      "dtSocial": 8,
+      "dtForcaEstatua": 17,
+      "reabertura": true,
+      "cancelamentoPreserva": true,
+      "leitor": "somente leitura, notas privadas",
+      "overflow": false
+    },
+    {
+      "viewport": "1366x768",
+      "fichaId": 199,
+      "criacao": 201,
+      "social": -1,
+      "medicina": 0,
+      "realocados": 3,
+      "dtSocial": 8,
+      "dtForcaEstatua": 17,
+      "reabertura": true,
+      "cancelamentoPreserva": true,
+      "leitor": "somente leitura, notas privadas",
+      "overflow": false
+    }
+  ],
+  "invalidos": [
+    {
+      "alteracoes": {
+        "social": -1,
+        "medicina": -1,
+        "luta": 3
+      },
+      "status": 400,
+      "mensagem": "Ficha de criatura inválida: realocação: 4 pontos retirados excedem o limite total de 3"
+    },
+    {
+      "alteracoes": {
+        "forca": 5,
+        "luta": 1
+      },
+      "status": 400,
+      "mensagem": "Ficha de criatura inválida: forca: valor acima do limite (4)"
+    },
+    {
+      "alteracoes": {
+        "luta": 3
+      },
+      "status": 400,
+      "mensagem": "Ficha de criatura inválida: atributos: distribuição excede o orçamento em 1 pontos"
+    }
+  ],
+  "snapshotEditavelPreservado": true,
+  "capturas": [
+    "antes-1366-atributos.png",
+    "antes-1366-modificadores.png",
+    "antes-1920-atributos.png",
+    "antes-1920-modificadores.png",
+    "antes-360-atributos.png",
+    "antes-360-modificadores.png",
+    "antes-960-atributos.png",
+    "antes-960-modificadores.png",
+    "depois-1366-dt-negativa.png",
+    "depois-1366-dt-positiva.png",
+    "depois-1366-edicao-negativa.png",
+    "depois-1366-ficha-dt.png",
+    "depois-1366-leitor.png",
+    "depois-1366-negativo.png",
+    "depois-1366-realocacao-invalida.png",
+    "depois-1366-revisao.png",
+    "depois-1366-teto-invalido.png",
+    "depois-1920-dt-negativa.png",
+    "depois-1920-dt-positiva.png",
+    "depois-1920-edicao-negativa.png",
+    "depois-1920-ficha-dt.png",
+    "depois-1920-leitor.png",
+    "depois-1920-negativo.png",
+    "depois-1920-realocacao-invalida.png",
+    "depois-1920-revisao.png",
+    "depois-1920-teto-invalido.png",
+    "depois-360-dt-negativa.png",
+    "depois-360-dt-positiva.png",
+    "depois-360-edicao-negativa.png",
+    "depois-360-ficha-dt.png",
+    "depois-360-leitor.png",
+    "depois-360-negativo.png",
+    "depois-360-realocacao-invalida.png",
+    "depois-360-revisao.png",
+    "depois-360-teto-invalido.png",
+    "depois-960-dt-negativa.png",
+    "depois-960-dt-positiva.png",
+    "depois-960-edicao-negativa.png",
+    "depois-960-ficha-dt.png",
+    "depois-960-leitor.png",
+    "depois-960-negativo.png",
+    "depois-960-realocacao-invalida.png",
+    "depois-960-revisao.png",
+    "depois-960-teto-invalido.png"
+  ]
+}

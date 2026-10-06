@@ -53,7 +53,7 @@ describe('CriaturaCriar', () => {
 
   afterEach(() => TestBed.resetTestingModule());
 
-  /** Preenche o estado com "A Estátua" (docs/core/guia_de_mestre-v4.0.0.md — "Exemplo de Ficha
+  /** Preenche o estado com "A Estátua" (docs/core/guia_de_mestre-v4.2.0.md — "Exemplo de Ficha
    * Completa"), passo a passo, avançando pelo assistente — mesmos valores usados no caso de
    * teste do motor de regras (`shared/src/regras/criatura/a-estatua.spec.ts`, m4-02). */
   function preencherAEstatua(componente: CriaturaCriar): void {
@@ -115,10 +115,10 @@ describe('CriaturaCriar', () => {
       cadencia: CadenciaEnum.SINGULAR,
       turnosPorRodada: 1,
       ataques: [
-        { nome: 'Pancada', teste: 'lutad20kh1+5', custoAcao: CustoAcaoEnum.MOVIMENTO, dano: '3D12+4', danoCritico: '6D12+8', area: false, efeito: '' },
+        { nome: 'Pancada', teste: 'lutad20kh1+12', custoAcao: CustoAcaoEnum.MOVIMENTO, dano: '3D12+4', danoCritico: '6D12+8', area: false, efeito: '' },
         {
-          nome: 'Esmagamento', teste: 'lutad20kh1+5', custoAcao: CustoAcaoEnum.PADRAO, dano: '4D12+10', danoCritico: '8D12+20',
-          area: false, efeito: 'O alvo realiza um teste de Vigor (DT 20) ou fica Imobilizado por 1 turno.',
+          nome: 'Esmagamento', teste: 'lutad20kh1+12', custoAcao: CustoAcaoEnum.PADRAO, dano: '3D12+4', danoCritico: '6D12+8',
+          area: false, efeito: 'O alvo realiza um teste de Vigor contra a DT Força da criatura (17) ou fica Imobilizado por 1 turno.',
         },
       ],
     });
@@ -147,6 +147,61 @@ describe('CriaturaCriar', () => {
     });
     avancar();
   }
+
+  it('realoca três entre Social e Medicina e consome orçamento compartilhado', () => {
+    const { componente, fixture } = montar();
+    componente['alterar']({ vd: 5, passo: 2 });
+    componente['definirAtributo']('social', -1);
+    componente['definirAtributo']('medicina', 0);
+    expect(componente['pontosAjuste']()).toMatchObject({ pontosRealocados: 3, saldo: 4 });
+    expect(componente['passoValido']()).toBe(false);
+    componente['definirAtributo']('forca', 4);
+    componente['definirAtributo']('luta', 2);
+    fixture.detectChanges();
+    expect(componente['passoValido']()).toBe(true);
+    expect(fixture.nativeElement.textContent).toContain('3/3');
+    componente['definirAtributo']('medicina', -1);
+    componente['definirAtributo']('luta', 3);
+    fixture.detectChanges();
+    expect(componente['pontosAjuste']().saldo).toBe(0);
+    expect(componente['passoValido']()).toBe(false);
+    expect(fixture.nativeElement.textContent).toContain('limite total de 3');
+  });
+
+  it('mantém digitação inválida visível, consulta piso/teto e preserva negativo ao retomar', () => {
+    const primeira = montar();
+    primeira.componente['alterar']({ vd: 5, passo: 2 });
+    primeira.componente['definirAtributo']('social', -2);
+    primeira.componente['definirAtributo']('forca', 9);
+    primeira.fixture.detectChanges();
+    expect(primeira.componente['estado']().atributos).toMatchObject({ social: -2, forca: 9 });
+    expect(primeira.raiz.querySelector<HTMLInputElement>('[aria-label="Força"]')?.value).toBe('9');
+    expect(primeira.componente['pontosAjuste']().violacoes).toContain('forca: valor acima do limite (4)');
+    expect(primeira.raiz.querySelector<HTMLButtonElement>('[aria-label="Diminuir Social"]')?.disabled)
+      .toBe(true);
+    expect(primeira.raiz.querySelector<HTMLButtonElement>('[aria-label="Aumentar Força"]')?.disabled)
+      .toBe(true);
+    const salvo = primeira.componente['estado']();
+    TestBed.resetTestingModule();
+    const segunda = montar(CAMPANHA_ID, salvo);
+    segunda.componente['retomar']();
+    expect(segunda.componente['estado']().atributos.social).toBe(-2);
+  });
+
+  it('exibe DT e fórmula executável para positivo, negativo e zero sem atributo efetivo', () => {
+    const { componente, fixture } = montar();
+    preencherAEstatua(componente);
+    componente['alterar']({ passo: 3 });
+    fixture.detectChanges();
+    expect(componente['dtAtributo']('forca')).toBe(17);
+    expect(componente['testeAtributoFormula']('luta')).toBe('lutad20kh1+12');
+    expect(fixture.nativeElement.textContent).toContain('DT 17');
+    componente['alterar']({ vd: 5, atributos: { ...componente['estado']().atributos, social: -1 } });
+    expect(componente['dtAtributo']('social')).toBe(8);
+    expect(componente['testeAtributoFormula']('social')).toBe('sociald20kh1-3');
+    componente['definirAtributo']('social', 0);
+    expect(componente['dtAtributo']('social')).toBe(9);
+  });
 
   it('lê o campanhaId da rota-pai', () => {
     const { componente } = montar();
@@ -225,10 +280,10 @@ describe('CriaturaCriar', () => {
       cadencia: CadenciaEnum.SINGULAR,
       turnosPorRodada: 1,
       ataques: [
-        { nome: 'Pancada', teste: 'lutad20kh1+5', custoAcao: CustoAcaoEnum.MOVIMENTO, dano: '3D12+4', danoCritico: '6D12+8', area: false },
+        { nome: 'Pancada', teste: 'lutad20kh1+12', custoAcao: CustoAcaoEnum.MOVIMENTO, dano: '3D12+4', danoCritico: '6D12+8', area: false },
         {
-          nome: 'Esmagamento', teste: 'lutad20kh1+5', custoAcao: CustoAcaoEnum.PADRAO, dano: '4D12+10', danoCritico: '8D12+20',
-          area: false, efeito: 'O alvo realiza um teste de Vigor (DT 20) ou fica Imobilizado por 1 turno.',
+          nome: 'Esmagamento', teste: 'lutad20kh1+12', custoAcao: CustoAcaoEnum.PADRAO, dano: '3D12+4', danoCritico: '6D12+8',
+          area: false, efeito: 'O alvo realiza um teste de Vigor contra a DT Força da criatura (17) ou fica Imobilizado por 1 turno.',
         },
       ],
       habilidades: [

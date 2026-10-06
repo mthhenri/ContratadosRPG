@@ -3,7 +3,7 @@ import { CadenciaEnum } from '../../enums';
 import type { CombatenteOrdenavelDto } from './encontro.dtos';
 
 /**
- * Turnos por rodada de cada Cadência (`docs/core/guia_de_mestre-v4.0.0.md` — "Guia de Criação de
+ * Turnos por rodada de cada Cadência (`docs/core/guia_de_mestre-v4.2.0.md` — "Guia de Criação de
  * Ameaças" > "Cadência"). Frenética é "4+" no documento e recebe o valor declarado pelo Mestre.
  */
 const TURNOS_POR_CADENCIA: Record<CadenciaEnum, number> = {
@@ -47,7 +47,7 @@ export function ordenarIniciativa(
 
 /**
  * Monta a sequência de turnos da rodada a partir dos combatentes **já ordenados**, aplicando a
- * **Intercalação na Iniciativa** (`guia_de_mestre-v4.0.0.md`): os turnos extras de uma criatura
+ * **Intercalação na Iniciativa** (`guia_de_mestre-v4.2.0.md`): os turnos extras de uma criatura
  * "não se acumulam em sequência: eles são distribuídos entre os turnos dos agentes. O segundo
  * turno de uma criatura cai sempre no **próximo slot disponível** abaixo de sua posição na ordem
  * de iniciativa".

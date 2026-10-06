@@ -27,6 +27,22 @@ describe('rolarTesteAtributoCriatura', () => {
     expect(resultado?.resultado.constante).toBe(12);
   });
 
+  it.each([[0, 2], [-1, 3], [-2, 4]])('atributo %i usa desvantagem com %i D20 e bônus fixo', (valor, quantidade) => {
+    const aleatoriedade = vi.spyOn(Math, 'random').mockReturnValue(0.5);
+    const resultado = rolarTesteAtributoCriatura({
+      atributos: { ...atributos, social: valor },
+      modificadores: { social: ModificadorCriaturaEnum.FRAGIL } as never,
+      vd: 5,
+    }, 'social', 'Teste de Social');
+    const pool = resultado!.resultado.dados[0];
+    expect(pool.valores).toHaveLength(quantidade);
+    expect(pool.desvantagem).toBe(true);
+    expect(pool.mantidos).toEqual([Math.min(...pool.valores)]);
+    expect(resultado!.resultado.constante).toBe(-3);
+    expect(resultado!.resultado.total).toBe(Math.min(...pool.valores) - 3);
+    aleatoriedade.mockRestore();
+  });
+
   it('usa sinal negativo quando o valor do Modificador é negativo (VD baixo, ex. FRÁGIL em VD 5)', () => {
     const dados = {
       atributos,

@@ -1,8 +1,12 @@
-import type { BaseLimiteAtributosDto, BaseLimiteAtributosObterDto, RealocacaoAtributosValidarDto } from './criatura.dtos';
+import type { BaseLimiteAtributosDto, BaseLimiteAtributosObterDto } from './criatura.dtos';
+import type {
+    CriaturaAtributosDistribuicaoCalcularDto, CriaturaAtributosDistribuicaoDto,
+    CriaturaAtributosRealocacaoValidarDto,
+} from "../../dtos/ficha";
 
 /**
  * Base, Limite de Atributo e Pontos de Ajuste por faixa de Valor de Desafio
- * (docs/core/guia_de_mestre-v4.0.0.md — "Guia de Criação de Ameaças" > "Atributos" > "Base,
+ * (docs/core/guia_de_mestre-v4.2.0.md — "Guia de Criação de Ameaças" > "Atributos" > "Base,
  * Limite e Pontos de Ajuste"). Limite é Base + 3 na maioria das faixas, exceto 80–100 (Base +
  * 4) e 100+ (Base + 5) — por isso a tabela vem com `limite` já resolvido por faixa, em vez de
  * uma fórmula genérica "+3" com dois casos especiais.
@@ -26,18 +30,42 @@ export function obterBaseELimitePorVd(dto: BaseLimiteAtributosObterDto): BaseLim
   return { base: faixa.base, limite: faixa.limite, pontosAjuste: Math.floor(dto.vd / 5) };
 }
 
-/**
- * Valida que os dez atributos finais (Base + Pontos de Ajuste + Realocação) respeitam o
- * Limite da faixa de VD e não caem abaixo de 0 — a Realocação pode retirar até 3 pontos de um
- * atributo e zerá-lo, mas não negativá-lo (doc: "pode cair abaixo da base, inclusive até
- * zero"). Retorna a lista de violações (vazia = ficha coerente), mesmo padrão de
- * `validarDistribuicaoAtributos` em `shared/regras/agente/criacao.ts`.
- */
-export function validarRealocacaoAtributos(dto: RealocacaoAtributosValidarDto): readonly string[] {
-  const violacoes: string[] = [];
-  for (const [atributo, valor] of Object.entries(dto.atributosFinal)) {
-    if (valor < 0) violacoes.push(`${atributo}: valor abaixo de 0`);
-    if (valor > dto.limite) violacoes.push(`${atributo}: valor acima do limite (${dto.limite})`);
-  }
-  return violacoes;
+const LIMITE_REALOCACAO = 3;
+
+/** Guia v4.2.0 > Realocação de Pontos: orçamento único entre todas as origens. */
+export function calcularDistribuicaoAtributosCriatura(
+    dto: CriaturaAtributosDistribuicaoCalcularDto,
+): CriaturaAtributosDistribuicaoDto {
+    const { base, limite, pontosAjuste } = obterBaseELimitePorVd({ vd: dto.vd });
+    const violacoes: string[] = [];
+    let gastos = 0;
+    let pontosRealocados = 0;
+    for (const [atributo, valor] of Object.entries(dto.atributosFinal)) {
+        if (!Number.isInteger(valor)) {
+            violacoes.push(`${atributo}: valor deve ser inteiro`);
+            continue;
+        }
+        if (valor > limite) violacoes.push(`${atributo}: valor acima do limite (${limite})`);
+        gastos += valor - base;
+        pontosRealocados += Math.max(0, base - valor);
+    }
+    const saldo = pontosAjuste - gastos;
+    if (pontosRealocados > LIMITE_REALOCACAO) {
+        violacoes.push(
+            `realocação: ${pontosRealocados} pontos retirados excedem o limite total de 3`,
+        );
+    }
+    if (saldo > 0) violacoes.push(`atributos: restam ${saldo} pontos para distribuir`);
+    if (saldo < 0) violacoes.push(`atributos: distribuição excede o orçamento em ${-saldo} pontos`);
+    return {
+        base, limite, minimo: base - LIMITE_REALOCACAO, pontosAjuste,
+        pontosRealocados, limiteRealocacao: LIMITE_REALOCACAO, gastos, saldo, violacoes,
+    };
+}
+
+/** Valida somente a distribuição inicial; edição de snapshots não passa por este orçamento. */
+export function validarRealocacaoAtributos(
+    dto: CriaturaAtributosRealocacaoValidarDto,
+): readonly string[] {
+    return calcularDistribuicaoAtributosCriatura(dto).violacoes;
 }

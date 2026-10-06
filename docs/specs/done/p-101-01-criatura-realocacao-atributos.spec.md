@@ -1,6 +1,6 @@
 # p-101-01-criatura-realocacao-atributos.spec.md
 
-> Task 1/3 da P-101. Preparada para revisão; **sem implementação ou commit agora**.
+> Task 1/3 da P-101. Execução conjunta autorizada e concluída em 2026-10-06.
 
 ## Objetivo
 
@@ -38,10 +38,20 @@ Criatura, incluindo atributos negativos, conforme Guia v4.2.0 > Realocação de 
 
 ## Fora de Escopo
 
-- Executar agora; editar Guia, recalcular todas as fichas antigas, DT e Cadência.
+- Editar Guia, recalcular todas as fichas antigas, DT e Cadência.
 - Interpretar incoerência do exemplo A Estátua como autorização de ponto extra.
 
 ## Dependências
 
 - Guia v4.2.0 > Atributos/Realocação (`:421–439`), Sistema > Testes/desvantagem.
 - P-101 e matriz da [revisão](../../reviews/m4-19-revisao-guia-v4.2.0.md).
+
+## Fecho — 2026-10-06
+
+Consulta/validação compartilhada implementada e consumida pelo guia e criação REST.
+Até três retirados no total, negativos e distribuição exata aceitos; quatro retirados,
+teto, fração e orçamento inválidos rejeitados. Edição posterior preserva snapshots.
+Rolagem de negativo já correta, confirmada com novos casos; preview simbólico adequado.
+Na inspeção real, corrigido clamp que deixava digitação e estado divergentes.
+Gates amplos e jornadas nos quatro viewports aprovados; dados sintéticos e temporários
+limpos. [Fecho integrado e evidências](../../reviews/p-101-verificacao.md).

@@ -341,14 +341,28 @@
                     <app-stat
                         tamanho="compacto"
                         rotulo="Pontos de Ajuste"
-                        [valor]="pontosAjuste().gastos + '/' + pontosAjuste().total"
+                        [valor]="pontosAjuste().gastos + '/' + pontosAjuste().pontosAjuste"
                         [variante]="pontosAjuste().saldo !== 0 ? 'alerta' : undefined"
+                    />
+                    <app-stat
+                        tamanho="compacto"
+                        rotulo="Pontos realocados"
+                        [valor]="
+                            pontosAjuste().pontosRealocados + '/' + pontosAjuste().limiteRealocacao
+                        "
+                        [variante]="
+                            pontosAjuste().pontosRealocados > pontosAjuste().limiteRealocacao
+                                ? 'alerta' : undefined
+                        "
                     />
                 </div>
                 <small class="guia__metricas-ajuda"
-                    >Realocação de até 3 pontos por atributo permite cair abaixo da base, até
-                    0.</small
+                    >Realocação de até 3 pontos no total, retirados de um ou mais atributos. O
+                    atributo de origem pode ficar negativo.</small
                 >
+                @for (violacao of pontosAjuste().violacoes; track violacao) {
+                <p class="guia__erro" role="alert"><app-icone nome="alerta" /> {{ violacao }}</p>
+                }
                 <div class="guia__atributos">
                     @for (campo of campos; track campo.chave) {
                     <div
@@ -364,7 +378,12 @@
                             tamanho="compacto"
                             [valorExterno]="estado().atributos[campo.chave]"
                             [ariaRotulo]="campo.nome"
-                            [bloquearAumentar]="estado().atributos[campo.chave] >= baseLimite().limite"
+                            [bloquearDiminuir]="
+                                estado().atributos[campo.chave] <= pontosAjuste().minimo
+                            "
+                            [bloquearAumentar]="
+                                estado().atributos[campo.chave] >= pontosAjuste().limite
+                            "
                             (valorAlterado)="definirAtributo(campo.chave, $event)"
                         />
                     </div>
@@ -376,8 +395,8 @@
                         >DISTRIBUIÇÃO FIXA // 2 FORTE · 3 MÉDIO · 3 FRACO · 2 FRÁGIL</span
                     >
                     <p>
-                        Onde a criatura se destaca e onde ela é vulnerável. Afeta só o Atributo
-                        Efetivo (testes), nunca o valor salvo em Atributos.
+                        Onde a criatura se destaca e onde ela é vulnerável. O modificador soma ao
+                        resultado do teste, sem alterar o atributo ou a quantidade de D20.
                     </p>
                 </div>
                 <div class="guia__vagas">
@@ -396,13 +415,15 @@
                     </div>
                     }
                 </div>
-                <div class="guia__subsecao"><span>Atributo Efetivo</span><i></i></div>
+                <div class="guia__subsecao"><span>Testes e DTs de atributos</span><i></i></div>
                 <div class="guia__atributos">
                     @for (campo of campos; track campo.chave) {
                     <div class="atributo">
                         <div class="atributo__identidade">
                             <span>{{ campo.nome }} {{ estado().atributos[campo.chave] }}</span>
-                            @if (testeAtributoFormula(campo.chave); as formula) {
+                            @if (dtAtributo(campo.chave) !== null) {
+                            <small>DT {{ dtAtributo(campo.chave) }}</small>
+                            } @if (testeAtributoFormula(campo.chave); as formula) {
                             <small class="atributo__bonus">Teste real: {{ formula }}</small> }
                         </div>
                         <div

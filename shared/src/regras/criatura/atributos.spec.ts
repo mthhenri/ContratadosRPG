@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { obterBaseELimitePorVd, validarRealocacaoAtributos } from './atributos';
 
 /**
- * Base/Limite/Pontos de Ajuste conferidos contra docs/core/guia_de_mestre-v4.0.0.md — "Guia
+ * Base/Limite/Pontos de Ajuste conferidos contra docs/core/guia_de_mestre-v4.2.0.md — "Guia
  * de Criação de Ameaças" > "Atributos" > "Base, Limite e Pontos de Ajuste".
  */
 describe('obterBaseELimitePorVd', () => {
@@ -37,28 +37,27 @@ describe('obterBaseELimitePorVd', () => {
 
 describe('validarRealocacaoAtributos', () => {
   const atributosBase = {
-    destreza: 0, forca: 0, luta: 0, pontaria: 0, vigor: 0,
-    intelecto: 0, medicina: 0, sentidos: 0, social: 0, vontade: 0,
+    destreza: 2, forca: 2, luta: 2, pontaria: 2, vigor: 2,
+    intelecto: 2, medicina: 2, sentidos: 2, social: 2, vontade: 2,
   };
 
-  it('sem violações quando todos os atributos estão dentro de [0, limite]', () => {
+  it('sem violações com distribuição exata e retirada de Social abaixo da base', () => {
     expect(
       validarRealocacaoAtributos({
-        atributosFinal: { ...atributosBase, forca: 3, destreza: 4, luta: 5, pontaria: 2, vigor: 3, sentidos: 3 },
-        limite: 5,
+        atributosFinal: { ...atributosBase, forca: 3, destreza: 4, luta: 5, vigor: 3, sentidos: 3, social: 0 },
+        vd: 30,
       }),
     ).toEqual([]);
   });
 
   it('acusa atributo acima do limite', () => {
-    expect(validarRealocacaoAtributos({ atributosFinal: { ...atributosBase, forca: 6 }, limite: 5 })).toEqual([
-      'forca: valor acima do limite (5)',
-    ]);
+    expect(validarRealocacaoAtributos({ atributosFinal: { ...atributosBase, forca: 6 }, vd: 30 }))
+      .toContain('forca: valor acima do limite (5)');
   });
 
-  it('acusa atributo negativo (Realocação pode zerar, não negativar)', () => {
-    expect(validarRealocacaoAtributos({ atributosFinal: { ...atributosBase, social: -1 }, limite: 5 })).toEqual([
-      'social: valor abaixo de 0',
-    ]);
+  it('negativo é válido com retirada total de três e redistribuição exata', () => {
+    expect(validarRealocacaoAtributos({ atributosFinal: {
+      ...atributosBase, social: -1, forca: 5, destreza: 5, luta: 5,
+    }, vd: 30 })).toEqual([]);
   });
 });

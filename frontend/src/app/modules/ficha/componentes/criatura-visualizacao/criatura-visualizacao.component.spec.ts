@@ -66,10 +66,41 @@ describe('CriaturaVisualizacao', () => {
     return { fixture, eventos, bandeja: TestBed.inject(BandejaDadosService) };
   }
 
-  it('calcula o Atributo Efetivo (atributo + modificador) por chave', () => {
+  it('calcula DT por chave sem somar modificador ao atributo', () => {
     const { fixture } = montar();
-    // luta=6, modificador FORTE em VD30: base 0 + (30-5)/5*2.5 = 12.5 -> floor 12 => efetivo 18.
-    expect(fixture.componentInstance['atributoEfetivo']('luta')).toBe(18);
+    // luta6, FORTE12 em VD30: 10 + 6 + trunc(12/2) = 22.
+    expect(fixture.componentInstance['dtAtributo']('luta')).toBe(22);
+    expect(fixture.nativeElement.querySelector('[aria-label="Luta — DT 22"]')).not.toBeNull();
+  });
+
+  it('edição e cancelamento preservam negativos e não revalidam orçamento de criação', () => {
+    const { fixture, eventos } = montar();
+    fixture.componentRef.setInput('dados', {
+      ...dados, vd: 5, atributos: { ...dados.atributos, social: -1 },
+    });
+    fixture.detectChanges();
+    expect(fixture.componentInstance['dtAtributo']('social')).toBe(9);
+    fixture.componentInstance['editarAtributos']();
+    fixture.detectChanges();
+    expect(fixture.componentInstance['atributoRascunho']('social')).toBe(-1);
+    fixture.componentInstance['definirAtributoRascunho']('social', -4);
+    expect(fixture.componentInstance['dtAtributo']('social')).toBe(6);
+    fixture.componentInstance['cancelarAtributos']();
+    expect(fixture.componentInstance['atributoRascunho']('social')).toBe(-1);
+    fixture.componentInstance['editarAtributos']();
+    fixture.componentInstance['definirAtributoRascunho']('social', -4);
+    fixture.componentInstance['salvarAtributos']();
+    expect(eventos['atributosMudou']).toEqual([{ ...dados.atributos, social: -4 }]);
+  });
+
+  it('leitor consulta DT e bônus sem controles de edição ou rolagem', () => {
+    const { fixture } = montar();
+    fixture.componentRef.setInput('ajustavel', false);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[aria-label="Luta — DT 22"]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('[aria-label="Editar atributos"]')).toBeNull();
+    expect(fixture.nativeElement.querySelector('[aria-label="Rolar teste de Luta"]')).toBeNull();
+    expect(fixture.componentInstance['modificadorValor']('luta')).toBe(12);
   });
 
   it('o card de leitura mostra o Modificador puro, sem somar o Atributo Final', () => {

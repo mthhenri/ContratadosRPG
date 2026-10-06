@@ -1,6 +1,6 @@
 # p-101-03-criatura-referencias-e-cadencia.spec.md
 
-> Task 3/3 da P-101. **Somente preparação documental, sem execução/commit.**
+> Task 3/3 da P-101. Execução conjunta autorizada e concluída em 2026-10-06.
 
 ## Objetivo
 
@@ -36,9 +36,19 @@ que já estão corretas no produto, incluindo a sobra de turnos da Cadência.
 
 ## Fora de Escopo
 
-- Executar agora; alterar fontes autorais, fichas antigas ou criar novo algoritmo de
+- Alterar fontes autorais, fichas antigas ou criar novo algoritmo de
   iniciativa sem defeito confirmado. Dedução automática de efeitos narrativos.
 
 ## Dependências
 
 - P-101-02 para a consulta de DT; Guia v4.2.0 > Cadência/A Estátua/Biblioteca de NPC.
+
+## Fecho — 2026-10-06
+
+Fixtures shared/assistente alinhadas com Explosão26, Esmagamento3D12+4 e DT Força17;
+referência geral Padrão4D12+10 preservada. Cadência já intercala e drena a sobra ao fim,
+com teste existente aprovado; só referências de comentário foram alteradas. Biblioteca
+NPC do produto não copia as condições/DTs alteradas no livro, sem mudança funcional.
+Propostas editoriais concretas registradas: Fraco+6→+5 nos três atributos e narrativa
+de Social “três”→“dois pontos”. Fontes autorais intactas; revisão editorial do autor
+permanece separada. [Matriz, gates e propostas](../../reviews/p-101-verificacao.md).

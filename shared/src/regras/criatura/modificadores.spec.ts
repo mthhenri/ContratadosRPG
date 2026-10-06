@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ModificadorCriaturaEnum } from '../../enums';
-import { calcularAtributoEfetivo, calcularValorModificador } from './modificadores';
+import { calcularDtAtributoCriatura, calcularValorModificador } from './modificadores';
 
 describe('calcularValorModificador', () => {
   it('valores base em VD 5', () => {
@@ -23,8 +23,16 @@ describe('calcularValorModificador', () => {
   });
 });
 
-describe('calcularAtributoEfetivo', () => {
-  it('soma o Atributo Final ao valor do Modificador', () => {
-    expect(calcularAtributoEfetivo({ atributoFinal: 5, modificador: ModificadorCriaturaEnum.FORTE, vd: 30 })).toBe(17);
+/** Guia v4.2.0 > DTs: valores não inteiros da metade são aproximados em direção a zero. */
+describe('calcularDtAtributoCriatura', () => {
+  it.each([
+    [5, ModificadorCriaturaEnum.FORTE, 30, 21],
+    [2, ModificadorCriaturaEnum.FRAGIL, 5, 11],
+    [3, ModificadorCriaturaEnum.MEDIO, 30, 17],
+    [2, ModificadorCriaturaEnum.MEDIO, 5, 12],
+    [0, ModificadorCriaturaEnum.FORTE, 5, 10],
+    [-1, ModificadorCriaturaEnum.FRAGIL, 5, 8],
+  ])('atributo %i, modificador %s, VD %i → DT %i', (atributo, modificador, vd, esperado) => {
+    expect(calcularDtAtributoCriatura({ atributo, modificador, vd })).toBe(esperado);
   });
 });

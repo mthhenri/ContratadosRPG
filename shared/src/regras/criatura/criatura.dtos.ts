@@ -6,7 +6,6 @@ import type {
   TenacidadeEnum,
   TipoDanoEnum,
 } from '../../enums';
-import type { FichaAtributosDto } from '../../dtos/ficha';
 
 /**
  * DTOs de entrada e saída das fórmulas de criatura (`regras/criatura`, m4-02). Mesma
@@ -33,23 +32,10 @@ export interface BaseLimiteAtributosDto {
   readonly pontosAjuste: number;
 }
 
-/** Entrada de `validarRealocacaoAtributos`: os dez atributos finais (Base + Pontos de Ajuste
- * + Realocação) contra o Limite da faixa de VD. */
-export interface RealocacaoAtributosValidarDto {
-  readonly atributosFinal: FichaAtributosDto;
-  readonly limite: number;
-}
-
 // ── Modificadores ────────────────────────────────────────────────────────────
 
 export interface ValorModificadorCalcularDto {
   readonly tipo: ModificadorCriaturaEnum;
-  readonly vd: number;
-}
-
-export interface AtributoEfetivoCalcularDto {
-  readonly atributoFinal: number;
-  readonly modificador: ModificadorCriaturaEnum;
   readonly vd: number;
 }
 
