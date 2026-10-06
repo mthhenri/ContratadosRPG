@@ -9,13 +9,10 @@ Mostrar o mapa da nota, "Nesta versão", e destacar o capítulo que está na tel
 
 ## Entregáveis
 
-1. **Decisão de primitivo antes de codar.** `shared/ui/` não tem sumário nem TOC. Ao abrir a task,
-   **perguntar ao autor**, com o trade-off de cada opção:
-   - (a) criar o primitivo `app-sumario` em `shared/ui/`, com lista de âncoras, item ativo e
-     `aria-current`, reutilizável pela Biblioteca e por regras;
-   - (b) componente local do módulo de patchnotes.
+1. **Decisão de primitivo (resolvida pelo autor em 2026-10-06):** componente **local** do módulo de
+   patchnotes (`sumario-patchnote`), não um primitivo de `shared/ui/`. Se surgir um segundo uso
+   (Biblioteca, regras), promove-se a `app-sumario` nessa hora.
 
-   Implementar só depois da resposta (regra da biblioteca de componentes).
 2. **Conteúdo do sumário**:
    - os grupos aparecem como rótulo mono em caixa alta e os blocos como itens com o título
      completo, emoji incluído;
