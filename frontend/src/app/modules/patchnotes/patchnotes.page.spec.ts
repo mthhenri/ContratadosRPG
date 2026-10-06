@@ -289,6 +289,153 @@ describe('PatchnotesPage', () => {
     expect(raiz().querySelector('.patchnotes__nota-versao b')?.textContent).toContain('v1.0.0');
   });
 
+  describe('capítulos e âncoras (pn-07)', () => {
+    const MARKDOWN_CAPITULOS = [
+      '# PARA OS PLAYERS',
+      '',
+      '## 🎬 Cenas',
+      '',
+      'Texto das cenas.',
+      '',
+      '# PARA O MESTRE',
+      '',
+      '## 📚 Biblioteca',
+      '',
+      'Texto da biblioteca.',
+    ].join('\n');
+
+    let rolarAte: ReturnType<typeof vi.fn>;
+
+    beforeEach(() => {
+      // jsdom não implementa `scrollIntoView`.
+      rolarAte = vi.fn();
+      Element.prototype.scrollIntoView = rolarAte as unknown as Element['scrollIntoView'];
+    });
+
+    function alvosRolados(): (string | null)[] {
+      return rolarAte.mock.contexts.map((contexto) => (contexto as HTMLElement).getAttribute('id'));
+    }
+
+    it('dá o id do capítulo a cada título de grupo e de bloco', async () => {
+      await abrir('/patchnotes/1.1.0');
+      await responderIndice();
+      await responderNota(nota('1.1.0', MARKDOWN_CAPITULOS));
+
+      const ids = Array.from(
+        raiz().querySelectorAll('.patchnotes__grupo-titulo, .patchnotes__bloco-titulo'),
+      ).map((titulo) => titulo.getAttribute('id'));
+      expect(ids).toEqual(['para-os-players', 'cenas', 'para-o-mestre', 'biblioteca']);
+    });
+
+    it('nota só com ## também ganha ids nos blocos', async () => {
+      await abrir('/patchnotes/1.1.0');
+      await responderIndice();
+      await responderNota(nota('1.1.0', MARKDOWN_1_1_0));
+
+      const ids = Array.from(raiz().querySelectorAll('.patchnotes__bloco-titulo')).map((titulo) =>
+        titulo.getAttribute('id'),
+      );
+      expect(ids).toEqual(['novidades', 'correcoes']);
+    });
+
+    it('com fragmento existente, rola até o capítulo depois que a nota renderiza', async () => {
+      await abrir('/patchnotes/1.1.0#para-o-mestre');
+      await responderIndice();
+      expect(rolarAte).not.toHaveBeenCalled();
+      await responderNota(nota('1.1.0', MARKDOWN_CAPITULOS));
+
+      expect(alvosRolados()).toEqual(['para-o-mestre']);
+    });
+
+    it('o fragmento vale para a versão de destino na troca de versão', async () => {
+      await abrir('/patchnotes/1.1.0');
+      await responderIndice();
+      await responderNota(nota('1.1.0', MARKDOWN_CAPITULOS));
+      expect(rolarAte).not.toHaveBeenCalled();
+
+      await abrir('/patchnotes/1.0.0#biblioteca');
+      expect(rolarAte).not.toHaveBeenCalled();
+      await responderNota(nota('1.0.0', MARKDOWN_CAPITULOS));
+
+      expect(alvosRolados()).toEqual(['biblioteca']);
+    });
+
+    it('fragmento inexistente é ignorado, sem erro e sem rolagem', async () => {
+      await abrir('/patchnotes/1.1.0#nao-existe');
+      await responderIndice();
+      await responderNota(nota('1.1.0', MARKDOWN_CAPITULOS));
+
+      expect(rolarAte).not.toHaveBeenCalled();
+      expect(raiz().querySelector('.patchnotes__nota')).not.toBeNull();
+    });
+
+    describe('copiar link', () => {
+      let escreverTexto: ReturnType<typeof vi.fn>;
+
+      function definirClipboard(escrever: (texto: string) => Promise<void>): void {
+        escreverTexto = vi.fn(escrever);
+        Object.defineProperty(navigator, 'clipboard', {
+          value: { writeText: escreverTexto },
+          configurable: true,
+        });
+      }
+
+      function botaoCopiar(id: string): HTMLButtonElement {
+        return raiz().querySelector<HTMLButtonElement>(`[id="${id}"] .patchnotes__copiar-link`)!;
+      }
+
+      it('cada título tem o botão, com rótulo próprio', async () => {
+        await abrir('/patchnotes/1.1.0');
+        await responderIndice();
+        await responderNota(nota('1.1.0', MARKDOWN_CAPITULOS));
+
+        expect(botaoCopiar('para-o-mestre').getAttribute('aria-label')).toBe(
+          'Copiar link de PARA O MESTRE',
+        );
+        expect(botaoCopiar('cenas').getAttribute('aria-label')).toBe('Copiar link de 🎬 Cenas');
+        expect(raiz().querySelectorAll('.patchnotes__copiar-link')).toHaveLength(4);
+      });
+
+      it('copia a URL absoluta com o fragmento, atualiza a URL sem rolar e notifica', async () => {
+        definirClipboard(() => Promise.resolve());
+        const notificar = vi.spyOn(TestBed.inject(NotificacaoService), 'notificar');
+        await abrir('/patchnotes/1.1.0');
+        await responderIndice();
+        await responderNota(nota('1.1.0', MARKDOWN_CAPITULOS));
+
+        botaoCopiar('biblioteca').click();
+        await harness.fixture.whenStable();
+        harness.detectChanges();
+
+        expect(escreverTexto).toHaveBeenCalledWith(
+          `${window.location.origin}/patchnotes/1.1.0#biblioteca`,
+        );
+        expect(TestBed.inject(Router).url).toBe('/patchnotes/1.1.0#biblioteca');
+        expect(notificar).toHaveBeenCalledWith(
+          expect.objectContaining({ severidade: 'sucesso', resumo: 'Link copiado' }),
+        );
+        expect(rolarAte).not.toHaveBeenCalled();
+      });
+
+      it('falha do clipboard não quebra: avisa que o link está na barra de endereço', async () => {
+        definirClipboard(() => Promise.reject(new Error('negado')));
+        const notificar = vi.spyOn(TestBed.inject(NotificacaoService), 'notificar');
+        await abrir('/patchnotes/1.1.0');
+        await responderIndice();
+        await responderNota(nota('1.1.0', MARKDOWN_CAPITULOS));
+
+        botaoCopiar('cenas').click();
+        await harness.fixture.whenStable();
+
+        expect(TestBed.inject(Router).url).toBe('/patchnotes/1.1.0#cenas');
+        expect(notificar).toHaveBeenCalledWith(
+          expect.objectContaining({ severidade: 'informacao', resumo: 'Não foi possível copiar' }),
+        );
+      });
+    });
+  });
+
+
   describe('reiniciar cache (pn-06)', () => {
     function logarComo(tipo: TipoUsuarioEnum): void {
       TestBed.inject(SessaoService).substituirSessao({

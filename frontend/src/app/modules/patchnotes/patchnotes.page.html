@@ -130,7 +130,20 @@
             @for (grupo of conteudo()?.grupos; track $index) {
             <section class="patchnotes__grupo">
                 @if (grupo.titulo) {
-                <h3 class="patchnotes__grupo-titulo">{{ grupo.titulo }}</h3>
+                <h3 class="patchnotes__grupo-titulo" [id]="grupo.id">
+                    <span>{{ grupo.titulo }}</span>
+                    <button
+                        app-botao-icone
+                        tamanho="mini"
+                        type="button"
+                        class="patchnotes__copiar-link"
+                        [attr.aria-label]="'Copiar link de ' + grupo.titulo"
+                        [appTooltip]="'Copiar link'"
+                        (click)="copiarLink(grupo.id!)"
+                    >
+                        <app-icone nome="link" />
+                    </button>
+                </h3>
                 } @if (grupo.introducao) {
                 <div class="patchnotes__markdown" [innerHTML]="grupo.introducao"></div>
                 } @for (bloco of grupo.blocos; track $index) {
@@ -139,7 +152,20 @@
                     [class.patchnotes__bloco--funcionalidade]="bloco.tom === 'neutro'"
                     [attr.data-tom]="bloco.tom"
                 >
-                    <h4 class="patchnotes__bloco-titulo">{{ bloco.titulo }}</h4>
+                    <h4 class="patchnotes__bloco-titulo" [id]="bloco.id">
+                        <span>{{ bloco.titulo }}</span>
+                        <button
+                            app-botao-icone
+                            tamanho="mini"
+                            type="button"
+                            class="patchnotes__copiar-link"
+                            [attr.aria-label]="'Copiar link de ' + bloco.titulo"
+                            [appTooltip]="'Copiar link'"
+                            (click)="copiarLink(bloco.id)"
+                        >
+                            <app-icone nome="link" />
+                        </button>
+                    </h4>
                     <div class="patchnotes__markdown" [innerHTML]="bloco.html"></div>
                 </section>
                 }

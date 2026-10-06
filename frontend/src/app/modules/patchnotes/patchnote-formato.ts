@@ -111,6 +111,81 @@ export function estruturarPatchnote(markdown: string): PatchnoteEstruturado {
   };
 }
 
+/** Público de um capítulo de primeiro nível, deduzido do título do grupo; não filtra nada. */
+export type PatchnotePublico = 'players' | 'mestre' | 'resumo' | 'geral';
+
+export interface PatchnoteCapitulo {
+  readonly titulo: string;
+  /** Âncora estável (slug do título, única na nota) — o fragmento da URL e o `id` do título. */
+  readonly id: string;
+  readonly publico: PatchnotePublico;
+  readonly filhos: readonly PatchnoteCapitulo[];
+}
+
+function deduzirPublico(titulo: string): PatchnotePublico {
+  const normalizado = normalizarTitulo(titulo);
+  if (normalizado.startsWith('resumo')) {
+    return 'resumo';
+  }
+  if (/\bplayers?\b/.test(normalizado)) {
+    return 'players';
+  }
+  if (/\bmestre\b/.test(normalizado)) {
+    return 'mestre';
+  }
+  return 'geral';
+}
+
+/** `🎬 Cenas e Fichas!` → `cenas-e-fichas`: sem emoji, acento nem pontuação; vazio vira `capitulo`. */
+export function gerarSlugPatchnote(titulo: string): string {
+  const slug = normalizarTitulo(titulo)
+    .replace(/\p{Extended_Pictographic}|‍|️/gu, '')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/[\s-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return slug || 'capitulo';
+}
+
+/**
+ * Capítulos da nota (pn-07): cada grupo `# …` é um capítulo e os blocos `## …` são os filhos. O grupo
+ * implícito de uma nota só com `##` não vira capítulo — os blocos sobem para o primeiro nível. Os
+ * slugs repetidos ganham `-2`, `-3`… na ordem do documento.
+ */
+export function capitularPatchnote(estrutura: PatchnoteEstruturado): PatchnoteCapitulo[] {
+  const usados = new Set<string>();
+  const criar = (
+    titulo: string,
+    publico: PatchnotePublico,
+    filhos: readonly PatchnoteCapitulo[],
+  ): PatchnoteCapitulo => {
+    const base = gerarSlugPatchnote(titulo);
+    let id = base;
+    for (let sufixo = 2; usados.has(id); sufixo++) {
+      id = `${base}-${sufixo}`;
+    }
+    usados.add(id);
+    return { titulo, id, publico, filhos };
+  };
+
+  const capitulos: PatchnoteCapitulo[] = [];
+  for (const grupo of estrutura.grupos) {
+    if (grupo.titulo === null) {
+      capitulos.push(...grupo.blocos.map((bloco) => criar(bloco.titulo, 'geral', [])));
+      continue;
+    }
+    // O id do grupo é reservado antes dos blocos para a ordem do documento valer.
+    const publico = deduzirPublico(grupo.titulo);
+    const filhos: PatchnoteCapitulo[] = [];
+    const reservado = criar(grupo.titulo, publico, []);
+    for (const bloco of grupo.blocos) {
+      filhos.push(criar(bloco.titulo, 'geral', []));
+    }
+    capitulos.push({ ...reservado, filhos });
+  }
+  return capitulos;
+}
+
 const MESES = [
   'janeiro',
   'fevereiro',

@@ -3,6 +3,9 @@ import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
+  ElementRef,
+  Injector,
+  afterNextRender,
   computed,
   effect,
   inject,
@@ -10,9 +13,9 @@ import {
   signal,
   untracked,
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { DomSanitizer } from '@angular/platform-browser';
-import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import type {
   PatchnoteRecuperadoDto,
   PatchnoteResumoDto,
@@ -32,6 +35,7 @@ import { EstadoVazio } from '../../shared/ui/estado-vazio/estado-vazio.component
 import { NotificacaoService } from '../../shared/ui/notificacao/notificacao.service';
 import { Icone } from '../../shared/icone/icone.component';
 import {
+  capitularPatchnote,
   estruturarPatchnote,
   formatarDataPatchnote,
   formatarDataPatchnoteCurta,
@@ -75,11 +79,19 @@ export class PatchnotesPage {
   private readonly sessaoService = inject(SessaoService);
   private readonly notificacaoService = inject(NotificacaoService);
   private readonly router = inject(Router);
+  private readonly rota = inject(ActivatedRoute);
+  private readonly elemento = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly injetor = inject(Injector);
   private readonly sanitizer = inject(DomSanitizer);
   private readonly destroyRef = inject(DestroyRef);
   private assinaturaNota: Subscription | undefined;
   /** Liga a leitura da próxima nota aberta sem o cache do navegador (recarga pós-reinício, pn-06). */
   private proximaNotaSemCache = false;
+  /** `versão#capítulo` já posicionado na tela — impede rolar de novo ao só copiar o link (pn-07). */
+  private destinoRolado: string | null = null;
+
+  /** Fragmento da URL (`/patchnotes/1.4.0#para-o-mestre`) — o capítulo a abrir posicionado. */
+  private readonly fragmento = toSignal(this.rota.fragment, { initialValue: null });
 
   protected readonly avisosFalha = [
     'Nenhum dado seu foi perdido. A interrupção é do arquivo, não da sua credencial.',
@@ -121,17 +133,39 @@ export class PatchnotesPage {
     const renderizar = (markdown: string): string =>
       markdown ? renderizarMarkdownSeguro(markdown, this.sanitizer) : '';
     const estrutura = estruturarPatchnote(nota.conteudoMarkdown);
+    // Os capítulos seguem a ordem do documento: um por grupo com título e, no grupo implícito, um por
+    // bloco — o cursor os devolve aos títulos renderizados (pn-07).
+    const capitulos = capitularPatchnote(estrutura);
+    let proximo = 0;
     return {
       introducao: renderizar(estrutura.introducao),
-      grupos: estrutura.grupos.map((grupo) => ({
-        titulo: grupo.titulo,
-        introducao: renderizar(grupo.introducao),
-        blocos: grupo.blocos.map((bloco) => ({
-          titulo: bloco.titulo,
-          tom: bloco.tom,
-          html: renderizar(bloco.markdown),
-        })),
-      })),
+      grupos: estrutura.grupos.map((grupo) => {
+        if (grupo.titulo === null) {
+          return {
+            titulo: null,
+            id: null,
+            introducao: renderizar(grupo.introducao),
+            blocos: grupo.blocos.map((bloco) => ({
+              titulo: bloco.titulo,
+              id: capitulos[proximo++].id,
+              tom: bloco.tom,
+              html: renderizar(bloco.markdown),
+            })),
+          };
+        }
+        const capitulo = capitulos[proximo++];
+        return {
+          titulo: grupo.titulo,
+          id: capitulo.id,
+          introducao: renderizar(grupo.introducao),
+          blocos: grupo.blocos.map((bloco, indice) => ({
+            titulo: bloco.titulo,
+            id: capitulo.filhos[indice].id,
+            tom: bloco.tom,
+            html: renderizar(bloco.markdown),
+          })),
+        };
+      }),
     };
   });
 
@@ -145,6 +179,15 @@ export class PatchnotesPage {
         untracked(() => this.abrirVersao(itens, versao));
       }
     });
+    effect(() => {
+      const fragmento = this.fragmento();
+      const versao = this.nota()?.versao;
+      // Na troca de versão a nota antiga ainda está na tela até a nova chegar: o fragmento vale
+      // para a versão da URL, nunca para a que está saindo.
+      if (fragmento && versao && versao === this.versao() && this.conteudo()) {
+        untracked(() => this.rolarAteCapitulo(versao, fragmento));
+      }
+    });
   }
 
   protected formatarData(data: string): string {
@@ -153,6 +196,32 @@ export class PatchnotesPage {
 
   protected formatarDataCurta(data: string): string {
     return formatarDataPatchnoteCurta(data);
+  }
+
+  /**
+   * Copia o link do capítulo (URL absoluta com fragmento) e deixa o fragmento na barra de endereço,
+   * sem navegar nem rolar. A falha do clipboard (permissão, contexto inseguro) não quebra nada: o
+   * link continua na barra de endereço.
+   */
+  protected copiarLink(id: string): void {
+    const versao = this.nota()?.versao;
+    if (!versao) {
+      return;
+    }
+    this.destinoRolado = `${versao}#${id}`;
+    const arvore = this.router.createUrlTree(['/patchnotes', versao], { fragment: id });
+    const url = `${window.location.origin}${this.router.serializeUrl(arvore)}`;
+    void this.router.navigateByUrl(arvore, { replaceUrl: true });
+    const copia = navigator.clipboard?.writeText(url) ?? Promise.reject(new Error('sem clipboard'));
+    copia.then(
+      () => this.notificacaoService.notificar({ severidade: 'sucesso', resumo: 'Link copiado' }),
+      () =>
+        this.notificacaoService.notificar({
+          severidade: 'informacao',
+          resumo: 'Não foi possível copiar',
+          detalhe: 'O link do capítulo está na barra de endereço.',
+        }),
+    );
   }
 
   /** Repete a última carga que falhou: o índice, se foi ele, ou a nota aberta. */
@@ -199,6 +268,40 @@ export class PatchnotesPage {
               : `${resultado.entradasRemovidas} entradas descartadas; as notas foram relidas do arquivo.`,
         });
       });
+  }
+
+  /**
+   * Rola até o capítulo do fragmento depois que a nota está no DOM — antes disso o `[innerHTML]` e
+   * os ids ainda não existem. Fragmento sem capítulo correspondente é ignorado; cada destino rola
+   * uma única vez (`destinoRolado`).
+   */
+  private rolarAteCapitulo(versao: string, id: string): void {
+    const destino = `${versao}#${id}`;
+    if (this.destinoRolado === destino) {
+      return;
+    }
+    this.destinoRolado = destino;
+    afterNextRender(
+      () => {
+        const alvo = this.elemento.nativeElement.querySelector<HTMLElement>(`[id="${id}"]`);
+        if (!alvo) {
+          return;
+        }
+        const reduzMovimento = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+        const rolar = (): void =>
+          alvo.scrollIntoView({ behavior: reduzMovimento ? 'auto' : 'smooth', block: 'start' });
+        // Medir força o layout, e é ele que dispara o carregamento das fontes da nota. Rolar antes
+        // delas chegarem mira uma posição do texto de reserva, mais alto, e a página para fora do
+        // capítulo quando a fonte troca — por isso espera `fonts.ready`.
+        alvo.getBoundingClientRect();
+        if (document.fonts?.status === 'loading') {
+          void document.fonts.ready.then(rolar);
+        } else {
+          rolar();
+        }
+      },
+      { injector: this.injetor },
+    );
   }
 
   private carregarIndice(): void {

@@ -1,5 +1,29 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-06 — pn-07: capítulos e âncoras nos patchnotes
+
+**Pedido do autor.** Primeira das cinco tasks da revisão da página (`pn-07`…`pn-11`, escopo fechado na
+bancada interativa, conjunto "Definido"); as specs foram commitadas em `59743fd4`.
+
+**Entrega.** `capitularPatchnote`/`gerarSlugPatchnote` (funções puras, `patchnote-formato.ts`); `id` em
+cada título de grupo e de bloco com `scroll-margin-top` da topbar; fragmento da URL rola até o capítulo
+após a nota renderizar; botão `app-botao-icone mini` "copiar link" por título (clipboard, URL com
+fragmento via `replaceUrl`, toast; falha do clipboard avisa que o link está na barra de endereço).
+Reserva o espaço do botão por opacidade, então o título não se desloca; no toque fica sempre visível.
+
+**Achados ao vivo (testes não pegavam).**
+- Na troca de versão a nota antiga continua na tela até a nova chegar; o fragmento da nova rolava na
+  antiga. O efeito agora só age quando `nota().versao === versao()` da URL (teste cobre).
+- Em carga fria a página parava 21–38 px acima do capítulo: o `scrollIntoView` mirava o layout com a
+  fonte de reserva e a troca para IBM Plex encurtava o texto. Medir força o layout (que dispara o
+  carregamento da fonte) e a rolagem espera `document.fonts.ready`. Frio e quente agora param no mesmo
+  ponto (topo do título a 68 px = topbar 52 + 16).
+
+**Verificado.** Testes de `patchnotes` (62) e lint sem erros; ao vivo em 1920×1080 e 360×800:
+`#para-o-mestre` posiciona abaixo da topbar, link copiado abre no mesmo ponto em aba nova, fragmento
+inexistente não rola nem lança, 13 ids únicos na `1.4.0`, botão 16 px no desktop e 44 px no toque.
+Sem `docs/design/` nesta task (o padrão de trilhos entra na `pn-08`).
+
 ## 2026-10-05 — pn-06: ADMIN reinicia o cache dos patchnotes sem reiniciar a API
 
 **Pedido e recorte.** O autor pediu, na página de patchnotes, um botão discreto só para

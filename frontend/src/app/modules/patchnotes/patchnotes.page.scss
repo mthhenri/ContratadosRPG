@@ -191,6 +191,29 @@
         gap: 20px;
     }
 
+    // Título âncora (pn-07): o `scroll-margin` mantém o capítulo abaixo da topbar ao abrir `#capitulo`.
+    &__grupo-titulo,
+    &__bloco-titulo {
+        scroll-margin-top: calc(var(--altura-topbar) + var(--space-16));
+    }
+
+    // "Copiar link" do capítulo: reserva o espaço sempre (opacidade, nunca display), então o título
+    // não se desloca quando o botão aparece no hover/foco; sem hover (toque) fica visível e discreto.
+    &__copiar-link {
+        flex: none;
+        opacity: 0;
+
+        @media (hover: none) {
+            opacity: 0.6;
+        }
+    }
+
+    &__grupo-titulo:hover &__copiar-link,
+    &__bloco-titulo:hover &__copiar-link,
+    &__copiar-link:focus-visible {
+        opacity: 1;
+    }
+
     &__grupo-titulo {
         display: flex;
         align-items: center;
