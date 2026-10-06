@@ -2,7 +2,13 @@
 
 Data: 2026-09-29. Revisão-base: `f308f02df88c67a4f1299cfa4172e57a2c61ab40`, incluindo o estado de trabalho local. As linhas abaixo são dessa leitura, não de uma implementação futura.
 
-**Estado: investigação parcial, spec em active.** O mapa estático dos produtores e consumidores foi percorrido e três divergências foram confirmadas. A cobertura dinâmica completa ainda está aberta. Nenhum código, contrato, schema, estilo ou teste versionado foi alterado.
+> **Conferência documental P-098 — 2026-10-06:** a [spec investigativa histórica](../specs/done/auditoria-ficha-oculta-todos-consumidores.spec.md)
+> está arquivada em `done/`. Essa localização não comprova fecho integral: o relatório
+> permanece parcial, com D-01/D-02/H-02 e cobertura adicional de H-01 pendentes.
+> Os recortes observados nas correções FO-01/02/03 e na m7-27 continuam registrados abaixo.
+> Esta conferência corrige ponteiros e estado documental, sem nova investigação ou código.
+
+**Estado da rodada inicial (2026-09-29): investigação parcial, então com spec em active.** O mapa estático dos produtores e consumidores foi percorrido e três divergências foram confirmadas. A cobertura dinâmica completa ainda está aberta. Nenhum código, contrato, schema, estilo ou teste versionado foi alterado nessa rodada.
 
 ## Contrato e método
 
