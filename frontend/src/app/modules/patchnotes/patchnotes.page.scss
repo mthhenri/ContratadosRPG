@@ -600,17 +600,56 @@
             gap: 24px;
         }
 
-        // Fixo sob a topbar, com rolagem interna própria: em notebook a lista não cabe inteira.
+        // Fixo sob a topbar; só a lista de versões rola (em notebook ela não cabe inteira). O
+        // cabeçalho fica parado no topo do trilho.
         &__trilho {
             position: sticky;
             top: calc(var(--altura-topbar) + var(--space-16));
             max-height: calc(100dvh - var(--altura-topbar) - 2 * var(--space-16));
-            overflow-y: auto;
         }
 
+        &__cabecalho {
+            flex: none;
+        }
+
+        &__versoes {
+            flex: 1 1 auto;
+            min-height: 0;
+        }
+
+        // Só a lista rola; o rótulo "Versões" e o aviso de novas ficam parados acima dela.
         &__lista {
+            flex: 1 1 auto;
             flex-direction: column;
-            overflow: visible;
+            min-height: 0;
+            overflow-y: auto;
+
+            // Fade padrão do sistema (appOverflowFade): só onde a lista está de fato cortada.
+            --fade-topo: 0px;
+            --fade-base: 0px;
+            &.overflow-fade--topo,
+            &.overflow-fade--base {
+                -webkit-mask-image: linear-gradient(
+                    to bottom,
+                    transparent 0,
+                    #000 var(--fade-topo),
+                    #000 calc(100% - var(--fade-base)),
+                    transparent 100%
+                );
+                mask-image: linear-gradient(
+                    to bottom,
+                    transparent 0,
+                    #000 var(--fade-topo),
+                    #000 calc(100% - var(--fade-base)),
+                    transparent 100%
+                );
+            }
+            &.overflow-fade--topo {
+                --fade-topo: 22px;
+            }
+            &.overflow-fade--base {
+                --fade-base: 22px;
+            }
         }
 
         &__item {

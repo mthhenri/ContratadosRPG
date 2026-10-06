@@ -86,7 +86,7 @@
                         {{ versoesNovas().size === 1 ? 'versão nova desde a sua última visita' : 'versões novas desde a sua última visita' }}
                     </p>
                     }
-                    <div class="patchnotes__lista">
+                    <div class="patchnotes__lista" appOverflowFade>
                         @for (linha of linhas(); track linha.rotulo) {
                         <span class="patchnotes__linha-rotulo">{{ linha.rotulo }}</span>
                         @for (item of linha.itens; track item.versao) {

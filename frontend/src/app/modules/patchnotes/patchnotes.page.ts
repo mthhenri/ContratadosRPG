@@ -26,6 +26,7 @@ import { Subscription, finalize, map, switchMap } from 'rxjs';
 import { SessaoService } from '../../core/services/sessao.service';
 import { VersaoService } from '../../core/services/versao.service';
 import { DocumentoContencao } from '../../shared/documento-contencao/documento-contencao.component';
+import { OverflowFade } from '../../shared/overflow-fade/overflow-fade.directive';
 import { renderizarMarkdownSeguro } from '../../shared/markdown/markdown-seguro';
 import { Botao } from '../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../shared/ui/botao-icone/botao-icone.component';
@@ -76,6 +77,7 @@ type EstadoNota = 'carregando' | 'ok' | 'inexistente' | 'falha';
     SumarioPatchnote,
     ClampTruncado,
     Tooltip,
+    OverflowFade,
   ],
   templateUrl: './patchnotes.page.html',
   styleUrl: './patchnotes.page.scss',
