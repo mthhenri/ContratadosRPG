@@ -95,6 +95,33 @@
         gap: var(--space-8);
         overflow-x: auto;
         padding-bottom: var(--space-4);
+
+        // Fade padrão do sistema na faixa horizontal do mobile (appOverflowFade): só onde cortada.
+        --fade-esquerda: 0px;
+        --fade-direita: 0px;
+        &.overflow-fade--esquerda,
+        &.overflow-fade--direita {
+            -webkit-mask-image: linear-gradient(
+                to right,
+                transparent 0,
+                #000 var(--fade-esquerda),
+                #000 calc(100% - var(--fade-direita)),
+                transparent 100%
+            );
+            mask-image: linear-gradient(
+                to right,
+                transparent 0,
+                #000 var(--fade-esquerda),
+                #000 calc(100% - var(--fade-direita)),
+                transparent 100%
+            );
+        }
+        &.overflow-fade--esquerda {
+            --fade-esquerda: 22px;
+        }
+        &.overflow-fade--direita {
+            --fade-direita: 22px;
+        }
     }
 
     &__item {
