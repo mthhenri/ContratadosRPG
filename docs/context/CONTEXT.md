@@ -40,9 +40,14 @@
 > specs antes de novas correções. Proposta global P-099 retirada após esclarecer teste
 > e dano/cura posteriores; contrato do fluxo específico NPC ainda será revisado.
 > [Fila consolidada de specs](../specs/backlog/revisao-documentos-sistema-v4.1.3-guia-v4.2.0.spec.md):
-> NPC pendente; documentação P-102, Criaturas P-101-01/02/03, fixtures P-095/096
+> NPC (m4-19) pendente; documentação P-102, Criaturas P-101-01/02/03, fixtures P-095/096
 > e documentação P-098 concluídas por autorizações próprias.
-> Ataques/equipamentos NPC têm spec investigativa separada; sem execução das correções.
+> Ataques/equipamentos NPC: [investigação concluída](../reviews/npc-ataques-equipamentos-investigacao.md)
+> (spec em `done/`) — matriz de reaproveitamento do motor de compras do agente, sem
+> implementação. Autor confirmou que a Categoria Civil do NPC segue a mesma restrição de
+> categoria do Civil jogador (sem Proteções/Explosivos). Falta decidir qual patente usar
+> dentro da faixa de Patente Equivalente por Categoria (cada Categoria cobre 2–3 patentes
+> do agente, não uma só) antes de virar task executável.
 > Autor autorizou versionar a preparação documental das specs.
 > [P-095](../specs/done/p-095-fixture-rolagens-feed-deterministica.spec.md) e
 > [P-096](../specs/done/p-096-fixture-resumo-rolagem-deterministica.spec.md) concluídas:

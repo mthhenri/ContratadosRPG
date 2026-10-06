@@ -1,5 +1,35 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-06 — Investigação NPC Ataques/Equipamentos: matriz e decisões para o autor
+
+Spec `npc-ataques-e-equipamentos-guia-v4.2.0` movida de `backlog/` para `active/` e
+investigada em paralelo à execução da P-102 (sessões distintas, sem conflito de arquivo:
+a spec cita só Guia v4.2.0, nenhum ponteiro antigo que a P-102 precisasse tocar).
+Confirmado em código que `FichaNpcDadosDto` não tem inventário/ataque algum e que
+`defesaBase`/`bloquear`/`esquivar` são snapshots manuais sem soma de equipamento.
+
+Matriz de reaproveitamento do motor de compras (`shared/regras/compras`) encontrou que
+`calcularStatItem`, `resolverDadosItem` e as funções de bônus de equipamento do agente
+(`calcularBonusDefesaEquipamento`, `montarResistencias`) já operam só sobre
+`CarrinhoItemDto`, sem depender de classe — reusáveis como estão. `obterLimiteModificacoes`
+não serve direto: recebe Prestígio, e a tabela "Patente Equivalente" do Guia mapeia cada
+Categoria de NPC a uma **faixa** de 2–3 patentes (ex.: Elite cobre Força Tarefa, Força
+Tarefa Especial e Operações Especiais), não a uma única — confirmado contra
+`shared/regras/dados/patente.dados.ts`. Civil não tem patente equivalente alguma (abaixo do
+piso do enum). Fluxo de teste/dano como duas operações separadas já tem precedente real no
+sistema: `FichaCriaturaAtaqueDto` já persiste `teste` e `dano` como fórmulas independentes,
+roladas sem encadeamento automático — mesma régua de P-099 (descartada).
+
+Documento completo: [`docs/reviews/npc-ataques-equipamentos-investigacao.md`](../reviews/npc-ataques-equipamentos-investigacao.md).
+Spec movida para `done/` — a investigação em si está completa.
+
+Autor decidiu, na mesma data: a Categoria Civil do NPC segue a mesma restrição de categoria
+do Civil jogador (sem Proteções/Explosivos no catálogo — espelha `civil-guia-criacao`, mas
+como decisão própria do NPC, não herança de `ClasseEnum`). Segue pendente apenas qual
+patente usar dentro da faixa de "Patente Equivalente" por Categoria (piso ou teto — exemplo
+com números concretos no documento) e o timing versus m4-19; sem gerar task executável
+ainda. Nenhum código, DTO ou migração alterado nesta rodada.
+
 ## 2026-10-06 — P-102: versionamento autorizado da conclusão documental
 
 Autor autorizou o commit da P-102 após o fecho da execução. Incluídos os ponteiros

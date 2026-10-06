@@ -38,7 +38,7 @@ Este arquivo coordena tasks; não é uma implementação única.
 | [P-101-02](../done/p-101-02-criatura-dt-e-modificadores.spec.md) | DT e consumidores do modificador fixo | Concluída; guia/ficha/leitor e preservação de snapshots |
 | [P-101-03](../done/p-101-03-criatura-referencias-e-cadencia.spec.md) | Exemplos/referências; Cadência já compatível | Concluída; algoritmo preservado e propostas editoriais registradas |
 | [P-102](../done/p-102-referencias-documentos-vigentes.spec.md) | README/schema/design/specs operacionais e comentários | Concluída; correspondência de fontes, histórico preservado e pipeline de PDFs conferido |
-| [NPC ataques/equipamentos](npc-ataques-e-equipamentos-guia-v4.2.0.spec.md) | Investigação da seção nova e proposta de integração | Revisão antes de gerar tasks de implementação; não expandir m4-19 |
+| [NPC ataques/equipamentos](../done/npc-ataques-e-equipamentos-guia-v4.2.0.spec.md) | Investigação concluída — [matriz e decisões](../../reviews/npc-ataques-equipamentos-investigacao.md) | Falta decisão do autor (faixa de Patente Equivalente por Categoria) antes de gerar tasks; não expandir m4-19 |
 
 ## Cobertura da comparação dos documentos
 
@@ -50,7 +50,7 @@ Comparação contra os livros anteriores no Git, normalizando espaços, `&nbsp;`
 | Sistema: três parágrafos de Crítico, incluindo cura como dado resultante | P-097-01 já executada; interpretação teste/resultado reaberta para revisão pelo esclarecimento do autor, sem inferência/rollback |
 | Guia: Nível/atributos/Competências de NPC | m4-19 e P-100 |
 | Guia: DTs contextuais de habilidades NPC | P-101-03, apenas onde referências do produto reproduzem o conteúdo |
-| Guia: Ataques/Equipamentos, acesso por Categoria e ausência de Dano Furtivo padrão | Spec investigativa NPC ataques/equipamentos |
+| Guia: Ataques/Equipamentos, acesso por Categoria e ausência de Dano Furtivo padrão | Investigação NPC ataques/equipamentos concluída; decisão de Patente Equivalente pendente |
 | Guia: realocação de vários atributos, zero/negativo | P-101-01 |
 | Guia: modificador no total, DT com metade truncada | P-101-02; rolagem de Criatura já usa bônus fixo corretamente |
 | Guia: sobra de turnos no fim | P-101-03: código e teste existentes já fazem isso |
@@ -65,8 +65,9 @@ Comparação contra os livros anteriores no Git, normalizando espaços, `&nbsp;`
   antes de alterar o motor novamente. A API genérica não conhece intenção futura.
 - **Ocultação:** autor decidiu rolagens sempre privadas. Definir apresentação do item
   compatível com isso; alternância pública do análogo não está automaticamente autorizada.
-- **NPC equipamento/ataques:** definir o recorte de produto após a investigação, sem
-  importar classe/progressão de Jogador para NPC.
+- **NPC equipamento/ataques:** investigação concluída (ver tabela acima); falta decidir
+  piso ou teto da faixa de Patente Equivalente por Categoria antes de gerar task
+  executável, sem importar classe/progressão de Jogador para NPC.
 - **Exemplos/editorial do autor:** Fraco+6 versus fórmula+5, Social base2→zero versus
   “três pontos”, versão interna e grafia de Porte. Preparar proposta para o autor;
   não alterar os livros. P-093 arredondamento continua ACEITO por decisão anterior.
