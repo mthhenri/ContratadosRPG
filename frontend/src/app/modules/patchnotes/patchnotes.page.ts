@@ -47,6 +47,7 @@ import {
   versoesNovasPatchnote,
 } from './patchnote-formato';
 import { PatchnoteService } from './patchnote.service';
+import { rolarAoTopo, sinalRolagemPassou } from './rolagem-pagina';
 import { SumarioPatchnote } from './sumario-patchnote/sumario-patchnote.component';
 
 type EstadoNota = 'carregando' | 'ok' | 'inexistente' | 'falha';
@@ -155,6 +156,20 @@ export class PatchnotesPage {
     return itens[itens.findIndex((item) => item.versao === exibida) + 1] ?? null;
   });
 
+  /** A versão imediatamente mais nova que a exibida; some na mais recente (pn-11). */
+  protected readonly versaoProxima = computed(() => {
+    const itens = this.indice();
+    const exibida = this.nota()?.versao;
+    if (!itens || !exibida) {
+      return null;
+    }
+    const posicao = itens.findIndex((item) => item.versao === exibida);
+    return posicao > 0 ? itens[posicao - 1] : null;
+  });
+
+  /** A leitura passou do começo: liga o botão de voltar ao topo (pn-11). */
+  protected readonly rolado = sinalRolagemPassou(400);
+
   /** Introdução, grupos e blocos da nota exibida, já renderizados e sanitizados. */
   protected readonly conteudo = computed(() => {
     const nota = this.nota();
@@ -168,38 +183,56 @@ export class PatchnotesPage {
     // bloco — o cursor os devolve aos títulos renderizados (pn-07).
     const capitulos = capitularPatchnote(estrutura);
     let proximo = 0;
-    return {
-      capitulos,
-      /** Itens do sumário: os blocos de cada grupo e os capítulos sem bloco. */
-      totalCapitulos: capitulos.reduce((total, capitulo) => total + Math.max(capitulo.filhos.length, 1), 0),
-      introducao: renderizar(estrutura.introducao),
-      grupos: estrutura.grupos.map((grupo) => {
-        if (grupo.titulo === null) {
-          return {
-            titulo: null,
-            id: null,
-            introducao: renderizar(grupo.introducao),
-            blocos: grupo.blocos.map((bloco) => ({
-              titulo: bloco.titulo,
-              id: capitulos[proximo++].id,
-              tom: bloco.tom,
-              html: renderizar(bloco.markdown),
-            })),
-          };
-        }
-        const capitulo = capitulos[proximo++];
+    const todosGrupos = estrutura.grupos.map((grupo) => {
+      if (grupo.titulo === null) {
         return {
-          titulo: grupo.titulo,
-          id: capitulo.id,
+          titulo: null,
+          id: null,
+          publico: 'geral' as const,
           introducao: renderizar(grupo.introducao),
-          blocos: grupo.blocos.map((bloco, indice) => ({
+          blocos: grupo.blocos.map((bloco) => ({
             titulo: bloco.titulo,
-            id: capitulo.filhos[indice].id,
+            id: capitulos[proximo++].id,
             tom: bloco.tom,
             html: renderizar(bloco.markdown),
           })),
         };
-      }),
+      }
+      const capitulo = capitulos[proximo++];
+      return {
+        titulo: grupo.titulo,
+        id: capitulo.id,
+        publico: capitulo.publico,
+        introducao: renderizar(grupo.introducao),
+        blocos: grupo.blocos.map((bloco, indice) => ({
+          titulo: bloco.titulo,
+          id: capitulo.filhos[indice].id,
+          tom: bloco.tom,
+          html: renderizar(bloco.markdown),
+        })),
+      };
+    });
+    // O resumo da versão (`# RESUMO…`, só texto) sobe para um cartão logo após o cabeçalho da nota
+    // (pn-11); a âncora do capítulo continua a mesma e, no sumário, ele é o primeiro item, "Resumo".
+    const resumo = todosGrupos.find(
+      (grupo) => grupo.publico === 'resumo' && grupo.blocos.length === 0 && grupo.introducao !== '',
+    );
+    const capitulosSumario = resumo
+      ? [
+          { titulo: 'Resumo', id: resumo.id!, publico: 'resumo' as const, filhos: [] },
+          ...capitulos.filter((capitulo) => capitulo.id !== resumo.id),
+        ]
+      : capitulos;
+    return {
+      capitulos: capitulosSumario,
+      /** Itens do sumário: os blocos de cada grupo e os capítulos sem bloco. */
+      totalCapitulos: capitulosSumario.reduce(
+        (total, capitulo) => total + Math.max(capitulo.filhos.length, 1),
+        0,
+      ),
+      introducao: renderizar(estrutura.introducao),
+      resumo: resumo ? { id: resumo.id!, html: resumo.introducao } : null,
+      grupos: todosGrupos.filter((grupo) => grupo !== resumo),
     };
   });
 
@@ -275,6 +308,21 @@ export class PatchnotesPage {
     void this.router.navigateByUrl(this.router.createUrlTree(['/patchnotes', versao], { fragment: id }), {
       replaceUrl: true,
     });
+  }
+
+  /**
+   * "Voltar ao topo": sobe suavemente, limpa o fragmento da URL (sem empilhar histórico) e zera o
+   * destaque do sumário — o observador fica quieto durante a subida para não repintar capítulos.
+   */
+  protected voltarAoTopo(): void {
+    const versao = this.nota()?.versao;
+    this.destinoRolado = null;
+    this.capituloAtivo.set(null);
+    this.observadorSilenciadoAte = performance.now() + 900;
+    rolarAoTopo(true);
+    if (versao && this.fragmento()) {
+      void this.router.navigate(['/patchnotes', versao], { replaceUrl: true });
+    }
   }
 
   /** Repete a última carga que falhou: o índice, se foi ele, ou a nota aberta. */
@@ -422,8 +470,13 @@ export class PatchnotesPage {
     this.estadoNota.set('carregando');
     this.assinaturaNota = this.patchnoteService.recuperar(versao, { semCacheNavegador }).subscribe({
       next: (nota) => {
+        const versaoSaindo = this.nota()?.versao;
         this.nota.set(nota);
         this.estadoNota.set('ok');
+        // Outra versão, sem fragmento: a nota nova abre no topo (e não onde a anterior parou).
+        if (versaoSaindo && versaoSaindo !== nota.versao && !this.fragmento()) {
+          afterNextRender(() => rolarAoTopo(false), { injector: this.injetor });
+        }
       },
       error: (erro: unknown) => {
         this.nota.set(null);

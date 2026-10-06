@@ -483,6 +483,20 @@ faixa horizontal do mobile não tem rótulos e os itens ficam mais largos (168�
 uma linha `--positive` no topo ("N versões novas desde a sua última visita"). O "Novo" vem da chave
 `versao-vista` lida **antes** de `marcarVista()` (`VersaoService.vistaAnterior`).
 
+### Resumo, rodapé e voltar ao topo dos patchnotes (pn-11)
+
+- **Resumo** (`# RESUMO…` só com texto): cartão logo após o cabeçalho da nota — `--bg`, filete `--accent` à
+  esquerda, rótulo mono `// Resumo da versão`. Sai do fim da nota; a âncora do capítulo é a mesma e, no
+  sumário, ele é o primeiro item ("Resumo").
+- **Rodapé**: anterior à esquerda e próxima à direita, `app-botao` `estilo="link"` `tamanho="pequeno"` com o
+  número sublinhado e o título como linha de apoio (sem sublinhado nem caixa alta); empilham no mobile.
+  Trocar de versão sem fragmento volta ao topo da nota.
+- **Voltar ao topo** (aparece depois de ~400px de rolagem): em três zonas, `app-botao` `secundario`/
+  `contorno` no fim do trilho direito (`sticky`); abaixo de 1240px, `app-botao-icone` flutuante no canto
+  inferior direito (`sticky` no fim da coluna — `fixed` não serve: o contêiner de container query contém
+  descendentes fixos). Ícone `chevron` girado 180°. O clique rola ao topo, limpa o fragmento da URL
+  (`replaceUrl`) e zera o destaque do sumário.
+
 ### Sumário "Nesta versão" (`sumario-patchnote`, pn-09)
 
 Componente **local** dos patchnotes (decisão do autor: vira `app-sumario` em `shared/ui/` só se surgir um

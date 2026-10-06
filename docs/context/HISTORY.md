@@ -1,5 +1,25 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-06 — pn-11: resumo no topo, anterior/próxima, voltar ao topo — fecha a revisão da página
+
+**Pedido do autor.** Última task da revisão (`pn-07`…`pn-11`). O autor acrescentou à task um botão de
+**voltar ao topo** que limpa o fragmento da URL, também no trilho do sumário.
+
+**Entrega.** O `# RESUMO…` (só texto) vira o cartão `// Resumo da versão` logo após o cabeçalho, sai do
+fim da nota, mantém a âncora e é o primeiro item do sumário. Rodapé com anterior e próxima (título como
+linha de apoio; só uma nas pontas; empilha no mobile). Trocar de versão sem fragmento sobe ao topo; a
+recarga da mesma versão (reiniciar cache) não rola. Voltar ao topo (`rolagem-pagina.ts`): botão no trilho
+direito em três zonas e flutuante abaixo disso; limpa o fragmento, zera o destaque e silencia o observador.
+`position: fixed` não funciona dentro do contêiner de container query (`container-type` contém
+descendentes fixos): o flutuante é `sticky` no fim da coluna da nota. Fecha o guarda-chuva
+`pn-revisao-pagina-patchnotes` (spec em `done/`).
+
+**Verificado (gate final).** Suíte completa do frontend 3000 verde, lint sem erros. Ao vivo em 1920/1366/
+960/360: resumo no topo (20px após o cabeçalho), sumário com "Resumo" primeiro, botão do trilho (3 zonas) e
+flutuante (960/360, 44px no mobile), clique limpa `#para-o-mestre` e sobe a 0, rodapé com as duas versões,
+"próxima" abre `1.4.0` já no topo, sem overflow horizontal; 404, 503, vazio e carregando com o `h1` único;
+visitante sem o botão do ADMIN e ADMIN com ele (44px no mobile).
+
 ## 2026-10-06 — pn-10: lista de versões com título, linha e "Novo"
 
 **Pedido do autor.** Quarta task da revisão. Decisão do autor: o "Novo" usa uma nova severidade

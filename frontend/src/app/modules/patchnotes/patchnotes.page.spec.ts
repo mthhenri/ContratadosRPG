@@ -135,7 +135,6 @@ describe('PatchnotesPage', () => {
     expect(grupos.map((grupo) => grupo.querySelector('.patchnotes__grupo-titulo')?.textContent)).toEqual([
       'PARA OS PLAYERS',
       'PARA O MESTRE',
-      'RESUMO',
     ]);
     expect(raiz().querySelector('.patchnotes__markdown--introducao')?.textContent).toContain(
       'Este foi um update grande.',
@@ -147,8 +146,9 @@ describe('PatchnotesPage', () => {
     expect(funcionalidade.querySelectorAll('li')).toHaveLength(2);
     expect(grupos[0].querySelector('.patchnotes__bloco[data-tom="novidades"]')).not.toBeNull();
     expect(grupos[0].querySelector('.patchnotes__bloco[data-tom="novidades"].patchnotes__bloco--funcionalidade')).toBeNull();
-    expect(grupos[2].querySelector('.patchnotes__markdown strong')?.textContent).toBe('Cenas');
-    expect(grupos[2].querySelector('.patchnotes__bloco')).toBeNull();
+    // O resumo saiu do fim da nota e virou o cartão do topo (pn-11).
+    expect(grupos).toHaveLength(2);
+    expect(raiz().querySelector('.patchnotes__resumo .patchnotes__markdown strong')?.textContent).toBe('Cenas');
   });
 
   it('lista as versões, marca a aberta e não põe "Atual" numa versão antiga', async () => {
@@ -164,17 +164,22 @@ describe('PatchnotesPage', () => {
     expect(itens[1].classList.contains('patchnotes__item--ativo')).toBe(true);
     expect(itens[1].getAttribute('aria-current')).toBe('page');
     expect(raiz().querySelector('.patchnotes__nota app-chip')).toBeNull();
-    expect(raiz().querySelector('.patchnotes__nota-rodape')).toBeNull();
+    // Na mais antiga só existe a próxima; a anterior não.
+    expect(
+      Array.from(raiz().querySelectorAll('.patchnotes__nota-rodape a')).map((link) => link.getAttribute('href')),
+    ).toEqual(['/patchnotes/1.1.0']);
   });
 
-  it('oferece o atalho para a versão anterior', async () => {
+  it('na versão mais recente, o rodapé só tem a anterior, com o título', async () => {
     await abrir('/patchnotes/1.1.0');
     await responderIndice();
     await responderNota(nota('1.1.0', MARKDOWN_1_1_0));
 
-    const atalho = raiz().querySelector<HTMLAnchorElement>('.patchnotes__nota-rodape a')!;
-    expect(atalho.getAttribute('href')).toBe('/patchnotes/1.0.0');
-    expect(atalho.textContent).toContain('v1.0.0 (anterior)');
+    const atalhos = raiz().querySelectorAll<HTMLAnchorElement>('.patchnotes__nota-rodape a');
+    expect(atalhos).toHaveLength(1);
+    expect(atalhos[0].getAttribute('href')).toBe('/patchnotes/1.0.0');
+    expect(atalhos[0].textContent).toContain('v1.0.0');
+    expect(atalhos[0].textContent).toContain('O começo');
   });
 
   it('registra a versão atual como vista ao abrir', async () => {
@@ -323,6 +328,194 @@ describe('PatchnotesPage', () => {
 
       expect(raiz().querySelector('.patchnotes__contencao app-documento-contencao')).not.toBeNull();
       expect(raiz().querySelector('.patchnotes__corpo')).toBeNull();
+    });
+  });
+
+  describe('resumo, rodapé e voltar ao topo (pn-11)', () => {
+    const TRES_VERSOES: PatchnoteResumoDto[] = [
+      { versao: '1.2.0', data: '2026-09-29', titulo: 'Terceira' },
+      { versao: '1.1.0', data: '2026-09-08', titulo: 'Cenas e Biblioteca' },
+      { versao: '1.0.0', data: '2026-09-01', titulo: 'O começo' },
+    ];
+    const COM_RESUMO = [
+      '# PARA OS PLAYERS',
+      '',
+      '## Cenas',
+      '',
+      'Texto.',
+      '',
+      '# RESUMO DO QUE MAIS MUDA',
+      '',
+      'O maior impacto são as **Cenas**.',
+    ].join('\n');
+
+    let rolarJanela: ReturnType<typeof vi.fn>;
+    let rolarAte: ReturnType<typeof vi.fn>;
+
+    beforeEach(() => {
+      rolarJanela = vi.fn();
+      rolarAte = vi.fn();
+      window.scrollTo = rolarJanela as unknown as typeof window.scrollTo;
+      Element.prototype.scrollIntoView = rolarAte as unknown as Element['scrollIntoView'];
+    });
+
+    afterEach(() => {
+      Object.defineProperty(window, 'scrollY', { value: 0, configurable: true });
+    });
+
+    function notaTres(versao: string, markdown = MARKDOWN_1_1_0): PatchnoteRecuperadoDto {
+      return { ...TRES_VERSOES.find((item) => item.versao === versao)!, conteudoMarkdown: markdown };
+    }
+
+    async function abrirTres(versao: string, markdown?: string): Promise<void> {
+      await abrir(`/patchnotes/${versao}`);
+      await responderIndice(TRES_VERSOES);
+      await responderNota(notaTres(versao, markdown));
+    }
+
+    function rolarPara(y: number): void {
+      Object.defineProperty(window, 'scrollY', { value: y, configurable: true });
+      window.dispatchEvent(new Event('scroll'));
+      harness.detectChanges();
+    }
+
+    it('põe o resumo num cartão logo após o cabeçalho e o tira do fim', async () => {
+      await abrirTres('1.1.0', COM_RESUMO);
+
+      const cartao = raiz().querySelector('.patchnotes__resumo')!;
+      expect(cartao.querySelector('.patchnotes__resumo-rotulo')?.textContent).toContain('Resumo da versão');
+      expect(cartao.querySelector('strong')?.textContent).toBe('Cenas');
+      const cabecalho = raiz().querySelector('.patchnotes__nota-cabecalho')!;
+      const primeiroGrupo = raiz().querySelector('.patchnotes__grupo')!;
+      expect(cabecalho.compareDocumentPosition(cartao) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(cartao.compareDocumentPosition(primeiroGrupo) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      // Não aparece duas vezes.
+      expect(raiz().querySelectorAll('.patchnotes__grupo-titulo')).toHaveLength(1);
+      expect(raiz().textContent?.match(/O maior impacto/g)).toHaveLength(1);
+    });
+
+    it('mantém a âncora do capítulo do resumo e o põe como primeiro item do sumário', async () => {
+      await abrirTres('1.1.0', COM_RESUMO);
+
+      expect(raiz().querySelector('.patchnotes__resumo-rotulo')?.getAttribute('id')).toBe(
+        'resumo-do-que-mais-muda',
+      );
+      const itens = Array.from(
+        raiz().querySelectorAll('.patchnotes__trilho-direito .sumario__item, .patchnotes__trilho-direito .sumario__rotulo'),
+      ).map((item) => item.textContent!.trim());
+      expect(itens).toEqual(['Resumo', 'PARA OS PLAYERS', 'Cenas']);
+    });
+
+    it('link com o fragmento do resumo rola até o cartão', async () => {
+      await abrir('/patchnotes/1.1.0#resumo-do-que-mais-muda');
+      await responderIndice(TRES_VERSOES);
+      await responderNota(notaTres('1.1.0', COM_RESUMO));
+
+      expect(rolarAte.mock.contexts.map((contexto) => (contexto as HTMLElement).id)).toEqual([
+        'resumo-do-que-mais-muda',
+      ]);
+    });
+
+    it('nota sem resumo não mostra cartão', async () => {
+      await abrirTres('1.1.0');
+
+      expect(raiz().querySelector('.patchnotes__resumo')).toBeNull();
+    });
+
+    it('rodapé da versão do meio leva à anterior e à próxima, com títulos', async () => {
+      await abrirTres('1.1.0');
+
+      const links = Array.from(raiz().querySelectorAll<HTMLAnchorElement>('.patchnotes__nota-rodape a'));
+      expect(links.map((link) => link.getAttribute('href'))).toEqual(['/patchnotes/1.0.0', '/patchnotes/1.2.0']);
+      expect(links[0].textContent).toContain('O começo');
+      expect(links[1].textContent).toContain('Terceira');
+    });
+
+    it('na versão mais antiga o rodapé só tem a próxima', async () => {
+      await abrirTres('1.0.0');
+
+      const links = Array.from(raiz().querySelectorAll<HTMLAnchorElement>('.patchnotes__nota-rodape a'));
+      expect(links.map((link) => link.getAttribute('href'))).toEqual(['/patchnotes/1.1.0']);
+    });
+
+    it('clicar na próxima abre a versão de destino e sobe ao topo', async () => {
+      await abrirTres('1.1.0');
+      const proxima = raiz().querySelector<HTMLAnchorElement>('.patchnotes__rodape-link--proxima')!;
+
+      await abrir(proxima.getAttribute('href')!);
+      await responderNota(notaTres('1.2.0'));
+
+      expect(raiz().querySelector('.patchnotes__nota-versao b')?.textContent).toContain('v1.2.0');
+      expect(rolarJanela).toHaveBeenCalledWith(expect.objectContaining({ top: 0 }));
+    });
+
+    it('recarregar a mesma versão (reiniciar cache) não rola', async () => {
+      TestBed.inject(SessaoService).substituirSessao({
+        token: 't',
+        id: 1,
+        login: 'a',
+        nome: 'A',
+        tipo: TipoUsuarioEnum.ADMIN,
+      } as UsuarioAutenticadoDto);
+      await abrirTres('1.1.0');
+      rolarJanela.mockClear();
+
+      raiz().querySelector<HTMLButtonElement>('.patchnotes__reiniciar-cache')!.click();
+      http
+        .expectOne('/patchnote/cache/reiniciar')
+        .flush({ sucesso: true, dados: { entradasRemovidas: 1 }, mensagem: 'ok' });
+      http.expectOne('/patchnote').flush({ sucesso: true, dados: [...TRES_VERSOES], mensagem: 'ok' });
+      await harness.fixture.whenStable();
+      harness.detectChanges();
+      await responderNota(notaTres('1.1.0'));
+
+      expect(raiz().querySelector('.patchnotes__nota')).not.toBeNull();
+      expect(rolarJanela).not.toHaveBeenCalled();
+    });
+
+    it('o botão de voltar ao topo só aparece depois de rolar', async () => {
+      await abrirTres('1.1.0');
+      expect(raiz().querySelector('.patchnotes__topo-flutuante')).toBeNull();
+      expect(raiz().querySelector('.patchnotes__topo-trilho')).toBeNull();
+
+      rolarPara(900);
+      expect(raiz().querySelector('.patchnotes__topo-flutuante button')?.getAttribute('aria-label')).toBe(
+        'Voltar ao topo',
+      );
+      expect(raiz().querySelector('.patchnotes__topo-trilho')?.textContent).toContain('Voltar ao topo');
+
+      rolarPara(0);
+      expect(raiz().querySelector('.patchnotes__topo-flutuante')).toBeNull();
+      expect(raiz().querySelector('.patchnotes__topo-trilho')).toBeNull();
+    });
+
+    it('voltar ao topo rola, limpa o fragmento da URL e zera o destaque do sumário', async () => {
+      await abrir('/patchnotes/1.1.0#cenas');
+      await responderIndice(TRES_VERSOES);
+      await responderNota(notaTres('1.1.0', COM_RESUMO));
+      rolarPara(900);
+      expect(TestBed.inject(Router).url).toBe('/patchnotes/1.1.0#cenas');
+
+      raiz().querySelector<HTMLButtonElement>('.patchnotes__topo-trilho')!.click();
+      await harness.fixture.whenStable();
+      harness.detectChanges();
+
+      expect(rolarJanela).toHaveBeenCalledWith(expect.objectContaining({ top: 0 }));
+      expect(TestBed.inject(Router).url).toBe('/patchnotes/1.1.0');
+      expect(raiz().querySelector('.patchnotes__trilho-direito [aria-current="location"]')).toBeNull();
+    });
+
+    it('o botão flutuante faz o mesmo', async () => {
+      await abrir('/patchnotes/1.1.0#cenas');
+      await responderIndice(TRES_VERSOES);
+      await responderNota(notaTres('1.1.0', COM_RESUMO));
+      rolarPara(900);
+
+      raiz().querySelector<HTMLButtonElement>('.patchnotes__topo-flutuante button')!.click();
+      await harness.fixture.whenStable();
+
+      expect(rolarJanela).toHaveBeenCalledWith(expect.objectContaining({ top: 0 }));
+      expect(TestBed.inject(Router).url).toBe('/patchnotes/1.1.0');
     });
   });
 

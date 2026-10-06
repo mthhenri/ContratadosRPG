@@ -415,15 +415,109 @@
 
     &__nota-rodape {
         display: flex;
+        flex-wrap: wrap;
         justify-content: space-between;
         gap: var(--space-12);
         padding-top: var(--space-12);
         border-top: 1px solid var(--border);
 
+    }
+
+    // Anterior à esquerda e próxima à direita, cada uma com o título da versão como linha de apoio.
+    &__rodape-link {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+        max-width: 48%;
+        height: auto;
+        text-align: left;
         // O padding do botão-link recuava o texto; alinha ao filete da coluna de conteúdo.
-        a {
-            margin-left: calc(-1 * var(--space-12));
+        margin-left: calc(-1 * var(--space-12));
+
+        // Só o rótulo ("v1.3.0") leva o sublinhado do botão-link; a linha de apoio (título) fica limpa, e
+        // o sublinhado não se desfaz em descendente, então ele sai do `a` e entra no `span` (abaixo).
+        > span {
+            text-decoration: underline;
+            text-underline-offset: 3px;
         }
+
+        small {
+            display: block;
+            font: 400 12.5px/1.35 var(--font-sans);
+            letter-spacing: 0;
+            text-transform: none;
+            color: var(--text-dim);
+        }
+
+        &--proxima {
+            align-items: flex-end;
+            margin-left: auto;
+            margin-right: calc(-1 * var(--space-12));
+            text-align: right;
+        }
+
+        // No mobile as duas se empilham em largura total (a 48% o título quebraria em muitas linhas).
+        @include bp.mobile {
+            max-width: none;
+            min-height: bp.$alvo-toque;
+
+            &--proxima {
+                align-items: flex-start;
+                margin-left: calc(-1 * var(--space-12));
+                text-align: left;
+            }
+        }
+    }
+
+    a#{&}__rodape-link {
+        text-decoration: none;
+    }
+
+    // Resumo da versão em destaque, logo após o cabeçalho da nota (pn-11).
+    &__resumo {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-8);
+        padding: var(--space-12) var(--space-16);
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-left: 2px solid var(--accent);
+        border-radius: var(--radius-control);
+    }
+
+    &__resumo-rotulo {
+        scroll-margin-top: calc(var(--altura-topbar) + var(--space-16));
+        font: 700 11px var(--font-mono);
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        color: var(--text-mute);
+    }
+
+    // Voltar ao topo (pn-11). Em três zonas é o botão do trilho direito; abaixo disso, o flutuante.
+    // `sticky` (e não `fixed`): o contêiner de container query contém descendentes fixos.
+    &__topo-flutuante {
+        position: sticky;
+        bottom: var(--space-16);
+        z-index: 5;
+        display: flex;
+        justify-content: flex-end;
+        margin-top: var(--space-16);
+        pointer-events: none;
+
+        > button {
+            pointer-events: auto;
+            background: var(--surface-2);
+        }
+    }
+
+    &__topo-trilho {
+        position: sticky;
+        bottom: 0;
+        align-self: flex-start;
+    }
+
+    &__icone-topo {
+        transform: rotate(180deg);
     }
 
     &__carregando {
@@ -542,7 +636,8 @@
             font-size: 15px;
         }
 
-        &__sumario-recolhivel {
+        &__sumario-recolhivel,
+        &__topo-flutuante {
             display: none;
         }
 

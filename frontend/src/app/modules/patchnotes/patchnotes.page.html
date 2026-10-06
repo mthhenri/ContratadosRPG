@@ -154,6 +154,13 @@
                         }
                     </header>
 
+                    @if (conteudo()?.resumo; as resumo) {
+                    <section class="patchnotes__resumo" aria-label="Resumo da versão">
+                        <span class="patchnotes__resumo-rotulo" [id]="resumo.id">// Resumo da versão</span>
+                        <div class="patchnotes__markdown" [innerHTML]="resumo.html"></div>
+                    </section>
+                    }
+
                     @if (conteudo(); as c) { @if (c.capitulos.length > 0) {
                     <details #recolhivel class="patchnotes__sumario-recolhivel">
                         <summary>Nesta versão · {{ c.totalCapitulos }} capítulos</summary>
@@ -209,18 +216,33 @@
                         </section>
                         }
                     </section>
-                    } @if (versaoAnterior(); as anterior) {
+                    } @if (versaoAnterior() || versaoProxima()) {
                     <footer class="patchnotes__nota-rodape">
+                        @if (versaoAnterior(); as anterior) {
                         <a
                             app-botao
                             variante="secundario"
                             estilo="link"
                             tamanho="pequeno"
+                            class="patchnotes__rodape-link"
                             [routerLink]="['/patchnotes', anterior.versao]"
                         >
-                            <app-icone nome="voltar" />
-                            v{{ anterior.versao }} (anterior)
+                            <span><app-icone nome="voltar" /> v{{ anterior.versao }}</span>
+                            <small>{{ anterior.titulo }}</small>
                         </a>
+                        } @if (versaoProxima(); as proxima) {
+                        <a
+                            app-botao
+                            variante="secundario"
+                            estilo="link"
+                            tamanho="pequeno"
+                            class="patchnotes__rodape-link patchnotes__rodape-link--proxima"
+                            [routerLink]="['/patchnotes', proxima.versao]"
+                        >
+                            <span>v{{ proxima.versao }} <app-icone nome="chevron-direita" /></span>
+                            <small>{{ proxima.titulo }}</small>
+                        </a>
+                        }
                     </footer>
                     }
                 </article>
@@ -233,6 +255,21 @@
                 </div>
                 }
             }
+
+            @if (rolado()) {
+            <div class="patchnotes__topo-flutuante">
+                <button
+                    app-botao-icone
+                    tamanho="padrao"
+                    type="button"
+                    aria-label="Voltar ao topo"
+                    [appTooltip]="'Voltar ao topo'"
+                    (click)="voltarAoTopo()"
+                >
+                    <app-icone nome="chevron" class="patchnotes__icone-topo" />
+                </button>
+            </div>
+            }
         </div>
 
         @if (nota(); as notaAtual) { @if (conteudo(); as c) { @if (c.capitulos.length > 0) {
@@ -244,6 +281,20 @@
                 [ativo]="capituloAtivo()"
                 (navegar)="irParaCapitulo($event)"
             />
+            @if (rolado()) {
+            <button
+                app-botao
+                variante="secundario"
+                estilo="contorno"
+                tamanho="pequeno"
+                type="button"
+                class="patchnotes__topo-trilho"
+                (click)="voltarAoTopo()"
+            >
+                <app-icone nome="chevron" class="patchnotes__icone-topo" />
+                Voltar ao topo
+            </button>
+            }
         </aside>
         } } }
     </div>
