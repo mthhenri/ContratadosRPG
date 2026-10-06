@@ -52,7 +52,7 @@ describe('CampanhaDetalheDadosService', () => {
       formula: '1d20+5',
       visibilidade: RolagemVisibilidadeEnum.PUBLICA,
       resultado: { dados: [], atributos: [], constante: 5, total: 17 },
-      createdDate: new Date().toISOString(),
+      createdDate: "2026-10-05T12:00:00.000Z",
       corFicha: null,
       ...sobrescritas,
     };
@@ -189,7 +189,7 @@ describe('CampanhaDetalheDadosService', () => {
     });
     expect(service.rolagensFeed().length).toBe(1);
 
-    rolagemRegistrada$.next(rolagem({ id: 2 }));
+    rolagemRegistrada$.next(rolagem({ id: 2, createdDate: "2026-10-05T12:00:01.000Z" }));
     expect(service.rolagensFeed()[0].id).toBe(2);
     expect(service.rolagensFeed().length).toBe(2);
   });
@@ -299,12 +299,14 @@ describe('CampanhaDetalheDadosService', () => {
   });
 
   it('reconexao$ traz uma rolagem feita durante a queda para o feed', () => {
+    const rolagemAnterior = rolagem({ id: 1, createdDate: "2026-10-05T12:00:00.000Z" });
+    const rolagemDuranteQueda = rolagem({ id: 2, createdDate: "2026-10-05T12:00:01.000Z" });
     const { service, rolagemService, reconexao$ } = montar({
       usuarioId: 1,
       membros: membrosCom(1, TipoCampanhaMembroPapelEnum.MESTRE),
-      rolagens: [rolagem({ id: 1 })],
+      rolagens: [rolagemAnterior],
     });
-    rolagemService.listarPorCampanha.mockReturnValue(of([rolagem({ id: 2 }), rolagem({ id: 1 })]));
+    rolagemService.listarPorCampanha.mockReturnValue(of([rolagemDuranteQueda, rolagemAnterior]));
 
     reconexao$.next();
 

@@ -1,7 +1,7 @@
 # p-095-fixture-rolagens-feed-deterministica.spec.md
 
 > Task avulsa de `PROBLEMS.md` P-095. Preparada em 2026-10-06 por pedido do autor;
-> **somente especificação nesta rodada, sem execução autorizada agora**.
+> execução autorizada pelo autor em 2026-10-06. Correção restrita a testes e documentação.
 
 ## Objetivo
 
@@ -22,7 +22,7 @@ rolagem anterior após a reconexão, sem alterar a ordenação do produto.
    durante GET e chegada de rolagem por socket. Ajustar somente suas datas quando
    necessário para expressar a cronologia que o próprio cenário exige.
 4. Registrar o resultado em `HISTORY.md` e retirar P-095 de Ativos somente depois dos
-   gates; mover esta spec para `done/` apenas no fecho da implementação futura.
+   gates; mover esta spec para `done/` apenas no fecho da implementação.
 
 ## Critérios de Aceite
 
@@ -40,7 +40,6 @@ rolagem anterior após a reconexão, sem alterar a ordenação do produto.
 - Alterar `mesclarFeedRolagens`, desempatar datas por id ou mudar a ordem do produto.
 - Adicionar espera artificial para o relógio avançar, retries ou omitir `createdDate`.
 - Refatoração de fixtures de outros arquivos; correção de P-096/P-097 ou regra de NPC.
-- Implementar a correção nesta rodada de elaboração da spec.
 
 ## Dependências
 
@@ -55,3 +54,15 @@ rolagem anterior após a reconexão, sem alterar a ordenação do produto.
   o cenário verifica cronologia; não inferir “id maior = rolagem mais recente”.
 - Relaxar a expectativa esconderia uma regressão de reconexão. Manter `[2, 1]` e as
   provas existentes de preservação/exclusão de registros.
+
+## Fecho — 2026-10-06
+
+- Fixture com data fixa e sobrescritas preservadas; reconexão reutiliza a rolagem anterior
+  e declara data posterior para a rolagem feita durante a queda. Expectativa `[2, 1]` intacta.
+- Teste focado: 38/38. Gate amplo: shared 1089, backend 959 + 1 ignorado, frontend 3001;
+  todos passando. Lint dos três workspaces sem erros, com avisos preexistentes.
+- Compilação de testes Angular e revisão de diff/convenções aprovadas. Somente testes e
+  documentação alterados; UI e ordenação do produto preservadas. Sem gate visual aplicável.
+- P-095 retirado de Ativos; contexto e fila consolidada alinhados. Comandos, limitação
+  inicial do isolamento e resultados completos registrados em `docs/context/HISTORY.md`.
+- Sem pendências da P-095. P-096 e m4-19 continuam em suas frentes próprias.
