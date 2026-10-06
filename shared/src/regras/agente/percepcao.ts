@@ -5,7 +5,7 @@ import { AreaPercepcaoCalcularDto } from './agente.dtos';
  * (e tem chance de detectar seres furtivos). Vale para todas as classes.
  *
  * 5 + Sentidos × 5. Sem Sentidos (0 ou menos), a área é apenas 3 metros.
- * Fonte: docs/core/sistema-v4.1.0.md — "Área de Percepção".
+ * Fonte: docs/core/sistema-v4.1.3.md — "Área de Percepção".
  */
 export function calcularAreaPercepcao(dto: AreaPercepcaoCalcularDto): number {
   if (dto.sentidos <= 0) {

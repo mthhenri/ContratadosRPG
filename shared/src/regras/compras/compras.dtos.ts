@@ -12,7 +12,7 @@ import {
  * §6.6): funções puras recebem sempre um DTO tipado. Entradas seguem o verbo no
  * infinitivo; as saídas são recortes computados (value-objects sem verbo).
  *
- * Fonte: docs/core/sistema-v4.1.0.md — "Equipamentos", "Prestígio e Patentes"
+ * Fonte: docs/core/sistema-v4.1.3.md — "Equipamentos", "Prestígio e Patentes"
  * (limite de modificações) e "Amplificadores". Em conflito com o código, o
  * documento vence (proibição #27). As tabelas (catálogo, modificações,
  * amplificadores, custos, limites) vivem em `compras.dados` e `catalogo.dados`.
@@ -92,14 +92,14 @@ export interface ModificacaoAplicadaDto {
   /**
    * Peso próprio da modificação, **só relevante para mods custom** (sem correspondência no
    * catálogo, que não têm uma "descrição" oficial de peso). Espelha a exceção da regra ("salvo
-   * indicação contrária em sua descrição", `docs/core/sistema-v4.1.0.md:958`) — ausente = usa o
+   * indicação contrária em sua descrição", `docs/core/sistema-v4.1.3.md:958`) — ausente = usa o
    * padrão de `PESO_MODIFICACAO_PADRAO` (+0,2) por empilhamento. Uma mod do catálogo real ignora
    * este campo mesmo se vier preenchido; o peso do catálogo é sempre a fonte de verdade (m3-76).
    */
   readonly pesoCustom?: number;
   /**
    * `nome` do item (Operacional ou Medicinal) que esta modificação mira — só "Espaço Reservado"
-   * usa este campo (`docs/core/sistema-v4.1.0.md` — tabela "Modificações" de Armazenamento:
+   * usa este campo (`docs/core/sistema-v4.1.3.md` — tabela "Modificações" de Armazenamento:
    * "Permite a seleção de um item... para que sua segunda repetição não contabilize peso"). Casa
    * por `nome` porque Operacional/Medicinal (`CATEGORIAS_EMPILHAVEIS`) nunca ganham `apelido` —
    * `nome` já é identidade única dentro dessas categorias (mesma chave que `inserirItem`, no
@@ -290,7 +290,7 @@ export interface LimiteModificacoesDto {
  * Conflito de uma modificação candidata com as já aplicadas ao item. `bloqueada`
  * é `true` se o uso simultâneo é proibido em qualquer direção (a candidata
  * bloqueia uma ativa, ou uma ativa bloqueia a candidata).
- * Fonte: docs/core/sistema-v4.1.0.md — coluna "Bloqueia".
+ * Fonte: docs/core/sistema-v4.1.3.md — coluna "Bloqueia".
  */
 export interface ConflitoModificacaoDto {
   readonly bloqueada: boolean;

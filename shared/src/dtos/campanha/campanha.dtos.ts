@@ -312,7 +312,7 @@ export interface CampanhaMembrosListarDto {
  *
  * As três condições (I-031) vêm **mesmo sem `acessoCompleto`** — é o único recorte de estado que
  * atravessa a carteirinha, pra quem joga em equipe saber quem está Machucado/Morrendo/Inconsciente
- * sem precisar de acesso à ficha inteira (`sistema-v4.1.0.md` "Condições"; combina com o Machucado
+ * sem precisar de acesso à ficha inteira (`sistema-v4.1.3.md` "Condições"; combina com o Machucado
  * automático da I-032, `resolverMachucadoPelaVida`). Vida/Energia numéricas continuam de fora.
  */
 export interface CampanhaMembroFichaResumoDto {

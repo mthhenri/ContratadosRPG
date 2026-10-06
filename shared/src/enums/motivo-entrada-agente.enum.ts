@@ -5,7 +5,7 @@
  * calculadora de novo agente (`regras/novo-agente`, m1-03), não é conteúdo de
  * JSONB `ficha.dados` — sem tabela `tipo_*` (§10.3).
  *
- * Fonte: docs/core/sistema-v4.1.0.md — "Iniciando um Novo Agente" > "Prestígio
+ * Fonte: docs/core/sistema-v4.1.3.md — "Iniciando um Novo Agente" > "Prestígio
  * Inicial" e "Aposentadoria" > "Contido ou Exterminado". Os sufixos
  * `SUCESSOR_CONVENCIONAL`/`SUCESSOR_EXPERIMENTO` refletem a humanidade do
  * sucessor (÷5 convencional / ÷3 Experimento — doc "Contido ou Exterminado").

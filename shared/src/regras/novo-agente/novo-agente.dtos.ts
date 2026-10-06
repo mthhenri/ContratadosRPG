@@ -8,7 +8,7 @@ import { PatenteDados } from '../dados';
  * `<Conceito>CalcularDto` (verbo no infinitivo); saídas são recortes computados
  * (value-objects sem verbo).
  *
- * Fonte: docs/core/sistema-v4.1.0.md — "Iniciando um Novo Agente". Em conflito
+ * Fonte: docs/core/sistema-v4.1.3.md — "Iniciando um Novo Agente". Em conflito
  * com o código, o documento vence (proibição #27).
  */
 

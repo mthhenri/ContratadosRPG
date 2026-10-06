@@ -14,7 +14,7 @@ import {
 } from './formacoes';
 
 /**
- * `aplicarFormacaoAosDerivados` conferida contra `docs/core/sistema-v4.1.0.md` — "⬦ Formação": as 5
+ * `aplicarFormacaoAosDerivados` conferida contra `docs/core/sistema-v4.1.3.md` — "⬦ Formação": as 5
  * linhas com campo em `FichaDerivadosDto` aplicam o delta; as outras 16 são ignoradas sem quebrar.
  */
 const BASE: FichaDerivadosDto = {

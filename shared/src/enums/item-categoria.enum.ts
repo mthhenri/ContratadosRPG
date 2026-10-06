@@ -1,6 +1,6 @@
 /**
  * Categorias do catálogo de equipamentos. Conteúdo de JSONB `ficha.dados` — sem
- * tabela `tipo_*` (§10.3). Fonte: docs/core/sistema-v4.1.0.md — capítulo
+ * tabela `tipo_*` (§10.3). Fonte: docs/core/sistema-v4.1.3.md — capítulo
  * "Equipamentos" (Corpo a Corpo, Explosivos, Armas de Fogo, Munições, Proteções
  * e Escudos, Exóticos, Armazenamento, Itens Operacionais, Itens Medicinais) e a
  * seção "Amplificadores".
@@ -20,17 +20,17 @@ export enum ItemCategoriaEnum {
    * Fragmento Construtor: resto mortal materializado que **é** o próprio item
    * (Arma Corpo a Corpo / Fogo / Exótica, Munição ou Proteção), definido por
    * módulo + forma base; aceita modificações como a arma base. Fonte:
-   * docs/core/sistema-v4.1.0.md — "⬡ Fragmentos → ⬦ Construtor".
+   * docs/core/sistema-v4.1.3.md — "⬡ Fragmentos → ⬦ Construtor".
    */
   FRAGMENTO_CONSTRUTOR = 'FRAGMENTO_CONSTRUTOR',
   /**
    * Fragmento Potencializador: melhoria anômala acoplada a um item ou ser,
    * definida por módulo e pela função que amplia. Fonte:
-   * docs/core/sistema-v4.1.0.md — "⬡ Fragmentos → ⬦ Potencializador".
+   * docs/core/sistema-v4.1.3.md — "⬡ Fragmentos → ⬦ Potencializador".
    */
   FRAGMENTO_POTENCIALIZADOR = 'FRAGMENTO_POTENCIALIZADOR',
   /**
-   * Categoria de sistema, sem capítulo correspondente em sistema-v4.1.0.md: bucket
+   * Categoria de sistema, sem capítulo correspondente em sistema-v4.1.3.md: bucket
    * organizacional puro, sem efeito mecânico, só disponível para item custom (nunca
    * ganha item de catálogo). Ver docs/specs/done/item-sem-categoria.spec.md.
    */

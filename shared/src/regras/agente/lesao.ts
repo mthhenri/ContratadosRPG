@@ -1,7 +1,7 @@
 import type { FichaAtributosDto, FichaLesaoDto } from '../../dtos/ficha';
 
 /**
- * Efeito mecânico das lesões nos atributos (`sistema-v4.1.0.md` — "⬡ Lesões"): cada ponto de lesão
+ * Efeito mecânico das lesões nos atributos (`sistema-v4.1.3.md` — "⬡ Lesões"): cada ponto de lesão
  * remove **1 ponto** do atributo afetado (Lesão Leve 1 / Grave 3 / Mortal 5 na origem, reduzível por
  * tratamento). O **valor base** da ficha nunca é mutado — o efetivo é **derivado**. Consequência
  * importante: a **Maestria** (ligada ao valor base, `maestria.ts`) **sobrevive** à lesão — ter 6 num

@@ -40,7 +40,7 @@ export function expirarCondicoes(
 
 /**
  * Informa se o próximo turno do combatente é **consumido** por alguma condição — o marcador
- * `perdeTurno` (`Inconsciente`, `Insolação` e afins, `sistema-v4.1.0.md` > "Condições"). Quem
+ * `perdeTurno` (`Inconsciente`, `Insolação` e afins, `sistema-v4.1.3.md` > "Condições"). Quem
  * conduz o encontro pula o turno e registra o evento.
  */
 export function combatentePerdeTurno(condicoes: readonly CondicaoCombatenteDto[]): boolean {

@@ -11,7 +11,7 @@ import {
 
 /**
  * `limiteMinimoEnergiaMaximaFragmentos`/`emAnomaliaBiologica` conferidas contra
- * `docs/core/sistema-v4.1.0.md` — "⬥ Afinidade com Fragmentos" > "⬦ Limite mínimo de Energia" (m3-67).
+ * `docs/core/sistema-v4.1.3.md` — "⬥ Afinidade com Fragmentos" > "⬦ Limite mínimo de Energia" (m3-67).
  */
 describe('limiteMinimoEnergiaMaximaFragmentos', () => {
   it('(Vigor + Destreza) × 2', () => {

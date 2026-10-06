@@ -7,7 +7,7 @@ import { AmplificadorAplicadoDto, CarrinhoItemDto } from './compras.dtos';
  * (aplicando a taxa da Loja / check-in / fora de patente) e a venda de
  * fragmentos por módulo × tipo.
  *
- * Fonte: docs/core/sistema-v4.1.0.md — "Loja", "Retornando após uma Missão" e
+ * Fonte: docs/core/sistema-v4.1.3.md — "Loja", "Retornando após uma Missão" e
  * "Venda de Fragmentos". O documento vence (proibição #27). As tabelas
  * (`MULTIPLICADOR_TAXA_VENDA`, `VENDA_FRAGMENTOS`) vivem em `venda.dados`.
  */

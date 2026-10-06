@@ -25,7 +25,7 @@ import { empilhamentosAmplificador } from './amplificador';
  * generaliza o efeito de amplificador pras demais stats (Defesa/Esquiva/Bloqueio/Deslocamento/
  * Inventário/Vida/Energia/testes de atributo).
  *
- * Fonte: docs/core/sistema-v4.1.0.md — "⬦ Resistências", "Tipos de Dano" e "⬡ Amplificadores"
+ * Fonte: docs/core/sistema-v4.1.3.md — "⬦ Resistências", "Tipos de Dano" e "⬡ Amplificadores"
  * (Resistente: "+1 de resistência a Dano Geral, a partir do 2º empilhamento -1 de Defesa a cada
  * empilhamento" — o bônus de resistência **escala com os empilhamentos** (mesma regra geral de
  * `amplificador.ts`), a penalidade cruzada em Defesa só entra do 2º empilhamento em diante; Defesa:

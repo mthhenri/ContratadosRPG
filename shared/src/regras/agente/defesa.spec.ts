@@ -5,7 +5,7 @@ import type { CarrinhoItemDto } from '../compras';
 import { calcularAjusteDadosEquipamento, calcularBonusDefesaEquipamento, calcularContraAtaque, calcularDefesa, calcularProficiencia } from './defesa';
 
 /**
- * Defesa e Proficiência conferidas contra docs/core/sistema-v4.1.0.md — "Defesa"
+ * Defesa e Proficiência conferidas contra docs/core/sistema-v4.1.3.md — "Defesa"
  * (Defesa Base = 10 + Nível), "Regras Gerais" (Esquivar soma Destreza; Bloquear
  * usa Vigor), "Progressão" (+1 de Proficiência por Nível) e "Jogando como um
  * Civil" > "Defesa e Reações" (civis não possuem defesa).
@@ -89,7 +89,7 @@ describe('calcularContraAtaque', () => {
 
 /**
  * Bug de m3-43 (item 16): mods de Proteções "Flexível"/"Resistente" não chegavam à Esquiva/
- * Bloqueio/Defesa exibidas em Combate — conferido contra docs/core/sistema-v4.1.0.md — "⬥
+ * Bloqueio/Defesa exibidas em Combate — conferido contra docs/core/sistema-v4.1.3.md — "⬥
  * Modificações" de Proteções e Escudos.
  */
 describe('calcularBonusDefesaEquipamento', () => {

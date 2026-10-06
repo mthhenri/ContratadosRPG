@@ -1,7 +1,7 @@
 /**
  * Tipo do efeito **mecânico** de uma modificação custom. Cobre os arquétipos de
  * efeito que aparecem nas tabelas de modificação de todas as categorias de
- * equipamento (docs/core/sistema-v4.1.0.md — tabelas "Modificações"): as mods do
+ * equipamento (docs/core/sistema-v4.1.3.md — tabelas "Modificações"): as mods do
  * catálogo têm efeito embutido no motor por nome; a mod custom monta o seu a
  * partir destes tipos, então uma mod inventada **funciona de verdade**.
  *

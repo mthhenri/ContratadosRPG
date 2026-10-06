@@ -29,8 +29,9 @@ import type { FichaImagemArquivoDto, FichaImagemFocoDto } from '../ficha';
 /**
  * Um slot da sequência de turnos de uma rodada. `ocorrencia` distingue os turnos múltiplos de um
  * mesmo combatente com Cadência > Singular (1 = primeiro turno, 2 = segundo, …), já
- * **intercalados** pela regra do guia — o turno extra cai no próximo slot abaixo, nunca em
- * sequência (`docs/core/guia_de_mestre-v4.0.0.md` — "Intercalação na Iniciativa").
+ * **intercalados** pela regra do guia — o turno extra cai no próximo slot disponível abaixo;
+ * sem espaço para intercalar, a sobra fica no fim da iniciativa (P-101-03;
+ * `docs/core/guia_de_mestre-v4.2.0.md` — "Intercalação na Iniciativa").
  */
 export interface OrdemTurnoDto {
   readonly combatenteId: number;
@@ -41,7 +42,7 @@ export interface OrdemTurnoDto {
  * Marcador de condição sobre um combatente, com duração em rodadas (mockup: `Sangramento ·
  * 2 rodadas`). `rodadasRestantes: null` = permanente até remoção manual; `perdeTurno` marca a
  * condição que **consome** o próximo turno do combatente (ex.: `Inconsciente`, `Insolação` —
- * `sistema-v4.1.0.md`, "Condições").
+ * `sistema-v4.1.3.md`, "Condições").
  *
  * Distinto das três condições da ficha (`morrendo`/`machucado`/`inconsciente`, em
  * `FichaEstadoDto`), que são **flags alternadas manualmente** por quem joga — o motor nunca as

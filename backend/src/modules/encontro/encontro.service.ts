@@ -995,7 +995,7 @@ export class EncontroService {
   /**
    * Cadência do combatente com ficha. Só o documento de **criatura** tem `cadencia`
    * (`FichaCriaturaDadosDto`) — agente e NPC são sempre `SINGULAR`, porque Cadência é conceito de
-   * criatura (`guia_de_mestre-v4.0.0.md`). Por isso a origem é lida do próprio documento, e não de
+   * criatura (`guia_de_mestre-v4.2.0.md`). Por isso a origem é lida do próprio documento, e não de
    * um `tipoFicha`: `FichaRecuperadaDto` não carrega o tipo, e inventar uma segunda consulta só
    * para descobri-lo seria pior que perguntar ao dado que já está em mãos.
    */

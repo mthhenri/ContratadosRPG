@@ -4,7 +4,7 @@ import type { MunicaoContagemDto } from './compras.dtos';
 /**
  * Catálogo de itens da loja (`CATALOGO_ITENS` do site antigo), migrado de
  * `contratados-calculadora/src/script.js` e conferido contra
- * docs/core/sistema-v4.1.0.md — capítulo "Equipamentos" (tabelas de item por
+ * docs/core/sistema-v4.1.3.md — capítulo "Equipamentos" (tabelas de item por
  * categoria). Em conflito, o documento vence (proibição #27). Os amplificadores
  * (categoria `AMPLIFICADOR`) vivem em `compras.dados` (`AMPLIFICADORES`).
  */
@@ -16,7 +16,7 @@ import type { MunicaoContagemDto } from './compras.dtos';
  * modificação "Faz Parte", passam a aceitar modificações de outra categoria.
  * `ehEscudo` distingue os escudos dentro da categoria `PROTECOES` (que também
  * abriga coletes/armaduras): só escudos aceitam as modificações "Apenas para
- * escudos" (Combativo, Arremesso). Fonte: docs/core/sistema-v4.1.0.md — Proteções.
+ * escudos" (Combativo, Arremesso). Fonte: docs/core/sistema-v4.1.3.md — Proteções.
  */
 export interface ItemCatalogo {
   readonly nome: string;

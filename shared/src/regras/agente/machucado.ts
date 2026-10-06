@@ -8,7 +8,7 @@ export interface MachucadoPelaVidaDto {
 }
 
 /**
- * Resolve a condição **Machucado** a partir da Vida (`sistema-v4.1.0.md` — "Condições": tirou
+ * Resolve a condição **Machucado** a partir da Vida (`sistema-v4.1.3.md` — "Condições": tirou
  * metade da Vida; "só é removido ao recuperar 100% da Vida"). Tem histerese: liga com Vida ≤ 50%
  * da máxima, mantém o valor atual entre 50% e 99% e só desliga em 100%. Ficha sem `vidaMaxima`
  * mantém o valor recebido.

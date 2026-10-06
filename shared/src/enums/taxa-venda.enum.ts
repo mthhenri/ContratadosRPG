@@ -1,6 +1,6 @@
 /**
  * Taxa aplicada na venda de um item à Fundação. Conteúdo de jogo — sem tabela
- * `tipo_*` (§10.3). Fonte: docs/core/sistema-v4.1.0.md — "Loja" (venda por
+ * `tipo_*` (§10.3). Fonte: docs/core/sistema-v4.1.3.md — "Loja" (venda por
  * metade), "Retornando após uma Missão" (entrega no check-in = 75%; item fora
  * de patente não entregue = 25%).
  */

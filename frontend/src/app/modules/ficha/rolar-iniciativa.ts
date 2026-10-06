@@ -23,7 +23,7 @@ import { executarPassoPreset, NOME_PRESET_INICIATIVA, type PassoExecutadoDto } f
 
 /**
  * Atributo **efetivo** do agente (base − lesões, `calcularAtributosEfetivos`) — a Iniciativa rola
- * pelo atributo de Destreza (`sistema-v4.1.0.md`: "definida pelo seu atributo de Destreza"), não
+ * pelo atributo de Destreza (`sistema-v4.1.3.md`: "definida pelo seu atributo de Destreza"), não
  * pelo atributo ajustado pra testes: `dadosTeste` (ajuste manual) e a penalidade de equipamento
  * (Armadura Pesada, −1 dado em Destreza) só valem pra testes de atributo, e não reduzem a Destreza
  * em si — só lesão reduz o atributo, e só o dado extra de Iniciativa (abaixo) ou uma condição que

@@ -2,7 +2,7 @@ import { TIPOS_DANO_BLOQUEAVEIS, TipoDanoEnum } from '../../enums';
 
 /**
  * Regra pura do "receber dano" (m7-17) — o tomador de dano facilitado do mestre e do jogador.
- * Fonte: docs/core/sistema-v4.1.0.md — "⬥ Tipos de Dano" e "⬦ Resistências". A regra é
+ * Fonte: docs/core/sistema-v4.1.3.md — "⬥ Tipos de Dano" e "⬦ Resistências". A regra é
  * **assimétrica** entre Geral e os quatro tipos bloqueáveis:
  *
  * - **Dano Geral** é irredutível — entra inteiro no total, sem resistência própria.

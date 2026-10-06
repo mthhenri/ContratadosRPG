@@ -86,7 +86,7 @@ type ChaveAtributo = keyof FichaAtributosDto;
 
 /** Rótulo dos dez atributos (mesma grafia do assistente de criação, `criar-criatura.page.ts`). Os
  * cinco primeiros são os "Atributos Físicos" e os cinco últimos os "Atributos Mentais"
- * (`sistema-v4.1.0.md`) — a ordem já nasce agrupada, então a grade da coluna de Atributos só
+ * (`sistema-v4.1.3.md`) — a ordem já nasce agrupada, então a grade da coluna de Atributos só
  * fatia o array em dois, sem tabela de grupo nova. As abreviações são as mesmas três letras dos
  * boxes de `FichaVisualizacao` (ficha de jogador) — o card do mockup mostra só a sigla, com o nome
  * inteiro na dica. */

@@ -66,7 +66,7 @@ describe('intercalarCadencia', () => {
   });
 
   it('reproduz o exemplo canônico do guia: Criatura Dupla [18], Agente A [17], Agente B [3]', () => {
-    // docs/core/guia_de_mestre-v4.0.0.md — "Intercalação na Iniciativa":
+    // docs/core/guia_de_mestre-v4.2.0.md — "Intercalação na Iniciativa":
     // "A ordem fica: Criatura [18] → Agente A [17] → Criatura [segundo turno] → Agente B [3]."
     const criatura = combatente(1, 18, CadenciaEnum.DUPLA);
     const agenteA = combatente(2, 17);

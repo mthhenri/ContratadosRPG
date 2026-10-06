@@ -10,7 +10,7 @@ import { dadosDeIniciativaDaFicha, rolarIniciativaDaFicha } from './rolar-inicia
 const PRESET_INICIATIVA: FichaRolagemDto = { nome: 'Iniciativa', formula: 'DESd6' };
 
 /**
- * Iniciativa rola pelo **atributo** de Destreza (`sistema-v4.1.0.md`: "definida pelo seu atributo
+ * Iniciativa rola pelo **atributo** de Destreza (`sistema-v4.1.3.md`: "definida pelo seu atributo
  * de Destreza"), não pelo atributo ajustado pra testes: só lesão (que reduz o atributo em si) e o
  * dado extra de Iniciativa (que reduz/soma na Iniciativa especificamente) contam — `dadosTeste`
  * (ajuste manual de teste) e a penalidade de equipamento (Armadura Pesada) não.

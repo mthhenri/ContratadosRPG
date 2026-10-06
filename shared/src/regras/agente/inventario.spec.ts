@@ -18,7 +18,7 @@ const mochileiroMelhorado: FichaHabilidadeDto = {
 };
 
 /**
- * Inventário base conferido contra docs/core/sistema-v4.1.0.md — "Inventário"
+ * Inventário base conferido contra docs/core/sistema-v4.1.3.md — "Inventário"
  * (Força × 5; Força 0 → 3; Força negativa → 0) e "Jogando como um Civil"
  * (Inventário = Força × 3).
  */

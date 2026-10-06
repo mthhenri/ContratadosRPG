@@ -3,7 +3,7 @@ import { FragmentoModuloEnum, FragmentoTipoEnum, TaxaVendaEnum } from '../../enu
 /**
  * Dados tipados da venda (m1-20): multiplicadores de taxa de venda de item e a
  * tabela de venda de fragmentos por módulo × tipo. Conferidos contra
- * docs/core/sistema-v4.1.0.md — "Loja" (venda por metade), "Retornando após uma
+ * docs/core/sistema-v4.1.3.md — "Loja" (venda por metade), "Retornando após uma
  * Missão" (entrega no check-in = 75%; item fora de patente não entregue = 25%) e
  * "Venda de Fragmentos" (tabela por módulo × tipo). Em conflito, o documento
  * vence (proibição #27).

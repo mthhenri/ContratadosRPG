@@ -691,7 +691,7 @@ describe('FichaCampanhaCard', () => {
     });
   });
 
-  // Condições (m2-16b): Morrendo/Machucado/Inconsciente — sistema-v4.1.0.md "Condições".
+  // Condições (m2-16b): Morrendo/Machucado/Inconsciente — sistema-v4.1.3.md "Condições".
   describe('condições', () => {
     it('mostra as três, ativas conforme o estado e inativas quando ausentes do documento', () => {
       const { raiz } = montar({

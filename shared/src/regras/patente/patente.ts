@@ -12,7 +12,7 @@ import { PatenteConsultaDto, PatenteConsultarDto, PatenteObterDto } from './pate
  * site antigo (`PATENTES.find(...) || PATENTES[length-1]`), preservado para
  * paridade; não é um caminho esperado.
  *
- * Fonte: docs/core/sistema-v4.1.0.md — "Prestígio e Patentes".
+ * Fonte: docs/core/sistema-v4.1.3.md — "Prestígio e Patentes".
  */
 export function obterPatente(dto: PatenteObterDto): PatenteDados {
   const patenteEncontrada = PATENTES.find(

@@ -12,7 +12,7 @@ import {
 } from './descanso';
 
 /**
- * Regras de descanso conferidas contra docs/core/sistema-v4.1.0.md — "Descanso":
+ * Regras de descanso conferidas contra docs/core/sistema-v4.1.3.md — "Descanso":
  * fórmula `ATRIBUTO dados de descanso + (Nível × 2)`, modificadores de qualidade
  * (Insalubre −1 / Adequado 0 / Confortável +1), refeição (+1), Descanso Curto
  * sem recuperação de Vida e interrupção (metade do valor, arredondando para

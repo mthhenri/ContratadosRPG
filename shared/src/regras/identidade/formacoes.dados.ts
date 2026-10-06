@@ -2,7 +2,7 @@ import { FormacaoBonusEnum, FormacaoParametroEnum } from '../../enums';
 import type { FormacaoDefinicaoDto } from './identidade.dtos';
 
 /**
- * As 21 linhas da tabela de bônus de **Formação** (`docs/core/sistema-v4.1.0.md` — "⬦ Formação"),
+ * As 21 linhas da tabela de bônus de **Formação** (`docs/core/sistema-v4.1.3.md` — "⬦ Formação"),
  * transcritas 1:1. `codigo`/`grupo`/`rotulo` conferidos contra o documento; `parametro` só nas
  * linhas que exigem escolha do jogador (categoria de arma, tipo de dano, atributo, condição,
  * esquiva/bloqueio).

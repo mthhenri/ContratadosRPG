@@ -8,7 +8,7 @@ import { DtAtributoCalcularDto } from './dt.dtos';
  * Usada sempre que o padrão "DT [ATRIBUTO]" aparecer e o causador for o próprio
  * agente (ex.: Sangramento testa Vigor contra a DT de Força de quem aplicou).
  *
- * Fonte: docs/core/sistema-v4.1.0.md — "DTs de Atributos". Sem divergências vs
+ * Fonte: docs/core/sistema-v4.1.3.md — "DTs de Atributos". Sem divergências vs
  * `contratados-calculadora/src/script.js` (`calcDT`).
  */
 export function calcularDtAtributo(dto: DtAtributoCalcularDto): number {

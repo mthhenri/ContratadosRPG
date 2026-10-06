@@ -331,7 +331,7 @@ export class FichaService {
   /**
    * Média de Nível/Prestígio dos agentes ativos de uma campanha — agregado calculado no banco
    * (`FichaRepository.calcularMediasEsquadrao`), usado pelo guia de criação para "Iniciando um
-   * Novo Agente" (`docs/core/sistema-v4.1.0.md`). Só exige que o autor seja membro da campanha,
+   * Novo Agente" (`docs/core/sistema-v4.1.3.md`). Só exige que o autor seja membro da campanha,
    * a mesma checagem de `listarFichas` — mas **não** ramifica por papel: diferente de
    * `listarFichas`, o agregado não expõe nenhuma ficha individual, então a matriz de visibilidade
    * por ficha (§14) não se aplica aqui, e um jogador comum consulta a mesma média que o mestre.
@@ -428,7 +428,7 @@ export class FichaService {
 
   /**
    * `true` quando o peso do inventário principal excede o Inventário Máximo efetivo (aviso, não
-   * trava — `sistema-v4.1.0.md`). Soma o ajuste de amplificador (`ajusteInventarioAmplificadores`)
+   * trava — `sistema-v4.1.3.md`). Soma o ajuste de amplificador (`ajusteInventarioAmplificadores`)
    * ao snapshot bruto de `inventarioMaximo` antes de chamar `calcularResumoCompras` — mesmo passo
    * que a aba Inventário já faz no cliente (`inventarioMaximoEfetivo`) antes de montar o resumo de
    * compras. `undefined` numa ficha sem `derivados.inventarioMaximo` salvo (retrocompat) — sem o
@@ -863,7 +863,7 @@ export class FichaService {
 
   /**
    * ── Ficha de criatura (M4, `m4-03`) ──────────────────────────────────────────────────────
-   * Ferramenta do mestre para ameaças (`docs/core/guia_de_mestre-v4.0.0.md` — "Guia de Criação
+   * Ferramenta do mestre para ameaças (`docs/core/guia_de_mestre-v4.2.0.md` — "Guia de Criação
    * de Ameaças"). Só o **mestre** cria (§14 — "criar criatura/NPC": mestre irrestrito, demais
    * nunca; sem delegação de dono, diferente de jogador); dono é sempre o próprio mestre — dentro
    * de uma campanha (mestre daquela campanha) ou solto no acervo (m4-11: mestre de **alguma**
@@ -1820,7 +1820,7 @@ export class FichaService {
    * `saberDeCampo` preenchidos e exatamente 2 Formações, cada bônus de Formação existente em
    * `FORMACOES` com `parametro` presente quando a definição exige, `texto` sempre obrigatório
    * (inclusive no bônus custom `bonus: null`) e Especialidade com `gatilho`/`efeito` preenchidos
-   * (`efeito` é texto livre — o Mestre arbitra o teto de poder, `sistema-v4.1.0.md` "⬦
+   * (`efeito` é texto livre — o Mestre arbitra o teto de poder, `sistema-v4.1.3.md` "⬦
    * Especialidade" não lista um catálogo fechado como a Formação lista). Reusa o catálogo de
    * `shared/regras/identidade` (m3-23) — nenhuma regra de conteúdo é reimplementada aqui
    * (proibições #26/#28). Ficha sem `identidade` (anterior à m3-23) não valida nada.
@@ -1897,7 +1897,7 @@ export class FichaService {
 
   /**
    * Impõe a imutabilidade de Personalidade e Origem já definidas, só para o **dono** da ficha
-   * (m3-24 — "trava para o dono, o mestre passa"): `docs/core/sistema-v4.1.0.md` — "Assim que
+   * (m3-24 — "trava para o dono, o mestre passa"): `docs/core/sistema-v4.1.3.md` — "Assim que
    * receber a descrição e efeito de sua personalidade, ela não poderá mais ser mudada" e "Uma vez
    * definida, a Origem não pode ser alterada." O mestre é quem constrói as duas (erro de digitação
    * precisa de conserto) e o sistema não versiona ficha (SYSTEM.SPEC) — por isso só o dono é

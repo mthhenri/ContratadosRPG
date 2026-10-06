@@ -3,7 +3,7 @@ import { ClasseEnum } from '../../enums';
 import { calcularLimiteHabilidadesPorTurno } from './habilidades';
 
 /**
- * Limite de Habilidades por Turno conferido contra docs/core/sistema-v4.1.0.md —
+ * Limite de Habilidades por Turno conferido contra docs/core/sistema-v4.1.3.md —
  * "Habilidades" (limite inicial de 4), tabela de "Progressão" (+1 por Turno nos
  * Níveis 2/4/6/8/12/14/16/18 e +2 nos Níveis 10 e 20) e "Jogando como um Civil"
  * (limite fixo de 3).

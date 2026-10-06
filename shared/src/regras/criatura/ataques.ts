@@ -3,7 +3,7 @@ import type { DanoReferenciaObterDto, DanoReferenciaTurnoObterDto } from './cria
 
 /**
  * Tabela de dano de referência por faixa de VD e custo de ação
- * (docs/core/guia_de_mestre-v4.0.0.md — "Guia de Criação de Ameaças" > "Ações e Habilidades" >
+ * (docs/core/guia_de_mestre-v4.2.0.md — "Guia de Criação de Ameaças" > "Ações e Habilidades" >
  * "Ataques" > "Dano e Escala") — é referência, nunca teto; o Mestre pode ajustar em qualquer
  * direção, desde que preserve a distância entre colunas e nunca zere o fixo (regras
  * qualitativas, não verificáveis por este motor a partir de uma string de dano livre).

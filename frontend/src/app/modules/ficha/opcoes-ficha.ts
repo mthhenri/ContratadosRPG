@@ -76,7 +76,7 @@ export function ehClasseBase(classe: ClasseEnum): boolean {
 /**
  * Opção da segunda etapa do seletor de Classe em dois passos (P-019): um arquétipo regular, ou a
  * subclasse de Experimento da base — as duas formas de completar o perfil, nunca as duas ao mesmo
- * tempo (`sistema-v4.1.0.md` — "⬡ Subclasse": "abdicar de ganhar o seu arquétipo tornando a sua
+ * tempo (`sistema-v4.1.3.md` — "⬡ Subclasse": "abdicar de ganhar o seu arquétipo tornando a sua
  * subclasse o seu arquétipo").
  */
 export interface OpcaoPerfilClasse {
@@ -95,7 +95,7 @@ export interface GrupoPerfilClasse {
  * Classes-base do **primeiro** select do seletor de Classe em dois passos (P-019): Combatente,
  * Especialista, Suporte ou Civil — a família da classe, sem misturar arquétipo/subclasse ainda (isso
  * é a segunda etapa, `gruposPerfilDaClasseBase`). Reflete o próprio fluxo descrito pelo doc
- * (`sistema-v4.1.0.md` — "⬡ Subclasse"): "Após escolher a sua classe você pode escolher tomar uma
+ * (`sistema-v4.1.3.md` — "⬡ Subclasse"): "Após escolher a sua classe você pode escolher tomar uma
  * subclasse e abdicar de ganhar o seu arquétipo".
  */
 export const GRUPOS_CLASSE_BASE: readonly GrupoClasse[] = [

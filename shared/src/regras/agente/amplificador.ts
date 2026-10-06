@@ -2,7 +2,7 @@ import type { FichaAtributosDto } from '../../dtos/ficha';
 import { AMPLIFICADORES, PENALIDADE_VONTADE_POR_EMPILHAMENTO, type AmplificadorAplicadoDto } from '../compras';
 
 /**
- * Efeito mecânico dos Amplificadores (`docs/core/sistema-v4.1.0.md` — "⬡ Amplificadores"). Um
+ * Efeito mecânico dos Amplificadores (`docs/core/sistema-v4.1.3.md` — "⬡ Amplificadores"). Um
  * amplificador é "muito similar à modificação" (doc) — assim como uma modificação de item, seu
  * **bônus principal escala com as compras** (`valorPorEmpilhamento × compras`, mesma regra de
  * `Reforçada`/`Blindada` em `compras.ts`, mesmo quando a tabela não escreve "por empilhamento"

@@ -85,7 +85,7 @@ export interface BonusDefesaEquipamentoDto {
  * do valor manual/calculado de cada stat, nunca escreve de volta no `derivados` (mesma filosofia
  * "manual + equipamento" de `resistencia.ts`/`amplificador.ts`).
  *
- * Fonte: docs/core/sistema-v4.1.0.md — "⬥ Modificações" de Proteções e Escudos (Flexível/Resistente).
+ * Fonte: docs/core/sistema-v4.1.3.md — "⬥ Modificações" de Proteções e Escudos (Flexível/Resistente).
  */
 export function calcularBonusDefesaEquipamento(itens: readonly CarrinhoItemDto[]): BonusDefesaEquipamentoDto {
   let esquiva = 0;
@@ -111,7 +111,7 @@ export function calcularBonusDefesaEquipamento(itens: readonly CarrinhoItemDto[]
  * `calcularBonusDefesaEquipamento`/`resistencia.ts`/`amplificador.ts`) — quem consome mescla este
  * resultado com `dadosTeste` antes de chamar `calcularAtributosParaDados`.
  *
- * Fonte: docs/core/sistema-v4.1.0.md — "Proteções e Escudos" (coluna "Penalidade").
+ * Fonte: docs/core/sistema-v4.1.3.md — "Proteções e Escudos" (coluna "Penalidade").
  */
 export function calcularAjusteDadosEquipamento(
   itens: readonly CarrinhoItemDto[],

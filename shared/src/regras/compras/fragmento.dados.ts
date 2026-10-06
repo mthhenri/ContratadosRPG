@@ -4,7 +4,7 @@ import { FragmentoModuloEnum } from '../../enums';
  * Dados tipados de Fragmentos (m3-35/m3-42/m3-63/m3-64/m3-65) — custo em Energia por módulo, os
  * cardápios de bônus do Potencializador "em um item" (5 opções, incluindo a de "N× valor máximo do
  * maior dado", `m3-63`) e "Consumido" (`m3-64`), a tabela de bônus fixos do Construtor (`m3-65`), a
- * Afinidade e o Preço de Sanidade do Consumo. Conferidos contra `docs/core/sistema-v4.1.0.md` —
+ * Afinidade e o Preço de Sanidade do Consumo. Conferidos contra `docs/core/sistema-v4.1.3.md` —
  * "⬡ Fragmentos" (⬥ Módulos, ⬥ Acoplamento, ⬥ Função > Potencializador > Consumo de Fragmentos,
  * ⬦ Construtor, ⬥ Afinidade com Fragmentos). Em conflito, o documento vence (proibição #27).
  *

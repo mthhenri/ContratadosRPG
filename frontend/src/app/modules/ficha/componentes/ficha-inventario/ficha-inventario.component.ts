@@ -927,7 +927,7 @@ export class FichaInventario {
     ignoraLimiteProprio: new FormControl(false, { nonNullable: true }),
     /**
      * Peso próprio da mod, por empilhamento — vazio (`null`) usa o padrão de 0,2 do sistema
-     * (`docs/core/sistema-v4.1.0.md:958`, "salvo indicação contrária em sua descrição", m3-76).
+     * (`docs/core/sistema-v4.1.3.md:958`, "salvo indicação contrária em sua descrição", m3-76).
      */
     pesoCustom: new FormControl<number | null>(null, { validators: [Validators.min(0)] }),
     descricao: new FormControl('', { nonNullable: true }),

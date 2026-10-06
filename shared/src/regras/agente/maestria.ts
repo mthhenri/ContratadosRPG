@@ -1,4 +1,4 @@
-// Regra de Maestria de atributo (sistema-v4.1.0.md — "⬥ Maestrias"), m3-10. Funções puras,
+// Regra de Maestria de atributo (sistema-v4.1.3.md — "⬥ Maestrias"), m3-10. Funções puras,
 // dto-free: operam sobre pontos/mapa de atributos, para servir tanto ao front (habilitar o toggle)
 // quanto ao back (rejeitar maestria inválida) sem acoplar `regras` aos DTOs.
 

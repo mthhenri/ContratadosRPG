@@ -6,7 +6,7 @@ import { ValorFragmentoObterDto, ValorVendaCarrinhoCalcularDto, VendaFragmentosC
  * Regras de venda da aba compras (m1-20) — funções puras, zero dependência
  * externa. Não recalculam custo de item nem valor de fragmento: aplicam a taxa
  * sobre o `gasto` já computado por `calcularTotaisCarrinho` (m1-05) e consultam
- * a tabela `VENDA_FRAGMENTOS`. Conferidas contra docs/core/sistema-v4.1.0.md —
+ * a tabela `VENDA_FRAGMENTOS`. Conferidas contra docs/core/sistema-v4.1.3.md —
  * "Loja", "Retornando após uma Missão" e "Venda de Fragmentos". Em conflito, o
  * documento vence (proibição #27).
  */

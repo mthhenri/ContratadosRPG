@@ -18,7 +18,7 @@ import {
 } from './habilidades-catalogo.dados';
 
 /**
- * Prova as regras de visibilidade do seletor de habilidades do sistema (`sistema-v4.1.0.md` —
+ * Prova as regras de visibilidade do seletor de habilidades do sistema (`sistema-v4.1.3.md` —
  * "Habilidades"): Gerais sempre (com as melhoradas do arquétipo da ficha substituindo a comum);
  * Classe entre as três classes-base; Subclasse só existe pra Experimento (aba separada de
  * Arquétipo — P-014 follow-up); Arquétipo só os da classe-base da ficha, sem nenhuma Geral
@@ -200,7 +200,7 @@ describe('catálogo de habilidades → grupos de filtro', () => {
 });
 
 /**
- * Prova a Habilidade Inicial que o agente já ganha do arquétipo/subclasse (`sistema-v4.1.0.md` —
+ * Prova a Habilidade Inicial que o agente já ganha do arquétipo/subclasse (`sistema-v4.1.3.md` —
  * "Habilidade Inicial de Arquétipo"): é sempre o primeiro item da lista, com categoria/origem.
  */
 describe('habilidadesIniciais', () => {

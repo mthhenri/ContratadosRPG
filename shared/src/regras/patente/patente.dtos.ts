@@ -6,7 +6,7 @@ import { PatenteDados } from '../dados';
  * §6.6): funções puras recebem sempre um DTO tipado. Entradas seguem o verbo no
  * infinitivo; a saída é um recorte computado (value-object sem verbo).
  *
- * Fonte: docs/core/sistema-v4.1.0.md — "Prestígio e Patentes". A tabela em si
+ * Fonte: docs/core/sistema-v4.1.3.md — "Prestígio e Patentes". A tabela em si
  * (`PATENTES`) vive em `regras/dados` (m1-01).
  */
 

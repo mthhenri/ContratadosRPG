@@ -4,7 +4,7 @@
  * a função pura recebe um DTO tipado, nunca primitivos soltos. Entrada segue
  * `<Conceito>CalcularDto` (verbo no infinitivo).
  *
- * Fonte da fórmula: docs/core/sistema-v4.1.0.md — "DTs de Atributos". Em
+ * Fonte da fórmula: docs/core/sistema-v4.1.3.md — "DTs de Atributos". Em
  * conflito com o código, o documento vence (proibição #27).
  */
 

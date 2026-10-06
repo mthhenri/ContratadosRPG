@@ -20,7 +20,7 @@ import type { MontadorModo } from './montador-modelo';
  * teste, `1d100`) volta como fórmula "avançada" (`podeMontarPecas`), nunca é reescrito.
  */
 
-/** Dados dos controles — os do sistema, sem `d100` (`docs/core/sistema-v4.1.0.md` — "Dados"). */
+/** Dados dos controles — os do sistema, sem `d100` (`docs/core/sistema-v4.1.3.md` — "Dados"). */
 export const FACES_MONTADOR: readonly number[] = [3, 4, 6, 8, 10, 12, 20];
 
 /** Margem de crítico que os controles oferecem (`cm1`…`cm3`; 0 = sem margem). */

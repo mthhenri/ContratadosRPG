@@ -3,7 +3,7 @@
  * modificações de item (`compras`, `ModificacaoEfeitoDto`), então adotar o enum **não migra nenhum
  * dado**. Conteúdo de jogo dentro do `ficha.dados` JSONB — sem tabela `tipo_*` (§10.3).
  *
- * Fonte: docs/core/sistema-v4.1.0.md — "Tipos de Dano". **Composto** (junção de dois tipos
+ * Fonte: docs/core/sistema-v4.1.3.md — "Tipos de Dano". **Composto** (junção de dois tipos
  * bloqueáveis, dividido 50/50 com o resto para o primeiro) e o alcance de **Geral** (irredutível)
  * são regras de agrupamento, não membros do enum.
  */

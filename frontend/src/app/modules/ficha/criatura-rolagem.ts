@@ -20,7 +20,7 @@ export interface DadosParaTesteAtributo {
  * Rola um teste de Atributo da criatura: `<chave>d20kh1±<modificador>` (sem `+PROF` — criatura
  * não tem Proficiência). O Modificador **nunca** entra na contagem de dados do pool — ele é um
  * bônus plano somado ao resultado do teste, igual a "+N no resultado" (distinto de "+1 dado",
- * as duas categorias de bônus do sistema, `sistema-v4.1.0.md` — "Regras Gerais"). A contagem de
+ * as duas categorias de bônus do sistema, `sistema-v4.1.3.md` — "Regras Gerais"). A contagem de
  * dados usa só o Atributo Final (`dados.atributos[chave]`, nunca mutado nem substituído).
  */
 export function rolarTesteAtributoCriatura(

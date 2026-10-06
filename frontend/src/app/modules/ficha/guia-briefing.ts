@@ -3,7 +3,7 @@ import { ArquetipoEnum, ClasseEnum } from '@contratados-rpg/shared/enums';
 /**
  * Texto-guia (descrição narrativa curta) de cada classe/registro e arquétipo, usado no passo
  * 02 // CLASSE do guia de criação (m3-57) para apresentar o perfil antes da escolha ser
- * confirmada. Citações literais de `docs/core/sistema-v4.1.0.md` — "Classes e Arquétipos" e
+ * confirmada. Citações literais de `docs/core/sistema-v4.1.3.md` — "Classes e Arquétipos" e
  * "Jogando como um Civil" — sem paráfrase de regra; puro texto de apresentação, não é regra de
  * jogo (o documento continua sendo a fonte de verdade das mecânicas).
  */

@@ -9,7 +9,7 @@ const NOME_TANQUE = 'Tanque';
  *   Vida    = (vidaBase    + Vigor    × vidaPorVigor)    + Nível × (vidaPorNivel    + Vigor    × vidaPorNivelVigor)
  *   Energia = (energiaBase + Destreza × energiaPorDestreza) + Nível × (energiaPorNivel + Destreza × energiaPorNivelDestreza)
  *
- * Fonte: docs/core/sistema-v4.1.0.md — blocos "⬦ Saúde"/"⬦ Progressão por Nível"
+ * Fonte: docs/core/sistema-v4.1.3.md — blocos "⬦ Saúde"/"⬦ Progressão por Nível"
  * de cada classe e "Jogando como um Civil" > "Saúde". Sem divergências vs
  * `contratados-calculadora/src/script.js`.
  */
@@ -94,7 +94,7 @@ export function calcularEnergia(dto: EnergiaCalcularDto): number {
  * Limite de Energia: pontos que a Energia pode ser negativada antes de cada
  * penalidade. Destreza × 2 para agentes, apenas Destreza para Civis.
  *
- * Fonte: docs/core/sistema-v4.1.0.md — "Energia" > "Limites de Energia" e
+ * Fonte: docs/core/sistema-v4.1.3.md — "Energia" > "Limites de Energia" e
  * "Jogando como um Civil" > "Informações Adicionais". Diverge de
  * `contratados-calculadora/src/script.js`, que usava `(Vigor + Destreza) × 2`
  * para agentes — o documento vence (proibição #27).

@@ -8,7 +8,7 @@ import type { FormacaoDefinicaoDto, FormacaoGrupo } from '@contratados-rpg/share
  * do catálogo já existente — nenhuma regra de jogo aqui (proibições #26/#27).
  */
 
-/** Ordem de exibição dos grupos no `<select>` (`docs/core/sistema-v4.1.0.md` — "⬦ Formação"). */
+/** Ordem de exibição dos grupos no `<select>` (`docs/core/sistema-v4.1.3.md` — "⬦ Formação"). */
 const ORDEM_GRUPOS_FORMACAO: readonly FormacaoGrupo[] = [
   'Combate',
   'Movimento',

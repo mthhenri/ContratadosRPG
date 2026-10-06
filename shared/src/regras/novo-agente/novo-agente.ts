@@ -25,7 +25,7 @@ import {
  * - `recebeAmaldicoadoPeloPassado` — sucessores de Contenção ou Extermínio
  *   recebem a condição permanente Amaldiçoado pelo Passado.
  *
- * Fonte: docs/core/sistema-v4.1.0.md — "Prestígio Inicial" (÷7 morte/início do
+ * Fonte: docs/core/sistema-v4.1.3.md — "Prestígio Inicial" (÷7 morte/início do
  * zero; ÷10 aposentadoria; ÷5 Experimento) e "Aposentadoria" > "Contido ou
  * Exterminado" (÷5 sucessor convencional; ÷3 sucessor Experimento; Amaldiçoado
  * pelo Passado em ambos). Divisores idênticos a `calcNovoAgente` do site antigo.
@@ -76,7 +76,7 @@ const MOTIVOS_ENTRADA: Readonly<Record<MotivoEntradaAgenteEnum, MotivoEntradaDad
  * `Math.round` arredonda 0,5 para cima (em direção a +∞), o que equivale à regra
  * do documento para médias não-negativas.
  *
- * Fonte: docs/core/sistema-v4.1.0.md — "Nível Inicial". Ex.: média 5,0 → 4.
+ * Fonte: docs/core/sistema-v4.1.3.md — "Nível Inicial". Ex.: média 5,0 → 4.
  */
 export function calcularNivelInicial(dto: NivelInicialCalcularDto): number {
   return Math.max(0, Math.round(dto.mediaNivel) - 1);
@@ -94,7 +94,7 @@ export function calcularNivelInicial(dto: NivelInicialCalcularDto): number {
  * Contido ou Exterminado), quando o piso é o mínimo da patente imediatamente
  * inferior.
  *
- * Fonte: docs/core/sistema-v4.1.0.md — "Prestígio Inicial" e "Contido ou
+ * Fonte: docs/core/sistema-v4.1.3.md — "Prestígio Inicial" e "Contido ou
  * Exterminado". Espelha `calcNovoAgente` do site antigo.
  */
 export function calcularPrestigioInicial(dto: PrestigioInicialCalcularDto): PrestigioInicialDto {
@@ -126,7 +126,7 @@ export function calcularPrestigioInicial(dto: PrestigioInicialCalcularDto): Pres
  * Patente)`. O multiplicador começa em 1× na patente Agente e sobe 0,5× por
  * patente. Não soma o dinheiro inicial padrão (1000 + 4D4 × 250), aleatório.
  *
- * Fonte: docs/core/sistema-v4.1.0.md — "Bônus Monetário". Ex.: Prestígio 24 na
+ * Fonte: docs/core/sistema-v4.1.3.md — "Bônus Monetário". Ex.: Prestígio 24 na
  * Força Tarefa (3×) → 24 × (500 × 3) = 36.000. Espelha `calcBonus` do site antigo.
  */
 export function calcularBonusMonetario(dto: BonusMonetarioCalcularDto): BonusMonetarioDto {
@@ -141,7 +141,7 @@ export function calcularBonusMonetario(dto: BonusMonetarioCalcularDto): BonusMon
  * Dinheiro inicial a partir de uma soma de 4D4 **já rolada** — função pura, sem aleatoriedade
  * (mesma separação de `calcularResultadoDescanso`/`rolarDados`).
  *
- * Fonte: docs/core/sistema-v4.1.0.md — "Iniciando um Novo Agente" > "Dinheiro Inicial".
+ * Fonte: docs/core/sistema-v4.1.3.md — "Iniciando um Novo Agente" > "Dinheiro Inicial".
  */
 export function calcularDinheiroInicial(dto: DinheiroInicialCalcularDto): DinheiroInicialDto {
   return { dinheiro: 1000 + dto.somaDados * 250, somaDados: dto.somaDados };
@@ -162,7 +162,7 @@ export function rolarDinheiroInicial(): DinheiroInicialDto {
  * detalhamento e piso de patente), patente resultante, bônus monetário e se
  * recebe a condição Amaldiçoado pelo Passado.
  *
- * Fonte: docs/core/sistema-v4.1.0.md — "Iniciando um Novo Agente".
+ * Fonte: docs/core/sistema-v4.1.3.md — "Iniciando um Novo Agente".
  */
 export function calcularNovoAgente(dto: NovoAgenteCalcularDto): NovoAgenteDto {
   const prestigio = calcularPrestigioInicial({ motivo: dto.motivo, mediaPrestigio: dto.mediaPrestigio });

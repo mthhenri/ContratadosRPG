@@ -35,7 +35,7 @@ export function incrementarDanoFurtivo(expressao: string, incrementoMarcos: numb
 /**
  * Soma `incrementoDados` só ao **número de dados** de uma expressão `Nd6+M` já existente,
  * preservando o fixo intacto — para bônus que concedem **apenas dado** (ex.: Formação "+1 dado de
- * dano Furtivo", `sistema-v4.1.0.md` "⬦ Formação", m3-23), diferente de `incrementarDanoFurtivo`
+ * dano Furtivo", `sistema-v4.1.3.md` "⬦ Formação", m3-23), diferente de `incrementarDanoFurtivo`
  * (marco de progressão/Letalidade, que soma dado **e** fixo juntos — "+1D6+1"). Fora do formato
  * esperado, devolve a expressão intacta (fail-safe). Nunca gera componente negativo (clamp em 0).
  */

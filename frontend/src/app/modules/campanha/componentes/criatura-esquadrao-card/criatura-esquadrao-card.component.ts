@@ -33,8 +33,9 @@ export interface CriaturaEsquadraoCardDados {
  * Cartão de criatura da grade "Criaturas" (visão de mestre) — análogo aprovado
  * `EspectadorFichaCard` (Esquadrão de jogadores da mesma tela): mesma moldura, avatar hachurado
  * com o botão "Abrir ficha", barra de Vida (`app-barra-recurso`) e faixa "Última rolagem"
- * full-width no rodapé. Só Defesa aparece na linha de reação — criatura não tem Esquiva/Bloqueio/
- * Contra-ataque de verdade (`guia_de_mestre-v4.0.0.md`: ela nunca reage a ataques). O avatar fica
+ * full-width no rodapé. Só Defesa aparece na linha de reação — criatura não usa as reações
+ * Esquiva/Bloqueio de agente. O Contra-Ataque tem gatilho próprio no guia, não é uma reação
+ * escolhida nesse cartão (`guia_de_mestre-v4.2.0.md`, "Defesa"/"Contra-Ataque"). O avatar fica
  * no tamanho que a criatura já usava (100×100, menor que os 128×128 do jogador) — pedido do autor,
  * não um esquecimento.
  *

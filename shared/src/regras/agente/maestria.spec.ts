@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { MAESTRIA_PONTOS_MINIMO, maestriaAtingivel, maestriaValida } from './maestria';
 
 /**
- * Prova a regra de Maestria (sistema-v4.1.0.md — "⬥ Maestrias"), m3-10: só marcável em atributo
+ * Prova a regra de Maestria (sistema-v4.1.3.md — "⬥ Maestrias"), m3-10: só marcável em atributo
  * com 6+ pontos; `null` (sem Maestria) é sempre válido; a unicidade vem do campo único.
  */
 describe('maestria', () => {

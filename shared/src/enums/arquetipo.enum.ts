@@ -8,7 +8,7 @@
  * (e o registro Civil) já são valores de `ClasseEnum`, a ficha guarda o arquétipo
  * apenas quando `classe` é uma das três classes base — caso contrário é `null`.
  *
- * Fonte: docs/core/sistema-v4.1.0.md — "Classes e Arquétipos". O documento vence
+ * Fonte: docs/core/sistema-v4.1.3.md — "Classes e Arquétipos". O documento vence
  * o código (proibição #27).
  */
 export enum ArquetipoEnum {

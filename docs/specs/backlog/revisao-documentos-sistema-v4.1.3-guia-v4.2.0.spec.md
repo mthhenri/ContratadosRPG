@@ -5,7 +5,7 @@
 > Autor autorizou commitar a preparação destas specs em 2026-10-06;
 > autorização restrita à documentação, sem execução das correções.
 > Correções de P-097-01 já realizadas permanecem como estão; nenhum rollback implícito.
-> P-095/P-096/P-098/P-100 e P-101-01/02/03 tiveram execução autorizada e foram concluídas em 2026-10-06;
+> P-095/P-096/P-098/P-100, P-101/01/02/03 e P-102 tiveram execução autorizada e foram concluídas em 2026-10-06;
 > demais tasks conservam suas autorizações e pendências próprias.
 
 ## Objetivo
@@ -37,7 +37,7 @@ Este arquivo coordena tasks; não é uma implementação única.
 | [P-101-01](../done/p-101-01-criatura-realocacao-atributos.spec.md) | Realocação total3, várias origens e negativo | Concluída; shared/criação/REST e edição preservada |
 | [P-101-02](../done/p-101-02-criatura-dt-e-modificadores.spec.md) | DT e consumidores do modificador fixo | Concluída; guia/ficha/leitor e preservação de snapshots |
 | [P-101-03](../done/p-101-03-criatura-referencias-e-cadencia.spec.md) | Exemplos/referências; Cadência já compatível | Concluída; algoritmo preservado e propostas editoriais registradas |
-| [P-102](p-102-referencias-documentos-vigentes.spec.md) | README/schema/design/specs operacionais e comentários | Não reescrever histórico nem trocar regra apenas por versão |
+| [P-102](../done/p-102-referencias-documentos-vigentes.spec.md) | README/schema/design/specs operacionais e comentários | Concluída; correspondência de fontes, histórico preservado e pipeline de PDFs conferido |
 | [NPC ataques/equipamentos](npc-ataques-e-equipamentos-guia-v4.2.0.spec.md) | Investigação da seção nova e proposta de integração | Revisão antes de gerar tasks de implementação; não expandir m4-19 |
 
 ## Cobertura da comparação dos documentos

@@ -124,7 +124,7 @@ export function normalizarEntrada(
  * Proteções **equipados** (`calcularBonusDefesaEquipamento` — mods "Flexível"/"Resistente" e
  * efeito custom `DEFESA`), mesma filosofia "por cima, nunca persistido" do amplificador.
  *
- * **Bônus de Defesa cascateia nas reações**: doc (`docs/core/sistema-v4.1.0.md` — "Defesa") define
+ * **Bônus de Defesa cascateia nas reações**: doc (`docs/core/sistema-v4.1.3.md` — "Defesa") define
  * Esquiva/Bloqueio/Contra-Ataque como a "Defesa Final" (Defesa Base + Habilidades/Fragmentos) somada
  * ao bônus de cada reação. Todo bônus que mexe na Defesa (amplificador "Defesa", "Resistente", ou o
  * bônus de equipamento) entra também em `bonusDefesa` e soma nas três reações, além do próprio bônus

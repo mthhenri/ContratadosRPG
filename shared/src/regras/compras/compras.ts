@@ -57,7 +57,7 @@ export function alterarContagemMunicao(contagem: MunicaoContagemDto, delta: numb
  * custo e peso de modificação, conflitos, stat computado de item, custo de
  * amplificador e totais do carrinho. Migradas de
  * `contratados-calculadora/src/script.js` e conferidas contra
- * docs/core/sistema-v4.1.0.md — "Equipamentos", "Prestígio e Patentes" e
+ * docs/core/sistema-v4.1.3.md — "Equipamentos", "Prestígio e Patentes" e
  * "Amplificadores". Em conflito, o documento vence (proibição #27). Reusa
  * `obterPatente` (m1-03) para Prestígio → patente e `elevarDado` (m1-04) para a
  * escada de dados de dano.
@@ -68,7 +68,7 @@ export function alterarContagemMunicao(contagem: MunicaoContagemDto, delta: numb
  * por modificação e modificações por item. Reusa `obterPatente` (m1-03) para não
  * duplicar as faixas de Prestígio. Espelha `getPatenteMod` do site antigo.
  *
- * Fonte: docs/core/sistema-v4.1.0.md — "Prestígio e Patentes" (tabela "Limite de
+ * Fonte: docs/core/sistema-v4.1.3.md — "Prestígio e Patentes" (tabela "Limite de
  * Modificações").
  */
 export function obterLimiteModificacoes(dto: LimiteModificacoesObterDto): LimiteModificacoesDto {
@@ -339,7 +339,7 @@ export function resolverDadosItem(item: CarrinhoItemDto): ItemCatalogo | null {
  * e coletes/armaduras). Só escudos aceitam as modificações "Apenas para escudos"
  * (Combativo, Arremesso). A distinção vem do catálogo (`ehEscudo`); item custom
  * não é escudo (o formulário de item não declara escudo). Fonte:
- * docs/core/sistema-v4.1.0.md — Proteções.
+ * docs/core/sistema-v4.1.3.md — Proteções.
  */
 export function ehEscudo(item: CarrinhoItemDto): boolean {
   const doCatalogo = CATALOGO_ITENS[item.categoria]?.find((catalogo) => catalogo.nome === item.nome);
@@ -422,7 +422,7 @@ export function listarModificacoesDisponiveis(item: CarrinhoItemDto): readonly M
  * `empilhamentosIniciais` por um único custo; cada empilhamento além disso conta
  * como mais uma compra. Espelha `getModPurchases` do site antigo.
  *
- * Fonte: docs/core/sistema-v4.1.0.md — "Empilhamento" (a mod com N níveis
+ * Fonte: docs/core/sistema-v4.1.3.md — "Empilhamento" (a mod com N níveis
  * iniciais custa uma modificação, mas ocupa N espaços do limite).
  */
 export function contarComprasModificacao(dto: ComprasModificacaoContarDto): number {
@@ -466,7 +466,7 @@ export function obterPesoModificacao(dto: ModificacaoItemDto): number {
  * (doc — "⬦ Construtor": "podem receber modificações como sua arma base, com o dobro do custo",
  * `m3-65`).
  *
- * Fonte: docs/core/sistema-v4.1.0.md — "$ 750 por modificação" (exceções:
+ * Fonte: docs/core/sistema-v4.1.3.md — "$ 750 por modificação" (exceções:
  * Explosivos/Munições $ 250, Armazenamento $ 300).
  */
 export function obterCustoModificacao(dto: ModificacaoItemDto): number {
@@ -488,7 +488,7 @@ export function obterCustoModificacao(dto: ModificacaoItemDto): number {
  * houver conflito em qualquer direção. Espelha a checagem de `bloqueia` de
  * `addMod`/`renderModSection` do site antigo.
  *
- * Fonte: docs/core/sistema-v4.1.0.md — coluna "Bloqueia" das tabelas de modificação.
+ * Fonte: docs/core/sistema-v4.1.3.md — coluna "Bloqueia" das tabelas de modificação.
  */
 export function verificarConflitoModificacao(dto: ConflitoModificacaoVerificarDto): ConflitoModificacaoDto {
   const definicoes = listarModificacoesDisponiveis(dto.item);
@@ -547,7 +547,7 @@ export function interpretarNotacaoResistencia(texto: string): readonly EntradaRe
 }
 
 /**
- * Níveis de alcance de arma/explosivo, em ordem crescente (docs/core/sistema-v4.1.0.md —
+ * Níveis de alcance de arma/explosivo, em ordem crescente (docs/core/sistema-v4.1.3.md —
  * "Tipos de Alcance"). "Corpo a Corpo" (armas CaC) fica fora: as modificações que sobem alcance
  * (`Alcance`, `Aerodinâmica`) só existem para Armas de Fogo e Explosivos.
  */
@@ -575,7 +575,7 @@ function elevarNivelAlcanceInformacao(informacao: string, passos: number): strin
  * há stat computável. Espelha `computeItemStat` do site antigo — as notações de jogo saem sem
  * ícone/rótulo (isso é UI, m1-10).
  *
- * Fonte: docs/core/sistema-v4.1.0.md — tabelas de item e efeitos de modificação.
+ * Fonte: docs/core/sistema-v4.1.3.md — tabelas de item e efeitos de modificação.
  */
 export function calcularStatItem(dto: StatItemCalcularDto): StatItemDto | null {
   const item = dto.item;
@@ -825,7 +825,7 @@ export function calcularStatItem(dto: StatItemCalcularDto): StatItemDto | null {
  * `CUSTO_PRIMEIRO_AMPLIFICADOR` ($ 3000) e cada empilhamento além dele custa
  * `CUSTO_EMPILHAMENTO_AMPLIFICADOR` ($ 1000).
  *
- * Fonte: docs/core/sistema-v4.1.0.md — "Amplificadores".
+ * Fonte: docs/core/sistema-v4.1.3.md — "Amplificadores".
  */
 export function calcularCustoAmplificador(dto: CustoAmplificadorCalcularDto): number {
   return CUSTO_PRIMEIRO_AMPLIFICADOR + Math.max(0, dto.empilhamentos - 1) * CUSTO_EMPILHAMENTO_AMPLIFICADOR;
@@ -993,7 +993,7 @@ export function listarSubInventarios(itens: readonly CarrinhoItemDto[]): readonl
  * (−2 por empilhamento além do 1º de cada amplificador). Espelha
  * `renderCmpSummary` do site antigo.
  *
- * Fonte: docs/core/sistema-v4.1.0.md — "Amplificadores" (limite Vontade × 3;
+ * Fonte: docs/core/sistema-v4.1.3.md — "Amplificadores" (limite Vontade × 3;
  * penalidade de −2 em Vontade por empilhamento além do primeiro).
  */
 export function calcularResumoCompras(dto: ResumoComprasCalcularDto): ResumoComprasDto {

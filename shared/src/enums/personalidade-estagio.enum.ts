@@ -1,5 +1,5 @@
 /**
- * Estágio da Habilidade de Personalidade de um agente (`docs/core/sistema-v4.1.0.md` —
+ * Estágio da Habilidade de Personalidade de um agente (`docs/core/sistema-v4.1.3.md` —
  * "Identidade" e "Fortificação de Traços"; m3-78): a Base, definida com o Mestre logo após a
  * criação, e as duas Fortificações, obtidas nos níveis 7 e 14. Conteúdo de JSONB `ficha.dados` —
  * sem tabela `tipo_*` (§10.3).

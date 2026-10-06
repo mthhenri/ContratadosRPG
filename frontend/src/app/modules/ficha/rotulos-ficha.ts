@@ -84,7 +84,7 @@ export function rotuloMotivoEntrada(motivo: MotivoEntradaAgenteEnum): string {
 /**
  * Rótulo combinado "Classe - Arquétipo/Subclasse" para exibição compacta (mini-card da campanha).
  * Classe base com arquétipo: `"Combatente - Lutador"`. Subclasse Experimento: `"Combatente -
- * Experimento Bestial"` — a subclasse **é** daquela classe-base (`sistema-v4.1.0.md`, "Subclasse":
+ * Experimento Bestial"` — a subclasse **é** daquela classe-base (`sistema-v4.1.3.md`, "Subclasse":
  * "abdicar de ganhar o seu arquétipo tornando a sua subclasse o seu arquétipo"; o vínculo
  * fixo Bestial→Combatente/Artificial→Especialista/Híbrido→Suporte já vem de
  * `classeBaseDeHabilidades`, a mesma fonte usada pelo seletor de habilidades — nenhum mapa

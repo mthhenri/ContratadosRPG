@@ -26,7 +26,10 @@
 > **Última revisão:** 2026-10-06 · P-101 e tasks01/02/03 concluídas após autorização
 > de execução conjunta: realocação total3/negativos, DT compartilhada e referências
 > do Guia alinhadas. Gates e app real nos quatro viewports aprovados; evidências em
-> [P-101](../reviews/p-101-verificacao.md), sem commit desta execução. P-095/P-096/P-098/P-100
+> [P-101](../reviews/p-101-verificacao.md), commitada com as três filhas em `767b47bf`.
+> P-102 concluiu o alinhamento dos ponteiros operacionais, com histórico/livros preservados;
+> [checagens documentais](../reviews/p-102-verificacao.md), versionadas em commit próprio
+> após autorização do autor. P-095/P-096/P-098/P-100
 > já versionadas separadamente; P-097 e livros/leitor em grupos próprios.
 > Dados sintéticos/resíduos limpos. Proposta M10 fica para sua conversa própria.
 > **Última decisão registrada:** Sistema do Jogador v4.1.3
@@ -37,7 +40,7 @@
 > specs antes de novas correções. Proposta global P-099 retirada após esclarecer teste
 > e dano/cura posteriores; contrato do fluxo específico NPC ainda será revisado.
 > [Fila consolidada de specs](../specs/backlog/revisao-documentos-sistema-v4.1.3-guia-v4.2.0.spec.md):
-> NPC e documentação P-102 pendentes; Criaturas P-101-01/02/03, fixtures P-095/096
+> NPC pendente; documentação P-102, Criaturas P-101-01/02/03, fixtures P-095/096
 > e documentação P-098 concluídas por autorizações próprias.
 > Ataques/equipamentos NPC têm spec investigativa separada; sem execução das correções.
 > Autor autorizou versionar a preparação documental das specs.
@@ -875,7 +878,8 @@ Cadência já drena turnos excedentes ao fim; referências do exemplo alinhadas.
 [Gates e matriz](../reviews/p-101-verificacao.md) aprovados nos quatro viewports.
 Propostas editoriais Fraco+6→+5 e narrativa de Social três→dois aguardam o autor;
 fontes intactas, sem pendência técnica na P-101.
-Ponteiros P-098 concluídos; P-102 e investigação de equipamento/ataques NPC em tasks próprias;
+Ponteiros P-098 e [P-102](../reviews/p-102-verificacao.md) concluídos; investigação de
+equipamento/ataques NPC em task própria; Competências/testes continuam na m4-19 ativa.
 [fila consolidada](../specs/backlog/revisao-documentos-sistema-v4.1.3-guia-v4.2.0.spec.md)
 tem versionamento documental autorizado; demais correções aguardam revisão.
 [P-095](../specs/done/p-095-fixture-rolagens-feed-deterministica.spec.md) concluída:
@@ -2134,7 +2138,8 @@ de Criação de Ameaças" — atributos, modificadores, saúde, defesa, resistê
 regeneração, deslocamento, cadência/iniciativa (Frenética declara `turnosPorRodada` >= 4, inclusive
 para combatentes avulsos; após o cálculo, a Iniciativa desenha um cartão por slot intercalado de
 `ordemRodada`, com iniciativa travada nas ocorrências adicionais), ataques, `validarFichaCriatura` — contra
-`docs/core/guia_de_mestre-v4.0.0.md`, caso de teste completo "A Estátua"). `encontro/` (ordem
+`docs/core/guia_de_mestre-v4.2.0.md`, caso de teste completo "A Estátua" revisto na P-101).
+`encontro/` (ordem
 intercalada, condições, receber dano) e `cena/` (`m7-21`: `cenaTemIniciativa`, a fonte única de
 "este tipo de cena tem iniciativa") completam o motor.
 
@@ -3447,10 +3452,11 @@ Armadilhas que já custaram retrabalho neste repositório. Cada uma tem um epis�
   (Flexível/Resistente/Potente/Conservador/Veloz) **não** dobra o bônus; a penalidade continua no
   bruto.
 - Se código e `docs/core/sistema-v4.1.3.md` divergirem, **o documento vence** (proibição #27).
-- **`docs/core/guia_de_mestre-v4.0.0.md` — "Guia de Criação de Ameaças" tem duas divergências
-  internas entre a fórmula geral e o exemplo "A Estátua"**: o modificador Fraco em VD 30 (fórmula
-  dá +5, o exemplo mostra "+6") e o mínimo de Fraqueza (fórmula exige 26 — metade da soma de
-  resistências 52 —, o exemplo declara 20). Quando o próprio documento se contradiz entre regra
+- **`docs/core/guia_de_mestre-v4.2.0.md` — "Guia de Criação de Ameaças" mantém divergências
+  entre regra e exemplo "A Estátua"**: Fraco em VD 30 (fórmula dá +5, exemplo mostra "+6") e
+  narrativa de Social base2→zero (“três pontos”, retirada efetiva de dois). Fraqueza agora
+  consta26 no livro e no produto (P-101); propostas editoriais restantes em
+  `docs/reviews/p-101-verificacao.md`. Quando o próprio documento se contradiz entre regra
   geral e exemplo pontual, a **fórmula geral vence** (decisão de abertura da `m4-02`) — o exemplo é
   mais sujeito a erro de transcrição. Ver `shared/src/regras/criatura/modificadores.ts` e
   `a-estatua.spec.ts`. Relevante para `m4-06` (`shared/regras/npc`) se a Biblioteca de Referência
@@ -3488,7 +3494,10 @@ Proposta global P-099 descartada/ACEITO; nenhum trabalho de implementação pend
 Correção P-097-01 mantida, sem rollback.
 Revisar aplicação no fluxo explicitamente escolhido de NPC antes de novo código,
 distinguindo Competência dentro do teste de dano/cura posteriores.
-P-095/096/098/100 e P-101-01/02/03 concluídas; P-102 tem spec preparada, sem execução.
+P-095/096/098/100, P-101-01/02/03 e P-102 concluídas. P-101 e as três filhas
+versionadas no commit `767b47bf`; P-102 documental executada após autorização,
+com evidências em `docs/reviews/p-102-verificacao.md`, versionadas em commit próprio
+após autorização do autor.
 Versionamento da preparação documental autorizado pelo autor.
 NPC ataques/equipamento é investigação separada. Exemplos autorais incoerentes
 registrados para revisão, sem alterar fontes; fórmula geral prevalece sobre exemplo.

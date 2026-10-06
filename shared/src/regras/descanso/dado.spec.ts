@@ -4,7 +4,7 @@ import { ESCADA_DADOS } from './descanso.dados';
 
 /**
  * Escada de dados e seus utilitários, conferidos contra
- * docs/core/sistema-v4.1.0.md — "Descanso" (o único degrau concreto que o
+ * docs/core/sistema-v4.1.3.md — "Descanso" (o único degrau concreto que o
  * documento fixa é D4 → D3 para ambiente insalubre) e por paridade com
  * `tipoDado`/`_upgradeDie`/`descDado` de `contratados-calculadora/src/script.js`.
  */

@@ -63,7 +63,7 @@ import type { FichaAtributosDto, FichaHabilidadeDto, FichaRolagemDto, FichaRolag
  * `(<dados>)[Tipo]` para tipar pools de dado, e `(<fórmula>)#N` para repetir a fórmula **inteira** N vezes
  * independentes. Qualquer outro uso de parênteses é erro de parse.
  *
- * Fonte: docs/core/sistema-v4.1.0.md — "Atributos"/"Testes"/"Tipos de Dano". Explosão/implosão não são
+ * Fonte: docs/core/sistema-v4.1.3.md — "Atributos"/"Testes"/"Tipos de Dano". Explosão/implosão não são
  * regra do documento — entram como operadores de ferramenta (m3-29).
  */
 

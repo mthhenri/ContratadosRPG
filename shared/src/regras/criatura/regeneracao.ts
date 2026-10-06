@@ -1,7 +1,7 @@
 import { RegeneracaoIntensidadeEnum, RegeneracaoModoEnum } from '../../enums';
 import type { ValorRegeneracaoCalcularDto } from './criatura.dtos';
 
-/** % da Vida Máxima recuperado por Intensidade e Modo (docs/core/guia_de_mestre-v4.0.0.md —
+/** % da Vida Máxima recuperado por Intensidade e Modo (docs/core/guia_de_mestre-v4.2.0.md —
  * "Guia de Criação de Ameaças" > "Regeneração Natural" > "Intensidades" / "Regeneração
  * Condicional"). Condicional soma o % da Passiva equivalente + 15 pontos percentuais fixos
  * — tabulado direto em vez de recalculado, porque o documento já publica os dois valores

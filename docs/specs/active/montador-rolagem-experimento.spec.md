@@ -145,7 +145,7 @@ no produto as fórmulas com termo subtraindo passam a montar.
 `rolagem-expressao-quantidade-dados.spec.md` (a conta de quantidade de dados precisa existir no motor, para todos,
 antes da tokenização e do campo de expressão — **concluída em 2026-10-03**, em `docs/specs/done/`). As superfícies já existem (barra de "Rolagem rápida" da
 ficha de jogador, da criatura/NPC e do cartão de campanha) e não dependem de outra spec. Fontes de verdade: `docs/design/DESIGN.md` e o handoff
-`docs/design/tema/`; `docs/core/sistema-v4.1.0.md` ("Testes"; "Arredondamentos").
+`docs/design/tema/`; `docs/core/sistema-v4.1.3.md` ("Testes"; "Arredondamentos").
 
 ## Riscos e Mitigação
 

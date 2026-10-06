@@ -11,7 +11,7 @@ import {
 
 /**
  * Resolve os grupos de filtro do **seletor de habilidades do sistema** para uma ficha
- * (`sistema-v4.1.0.md` — "Habilidades"). Regra pura, sem dependências — a UI só renderiza o que
+ * (`sistema-v4.1.3.md` — "Habilidades"). Regra pura, sem dependências — a UI só renderiza o que
  * esta função devolve.
  *
  * Alcance de cada aba (definido pelos picks de nível 5/10/15/20 — "outra classe" ou "outro
@@ -103,7 +103,7 @@ export function classeBaseDeHabilidades(classe: ClasseEnum): ClasseEnum | null {
 
 /**
  * O inverso de `classeBaseDeHabilidades` restrito às subclasses: a subclasse de Experimento de uma
- * classe-base (`sistema-v4.1.0.md` — "⬡ Subclasse", cada uma nasce "⬡ CLASSE - <base>"). `null` para
+ * classe-base (`sistema-v4.1.3.md` — "⬡ Subclasse", cada uma nasce "⬡ CLASSE - <base>"). `null` para
  * Civil ou para uma classe que já é ela mesma uma subclasse. Cada base tem hoje exatamente uma
  * subclasse. Consumida pelo seletor de Classe em dois passos do guia de criação (P-019): a segunda
  * etapa combina os arquétipos da base com esta subclasse, como o doc descreve — "após escolher sua
@@ -271,7 +271,7 @@ export function catalogoHabilidades(
 }
 
 /**
- * A **Habilidade Inicial** do arquétipo/subclasse da ficha (`sistema-v4.1.0.md` — "Habilidade
+ * A **Habilidade Inicial** do arquétipo/subclasse da ficha (`sistema-v4.1.3.md` — "Habilidade
  * Inicial de Arquétipo"; cada Experimento também tem a sua). O agente já nasce com ela — não é
  * escolhida, vem de graça com o arquétipo/subclasse. Nos dados do catálogo a inicial é sempre o
  * **primeiro item** da lista do arquétipo/subclasse.

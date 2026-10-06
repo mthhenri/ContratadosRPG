@@ -3,7 +3,7 @@
 > Spec avulsa, fora da fila de milestone. Endereça `PROBLEMS.md` `P-018` — o guia de
 > criação de ficha (`frontend/src/app/modules/ficha/paginas/criar/criar.page.ts` +
 > `.html`) trata a classe Civil com as mesmas fórmulas/tetos/rótulos de um agente
-> convencional em pelo menos três passos, divergindo de `docs/core/sistema-v4.1.0.md`
+> convencional em pelo menos três passos, divergindo de `docs/core/sistema-v4.1.3.md`
 > — "⬡ Jogando como um Civil". Esta spec **não implementa nada**; mapeia o escopo
 > confirmado (com citação de fonte) e isola as decisões que só o dono pode tomar,
 > por pedido explícito dele ao revisar o levantamento inicial de P-018.
@@ -48,7 +48,7 @@ valor sem questionar.
 
 ### 1 — Novo agente (Nível/Prestígio → Treinamento)
 
-Doc, "⬥ Treinamentos" (`docs/core/sistema-v4.1.0.md:921-923`): *"Todo civíl inicia
+Doc, "⬥ Treinamentos" (`docs/core/sistema-v4.1.3.md:921-923`): *"Todo civíl inicia
 **sem nenhum treinamento**."* — absoluto, não depende de média de campanha, motivo de
 entrada ou patente (conceitos que a seção de Civil nunca menciona).
 
@@ -66,13 +66,13 @@ Código afetado:
 - `.html:665`, `.html:731-732` — resumo (`dt>Nível / Prestígio`, linhas "Nível
   inicial"/"Prestígio" no aside) — mesmo problema.
 - `.html:745` — `{{ nivelInicial() + 10 }}` como "Defesa" no resumo lateral, sem
-  checar classe. Doc, "⬥ Defesa e Reações" (`sistema-v4.1.0.md:861-862`): *"Diferente
+  checar classe. Doc, "⬥ Defesa e Reações" (`sistema-v4.1.3.md:861-862`): *"Diferente
   de um agente, você não possui defesa"* — o stat inteiro não deveria aparecer pra
   Civil.
 
 ### 2 — Atributos (base e orçamento de criação do Civil)
 
-Doc, "⬡ Jogando como um Civil" (`sistema-v4.1.0.md:851-852`): *"você tem todos os
+Doc, "⬡ Jogando como um Civil" (`sistema-v4.1.3.md:851-852`): *"você tem todos os
 seus atributos com 1 ponto, exceto os seus atributos de Luta e Pontaria, que iniciam
 em zero. Você também possui apenas dois pontos para distribuir na sua ficha, além de
 que você também pode zerar outros dois atributos adicionais. Durante a montagem da
@@ -95,7 +95,7 @@ Código afetado:
 
 ### 3 — Equipamento inicial (orçamento fixo + categorias vetadas)
 
-Doc, "⬥ Equipamento Inicial" (`sistema-v4.1.0.md:865-866`): *"o seu equipamento
+Doc, "⬥ Equipamento Inicial" (`sistema-v4.1.3.md:865-866`): *"o seu equipamento
 inicial consta como 1000 $, no qual você não pode aplicar nenhuma modificação em
 nenhum dos equipamentos, ou adquirir qualquer tipo de Proteção e/ou Explosivos."*
 
@@ -204,7 +204,7 @@ Numerados por item; cada um deve poder ser um corte revisável separado
 - Nenhuma spec ativa depende deste corte. Recomendado implementar antes de qualquer
   outra task grande que toque `criar.page.ts`/`.html` ou `criacao.ts` (arquivos
   centrais, alto risco de conflito de diff).
-- `docs/core/sistema-v4.1.0.md` — "⬡ Jogando como um Civil" (linhas 847-931) é a
+- `docs/core/sistema-v4.1.3.md` — "⬡ Jogando como um Civil" (linhas 847-931) é a
   fonte de verdade para qualquer detalhe não coberto aqui; em conflito, o documento
   vence (`AGENTS.md`, proibição #27 citada nos comentários do próprio `shared/regras`).
 

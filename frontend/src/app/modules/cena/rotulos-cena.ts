@@ -3,7 +3,7 @@ import { CenaStatusEnum, CenaTipoEnum } from '@contratados-rpg/shared/enums';
 /**
  * Rótulos legíveis dos enums da Cena (m7-23) — puro mapa de apresentação, sem regra de jogo (mesmo
  * papel de `rotulos-encontro.ts`). Os nomes dos tipos são os títulos do capítulo "⬡ Cenas" de
- * `docs/core/sistema-v4.1.0.md`; quem decide o que cada tipo **faz** é `shared/regras/cena`.
+ * `docs/core/sistema-v4.1.3.md`; quem decide o que cada tipo **faz** é `shared/regras/cena`.
  */
 
 const ROTULO_TIPO: Record<CenaTipoEnum, string> = {

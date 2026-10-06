@@ -480,7 +480,7 @@ export const schemasContratosPublicos = {
             "inconsciente"
         ],
         "additionalProperties": false,
-        "description": "Ficha de um membro, no recorte mínimo pra Equipe (m3-65): quando `acessoCompleto` é `false`,\né só a \"carteirinha\" — nome/classe/foto, sem vida/energia/etc. (esses continuam vindo, pra quem\ntem acesso completo, de `GET /ficha?campanhaId=`, que não muda). Fichas marcadas `oculta` por um\njogador que não seja o dono/mestre requisitante nem entram nesta lista — não tem carteirinha.\n\nAs três condições (I-031) vêm **mesmo sem `acessoCompleto`** — é o único recorte de estado que\natravessa a carteirinha, pra quem joga em equipe saber quem está Machucado/Morrendo/Inconsciente\nsem precisar de acesso à ficha inteira (`sistema-v4.1.0.md` \"Condições\"; combina com o Machucado\nautomático da I-032, `resolverMachucadoPelaVida`). Vida/Energia numéricas continuam de fora."
+        "description": "Ficha de um membro, no recorte mínimo pra Equipe (m3-65): quando `acessoCompleto` é `false`,\né só a \"carteirinha\" — nome/classe/foto, sem vida/energia/etc. (esses continuam vindo, pra quem\ntem acesso completo, de `GET /ficha?campanhaId=`, que não muda). Fichas marcadas `oculta` por um\njogador que não seja o dono/mestre requisitante nem entram nesta lista — não tem carteirinha.\n\nAs três condições (I-031) vêm **mesmo sem `acessoCompleto`** — é o único recorte de estado que\natravessa a carteirinha, pra quem joga em equipe saber quem está Machucado/Morrendo/Inconsciente\nsem precisar de acesso à ficha inteira (`sistema-v4.1.3.md` \"Condições\"; combina com o Machucado\nautomático da I-032, `resolverMachucadoPelaVida`). Vida/Energia numéricas continuam de fora."
     },
     "CampanhaMembroResumoDto": {
         "type": "object",
@@ -2364,7 +2364,7 @@ export const schemasContratosPublicos = {
             "ocorrencia"
         ],
         "additionalProperties": false,
-        "description": "Um slot da sequência de turnos de uma rodada. `ocorrencia` distingue os turnos múltiplos de um\nmesmo combatente com Cadência > Singular (1 = primeiro turno, 2 = segundo, …), já\n**intercalados** pela regra do guia — o turno extra cai no próximo slot abaixo, nunca em\nsequência (`docs/core/guia_de_mestre-v4.0.0.md` — \"Intercalação na Iniciativa\")."
+        "description": "Um slot da sequência de turnos de uma rodada. `ocorrencia` distingue os turnos múltiplos de um\nmesmo combatente com Cadência > Singular (1 = primeiro turno, 2 = segundo, …), já\n**intercalados** pela regra do guia — o turno extra cai no próximo slot disponível abaixo;\nsem espaço para intercalar, a sobra fica no fim da iniciativa (P-101-03;\n`docs/core/guia_de_mestre-v4.2.0.md` — \"Intercalação na Iniciativa\")."
     },
     "CondicaoCombatenteDto": {
         "type": "object",
@@ -2385,7 +2385,7 @@ export const schemasContratosPublicos = {
             "perdeTurno"
         ],
         "additionalProperties": false,
-        "description": "Marcador de condição sobre um combatente, com duração em rodadas (mockup: `Sangramento ·\n2 rodadas`). `rodadasRestantes: null` = permanente até remoção manual; `perdeTurno` marca a\ncondição que **consome** o próximo turno do combatente (ex.: `Inconsciente`, `Insolação` —\n`sistema-v4.1.0.md`, \"Condições\").\n\nDistinto das três condições da ficha (`morrendo`/`machucado`/`inconsciente`, em\n`FichaEstadoDto`), que são **flags alternadas manualmente** por quem joga — o motor nunca as\nrecalcula a partir de `vidaAtual` (m3-10). O encontro as **lê** da ficha; não as grava aqui."
+        "description": "Marcador de condição sobre um combatente, com duração em rodadas (mockup: `Sangramento ·\n2 rodadas`). `rodadasRestantes: null` = permanente até remoção manual; `perdeTurno` marca a\ncondição que **consome** o próximo turno do combatente (ex.: `Inconsciente`, `Insolação` —\n`sistema-v4.1.3.md`, \"Condições\").\n\nDistinto das três condições da ficha (`morrendo`/`machucado`/`inconsciente`, em\n`FichaEstadoDto`), que são **flags alternadas manualmente** por quem joga — o motor nunca as\nrecalcula a partir de `vidaAtual` (m3-10). O encontro as **lê** da ficha; não as grava aqui."
     },
     "EncontroEventoDto": {
         "type": "object",
@@ -3174,6 +3174,113 @@ export const schemasContratosPublicos = {
         "additionalProperties": false,
         "description": "Um combo nomeado — sequência ordenada de passos."
     },
+    "CriaturaAtributosDistribuicaoCalcularDto": {
+        "type": "object",
+        "properties": {
+            "vd": {
+                "type": "number"
+            },
+            "atributosFinal": {
+                "$ref": "#/components/schemas/FichaAtributosDto"
+            }
+        },
+        "required": [
+            "vd",
+            "atributosFinal"
+        ],
+        "additionalProperties": false,
+        "description": "Distribuição inicial; não restringe os snapshots editáveis de uma ficha pronta."
+    },
+    "CriaturaAtributosRealocacaoValidarDto": {
+        "type": "object",
+        "properties": {
+            "vd": {
+                "type": "number"
+            },
+            "atributosFinal": {
+                "$ref": "#/components/schemas/FichaAtributosDto"
+            }
+        },
+        "required": [
+            "vd",
+            "atributosFinal"
+        ],
+        "additionalProperties": false
+    },
+    "CriaturaAtributosDistribuicaoDto": {
+        "type": "object",
+        "properties": {
+            "base": {
+                "type": "number"
+            },
+            "limite": {
+                "type": "number"
+            },
+            "minimo": {
+                "type": "number"
+            },
+            "pontosAjuste": {
+                "type": "number"
+            },
+            "pontosRealocados": {
+                "type": "number"
+            },
+            "limiteRealocacao": {
+                "type": "number"
+            },
+            "gastos": {
+                "type": "number"
+            },
+            "saldo": {
+                "type": "number"
+            },
+            "violacoes": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                }
+            }
+        },
+        "required": [
+            "base",
+            "limite",
+            "minimo",
+            "pontosAjuste",
+            "pontosRealocados",
+            "limiteRealocacao",
+            "gastos",
+            "saldo",
+            "violacoes"
+        ],
+        "additionalProperties": false
+    },
+    "CriaturaAtributoDtCalcularDto": {
+        "type": "object",
+        "properties": {
+            "atributo": {
+                "type": "number"
+            },
+            "modificador": {
+                "type": "string",
+                "enum": [
+                    "FORTE",
+                    "MEDIO",
+                    "FRACO",
+                    "FRAGIL"
+                ]
+            },
+            "vd": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "atributo",
+            "modificador",
+            "vd"
+        ],
+        "additionalProperties": false,
+        "description": "Guia v4.2.0 > DTs de Atributos; modificador é resolvido pela tabela compartilhada."
+    },
     "FichaCriaturaCriarDto": {
         "type": "object",
         "properties": {
@@ -3530,7 +3637,7 @@ export const schemasContratosPublicos = {
             "habilidades"
         ],
         "additionalProperties": false,
-        "description": "Contrato tipado do documento JSONB `ficha.dados` para a **ficha de criatura** (Ameaça,\n`m4-01`). Forma final derivada de `docs/core/guia_de_mestre-v4.0.0.md` — \"Guia de Criação\nde Ameaças\" — o documento vence o código (proibição #27). Design fechado em `SCHEMA.md`\n(\"FichaCriaturaDadosDto\") antes desta task; aqui só se codifica.\n\n── Dois contratos, não um (decisão de abertura do M4) ───────────────────────\nCriatura e NPC **não compartilham forma** — a mecânica dos dois capítulos do guia\ndivergiu o suficiente para não valer a pena uma variação de um único DTO. Ver\n`FichaNpcDadosDto` (`m4-05`) para o contrato de NPC.\n\n── Sem Maestria ──────────────────────────────────────────────────────────────\nMaestria é mecânica exclusiva de jogador (decisão de abertura do M4) — não existe campo\nequivalente aqui.\n\n── Snapshot na criação + editável depois (mesma filosofia de m3-10) ─────────\n`vidaMaxima`/`vidaAtual` e `defesa` são calculados uma vez na criação\n(`shared/regras/criatura`, `m4-02`) e persistidos; o motor **não os recalcula** sobre\nedições posteriores — o Mestre pode ajustá-los livremente depois. A atual pode exceder a\nmáxima, mesma liberdade de edição da ficha de jogador.\n\n── Validação estrutural (SYSTEM.SPEC §11) ───────────────────────────────────\n`interface readonly` pura, como todos os DTOs do shared — sem class-validator (o backend\nnão liga `ValidationPipe`, decisão vigente do projeto). A validação de coerência de\ndomínio (soma de resistências ≤ limite, modificadores na distribuição fixa 2/3/3/2, ao\nmenos 1 fraqueza, ao menos 1 modo de deslocamento) é responsabilidade de\n`shared/regras/criatura` (`m4-02`), chamada pelo service (`m4-03`) antes de persistir."
+        "description": "Contrato tipado do documento JSONB `ficha.dados` para a **ficha de criatura** (Ameaça,\n`m4-01`). Forma final derivada de `docs/core/guia_de_mestre-v4.2.0.md` — \"Guia de Criação\nde Ameaças\" — o documento vence o código (proibição #27). Design fechado em `SCHEMA.md`\n(\"FichaCriaturaDadosDto\") antes desta task; aqui só se codifica.\n\n── Dois contratos, não um (decisão de abertura do M4) ───────────────────────\nCriatura e NPC **não compartilham forma** — a mecânica dos dois capítulos do guia\ndivergiu o suficiente para não valer a pena uma variação de um único DTO. Ver\n`FichaNpcDadosDto` (`m4-05`) para o contrato de NPC.\n\n── Sem Maestria ──────────────────────────────────────────────────────────────\nMaestria é mecânica exclusiva de jogador (decisão de abertura do M4) — não existe campo\nequivalente aqui.\n\n── Snapshot na criação + editável depois (mesma filosofia de m3-10) ─────────\n`vidaMaxima`/`vidaAtual` e `defesa` são calculados uma vez na criação\n(`shared/regras/criatura`, `m4-02`) e persistidos; o motor **não os recalcula** sobre\nedições posteriores — o Mestre pode ajustá-los livremente depois. A atual pode exceder a\nmáxima, mesma liberdade de edição da ficha de jogador.\n\n── Validação estrutural (SYSTEM.SPEC §11) ───────────────────────────────────\n`interface readonly` pura, como todos os DTOs do shared — sem class-validator (o backend\nnão liga `ValidationPipe`, decisão vigente do projeto). A validação de coerência de\ndomínio (soma de resistências ≤ limite, modificadores na distribuição fixa 2/3/3/2, ao\nmenos 1 fraqueza, ao menos 1 modo de deslocamento) é responsabilidade de\n`shared/regras/criatura` (`m4-02`), chamada pelo service (`m4-03`) antes de persistir."
     },
     "FichaCriaturaIdentidadeDto": {
         "type": "object",
@@ -3582,7 +3689,7 @@ export const schemasContratosPublicos = {
             "ganchoUnico"
         ],
         "additionalProperties": false,
-        "description": "Ficha de Identidade da criatura (`docs/core/guia_de_mestre-v4.0.0.md` — \"Guia de Criação\nde Ameaças\" > \"Identidade e Classificação\"). Preenchida **antes** de qualquer número —\na criatura precisa existir como conceito coerente primeiro."
+        "description": "Ficha de Identidade da criatura (`docs/core/guia_de_mestre-v4.2.0.md` — \"Guia de Criação\nde Ameaças\" > \"Identidade e Classificação\"). Preenchida **antes** de qualquer número —\na criatura precisa existir como conceito coerente primeiro."
     },
     "FichaCriaturaResistenciaDto": {
         "type": "object",
@@ -4700,7 +4807,7 @@ export const schemasContratosPublicos = {
             "quantidade"
         ],
         "additionalProperties": false,
-        "description": "Saída da média de Nível/Prestígio dos agentes (`JOGADOR`) ativos de uma campanha — recorte\ncalculado (`Entidade + Recorte + Dto`, sem verbo), consumido pelo guia de criação ao aplicar\n\"Iniciando um Novo Agente\" (`docs/core/sistema-v4.1.0.md`). É um **agregado**: nunca expõe\nfichas individuais, então **não** passa pela matriz de visibilidade por ficha (§14) que\n`listarFichas` aplica — qualquer membro da campanha pode consultar, mestre ou jogador comum,\nmesmo sem `usuario_ficha_acesso` sobre as fichas alheias somadas na média. Reusa `FichaListarDto`\ncomo entrada (mesmo `campanhaId`). `quantidade` é o total de agentes considerados — `0` quando a\ncampanha ainda não tem nenhum, caso em que `mediaNivel`/`mediaPrestigio` saem `0`."
+        "description": "Saída da média de Nível/Prestígio dos agentes (`JOGADOR`) ativos de uma campanha — recorte\ncalculado (`Entidade + Recorte + Dto`, sem verbo), consumido pelo guia de criação ao aplicar\n\"Iniciando um Novo Agente\" (`docs/core/sistema-v4.1.3.md`). É um **agregado**: nunca expõe\nfichas individuais, então **não** passa pela matriz de visibilidade por ficha (§14) que\n`listarFichas` aplica — qualquer membro da campanha pode consultar, mestre ou jogador comum,\nmesmo sem `usuario_ficha_acesso` sobre as fichas alheias somadas na média. Reusa `FichaListarDto`\ncomo entrada (mesmo `campanhaId`). `quantidade` é o total de agentes considerados — `0` quando a\ncampanha ainda não tem nenhum, caso em que `mediaNivel`/`mediaPrestigio` saem `0`."
     },
     "FichaResumoDto": {
         "type": "object",
@@ -4871,7 +4978,7 @@ export const schemasContratosPublicos = {
             },
             "sobrecarregado": {
                 "type": "boolean",
-                "description": "`true` quando o peso do inventário excede o Inventário Máximo (aviso, não trava —\n`sistema-v4.1.0.md`). Calculado com exatidão pelo `FichaService` via `calcularResumoCompras`\n(`shared/regras/compras`) — o mesmo motor que a aba Inventário usa —, não uma aproximação: o\n`FichaResumoInternoDto` que a repository devolve carrega os campos brutos (itens/amplificadores/\ndinheiro/vontade/inventário base) que a fórmula precisa, e o service os reduz a este único\nbooleano antes de expor o resumo público. `undefined` numa ficha sem `derivados.inventarioMaximo`\nsalvo (retrocompat) — sem o máximo não há o que comparar."
+                "description": "`true` quando o peso do inventário excede o Inventário Máximo (aviso, não trava —\n`sistema-v4.1.3.md`). Calculado com exatidão pelo `FichaService` via `calcularResumoCompras`\n(`shared/regras/compras`) — o mesmo motor que a aba Inventário usa —, não uma aproximação: o\n`FichaResumoInternoDto` que a repository devolve carrega os campos brutos (itens/amplificadores/\ndinheiro/vontade/inventário base) que a fórmula precisa, e o service os reduz a este único\nbooleano antes de expor o resumo público. `undefined` numa ficha sem `derivados.inventarioMaximo`\nsalvo (retrocompat) — sem o máximo não há o que comparar."
             }
         },
         "required": [
@@ -4891,7 +4998,7 @@ export const schemasContratosPublicos = {
             "imagemUrl"
         ],
         "additionalProperties": false,
-        "description": "Item de listagem — recorte enxuto da ficha, com os campos de jogo lidos do JSONB\n(`dados->>'classe'`, `dados->>'nivel'` — §10.4). `usuarioId` é o dono, para o front distinguir\n\"minha ficha\" das demais.\n\nVida/Energia + as três condições rastreadas (`morrendo`/`machucado`/`inconsciente` —\n`sistema-v4.1.0.md`, \"Condições\") entraram para alimentar o mini-card de ficha embutido no\ndetalhe da campanha (m2-16) sem precisar do documento completo — continua um recorte, não o\n`dados` inteiro (§14/§10.4: a listagem nunca expõe inventário/habilidades/sequelas de terceiros).\n`vidaMaxima`/`energiaMaxima` seguem opcionais (retrocompat de `FichaEstadoDto`, m3-10 — fichas\nsem snapshot); as três condições vêm sempre resolvidas (`false` quando ausentes no documento).\n`arquetipo` acompanha `classe` para o mini-card mostrar \"Classe - Arquétipo\" — `null` quando a\nclasse é uma subclasse Experimento ou `CIVIL` (mesma regra de `FichaJogadorDadosDto.arquetipo`).\n\n`campanhaId`/`campanhaNome` (m3-28) alimentam o **chip de campanha** do acervo (`/fichas`,\n`FichaAcervo`) — `null`/`null` para uma ficha solta (\"Sem campanha\"). O mesmo recorte também\natende a listagem campanha-scoped (`listarPorCampanha`/`listarVisiveisParaUsuario`), onde os\ndois campos são redundantes (a campanha já é conhecida pela rota) mas inofensivos."
+        "description": "Item de listagem — recorte enxuto da ficha, com os campos de jogo lidos do JSONB\n(`dados->>'classe'`, `dados->>'nivel'` — §10.4). `usuarioId` é o dono, para o front distinguir\n\"minha ficha\" das demais.\n\nVida/Energia + as três condições rastreadas (`morrendo`/`machucado`/`inconsciente` —\n`sistema-v4.1.3.md`, \"Condições\") entraram para alimentar o mini-card de ficha embutido no\ndetalhe da campanha (m2-16) sem precisar do documento completo — continua um recorte, não o\n`dados` inteiro (§14/§10.4: a listagem nunca expõe inventário/habilidades/sequelas de terceiros).\n`vidaMaxima`/`energiaMaxima` seguem opcionais (retrocompat de `FichaEstadoDto`, m3-10 — fichas\nsem snapshot); as três condições vêm sempre resolvidas (`false` quando ausentes no documento).\n`arquetipo` acompanha `classe` para o mini-card mostrar \"Classe - Arquétipo\" — `null` quando a\nclasse é uma subclasse Experimento ou `CIVIL` (mesma regra de `FichaJogadorDadosDto.arquetipo`).\n\n`campanhaId`/`campanhaNome` (m3-28) alimentam o **chip de campanha** do acervo (`/fichas`,\n`FichaAcervo`) — `null`/`null` para uma ficha solta (\"Sem campanha\"). O mesmo recorte também\natende a listagem campanha-scoped (`listarPorCampanha`/`listarVisiveisParaUsuario`), onde os\ndois campos são redundantes (a campanha já é conhecida pela rota) mas inofensivos."
     },
     "FichaAcervoListarDto": {
         "type": "object",
@@ -5476,7 +5583,7 @@ export const schemasContratosPublicos = {
             "vontade"
         ],
         "additionalProperties": false,
-        "description": "Os dez atributos de um agente (`docs/core/sistema-v4.1.0.md` — \"Atributos\").\nO documento agrupa cinco como Físicos (Destreza, Força, Luta, Pontaria, Vigor)\ne cinco como Mentais (Intelecto, Medicina, Sentidos, Social, Vontade), mas isso\né só um agrupamento de leitura — todos moram no mesmo bloco.\n\n\"Sentidos\" é um atributo (não um campo à parte): a Área de Percepção é derivada\ndele (`5 + Sentidos × 5`) e não é guardada. Cada atributo inicia com 1 ponto\nbase; na criação distribuem-se 4 pontos (máx. 3 num único atributo, 2 nos\ndemais), teto por atributo que sobe para 6 após finalizar a ficha; a Maestria\n(única na ficha) leva um atributo além disso. Lesões podem reduzir atributos."
+        "description": "Os dez atributos de um agente (`docs/core/sistema-v4.1.3.md` — \"Atributos\").\nO documento agrupa cinco como Físicos (Destreza, Força, Luta, Pontaria, Vigor)\ne cinco como Mentais (Intelecto, Medicina, Sentidos, Social, Vontade), mas isso\né só um agrupamento de leitura — todos moram no mesmo bloco.\n\n\"Sentidos\" é um atributo (não um campo à parte): a Área de Percepção é derivada\ndele (`5 + Sentidos × 5`) e não é guardada. Cada atributo inicia com 1 ponto\nbase; na criação distribuem-se 4 pontos (máx. 3 num único atributo, 2 nos\ndemais), teto por atributo que sobe para 6 após finalizar a ficha; a Maestria\n(única na ficha) leva um atributo além disso. Lesões podem reduzir atributos."
     },
     "FichaSequelaDto": {
         "type": "object",
@@ -5492,7 +5599,7 @@ export const schemasContratosPublicos = {
             "nome"
         ],
         "additionalProperties": false,
-        "description": "Uma sequela: instabilidade mental **temporária** (`sistema-v4.1.0.md` —\n\"Saúde\" > Sanidade). Ganha ao falhar num teste de Vontade; removida ao voltar à\nbase ou num descanso longo e confortável. O limite (Vontade) e os efeitos\nmecânicos são domínio de `shared/regras`; aqui guarda-se só a entrada nomeada."
+        "description": "Uma sequela: instabilidade mental **temporária** (`sistema-v4.1.3.md` —\n\"Saúde\" > Sanidade). Ganha ao falhar num teste de Vontade; removida ao voltar à\nbase ou num descanso longo e confortável. O limite (Vontade) e os efeitos\nmecânicos são domínio de `shared/regras`; aqui guarda-se só a entrada nomeada."
     },
     "FichaTraumaDto": {
         "type": "object",
@@ -5513,7 +5620,7 @@ export const schemasContratosPublicos = {
             "tratado"
         ],
         "additionalProperties": false,
-        "description": "Um trauma: versão **permanente** de uma sequela (`sistema-v4.1.0.md` — Sanidade).\nNão é removível, apenas **tratável** (o tratamento reduz a penalidade, não some\ncom o trauma) — daí `tratado`. O limite de traumas não-tratados (Vontade + 1;\nExperimentos Vontade − 1) é validado por `shared/regras`."
+        "description": "Um trauma: versão **permanente** de uma sequela (`sistema-v4.1.3.md` — Sanidade).\nNão é removível, apenas **tratável** (o tratamento reduz a penalidade, não some\ncom o trauma) — daí `tratado`. O limite de traumas não-tratados (Vontade + 1;\nExperimentos Vontade − 1) é validado por `shared/regras`."
     },
     "FichaFragmentoConsumidoDto": {
         "type": "object",
@@ -5572,7 +5679,7 @@ export const schemasContratosPublicos = {
             "item"
         ],
         "additionalProperties": false,
-        "description": "Registro de um Fragmento Potencializador **consumido** (`sistema-v4.1.0.md` — \"⬦ Consumo de\nFragmentos\"; m3-64). A sequela \"Rejeição Biológica\" carrega o mesmo texto na `descricao`, mas só é\ngerada quando o jogador **não** evita o Preço de Sanidade com o teste de Vontade. Este registro é\nincondicional: existe sempre que um fragmento é consumido, independente da sequela.\n\nGuarda também o suficiente para **reverter** o consumo (m3-64, correção — \"remover um fragmento\nconsumido\"): o bônus estruturado (`opcao`/`atributoEscolhido`, entrada de\n`reverterBonusConsumoFragmento`), o delta de Energia Máxima que o consumo aplicou\n(`custoAquisicao - energiaMaximaExtra` do Preço de Sanidade) e o próprio item removido do\ninventário, para devolvê-lo. Sem isso o registro seria só um texto de exibição, incapaz de desfazer\no que descreve."
+        "description": "Registro de um Fragmento Potencializador **consumido** (`sistema-v4.1.3.md` — \"⬦ Consumo de\nFragmentos\"; m3-64). A sequela \"Rejeição Biológica\" carrega o mesmo texto na `descricao`, mas só é\ngerada quando o jogador **não** evita o Preço de Sanidade com o teste de Vontade. Este registro é\nincondicional: existe sempre que um fragmento é consumido, independente da sequela.\n\nGuarda também o suficiente para **reverter** o consumo (m3-64, correção — \"remover um fragmento\nconsumido\"): o bônus estruturado (`opcao`/`atributoEscolhido`, entrada de\n`reverterBonusConsumoFragmento`), o delta de Energia Máxima que o consumo aplicou\n(`custoAquisicao - energiaMaximaExtra` do Preço de Sanidade) e o próprio item removido do\ninventário, para devolvê-lo. Sem isso o registro seria só um texto de exibição, incapaz de desfazer\no que descreve."
     },
     "FichaLesaoDto": {
         "type": "object",
@@ -5621,7 +5728,7 @@ export const schemasContratosPublicos = {
             "permanente"
         ],
         "additionalProperties": false,
-        "description": "Uma lesão física (`sistema-v4.1.0.md` — \"Lesões\"): remove pontos de um atributo\nconforme a severidade. Guarda-se qual atributo foi afetado, quantos pontos\nrestam removidos (pode ser reduzido por tratamento/reabilitação) e se já se\ntornou permanente (após entrar em \"Morrendo\" o suficiente enquanto lesionado)."
+        "description": "Uma lesão física (`sistema-v4.1.3.md` — \"Lesões\"): remove pontos de um atributo\nconforme a severidade. Guarda-se qual atributo foi afetado, quantos pontos\nrestam removidos (pode ser reduzido por tratamento/reabilitação) e se já se\ntornou permanente (após entrar em \"Morrendo\" o suficiente enquanto lesionado)."
     },
     "FichaHabilidadeDto": {
         "type": "object",
@@ -5681,7 +5788,7 @@ export const schemasContratosPublicos = {
             "descricao"
         ],
         "additionalProperties": false,
-        "description": "Uma habilidade da ficha (`sistema-v4.1.0.md` — \"Habilidades\"). Sem catálogo\ntipado de habilidades no `shared/regras` (diferente de compras), a ficha guarda\na habilidade de forma desnormalizada: nome, custo de Energia, categoria de\norigem e o texto do efeito."
+        "description": "Uma habilidade da ficha (`sistema-v4.1.3.md` — \"Habilidades\"). Sem catálogo\ntipado de habilidades no `shared/regras` (diferente de compras), a ficha guarda\na habilidade de forma desnormalizada: nome, custo de Energia, categoria de\norigem e o texto do efeito."
     },
     "FichaInventarioDto": {
         "type": "object",
@@ -5747,15 +5854,15 @@ export const schemasContratosPublicos = {
             },
             "morrendo": {
                 "type": "boolean",
-                "description": "Condição **Morrendo** (`sistema-v4.1.0.md` — \"Condições\": teste de Vigor a cada turno, DT\ncrescente; falhar mata). Alternada **manualmente** pelo dono/mestre — não é recalculada\nautomaticamente a partir de `vidaAtual` (mesma filosofia de m3-10: o estado narrativo é\nrefletido por quem joga, não travado pelo motor). Opcional por retrocompatibilidade —\nausente equivale a `false`."
+                "description": "Condição **Morrendo** (`sistema-v4.1.3.md` — \"Condições\": teste de Vigor a cada turno, DT\ncrescente; falhar mata). Alternada **manualmente** pelo dono/mestre — não é recalculada\nautomaticamente a partir de `vidaAtual` (mesma filosofia de m3-10: o estado narrativo é\nrefletido por quem joga, não travado pelo motor). Opcional por retrocompatibilidade —\nausente equivale a `false`."
             },
             "machucado": {
                 "type": "boolean",
-                "description": "Condição **Machucado** (`sistema-v4.1.0.md` — \"Condições\": resultado de um golpe que\nremoveu metade da vida; só sai ao recuperar 100%). Alternada manualmente, mesmo modelo de\n`morrendo`."
+                "description": "Condição **Machucado** (`sistema-v4.1.3.md` — \"Condições\": resultado de um golpe que\nremoveu metade da vida; só sai ao recuperar 100%). Alternada manualmente, mesmo modelo de\n`morrendo`."
             },
             "inconsciente": {
                 "type": "boolean",
-                "description": "Condição **Inconsciente** (`sistema-v4.1.0.md` — \"Condições\": impossibilitado de agir ou\nreagir, também Vulnerável). Alternada manualmente, mesmo modelo de `morrendo`."
+                "description": "Condição **Inconsciente** (`sistema-v4.1.3.md` — \"Condições\": impossibilitado de agir ou\nreagir, também Vulnerável). Alternada manualmente, mesmo modelo de `morrendo`."
             }
         },
         "required": [
@@ -5766,7 +5873,7 @@ export const schemasContratosPublicos = {
             "lesoes"
         ],
         "additionalProperties": false,
-        "description": "Estado mutável de saúde do agente durante o jogo (`sistema-v4.1.0.md` —\n\"Saúde\"). Vida e Energia atuais são valores correntes (os máximos são\nderivados). A Sanidade não é uma barra: materializa-se nas listas de sequelas\n(temporárias) e traumas (permanentes). As lesões físicas removem atributos."
+        "description": "Estado mutável de saúde do agente durante o jogo (`sistema-v4.1.3.md` —\n\"Saúde\"). Vida e Energia atuais são valores correntes (os máximos são\nderivados). A Sanidade não é uma barra: materializa-se nas listas de sequelas\n(temporárias) e traumas (permanentes). As lesões físicas removem atributos."
     },
     "FichaDerivadosDto": {
         "type": "object",
@@ -5838,7 +5945,7 @@ export const schemasContratosPublicos = {
             },
             "critico": {
                 "type": "boolean",
-                "description": "`true` marca o passo como **critável** (m3-30): a UI oferece um botão \"Rolar crítico\" além do\n\"Rolar\", e o crítico **dobra** o dano (dados, fixos e atributos da fórmula), exceto valores de\nPatente/Nível (`PROF`/`NIV`), conforme `sistema-v4.1.0` (1217/1303). Ausente = não."
+                "description": "`true` marca o passo como **critável** (m3-30): a UI oferece um botão \"Rolar crítico\" além do\n\"Rolar\", e o crítico **dobra** o dano (dados, fixos e atributos da fórmula), exceto valores de\nPatente/Nível (`PROF`/`NIV`), por decisão D4 de m3-30. No livro corrente,\n`sistema-v4.1.3.md` (\"Medicinais\"), essa exclusão é explícita na cura; a aplicação por\ncontexto de operação continua sob revisão, conforme `docs/context/CONTEXT.md` §7. Ausente = não."
             }
         },
         "required": [
@@ -5936,7 +6043,7 @@ export const schemasContratosPublicos = {
             "texto"
         ],
         "additionalProperties": false,
-        "description": "Uma linha de bônus de **Formação** já aplicada a um personagem (`docs/core/sistema-v4.1.0.md` —\n\"⬦ Formação\"). `bonus: null` **não é lacuna, é o escape do documento**: *\"A lista apresentada não é\ndefinitiva. Bônus adicionais podem ser autorizados pelo Mestre.\"* — nesse caso só o `texto` livre\nexiste. Quando `bonus` aponta para uma linha de `FormacaoBonusEnum`, `parametro` guarda a escolha\nlivre que a linha exige (ex.: \"Vigor\", \"Armas de Fogo\", \"Químico\", \"Esquiva\") — `null` quando a\nlinha não exige parâmetro. `texto` é sempre a fonte de exibição, independente do tipo do bônus."
+        "description": "Uma linha de bônus de **Formação** já aplicada a um personagem (`docs/core/sistema-v4.1.3.md` —\n\"⬦ Formação\"). `bonus: null` **não é lacuna, é o escape do documento**: *\"A lista apresentada não é\ndefinitiva. Bônus adicionais podem ser autorizados pelo Mestre.\"* — nesse caso só o `texto` livre\nexiste. Quando `bonus` aponta para uma linha de `FormacaoBonusEnum`, `parametro` guarda a escolha\nlivre que a linha exige (ex.: \"Vigor\", \"Armas de Fogo\", \"Químico\", \"Esquiva\") — `null` quando a\nlinha não exige parâmetro. `texto` é sempre a fonte de exibição, independente do tipo do bônus."
     },
     "FichaEspecialidadeDto": {
         "type": "object",
@@ -5953,7 +6060,7 @@ export const schemasContratosPublicos = {
             "efeito"
         ],
         "additionalProperties": false,
-        "description": "A **Especialidade** de um agente (`docs/core/sistema-v4.1.0.md` — \"⬦ Especialidade\"): um único\nbônus com gatilho circunstancial, sem custo de Energia. `efeito` não acumula com outras opções\n(regra do documento). Texto livre — descreve o bônus específico (ex.: \"+1 dado em testes de\nFurtividade\"), não um catálogo fechado; o Mestre é o árbitro do teto de poder (mesmo espírito do\nescape \"autorizado pelo Mestre\" que `FichaFormacaoDto.bonus: null` já usa)."
+        "description": "A **Especialidade** de um agente (`docs/core/sistema-v4.1.3.md` — \"⬦ Especialidade\"): um único\nbônus com gatilho circunstancial, sem custo de Energia. `efeito` não acumula com outras opções\n(regra do documento). Texto livre — descreve o bônus específico (ex.: \"+1 dado em testes de\nFurtividade\"), não um catálogo fechado; o Mestre é o árbitro do teto de poder (mesmo espírito do\nescape \"autorizado pelo Mestre\" que `FichaFormacaoDto.bonus: null` já usa)."
     },
     "FichaOrigemDto": {
         "type": "object",
@@ -5985,7 +6092,7 @@ export const schemasContratosPublicos = {
             "saberDeCampo"
         ],
         "additionalProperties": false,
-        "description": "A **Origem** de um agente (`docs/core/sistema-v4.1.0.md` — \"⬦ Origem\"): passado profissional antes\nda Fundação SCP, composto por Formação (exatamente 2 bônus), Especialidade e Saber de Campo.\n**Imutável após definida** (regra do documento) — a trava de imutabilidade é validada no backend\n(m3-24), não aqui."
+        "description": "A **Origem** de um agente (`docs/core/sistema-v4.1.3.md` — \"⬦ Origem\"): passado profissional antes\nda Fundação SCP, composto por Formação (exatamente 2 bônus), Especialidade e Saber de Campo.\n**Imutável após definida** (regra do documento) — a trava de imutabilidade é validada no backend\n(m3-24), não aqui."
     },
     "FichaPersonalidadeEstagioDto": {
         "type": "object",
@@ -6002,7 +6109,7 @@ export const schemasContratosPublicos = {
             "custoEnergia"
         ],
         "additionalProperties": false,
-        "description": "Texto/custo de um estágio da Habilidade de Personalidade — Base ou uma Fortificação (1ª/2ª,\nobtidas nos níveis 7 e 14; `docs/core/sistema-v4.1.0.md` — \"Identidade\" e \"Fortificação de\nTraços\"; m3-78). Sem campo de nome: o nome de qualquer estágio é sempre a palavra de\npersonalidade (`FichaIdentidadeDto.personalidade`), sufixada pelo rótulo do estágio nas\nFortificações (`materializarHabilidadePersonalidade`, `shared/regras/identidade`) — nunca um\ntexto livre à parte."
+        "description": "Texto/custo de um estágio da Habilidade de Personalidade — Base ou uma Fortificação (1ª/2ª,\nobtidas nos níveis 7 e 14; `docs/core/sistema-v4.1.3.md` — \"Identidade\" e \"Fortificação de\nTraços\"; m3-78). Sem campo de nome: o nome de qualquer estágio é sempre a palavra de\npersonalidade (`FichaIdentidadeDto.personalidade`), sufixada pelo rótulo do estágio nas\nFortificações (`materializarHabilidadePersonalidade`, `shared/regras/identidade`) — nunca um\ntexto livre à parte."
     },
     "FichaPersonalidadeHabilidadeDto": {
         "type": "object",
@@ -6053,7 +6160,7 @@ export const schemasContratosPublicos = {
             "origem"
         ],
         "additionalProperties": false,
-        "description": "A **Identidade** de um agente (`docs/core/sistema-v4.1.0.md` — \"⬡ Identidade\"): Personalidade\n(uma única palavra, um adjetivo — a habilidade correspondente vive em `habilidades[]` com\n`categoria: HabilidadeCategoriaEnum.PERSONALIDADE`) e Origem. **Imutável após definida** (regra do\ndocumento) — validado no backend (m3-24). Opcional — fichas anteriores a esta task (m3-23) não têm."
+        "description": "A **Identidade** de um agente (`docs/core/sistema-v4.1.3.md` — \"⬡ Identidade\"): Personalidade\n(uma única palavra, um adjetivo — a habilidade correspondente vive em `habilidades[]` com\n`categoria: HabilidadeCategoriaEnum.PERSONALIDADE`) e Origem. **Imutável após definida** (regra do\ndocumento) — validado no backend (m3-24). Opcional — fichas anteriores a esta task (m3-23) não têm."
     },
     "FichaJogadorDadosDto": {
         "type": "object",
@@ -6111,7 +6218,7 @@ export const schemasContratosPublicos = {
                     "social",
                     "vontade"
                 ],
-                "description": "Atributo que carrega a **Maestria** (o ápice único da ficha), ou `null` (m3-10). Segue\n`sistema-v4.1.0.md` (\"⬥ Maestrias\"): **única na ficha** (por isso um só campo, não um por\natributo) e só marcável em atributo com **6+ pontos** (`shared/regras/agente`\n`maestriaAtingivel`). A ficha guarda apenas **qual** atributo tem a Maestria; o bônus permanente\n(distinto por atributo, tabela do documento) é exibição derivada, não persistido."
+                "description": "Atributo que carrega a **Maestria** (o ápice único da ficha), ou `null` (m3-10). Segue\n`sistema-v4.1.3.md` (\"⬥ Maestrias\"): **única na ficha** (por isso um só campo, não um por\natributo) e só marcável em atributo com **6+ pontos** (`shared/regras/agente`\n`maestriaAtingivel`). A ficha guarda apenas **qual** atributo tem a Maestria; o bônus permanente\n(distinto por atributo, tabela do documento) é exibição derivada, não persistido."
             },
             "identidade": {
                 "$ref": "#/components/schemas/FichaIdentidadeDto",

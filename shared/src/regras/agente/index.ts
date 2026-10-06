@@ -1,5 +1,5 @@
 // Fórmulas do agente (aba `agente` da calculadora) — m1-02. Funções puras
-// conferidas contra docs/core/sistema-v4.1.0.md; DTOs de entrada e value-objects
+// conferidas contra docs/core/sistema-v4.1.3.md; DTOs de entrada e value-objects
 // de saída em `agente.dtos`.
 export * from './agente.dtos';
 export * from './saude';

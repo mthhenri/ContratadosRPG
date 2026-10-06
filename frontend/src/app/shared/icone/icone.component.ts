@@ -6,7 +6,7 @@ import { Component, input } from '@angular/core';
  * depois (m2-09) topbar, autenticação e campanhas (nav, dropdown de perfil, chips de papel,
  * ações); e por fim as seis abas da ficha (batem com o `id` da aba — Visão Geral, Combate,
  * Inventário, Habilidades, Sanidade, Rolagens); e por fim as três condições rastreadas na ficha
- * (`sistema-v4.1.0.md` — "Condições"; m2-16b), usadas no editor e no mini-card de campanha; e
+ * (`sistema-v4.1.3.md` — "Condições"; m2-16b), usadas no editor e no mini-card de campanha; e
  * `infinito`, marca de lesão permanente na aba Sanidade; `alerta`, sinal de sobrecarga na linha
  * "Inventário"; `camadas`/`teto`, toggles "não conta no total/teto" das modificações de item; e
  * `busca`, botão de busca de itens na aba Inventário; `duplicar`, ação de clonar uma ficha no

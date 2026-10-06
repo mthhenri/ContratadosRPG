@@ -14,7 +14,7 @@ import type { FichaComboDto } from './ficha-combo.dtos';
 
 /**
  * Contrato tipado do documento JSONB `ficha.dados` para a **ficha de jogador**
- * (m3-01). Forma final derivada de `docs/core/sistema-v4.1.0.md` — o documento
+ * (m3-01). Forma final derivada de `docs/core/sistema-v4.1.3.md` — o documento
  * vence o código (proibição #27). É a fundação consumida pelo backend (validação
  * autoritativa via `shared/regras`, m3-03) e pelo frontend (cálculo/exibição ao
  * vivo). Camada `shared/` pura: nenhuma migration, service ou endpoint aqui.
@@ -52,7 +52,7 @@ import type { FichaComboDto } from './ficha-combo.dtos';
  */
 
 /**
- * Os dez atributos de um agente (`docs/core/sistema-v4.1.0.md` — "Atributos").
+ * Os dez atributos de um agente (`docs/core/sistema-v4.1.3.md` — "Atributos").
  * O documento agrupa cinco como Físicos (Destreza, Força, Luta, Pontaria, Vigor)
  * e cinco como Mentais (Intelecto, Medicina, Sentidos, Social, Vontade), mas isso
  * é só um agrupamento de leitura — todos moram no mesmo bloco.
@@ -77,7 +77,7 @@ export interface FichaAtributosDto {
 }
 
 /**
- * Uma sequela: instabilidade mental **temporária** (`sistema-v4.1.0.md` —
+ * Uma sequela: instabilidade mental **temporária** (`sistema-v4.1.3.md` —
  * "Saúde" > Sanidade). Ganha ao falhar num teste de Vontade; removida ao voltar à
  * base ou num descanso longo e confortável. O limite (Vontade) e os efeitos
  * mecânicos são domínio de `shared/regras`; aqui guarda-se só a entrada nomeada.
@@ -88,7 +88,7 @@ export interface FichaSequelaDto {
 }
 
 /**
- * Um trauma: versão **permanente** de uma sequela (`sistema-v4.1.0.md` — Sanidade).
+ * Um trauma: versão **permanente** de uma sequela (`sistema-v4.1.3.md` — Sanidade).
  * Não é removível, apenas **tratável** (o tratamento reduz a penalidade, não some
  * com o trauma) — daí `tratado`. O limite de traumas não-tratados (Vontade + 1;
  * Experimentos Vontade − 1) é validado por `shared/regras`.
@@ -101,7 +101,7 @@ export interface FichaTraumaDto {
 }
 
 /**
- * Registro de um Fragmento Potencializador **consumido** (`sistema-v4.1.0.md` — "⬦ Consumo de
+ * Registro de um Fragmento Potencializador **consumido** (`sistema-v4.1.3.md` — "⬦ Consumo de
  * Fragmentos"; m3-64). A sequela "Rejeição Biológica" carrega o mesmo texto na `descricao`, mas só é
  * gerada quando o jogador **não** evita o Preço de Sanidade com o teste de Vontade. Este registro é
  * incondicional: existe sempre que um fragmento é consumido, independente da sequela.
@@ -128,7 +128,7 @@ export interface FichaFragmentoConsumidoDto {
 }
 
 /**
- * Uma lesão física (`sistema-v4.1.0.md` — "Lesões"): remove pontos de um atributo
+ * Uma lesão física (`sistema-v4.1.3.md` — "Lesões"): remove pontos de um atributo
  * conforme a severidade. Guarda-se qual atributo foi afetado, quantos pontos
  * restam removidos (pode ser reduzido por tratamento/reabilitação) e se já se
  * tornou permanente (após entrar em "Morrendo" o suficiente enquanto lesionado).
@@ -146,7 +146,7 @@ export interface FichaLesaoDto {
 }
 
 /**
- * Uma habilidade da ficha (`sistema-v4.1.0.md` — "Habilidades"). Sem catálogo
+ * Uma habilidade da ficha (`sistema-v4.1.3.md` — "Habilidades"). Sem catálogo
  * tipado de habilidades no `shared/regras` (diferente de compras), a ficha guarda
  * a habilidade de forma desnormalizada: nome, custo de Energia, categoria de
  * origem e o texto do efeito.
@@ -183,7 +183,7 @@ export interface FichaInventarioDto {
 }
 
 /**
- * Estado mutável de saúde do agente durante o jogo (`sistema-v4.1.0.md` —
+ * Estado mutável de saúde do agente durante o jogo (`sistema-v4.1.3.md` —
  * "Saúde"). Vida e Energia atuais são valores correntes (os máximos são
  * derivados). A Sanidade não é uma barra: materializa-se nas listas de sequelas
  * (temporárias) e traumas (permanentes). As lesões físicas removem atributos.
@@ -212,7 +212,7 @@ export interface FichaEstadoDto {
   readonly traumas: readonly FichaTraumaDto[];
   readonly lesoes: readonly FichaLesaoDto[];
   /**
-   * Condição **Morrendo** (`sistema-v4.1.0.md` — "Condições": teste de Vigor a cada turno, DT
+   * Condição **Morrendo** (`sistema-v4.1.3.md` — "Condições": teste de Vigor a cada turno, DT
    * crescente; falhar mata). Alternada **manualmente** pelo dono/mestre — não é recalculada
    * automaticamente a partir de `vidaAtual` (mesma filosofia de m3-10: o estado narrativo é
    * refletido por quem joga, não travado pelo motor). Opcional por retrocompatibilidade —
@@ -220,13 +220,13 @@ export interface FichaEstadoDto {
    */
   readonly morrendo?: boolean;
   /**
-   * Condição **Machucado** (`sistema-v4.1.0.md` — "Condições": resultado de um golpe que
+   * Condição **Machucado** (`sistema-v4.1.3.md` — "Condições": resultado de um golpe que
    * removeu metade da vida; só sai ao recuperar 100%). Alternada manualmente, mesmo modelo de
    * `morrendo`.
    */
   readonly machucado?: boolean;
   /**
-   * Condição **Inconsciente** (`sistema-v4.1.0.md` — "Condições": impossibilitado de agir ou
+   * Condição **Inconsciente** (`sistema-v4.1.3.md` — "Condições": impossibilitado de agir ou
    * reagir, também Vulnerável). Alternada manualmente, mesmo modelo de `morrendo`.
    */
   readonly inconsciente?: boolean;
@@ -288,7 +288,9 @@ export interface FichaRolagemPassoDto {
   /**
    * `true` marca o passo como **critável** (m3-30): a UI oferece um botão "Rolar crítico" além do
    * "Rolar", e o crítico **dobra** o dano (dados, fixos e atributos da fórmula), exceto valores de
-   * Patente/Nível (`PROF`/`NIV`), conforme `sistema-v4.1.0` (1217/1303). Ausente = não.
+   * Patente/Nível (`PROF`/`NIV`), por decisão D4 de m3-30. No livro corrente,
+   * `sistema-v4.1.3.md` ("Medicinais"), essa exclusão é explícita na cura; a aplicação por
+   * contexto de operação continua sob revisão, conforme `docs/context/CONTEXT.md` §7. Ausente = não.
    */
   readonly critico?: boolean;
 }
@@ -321,7 +323,7 @@ export interface FichaRolagemDto {
 }
 
 /**
- * Uma linha de bônus de **Formação** já aplicada a um personagem (`docs/core/sistema-v4.1.0.md` —
+ * Uma linha de bônus de **Formação** já aplicada a um personagem (`docs/core/sistema-v4.1.3.md` —
  * "⬦ Formação"). `bonus: null` **não é lacuna, é o escape do documento**: *"A lista apresentada não é
  * definitiva. Bônus adicionais podem ser autorizados pelo Mestre."* — nesse caso só o `texto` livre
  * existe. Quando `bonus` aponta para uma linha de `FormacaoBonusEnum`, `parametro` guarda a escolha
@@ -335,7 +337,7 @@ export interface FichaFormacaoDto {
 }
 
 /**
- * A **Especialidade** de um agente (`docs/core/sistema-v4.1.0.md` — "⬦ Especialidade"): um único
+ * A **Especialidade** de um agente (`docs/core/sistema-v4.1.3.md` — "⬦ Especialidade"): um único
  * bônus com gatilho circunstancial, sem custo de Energia. `efeito` não acumula com outras opções
  * (regra do documento). Texto livre — descreve o bônus específico (ex.: "+1 dado em testes de
  * Furtividade"), não um catálogo fechado; o Mestre é o árbitro do teto de poder (mesmo espírito do
@@ -347,7 +349,7 @@ export interface FichaEspecialidadeDto {
 }
 
 /**
- * A **Origem** de um agente (`docs/core/sistema-v4.1.0.md` — "⬦ Origem"): passado profissional antes
+ * A **Origem** de um agente (`docs/core/sistema-v4.1.3.md` — "⬦ Origem"): passado profissional antes
  * da Fundação SCP, composto por Formação (exatamente 2 bônus), Especialidade e Saber de Campo.
  * **Imutável após definida** (regra do documento) — a trava de imutabilidade é validada no backend
  * (m3-24), não aqui.
@@ -362,7 +364,7 @@ export interface FichaOrigemDto {
 
 /**
  * Texto/custo de um estágio da Habilidade de Personalidade — Base ou uma Fortificação (1ª/2ª,
- * obtidas nos níveis 7 e 14; `docs/core/sistema-v4.1.0.md` — "Identidade" e "Fortificação de
+ * obtidas nos níveis 7 e 14; `docs/core/sistema-v4.1.3.md` — "Identidade" e "Fortificação de
  * Traços"; m3-78). Sem campo de nome: o nome de qualquer estágio é sempre a palavra de
  * personalidade (`FichaIdentidadeDto.personalidade`), sufixada pelo rótulo do estágio nas
  * Fortificações (`materializarHabilidadePersonalidade`, `shared/regras/identidade`) — nunca um
@@ -387,7 +389,7 @@ export interface FichaPersonalidadeHabilidadeDto {
 }
 
 /**
- * A **Identidade** de um agente (`docs/core/sistema-v4.1.0.md` — "⬡ Identidade"): Personalidade
+ * A **Identidade** de um agente (`docs/core/sistema-v4.1.3.md` — "⬡ Identidade"): Personalidade
  * (uma única palavra, um adjetivo — a habilidade correspondente vive em `habilidades[]` com
  * `categoria: HabilidadeCategoriaEnum.PERSONALIDADE`) e Origem. **Imutável após definida** (regra do
  * documento) — validado no backend (m3-24). Opcional — fichas anteriores a esta task (m3-23) não têm.
@@ -433,7 +435,7 @@ export interface FichaJogadorDadosDto {
   readonly atributos: FichaAtributosDto;
   /**
    * Atributo que carrega a **Maestria** (o ápice único da ficha), ou `null` (m3-10). Segue
-   * `sistema-v4.1.0.md` ("⬥ Maestrias"): **única na ficha** (por isso um só campo, não um por
+   * `sistema-v4.1.3.md` ("⬥ Maestrias"): **única na ficha** (por isso um só campo, não um por
    * atributo) e só marcável em atributo com **6+ pontos** (`shared/regras/agente`
    * `maestriaAtingivel`). A ficha guarda apenas **qual** atributo tem a Maestria; o bônus permanente
    * (distinto por atributo, tabela do documento) é exibição derivada, não persistido.

@@ -11,7 +11,7 @@ import { IconeNome } from '../../shared/icone/icone.component';
  * `novo-agente` e `patente` da simulacao. É **formatação de UI** — a fonte da verdade dos
  * valores continua em `shared/regras` (enums SCREAMING_SNAKE_CASE); aqui só se traduz o
  * código do enum para o texto exibido, como o mapeamento `null`→"N/A" da aba `agente` (m1-07).
- * Os nomes de patente seguem os nomes completos do documento (docs/core/sistema-v4.1.0.md —
+ * Os nomes de patente seguem os nomes completos do documento (docs/core/sistema-v4.1.3.md —
  * "Prestígio e Patentes"), não as abreviações do site antigo ("FT Especial"/"Op. Especiais").
  */
 export const ROTULOS_PATENTE: Readonly<Record<PatenteEnum, string>> = {

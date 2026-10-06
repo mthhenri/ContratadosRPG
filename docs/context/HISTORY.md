@@ -1,5 +1,54 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-06 — P-102: versionamento autorizado da conclusão documental
+
+Autor autorizou o commit da P-102 após o fecho da execução. Incluídos os ponteiros
+operacionais alinhados, comentários e descrições geradas, spec concluída, contexto
+e evidências já verificadas; sem novas mudanças de regra ou UI. Diff conferido,
+80 testes aprovados na execução anterior e nove temporários já removidos.
+Proposta M10 preservada fora do commit. Coautoria Codex incluída; mensagem gravada
+e escopo do commit conferidos após a gravação.
+
+## 2026-10-06 — Commit P-101/01/02/03 e P-102: fontes correntes com histórico preservado
+
+Autor confirmou que o commit deve reunir P-101 e as três filhas 01/02/03. Criado
+`767b47bf539123d51a991d376f0caf232b7c1f37`, com as quatro specs concluídas, implementação,
+contexto e evidências de verificação; trailer `Co-authored-by: Codex <noreply@openai.com>`
+conferido na mensagem gravada. Proposta M10 mantida fora do commit.
+
+Execução da P-102 autorizada em seguida. Inventariadas 299 ocorrências de fontes antigas
+em 173 arquivos operacionais, incluindo descrições geradas da API. Comparação normalizada
+dos livros mostrou o Sistema idêntico fora dos três parágrafos de Crítico; seções do Guia
+conferidas e adequações já concluídas na P-101 distinguidas das pendências NPC. README,
+SCHEMA, design, specs ativas/backlog e comentários apontam Sistema v4.1.3/Guia v4.2.0;
+índices de Arredondamentos/Cenas corrigidos e citações de Civil conservadas após conferência.
+CONTEXT/PROBLEMS complementares alinhados. Nenhuma substituição global nem edição do livro.
+
+Comentário de modificador descreve bônus fixo no teste/metade truncada na DT (regra já
+implementada); slot de Cadência admite sobra no fim; cartão distingue Contra-Ataque próprio
+de reação de agente. Schema corrige somente o exemplo documental de ataque para as chaves
+já existentes e declara seus snapshots livres. Schema, FICHA-NPC e milestone não afirmam
+Competências implementadas: m4-19 e investigação Ataques/Equipamentos continuam próprias.
+Citação D4 da regressão de contas identificada como histórica; exceção de Patente/Nível no
+preset documentada como decisão legada e revisão por contexto, sem alterar motor ou
+reativar P-099. P-093 segue ACEITO, apenas com índice de linha vigente; editorial sob o autor.
+
+Geração oficial de OpenAPI atualiza descrições e incorpora quatro schemas dos DTOs P-101
+já presentes na fonte antes desta tarefa.129 operações e 273 schemas anteriores conservados
+fora de descrições.160 arquivos TS têm emissão funcional igual; dois templates/dois SCSS
+iguais fora de comentários.3 testes OpenAPI e 77 de contas passaram; primeira tentativa
+teve EPERM ambiental do sandbox, repetição autorizada passou. PDFs/worker publicados não
+vazios; SHA-256 dos dois PDFs igual em core/public/saída existente, sem recópia ou publicação.
+Servidor local inativo na tentativa HTTP; gate documental feito por arquivos/pipeline.
+Links/diff e AGENTS/CLAUDE conferidos; skills intocadas. Sem build/lint amplo/visual pelo
+escopo documental e prova de código/UI preservados. Reviews antigos e specs anteriores em
+done preservados; este bloco acrescido sem reescrever o histórico anterior.
+
+P-102 movida para done e retirada de PROBLEMS, CONTEXT/MEMORY/fila atualizados.
+[Relatório](../reviews/p-102-verificacao.md), inventário e checagens guardados;
+scripts/resultados temporários removidos. Proposta M10 preservada. P-102 sem commit próprio;
+nenhuma pendência técnica dela, sem encerrar m4-19 nem investigações/revisões separadas.
+
 ## 2026-10-06 — P-101/01/02/03: realocação negativa, DT e referências de Criatura
 
 Autor autorizou executar P-101 e suas três tasks em conjunto. Implementada consulta pura

@@ -2,7 +2,7 @@ import type { FichaHabilidadeDto } from '../../dtos/ficha';
 import { ClasseEnum, HabilidadeCategoriaEnum } from '../../enums';
 
 /**
- * Regra "Experimento com Peculiaridade perde a Origem" (m3-41; `docs/core/sistema-v4.1.0.md` —
+ * Regra "Experimento com Peculiaridade perde a Origem" (m3-41; `docs/core/sistema-v4.1.3.md` —
  * "⬡ Subclasse"): as três subclasses de Experimento têm, no catálogo de Subclasse
  * (`shared/regras/agente/habilidades-catalogo.dados`), a habilidade "Peculiaridade" — "Ao criar seu
  * agente, escolha uma característica anômala, ela lhe concederá um bônus e uma penalidade
@@ -10,7 +10,7 @@ import { ClasseEnum, HabilidadeCategoriaEnum } from '../../enums';
  * (Formação/Especialidade/Saber de Campo) deixa de existir para aquele agente.
  */
 
-/** As três subclasses de Experimento (`docs/core/sistema-v4.1.0.md` — "⬡ Subclasse"). */
+/** As três subclasses de Experimento (`docs/core/sistema-v4.1.3.md` — "⬡ Subclasse"). */
 const CLASSES_EXPERIMENTO: readonly ClasseEnum[] = [
   ClasseEnum.EXPERIMENTO_BESTIAL,
   ClasseEnum.EXPERIMENTO_ARTIFICIAL,
@@ -18,7 +18,7 @@ const CLASSES_EXPERIMENTO: readonly ClasseEnum[] = [
 ];
 
 /**
- * `true` quando `classe` é uma das três subclasses de Experimento (`docs/core/sistema-v4.1.0.md` —
+ * `true` quando `classe` é uma das três subclasses de Experimento (`docs/core/sistema-v4.1.3.md` —
  * "⬡ Subclasse"). Reusado pelo guia de criação para conceder a vaga garantida de Habilidade de
  * Subclasse mesmo no Nível 0 (m3-58 só concede vagas a partir do Nível 1).
  */
@@ -45,7 +45,7 @@ export function experimentoComPeculiaridade(
 
 /**
  * `true` quando `classe` é Experimento Artificial **e** `habilidades` contém a "Anomalia" de
- * Subclasse (`docs/core/sistema-v4.1.0.md` — "⬦ Habilidades de Subclasse": "Fragmentos custam o
+ * Subclasse (`docs/core/sistema-v4.1.3.md` — "⬦ Habilidades de Subclasse": "Fragmentos custam o
  * dobro de Energia em seu uso, mas têm todos os seus efeitos dobrados"). Diferente de
  * `experimentoComPeculiaridade`, a habilidade só existe no catálogo de Artificial (`P-013`) — as
  * outras duas subclasses de Experimento não a têm, então não há por que checar `ehClasseExperimento`

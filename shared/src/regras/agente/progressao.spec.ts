@@ -3,7 +3,7 @@ import { ClasseEnum } from '../../enums';
 import { calcularBeneficiosNivel, calcularProgressaoAcumulada } from './progressao';
 
 /**
- * Progressão conferida contra docs/core/sistema-v4.1.0.md — tabela de "Progressão"
+ * Progressão conferida contra docs/core/sistema-v4.1.3.md — tabela de "Progressão"
  * (agente, Níveis 0–20) e "Jogando como um Civil" > "Treinamentos" (0–5). Consome
  * as tabelas `dadosAgente`/`dadosCivil` migradas na m1-01 (fonte única).
  */

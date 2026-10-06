@@ -2,7 +2,7 @@ import { HabilidadeCategoriaEnum, PersonalidadeEstagioEnum, ROTULOS_PERSONALIDAD
 import type { FichaHabilidadeDto, FichaIdentidadeDto, FichaPersonalidadeHabilidadeDto } from '../../dtos/ficha';
 
 /**
- * Motor da Habilidade de Personalidade (`docs/core/sistema-v4.1.0.md` — "Identidade" e
+ * Motor da Habilidade de Personalidade (`docs/core/sistema-v4.1.3.md` — "Identidade" e
  * "Fortificação de Traços"; m3-78): a Habilidade de Personalidade tem 3 estágios (Base, 1ª e 2ª
  * Fortificação, obtidas nos níveis 7/14), mas só o estágio **ativo** existe como item em
  * `dados.habilidades` a qualquer momento — os 3 rascunhos completos vivem em
@@ -17,7 +17,7 @@ import type { FichaHabilidadeDto, FichaIdentidadeDto, FichaPersonalidadeHabilida
  * palavra de Personalidade ainda não foi definida (o nome de todo estágio depende dela) ou quando o
  * estágio marcado como `ativa` ainda não tem descrição preenchida — a ferramenta não inventa um
  * valor que Mestre e Jogador ainda não combinaram. O nome de uma Fortificação nunca é livre: é
- * sempre a palavra de Personalidade seguida do rótulo do estágio (`docs/core/sistema-v4.1.0.md` —
+ * sempre a palavra de Personalidade seguida do rótulo do estágio (`docs/core/sistema-v4.1.3.md` —
  * exemplo "⬦ Determinado" mantido em toda Fortificação, só descrição/custo mudam).
  */
 export function materializarHabilidadePersonalidade(

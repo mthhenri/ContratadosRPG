@@ -15,7 +15,7 @@ import type { AnaliseContaDto, ContaDto, FonteEscalar, NoContaDto, OperadorConta
  *
  * **Aritmética exata**: cada valor é uma fração de inteiros (`BigInt`), nunca ponto flutuante — `(7/3)*3`
  * vale exatamente 7, e o **arredondamento é para baixo, uma única vez, ao fim da conta**
- * (docs/core/sistema-v4.1.0.md:2027-2033 — "arredondar para baixo após a conclusão do cálculo"; 27,5 → 27).
+ * (docs/core/sistema-v4.1.3.md:1353-1359 — "arredondar para baixo após a conclusão do cálculo"; 27,5 → 27).
  * Sem `eval`/`Function`: analisador recursivo sobre tokens, com limites de tamanho e de profundidade
  * (o backend valida texto vindo do cliente). Nada aqui lança: o erro de leitura volta em `erro`, e a divisão
  * por zero **na rolagem** (divisor que depende de uma fonte e vale 0) faz a conta valer 0 (D2).

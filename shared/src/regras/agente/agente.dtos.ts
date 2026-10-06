@@ -9,7 +9,7 @@ import type { PrecoSanidadeConsumoDto } from '../compras';
  * primitivos soltos. Seguem as convenções de DTO — entrada `<Conceito>CalcularDto`
  * (verbo no infinitivo), saída como recorte computado / value-object sem verbo.
  *
- * Fonte das fórmulas: docs/core/sistema-v4.1.0.md. Em conflito com o código, o
+ * Fonte das fórmulas: docs/core/sistema-v4.1.3.md. Em conflito com o código, o
  * documento vence (proibição #27).
  */
 

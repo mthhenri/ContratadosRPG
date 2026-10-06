@@ -68,7 +68,7 @@ function calcularFaixa(
  * com o dado deslocado na escada pela qualidade (Insalubre −1, Confortável +1) e
  * pela refeição (+1). Descanso Curto não recupera Vida (`vida` = `null`).
  *
- * Fonte: docs/core/sistema-v4.1.0.md — "Descanso". Espelha `calcDescanso` do
+ * Fonte: docs/core/sistema-v4.1.3.md — "Descanso". Espelha `calcDescanso` do
  * site antigo. Dados extras digitados livremente não entram nesta faixa, só na rolagem
  * (`calcularResultadoDescanso`); dados adicionais permanentes de habilidades entram porque fazem
  * parte da própria fórmula.
@@ -165,7 +165,7 @@ export function rolarDados(dto: RolagemDadosDto): number[] {
  * total por 2 (arredonda para baixo). Espelha o núcleo de `buildResult` do site
  * antigo, isolado da rolagem para ser determinístico e testável.
  *
- * Fonte: docs/core/sistema-v4.1.0.md — "Descanso" (interrupção = metade do valor
+ * Fonte: docs/core/sistema-v4.1.3.md — "Descanso" (interrupção = metade do valor
  * recuperado, arredondando para baixo).
  */
 export function calcularResultadoDescanso(dto: ResultadoDescansoCalcularDto): ResultadoDescansoDto {

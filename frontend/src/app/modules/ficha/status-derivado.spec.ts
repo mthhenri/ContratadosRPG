@@ -6,7 +6,7 @@ import { montarInformacoesExtras, normalizarEntrada } from './status-derivado';
 
 /**
  * Bug relatado: bônus de Defesa (amplificador "Defesa", equipamento) não cascateava para
- * Esquiva/Bloqueio/Contra-Ataque — conferido contra docs/core/sistema-v4.1.0.md — "Defesa": "A
+ * Esquiva/Bloqueio/Contra-Ataque — conferido contra docs/core/sistema-v4.1.3.md — "Defesa": "A
  * defesa base é complementada com as Habilidades e Fragmentos, e com isso, você tem a sua 'Defesa
  * Final', que aí sim, nesta defesa, você poderá somar os bônus de reação, sendo ele Esquiva,
  * Bloqueio ou Contra-Ataque."

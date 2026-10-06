@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { calcularDtAtributo } from './dt';
 
 /**
- * DT de atributo conferida contra docs/core/sistema-v4.1.0.md — "DTs de
+ * DT de atributo conferida contra docs/core/sistema-v4.1.3.md — "DTs de
  * Atributos": DT = 10 + Nível + (Atributo × 2). Os valores de referência batem
  * com a tabela (Atributo 1–6 × Nível 0/5/10/15/20) exibida por `calcDT` no site
  * antigo.

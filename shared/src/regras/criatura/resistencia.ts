@@ -3,7 +3,7 @@ import type { FichaCriaturaResistenciaDto } from '../../dtos/ficha';
 import type { CustoResistenciaCalcularDto, FraquezaValidarDto, LimiteResistenciasCalcularDto } from './criatura.dtos';
 
 /** Limite de Resistências = 2×VD, +25% por Fraqueza declarada além da 1ª
- * (docs/core/guia_de_mestre-v4.0.0.md — "Guia de Criação de Ameaças" > "Resistências e
+ * (docs/core/guia_de_mestre-v4.2.0.md — "Guia de Criação de Ameaças" > "Resistências e
  * Fraquezas" > "Limite de Resistências" / "Múltiplas Fraquezas"). */
 export function calcularLimiteResistencias(dto: LimiteResistenciasCalcularDto): number {
   return Math.floor(2 * dto.vd * (1 + 0.25 * dto.quantidadeFraquezasExtras));

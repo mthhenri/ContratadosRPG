@@ -9,7 +9,7 @@ import {
 } from './fragmento-consumo';
 
 /**
- * `aplicarBonusConsumoFragmento` conferida contra `docs/core/sistema-v4.1.0.md` — "⬦
+ * `aplicarBonusConsumoFragmento` conferida contra `docs/core/sistema-v4.1.3.md` — "⬦
  * Potencializador", coluna "Consumido" (m3-64): o bônus é do agente, permanente — soma direto nos
  * campos persistidos (`modificadoresTeste`/`derivados`/`atributos`), nunca recalculado ao vivo (o
  * fragmento consumido não existe mais para reprocessar).

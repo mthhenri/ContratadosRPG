@@ -7,7 +7,7 @@ import type { FichaHabilidadeDto } from '../../dtos/ficha';
  * §6.6): funções puras recebem sempre um DTO tipado. Entradas seguem o verbo no
  * infinitivo; as saídas são recortes computados (value-objects sem verbo).
  *
- * Fonte: docs/core/sistema-v4.1.0.md — "Descanso". Em conflito com o código, o
+ * Fonte: docs/core/sistema-v4.1.3.md — "Descanso". Em conflito com o código, o
  * documento vence (proibição #27).
  */
 

@@ -44,7 +44,7 @@ function aplicarEfeitoUnico(
         ? { ...derivados, danoCorpoACorpo: somarDanoFixo(derivados.danoCorpoACorpo, sinal * efeito.valor) }
         : derivados;
     case 'DANO_FURTIVO_DADO':
-      // Bônus de Formação concede só DADO (sistema-v4.1.0.md "⬦ Formação") — incrementarDadosDanoFurtivo,
+      // Bônus de Formação concede só DADO (sistema-v4.1.3.md "⬦ Formação") — incrementarDadosDanoFurtivo,
       // não incrementarDanoFurtivo (que soma dado E fixo, contrato de marco de progressão/Letalidade).
       return derivados.danoFurtivo
         ? {

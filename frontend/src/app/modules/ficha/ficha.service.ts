@@ -129,7 +129,7 @@ export class FichaService {
 
   /**
    * Média de Nível/Prestígio dos agentes ativos da campanha ("Iniciando um Novo Agente",
-   * `docs/core/sistema-v4.1.0.md`) — agregado; qualquer membro recebe a mesma média, mestre ou
+   * `docs/core/sistema-v4.1.3.md`) — agregado; qualquer membro recebe a mesma média, mestre ou
    * jogador comum, mesmo sem acesso concedido às fichas alheias que entram na conta (§14 não se
    * aplica a este agregado, só a fichas individuais — ver `FichaMediasEsquadraoDto`).
    */

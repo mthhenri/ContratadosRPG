@@ -76,7 +76,7 @@ function rolar(
   return resultado;
 }
 
-describe('avaliador de conta — precedência, parênteses e frações exatas (sistema-v4.1.0.md:2027-2033)', () => {
+describe('avaliador de conta — precedência, parênteses e frações exatas (sistema-v4.1.3.md:1353-1359)', () => {
   it('respeita a precedência de * e / sobre + e −, com associatividade à esquerda', () => {
     expect(valorDaConta('2+3*4')).toBe(14);
     expect(valorDaConta('2*3+4')).toBe(10);
@@ -368,6 +368,8 @@ describe('bônus fixo por conta (I-041)', () => {
   });
 });
 
+// Referência histórica da decisão D4. A regra corrente de Crítico está no Sistema v4.1.3;
+// seu contexto de uso foi revisto na P-097-01 e não é redefinido por esta regressão de contas.
 describe('crítico em bônus por conta — só o que vem de atributos e de números dobra (D4; sistema-v4.1.0.md:1810 e :1965)', () => {
   const critico = (formula: string, atributos: Partial<FichaAtributosDto> = {}, proficiencia = 2): number[] => [
     rolar(formula, atributos, { proficiencia }).total,

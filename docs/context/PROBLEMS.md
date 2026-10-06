@@ -29,19 +29,6 @@
 
 ## Ativos
 
-### P-102 — Referências operacionais apontam livros substituídos · `ABERTO` · documentação
-
-- **Sintoma:** README25–26 aponta livros removidos; SCHEMA, FICHA-NPC e specs ativas
-  ainda citam v4.1.0/v4.0.0 como fonte corrente, apesar das publicações novas recebidas.
-- **Causa:** alinhamento anterior cobriu constituição, instruções, skill e leitor,
-  sem inventariar todos os ponteiros operacionais.
-- **Contorno:** consultar Sistema v4.1.3 e Guia v4.2.0 em docs/core.
-- **Correção:** conferir referência a referência e alinhar as fontes correntes,
-  preservando histórico/done e distinguindo comentários de regras superadas.
-- **Spec:** [P-102](../specs/backlog/p-102-referencias-documentos-vigentes.spec.md),
-  preparada para revisão; sem correção nesta rodada.
-- **Desde:** revisão adicional de 2026-10-06 após pedido de preparar todas as specs.
-
 ### P-099 — Rastreamento de rolagem resultante: proposta descartada · `ACEITO` · rolagem/contrato
 
 - **Sintoma:** expressão genérica não informa se o usuário fará dano/cura depois;
@@ -67,7 +54,7 @@
   "para baixo". A única exceção "para cima" documentada é a média de nível do esquadrão (`:1185`), outra regra.
 - **Contorno:** vale "para baixo" (decisão confirmada pelo autor em 2026-10-02); o motor e o guia de fórmulas já se
   comportam assim, e a spec `rolagem-expressao-quantidade-dados` também.
-- **Correção:** trocar "cima" por "baixo" na linha 2045. **O autor decidiu não alterar `docs/core` por ora**
+- **Correção:** trocar "cima" por "baixo" na linha 1363 do Sistema v4.1.3. **O autor decidiu não alterar `docs/core` por ora**
   (2026-10-02) e pediu só o registro aqui; por isso o item fica `ACEITO`, para ninguém "corrigir" o documento ou o
   motor por conta própria. Reabrir se o autor mudar de ideia.
 - **Desde:** identificado em 2026-10-02, ao especificar a quantidade de dados por expressão (I-041).
@@ -114,7 +101,7 @@
   Um caso concreto encontrado: o passo // Novo agente (nível inicial "arredonda a média da campanha
   − 1", teto de 20, mais o Prestígio) roda **igual pra Civil** — o rótulo, o range do campo manual
   (`min=0 max=20` em "Nível inicial exato") e o resumo mostram "Nível"/"Prestígio" pro Civil também,
-  mas `docs/core/sistema-v4.1.0.md` só define Treinamento 0–5 pra Civil (sem noção de Prestígio;
+  mas `docs/core/sistema-v4.1.3.md` só define Treinamento 0–5 pra Civil (sem noção de Prestígio;
   `dadosCivil` — `shared/src/regras/dados/progressao-civil.dados.ts` — só tem entradas de 0 a 5). Um
   Civil que herda uma média de campanha acima de 5 vira um "Nível" fora da tabela, e
   `calcularProgressaoAcumulada`/`calcularBeneficiosNivel` devolvem lista vazia pra qualquer

@@ -566,7 +566,7 @@ describe('FichaInventario', () => {
     // Regressão: `montarItemInventario` tinha sua própria conta de peso por mod (pro badge do
     // próprio card), separada da do motor usada pelo resumo geral — só essa segunda esquecia de
     // repassar `pesoCustom`, então o total geral batia mas o card do item ainda somava o padrão de
-    // 0,2 (`docs/core/sistema-v4.1.0.md:958`) por cima de uma mod com peso zero declarado.
+    // 0,2 (`docs/core/sistema-v4.1.3.md:958`) por cima de uma mod com peso zero declarado.
     const comModPesoZero: CarrinhoItemDto = {
       ...itemLeve,
       modificacoes: [{ nome: 'Leve como pluma', empilhamentos: 1, pesoCustom: 0 }],

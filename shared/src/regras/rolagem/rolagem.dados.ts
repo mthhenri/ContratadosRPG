@@ -3,7 +3,7 @@ import { TipoDanoEnum } from '../../enums';
 
 /**
  * Abreviação de 3 letras → chave do atributo na ficha. As fórmulas de rolagem (m3-15) referenciam
- * atributos por esta abreviação (ex.: `1d20+LUT`). Fonte: docs/core/sistema-v4.1.0.md — "Atributos"
+ * atributos por esta abreviação (ex.: `1d20+LUT`). Fonte: docs/core/sistema-v4.1.3.md — "Atributos"
  * (as abreviações usadas na notação de testes e dano). Conteúdo de jogo, sem tabela `tipo_*` (§10.3).
  */
 export const ABREVIACOES_ATRIBUTO: Readonly<Record<string, keyof FichaAtributosDto>> = {
@@ -22,7 +22,7 @@ export const ABREVIACOES_ATRIBUTO: Readonly<Record<string, keyof FichaAtributosD
 /**
  * Fontes escalares **extras** além dos 10 atributos (m3-22): a **Proficiência** (`PROF`) e o **Nível**
  * (`NIV`) do agente, usáveis nas fórmulas exatamente como um atributo (modificador, fonte de dados ou
- * escalada). Proficiência = Nível para não-Civis; Civil = 0 (`sistema-v4.1.0.md` — "Testes"). Conteúdo
+ * escalada). Proficiência = Nível para não-Civis; Civil = 0 (`sistema-v4.1.3.md` — "Testes"). Conteúdo
  * de jogo, sem tabela `tipo_*` (§10.3).
  */
 export const ABREVIACOES_FONTE_EXTRA: Readonly<Record<string, 'proficiencia' | 'nivel'>> = {

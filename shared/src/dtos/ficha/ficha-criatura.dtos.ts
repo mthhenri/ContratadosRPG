@@ -17,7 +17,7 @@ import type { FichaAtributosDto } from './ficha.dtos';
 
 /**
  * Contrato tipado do documento JSONB `ficha.dados` para a **ficha de criatura** (Ameaça,
- * `m4-01`). Forma final derivada de `docs/core/guia_de_mestre-v4.0.0.md` — "Guia de Criação
+ * `m4-01`). Forma final derivada de `docs/core/guia_de_mestre-v4.2.0.md` — "Guia de Criação
  * de Ameaças" — o documento vence o código (proibição #27). Design fechado em `SCHEMA.md`
  * ("FichaCriaturaDadosDto") antes desta task; aqui só se codifica.
  *
@@ -106,7 +106,7 @@ export interface FichaCriaturaDadosDto {
 }
 
 /**
- * Ficha de Identidade da criatura (`docs/core/guia_de_mestre-v4.0.0.md` — "Guia de Criação
+ * Ficha de Identidade da criatura (`docs/core/guia_de_mestre-v4.2.0.md` — "Guia de Criação
  * de Ameaças" > "Identidade e Classificação"). Preenchida **antes** de qualquer número —
  * a criatura precisa existir como conceito coerente primeiro.
  */

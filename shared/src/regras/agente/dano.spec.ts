@@ -10,7 +10,7 @@ import {
 } from './dano';
 
 /**
- * Dano de Corpo e Dano Furtivo conferidos contra docs/core/sistema-v4.1.0.md —
+ * Dano de Corpo e Dano Furtivo conferidos contra docs/core/sistema-v4.1.3.md —
  * "Corpo e Pontuação Corporal" (tabela Força + Vigor), "Jogando como um Civil"
  * (dano de corpo = Força − 1; sem dano furtivo) e "Progressão" (dano furtivo
  * inicia em 1D6+1 e ganha +1D6+1 nos Níveis 3/6/9/12/15/18).

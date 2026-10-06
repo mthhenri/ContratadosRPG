@@ -1,7 +1,7 @@
 /**
  * Mapa de nível (0–20) para a lista de benefícios ganhos naquele nível. Usado
  * pelas fórmulas de progressão de `regras/agente` (m1-02). Fonte:
- * docs/core/sistema-v4.1.0.md — "Níveis e Melhorias de Agente".
+ * docs/core/sistema-v4.1.3.md — "Níveis e Melhorias de Agente".
  */
 export type BeneficiosPorNivel = Readonly<Record<number, readonly string[]>>;
 

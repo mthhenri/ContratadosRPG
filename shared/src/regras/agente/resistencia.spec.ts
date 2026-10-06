@@ -12,7 +12,7 @@ import { montarResistencias } from './resistencia';
 
 /**
  * Resistências da aba Combate (m3-36 + ajuste posterior: sempre as 5, manual + equipamento,
- * amplificadores) conferida contra docs/core/sistema-v4.1.0.md — "⬦ Resistências" (exemplo: Colete
+ * amplificadores) conferida contra docs/core/sistema-v4.1.3.md — "⬦ Resistências" (exemplo: Colete
  * Kevlar com 3 de Resistência a Dano Balístico) e "⬡ Amplificadores" (Resistente/Defesa).
  */
 function protecao(parcial: Partial<CarrinhoItemDto> & { resistencia: string }): CarrinhoItemDto {

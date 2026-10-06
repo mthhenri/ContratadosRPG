@@ -261,7 +261,7 @@ copiados por página, `<p class="…__vazio">`/`…__estado` com texto solto) qu
 mobile da ficha, o bloco de vitalidade desktop da mesma ficha e o cartão de combatente, que não
 tinha trilho algum (Vida/Energia eram texto puro). O primitivo é dono do rótulo, do valor
 atual/máximo e do trilho; steppers e o botão "Receber dano" continuam do consumidor, projetados
-ao redor dele ou no slot `[barraRecursoAcao]`. Sanidade fica de fora: `sistema-v4.1.0.md`
+ao redor dele ou no slot `[barraRecursoAcao]`. Sanidade fica de fora: `sistema-v4.1.3.md`
 §Sanidade diz que ela "não é uma barra de valor convencional" — o sistema a modela como listas de
 Sequelas/Traumas/Lesões (`ficha-sanidade`), sem par atual/máximo.
 

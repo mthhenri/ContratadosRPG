@@ -4,7 +4,7 @@ import { aplicarLimitesPorClasse, obterLimitesClasse } from './limites';
 
 /**
  * Limites de entrada por classe. `nivelMaximo` (20 agente / 5 civil) e Nível
- * mínimo 0 vêm do documento (sistema-v4.1.0.md — "Progressão" e "Jogando como um
+ * mínimo 0 vêm do documento (sistema-v4.1.3.md — "Progressão" e "Jogando como um
  * Civil" > "Treinamentos"). Os bounds de atributo (−5 a 7; 8 para Experimento
  * Artificial; 3 para Civil) são os clamps de input da calculadora antiga
  * (`aplicarLimitesPorClasse` do script.js), não fórmula do documento.

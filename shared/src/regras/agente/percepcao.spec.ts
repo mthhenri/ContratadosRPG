@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { calcularAreaPercepcao } from './percepcao';
 
 /**
- * Área de Percepção (em metros) conferida contra docs/core/sistema-v4.1.0.md —
+ * Área de Percepção (em metros) conferida contra docs/core/sistema-v4.1.3.md —
  * "Área de Percepção": 5 + Sentidos × 5; Sentidos ≤ 0 vira 3 metros.
  */
 describe('calcularAreaPercepcao', () => {

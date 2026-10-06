@@ -1,7 +1,7 @@
 import { ArquetipoEnum, ClasseEnum } from '../../enums';
 
 /**
- * Catálogo de habilidades **do sistema** (`sistema-v4.1.0.md`), transcrito fielmente do documento
+ * Catálogo de habilidades **do sistema** (`sistema-v4.1.3.md`), transcrito fielmente do documento
  * e desnormalizado. Fonte única consumida pelo seletor da ficha (`catalogoHabilidades`) — o
  * documento vence o código (proibições #26/#27). Cada entrada guarda só nome/custo/descrição; a
  * **categoria** e a **origem** (classe/arquétipo/subclasse) são atribuídas por `habilidades-catalogo.ts`
@@ -23,7 +23,7 @@ export interface HabilidadeBaseDto {
   readonly descricao: string;
 }
 
-/** Habilidades Gerais — disponíveis a qualquer agente (`sistema-v4.1.0.md` — "⬥ Habilidades Gerais"). */
+/** Habilidades Gerais — disponíveis a qualquer agente (`sistema-v4.1.3.md` — "⬥ Habilidades Gerais"). */
 export const HABILIDADES_GERAIS: readonly HabilidadeBaseDto[] = [
   { nome: '6º Sentido', custoEnergia: 0, descricao: 'Permite-lhe reagir a ataques surpresa, sem penalidade de redução de Defesa e adicionando um terço de sua Destreza.' },
   { nome: 'Analisar Cenário', custoEnergia: 2, descricao: 'Refaz um teste em um local já explorado ou investigado.' },
@@ -88,7 +88,7 @@ export const HABILIDADES_GERAIS: readonly HabilidadeBaseDto[] = [
 ];
 
 /**
- * Habilidades de Civil (`sistema-v4.1.0.md` — "⬥ Habilidades de Civíl"): lista fechada e exclusiva
+ * Habilidades de Civil (`sistema-v4.1.3.md` — "⬥ Habilidades de Civíl"): lista fechada e exclusiva
  * de agentes Civis — "Civis não possuem classes, arquétipos ou habilidades gerais. Possuem acesso
  * exclusivo à lista de habilidades civis. Ao criar a ficha, o civil escolhe 3 habilidades civis."
  * (a escolha de 3 é manual, sem trava no seletor — mesma filosofia "aviso, não trava" do resto do
@@ -121,7 +121,7 @@ export const HABILIDADES_CIVIL: readonly HabilidadeBaseDto[] = [
 ];
 
 /**
- * Habilidades de Classe por classe-base (`sistema-v4.1.0.md` — tabelas de classe). Só as três
+ * Habilidades de Classe por classe-base (`sistema-v4.1.3.md` — tabelas de classe). Só as três
  * classes-base têm lista própria; Experimentos acessam a lista da classe-base correspondente
  * (resolvido em `habilidades-catalogo.ts`). `CIVIL` fica vazio aqui **de propósito** — Civil não
  * tem habilidades de "Classe"; a lista própria dele é `HABILIDADES_CIVIL` (categoria `CIVIL`,
@@ -285,7 +285,7 @@ export const HABILIDADES_ARQUETIPO: Readonly<Record<ArquetipoEnum, readonly Habi
 
 /**
  * Gerais Melhoradas por arquétipo — versão buffada de uma Geral, exclusiva daquele arquétipo
- * (`sistema-v4.1.0.md`). Só aparecem para o próprio arquétipo da ficha.
+ * (`sistema-v4.1.3.md`). Só aparecem para o próprio arquétipo da ficha.
  */
 export const HABILIDADES_GERAIS_MELHORADAS: Readonly<
   Record<ArquetipoEnum, readonly HabilidadeBaseDto[]>

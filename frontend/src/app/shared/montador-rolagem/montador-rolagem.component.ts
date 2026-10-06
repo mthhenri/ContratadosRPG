@@ -20,7 +20,7 @@ import {
   reposicionarOperadorPool,
 } from './montador-rolagem.util';
 
-/** Dados canônicos do sistema (`docs/core/sistema-v4.1.0.md` — "Dados"); sem `d100`. */
+/** Dados canônicos do sistema (`docs/core/sistema-v4.1.3.md` — "Dados"); sem `d100`. */
 const DADOS: readonly number[] = [3, 4, 6, 8, 10, 12, 20];
 
 /** Os 10 atributos, na mesma ordem usada em `guia-formula`/`ficha-rolagens`. */

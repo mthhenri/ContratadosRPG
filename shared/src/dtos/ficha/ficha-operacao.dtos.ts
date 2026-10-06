@@ -85,7 +85,7 @@ export interface FichaListarDto {
 /**
  * Saída da média de Nível/Prestígio dos agentes (`JOGADOR`) ativos de uma campanha — recorte
  * calculado (`Entidade + Recorte + Dto`, sem verbo), consumido pelo guia de criação ao aplicar
- * "Iniciando um Novo Agente" (`docs/core/sistema-v4.1.0.md`). É um **agregado**: nunca expõe
+ * "Iniciando um Novo Agente" (`docs/core/sistema-v4.1.3.md`). É um **agregado**: nunca expõe
  * fichas individuais, então **não** passa pela matriz de visibilidade por ficha (§14) que
  * `listarFichas` aplica — qualquer membro da campanha pode consultar, mestre ou jogador comum,
  * mesmo sem `usuario_ficha_acesso` sobre as fichas alheias somadas na média. Reusa `FichaListarDto`
@@ -104,7 +104,7 @@ export interface FichaMediasEsquadraoDto {
  * "minha ficha" das demais.
  *
  * Vida/Energia + as três condições rastreadas (`morrendo`/`machucado`/`inconsciente` —
- * `sistema-v4.1.0.md`, "Condições") entraram para alimentar o mini-card de ficha embutido no
+ * `sistema-v4.1.3.md`, "Condições") entraram para alimentar o mini-card de ficha embutido no
  * detalhe da campanha (m2-16) sem precisar do documento completo — continua um recorte, não o
  * `dados` inteiro (§14/§10.4: a listagem nunca expõe inventário/habilidades/sequelas de terceiros).
  * `vidaMaxima`/`energiaMaxima` seguem opcionais (retrocompat de `FichaEstadoDto`, m3-10 — fichas
@@ -184,7 +184,7 @@ export interface FichaResumoDto {
   readonly imagemUrl: string | null;
   /**
    * `true` quando o peso do inventário excede o Inventário Máximo (aviso, não trava —
-   * `sistema-v4.1.0.md`). Calculado com exatidão pelo `FichaService` via `calcularResumoCompras`
+   * `sistema-v4.1.3.md`). Calculado com exatidão pelo `FichaService` via `calcularResumoCompras`
    * (`shared/regras/compras`) — o mesmo motor que a aba Inventário usa —, não uma aproximação: o
    * `FichaResumoInternoDto` que a repository devolve carrega os campos brutos (itens/amplificadores/
    * dinheiro/vontade/inventário base) que a fórmula precisa, e o service os reduz a este único

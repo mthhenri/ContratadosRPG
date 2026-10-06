@@ -18,7 +18,7 @@ import { CarrinhoItemDto, ModificacaoAplicadaDto, ModificacaoEfeitoDto } from '.
 
 /**
  * Custos de Energia, Afinidade e Preço de Sanidade dos Fragmentos (m3-35/m3-42) — funções puras
- * conferidas contra `docs/core/sistema-v4.1.0.md` — "⬡ Fragmentos" (ver `fragmento.dados.ts` para
+ * conferidas contra `docs/core/sistema-v4.1.3.md` — "⬡ Fragmentos" (ver `fragmento.dados.ts` para
  * o que fica de fora).
  */
 

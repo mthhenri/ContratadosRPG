@@ -17,7 +17,7 @@ import {
 } from './amplificador';
 
 /**
- * Efeito mecânico dos amplificadores conferido contra docs/core/sistema-v4.1.0.md —
+ * Efeito mecânico dos amplificadores conferido contra docs/core/sistema-v4.1.3.md —
  * "⬡ Amplificadores": bônus principal **escala com as compras** (`valorPorEmpilhamento × compras`,
  * mesma regra das modificações de item — um amplificador é "muito similar à modificação"). Compras
  * ≠ empilhamento bruto: um amplificador que já nasce em ■■ (`Conservador`, `Veloz`) tem a 1ª compra

@@ -1,6 +1,6 @@
 /**
  * Tipo de parâmetro que uma linha de `FormacaoBonusEnum` exige para ser aplicável a um personagem
- * (`docs/core/sistema-v4.1.0.md` — "⬦ Formação"). Nem todo bônus precisa de parâmetro — só as linhas
+ * (`docs/core/sistema-v4.1.3.md` — "⬦ Formação"). Nem todo bônus precisa de parâmetro — só as linhas
  * cujo efeito depende de uma escolha do jogador (qual categoria de arma, qual atributo…). O valor
  * escolhido é texto livre em `FichaFormacaoDto.parametro`; este enum só documenta **o tipo** esperado.
  */

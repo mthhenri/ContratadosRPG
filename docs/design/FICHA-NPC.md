@@ -3,8 +3,14 @@
 > Contrato refinado e implementado em 2026-09-30 (`m4-08`/`m4-08b`).
 > Evidências: `docs/reviews/m4-08b-verificacao.md`. Listagem integrada segue na `m4-09`.
 > Este documento define apresentação e composição; regras e forma dos dados continuam em
-> `docs/core/guia_de_mestre-v4.0.0.md` (Guia de Criação de NPCs) e `docs/SCHEMA.md`
+> `docs/core/guia_de_mestre-v4.2.0.md` (Guia de Criação de NPCs) e `docs/SCHEMA.md`
 > (`FichaNpcDadosDto`). Tokens e primitivos seguem `docs/design/DESIGN.md`.
+
+> **Alinhamento documental (P-102, 2026-10-06):** o livro corrente inclui Competências,
+> ainda pendentes na m4-19 ativa, e Ataques/Equipamentos, em investigação própria.
+> Este contrato registra a composição implementada em m4-08/m4-08b; trocar a fonte
+> não implementa seleção de Competências, dadinho ou novas rolagens. P-100 já adequou
+> zero/redistribuição na criação. Competências não alteram o atributo nem a DT.
 
 ## Intenção
 

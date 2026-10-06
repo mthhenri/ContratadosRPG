@@ -4,7 +4,7 @@ import { PatenteEnum } from '../../enums';
  * Uma linha da tabela de patentes: faixa de Prestígio, salário por missão,
  * multiplicador do bônus monetário de novo agente (m1-03), limite de
  * modificações por item e limite de crédito (padrão de vida fora da
- * Fundação). Fonte: docs/core/sistema-v4.1.0.md — "Prestígio e Patentes" e
+ * Fundação). Fonte: docs/core/sistema-v4.1.3.md — "Prestígio e Patentes" e
  * "Bônus Monetário".
  */
 export interface PatenteDados {

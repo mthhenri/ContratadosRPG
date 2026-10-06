@@ -3,7 +3,7 @@ import { ClasseEnum } from '../../enums';
 import { calcularDeslocamento } from './movimento';
 
 /**
- * Deslocamento (em metros) conferido contra docs/core/sistema-v4.1.0.md —
+ * Deslocamento (em metros) conferido contra docs/core/sistema-v4.1.3.md —
  * "Deslocamento" (agente: DES ≤ 0 → 8m; 1–4 → 9m; ≥ 5 → 10m) e "Jogando como um
  * Civil" > "Informações Adicionais" (6m com DES 0–1; 7m com DES 2–3).
  */

@@ -3,7 +3,7 @@ import { ClasseEnum, HabilidadeCategoriaEnum } from '../../enums';
 import { calcularEnergia, calcularLimiteEnergia, calcularVida, obterSaudeClasse } from './saude';
 
 /**
- * Fórmulas de saúde do agente conferidas contra docs/core/sistema-v4.1.0.md —
+ * Fórmulas de saúde do agente conferidas contra docs/core/sistema-v4.1.3.md —
  * blocos de classe ("⬦ Saúde" / "⬦ Progressão por Nível") e "Jogando como um
  * Civil" > "Saúde".
  */
@@ -108,7 +108,7 @@ describe('calcularEnergia', () => {
 
 describe('calcularLimiteEnergia', () => {
   // DIVERGÊNCIA vs script.js: o site antigo calculava (Vigor + Destreza) × 2.
-  // O documento (sistema-v4.1.0.md — "Limites de Energia" e "Jogando como um
+  // O documento (sistema-v4.1.3.md — "Limites de Energia" e "Jogando como um
   // Civil") define Destreza × 2 (agente) e Destreza (civil). Documento vence
   // (proibição #27).
   it('agente: Limite de Energia = Destreza × 2', () => {

@@ -10,7 +10,7 @@ import {
 } from './novo-agente';
 
 /**
- * Fórmulas de novo agente conferidas contra docs/core/sistema-v4.1.0.md —
+ * Fórmulas de novo agente conferidas contra docs/core/sistema-v4.1.3.md —
  * "Iniciando um Novo Agente" (Nível Inicial, Prestígio Inicial, Bônus Monetário)
  * e "Aposentadoria" > "Contido ou Exterminado" (divisores por humanidade do
  * sucessor). Os exemplos numéricos do documento estão replicados abaixo.

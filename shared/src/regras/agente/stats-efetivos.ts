@@ -43,7 +43,7 @@ export interface StatsEfetivosDto {
 /**
  * Compõe o valor **efetivo** da ficha: o snapshot stored/editável vence a fórmula calculada e os
  * bônus de amplificador e equipamento entram só na leitura. Defesa Final cascateia para Esquiva,
- * Bloqueio e Contra-Ataque, como definido em `sistema-v4.1.0.md` — "Defesa".
+ * Bloqueio e Contra-Ataque, como definido em `sistema-v4.1.3.md` — "Defesa".
  *
  * Nenhum ajuste é persistido aqui: isso evita gravar um delta transitório como override manual e
  * reaplicá-lo numa leitura futura. Frontend, resumo de ficha e encontro usam esta mesma composição.

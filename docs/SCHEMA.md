@@ -317,7 +317,7 @@ no-op. `rolagem:excluida` (soft delete por `ADMIN`) segue o mesmo roteamento.
 
 ## cena (M7 — m7-21/m7-22)
 
-A **Cena**: raiz tipada da mesa (`docs/core/sistema-v4.1.0.md`, "⬡ Cenas"), com ciclo de vida
+A **Cena**: raiz tipada da mesa (`docs/core/sistema-v4.1.3.md`, "⬡ Cenas"), com ciclo de vida
 `PLANEJADA → ATIVA → ENCERRADA`. O `encontro` (iniciativa) é uma estrutura que a cena pode ter —
 só os tipos em que `cenaTemIniciativa` (`shared/regras/cena`) é verdadeiro — e pendura nela por
 `encontro.cena_id`, no máximo um por cena.
@@ -483,19 +483,21 @@ Política única em `backend/src/modules/cena/cena-visibilidade.ts`.
 
 ## Forma dos documentos JSONB (`ficha.dados`)
 
-> A forma final de cada documento é definida nas specs de M3 (jogador) e M4 (criatura/NPC),
-> derivada de `docs/core/sistema-v4.1.0.md` e `docs/core/guia_de_mestre-v4.0.0.md`. O
-> contrato tipado vive em `shared/src/dtos/ficha/` (`FichaJogadorDadosDto` — **final**,
-> m3-01; `FichaCriaturaDadosDto` — **final**, m4-01; `FichaNpcDadosDto` — design fechado a
-> partir do capítulo "Guia de Criação de NPCs" do guia de mestre, contrato TS a codificar em
-> `m4-05`) e o backend valida via `shared/regras` (coerência de domínio) + validação
-> estrutural quando o `ValidationPipe` for ligado (m3-02/03). Campos de jogo nunca viram
-> colunas — listagens usam `dados->>'campo'`.
+> Fontes correntes: `docs/core/sistema-v4.1.3.md` e `docs/core/guia_de_mestre-v4.2.0.md`.
+> Os contratos implementados vivem em `shared/src/dtos/ficha/`: `FichaJogadorDadosDto`
+> (m3-01), `FichaCriaturaDadosDto` (m4-01) e `FichaNpcDadosDto` (m4-05).
+> Citar o livro corrente não declara conformidade integral: realocação/DT de Criatura
+> foram adequadas na P-101; Competências/testes de NPC dependem da m4-19 ativa e
+> ataques/equipamentos de NPC têm investigação própria na fila documental.
+> O backend valida a coerência de domínio via `shared/regras` e a estrutura nos
+> recortes implementados; `ValidationPipe` genérico permanece adiado (P-003).
+> Campos de jogo nunca viram colunas — listagens usam `dados->>'campo'`.
 
 ### FichaJogadorDadosDto (final — m3-01)
 
-Contrato: `shared/src/dtos/ficha/ficha.dtos.ts`. Forma 1:1 com `sistema-v4.1.0.md`
-(classe/atributos/estado/inventário). O documento vence o código (proibição #27).
+Contrato: `shared/src/dtos/ficha/ficha.dtos.ts`. Referências de classe, atributos,
+estado e inventário em `sistema-v4.1.3.md`. O documento vence o código (proibição #27);
+revisões de crítico por contexto continuam na fila, sem inferir uma rolagem posterior.
 
 ```jsonc
 {
@@ -509,7 +511,7 @@ Contrato: `shared/src/dtos/ficha/ficha.dtos.ts`. Forma 1:1 com `sistema-v4.1.0.m
     "intelecto": 1, "medicina": 0, "sentidos": 2, "social": 1, "vontade": 2
   },
   "maestria": "forca",                // keyof atributos | null — atributo com Maestria (m3-10);
-                                      // único na ficha, só em atributo com 6+ (sistema-v4.1.0.md)
+                                      // único na ficha, só em atributo com 6+ (sistema-v4.1.3.md)
   "identidade": {                     // m3-23: opcional — ausente em fichas anteriores a esta task
     "personalidade": "Determinado",   // string | null — uma única palavra, um adjetivo
     "origem": {                       // FichaOrigemDto | null — imutável após definida (m3-24 trava)
@@ -535,7 +537,7 @@ Contrato: `shared/src/dtos/ficha/ficha.dtos.ts`. Forma 1:1 com `sistema-v4.1.0.m
     "lesoes":   [ { "atributo": "forca", "pontos": 1,
                     "severidade": "LEVE", "permanente": false } ],       // remove ponto de atributo
     "morrendo": false, "machucado": false, "inconsciente": false
-    // m2-16b: as três condições de sistema-v4.1.0.md ("Condições") rastreadas na ficha.
+    // m2-16b: as três condições de sistema-v4.1.3.md ("Condições") rastreadas na ficha.
     // Opcionais (retrocompat) — ausente equivale a false. Alternadas MANUALMENTE pelo dono/mestre,
     // nunca recalculadas a partir de vidaAtual (mesma filosofia de m3-10: liberdade de edição).
   },
@@ -610,7 +612,10 @@ sub-coleções de jogo — **sequelas/traumas/lesões** (Sanidade), **habilidade
 ### FichaCriaturaDadosDto (final — m4-01)
 
 Contrato: `shared/src/dtos/ficha/ficha-criatura.dtos.ts`, exportado pelo subpath `./dtos/ficha`
-(mesmo subpath de `FichaJogadorDadosDto`). Capítulo "Guia de Criação de Ameaças".
+(mesmo subpath de `FichaJogadorDadosDto`). Guia v4.2.0, capítulo "Guia de Criação de Ameaças".
+P-101 registra distribuição inicial, DT contextual e exemplos de referência. O exemplo
+abaixo é estrutural e usa snapshots livres; não é transcrição de "A Estátua" nem migração
+de fichas existentes. Modificador soma ao teste e participa da DT, sem alterar o atributo.
 
 Criatura e NPC **não compartilham forma** (M4 fecha dois DTOs, não um com variação — a mecânica
 divergiu). Segue a mesma filosofia de `FichaJogadorDadosDto`: tudo que aparece na ficha é
@@ -646,7 +651,7 @@ editado sem o outro (achado ao vivo).
   "tenacidade": "PADRAO",               // TenacidadeEnum: DESCARTAVEL|FRAGIL|PADRAO|ROBUSTA|RESISTENTE|IMPLACAVEL|ABSOLUTA
   "vidaMaxima": 1050,                   // snapshot: VD × multiplicador de Tenacidade (m3-10: editável depois)
   "vidaAtual": 1050,
-  "defesa": 30,                         // snapshot: 15 + VD ÷ 2 (m3-10: editável depois) — criatura nunca reage a ataques
+  "defesa": 30,                         // snapshot: 15 + VD ÷ 2 (m3-10: editável depois); Contra-Ataque tem gatilho próprio no guia
   "resistencias": [ { "tipo": "FISICO", "subtipo": null, "valor": 36 } ],   // soma ≤ Limite (2×VD; +25% por Fraqueza extra além da 1ª)
   "fraquezas":    [ { "tipo": "EXPLOSAO", "subtipo": null, "valor": 20 } ], // ao menos 1; mínimo 5 ou metade das resistências
   "regeneracao": {                      // opcional — campo ausente = sem regeneração
@@ -663,8 +668,8 @@ editado sem o outro (achado ao vivo).
   "turnosPorRodada": 1,                  // 1/2/3 nas fixas; valor declarado >= 4 na Frenética
   "iniciativaBonus": 0,                 // opcional — Habilidade Especial Passiva de +X somado à Iniciativa (~10% da VD, sugestão)
   "ataques": [
-    { "nome": "Esmagamento", "atributo": "luta", "custoAcao": "PADRAO", // MOVIMENTO|PADRAO|COMPLETA
-      "dano": "4D12+10", "tipoDano": "FISICO", "area": false,
+    { "nome": "Esmagamento", "teste": "LUTd20kh1+12", "custoAcao": "PADRAO", // MOVIMENTO|PADRAO|COMPLETA
+      "dano": "4D12+10[Físico]", "danoCritico": "8D12+20[Físico]", "area": false,
       "efeito": "Vigor DT 20 ou Imobilizado por 1 turno" }             // opcional — reduz 1 patamar de dano quando presente
   ],
   "habilidades": [
@@ -681,6 +686,12 @@ O NPC é descrito no guia como uma "versão otimizada" da estrutura de agente: m
 Vida e reações, mas o teto de tudo vem da **Categoria** em vez de classe/Nível livre. Mesma
 filosofia de `m3-10` — Vida/Defesa/Energia são snapshot editável, nunca recalculados sobre a
 edição.
+
+**Adequação pendente ao Guia v4.2.0:** o contrato abaixo ainda não contém Competências.
+A m4-19 ativa define sua seleção e rolagens; não somar os dados de Categoria ao atributo
+nem à DT (`10 + Nível + 2 × Atributo`, seção "DTs de Atributos"). A integração de
+ataques/equipamentos segue em investigação própria. P-100 já cobre zero/redistribuição
+na criação; este alinhamento de ponteiros não implementa as demais regras.
 
 ```jsonc
 {

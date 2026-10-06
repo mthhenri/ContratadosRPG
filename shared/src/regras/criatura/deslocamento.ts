@@ -1,6 +1,6 @@
 import type { DeslocamentoSugeridoDto, DeslocamentoTerrestreSugerirDto } from './criatura.dtos';
 
-/** Faixas de Deslocamento Terrestre sugerido por Destreza (docs/core/guia_de_mestre-v4.0.0.md
+/** Faixas de Deslocamento Terrestre sugerido por Destreza (docs/core/guia_de_mestre-v4.2.0.md
  * — "Guia de Criação de Ameaças" > "Deslocamento" > "Terrestre") — pura sugestão de
  * referência; o valor final é sempre declarado pelo Mestre conforme o conceito, nunca
  * calculado automaticamente a partir do atributo. Destreza acima de 10 (fora da tabela) cai

@@ -12,7 +12,7 @@ import { maestriaValida } from './maestria';
 import { calcularVida } from './saude';
 
 /**
- * Prova o efeito mecânico das lesões nos atributos (`sistema-v4.1.0.md` — "⬡ Lesões"): removem pontos
+ * Prova o efeito mecânico das lesões nos atributos (`sistema-v4.1.3.md` — "⬡ Lesões"): removem pontos
  * do atributo afetado (efetivo = base − pontos, **sem piso — pode negativar**), **sem mutar o base** —
  * de modo que a Maestria, ligada ao base, sobrevive à lesão.
  */

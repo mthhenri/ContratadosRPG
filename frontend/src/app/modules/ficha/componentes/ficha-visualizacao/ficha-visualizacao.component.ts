@@ -992,7 +992,7 @@ export class FichaVisualizacao {
   protected readonly rascunhoAtributos = signal<FichaAtributosDto | null>(null);
   /** Rascunho da Maestria durante a edição. */
   protected readonly rascunhoMaestria = signal<keyof FichaAtributosDto | null>(null);
-  /** Pontos mínimos para marcar Maestria (`sistema-v4.1.0.md`). */
+  /** Pontos mínimos para marcar Maestria (`sistema-v4.1.3.md`). */
   protected readonly limiteMaestria = MAESTRIA_PONTOS_MINIMO;
 
   /**
@@ -1241,7 +1241,7 @@ export class FichaVisualizacao {
   }));
 
   /**
-   * Atributos **efetivos** = base − pontos de lesão (`shared/regras`, `sistema-v4.1.0.md` — "⬡ Lesões").
+   * Atributos **efetivos** = base − pontos de lesão (`shared/regras`, `sistema-v4.1.3.md` — "⬡ Lesões").
    * O valor **base** (`atributos()`) nunca é mutado; por isso a **Maestria** (ligada ao base) sobrevive à
    * lesão — um atributo 6 com Maestria que toma −1 mostra 5 mas mantém a estrela. A leitura usa o efetivo;
    * a edição (rascunho) e a Maestria seguem no base.
@@ -1920,7 +1920,7 @@ export class FichaVisualizacao {
   );
   /**
    * `true` quando a classe é uma subclasse de Experimento com a habilidade "Peculiaridade" tomada
-   * (m3-41 — `sistema-v4.1.0.md` "⬡ Subclasse": ela "substitui os bônus originais de Origem"). Nesse
+   * (m3-41 — `sistema-v4.1.3.md` "⬡ Subclasse": ela "substitui os bônus originais de Origem"). Nesse
    * caso a Origem trava para **todo mundo**, inclusive o mestre — não é a trava de posse/edição
    * (`origemEditavel`), é a Origem deixar de existir para aquele agente (o backend é o árbitro final,
    * `validarFormaIdentidade`).

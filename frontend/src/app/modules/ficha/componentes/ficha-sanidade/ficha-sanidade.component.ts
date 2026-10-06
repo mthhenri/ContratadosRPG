@@ -35,7 +35,7 @@ interface OpcaoAtributo {
   readonly nome: string;
 }
 
-/** Severidade + rótulo + pontos de origem (sugestão ao trocar — `sistema-v4.1.0.md`, não trava). */
+/** Severidade + rótulo + pontos de origem (sugestão ao trocar — `sistema-v4.1.3.md`, não trava). */
 interface OpcaoSeveridade {
   readonly valor: SeveridadeLesaoEnum;
   readonly rotulo: string;

@@ -1,5 +1,5 @@
 /**
- * As 21 linhas da tabela de bônus de **Formação** (`docs/core/sistema-v4.1.0.md` — "⬡ Identidade"
+ * As 21 linhas da tabela de bônus de **Formação** (`docs/core/sistema-v4.1.3.md` — "⬡ Identidade"
  * > "⬦ Origem" > "⬦ Formação"), agrupadas em Combate (5), Movimento (2), Perícia (4), Equipamento (7)
  * e Logística (3). Conteúdo de JSONB `ficha.dados` — sem tabela `tipo_*` (§10.3). Cada código indexa
  * uma entrada de `FORMACOES` (`shared/regras/identidade`) com o efeito mecânico correspondente.

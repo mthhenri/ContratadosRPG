@@ -12,12 +12,12 @@ import type {
  * convenção de `regras/agente/agente.dtos.ts`: funções puras recebem sempre um DTO tipado,
  * nunca uma cascata de primitivos soltos.
  *
- * Fonte das fórmulas: docs/core/guia_de_mestre-v4.0.0.md — "Guia de Criação de Ameaças". Em
+ * Fonte das fórmulas: docs/core/guia_de_mestre-v4.2.0.md — "Guia de Criação de Ameaças". Em
  * conflito com o código, o documento vence (proibição #27) — mas quando o próprio documento
  * se contradiz entre a fórmula geral de uma seção e um número do exemplo "A Estátua", a
  * fórmula geral vence (ela é a regra reutilizável; o exemplo é uma aplicação pontual, mais
- * sujeita a erro de transcrição). Duas divergências identificadas estão documentadas em
- * `modificadores.ts` e `a-estatua.spec.ts`.
+ * sujeita a erro de transcrição). A divergência Fraco +6/+5 e a narrativa de realocação
+ * de Social permanecem sob revisão autoral; ver `docs/reviews/p-101-verificacao.md`.
  */
 
 // ── Atributos ────────────────────────────────────────────────────────────────

@@ -4,7 +4,7 @@ import { PATENTES } from '../dados';
 import { calcularPatente, obterPatente } from './patente';
 
 /**
- * Lookup de patente por Prestígio conferido contra docs/core/sistema-v4.1.0.md —
+ * Lookup de patente por Prestígio conferido contra docs/core/sistema-v4.1.3.md —
  * "Prestígio e Patentes" (faixas: Agente 0–2, Operador 3–5, Experiente 6–11,
  * Veterano 12–20, Força Tarefa 21–32, Força Tarefa Especial 33–47, Operações
  * Especiais 48–65, Líder Operacional 66+).

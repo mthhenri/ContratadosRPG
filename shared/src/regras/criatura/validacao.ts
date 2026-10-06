@@ -4,7 +4,7 @@ import type { FichaCriaturaValidadaDto } from './criatura.dtos';
 import { calcularCustoResistencia, calcularLimiteResistencias, validarFraqueza } from './resistencia';
 
 /** Distribuição fixa de Modificadores exigida por toda criatura, independente do VD
- * (docs/core/guia_de_mestre-v4.0.0.md — "Guia de Criação de Ameaças" > "Modificadores" >
+ * (docs/core/guia_de_mestre-v4.2.0.md — "Guia de Criação de Ameaças" > "Modificadores" >
  * "Distribuição"). */
 const QUANTIDADE_ESPERADA_POR_MODIFICADOR: Readonly<Record<ModificadorCriaturaEnum, number>> = {
   [ModificadorCriaturaEnum.FORTE]: 2,

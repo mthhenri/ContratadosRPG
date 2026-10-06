@@ -1,6 +1,6 @@
 /**
  * Custo de ação de um ataque ou habilidade — Ação Livre, Movimento, Padrão, Completa ou Turno
- * (`docs/core/guia_de_mestre-v4.0.0.md` — "Ações e Habilidades"). Conceito genérico de
+ * (`docs/core/guia_de_mestre-v4.2.0.md` — "Ações e Habilidades"). Conceito genérico de
  * ação em combate, não exclusivo de criatura — nome sem prefixo de entidade para ficar
  * reutilizável por outros consumidores do mesmo conceito. Conteúdo de JSONB `ficha.dados` —
  * sem tabela `tipo_*` (§10.3).

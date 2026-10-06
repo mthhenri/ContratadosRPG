@@ -23,7 +23,7 @@ export interface ExecutarPassoPresetDto {
   readonly atributos: FichaAtributosDto;
   /**
    * Atributos **efetivos** (lesão, sem ajuste de teste) — usados só quando `preset.nome` é
-   * `"Iniciativa"`. A Iniciativa rola pelo atributo de Destreza (`sistema-v4.1.0.md`: "definida
+   * `"Iniciativa"`. A Iniciativa rola pelo atributo de Destreza (`sistema-v4.1.3.md`: "definida
    * pelo seu atributo de Destreza"), não pelo atributo ajustado pra testes: `dadosTeste` (ajuste
    * manual) e a penalidade de equipamento (Armadura Pesada) só valem pra testes de atributo, e não
    * reduzem a Destreza em si. Cai em `atributos` quando ausente (fallback de quem ainda não separa

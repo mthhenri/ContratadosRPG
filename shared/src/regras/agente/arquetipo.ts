@@ -14,7 +14,7 @@ export interface BonusAtributosObterDto {
  * Atributos Bônus **fixos** de cada arquétipo (doc — "Classes e Arquétipos"). Os pontos marcados
  * como "à escolha" no documento (Engenheiro/Assassino: +1 em um de dois; Acadêmico/Híbrido: +1 livre)
  * **não** entram aqui — só a parte determinística; a distribuição da escolha fica com o jogador.
- * Fonte: docs/core/sistema-v4.1.0.md (o documento vence — proibição #27).
+ * Fonte: docs/core/sistema-v4.1.3.md (o documento vence — proibição #27).
  */
 const BONUS_ARQUETIPO: Record<ArquetipoEnum, BonusAtributos> = {
   // Combatente

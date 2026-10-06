@@ -7,7 +7,7 @@ import { MULTIPLICADOR_TAXA_VENDA, VENDA_FRAGMENTOS } from './venda.dados';
 import { calcularValorVendaCarrinho, calcularVendaFragmentos, obterValorFragmento } from './venda';
 
 /**
- * Regras de venda (m1-20) conferidas contra docs/core/sistema-v4.1.0.md — "Loja"
+ * Regras de venda (m1-20) conferidas contra docs/core/sistema-v4.1.3.md — "Loja"
  * (venda por metade), "Retornando após uma Missão" (check-in 75% / fora de
  * patente 25%) e "Venda de Fragmentos" (tabela por módulo × tipo). Em conflito,
  * o documento vence (proibição #27).

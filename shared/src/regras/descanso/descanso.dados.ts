@@ -5,7 +5,7 @@ import { QualidadeDescansoEnum, TipoDescansoEnum } from '../../enums';
  * qualidade" (§ `ajustarDado`) move um passo nesta escada: Insalubre desce 1,
  * Confortável e Refeição sobem 1. O ramo inferior (D3) é confirmado pelo
  * documento — o exemplo "Descanso Curto insalubre" reduz o 1D4 de Energia para
- * 1D3 (docs/core/sistema-v4.1.0.md — "Descanso").
+ * 1D3 (docs/core/sistema-v4.1.3.md — "Descanso").
  *
  * A escada é a mesma primitiva usada pela aba compras (a antiga `_DIE_LADDER` do
  * site, idêntica à `DADOS_SEQ` do descanso); por isso vive aqui como utilidade
@@ -20,7 +20,7 @@ export const ESCADA_DADOS: readonly number[] = [3, 4, 6, 8, 10, 12, 20];
  * rola (a quantidade vem do atributo — Destreza para Energia, Vigor para Vida).
  * Descanso Curto não recupera Vida.
  *
- * Fonte: docs/core/sistema-v4.1.0.md — "Descanso" (Curto 1D4/—, Médio 1D6/1D4,
+ * Fonte: docs/core/sistema-v4.1.3.md — "Descanso" (Curto 1D4/—, Médio 1D6/1D4,
  * Longo 1D8/1D6). Sem divergências vs `contratados-calculadora/src/script.js`
  * (`DADOS_DESCANSO`).
  */
@@ -44,7 +44,7 @@ export const DADOS_DESCANSO: Readonly<Record<TipoDescansoEnum, DescansoTipoDados
  * na `ESCADA_DADOS`: Insalubre reduz 1 tipo, Adequado é padrão, Confortável
  * aumenta 1 tipo.
  *
- * Fonte: docs/core/sistema-v4.1.0.md — "Descanso" (Níveis de Descanso). Sem
+ * Fonte: docs/core/sistema-v4.1.3.md — "Descanso" (Níveis de Descanso). Sem
  * divergências vs `contratados-calculadora/src/script.js` (`QUALIDADE_MOD`).
  */
 export const QUALIDADE_MOD: Readonly<Record<QualidadeDescansoEnum, number>> = {

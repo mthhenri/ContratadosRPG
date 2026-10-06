@@ -3,7 +3,7 @@ import { ClasseEnum, FragmentoModuloEnum } from '../../enums';
 import { calcularSanidade } from './sanidade';
 
 /**
- * Sanidade conferida contra docs/core/sistema-v4.1.0.md — "Sanidade": um agente
+ * Sanidade conferida contra docs/core/sistema-v4.1.3.md — "Sanidade": um agente
  * suporta Vontade + 1 traumas não tratados ("Traumas") e remove Vontade sequelas
  * ao encerrar uma missão ("Sequelas"). O site antigo exibia o limite de traumas
  * como N/A para civis, então `limiteTraumas` vem `null` para a classe Civil.

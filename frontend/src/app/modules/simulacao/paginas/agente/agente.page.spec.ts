@@ -6,7 +6,7 @@ import { AgentePage } from './agente.page';
  * Prova que a aba do agente exibe stats vindas de `shared/regras/agente` (nenhuma
  * regra duplicada no front) e mapeia stats indisponíveis do Civil para "N/A".
  * Os valores esperados são conferidos contra as fórmulas do motor (m1-02), que por
- * sua vez batem com docs/core/sistema-v4.1.0.md.
+ * sua vez batem com docs/core/sistema-v4.1.3.md.
  */
 describe('AgentePage', () => {
   async function montar() {

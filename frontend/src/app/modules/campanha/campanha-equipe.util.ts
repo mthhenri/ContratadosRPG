@@ -46,7 +46,7 @@ export interface ItemFicha {
   readonly energiaMaxima?: number;
   readonly condicoes: readonly ItemFichaCondicao[];
   /**
-   * Vida ≤ 0 (o próprio limiar documentado pra entrar em "Morrendo" — sistema-v4.1.0.md) —
+   * Vida ≤ 0 (o próprio limiar documentado pra entrar em "Morrendo" — sistema-v4.1.3.md) —
    * destaque visual no cartão mesmo que ninguém tenha marcado a condição ainda (item 4: sinaliza
    * antes do dono/mestre lembrar de marcar o checkbox).
    */

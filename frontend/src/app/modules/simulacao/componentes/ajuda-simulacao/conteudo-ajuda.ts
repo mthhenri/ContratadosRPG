@@ -7,7 +7,7 @@
  * antiga é um projeto à parte, arquivada só após o M1 (SYSTEM.SPEC §1). Não havendo o texto de
  * origem, a paridade textual literal é impossível; a pedido do autor, cada entrada é um **guia de
  * "como usar esta página"** (instruções de uso da aba), redigido a partir do comportamento já
- * implementado das páginas (m1-07..m1-11) e conferido contra `docs/core/sistema-v4.1.0.md`.
+ * implementado das páginas (m1-07..m1-11) e conferido contra `docs/core/sistema-v4.1.3.md`.
  * Não há regra de jogo nova aqui — é texto de interface, no tom institucional do tema.
  */
 

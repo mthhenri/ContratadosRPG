@@ -26,7 +26,7 @@ import {
 } from './compras';
 
 /**
- * Regras de compras conferidas contra docs/core/sistema-v4.1.0.md —
+ * Regras de compras conferidas contra docs/core/sistema-v4.1.3.md —
  * "Equipamentos" (custo/peso de modificação, tabelas de item), "Prestígio e
  * Patentes" (limite de modificações) e "Amplificadores" (custo, limite Vontade×3,
  * penalidade de Vontade). Sem divergências numéricas vs
@@ -63,7 +63,7 @@ describe('contagem de munição', () => {
 });
 
 describe('listarModificacoesDisponiveis — "Apenas escudos" (Combativo/Arremesso)', () => {
-  // docs/core/sistema-v4.1.0.md — Proteções: "Combativo" e "Arremesso" são "Apenas para escudos".
+  // docs/core/sistema-v4.1.3.md — Proteções: "Combativo" e "Arremesso" são "Apenas para escudos".
   // A categoria PROTECOES mistura proteções (coletes/armaduras) e escudos: as mods de escudo só
   // podem ser oferecidas aos escudos.
   it('não oferece as mods exclusivas de escudo para proteções que não são escudo', () => {
@@ -128,7 +128,7 @@ describe('listarModificacoesDisponiveis — restrição por item (m3-44, "modifi
 
 describe('obterLimiteModificacoes', () => {
   it('reproduz a tabela de Limite de Modificações do documento por patente', () => {
-    // docs/core/sistema-v4.1.0.md — "Prestígio e Patentes"
+    // docs/core/sistema-v4.1.3.md — "Prestígio e Patentes"
     expect(obterLimiteModificacoes({ prestigio: 0 })).toEqual({ patente: PatenteEnum.AGENTE, maxEmpilhamentos: 1, maxModificacoes: 2 });
     expect(obterLimiteModificacoes({ prestigio: 3 })).toEqual({ patente: PatenteEnum.OPERADOR, maxEmpilhamentos: 2, maxModificacoes: 4 });
     expect(obterLimiteModificacoes({ prestigio: 12 })).toEqual({ patente: PatenteEnum.VETERANO, maxEmpilhamentos: 3, maxModificacoes: 9 });
@@ -142,7 +142,7 @@ describe('obterLimiteModificacoes', () => {
 
 describe('obterCustoModificacao', () => {
   it('cobra o custo padrão de $750 por modificação nas categorias sem exceção', () => {
-    // docs/core/sistema-v4.1.0.md — "$ 750 por modificação"
+    // docs/core/sistema-v4.1.3.md — "$ 750 por modificação"
     expect(obterCustoModificacao({ item: montarItem({ nome: 'Mediana', categoria: ItemCategoriaEnum.CORPO_A_CORPO }), modificacao: 'Letal' })).toBe(750);
     expect(obterCustoModificacao({ item: montarItem({ nome: 'Pistola', categoria: ItemCategoriaEnum.ARMAS_DE_FOGO }), modificacao: 'Potência' })).toBe(750);
     expect(obterCustoModificacao({ item: montarItem({ nome: 'Colete Leve', categoria: ItemCategoriaEnum.PROTECOES }), modificacao: 'Blindada' })).toBe(750);
@@ -185,7 +185,7 @@ describe('obterCustoModificacao', () => {
 
 describe('obterPesoModificacao', () => {
   it('soma o peso padrão de +0,2 por empilhamento, salvo indicação contrária', () => {
-    // docs/core/sistema-v4.1.0.md — "Cada modificação acrescenta +0,2 de peso"
+    // docs/core/sistema-v4.1.3.md — "Cada modificação acrescenta +0,2 de peso"
     expect(obterPesoModificacao({ item: montarItem({ nome: 'Mediana', categoria: ItemCategoriaEnum.CORPO_A_CORPO }), modificacao: 'Letal' })).toBe(0.2);
   });
 
@@ -195,7 +195,7 @@ describe('obterPesoModificacao', () => {
   });
 
   it('modificações de armazenamento não agregam peso (documento vence o site antigo)', () => {
-    // docs/core/sistema-v4.1.0.md — "Estas modificações não agregam nenhum peso ao item".
+    // docs/core/sistema-v4.1.3.md — "Estas modificações não agregam nenhum peso ao item".
     // O site antigo somava 0,2/stack aqui; corrigido em favor do documento (proibição #27).
     expect(obterPesoModificacao({ item: montarItem({ nome: 'Mochila Mediana', categoria: ItemCategoriaEnum.ARMAZENAMENTO }), modificacao: 'Compartimentos Extras' })).toBe(0);
   });
@@ -245,7 +245,7 @@ describe('obterPesoModificacao', () => {
 
 describe('contarComprasModificacao', () => {
   it('conta 1 compra enquanto está nos empilhamentos iniciais e +1 por empilhamento extra', () => {
-    // docs/core/sistema-v4.1.0.md — "Empilhamento": mod com 3 níveis iniciais custa uma modificação.
+    // docs/core/sistema-v4.1.3.md — "Empilhamento": mod com 3 níveis iniciais custa uma modificação.
     const item = montarItem({ nome: 'Pesada', categoria: ItemCategoriaEnum.CORPO_A_CORPO });
     expect(contarComprasModificacao({ item, modificacao: 'Pesada', empilhamentos: 3 })).toBe(1);
     expect(contarComprasModificacao({ item, modificacao: 'Pesada', empilhamentos: 5 })).toBe(3);
@@ -260,7 +260,7 @@ describe('contarComprasModificacao', () => {
 
 describe('verificarConflitoModificacao', () => {
   it('bloqueia Furtiva quando Pesada está ativa (e vice-versa)', () => {
-    // docs/core/sistema-v4.1.0.md — "Pesada em armas corpo a corpo bloqueia Furtiva e Veloz".
+    // docs/core/sistema-v4.1.3.md — "Pesada em armas corpo a corpo bloqueia Furtiva e Veloz".
     const comPesada = montarItem({ nome: 'Mediana', categoria: ItemCategoriaEnum.CORPO_A_CORPO, modificacoes: [mod('Pesada', 3)] });
     const conflito = verificarConflitoModificacao({ item: comPesada, modificacao: 'Furtiva' });
     expect(conflito.bloqueada).toBe(true);
@@ -283,7 +283,7 @@ describe('calcularStatItem', () => {
     montarItem({ nome, categoria, modificacoes });
 
   it('devolve o dano base quando não há modificações', () => {
-    // docs/core/sistema-v4.1.0.md — Corpo a Corpo: Mediana 3D4 + Força [Físico].
+    // docs/core/sistema-v4.1.3.md — Corpo a Corpo: Mediana 3D4 + Força [Físico].
     expect(calcularStatItem({ item: item('Mediana', ItemCategoriaEnum.CORPO_A_CORPO) })?.dano).toBe('3D4+FOR [Físico]');
   });
 
@@ -312,7 +312,7 @@ describe('calcularStatItem', () => {
   });
 
   it('Armas de Fogo: Alcance sobe +1 nível de alcance no texto de informação', () => {
-    // docs/core/sistema-v4.1.0.md — Tipos de Alcance: Curto < Médio < Longo < Longínquo.
+    // docs/core/sistema-v4.1.3.md — Tipos de Alcance: Curto < Médio < Longo < Longínquo.
     const comAlcance = calcularStatItem({ item: item('Submetralhadora', ItemCategoriaEnum.ARMAS_DE_FOGO, [mod('Alcance', 1)]) });
     expect(comAlcance?.informacao).toBe('Médio · Mun: 10mm');
     const rifleComAlcance = calcularStatItem({ item: item('Rifle de Precisão', ItemCategoriaEnum.ARMAS_DE_FOGO, [mod('Alcance', 1)]) });
@@ -461,7 +461,7 @@ describe('interpretarBonusArmazenamento', () => {
 
 describe('calcularCustoAmplificador', () => {
   it('cobra $3000 no primeiro empilhamento e $1000 por empilhamento extra', () => {
-    // docs/core/sistema-v4.1.0.md — "Amplificadores".
+    // docs/core/sistema-v4.1.3.md — "Amplificadores".
     expect(calcularCustoAmplificador({ empilhamentos: 1 })).toBe(3000);
     expect(calcularCustoAmplificador({ empilhamentos: 3 })).toBe(5000);
   });
@@ -876,7 +876,7 @@ describe('calcularResumoCompras', () => {
 
 describe('coerência do catálogo e das tabelas', () => {
   it('preserva nas descrições as condições canônicas dos itens e modificações auditados', () => {
-    // docs/core/sistema-v4.1.0.md — Armazenamento, Itens Operacionais, Itens Medicinais e Modificações.
+    // docs/core/sistema-v4.1.3.md — Armazenamento, Itens Operacionais, Itens Medicinais e Modificações.
     const item = (categoria: ItemCategoriaEnum, nome: string) =>
       (CATALOGO_ITENS[categoria].find((catalogo) => catalogo.nome === nome)?.descricao ?? '').toLocaleLowerCase();
     const modificacao = (categoria: ItemCategoriaEnum, nome: string) =>

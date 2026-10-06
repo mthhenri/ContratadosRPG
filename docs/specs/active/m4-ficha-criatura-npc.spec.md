@@ -1,10 +1,14 @@
 # m4-ficha-criatura-npc.spec.md
 
-> **Milestone M4 — Ficha de Criatura/NPC.** Design mecânico fechado em
-> `docs/core/guia_de_mestre-v4.0.0.md` (capítulos "Guia de Criação de Ameaças" e "Guia de Criação
+> **Milestone M4 — Ficha de Criatura/NPC.** Fonte mecânica corrente:
+> `docs/core/guia_de_mestre-v4.2.0.md` (capítulos "Guia de Criação de Ameaças" e "Guia de Criação
 > de NPCs"); este spec fixa o escopo acordado. Milestone já dividido em tasks numeradas;
 > planejamento visual revisado em 2026-09-30; contrato, motor e backend NPC concluídos
 > em `m4-05`/`m4-06`/`m4-07`.
+
+> **Adequações ao livro corrente:** P-100 e P-101/01/02/03 concluídas; m4-19 ativa
+> ainda implementará Competências/testes de NPC, e Ataques/Equipamentos têm investigação
+> própria. O escopo original abaixo não equivale a conformidade integral com Guia v4.2.0.
 
 > **Decisão (ex-pendência do `m3-10`):** Criatura e NPC seguem a mesma convenção da ficha de
 > jogador — **snapshot na criação + máximos editáveis** (Vida Máxima, Defesa/Bloquear/Esquivar,
@@ -16,7 +20,7 @@
 ## Objetivo
 
 Ferramenta do mestre para criar e gerenciar ameaças (criaturas) e NPCs, seguindo os roteiros de
-criação do `docs/core/guia_de_mestre-v4.0.0.md`.
+criação do `docs/core/guia_de_mestre-v4.2.0.md`.
 
 ## Escopo Acordado
 

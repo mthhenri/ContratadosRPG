@@ -3,7 +3,7 @@ import type { BeneficiosPorNivel } from './progressao-agente.dados';
 /**
  * Mapa de treinamento civil (0–5) para a lista de benefícios ganhos naquele
  * treinamento. Usado pelas fórmulas de progressão de `regras/agente` (m1-02)
- * quando a classe é Civil. Fonte: docs/core/sistema-v4.1.0.md — "Jogando como
+ * quando a classe é Civil. Fonte: docs/core/sistema-v4.1.3.md — "Jogando como
  * um Civil" > "Treinamentos". Sem divergências encontradas em relação a
  * `contratados-calculadora/src/script.js`.
  */

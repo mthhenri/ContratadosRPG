@@ -5,7 +5,7 @@ import { ItemCategoriaEnum, PatenteEnum } from '../../enums';
  * modificação por patente, catálogo de modificações por categoria e catálogo de
  * amplificadores. Migrados de `contratados-calculadora/src/script.js`
  * (`CATALOGO_CATS`, `MOD_CUSTO`, `PATENTES_MOD`, `MODIFICACOES`,
- * `CATALOGO_ITENS.amplificador`) e conferidos contra docs/core/sistema-v4.1.0.md
+ * `CATALOGO_ITENS.amplificador`) e conferidos contra docs/core/sistema-v4.1.3.md
  * — "Equipamentos", "Prestígio e Patentes" e "Amplificadores". Em conflito, o
  * documento vence (proibição #27). O catálogo de itens vive em `catalogo.dados`.
  */
@@ -89,7 +89,7 @@ export interface LimiteModificacoes {
 }
 
 /**
- * Limite de modificações por patente. Fonte: docs/core/sistema-v4.1.0.md —
+ * Limite de modificações por patente. Fonte: docs/core/sistema-v4.1.3.md —
  * "Prestígio e Patentes" (tabela "Limite de Modificações"). Representa o antigo
  * `PATENTES_MOD` do site sem duplicar as faixas de Prestígio: a tradução
  * Prestígio → patente reusa `obterPatente` (m1-03); aqui a tabela é indexada
@@ -129,7 +129,7 @@ export interface ModificacaoDados {
 /**
  * Catálogo de modificações por categoria (`MODIFICACOES` do site antigo).
  * Categorias sem modificações (Operacional, Medicinal, Amplificador) não têm
- * entrada. Conferido contra docs/core/sistema-v4.1.0.md — tabelas "Modificações"
+ * entrada. Conferido contra docs/core/sistema-v4.1.3.md — tabelas "Modificações"
  * de cada categoria.
  */
 export const MODIFICACOES: Partial<Record<ItemCategoriaEnum, readonly ModificacaoDados[]>> = {
@@ -232,7 +232,7 @@ export const MODIFICACOES: Partial<Record<ItemCategoriaEnum, readonly Modificaca
 
 /**
  * Um amplificador (modificação do próprio agente). Como as modificações de item,
- * tem empilhamentos iniciais (■) e um teto (□). Fonte: docs/core/sistema-v4.1.0.md
+ * tem empilhamentos iniciais (■) e um teto (□). Fonte: docs/core/sistema-v4.1.3.md
  * — "Amplificadores".
  */
 export interface AmplificadorDados {

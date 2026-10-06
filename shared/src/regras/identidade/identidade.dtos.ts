@@ -2,7 +2,7 @@ import type { FormacaoBonusEnum, FormacaoParametroEnum } from '../../enums';
 
 /**
  * DTOs e tipos do motor de **Identidade** (`regras/identidade`, m3-23). Fonte:
- * `docs/core/sistema-v4.1.0.md` — "⬡ Identidade" > "⬦ Origem" > "⬦ Formação". Em conflito com o
+ * `docs/core/sistema-v4.1.3.md` — "⬡ Identidade" > "⬦ Origem" > "⬦ Formação". Em conflito com o
  * código, o documento vence (proibição #27).
  */
 

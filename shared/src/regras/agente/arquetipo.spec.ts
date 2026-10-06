@@ -3,7 +3,7 @@ import { ArquetipoEnum, ClasseEnum } from '../../enums';
 import { obterBonusAtributos, obterBonusAtributosComEscolha, obterSlotsEscolhaBonus } from './arquetipo';
 
 /**
- * Atributos Bônus fixos por arquétipo/subclasse, conferidos contra docs/core/sistema-v4.1.0.md —
+ * Atributos Bônus fixos por arquétipo/subclasse, conferidos contra docs/core/sistema-v4.1.3.md —
  * "Classes e Arquétipos" e "Subclasses". Os pontos "à escolha" do documento não entram (só o fixo).
  */
 describe('obterBonusAtributos', () => {

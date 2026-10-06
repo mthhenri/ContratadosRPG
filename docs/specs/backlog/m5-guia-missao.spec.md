@@ -7,7 +7,7 @@
 ## Objetivo
 
 Assistente de criação de missão para o mestre, baseado nas regras de missões do
-`docs/core/sistema-v4.1.0.md` (seção Missões) e nas práticas do guia de mestre.
+`docs/core/sistema-v4.1.3.md` (seção Missões) e nas práticas do guia de mestre.
 
 ## Intenção Registrada
 

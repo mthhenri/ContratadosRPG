@@ -22,8 +22,8 @@ Sucessor da [contratados-calculadora](https://github.com/mthhenri/contratados-ca
 | [docs/DEPLOY.md](docs/DEPLOY.md) | Runbook de deploy em produção — ainda descreve o Render; reescrita para Cloud Run pendente (ver `docs/context/CONTEXT.md`) |
 | [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | Banco local reproduzível, fixtures e credenciais de desenvolvimento |
 | [docs/PARIDADE-M1.md](docs/PARIDADE-M1.md) | Verificação de paridade da calculadora (fecha o M1) |
-| [docs/core/sistema-v4.1.0.md](docs/core/sistema-v4.1.0.md) | Fonte da verdade das regras do jogo |
-| [docs/core/guia_de_mestre-v4.0.0.md](docs/core/guia_de_mestre-v4.0.0.md) | Fonte da verdade de criação de ameaças |
+| [docs/core/sistema-v4.1.3.md](docs/core/sistema-v4.1.3.md) | Fonte da verdade das regras do jogo |
+| [docs/core/guia_de_mestre-v4.2.0.md](docs/core/guia_de_mestre-v4.2.0.md) | Fonte da verdade de criação de ameaças |
 | [docs/specs/](docs/specs/) | Workflow spec-driven: backlog → active → done |
 
 ## API REST (Swagger)
