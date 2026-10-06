@@ -36,6 +36,35 @@ describe("NpcCriar", () => {
             prioridadesAlvo: "Evitar", reacaoFerimentoSevero: "Buscar ajuda" });
     }
 
+    it("o stepper reduz Social a zero, devolve o ponto e nunca passa a negativo", () => {
+        const { pagina, fixture } = montar();
+        pagina.irEtapa(1); fixture.detectChanges();
+        const raiz = fixture.nativeElement as HTMLElement;
+        const diminuir = raiz.querySelector('[aria-label="Diminuir Social"]') as HTMLButtonElement;
+        const social = raiz.querySelector('[aria-label="Social"]') as HTMLInputElement;
+        expect(social.min).toBe("0");
+        diminuir.click(); fixture.detectChanges();
+        expect(social.value).toBe("0");
+        expect(pagina.criacao.estado().atributos.social).toBe(0);
+        expect(pagina.criacao.distribuicao().restantes).toBe(7);
+        diminuir.click(); fixture.detectChanges();
+        expect(pagina.criacao.estado().atributos.social).toBe(0);
+        pagina.avancar();
+        expect(pagina.etapa()).toBe(1);
+        expect(pagina.mostrarErros()).toBe(true);
+    });
+
+    it("registra um Civil com zero redistribuído no mesmo documento da revisão", () => {
+        const { pagina, api } = montar();
+        preencherCivil(pagina);
+        pagina.criacao.formulario.patchValue({ atributos: { social: 0, forca: 2 } });
+        expect(pagina.criacao.distribuicao().violacoes).toEqual([]);
+        pagina.registrar();
+        expect(api.criarFichaNpc).toHaveBeenCalledExactlyOnceWith({ campanhaId: null,
+            nome: "Helena", dados: pagina.criacao.dados() });
+        expect(pagina.criacao.dados().atributos.social).toBe(0);
+    });
+
     it.each([null, "7"])("saída da criação abre NPC por tipo, campanha %s", (campanhaId) => {
         const { pagina, resposta, router } = montar(campanhaId);
         preencherCivil(pagina); pagina.registrar();

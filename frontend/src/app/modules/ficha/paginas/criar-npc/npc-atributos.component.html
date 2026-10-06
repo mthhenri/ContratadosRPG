@@ -3,7 +3,8 @@
         <span class="guia__introducao-codigo">ATRIBUTOS // RECURSOS</span>
         <p>
             Distribua {{ criacao.pontos().pontosDistribuir }} pontos adicionais. Limite de
-            {{ criacao.pontos().limite }} por atributo.
+            {{ criacao.pontos().limite }} por atributo. Você pode reduzir um atributo a zero para
+            redistribuir o ponto.
         </p>
     </div>
     <div class="guia__metricas" aria-live="polite">
@@ -68,11 +69,7 @@
                             [formControl]="
                                 criacao.formulario.controls.atributos.controls[campo.chave]
                             "
-                            [min]="
-                                criacao.formulario.controls.atributos.controls[campo.chave].disabled
-                                    ? 0
-                                    : 1
-                            "
+                            [min]="0"
                             [max]="maximoVisivel(campo.chave)"
                             [bloquearAumentar]="
                                 criacao.estado().atributos[campo.chave] >= criacao.pontos().limite

@@ -4,7 +4,7 @@ import type {
 import { CategoriaNpcEnum } from "../../enums";
 import { obterPontosELimitePorCategoria, validarAtributosCategoria } from "./atributos";
 
-/** Guia > NPC > Atributos: base 1, exceções Civil e pontos da Categoria, só na criação. */
+/** Guia > NPC > Atributos: base 1 removível até zero, exceções Civil e pontos da Categoria. */
 export function consultarAtributosCriacao(
     dto: NpcAtributosCriacaoConsultarDto,
 ): NpcAtributosCriacaoDto {
@@ -16,7 +16,6 @@ export function consultarAtributosCriacao(
             && ((chave === "luta" && !dto.lutaCivilLiberada)
                 || (chave === "pontaria" && !dto.pontariaCivilLiberada));
         if (bloqueado && valor !== 0) violacoes.push(`${chave}: Civil inicia em 0 sem liberação`);
-        if (!bloqueado && valor < 1) violacoes.push(`${chave}: inicia em 1`);
         distribuidos += valor - (bloqueado ? 0 : 1);
     }
     const restantes = obterPontosELimitePorCategoria(dto).pontosDistribuir - distribuidos;

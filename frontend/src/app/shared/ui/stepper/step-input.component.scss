@@ -66,6 +66,13 @@
         appearance: textfield;
         -moz-appearance: textfield;
 
+        &:focus-visible {
+            outline: 2px solid var(--accent);
+            // Mantém o foco dentro da cápsula, que recorta o conteúdo por overflow.
+            outline-offset: -2px;
+            border-radius: var(--radius-control);
+        }
+
         &::-webkit-outer-spin-button,
         &::-webkit-inner-spin-button {
             -webkit-appearance: none;

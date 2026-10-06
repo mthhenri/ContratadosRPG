@@ -1,7 +1,7 @@
 import { Injectable, computed, inject, signal } from "@angular/core";
 import { takeUntilDestroyed, toSignal } from "@angular/core/rxjs-interop";
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from "@angular/forms";
-import { map, startWith } from "rxjs";
+import { map, pairwise, startWith } from "rxjs";
 import type {
     FichaAtributosDto, FichaNpcDadosDto, FichaNpcHabilidadeDto,
 } from "@contratados-rpg/shared/dtos/ficha";
@@ -121,21 +121,24 @@ export class NpcCriacaoFormulario {
         (habilidade) => habilidade.tipo === HabilidadeTipoNpcEnum.ATIVA).length);
 
     constructor() {
-        this.formulario.controls.categoria.valueChanges.pipe(takeUntilDestroyed())
-            .subscribe((categoria) => {
-                this.lutaCivilLiberada.set(false);
-                this.pontariaCivilLiberada.set(false);
-                for (const chave of ["luta", "pontaria"] as const) {
-                    const controle = this.formulario.controls.atributos.controls[chave];
-                    if (categoria === CategoriaNpcEnum.CIVIL) {
-                        controle.setValue(0);
-                        controle.disable();
-                    } else {
-                        controle.enable();
-                        if (controle.value === 0) controle.setValue(1);
-                    }
+        this.formulario.controls.categoria.valueChanges.pipe(
+            startWith(this.formulario.controls.categoria.value), pairwise(), takeUntilDestroyed(),
+        ).subscribe(([categoriaAnterior, categoria]) => {
+            for (const chave of ["luta", "pontaria"] as const) {
+                const controle = this.formulario.controls.atributos.controls[chave];
+                const eraBloqueado = categoriaAnterior === CategoriaNpcEnum.CIVIL
+                    && !(chave === "luta" ? this.lutaCivilLiberada() : this.pontariaCivilLiberada());
+                if (categoria === CategoriaNpcEnum.CIVIL) {
+                    controle.setValue(0);
+                    controle.disable();
+                } else {
+                    controle.enable();
+                    if (eraBloqueado && controle.value === 0) controle.setValue(1);
                 }
-            });
+            }
+            this.lutaCivilLiberada.set(false);
+            this.pontariaCivilLiberada.set(false);
+        });
     }
 
     /** Civil inicia os atributos de combate bloqueados; liberação é transitória e por atributo. */

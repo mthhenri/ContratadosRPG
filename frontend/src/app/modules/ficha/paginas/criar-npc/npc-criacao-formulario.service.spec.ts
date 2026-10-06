@@ -8,6 +8,42 @@ describe("NpcCriacaoFormulario", () => {
         return TestBed.inject(NpcCriacaoFormulario);
     }
 
+    it("aceita o Operativo do Guia v4.2.0 com Social zero e mantém o snapshot", () => {
+        const criacao = montar();
+        criacao.formulario.patchValue({ atributos: {
+            luta: 3, pontaria: 3, forca: 3, destreza: 2, social: 0,
+        } });
+        expect(criacao.distribuicao()).toEqual({ distribuidos: 6, restantes: 0, violacoes: [] });
+        expect(criacao.violacoesEtapa(1)).toEqual([]);
+        expect(criacao.dados().atributos.social).toBe(0);
+    });
+
+    it("troca entre categorias não Civis preserva zeros escolhidos", () => {
+        const criacao = montar();
+        criacao.formulario.patchValue({ atributos: { luta: 0, pontaria: 0, social: 0 } });
+        criacao.formulario.controls.categoria.setValue(CategoriaNpcEnum.VETERANO);
+        expect(criacao.estado().atributos).toMatchObject({ luta: 0, pontaria: 0, social: 0 });
+        expect(criacao.distribuicao().restantes).toBe(14);
+    });
+
+    it("Civil não ganha pontos dos zeros bloqueados; exceções são independentes", () => {
+        const criacao = montar();
+        criacao.formulario.controls.categoria.setValue(CategoriaNpcEnum.CIVIL);
+        expect(criacao.distribuicao().restantes).toBe(2);
+        criacao.liberarCombateCivil("luta");
+        criacao.formulario.controls.atributos.controls.luta.setValue(0);
+        expect(criacao.distribuicao().restantes).toBe(3);
+        expect(criacao.formulario.controls.atributos.controls.pontaria.disabled).toBe(true);
+        criacao.liberarCombateCivil("pontaria");
+        criacao.formulario.controls.atributos.controls.pontaria.setValue(0);
+        expect(criacao.distribuicao().restantes).toBe(4);
+        criacao.liberarCombateCivil("luta");
+        expect(criacao.distribuicao().restantes).toBe(3);
+        expect(criacao.pontariaCivilLiberada()).toBe(true);
+        criacao.formulario.controls.categoria.setValue(CategoriaNpcEnum.OPERATIVO);
+        expect(criacao.estado().atributos).toMatchObject({ luta: 1, pontaria: 0 });
+    });
+
     it.each([
         [CategoriaNpcEnum.OPERATIVO, 85, 14, null],
         [CategoriaNpcEnum.VETERANO, 165, 21, null],

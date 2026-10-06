@@ -1,6 +1,7 @@
 # p-100-npc-criacao-atributo-zero.spec.md
 
-> Task avulsa de PROBLEMS P-100. **2026-10-06: somente spec, sem execução.**
+> Task avulsa de PROBLEMS P-100. **2026-10-06: execução autorizada pelo autor.**
+> **Concluída em 2026-10-06.** [Gates e evidências](../../reviews/p-100-verificacao.md).
 
 ## Objetivo
 
@@ -18,6 +19,9 @@ e redistribuí-lo na criação, conforme o Guia v4.2.0, preservando tetos e orç
    mínimo do stepper, saldo, mudança de Categoria, resumo e confirmação. Consumir
    exclusivamente a regra compartilhada; preservar a edição de ficha pronta.
 3. Registrar testes e evidências antes de remover P-100 e mover a spec para `done/`.
+4. Corrigir o foco de teclado do campo numérico no próprio `StepInput`, com tokens
+   do tema. Defeito preexistente encontrado no gate visual; ampliação autorizada
+   expressamente pelo autor em 2026-10-06, sem variante ou API nova.
 
 ## Critérios de Aceite
 
@@ -34,7 +38,7 @@ e redistribuí-lo na criação, conforme o Guia v4.2.0, preservando tetos e orç
 
 ## Fora de Escopo
 
-- Executar agora; criar Competências/dadinho (m4-19), mudar tabelas/tetos/recursos,
+- Criar Competências/dadinho (m4-19), mudar tabelas/tetos/recursos,
   interpretar texto de habilidade ou reescrever fichas existentes.
 
 ## Dependências
