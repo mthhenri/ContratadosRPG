@@ -22,7 +22,10 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-10-05 · **Última decisão registrada:** `m4-18-ficha-npc-atributos-como-jogador` concluída
+> **Última revisão:** 2026-10-06 · Preparação de specs de NPC, Criaturas, fixtures e
+> documentação concluída; autor autorizou seu versionamento, sem executar correções.
+> [Fila consolidada](../specs/backlog/revisao-documentos-sistema-v4.1.3-guia-v4.2.0.spec.md).
+> Antes: `m4-18-ficha-npc-atributos-como-jogador` concluída
 > (spec em `done/`): Jogador e NPC usam `app-atributo-ficha`; no NPC, siglas/DT e steppers com a
 > mesma caixa/grade do Jogador, sem Maestria, lesão, modificador, dados ou rolagem. Regressão do
 > Jogador: 24 pares de capturas idênticos. Evidências em `docs/reviews/m4-18-verificacao.md`.
@@ -826,10 +829,31 @@
 
 **Segunda rodada da revisão do NPC (pedido do autor, 2026-10-05) — `m4-16`, `m4-17` e
 [`m4-18`](../specs/done/m4-18-ficha-npc-atributos-como-jogador.spec.md) concluídas (`done/`);
-próxima spec no `backlog/`:**
-[`m4-19`](../specs/backlog/m4-19-npc-testes-de-atributo-regra-e-rolagem.spec.md) (**auditoria da regra de teste do NPC**, com
-parada obrigatória para o autor decidir a fórmula; modificador de teste/ajuste de dados no NPC; rolagem de atributo). Decisões
-de abertura **já tomadas pelo autor** estão dentro de cada spec; o que sobra para perguntar é só o que cada uma marca como tal.
+spec aberta em `active/`, implementação não iniciada:**
+[`m4-19`](../specs/active/m4-19-npc-testes-de-atributo-regra-e-rolagem.spec.md) reespecificada
+após [revisão do Guia v4.2.0](../reviews/m4-19-revisao-guia-v4.2.0.md).
+Contrato: maior D20 + Nível + dados de Categoria nos atributos escolhidos como Competência,
+além dos ajustes manuais; Competência não altera DT e seus dados não recebem crítico.
+Civil Nível0 soma zero, sem zerar fichas ou criar exceção para outros Níveis.
+Dadinho requerido; leitor vê bônus apresentados sem editar/rolar; Anotações privadas.
+Rolagens privadas sempre; apresentação do controle de ocultação ainda deve ser fechada,
+sem presumir autorização de transição pública. Autor esclareceu: nenhuma nova execução
+agora. Fontes autorais preservadas. P-097-01 corrigiu crítico de teste com um pool;
+[P-099](../specs/backlog/p-099-critico-teste-com-dados-adicionais.spec.md) teve a proposta
+global retirada pelo autor; API não deduz dano/cura posteriores. Revisar crítico pelo
+contexto escolhido da ação; não é dependência executável. [P-100](../specs/backlog/p-100-npc-criacao-atributo-zero.spec.md)
+adapta criação zero, antes do fecho integrado de m4-19. Adequações de Criaturas
+[P-101](../specs/backlog/p-101-criaturas-guia-v4.2.0.spec.md) divididas em 01/02/03;
+Cadência já drena turnos excedentes ao fim, sem correção necessária confirmada.
+Ponteiros P-098/102 e investigação de equipamento/ataques NPC em tasks próprias;
+[fila consolidada](../specs/backlog/revisao-documentos-sistema-v4.1.3-guia-v4.2.0.spec.md)
+tem versionamento documental autorizado; execução das correções aguarda revisão. Specs
+[P-095](../specs/backlog/p-095-fixture-rolagens-feed-deterministica.spec.md),
+[P-096](../specs/backlog/p-096-fixture-resumo-rolagem-deterministica.spec.md) em `backlog/`;
+as fixtures continuam aguardando execução própria; os livros novos não corrigem relógio
+dos testes. Revisão P-097 em `done/`; correção anterior mantida pelo autor.
+Decisões de abertura **já tomadas pelo autor** estão dentro de cada spec; o que sobra para
+perguntar é só o que cada uma marca como tal.
 **Revisão do NPC, primeira rodada (pedido do autor, 2026-10-04) — concluída: `m4-12`, `m4-13`, `m4-14` e `m4-15` em `done/`.**
 Pendências do autor no fim do bloco da `m4-14` em `HISTORY.md` (`I-043`/`I-044`/`I-045`/`I-046`). **Ficha de NPC (`m4-14`):** `visualizar-npc.page.*` usa `ficha-pagina__*`
 (campanha em chip, `textoPersistencia`); `npc-visualizacao` tem selos redondos no retrato; `NpcHabilidadesLista`/`NpcSanidadeLista` têm cabeçalho com lápis e "+",
@@ -3407,7 +3431,21 @@ Armadilhas que já custaram retrabalho neste repositório. Cada uma tem um epis�
 
 ## 7. Decisões Pendentes
 
-Nenhuma decisão de rumo em aberto no momento.
+**m4-19 — regras resolvidas; execução futura:** Guia v4.2.0 define Nível + Competências,
+quantidade/dados por Categoria e exclusão de crítico desses dados. Fórmula/Civil não
+dependem mais de opções da auditoria antiga. Spec reescrita, sem implementação.
+Resta apresentação do item “Ocultar rolagens” compatível com “sempre ocultas”; não
+presumir alternância pública do análogo. [Revisão e pendências autorais](../reviews/m4-19-revisao-guia-v4.2.0.md).
+**Crítico — contexto da operação para revisão:** a publicação define +2 no teste
+sem dado resultante e dobra no dano/cura. Autor esclareceu que teste e rolagem
+resultante posterior são separados; API não pode deduzir a segunda da primeira.
+Proposta global P-099 retirada/ACEITO; correção P-097-01 mantida, sem rollback.
+Revisar aplicação no fluxo explicitamente escolhido de NPC antes de novo código,
+distinguindo Competência dentro do teste de dano/cura posteriores.
+P-095/096/098/100/101-01/02/03/102 têm specs preparadas; sem execução das correções.
+Versionamento da preparação documental autorizado pelo autor.
+NPC ataques/equipamento é investigação separada. Exemplos autorais incoerentes
+registrados para revisão, sem alterar fontes; fórmula geral prevalece sobre exemplo.
 
 A única que existia — **identidade visual do site** — está **resolvida**: tema "Terminal de
 Contenção", handoff completo em `docs/design/`, com troca em runtime entregue na `m1-13`.

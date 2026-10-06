@@ -1,5 +1,74 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-06 — Versionamento da preparação de specs autorizado
+
+Após receber a explicação de cada task, o autor autorizou commitar a criação das specs.
+Autorização restrita à preparação documental: treze specs, auditoria/revisão do Guia,
+problemas e trechos de contexto/histórico desta frente. Código, livros novos, publicação
+dos PDFs e alterações de outras tarefas permanecem fora deste commit. m4-19 continua
+aberta e P-099 mantém a proposta global retirada; nenhuma correção nova implementada.
+
+Conferidos estrutura, links e diff documental. Contexto/histórico selecionados sem
+remover registros de outras tarefas. Commit com trailer de coautoria Codex;
+mensagem e relação de arquivos conferidas no Git após gravação.
+
+## 2026-10-06 — Specs consolidadas; inferência de resultado posterior retirada
+
+Autor esclareceu que Medicina→cura e ataque→dano são duas rolagens, e a API não
+conhece a intenção futura a partir da fórmula. Comentário dizia “095”, mas o assunto
+era a proposta P-099; P-095/P-096 foram explicitamente mantidas para correção das
+fixtures. Proposta global P-099 retirada da fila e registrada ACEITO; spec convertida
+em registro/revisão, sem executar correção ou rollback de P-097-01. Dados de Categoria
+no Guia pertencem ao teste de NPC; sua integração/crítico precisa de contrato explícito
+na revisão m4-19, sem presumir dano/cura posteriores ou total32 como aprovação global.
+
+Pedido atual é preparar todas as specs e revisar antes de commit. Criaturas P-101
+divididas em 01 realocação, 02 DT/modificadores, 03 referências/Cadência. Conferência
+encontrou sobra de turnos já drenada no fim em `ordem.ts` com caso de teste; não refazer
+algoritmo correto. Confirmados mínimo0 na criação e orçamento local de atributos que
+precisam do recorte puro compartilhado de realocação até3 no total.
+
+P-102 registra links operacionais aos livros removidos em README/SCHEMA/design/specs;
+spec preparada, preservando referências históricas e regras autorais. Seção nova de
+equipamentos/ataques NPC ganhou investigação própria, sem expansão da m4-19. Guarda-chuva
+`revisao-documentos-sistema-v4.1.3-guia-v4.2.0.spec.md` reúne fila, cobertura documental,
+dependências e decisões pendentes. P-095/096/098/100 continuam com specs existentes.
+
+Comparação semântica adicional normalizou ênfase/escapes/`&nbsp;` e confirmou apenas
+três parágrafos de Crítico como mudança do Sistema do Jogador; Guia coberto pela matriz.
+Somente docs/specs/contexto nesta rodada, sem fonte autoral, código, testes, banco,
+publicação ou commit. Conferência documental de links/estrutura; limpeza anterior
+mantida, sem novos temporários. Gates funcionais/visuais ficam nas tasks futuras.
+
+## 2026-10-06 — m4-19: revisão do Guia novo e specs, sem novas correções
+
+O autor esclareceu que pretendia especificar antes de implementar; aceitou manter o
+que já havia sido corrigido na rodada P-097-01. A partir desse esclarecimento, apenas
+revisão e documentação: nenhum código, teste, dado ou fonte autoral alterado nesta rodada.
+Pedido adicional de limpeza cobriu os arquivos temporários gerados pelo trabalho.
+
+Sistema v4.1.3 e Guia v4.2.0 confrontados com as questões anteriores. Guia define
+Nível como Proficiência e introduz Competências com dados por Categoria, sem afetar
+atributo/DT ou receber crítico. Civil Nível0 soma zero; não forçar todos os Civis a zero.
+m4-19 reescrita para essa composição, configuração/validação, ajustes manuais, dadinho,
+leitura sem edição e rolagens privadas. Apresentação do controle de ocultação ainda
+deve respeitar a declaração “sempre ocultas”; não presumir transição pública.
+
+Reprodução determinística em memória revelou P-099: segundo pool impede +2 do crítico
+(`3d20kh1cm1+6+1d6`, `[20,11,8,4]` retorna30, deveria32). P-097-01 segue válida para
+um pool, sem afirmar cobertura completa. P-100 registra criação de NPC que ainda exige
+atributo mínimo1, enquanto Guia permite zero. P-101 registra realocação de Criatura
+negativa ainda rejeitada e prevê inventário de DT/modificadores/cadência/consumidores.
+Exemplo A Estátua alinhou fraqueza26, mas mantém Fraco+6 divergente da fórmula e
+Social base2→zero descrito como retirada de3. Fonte preservada; fórmula geral prevalece
+conforme decisão histórica. P-093 arredondamento permanece ACEITO.
+
+Specs P-098/099/100/101 preparadas em backlog; P-095/096 já tinham specs e continuam
+abertas, pois mudanças de livro não corrigem fixtures que consultam relógio real.
+Relatório em `docs/reviews/m4-19-revisao-guia-v4.2.0.md`. Verificação documental e
+reproduções sem persistência; nenhum gate de aplicação repetido sem implementação.
+Limpeza dos 14 logs temporários `.tmp-p097-*.log`; evidências e documentos preservados.
+
 ## 2026-10-06 — pn-11: resumo no topo, anterior/próxima, voltar ao topo — fecha a revisão da página
 
 **Pedido do autor.** Última task da revisão (`pn-07`…`pn-11`). O autor acrescentou à task um botão de
