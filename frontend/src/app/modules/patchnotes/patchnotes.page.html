@@ -54,145 +54,151 @@
         </app-documento-contencao>
     </div>
     } @else {
-    <header class="patchnotes__cabecalho">
-        <span class="patchnotes__eyebrow">// Patchnotes</span>
-        <h1 class="patchnotes__titulo">Novidades do sistema</h1>
-        <p class="patchnotes__apresentacao">
-            O que mudou no ContratadosRPG, do jeito que você percebe na mesa.
-        </p>
-        @if (podeReiniciarCache()) {
-        <button
-            app-botao-icone
-            tamanho="padrao"
-            type="button"
-            class="patchnotes__reiniciar-cache"
-            [disabled]="reiniciandoCache()"
-            [attr.aria-label]="reiniciandoCache() ? 'Reiniciando o cache dos patchnotes' : 'Reiniciar o cache dos patchnotes'"
-            [appTooltip]="'Reiniciar o cache dos patchnotes'"
-            (click)="reiniciarCache()"
-        >
-            <app-icone nome="atualizar" />
-        </button>
-        }
-    </header>
-
-    @if (indice() === null) {
-    <div class="patchnotes__carregando" role="status" aria-label="Carregando patchnotes">
-        <app-esqueleto class="patchnotes__esqueleto-titulo" />
-        <app-esqueleto class="patchnotes__esqueleto-linha" />
-        <app-esqueleto class="patchnotes__esqueleto-linha patchnotes__esqueleto-linha--media" />
-        <app-esqueleto class="patchnotes__esqueleto-linha patchnotes__esqueleto-linha--curta" />
-    </div>
-    } @else if (indice()!.length === 0) {
-    <app-estado-vazio
-        icone="anotacoes"
-        titulo="Ainda não há notas de versão."
-        linhaApoio="Assim que a primeira for publicada, ela aparece aqui."
-    />
-    } @else {
     <div class="patchnotes__corpo">
-        <nav class="patchnotes__versoes" aria-label="Versões">
-            <span class="patchnotes__rotulo">Versões</span>
-            <div class="patchnotes__lista">
-                @for (item of indice(); track item.versao) {
-                <a
-                    class="patchnotes__item"
-                    [routerLink]="['/patchnotes', item.versao]"
-                    routerLinkActive="patchnotes__item--ativo"
-                    ariaCurrentWhenActive="page"
-                >
-                    <b>v{{ item.versao }}</b>
-                    <span>{{ formatarDataCurta(item.data) }}</span>
-                </a>
-                }
-            </div>
-        </nav>
-
-        @if (nota(); as notaAtual) {
-        <article class="patchnotes__nota" [attr.aria-label]="'Versão ' + notaAtual.versao">
-            <header class="patchnotes__nota-cabecalho">
-                <div class="patchnotes__nota-versao">
-                    <b>v{{ notaAtual.versao }}</b>
-                    @if (notaAtual.versao === versaoAtual()) {
-                    <app-chip severidade="primario">Atual</app-chip>
-                    }
-                    <time [attr.datetime]="notaAtual.data">{{ formatarData(notaAtual.data) }}</time>
+        <div class="patchnotes__trilho">
+            <header class="patchnotes__cabecalho">
+                <div class="patchnotes__cabecalho-texto">
+                    <span class="patchnotes__eyebrow">// Patchnotes</span>
+                    <h1 class="patchnotes__titulo">Novidades do sistema</h1>
                 </div>
-                <h2 class="patchnotes__nota-titulo">{{ notaAtual.titulo }}</h2>
-                @if (conteudo()?.introducao) {
-                <div
-                    class="patchnotes__markdown patchnotes__markdown--introducao"
-                    [innerHTML]="conteudo()?.introducao"
-                ></div>
+                @if (podeReiniciarCache()) {
+                <button
+                    app-botao-icone
+                    tamanho="padrao"
+                    type="button"
+                    class="patchnotes__reiniciar-cache"
+                    [disabled]="reiniciandoCache()"
+                    [attr.aria-label]="reiniciandoCache() ? 'Reiniciando o cache dos patchnotes' : 'Reiniciar o cache dos patchnotes'"
+                    [appTooltip]="'Reiniciar o cache dos patchnotes'"
+                    (click)="reiniciarCache()"
+                >
+                    <app-icone nome="atualizar" />
+                </button>
                 }
             </header>
 
-            @for (grupo of conteudo()?.grupos; track $index) {
-            <section class="patchnotes__grupo">
-                @if (grupo.titulo) {
-                <h3 class="patchnotes__grupo-titulo" [id]="grupo.id">
-                    <span>{{ grupo.titulo }}</span>
-                    <button
-                        app-botao-icone
-                        tamanho="mini"
-                        type="button"
-                        class="patchnotes__copiar-link"
-                        [attr.aria-label]="'Copiar link de ' + grupo.titulo"
-                        [appTooltip]="'Copiar link'"
-                        (click)="copiarLink(grupo.id!)"
-                    >
-                        <app-icone nome="link" />
-                    </button>
-                </h3>
-                } @if (grupo.introducao) {
-                <div class="patchnotes__markdown" [innerHTML]="grupo.introducao"></div>
-                } @for (bloco of grupo.blocos; track $index) {
-                <section
-                    class="patchnotes__bloco"
-                    [class.patchnotes__bloco--funcionalidade]="bloco.tom === 'neutro'"
-                    [attr.data-tom]="bloco.tom"
-                >
-                    <h4 class="patchnotes__bloco-titulo" [id]="bloco.id">
-                        <span>{{ bloco.titulo }}</span>
-                        <button
-                            app-botao-icone
-                            tamanho="mini"
-                            type="button"
-                            class="patchnotes__copiar-link"
-                            [attr.aria-label]="'Copiar link de ' + bloco.titulo"
-                            [appTooltip]="'Copiar link'"
-                            (click)="copiarLink(bloco.id)"
+            @if (indice() !== null && indice()!.length > 0) {
+                <nav class="patchnotes__versoes" aria-label="Versões">
+                    <span class="patchnotes__rotulo">Versões</span>
+                    <div class="patchnotes__lista">
+                        @for (item of indice(); track item.versao) {
+                        <a
+                            class="patchnotes__item"
+                            [routerLink]="['/patchnotes', item.versao]"
+                            routerLinkActive="patchnotes__item--ativo"
+                            ariaCurrentWhenActive="page"
                         >
-                            <app-icone nome="link" />
-                        </button>
-                    </h4>
-                    <div class="patchnotes__markdown" [innerHTML]="bloco.html"></div>
-                </section>
-                }
-            </section>
-            } @if (versaoAnterior(); as anterior) {
-            <footer class="patchnotes__nota-rodape">
-                <a
-                    app-botao
-                    variante="secundario"
-                    estilo="link"
-                    tamanho="pequeno"
-                    [routerLink]="['/patchnotes', anterior.versao]"
-                >
-                    <app-icone nome="voltar" />
-                    v{{ anterior.versao }} (anterior)
-                </a>
-            </footer>
+                            <b>v{{ item.versao }}</b>
+                            <span>{{ formatarDataCurta(item.data) }}</span>
+                        </a>
+                        }
+                    </div>
+                </nav>
             }
-        </article>
-        } @else {
-        <div class="patchnotes__carregando" role="status" aria-label="Carregando nota">
-            <app-esqueleto class="patchnotes__esqueleto-titulo" />
-            <app-esqueleto class="patchnotes__esqueleto-linha" />
-            <app-esqueleto class="patchnotes__esqueleto-linha patchnotes__esqueleto-linha--media" />
-            <app-esqueleto class="patchnotes__esqueleto-linha patchnotes__esqueleto-linha--curta" />
         </div>
-        }
+
+        <div class="patchnotes__principal">
+            @if (indice() === null) {
+            <div class="patchnotes__carregando" role="status" aria-label="Carregando patchnotes">
+                <app-esqueleto class="patchnotes__esqueleto-titulo" />
+                <app-esqueleto class="patchnotes__esqueleto-linha" />
+                <app-esqueleto class="patchnotes__esqueleto-linha patchnotes__esqueleto-linha--media" />
+                <app-esqueleto class="patchnotes__esqueleto-linha patchnotes__esqueleto-linha--curta" />
+            </div>
+            } @else if (indice()!.length === 0) {
+            <app-estado-vazio
+                icone="anotacoes"
+                titulo="Ainda não há notas de versão."
+                linhaApoio="Assim que a primeira for publicada, ela aparece aqui."
+            />
+            } @else {
+                @if (nota(); as notaAtual) {
+                <article class="patchnotes__nota" [attr.aria-label]="'Versão ' + notaAtual.versao">
+                    <header class="patchnotes__nota-cabecalho">
+                        <div class="patchnotes__nota-versao">
+                            <b>v{{ notaAtual.versao }}</b>
+                            @if (notaAtual.versao === versaoAtual()) {
+                            <app-chip severidade="primario">Atual</app-chip>
+                            }
+                            <time [attr.datetime]="notaAtual.data">{{ formatarData(notaAtual.data) }}</time>
+                        </div>
+                        <h2 class="patchnotes__nota-titulo">{{ notaAtual.titulo }}</h2>
+                        @if (conteudo()?.introducao) {
+                        <div
+                            class="patchnotes__markdown patchnotes__markdown--introducao"
+                            [innerHTML]="conteudo()?.introducao"
+                        ></div>
+                        }
+                    </header>
+
+                    @for (grupo of conteudo()?.grupos; track $index) {
+                    <section class="patchnotes__grupo">
+                        @if (grupo.titulo) {
+                        <h3 class="patchnotes__grupo-titulo" [id]="grupo.id">
+                            <span>{{ grupo.titulo }}</span>
+                            <button
+                                app-botao-icone
+                                tamanho="mini"
+                                type="button"
+                                class="patchnotes__copiar-link"
+                                [attr.aria-label]="'Copiar link de ' + grupo.titulo"
+                                [appTooltip]="'Copiar link'"
+                                (click)="copiarLink(grupo.id!)"
+                            >
+                                <app-icone nome="link" />
+                            </button>
+                        </h3>
+                        } @if (grupo.introducao) {
+                        <div class="patchnotes__markdown" [innerHTML]="grupo.introducao"></div>
+                        } @for (bloco of grupo.blocos; track $index) {
+                        <section
+                            class="patchnotes__bloco"
+                            [class.patchnotes__bloco--funcionalidade]="bloco.tom === 'neutro'"
+                            [attr.data-tom]="bloco.tom"
+                        >
+                            <h4 class="patchnotes__bloco-titulo" [id]="bloco.id">
+                                <span>{{ bloco.titulo }}</span>
+                                <button
+                                    app-botao-icone
+                                    tamanho="mini"
+                                    type="button"
+                                    class="patchnotes__copiar-link"
+                                    [attr.aria-label]="'Copiar link de ' + bloco.titulo"
+                                    [appTooltip]="'Copiar link'"
+                                    (click)="copiarLink(bloco.id)"
+                                >
+                                    <app-icone nome="link" />
+                                </button>
+                            </h4>
+                            <div class="patchnotes__markdown" [innerHTML]="bloco.html"></div>
+                        </section>
+                        }
+                    </section>
+                    } @if (versaoAnterior(); as anterior) {
+                    <footer class="patchnotes__nota-rodape">
+                        <a
+                            app-botao
+                            variante="secundario"
+                            estilo="link"
+                            tamanho="pequeno"
+                            [routerLink]="['/patchnotes', anterior.versao]"
+                        >
+                            <app-icone nome="voltar" />
+                            v{{ anterior.versao }} (anterior)
+                        </a>
+                    </footer>
+                    }
+                </article>
+                } @else {
+                <div class="patchnotes__carregando" role="status" aria-label="Carregando nota">
+                    <app-esqueleto class="patchnotes__esqueleto-titulo" />
+                    <app-esqueleto class="patchnotes__esqueleto-linha" />
+                    <app-esqueleto class="patchnotes__esqueleto-linha patchnotes__esqueleto-linha--media" />
+                    <app-esqueleto class="patchnotes__esqueleto-linha patchnotes__esqueleto-linha--curta" />
+                </div>
+                }
+            }
+        </div>
     </div>
-    } }
+    }
 </main>

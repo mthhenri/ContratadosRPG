@@ -451,6 +451,28 @@ mobile, por *container query* de `720px`), nota à direita em cartão. A nota te
 colorido; qualquer outro título é uma **funcionalidade**, com título de seção em sans 15px e o texto
 abaixo. O Markdown é renderizado por `renderizarMarkdownSeguro`.
 
+### Página de leitura em trilhos (`/patchnotes`, pn-08)
+
+Padrão para páginas de leitura longa com navegação lateral. A largura vem dos **trilhos**, nunca do
+parágrafo. Tudo por *container query* do próprio `.patchnotes` (não do viewport), então vale igual
+com a tela dividida:
+
+| Largura do contêiner | Zonas |
+|---|---|
+| `≥ 1240px` (inclui 1366) | três colunas: versões `250px` · nota fluida · trilho direito `260px` (reservado ao sumário "Nesta versão", pn-09) |
+| `720–1239px` | duas colunas: versões `250px` · nota; o conteúdo do trilho direito vai para o topo da nota |
+| `< 720px` | uma coluna; versões em faixa horizontal |
+
+- **Contêiner** com `max-width: 1400px` (era 1120px).
+- **Trilhos `sticky`** sob a topbar: `top: calc(var(--altura-topbar) + var(--space-16))` e
+  `max-height: calc(100dvh - var(--altura-topbar) - 2 * var(--space-16))` com `overflow-y: auto`
+  (rolagem interna: em notebook a lista não cabe inteira). Análogo: `.criar__resumo`.
+- **Cabeçalho compacto** no topo do trilho esquerdo, sobre um filete: eyebrow `// Patchnotes`, `h1`
+  mono 15px e, na ponta direita, o botão do ADMIN (`app-botao-icone`). Sem faixa própria nem frase de
+  apresentação. O `h1` continua único.
+- **Medida de leitura**: o Markdown sobe de 14px/66ch para no máximo **15px/70ch**, e só em três zonas.
+- Estados de contenção (404/503) ficam centralizados **fora** do grid.
+
 ### Biblioteca de documentos (`m9-04`)
 
 A página **Biblioteca** (`/campanhas/:id/documentos`; o rótulo não é "Documentos" porque esse é o

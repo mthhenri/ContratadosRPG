@@ -1,5 +1,26 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-06 — pn-08: layout em trilhos da página de patchnotes
+
+**Pedido do autor.** Segunda task da revisão (`pn-07`…`pn-11`), conjunto "Definido" da bancada.
+
+**Entrega.** Contêiner `max-width` 1120 → 1400px. Por container query: `≥1240px` três colunas
+(versões 250 · nota fluida · trilho direito 260, **coluna reservada**, ainda sem conteúdo até a
+`pn-09`), `720–1239px` duas, abaixo disso uma. O trilho esquerdo (cabeçalho compacto + versões) é
+`sticky` sob a topbar com rolagem interna. Cabeçalho compacto: eyebrow + `h1` 15px + botão do ADMIN
+na ponta direita, sem a frase de apresentação. Markdown a 15px/70ch só em três zonas. Template
+reorganizado: um só `.patchnotes__corpo` (trilho + principal) para carregando, vazio e nota;
+404/503 seguem fora do grid. Padrão registrado em `docs/design/DESIGN.md`.
+
+**Verificado.** Testes (3 novos, suíte completa do frontend 2959 verdes) e lint sem erros. Ao vivo em
+1920/1366/960/360: colunas `250/778/260`, `250/699/260`, `250/577` e uma; trilho `sticky` a 68px
+em todos menos mobile; sem overflow horizontal; rolagem interna do trilho com lista longa em 1366×768
+(`scrollHeight` 1242 > 684); parágrafo 554 → 630px em três zonas (folga do 15px/70ch) e inalterado
+nas demais; 404, 503, vazio e carregando com o `h1` único; botão do ADMIN ausente para visitante e
+presente (32px; 44px no mobile) com sessão ADMIN.
+
+**Nota.** Em 1920 o trilho direito vazio deixa 260px em branco à direita da nota até a `pn-09`.
+
 ## 2026-10-06 — pn-07: capítulos e âncoras nos patchnotes
 
 **Pedido do autor.** Primeira das cinco tasks da revisão da página (`pn-07`…`pn-11`, escopo fechado na

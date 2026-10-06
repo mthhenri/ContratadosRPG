@@ -289,6 +289,43 @@ describe('PatchnotesPage', () => {
     expect(raiz().querySelector('.patchnotes__nota-versao b')?.textContent).toContain('v1.0.0');
   });
 
+  describe('cabeçalho compacto (pn-08)', () => {
+    function cabecalho(): HTMLElement | null {
+      return raiz().querySelector<HTMLElement>('.patchnotes__trilho > .patchnotes__cabecalho');
+    }
+
+    it('abre o trilho de versões com o único h1 da página, sem frase de apresentação', async () => {
+      await abrir('/patchnotes/1.1.0');
+      await responderIndice();
+      await responderNota(nota('1.1.0', MARKDOWN_1_1_0));
+
+      expect(raiz().querySelectorAll('h1')).toHaveLength(1);
+      expect(cabecalho()!.querySelector('h1')?.textContent).toContain('Novidades do sistema');
+      expect(cabecalho()!.textContent).toContain('// Patchnotes');
+      expect(raiz().querySelector('.patchnotes__apresentacao')).toBeNull();
+      expect(raiz().querySelector('.patchnotes__trilho nav[aria-label="Versões"]')).not.toBeNull();
+    });
+
+    it('mantém o cabeçalho enquanto o índice carrega e quando não há versões', async () => {
+      await abrir('/patchnotes');
+      expect(cabecalho()!.querySelector('h1')).not.toBeNull();
+      expect(raiz().querySelector('[role="status"]')).not.toBeNull();
+
+      await responderIndice([]);
+      expect(cabecalho()!.querySelector('h1')).not.toBeNull();
+      expect(raiz().querySelector('nav[aria-label="Versões"]')).toBeNull();
+      expect(raiz().querySelector('app-estado-vazio')).not.toBeNull();
+    });
+
+    it('os estados de contenção continuam fora do grid, sem cabeçalho compacto', async () => {
+      await abrir('/patchnotes/9.9.9');
+      await responderIndice();
+
+      expect(raiz().querySelector('.patchnotes__contencao app-documento-contencao')).not.toBeNull();
+      expect(raiz().querySelector('.patchnotes__corpo')).toBeNull();
+    });
+  });
+
   describe('capítulos e âncoras (pn-07)', () => {
     const MARKDOWN_CAPITULOS = [
       '# PARA OS PLAYERS',

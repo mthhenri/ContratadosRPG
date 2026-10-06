@@ -1,15 +1,17 @@
 @use "tema/breakpoints" as bp;
 
-// Página pública /patchnotes (pn-04). Análogo aprovado: POC "Versão e Patchnotes" (lista à esquerda,
-// nota à direita) sobre o padrão de cartão/cabeçalho mono do produto. Só tokens; o estado de erro é
-// o documento de contenção compartilhado.
+// Página pública /patchnotes (pn-04, trilhos na pn-08). Análogos aprovados: trilho fixo lateral de
+// `.criar__resumo` (criar.page.scss), leitura longa da Biblioteca de documentos e o conjunto
+// "Definido" da bancada. Três zonas em tela larga (versões | nota | trilho direito, reservado ao
+// sumário da pn-09), duas em tela média, uma no mobile — todas por container query, então valem igual
+// com a tela dividida. Só tokens; o estado de erro é o documento de contenção compartilhado.
 .patchnotes {
     container-type: inline-size;
     display: flex;
     flex-direction: column;
     gap: var(--space-16);
     width: 100%;
-    max-width: 1120px;
+    max-width: 1400px;
     margin: 0 auto;
     padding: 32px clamp(16px, 4vw, 32px) 48px;
 
@@ -20,22 +22,27 @@
         padding-top: var(--space-16);
     }
 
-    // Texto na primeira coluna; a segunda só ganha conteúdo para o ADMIN (reiniciar cache, pn-06).
+    // Cabeçalho compacto: eyebrow e título à esquerda, botão do ADMIN (reiniciar cache, pn-06) na
+    // ponta direita; sem faixa própria nem frase de apresentação.
     &__cabecalho {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
-        column-gap: var(--space-12);
-        row-gap: 6px;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: var(--space-12);
+        min-width: 0;
+        padding-bottom: var(--space-12);
+        border-bottom: 1px solid var(--border);
+    }
 
-        > :not(.patchnotes__reiniciar-cache) {
-            grid-column: 1;
-        }
+    &__cabecalho-texto {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
     }
 
     &__reiniciar-cache {
-        grid-column: 2;
-        grid-row: 1 / span 3;
-        align-self: start;
+        flex: none;
     }
 
     &__eyebrow,
@@ -50,17 +57,10 @@
 
     &__titulo {
         margin: 0;
-        font: 600 clamp(20px, 3vw, 24px) var(--font-mono);
+        font: 600 15px/1.25 var(--font-mono);
         text-transform: uppercase;
         letter-spacing: 0.04em;
         color: var(--text);
-    }
-
-    &__apresentacao {
-        margin: 0;
-        max-width: 60ch;
-        font-size: 14px;
-        color: var(--text-dim);
     }
 
     &__corpo {
@@ -68,6 +68,18 @@
         grid-template-columns: minmax(0, 1fr);
         gap: var(--space-16);
         align-items: start;
+    }
+
+    // Trilho esquerdo: cabeçalho compacto e versões. Fixo na rolagem quando há colunas.
+    &__trilho {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-12);
+        min-width: 0;
+    }
+
+    &__principal {
+        min-width: 0;
     }
 
     // Lista de versões: faixa horizontal no mobile, coluna fixa quando cabe.
@@ -398,17 +410,21 @@
         }
     }
 
-    // Duas colunas quando a página comporta: lista fixa à esquerda, nota à direita. Container query
-    // (e não a largura do viewport): vale igual com a tela dividida ao lado de outro painel.
+    // Duas colunas (versões | nota) quando a página comporta. Container query, e não a largura do
+    // viewport: vale igual com a tela dividida ao lado de outro painel.
     @container (min-width: 720px) {
         &__corpo {
-            grid-template-columns: 220px minmax(0, 1fr);
+            grid-template-columns: 250px minmax(0, 1fr);
             gap: 24px;
         }
 
-        &__versoes {
+        // Fixo sob a topbar, com rolagem interna própria: em notebook a lista não cabe inteira.
+        &__trilho {
             position: sticky;
-            top: var(--space-16);
+            top: calc(var(--altura-topbar) + var(--space-16));
+            max-height: calc(100dvh - var(--altura-topbar) - 2 * var(--space-16));
+            overflow-y: auto;
+            scrollbar-width: thin;
         }
 
         &__lista {
@@ -418,6 +434,20 @@
 
         &__item {
             min-width: 0;
+        }
+    }
+
+    // Três zonas: o terceiro trilho (`Nesta versão`, pn-09) tem a coluna reservada para a nota não
+    // mudar de largura quando ele chegar. A largura vem dos trilhos, nunca do parágrafo: o Markdown
+    // sobe só a 15px e 70ch.
+    @container (min-width: 1240px) {
+        &__corpo {
+            grid-template-columns: 250px minmax(0, 1fr) 260px;
+        }
+
+        &__markdown {
+            max-width: 70ch;
+            font-size: 15px;
         }
     }
 }
