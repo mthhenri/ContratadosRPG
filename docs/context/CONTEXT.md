@@ -23,7 +23,11 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-10-06 · P-101 e tasks01/02/03 concluídas após autorização
+> **Última revisão:** 2026-10-06 · M4-19 concluída: Competências, ajustes, dadinho e
+> rolagens privadas do NPC. Crítico +2 uma vez pelo D20 mantido; indicador fixo
+> “Rolagens ocultas”; legado preservado. Gates completos e app real nos quatro
+> viewports: [evidências](../reviews/m4-19-verificacao.md).
+> P-101 e tasks01/02/03 concluídas após autorização
 > de execução conjunta: realocação total3/negativos, DT compartilhada e referências
 > do Guia alinhadas. Gates e app real nos quatro viewports aprovados; evidências em
 > [P-101](../reviews/p-101-verificacao.md), commitada com as três filhas em `767b47bf`.
@@ -35,18 +39,17 @@
 > **Última decisão registrada:** Sistema do Jogador v4.1.3
 > incorporado em `p-097-01`: crítico soma +2 uma vez no teste; dano/cura continuam
 > dobrando dados e valores. Motor, média do montador e leitor de documentos corrigidos.
-> Guia de Mestre v4.2.0 revisado; m4-19 reespecificada para Nível + Competências,
-> dadinho, ajustes e privacidade, sem implementação. Autor esclareceu que deseja
-> specs antes de novas correções. Proposta global P-099 retirada após esclarecer teste
-> e dano/cura posteriores; contrato do fluxo específico NPC ainda será revisado.
+> Guia de Mestre v4.2.0 incorporado na m4-19 para Nível + Competências,
+> dadinho, ajustes e privacidade, com execução autorizada pelo autor. Proposta global
+> P-099 permanece descartada: contexto explícito do teste NPC não infere dano/cura posteriores.
 > [Fila consolidada de specs](../specs/backlog/revisao-documentos-sistema-v4.1.3-guia-v4.2.0.spec.md):
-> NPC (m4-19) pendente; documentação P-102, Criaturas P-101-01/02/03, fixtures P-095/096
+> NPC (m4-19), documentação P-102, Criaturas P-101-01/02/03, fixtures P-095/096
 > e documentação P-098 concluídas por autorizações próprias.
 > Ataques/equipamentos NPC: [investigação concluída](../reviews/npc-ataques-equipamentos-investigacao.md)
 > (spec em `done/`); decisões do autor (Civil segue restrição do Civil jogador; mestre
 > escolhe a Patente Equivalente por NPC dentro da faixa da Categoria) incorporadas na spec
 > executável [`m4-20`](../specs/backlog/m4-20-npc-ataques-e-equipamentos.spec.md), preparada
-> no backlog, depende da `m4-19`, sem implementação ainda.
+> no backlog, com dependência `m4-19` concluída; sem implementação ainda.
 > Autor autorizou versionar a preparação documental das specs.
 > [P-095](../specs/done/p-095-fixture-rolagens-feed-deterministica.spec.md) e
 > [P-096](../specs/done/p-096-fixture-resumo-rolagem-deterministica.spec.md) concluídas:
@@ -858,19 +861,22 @@
 
 **Segunda rodada da revisão do NPC (pedido do autor, 2026-10-05) — `m4-16`, `m4-17` e
 [`m4-18`](../specs/done/m4-18-ficha-npc-atributos-como-jogador.spec.md) concluídas (`done/`);
-spec aberta em `active/`, implementação não iniciada:**
-[`m4-19`](../specs/active/m4-19-npc-testes-de-atributo-regra-e-rolagem.spec.md) reespecificada
-após [revisão do Guia v4.2.0](../reviews/m4-19-revisao-guia-v4.2.0.md).
+[`m4-19`](../specs/done/m4-19-npc-testes-de-atributo-regra-e-rolagem.spec.md) concluída
+após fechar decisões e executar os gates:**
 Contrato: maior D20 + Nível + dados de Categoria nos atributos escolhidos como Competência,
 além dos ajustes manuais; Competência não altera DT e seus dados não recebem crítico.
 Civil Nível0 soma zero, sem zerar fichas ou criar exceção para outros Níveis.
-Dadinho requerido; leitor vê bônus apresentados sem editar/rolar; Anotações privadas.
-Rolagens privadas sempre; apresentação do controle de ocultação ainda deve ser fechada,
-sem presumir autorização de transição pública. Autor pediu encerrar as pendências antes
-do fecho da m4-19. Fontes autorais preservadas. P-097-01 corrigiu crítico de teste com um pool;
+Dadinho por atributo; leitor vê bônus sem editar/rolar/histórico; Anotações privadas.
+Servidor força rolagem privada; indicador fixo “Rolagens ocultas”. Crítico +2 uma vez
+pelo D20 mantido, sem dobrar Competência/Nível/ajustes, por contexto explícito no shared.
+Legado abre/salva recursos sem configuração automática; conflitos mantêm escolhas.
+[Gates completos, REST/socket e limpeza](../reviews/m4-19-verificacao.md).
+Próxima task NPC: [M4-20](../specs/backlog/m4-20-npc-ataques-e-equipamentos.spec.md),
+no backlog com execução dependente de autorização própria. Fontes preservadas.
+P-097-01 corrigiu crítico de teste com um pool;
 [P-099](../specs/backlog/p-099-critico-teste-com-dados-adicionais.spec.md) teve a proposta
-global descartada pelo autor; arquivo preservado como memória, sem execução. Revisar crítico pelo
-contexto escolhido da ação; não é dependência executável. [P-100](../specs/done/p-100-npc-criacao-atributo-zero.spec.md)
+global descartada pelo autor; arquivo preservado como memória, sem execução ou dependência
+executável. [P-100](../specs/done/p-100-npc-criacao-atributo-zero.spec.md)
 concluída: criação aceita zero, devolve o ponto e preserva teto/orçamento, exceções Civil
 e zeros escolhidos na troca de Categoria. Foco do StepInput corrigido com autorização;
 [gates e app real nos quatro viewports](../reviews/p-100-verificacao.md) aprovados.
@@ -883,7 +889,7 @@ Cadência já drena turnos excedentes ao fim; referências do exemplo alinhadas.
 Propostas editoriais Fraco+6→+5 e narrativa de Social três→dois aguardam o autor;
 fontes intactas, sem pendência técnica na P-101.
 Ponteiros P-098 e [P-102](../reviews/p-102-verificacao.md) concluídos; investigação de
-equipamento/ataques NPC em task própria; Competências/testes continuam na m4-19 ativa.
+equipamento/ataques NPC em M4-20 própria; Competências/testes entregues na m4-19.
 [fila consolidada](../specs/backlog/revisao-documentos-sistema-v4.1.3-guia-v4.2.0.spec.md)
 tem versionamento documental autorizado; demais correções aguardam revisão.
 [P-095](../specs/done/p-095-fixture-rolagens-feed-deterministica.spec.md) concluída:
@@ -3486,18 +3492,17 @@ Armadilhas que já custaram retrabalho neste repositório. Cada uma tem um epis�
 
 ## 7. Decisões Pendentes
 
-**m4-19 — regras resolvidas; execução futura:** Guia v4.2.0 define Nível + Competências,
-quantidade/dados por Categoria e exclusão de crítico desses dados. Fórmula/Civil não
-dependem mais de opções da auditoria antiga. Spec reescrita, sem implementação.
-Resta apresentação do item “Ocultar rolagens” compatível com “sempre ocultas”; não
-presumir alternância pública do análogo. [Revisão e pendências autorais](../reviews/m4-19-revisao-guia-v4.2.0.md).
-**Crítico — contexto da operação para revisão:** a publicação define +2 no teste
+**m4-19 — decisões fechadas e implementadas:** Nível + Competências, ajustes e dadinho;
+crítico +2 uma vez no teste NPC, sem dobrar dados de Categoria; indicador fixo
+“Rolagens ocultas”, servidor força privacidade. Sem pendência da task.
+[Fecho e evidências](../reviews/m4-19-verificacao.md).
+**Crítico — contexto da operação preservado:** a publicação define +2 no teste
 sem dado resultante e dobra no dano/cura. Autor esclareceu que teste e rolagem
 resultante posterior são separados; API não pode deduzir a segunda da primeira.
 Proposta global P-099 descartada/ACEITO; nenhum trabalho de implementação pendente nela.
 Correção P-097-01 mantida, sem rollback.
-Revisar aplicação no fluxo explicitamente escolhido de NPC antes de novo código,
-distinguindo Competência dentro do teste de dano/cura posteriores.
+M4-19 identifica explicitamente o teste NPC, distinguindo Competência dentro do teste
+de dano/cura posteriores; classificador de fórmulas livres preservado.
 P-095/096/098/100, P-101-01/02/03 e P-102 concluídas. P-101 e as três filhas
 versionadas no commit `767b47bf`; P-102 documental executada após autorização,
 com evidências em `docs/reviews/p-102-verificacao.md`, versionadas em commit próprio

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
-import { RolagemVisibilidadeEnum, TipoCampanhaMembroPapelEnum, TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
+import { RolagemVisibilidadeEnum, TipoCampanhaMembroPapelEnum, TipoUsuarioEnum, TipoFichaEnum } from '@contratados-rpg/shared/enums';
 import type { ResultadoRolagemDto } from '@contratados-rpg/shared/regras/rolagem';
 import { ResourceNotFoundException, UnauthorizedAccessException } from '../../core/exceptions';
 import type { CampanhaGateway } from '../../core/gateway/campanha.gateway';
@@ -126,6 +126,36 @@ describe('RolagemService', () => {
       );
       expect(rolagemRepositorio.excluirRolagem).not.toHaveBeenCalled();
       expect(campanhaGateway.emitirRolagemExcluida).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('NPC: gestão e privacidade obrigatórias', () => {
+    it('força PRIVADA mesmo quando o dono solicita PUBLICA', async () => {
+      fichaService.recuperarFicha.mockResolvedValue({ id: 10, usuarioId: 7, campanhaId: 5, tipo: TipoFichaEnum.NPC });
+      rolagemRepositorio.registrarRolagem.mockResolvedValue(criarResumo({ visibilidade: RolagemVisibilidadeEnum.PRIVADA }));
+      await service.registrarRolagem({ fichaId: 10, rotulo: 'Luta', formula: 'LUTd20kh1+NIV',
+        resultado, visibilidade: RolagemVisibilidadeEnum.PUBLICA }, usuarioAtivo);
+      expect(rolagemRepositorio.registrarRolagem).toHaveBeenCalledWith(expect.objectContaining({ visibilidade: RolagemVisibilidadeEnum.PRIVADA }));
+      expect(campanhaGateway.emitirRolagemRegistrada).toHaveBeenCalledWith(expect.objectContaining({ visibilidade: RolagemVisibilidadeEnum.PRIVADA }));
+    });
+    it('concessão de leitura não permite registro nem histórico privado', async () => {
+      fichaService.recuperarFicha.mockResolvedValue({ id: 10, usuarioId: 99, campanhaId: 5, tipo: TipoFichaEnum.NPC });
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.JOGADOR });
+      await expect(service.registrarRolagem({ fichaId: 10, rotulo: 'Luta', formula: null,
+        resultado, visibilidade: RolagemVisibilidadeEnum.PUBLICA }, usuarioAtivo)).rejects.toBeInstanceOf(UnauthorizedAccessException);
+      await expect(service.listarPorFicha({ fichaId: 10, pagina: 1, itensPorPagina: 20 }, usuarioAtivo)).rejects.toBeInstanceOf(UnauthorizedAccessException);
+      expect(rolagemRepositorio.registrarRolagem).not.toHaveBeenCalled();
+      expect(rolagemRepositorio.listarPorFicha).not.toHaveBeenCalled();
+      expect(campanhaGateway.emitirRolagemRegistrada).not.toHaveBeenCalled();
+    });
+    it('mestre da campanha pode registrar e consultar NPC de outro dono', async () => {
+      fichaService.recuperarFicha.mockResolvedValue({ id: 10, usuarioId: 99, campanhaId: 5, tipo: TipoFichaEnum.NPC });
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.MESTRE });
+      rolagemRepositorio.registrarRolagem.mockResolvedValue(criarResumo());
+      await service.registrarRolagem({ fichaId: 10, rotulo: 'Luta', formula: null,
+        resultado, visibilidade: RolagemVisibilidadeEnum.PRIVADA }, usuarioAtivo);
+      await service.listarPorFicha({ fichaId: 10, pagina: 1, itensPorPagina: 20 }, usuarioAtivo);
+      expect(rolagemRepositorio.listarPorFicha).toHaveBeenCalled();
     });
   });
 

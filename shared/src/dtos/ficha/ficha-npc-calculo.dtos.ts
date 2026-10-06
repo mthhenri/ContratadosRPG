@@ -1,6 +1,21 @@
 import type { CategoriaNpcEnum } from "../../enums";
 import type { FichaAtributosDto } from "./ficha.dtos";
-import type { FichaNpcHabilidadeDto } from "./ficha-npc.dtos";
+import type { FichaNpcDadosDto, FichaNpcHabilidadeDto } from "./ficha-npc.dtos";
+
+/** Dados derivados da Categoria; nunca ajuste manual persistido. */
+export interface NpcCompetenciasDto {
+    readonly quantidade: number;
+    readonly dados: number;
+    readonly faces: number;
+}
+
+/** A ação explicita que todos os pools pertencem ao teste de atributo do NPC. */
+export interface NpcTesteAtributoDto {
+    readonly dados: FichaNpcDadosDto;
+    readonly atributo: keyof FichaAtributosDto;
+    readonly margemCritico?: number;
+    readonly repeticoes?: number;
+}
 
 /** Categoria para consultar tabelas do guia de mestre — "Guia de Criação de NPCs". */
 export interface NpcCategoriaConsultarDto {

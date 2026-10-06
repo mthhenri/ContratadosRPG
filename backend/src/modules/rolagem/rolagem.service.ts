@@ -9,7 +9,8 @@ import type {
   RolagemRegistrarDto,
   RolagemResumoDto,
 } from '@contratados-rpg/shared/dtos/rolagem';
-import { TipoCampanhaMembroPapelEnum, TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
+import { TipoCampanhaMembroPapelEnum, TipoUsuarioEnum, TipoFichaEnum, RolagemVisibilidadeEnum } from '@contratados-rpg/shared/enums';
+import type { FichaRecuperadaDto } from '@contratados-rpg/shared/dtos/ficha';
 import type { PaginatedResult } from '@contratados-rpg/shared/interfaces';
 import { ResourceNotFoundException, UnauthorizedAccessException } from '../../core/exceptions';
 import { CampanhaGateway } from '../../core/gateway/campanha.gateway';
@@ -25,8 +26,8 @@ import { RolagemRepository } from './rolagem.repository';
  * permissão (proibição #28); as queries de `rolagem` vêm do `RolagemRepository`.
  *
  * **Permissão de registrar/ver o histórico**: reusa `FichaService.recuperarFicha` — quem pode
- * **ver** a ficha pode rolar e ver o histórico dela (mesma matriz §14: dono, mestre ou concessão
- * em `usuario_ficha_acesso`). Nenhuma regra de permissão é reimplementada aqui.
+ * **ver** a ficha pode rolar e ver o histórico dela. NPC exige também dono ou mestre da campanha;
+ * concessão em `usuario_ficha_acesso` permanece somente leitura, sem histórico privado.
  *
  * **Permissão do feed da campanha**: mesmo gate de `FichaService.listarFichas` — exige ser membro
  * da campanha (`CampanhaRepository.recuperarMembro`); o papel (`MESTRE` ou não) decide se
@@ -46,7 +47,7 @@ export class RolagemService {
   /**
    * Registra uma rolagem disparada a partir de uma ficha. `fichaId` vem do `@Param` (montado pela
    * controller); `campanhaId`/o dono da ficha são resolvidos por `recuperarFicha`, que já garante
-   * a permissão de **visualização** (§14) — quem pode ver a ficha pode rolar. O **autor** é sempre
+   * a permissão de **visualização** (§14). NPC exige gestão e força visibilidade privada. O **autor** é sempre
    * quem disparou a rolagem (`usuarioAtivo.sub`), não necessariamente o dono da ficha. Após
    * persistir, sempre chama `emitirRolagemRegistrada` — é o gateway que decide a sala pela
    * visibilidade (`PUBLICA` vai à sala cheia/espectador; `PRIVADA` só à sala do mestre, m3-27
@@ -57,6 +58,7 @@ export class RolagemService {
     usuarioAtivo: JwtPayload,
   ): Promise<RolagemResumoDto> {
     const ficha = await this.fichaService.recuperarFicha({ id: dto.fichaId }, usuarioAtivo);
+    if (ficha.tipo === TipoFichaEnum.NPC) await this.validarGestaoNpc(ficha, usuarioAtivo);
 
     const rolagemRegistrada = await this.rolagemRepositorio.registrarRolagem({
       fichaId: ficha.id,
@@ -65,7 +67,7 @@ export class RolagemService {
       usuarioId: usuarioAtivo.sub,
       rotulo: dto.rotulo,
       formula: dto.formula,
-      visibilidade: dto.visibilidade,
+      visibilidade: ficha.tipo === TipoFichaEnum.NPC ? RolagemVisibilidadeEnum.PRIVADA : dto.visibilidade,
       resultado: dto.resultado,
     });
 
@@ -156,14 +158,24 @@ export class RolagemService {
 
   /**
    * Histórico paginado de uma ficha (§10.5), mais recente primeiro. Exige a mesma permissão de
-   * **visualização** de `recuperarFicha` (§14) — quem vê a ficha vê o histórico dela.
+   * **visualização** de `recuperarFicha` (§14); para NPC exige também gestão.
    */
   async listarPorFicha(
     dto: RolagemListarDto & { pagina: number; itensPorPagina: number },
     usuarioAtivo: JwtPayload,
   ): Promise<PaginatedResult<RolagemResumoDto>> {
-    await this.fichaService.recuperarFicha({ id: dto.fichaId }, usuarioAtivo);
+    const ficha = await this.fichaService.recuperarFicha({ id: dto.fichaId }, usuarioAtivo);
+    if (ficha.tipo === TipoFichaEnum.NPC) await this.validarGestaoNpc(ficha, usuarioAtivo);
     return this.rolagemRepositorio.listarPorFicha(dto);
+  }
+
+  /** Concessão de leitura do NPC não autoriza registrar nem acessar seu histórico privado. */
+  private async validarGestaoNpc(ficha: FichaRecuperadaDto, usuarioAtivo: JwtPayload): Promise<void> {
+    if (ficha.usuarioId === usuarioAtivo.sub) return;
+    const membro = ficha.campanhaId === null ? null : await this.campanhaRepositorio.recuperarMembro({
+      campanhaId: ficha.campanhaId, usuarioId: usuarioAtivo.sub,
+    });
+    if (membro?.papel !== TipoCampanhaMembroPapelEnum.MESTRE) throw new UnauthorizedAccessException();
   }
 
   /**

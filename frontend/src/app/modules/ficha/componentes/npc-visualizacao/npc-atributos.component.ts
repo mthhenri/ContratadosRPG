@@ -1,7 +1,9 @@
 import { Component, ElementRef, computed, effect, inject, input, viewChild } from "@angular/core";
 import { ReactiveFormsModule } from "@angular/forms";
 import type { FichaAtributosDto, FichaNpcDadosDto } from "@contratados-rpg/shared/dtos/ficha";
-import { calcularDtAtributo } from "@contratados-rpg/shared/regras/npc";
+import { calcularDtAtributo, obterReferenciaCategoria } from "@contratados-rpg/shared/regras/npc";
+import { CategoriaNpcEnum } from "@contratados-rpg/shared/enums";
+import { Botao } from "../../../../shared/ui/botao/botao.component";
 import { Icone } from "../../../../shared/icone/icone.component";
 import { Tooltip } from "../../../../shared/tooltip/tooltip.directive";
 import { AtributoFicha } from "../../../../shared/ui/atributo-ficha/atributo-ficha.component";
@@ -11,12 +13,14 @@ import { StepInput } from "../../../../shared/ui/stepper/step-input.component";
 import { NpcEdicaoFormulario } from "../../npc-edicao-formulario.service";
 import { GRUPOS_ATRIBUTOS } from "../../npc-atributos-campos";
 import { NpcBlocoAcoes } from "./npc-bloco-acoes.component";
+import { NpcCompetencias } from "./npc-competencias.component";
+import { NpcRolagemService } from "../../npc-rolagem.service";
 
 /** Card extraído do NPC; edição e validação continuam no formulário/service existentes. */
 @Component({
     selector: "app-npc-atributos",
     imports: [ReactiveFormsModule, Icone, Tooltip, AtributoFicha, BotaoIcone, Cartao,
-        StepInput, NpcBlocoAcoes],
+        StepInput, NpcBlocoAcoes, NpcCompetencias, Botao],
     templateUrl: "./npc-atributos.component.html",
     styleUrl: "./npc-atributos.component.scss",
 })
@@ -24,12 +28,12 @@ export class NpcAtributos {
     readonly dados = input.required<FichaNpcDadosDto>();
     readonly gerenciavel = input(false);
     readonly formulario = inject(NpcEdicaoFormulario);
+    readonly rolagens = inject(NpcRolagemService);
+    readonly dadosCompetencias = computed(() => this.edicao.rascunho()?.dados ?? this.dados());
     readonly edicao = this.formulario.edicao;
     readonly grupos = GRUPOS_ATRIBUTOS;
-    private readonly chaves = GRUPOS_ATRIBUTOS.flatMap((grupo) =>
-        grupo.campos.map((campo) => campo.chave));
-    readonly violacoes = computed(() => this.edicao.violacoes().filter((violacao) =>
-        this.chaves.some((chave) => violacao.startsWith(`${chave}:`))));
+    readonly categorias = Object.values(CategoriaNpcEnum).map((categoria) => obterReferenciaCategoria({ categoria }));
+    readonly violacoes = this.edicao.violacoes;
     private readonly editor = viewChild<ElementRef<HTMLElement>>("editor");
 
     constructor() {

@@ -1,8 +1,9 @@
 # m4-19-npc-testes-de-atributo-regra-e-rolagem.spec.md
 
 > Task numerada da segunda revisão do NPC, após m4-16/17/18.
-> **2026-10-06: somente especificação; implementação não iniciada.** O autor esclareceu
-> que deseja specs e revisão dos documentos, sem novas correções agora.
+> **2026-10-06: execução autorizada.** Após o pedido de fechar decisões e implementar,
+> o autor pediu para continuar. Execução segue as duas propostas apresentadas:
+> crítico +2 uma vez no teste e indicador fixo de privacidade no cabeçalho.
 > [Revisão vigente](../../reviews/m4-19-revisao-guia-v4.2.0.md).
 > Auditoria/opções/probabilidades de 05/10 são evidência histórica, não contrato atual.
 
@@ -25,7 +26,8 @@ com leitor autorizado sem edição e rolagens privadas.
 - P-097-01 já trata crítico no teste com um pool. Esclarecimento posterior do autor:
   teste e dano/cura resultantes são operações separadas; API não deduz a segunda.
   Dados de Competência pertencem ao teste pelo contrato explícito do NPC, não são
-  a rolagem posterior. Revisar crítico nesse fluxo antes de implementá-lo;
+  a rolagem posterior. Crítico do D20 mantido soma +2 uma única vez ao teste inteiro,
+  sem dobrar Nível, ajustes fixos ou dados de Competência;
   proposta global P-099 descartada, preservada só como memória, sem execução nesta task.
 - Bônus de habilidade/item manuais, conforme m3-31; nenhuma interpretação automática de texto.
 - Leitor vê valores, ajustes e Competências apresentados; não edita nem rola.
@@ -56,12 +58,12 @@ com leitor autorizado sem edição e rolagens privadas.
    bloco, sem apagar ou substituir escolhas silenciosamente.
 2. **Regra pura única.** Tabela e composição da fórmula em `shared/regras/npc`, usando
    atributo + ajuste D20, Nível, ajuste fixo e dados de Competência. Consumir motor existente;
-   nunca somar +2 no frontend. Pool zero/negativo usa desvantagem existente (dois D20,
-   menor), sem mínimo de dois em teste normal. Competência depende do atributo base,
+   nunca somar +2 no frontend. Pool zero usa dois D20; negativo usa `2 + abs(pool)` D20,
+   mantendo o menor, conforme motor vigente/m3-31; sem mínimo de dois em teste normal. Competência depende do atributo base,
    não de ajuste temporário. Não alterar DT `10 + Nível + 2 × atributo` ou recursos.
    Antes de alterar crítico, registrar contrato da ação escolhida: este botão é teste
    de atributo; não inferir resultado futuro da quantidade/faces dos pools. Separar
-   o bônus do teste dos dados resultantes e validar interpretação com o autor.
+   o bônus do teste dos dados resultantes conforme decisão registrada nesta execução.
 3. **Criação/configuração.** Seleção de Competências no bloco Atributos do assistente
    e da ficha pronta, com contagem necessária/selecionada e dado de Categoria separado
    do ajuste D20 e fixo. Salvar/Cancelar conforme m4-16. P-100 adapta atributos zero.
@@ -74,25 +76,25 @@ com leitor autorizado sem edição e rolagens privadas.
    Bandeja global e registro existentes; histórico apresenta fórmula/contribuições completas.
    Conferir permissão no service e socket após registro; feed/leitor/evento não expõe
    rolagem privada. Item de ocultação conforme decisão visual abaixo, sem transição pública.
-5. **Fecho futuro.** Testar regras/validação, roundtrip, ficha antiga, permissões e
+5. **Fecho.** Testar regras/validação, roundtrip, ficha antiga, permissões e
    registro privado. Atualizar HISTORY/CONTEXT/SCHEMA depois de executar; `done/` somente
-   com gates completos. Esta rodada entrega apenas a revisão documental.
+   com gates completos.
 
-## Decisão de interface pendente
+## Decisões fechadas para execução
 
-O análogo da Criatura alterna público/privado, enquanto o autor declarou “sempre
-ocultas”. Antes de implementar o controle, confirmar apresentação: indicador de
-ocultação permanente ou alternância expressamente autorizada. Até lá, `PRIVADA`.
-Não repetir perguntas de fórmula, leitura ou crítico já resolvidas. Essa escolha não
-impede preparar regras/dados quando houver autorização futura de execução.
+- Indicador fixo “Rolagens ocultas” no cabeçalho, usando `app-chip`; sem alternância pública.
+- Crítico: Veterano Nível6, D20 mantido20 e D6=4 totaliza32. Máximo no D6 não gera crítico.
+- Análogos: ficha de Jogador (`app-atributo-ficha`), edição do NPC (`npc-atributos`) e
+  assistente atual. Seleção por botões `app-botao` tamanho médio, estilo contorno e
+  `aria-pressed`, como a liberação Civil; leitura por chips. Não exige novo primitivo.
+- Orquestração de rolagem extraída para service próprio para manter apresentação no componente.
 
 ## Critérios de Aceite
 
 - Veterano Nível6, atributo3 com Competência, D20 `[18,11,8]` e D6 `[4]` → **28**;
   sem Competência → **24**. Bônus participa do teste; não é dano/cura posterior.
-- Caso crítico deve seguir contrato revisado com o autor, sem inferência de rolagem
-  futura nem dobra dos dados de Categoria; não usar total32 como aprovação automática
-  da proposta global anterior. Rolagens resultantes permanecem operações separadas.
+- Caso crítico acima totaliza32, sem inferência de rolagem futura nem dobra dos dados
+  de Categoria. Não altera o classificador de fórmulas livres da P-099 descartada.
 - Elite/Lendário somam todos os dados de Categoria, mantendo um D20. Máximo do D4/D6
   não gera crítico; D20 crítico descartado não conta. Margem ampliada/repetições cobertas.
 - Zero não pode ser Competência, Civil não tem Competências; seleção única/quantidade correta.
@@ -110,7 +112,7 @@ impede preparar regras/dados quando houver autorização futura de execução.
 
 ## Fora de Escopo
 
-- Implementar agora; alterar fontes autorais ou specs históricas em done.
+- Alterar fontes autorais ou specs históricas em done.
 - Vida/Energia/Defesa/DT/Proficiência do agente; Maestria/Lesão/Formação de NPC.
 - Automatizar habilidades/equipamento, fluxo novo de ataque/dano/inventário ou Dano Furtivo.
 - P-095/P-096, criação zero P-100 e Criaturas P-101: tasks separadas.
@@ -132,3 +134,11 @@ na UI e nos testes. Não inventar Competências para legado. Crítico depende do
 revisado da ação, sem inferência de dano/cura futuro ou compensação local na UI/service.
 Ocultação permanente não vira exposição pública
 pela reutilização automática de uma alternância existente.
+
+## Fecho — 2026-10-06
+
+Contrato, validação, persistência, criação/configuração, dadinho, bandeja e registro
+privados entregues. Crítico +2 uma vez pelo mantido, sem dobrar Competência; P-099
+preservada como descarte. Legado sem configuração automática; conflitos mantêm escolhas.
+Gates completos, aplicação real nos quatro viewports e privacidade REST/socket verificadas
+em [relatório final](../../reviews/m4-19-verificacao.md). Dados sintéticos e resíduos limpos.

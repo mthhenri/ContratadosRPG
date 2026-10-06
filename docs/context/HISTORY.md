@@ -1,5 +1,39 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-06 — M4-19 concluída: Competências e testes privados do NPC
+
+Após o pedido de fechar decisões e implementar, o autor pediu continuar com as propostas
+apresentadas: crítico do D20 mantido soma +2 uma vez ao teste explícito NPC, sem dobrar
+Nível/ajustes/Competência; indicador fixo “Rolagens ocultas”, sem opção pública. P-099
+permanece descartada, sem classificar fórmulas livres ou inferir dano/cura posteriores.
+
+DTO ganhou `competencias`/`modificadoresTeste`/`dadosTeste` opcionais, com JSONB/SCHEMA e
+OpenAPI alinhados. Tabela e composição/execução únicas em `shared/regras/npc/testes.ts`:
+0/2/3/4/5 escolhas e nenhum/1D4/1D6/2D6/3D6. Criação exige seleção canônica; legado salva
+recursos sem inventar escolhas. Backend impede retirar configuração existente, valida
+mapas, restringe rolagem/histórico NPC a dono/mestre e força `PRIVADA` mesmo com pedido público.
+
+Seleção por botões canônicos/chips na criação e bloco Atributos; Categoria, Competências
+e ajustes confirmados no mesmo rascunho, sem apagar escolhas inválidas. Orquestração em
+`NpcRolagemService` extraído; dadinho usa shared, bandeja e registro existentes. Leitor
+vê valores/bônus, sem editar, rolar, histórico ou Anotações. DT, atributo base e snapshots
+preservados. Pool zero/negativo conserva motor vigente: 2/3/4 D20 para 0/−1/−2, menor.
+
+Builds, tipos e lint dos três workspaces passaram; suíte completa: 5113 testes passaram,
+um ignorado existente. Avisos de estilo/budget e canvas separados no relatório.
+Aplicação real nos quatro viewports: cinco Categorias, criação/registro, edição,
+conflitos/Cancelar/Salvar, legado, leitor, normal28/crítico32, desvantagem, repetição e
+histórico. Comparação visual pessoal confirmou identidade/densidade, primitivos/inputs,
+foco/contraste/toque e ausência de overflow horizontal. Gate encontrou bandeja ausente
+na página; integrada e suíte/build repetidos. Capturas aguardam animações e usam viewport
+real para evitar alteração de largura da coleta de página completa.
+
+REST/socket com mestre e leitor confirmaram privacidade/feed/notas. Soft delete de
+22 fichas, três usuários, uma campanha e vínculos/rolagens; nenhum sintético ativo.
+Credenciais, scripts/logs e capturas redundantes removidos; M10 e M4-20 preservadas.
+Spec em `done/`; [evidências completas](../reviews/m4-19-verificacao.md).
+Sem pendência M4-19; equipamento/ataques continuam em M4-20 com autorização própria.
+
 ## 2026-10-06 — m4-20: spec executável de ataques/equipamentos de NPC preparada
 
 Com as três decisões da investigação resolvidas, escrita `m4-20-npc-ataques-e-equipamentos`

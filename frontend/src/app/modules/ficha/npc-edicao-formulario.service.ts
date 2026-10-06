@@ -1,12 +1,14 @@
 import { DestroyRef, Injectable, computed, effect, inject, signal } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormArray, FormBuilder, FormControl, Validators } from "@angular/forms";
-import { HabilidadeTipoNpcEnum } from "@contratados-rpg/shared/enums";
+import { HabilidadeTipoNpcEnum, CategoriaNpcEnum } from "@contratados-rpg/shared/enums";
 import type {
-    FichaNpcHabilidadeDto, FichaNpcRecuperadaDto, FichaSequelaDto, FichaTraumaDto,
+    FichaAtributosDto, FichaNpcHabilidadeDto, FichaNpcRecuperadaDto, FichaSequelaDto, FichaTraumaDto,
 } from "@contratados-rpg/shared/dtos/ficha";
 import { FichaEdicaoNpcService } from "./ficha-edicao-npc.service";
 import { mesclarDocumento } from "./mesclar-ficha";
+import { criarMapaAjustesNpc } from "./npc-ajustes-formulario";
+import { CHAVES_ATRIBUTOS_NPC } from "@contratados-rpg/shared/regras/npc";
 
 /** Blocos de vários campos — lápis some, Salvar/Cancelar aparecem no próprio bloco (m4-16). */
 export type GrupoEdicaoNpc = "atributos" | "conduta" | "habilidades" | "sequelas" | "traumas"
@@ -74,6 +76,9 @@ export class NpcEdicaoFormulario {
     readonly sequelas = new FormArray<ReturnType<typeof criarSequelaFormulario>>([]);
     readonly traumas = new FormArray<ReturnType<typeof criarTraumaFormulario>>([]);
     readonly formulario = this.formularios.group({
+        categoria: CategoriaNpcEnum.CIVIL,
+        competencias: new FormControl<readonly (keyof FichaAtributosDto)[]>([], { nonNullable: true }),
+        modificadoresTeste: criarMapaAjustesNpc(), dadosTeste: criarMapaAjustesNpc(),
         atributos: this.formularios.group({
             destreza: 1, forca: 1, luta: 0, pontaria: 0, vigor: 1,
             intelecto: 1, medicina: 1, sentidos: 1, social: 1, vontade: 1,
@@ -144,6 +149,8 @@ export class NpcEdicaoFormulario {
         this.preencher(this.baseFormulario);
         this.erroFormulario.set("");
         this.grupo.set(grupo);
+        if (grupo === "atributos") this.edicao.alterarRascunho((ficha) => ({ ...ficha,
+            dados: { ...ficha.dados, competencias: ficha.dados.competencias ?? [] } }));
     }
 
     cancelar(): void {
@@ -222,6 +229,10 @@ export class NpcEdicaoFormulario {
     private preencher(ficha: FichaNpcRecuperadaDto): void {
         const dados = ficha.dados;
         this.formulario.patchValue({ atributos: dados.atributos, ...dados.condutaCombate,
+            categoria: dados.categoria,
+            competencias: dados.competencias ?? [],
+            modificadoresTeste: Object.fromEntries(CHAVES_ATRIBUTOS_NPC.map((chave) => [chave, dados.modificadoresTeste?.[chave] ?? 0])),
+            dadosTeste: Object.fromEntries(CHAVES_ATRIBUTOS_NPC.map((chave) => [chave, dados.dadosTeste?.[chave] ?? 0])),
             anotacoes: dados.anotacoes ?? "" }, { emitEvent: false });
         this.preencherLista(this.habilidades, dados.habilidades, criarHabilidadeFormulario);
         this.preencherLista(this.sequelas, dados.sanidade.sequelas, criarSequelaFormulario);
@@ -246,7 +257,9 @@ export class NpcEdicaoFormulario {
         const valor = this.formulario.getRawValue();
         const dados = base.dados;
         switch (this.grupo()) {
-            case "atributos": return { ...base, dados: { ...dados, atributos: valor.atributos } };
+            case "atributos": return { ...base, dados: { ...dados, atributos: valor.atributos, categoria: valor.categoria,
+                competencias: valor.competencias, modificadoresTeste: valor.modificadoresTeste,
+                dadosTeste: valor.dadosTeste } };
             case "habilidades": return { ...base, dados: { ...dados,
                 habilidades: valor.habilidades.map((habilidade) => ({
                     nomeNeutro: habilidade.nomeNeutro, tipo: habilidade.tipo,

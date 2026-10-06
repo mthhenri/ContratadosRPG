@@ -5,7 +5,7 @@
 > Autor autorizou commitar a preparação destas specs em 2026-10-06;
 > autorização restrita à documentação, sem execução das correções.
 > Correções de P-097-01 já realizadas permanecem como estão; nenhum rollback implícito.
-> P-095/P-096/P-098/P-100, P-101/01/02/03 e P-102 tiveram execução autorizada e foram concluídas em 2026-10-06;
+> P-095/P-096/P-098/P-100, P-101/01/02/03, P-102 e M4-19 tiveram execução autorizada e foram concluídas em 2026-10-06;
 > demais tasks conservam suas autorizações e pendências próprias.
 
 ## Objetivo
@@ -33,7 +33,7 @@ Este arquivo coordena tasks; não é uma implementação única.
 | [P-098](../done/p-098-ponteiros-auditoria-ficha-oculta.spec.md) | Ponteiros da spec arquivada; cobertura parcial da auditoria preservada | Concluída; documental |
 | [P-099](p-099-critico-teste-com-dados-adicionais.spec.md) | Memória da proposta e motivo do descarte | DESCARTADA — NÃO EXECUTAR; arquivo preservado |
 | [P-100](../done/p-100-npc-criacao-atributo-zero.spec.md) | Zero e redistribuição na criação de NPC | Concluída; gates e criação/reabertura em quatro viewports |
-| [m4-19](../active/m4-19-npc-testes-de-atributo-regra-e-rolagem.spec.md) | Competências, ajustes, dadinho, leitura/privacidade | Regra publicada; crítico no fluxo explícito e controle visual sujeitos à revisão |
+| [m4-19](../done/m4-19-npc-testes-de-atributo-regra-e-rolagem.spec.md) | Competências, ajustes, dadinho, leitura/privacidade | Concluída; +2 uma vez no teste explícito NPC, indicador fixo e gates completos |
 | [P-101-01](../done/p-101-01-criatura-realocacao-atributos.spec.md) | Realocação total3, várias origens e negativo | Concluída; shared/criação/REST e edição preservada |
 | [P-101-02](../done/p-101-02-criatura-dt-e-modificadores.spec.md) | DT e consumidores do modificador fixo | Concluída; guia/ficha/leitor e preservação de snapshots |
 | [P-101-03](../done/p-101-03-criatura-referencias-e-cadencia.spec.md) | Exemplos/referências; Cadência já compatível | Concluída; algoritmo preservado e propostas editoriais registradas |
@@ -60,14 +60,11 @@ Comparação contra os livros anteriores no Git, normalizando espaços, `&nbsp;`
 
 ## Decisões ainda para revisão
 
-- **Crítico:** não inferir pela fórmula se o teste terá resultado posterior. Conferir
-  aplicação de +2 versus crítico do dano/cura no fluxo escolhido, inclusive Competência,
-  antes de alterar o motor novamente. A API genérica não conhece intenção futura.
-- **Ocultação:** autor decidiu rolagens sempre privadas. Definir apresentação do item
-  compatível com isso; alternância pública do análogo não está automaticamente autorizada.
-- **NPC equipamento/ataques:** investigação concluída (ver tabela acima); falta decidir
-  piso ou teto da faixa de Patente Equivalente por Categoria antes de gerar task
-  executável, sem importar classe/progressão de Jogador para NPC.
+- **Crítico/ocultação — fechados na M4-19:** +2 uma vez no teste explícito NPC, sem
+  dobrar dados de Competência; indicador fixo “Rolagens ocultas”, sem transição pública.
+  A API genérica não conhece intenção futura; P-099 continua descartada.
+- **NPC equipamento/ataques:** investigação e decisões concluídas; M4-20 preparada
+  (ver tabela acima), com execução dependente de autorização própria.
 - **Exemplos/editorial do autor:** Fraco+6 versus fórmula+5, Social base2→zero versus
   “três pontos”, versão interna e grafia de Porte. Preparar proposta para o autor;
   não alterar os livros. P-093 arredondamento continua ACEITO por decisão anterior.

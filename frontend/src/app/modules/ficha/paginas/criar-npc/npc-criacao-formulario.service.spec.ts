@@ -14,6 +14,7 @@ describe("NpcCriacaoFormulario", () => {
             luta: 3, pontaria: 3, forca: 3, destreza: 2, social: 0,
         } });
         expect(criacao.distribuicao()).toEqual({ distribuidos: 6, restantes: 0, violacoes: [] });
+        criacao.formulario.controls.competencias.setValue(["luta", "pontaria"]);
         expect(criacao.violacoesEtapa(1)).toEqual([]);
         expect(criacao.dados().atributos.social).toBe(0);
     });

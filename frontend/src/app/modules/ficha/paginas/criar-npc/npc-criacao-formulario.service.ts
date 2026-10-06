@@ -10,7 +10,7 @@ import {
     calcularBloquear, calcularDefesaBase, calcularDtAtributo, calcularEnergia, calcularEsquivar,
     calcularVidaMaxima, consultarAtributosCriacao, obterPontosELimitePorCategoria,
     obterReferenciaCategoria, obterReferenciaCooperacao, obterVolumeHabilidadesPorCategoria,
-    validarVolumeHabilidades,
+    validarVolumeHabilidades, validarCompetenciasNpc,
 } from "@contratados-rpg/shared/regras/npc";
 
 function criarHabilidadeFormulario(tipo: HabilidadeTipoNpcEnum) {
@@ -42,6 +42,7 @@ export class NpcCriacaoFormulario {
     readonly lutaCivilLiberada = signal(false);
     readonly pontariaCivilLiberada = signal(false);
     readonly formulario = this.construtor.group({
+        competencias: new FormControl<readonly (keyof FichaAtributosDto)[]>([], { nonNullable: true }),
         nome: ["", Validators.required], funcao: ["", Validators.required],
         categoria: [CategoriaNpcEnum.OPERATIVO],
         nivel: [3, [Validators.required, Validators.min(0), Validators.max(20)]],
@@ -84,6 +85,7 @@ export class NpcCriacaoFormulario {
         return {
             identidadeNarrativa: { nome: estado.nome.trim(), funcao: estado.funcao.trim() },
             categoria, nivel, cooperacao: estado.cooperacao, atributos,
+            competencias: estado.competencias,
             vidaMaxima, vidaAtual: vidaMaxima, defesaBase,
             bloquear: calcularBloquear({ defesaBase, vigor: atributos.vigor }),
             esquivar: calcularEsquivar({ defesaBase, destreza: atributos.destreza }),
@@ -188,7 +190,7 @@ export class NpcCriacaoFormulario {
                 ? ["Nível deve ser inteiro entre 0 e 20"] : []),
             ...(!this.referenciaCooperacao() ? ["Cooperação deve ser inteira entre 0 e 10"] : []),
         ];
-        if (etapa === 1) return this.distribuicao().violacoes;
+        if (etapa === 1) return [...this.distribuicao().violacoes, ...validarCompetenciasNpc(dados, true)];
         if (etapa === 2) return [
             ...validarVolumeHabilidades(dados),
             ...dados.habilidades.flatMap((habilidade, indice) => [

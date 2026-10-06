@@ -1,0 +1,48 @@
+<section class="npc-competencias" aria-label="Competências do NPC">
+    <div class="npc-competencias__cabecalho">
+        <span>Competências</span>
+        <app-chip variante="sutil"
+            >{{ competencias()?.length ?? 0 }}/{{ referencia().quantidade }}</app-chip
+        >
+        <app-chip variante="sutil">{{ dado() }}</app-chip>
+    </div>
+    @if (editavel()) {
+        <p>
+            Selecione {{ referencia().quantidade }} atributos base positivos. Estes dados somam ao
+            teste, sem alterar o atributo ou a DT.
+        </p>
+        <div class="npc-competencias__opcoes">
+            @for (campo of campos; track campo.chave) {
+                <button
+                    app-botao
+                    type="button"
+                    tamanho="medio"
+                    estilo="contorno"
+                    [variante]="selecionada(campo.chave) ? 'primario' : 'secundario'"
+                    [attr.aria-pressed]="selecionada(campo.chave)"
+                    [attr.aria-label]="'Competência em ' + campo.nome"
+                    [disabled]="
+                        desabilitado() ||
+                        (!selecionada(campo.chave) &&
+                            (atributos()[campo.chave] <= 0 || referencia().quantidade === 0))
+                    "
+                    (click)="alternar(campo.chave)"
+                >
+                    {{ campo.nome }}
+                </button>
+            }
+        </div>
+    } @else if (competencias() === undefined) {
+        <p>Competências ainda não configuradas.</p>
+    } @else if (competencias()?.length === 0) {
+        <p>Sem Competências nesta Categoria.</p>
+    } @else {
+        <div class="npc-competencias__opcoes">
+            @for (campo of campos; track campo.chave) {
+                @if (selecionada(campo.chave)) {
+                    <app-chip variante="sutil">{{ campo.nome }} · +{{ dado() }}</app-chip>
+                }
+            }
+        </div>
+    }
+</section>

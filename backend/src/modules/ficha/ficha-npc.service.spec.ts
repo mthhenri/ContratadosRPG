@@ -21,6 +21,7 @@ function criarDados(): FichaNpcDadosDto {
     return {
         identidadeNarrativa: { nome: "Rafael", funcao: "Soldado de contenção" },
         categoria: CategoriaNpcEnum.OPERATIVO, nivel: 5, cooperacao: 5,
+        competencias: ["luta", "pontaria"],
         atributos: {
             forca: 2, destreza: 2, luta: 3, pontaria: 2, vigor: 2,
             intelecto: 1, medicina: 1, sentidos: 1, social: 1, vontade: 1,
@@ -89,6 +90,14 @@ describe("FichaService — NPC (m4-07)", () => {
             gateway as unknown as CampanhaGateway,
             {} as ArmazenamentoProvedor,
         );
+    });
+
+    it("rejeita criação sem Competências e não apaga seleção já configurada na edição", async () => {
+        const dados = { ...criarDados(), competencias: undefined };
+        await expect(service.criarFichaNpc({ campanhaId: 3, nome: "Rafael", dados }, mestre)).rejects.toBeInstanceOf(BusinessException);
+        await expect(service.alterarFichaNpc({ id: 7, nome: "Rafael", dados }, mestre)).rejects.toBeInstanceOf(BusinessException);
+        expect(repositorio.criarFicha).not.toHaveBeenCalled();
+        expect(repositorio.alterarFicha).not.toHaveBeenCalled();
     });
 
     it("cria para o mestre e invalida a campanha sem transmitir identidade", async () => {

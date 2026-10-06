@@ -1,7 +1,9 @@
+<app-bandeja-dados />
 <section class="ficha-pagina" [class.ficha-pagina--lateral-aberta]="historicoAberto()">
     <app-coluna-acoes id="ficha-npc" rotulo="Ações da ficha de NPC">
         @if (edicao.ficha()) {
         <div class="coluna-acoes__categoria">Ficha</div>
+        @if (gerenciavel()) {
         <button
             app-coluna-acoes-item
             type="button"
@@ -12,6 +14,7 @@
         >
             Histórico
         </button>
+        }
         <button
             app-coluna-acoes-item
             type="button"
@@ -70,6 +73,7 @@
             /></a>
             <span class="ficha-pagina__cabecalho-indice">//</span>
             <h1 class="ficha-pagina__titulo">{{ edicao.ficha()?.nome || 'Ficha de NPC' }}</h1>
+            <app-chip variante="sutil">Rolagens ocultas</app-chip>
             @if (campanhaNome(); as nomeCampanha) {
             <span class="ficha-pagina__campanha">{{ nomeCampanha }}</span>
             }

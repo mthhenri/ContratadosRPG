@@ -3879,6 +3879,62 @@ export const schemasContratosPublicos = {
         "additionalProperties": false,
         "description": "Uma habilidade especial da criatura — propriedade da própria criatura, não selecionada de\num catálogo (diferente das habilidades de jogador). `restricao` é a frequência/condição\nde uso quando aplicável (ex.: \"uma vez por cena\", \"recarga de 3 turnos\")."
     },
+    "NpcCompetenciasDto": {
+        "type": "object",
+        "properties": {
+            "quantidade": {
+                "type": "number"
+            },
+            "dados": {
+                "type": "number"
+            },
+            "faces": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "quantidade",
+            "dados",
+            "faces"
+        ],
+        "additionalProperties": false,
+        "description": "Dados derivados da Categoria; nunca ajuste manual persistido."
+    },
+    "NpcTesteAtributoDto": {
+        "type": "object",
+        "properties": {
+            "dados": {
+                "$ref": "#/components/schemas/FichaNpcDadosDto"
+            },
+            "atributo": {
+                "type": "string",
+                "enum": [
+                    "destreza",
+                    "forca",
+                    "luta",
+                    "pontaria",
+                    "vigor",
+                    "intelecto",
+                    "medicina",
+                    "sentidos",
+                    "social",
+                    "vontade"
+                ]
+            },
+            "margemCritico": {
+                "type": "number"
+            },
+            "repeticoes": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "dados",
+            "atributo"
+        ],
+        "additionalProperties": false,
+        "description": "A ação explicita que todos os pools pertencem ao teste de atributo do NPC."
+    },
     "NpcCategoriaConsultarDto": {
         "type": "object",
         "properties": {
@@ -4519,6 +4575,35 @@ export const schemasContratosPublicos = {
             "atributos": {
                 "$ref": "#/components/schemas/FichaAtributosDto",
                 "description": "Reusa os dez atributos; Civil inicia com Luta/Pontaria 0, salvo exceção do mestre."
+            },
+            "competencias": {
+                "type": "array",
+                "items": {
+                    "type": "string",
+                    "enum": [
+                        "destreza",
+                        "forca",
+                        "luta",
+                        "pontaria",
+                        "vigor",
+                        "intelecto",
+                        "medicina",
+                        "sentidos",
+                        "social",
+                        "vontade"
+                    ]
+                },
+                "description": "Ausência identifica legado não configurado; seleção explícita segue a Categoria."
+            },
+            "modificadoresTeste": {
+                "type": "object",
+                "additionalProperties": true,
+                "description": "Ajustes manuais de resultado, separados do valor base do atributo."
+            },
+            "dadosTeste": {
+                "type": "object",
+                "additionalProperties": true,
+                "description": "Ajustes manuais exclusivos do pool D20; não alteram dados de Competência."
             },
             "vidaMaxima": {
                 "type": "number"
@@ -6764,7 +6849,7 @@ export const schemasContratosPublicos = {
             },
             "formula": {
                 "type": "string",
-                "description": "Expressão de dados usada na rolagem (ex.: `2d6+3[Físico]`), exibida como legenda discreta no\nhistórico/feed. `null` quando quem registra não a informa — o teste de Atributo direto (o\nrótulo já é o nome do atributo) nunca a envia."
+                "description": "Expressão de dados usada na rolagem (ex.: `2d6+3[Físico]`), exibida como legenda discreta no\nhistórico/feed. `null` quando quem registra não a informa. O teste direto de NPC envia a\nfórmula completa, incluindo Nível, ajustes e dados de Competência."
             },
             "visibilidade": {
                 "type": "string",
@@ -6785,7 +6870,7 @@ export const schemasContratosPublicos = {
             "resultado"
         ],
         "additionalProperties": false,
-        "description": "Entrada do registro de uma rolagem — o `fichaId` vem da rota (`@Param`, injetado no DTO pela\ncontroller). `visibilidade` decide quem além do autor enxerga a rolagem (`PUBLICA` = todos os\nmembros da campanha; `PRIVADA` = autor + mestre)."
+        "description": "Entrada do registro de uma rolagem — o `fichaId` vem da rota (`@Param`, injetado no DTO pela\ncontroller). `visibilidade` decide quem além do autor enxerga a rolagem (`PUBLICA` = todos os\nmembros da campanha; `PRIVADA` = autor + mestre). Para NPC, a service sempre força `PRIVADA`."
     },
     "RolagemAvulsoRegistrarDto": {
         "type": "object",
@@ -6801,7 +6886,7 @@ export const schemasContratosPublicos = {
             },
             "formula": {
                 "type": "string",
-                "description": "Expressão de dados usada na rolagem (ex.: `2d6+3[Físico]`), exibida como legenda discreta no\nhistórico/feed. `null` quando quem registra não a informa — o teste de Atributo direto (o\nrótulo já é o nome do atributo) nunca a envia."
+                "description": "Expressão de dados usada na rolagem (ex.: `2d6+3[Físico]`), exibida como legenda discreta no\nhistórico/feed. `null` quando quem registra não a informa. O teste direto de NPC envia a\nfórmula completa, incluindo Nível, ajustes e dados de Competência."
             },
             "visibilidade": {
                 "type": "string",

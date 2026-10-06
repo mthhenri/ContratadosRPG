@@ -1,0 +1,27 @@
+:host {
+    display: block;
+    min-width: 0;
+}
+.npc-competencias {
+    display: grid;
+    gap: var(--space-12);
+    border-top: 1px solid var(--border);
+    padding-top: var(--space-12);
+    &__cabecalho,
+    &__opcoes {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--space-8);
+    }
+    &__cabecalho > span {
+        font: 600 11px var(--font-mono);
+        color: var(--text-mute);
+        text-transform: uppercase;
+    }
+    p {
+        margin: 0;
+        font: 13px/1.5 var(--font-sans);
+        color: var(--text-dim);
+    }
+}

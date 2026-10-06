@@ -1,6 +1,6 @@
 import { TestBed } from "@angular/core/testing";
 import { of, throwError } from "rxjs";
-import { HabilidadeTipoNpcEnum } from "@contratados-rpg/shared/enums";
+import { HabilidadeTipoNpcEnum, CategoriaNpcEnum } from "@contratados-rpg/shared/enums";
 import { FichaService } from "./ficha.service";
 import { FichaEdicaoNpcService } from "./ficha-edicao-npc.service";
 import { NpcEdicaoFormulario } from "./npc-edicao-formulario.service";
@@ -20,6 +20,34 @@ describe("NpcEdicaoFormulario", () => {
     }
 
     // === Bloco (lápis + Salvar/Cancelar no próprio bloco) ===
+
+    it("configura legado explicitamente e preserva escolhas incompatíveis até correção/cancelamento", () => {
+        const { formulario, edicao, ficha } = montar();
+        expect(ficha.dados.competencias).toBeUndefined();
+        formulario.iniciar("atributos");
+        formulario.formulario.controls.competencias.setValue(["medicina", "sentidos"]);
+        expect(edicao.violacoes().join(" ")).toContain("competências:");
+        formulario.formulario.controls.categoria.setValue(CategoriaNpcEnum.OPERATIVO);
+        expect(edicao.rascunho()?.dados.competencias).toEqual(["medicina", "sentidos"]);
+        formulario.formulario.controls.atributos.controls.medicina.setValue(0);
+        expect(edicao.violacoes().join(" ")).toContain("atributos base positivos");
+        expect(edicao.rascunho()?.dados.competencias).toEqual(["medicina", "sentidos"]);
+        formulario.cancelar();
+        expect(edicao.ficha()).toEqual(ficha);
+    });
+
+    it("salva ajuste negativo e fixo sem modificar atributo, DT ou snapshots", async () => {
+        const { formulario, api, ficha } = montar();
+        formulario.iniciar("atributos");
+        formulario.formulario.controls.modificadoresTeste.controls.medicina.setValue(5);
+        formulario.formulario.controls.dadosTeste.controls.medicina.setValue(-3);
+        expect(await formulario.salvar()).toBe(true);
+        expect(api.alterarFichaNpc.mock.calls[0][1].dados).toMatchObject({
+            atributos: ficha.dados.atributos, vidaMaxima: ficha.dados.vidaMaxima,
+            defesaBase: ficha.dados.defesaBase, energia: ficha.dados.energia,
+            competencias: [], modificadoresTeste: { medicina: 5 }, dadosTeste: { medicina: -3 },
+        });
+    });
 
     it("salva um bloco (Conduta) sozinho, sem grupo acumulado de outro bloco", async () => {
         const { formulario, edicao, api } = montar();

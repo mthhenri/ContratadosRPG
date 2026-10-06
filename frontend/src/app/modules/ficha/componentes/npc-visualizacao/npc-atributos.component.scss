@@ -43,6 +43,11 @@
         font: 11px/1.6 var(--font-mono);
         color: var(--text-dim);
     }
+    &__categorias {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-8);
+    }
 }
 .npc__editor--ativo {
     padding-left: var(--space-12);

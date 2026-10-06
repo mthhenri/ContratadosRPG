@@ -6,11 +6,13 @@
 > `docs/core/guia_de_mestre-v4.2.0.md` (Guia de Criação de NPCs) e `docs/SCHEMA.md`
 > (`FichaNpcDadosDto`). Tokens e primitivos seguem `docs/design/DESIGN.md`.
 
-> **Alinhamento documental (P-102, 2026-10-06):** o livro corrente inclui Competências,
-> ainda pendentes na m4-19 ativa, e Ataques/Equipamentos, em investigação própria.
-> Este contrato registra a composição implementada em m4-08/m4-08b; trocar a fonte
-> não implementa seleção de Competências, dadinho ou novas rolagens. P-100 já adequou
-> zero/redistribuição na criação. Competências não alteram o atributo nem a DT.
+> **Extensão M4-19 (2026-10-06):** Competências na criação e no bloco Atributos, com
+> contagem e dados de Categoria separados dos ajustes manuais. Seletor por botões
+> canônicos médios/contorno e leitura por chips; atributo usa dadinho e ajustes do
+> `app-atributo-ficha`. Indicador fixo “Rolagens ocultas” no cabeçalho; bandeja e
+> histórico privados só para gestão. Competências não alteram o atributo nem a DT.
+> P-100 já adequou zero/redistribuição na criação. [Gates M4-19](../reviews/m4-19-verificacao.md).
+> Ataques/Equipamentos seguem na spec própria M4-20 preparada, sem implementação aqui.
 
 ## Intenção
 

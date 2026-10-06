@@ -8,3 +8,4 @@ export * from "./validacao";
 export * from "./condicoes";
 export * from "./referencia";
 export * from "./criacao";
+export * from "./testes";

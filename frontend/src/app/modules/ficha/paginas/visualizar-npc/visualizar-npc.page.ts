@@ -34,12 +34,16 @@ import { NpcEdicaoFormulario } from "../../npc-edicao-formulario.service";
 import { lerParamRota } from "../../ler-param-rota";
 import { RolagemService } from "../../rolagem.service";
 import { NpcVisualizacao } from "../../componentes/npc-visualizacao/npc-visualizacao.component";
+import { FichaRolagemRegistroService } from "../../ficha-rolagem-registro.service";
+import { NpcRolagemService } from "../../npc-rolagem.service";
+import { Chip } from "../../../../shared/ui/chip/chip.component";
+import { BandejaDados } from "../../../../shared/bandeja-dados/bandeja-dados.component";
 
 @Component({
-    selector: "app-npc-visualizar", providers: [FichaEdicaoNpcService, NpcEdicaoFormulario],
+    selector: "app-npc-visualizar", providers: [FichaEdicaoNpcService, NpcEdicaoFormulario, FichaRolagemRegistroService, NpcRolagemService],
     imports: [ReactiveFormsModule, RouterLink, Icone, Tooltip, CalculadoraFlutuante,
         HistoricoRolagensSidebar, Botao, BotaoIcone, Campo, Cartao, ColunaAcoes, ColunaAcoesItem,
-        EditorMarkdown, Esqueleto, EstadoVazio, Modal, PainelFlutuante, NpcVisualizacao],
+        EditorMarkdown, Esqueleto, EstadoVazio, Modal, PainelFlutuante, NpcVisualizacao, Chip, BandejaDados],
     templateUrl: "./visualizar-npc.page.html", styleUrl: "./visualizar-npc.page.scss",
 })
 export class NpcVisualizar {
@@ -49,6 +53,8 @@ export class NpcVisualizar {
     private readonly api = inject(FichaService);
     private readonly campanhas = inject(CampanhaService);
     private readonly rolagens = inject(RolagemService);
+    private readonly registro = inject(FichaRolagemRegistroService);
+    private readonly testesNpc = inject(NpcRolagemService);
     private readonly sessao = inject(SessaoService);
     private readonly tempoReal = inject(TempoRealService);
     private readonly topbar = inject(TopbarContextoService);
@@ -104,6 +110,11 @@ export class NpcVisualizar {
         && !this.acessos().some((acesso) => acesso.usuarioId === membro.usuarioId)));
 
     constructor() {
+        this.registro.inicializar(() => this.edicao.ficha()?.id ?? null, true);
+        this.testesNpc.inicializar(() => this.gerenciavel());
+        this.registro.registrada$.pipe(takeUntilDestroyed()).subscribe((rolagem) =>
+            this.historico.update((atuais) => atuais.some((atual) => atual.id === rolagem.id)
+                ? atuais : [rolagem, ...atuais]));
         void this.carregar();
         this.tempoReal.conectar();
         this.tempoReal.entrarSalaFicha(this.fichaId);
@@ -226,7 +237,7 @@ export class NpcVisualizar {
     }
 
     async carregarHistorico(pagina = this.historicoPagina + 1): Promise<void> {
-        if (!this.edicao.ficha() || this.historicoCarregando() || this.acessoPerdido) return;
+        if (!this.edicao.ficha() || !this.gerenciavel() || this.historicoCarregando() || this.acessoPerdido) return;
         this.historicoCarregando.set(true);
         try {
             const resposta = await firstValueFrom(

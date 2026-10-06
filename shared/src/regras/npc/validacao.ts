@@ -2,6 +2,7 @@ import { CategoriaNpcEnum } from "../../enums";
 import type { FichaNpcDadosDto, FichaNpcValidadaDto } from "../../dtos/ficha";
 import { validarAtributosCategoria } from "./atributos";
 import { validarVolumeHabilidades } from "./habilidades";
+import { validarCompetenciasNpc, validarAjustesTesteNpc } from "./testes";
 
 /**
  * Coerência conforme o guia de mestre — NPC > Categoria/Nível/Cooperação/Atributos/Volume.
@@ -16,6 +17,8 @@ export function validarFichaNpc(dados: FichaNpcDadosDto): FichaNpcValidadaDto {
     const violacoes = [
         ...validarAtributosCategoria({ categoria: dados.categoria, atributos: dados.atributos }),
         ...validarVolumeHabilidades({ categoria: dados.categoria, habilidades: dados.habilidades }),
+        ...validarCompetenciasNpc(dados),
+        ...validarAjustesTesteNpc(dados),
     ];
     if (!Number.isInteger(dados.nivel) || dados.nivel < 0 || dados.nivel > 20) {
         violacoes.push("nível: deve ser inteiro entre 0 e 20");

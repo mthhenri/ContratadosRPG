@@ -1,4 +1,14 @@
 <div class="guia__etapa">
+    <app-npc-competencias
+        [categoria]="criacao.estado().categoria"
+        [atributos]="criacao.estado().atributos"
+        [competencias]="criacao.estado().competencias"
+        [editavel]="true"
+        (competenciasAlteradas)="
+            criacao.formulario.controls.competencias.setValue($event);
+            criacao.formulario.markAsDirty()
+        "
+    />
     <div class="guia__introducao">
         <span class="guia__introducao-codigo">ATRIBUTOS // RECURSOS</span>
         <p>

@@ -16,14 +16,14 @@ import type { ResultadoRolagemDto } from '../../regras/rolagem';
 /**
  * Entrada do registro de uma rolagem — o `fichaId` vem da rota (`@Param`, injetado no DTO pela
  * controller). `visibilidade` decide quem além do autor enxerga a rolagem (`PUBLICA` = todos os
- * membros da campanha; `PRIVADA` = autor + mestre).
+ * membros da campanha; `PRIVADA` = autor + mestre). Para NPC, a service sempre força `PRIVADA`.
  */
 export interface RolagemRegistrarDto {
   readonly rotulo: string;
   /**
    * Expressão de dados usada na rolagem (ex.: `2d6+3[Físico]`), exibida como legenda discreta no
-   * histórico/feed. `null` quando quem registra não a informa — o teste de Atributo direto (o
-   * rótulo já é o nome do atributo) nunca a envia.
+   * histórico/feed. `null` quando quem registra não a informa. O teste direto de NPC envia a
+   * fórmula completa, incluindo Nível, ajustes e dados de Competência.
    */
   readonly formula: string | null;
   readonly visibilidade: RolagemVisibilidadeEnum;
@@ -48,7 +48,7 @@ export interface RolagemCampanhaAvulsaRegistrarDto {
 /**
  * Entrada interna do `RolagemRepository.registrarRolagem` — `campanhaId`/`usuarioId` já resolvidos
  * pela service a partir da ficha (dono da rolagem = quem a disparou, não necessariamente o dono da
- * ficha — um visualizador com acesso concedido também pode rolar). Só service ↔ repository.
+ * ficha). NPC exige gestão; concessão de leitura não permite rolar. Só service ↔ repository.
  */
 export interface RolagemInternoRegistrarDto {
   readonly fichaId: number | null;

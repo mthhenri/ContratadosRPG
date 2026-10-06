@@ -1,6 +1,6 @@
 import type { FichaNpcDadosDto } from "@contratados-rpg/shared/dtos/ficha";
 import { HabilidadeTipoNpcEnum } from "@contratados-rpg/shared/enums";
-import { validarFichaNpc } from "@contratados-rpg/shared/regras/npc";
+import { validarFichaNpc, validarCompetenciasNpc } from "@contratados-rpg/shared/regras/npc";
 import { BusinessException } from "../../core/exceptions";
 
 function ehObjeto(valor: unknown): valor is Record<string, unknown> {
@@ -21,7 +21,7 @@ function ehRegistroSanidade(valor: unknown): boolean {
 }
 
 /** Valida a estrutura REST antes do motor puro; não recalcula snapshots nem duplica Categoria. */
-export function validarDadosNpc(dados: FichaNpcDadosDto): void {
+export function validarDadosNpc(dados: FichaNpcDadosDto, criacao = false): void {
     if (!ehObjeto(dados) || !ehObjeto(dados.identidadeNarrativa)
         || !ehTexto(dados.identidadeNarrativa.nome) || !ehTexto(dados.identidadeNarrativa.funcao)
         || !ehObjeto(dados.atributos) || !ehObjeto(dados.energia)
@@ -62,7 +62,8 @@ export function validarDadosNpc(dados: FichaNpcDadosDto): void {
             throw new BusinessException("Habilidade do NPC inválida");
         }
     }
-    const { violacoes } = validarFichaNpc(dados);
+    const violacoes = [...validarFichaNpc(dados).violacoes];
+    if (criacao && violacoes.length === 0) violacoes.push(...validarCompetenciasNpc(dados, true));
     if (violacoes.length > 0) {
         throw new BusinessException("Ficha de NPC viola as regras do jogo", [...violacoes]);
     }

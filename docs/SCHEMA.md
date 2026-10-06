@@ -687,11 +687,16 @@ Vida e reações, mas o teto de tudo vem da **Categoria** em vez de classe/Níve
 filosofia de `m3-10` — Vida/Defesa/Energia são snapshot editável, nunca recalculados sobre a
 edição.
 
-**Adequação pendente ao Guia v4.2.0:** o contrato abaixo ainda não contém Competências.
-A m4-19 ativa define sua seleção e rolagens; não somar os dados de Categoria ao atributo
-nem à DT (`10 + Nível + 2 × Atributo`, seção "DTs de Atributos"). A integração de
-ataques/equipamentos segue em investigação própria. P-100 já cobre zero/redistribuição
-na criação; este alinhamento de ponteiros não implementa as demais regras.
+**M4-19 — Competências e testes:** `competencias` é uma lista única de chaves de atributos
+base positivos, com quantidade por Categoria (0/2/3/4/5). Os dados derivados são
+nenhum/1D4/1D6/2D6/3D6. `modificadoresTeste` soma ao resultado; `dadosTeste` ajusta só
+o pool D20. Ambos são mapas opcionais de inteiros, inclusive negativos, como no Jogador.
+Ausência dos campos é legado sem configuração automática; criação e configuração explícita
+exigem a seleção canônica. Alterar recursos não acrescenta escolhas ao legado.
+Os dados de Categoria não entram no atributo, nos recursos ou na DT
+(`10 + Nível + 2 × Atributo`). Crítico do D20 mantido soma +2 uma vez ao teste,
+sem dobrar Competência/Nível/fixo. Rolagens do NPC são sempre privadas e exclusivas do mestre,
+inclusive histórico. Ataques/equipamentos seguem em task própria; sem coluna ou migration nova.
 
 ```jsonc
 {
@@ -702,6 +707,9 @@ na criação; este alinhamento de ponteiros não implementa as demais regras.
   "categoria": "VETERANO",              // CategoriaNpcEnum: CIVIL|OPERATIVO|VETERANO|ELITE|LENDARIO — teto de poder
   "nivel": 8,                           // 0–20; funciona como Proficiência (ataque, Defesa, DT)
   "cooperacao": 6,                      // 0–10, estado ATUAL — mutável em jogo pelas regras padrão, não fixo pós-criação
+  "competencias": ["luta", "medicina", "sentidos"], // Veterano: 3 escolhas; ausência é legado
+  "modificadoresTeste": { "medicina": 2 }, // resultado; ausência por atributo = 0
+  "dadosTeste": { "medicina": -1 },     // pool D20; não altera o atributo base nem o D6
   "atributos": {                        // mesmos 10 campos do jogador; cap por Categoria arbitrado por shared/regras (Veterano: 4)
     "forca": 2, "destreza": 3, "luta": 4, "pontaria": 2, "vigor": 3,
     "intelecto": 2, "medicina": 1, "sentidos": 1, "social": 1, "vontade": 2

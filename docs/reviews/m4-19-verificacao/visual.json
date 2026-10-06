@@ -1,0 +1,242 @@
+[
+  {
+    "estado": "1920x1080-CIVIL-leitura",
+    "largura": 1920,
+    "documento": 1920,
+    "corpo": 1920
+  },
+  {
+    "estado": "1920x1080-OPERATIVO-leitura",
+    "largura": 1920,
+    "documento": 1920,
+    "corpo": 1920
+  },
+  {
+    "estado": "1920x1080-VETERANO-leitura",
+    "largura": 1920,
+    "documento": 1920,
+    "corpo": 1920
+  },
+  {
+    "estado": "1920x1080-atributos-leitura",
+    "largura": 1920,
+    "documento": 1920,
+    "corpo": 1920
+  },
+  {
+    "estado": "1920x1080-ELITE-leitura",
+    "largura": 1920,
+    "documento": 1920,
+    "corpo": 1920
+  },
+  {
+    "estado": "1920x1080-LENDARIO-leitura",
+    "largura": 1920,
+    "documento": 1920,
+    "corpo": 1920
+  },
+  {
+    "estado": "1920x1080-edicao-invalida",
+    "largura": 1920,
+    "documento": 1915,
+    "corpo": 1915
+  },
+  {
+    "estado": "1920x1080-foco",
+    "focado": true,
+    "largura": "2px",
+    "estilo": "solid"
+  },
+  {
+    "estado": "1920x1080-edicao-ajustes",
+    "largura": 1920,
+    "documento": 1915,
+    "corpo": 1915
+  },
+  {
+    "estado": "1920x1080-leitor",
+    "largura": 1920,
+    "documento": 1920,
+    "corpo": 1920
+  },
+  {
+    "estado": "360x800-CIVIL-leitura",
+    "largura": 360,
+    "documento": 355,
+    "corpo": 355
+  },
+  {
+    "estado": "360x800-OPERATIVO-leitura",
+    "largura": 360,
+    "documento": 355,
+    "corpo": 355
+  },
+  {
+    "estado": "360x800-VETERANO-leitura",
+    "largura": 360,
+    "documento": 355,
+    "corpo": 355
+  },
+  {
+    "estado": "360x800-atributos-leitura",
+    "largura": 360,
+    "documento": 355,
+    "corpo": 355
+  },
+  {
+    "estado": "360x800-ELITE-leitura",
+    "largura": 360,
+    "documento": 355,
+    "corpo": 355
+  },
+  {
+    "estado": "360x800-LENDARIO-leitura",
+    "largura": 360,
+    "documento": 355,
+    "corpo": 355
+  },
+  {
+    "estado": "360x800-edicao-invalida",
+    "largura": 360,
+    "documento": 355,
+    "corpo": 355
+  },
+  {
+    "estado": "360x800-foco",
+    "focado": true,
+    "largura": "2px",
+    "estilo": "solid"
+  },
+  {
+    "estado": "360x800-edicao-ajustes",
+    "largura": 360,
+    "documento": 355,
+    "corpo": 355
+  },
+  {
+    "estado": "360x800-leitor",
+    "largura": 360,
+    "documento": 355,
+    "corpo": 355
+  },
+  {
+    "estado": "960x1080-CIVIL-leitura",
+    "largura": 960,
+    "documento": 955,
+    "corpo": 955
+  },
+  {
+    "estado": "960x1080-OPERATIVO-leitura",
+    "largura": 960,
+    "documento": 955,
+    "corpo": 955
+  },
+  {
+    "estado": "960x1080-VETERANO-leitura",
+    "largura": 960,
+    "documento": 955,
+    "corpo": 955
+  },
+  {
+    "estado": "960x1080-atributos-leitura",
+    "largura": 960,
+    "documento": 955,
+    "corpo": 955
+  },
+  {
+    "estado": "960x1080-ELITE-leitura",
+    "largura": 960,
+    "documento": 955,
+    "corpo": 955
+  },
+  {
+    "estado": "960x1080-LENDARIO-leitura",
+    "largura": 960,
+    "documento": 955,
+    "corpo": 955
+  },
+  {
+    "estado": "960x1080-edicao-invalida",
+    "largura": 960,
+    "documento": 955,
+    "corpo": 955
+  },
+  {
+    "estado": "960x1080-foco",
+    "focado": true,
+    "largura": "2px",
+    "estilo": "solid"
+  },
+  {
+    "estado": "960x1080-edicao-ajustes",
+    "largura": 960,
+    "documento": 955,
+    "corpo": 955
+  },
+  {
+    "estado": "960x1080-leitor",
+    "largura": 960,
+    "documento": 955,
+    "corpo": 955
+  },
+  {
+    "estado": "1366x768-CIVIL-leitura",
+    "largura": 1366,
+    "documento": 1361,
+    "corpo": 1361
+  },
+  {
+    "estado": "1366x768-OPERATIVO-leitura",
+    "largura": 1366,
+    "documento": 1361,
+    "corpo": 1361
+  },
+  {
+    "estado": "1366x768-VETERANO-leitura",
+    "largura": 1366,
+    "documento": 1361,
+    "corpo": 1361
+  },
+  {
+    "estado": "1366x768-atributos-leitura",
+    "largura": 1366,
+    "documento": 1361,
+    "corpo": 1361
+  },
+  {
+    "estado": "1366x768-ELITE-leitura",
+    "largura": 1366,
+    "documento": 1361,
+    "corpo": 1361
+  },
+  {
+    "estado": "1366x768-LENDARIO-leitura",
+    "largura": 1366,
+    "documento": 1361,
+    "corpo": 1361
+  },
+  {
+    "estado": "1366x768-edicao-invalida",
+    "largura": 1366,
+    "documento": 1361,
+    "corpo": 1361
+  },
+  {
+    "estado": "1366x768-foco",
+    "focado": true,
+    "largura": "2px",
+    "estilo": "solid"
+  },
+  {
+    "estado": "1366x768-edicao-ajustes",
+    "largura": 1366,
+    "documento": 1361,
+    "corpo": 1361
+  },
+  {
+    "estado": "1366x768-leitor",
+    "largura": 1366,
+    "documento": 1361,
+    "corpo": 1361
+  }
+]

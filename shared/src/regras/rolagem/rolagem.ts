@@ -684,6 +684,7 @@ export function rolarFormula(dto: RolagemDto, rolarDado: RolarDado = rolarDadoPa
  * **independentes** e devolve as N em `subResultados` (o objeto externo espelha a 1ª, por
  * compatibilidade). Determinístico quando `rolarDado` é injetado.
  */
+/** `testeAtributo` informa o contexto explícito do NPC; só o primeiro pool D20 dá +2, sem dobra. */
 export function rolarInterpretada(
   formula: FormulaInterpretadaDto,
   atributos: FichaAtributosDto,
@@ -691,15 +692,16 @@ export function rolarInterpretada(
   nivel?: number,
   rolarDado: RolarDado = rolarDadoPadrao,
   critico = false,
+  testeAtributo = false,
 ): ResultadoRolagemDto {
-  const primeiro = rolarInterpretadaUnica(formula, atributos, proficiencia, nivel, rolarDado, critico);
+  const primeiro = rolarInterpretadaUnica(formula, atributos, proficiencia, nivel, rolarDado, critico, testeAtributo);
   const repeticoes = formula.repeticoes ?? 1;
   if (repeticoes < 2) {
     return primeiro;
   }
   const subResultados: ResultadoRolagemDto[] = [primeiro];
   for (let indice = 1; indice < repeticoes; indice += 1) {
-    subResultados.push(rolarInterpretadaUnica(formula, atributos, proficiencia, nivel, rolarDado, critico));
+    subResultados.push(rolarInterpretadaUnica(formula, atributos, proficiencia, nivel, rolarDado, critico, testeAtributo));
   }
   return { ...primeiro, subResultados };
 }
@@ -726,6 +728,7 @@ function rolarInterpretadaUnica(
   nivel: number | undefined,
   rolarDado: RolarDado,
   critico: boolean,
+  testeAtributo: boolean,
 ): ResultadoRolagemDto {
   // Ambiente escalar da rolagem (m3-22): os 10 atributos + Proficiência (`PROF`) + Nível (`NIV`).
   const ambiente: Record<FonteEscalar, number> = {
@@ -734,10 +737,11 @@ function rolarInterpretadaUnica(
     nivel: nivel ?? 0,
   };
 
-  const teste = ehFormulaTeste(formula);
+  // NPC informa o contexto da ação; pools complementares não identificam testes genericamente.
+  const teste = testeAtributo || ehFormulaTeste(formula);
   const dobrarResultado = critico && !teste;
-  const dados: DadosRoladosDto[] = formula.dados.map((termo) => rolarTermo(
-    teste ? { ...termo, margemCritico: termo.margemCritico ?? 1 } : termo,
+  const dados: DadosRoladosDto[] = formula.dados.map((termo, indice) => rolarTermo(
+    teste && indice === 0 ? { ...termo, margemCritico: termo.margemCritico ?? 1 } : termo,
     ambiente, rolarDado, dobrarResultado,
   ));
 
@@ -768,7 +772,7 @@ function rolarInterpretadaUnica(
 
   // Crítico de teste: +2 uma vez, aplicado após os demais bônus, somente pelo mantido.
   // O comando explícito de crítico também respeita a distinção entre teste e resultado.
-  if (teste && (critico || dados.some((termo) => (termo.criticos ?? 0) > 0))) {
+  if (teste && (critico || (dados[0]?.criticos ?? 0) > 0)) {
     atributosAplicados.push({ rotulo: 'CRÍTICO', valor: 2 });
   }
 

@@ -29,6 +29,28 @@
                 (salvar)="formulario.salvar()"
                 (cancelar)="formulario.cancelar()"
             />
+            <div class="npc-atributos__categorias" aria-label="Categoria do rascunho">
+                @for (categoria of categorias; track categoria.categoria) {
+                    <button
+                        app-botao
+                        type="button"
+                        tamanho="medio"
+                        estilo="contorno"
+                        [variante]="
+                            dadosCompetencias().categoria === categoria.categoria
+                                ? 'primario'
+                                : 'secundario'
+                        "
+                        [attr.aria-pressed]="dadosCompetencias().categoria === categoria.categoria"
+                        [disabled]="edicao.salvando()"
+                        (click)="
+                            formulario.formulario.controls.categoria.setValue(categoria.categoria)
+                        "
+                    >
+                        {{ categoria.rotulo }}
+                    </button>
+                }
+            </div>
             @for (violacao of violacoes(); track violacao) {
                 <p class="npc__erro" role="alert">{{ violacao }}</p>
             }
@@ -55,9 +77,12 @@
                             [editando]="gerenciavel() && formulario.emEdicaoDe('atributos')"
                             [mostrarMaestria]="false"
                             [mostrarLesao]="false"
-                            [mostrarModificador]="false"
-                            [mostrarDados]="false"
-                            [mostrarRolar]="false"
+                            [modificador]="dados().modificadoresTeste?.[campo.chave] ?? 0"
+                            [dados]="dados().dadosTeste?.[campo.chave] ?? 0"
+                            [podeRolar]="
+                                gerenciavel() && !formulario.ocupado() && !edicao.salvando()
+                            "
+                            (rolar)="rolagens.rolar(campo.chave, campo.nome)"
                         >
                             <app-step-input
                                 atributoValor
@@ -72,13 +97,50 @@
                                 [bloquearAumentar]="edicao.salvando()"
                                 [bloquearDiminuir]="edicao.salvando()"
                             />
+                            <app-step-input
+                                atributoModificador
+                                [formControl]="
+                                    formulario.formulario.controls.modificadoresTeste.controls[
+                                        campo.chave
+                                    ]
+                                "
+                                tamanho="micro"
+                                variante="discreto"
+                                [digitavel]="true"
+                                [ariaRotulo]="'Modificador de teste de ' + campo.nome"
+                                [bloquearAumentar]="edicao.salvando()"
+                                [bloquearDiminuir]="edicao.salvando()"
+                            />
+                            <app-step-input
+                                atributoDados
+                                [formControl]="
+                                    formulario.formulario.controls.dadosTeste.controls[campo.chave]
+                                "
+                                tamanho="micro"
+                                variante="discreto"
+                                [digitavel]="true"
+                                [ariaRotulo]="'Ajuste D20 de ' + campo.nome"
+                                [bloquearAumentar]="edicao.salvando()"
+                                [bloquearDiminuir]="edicao.salvando()"
+                            />
                         </app-atributo-ficha>
                     }
                 </div>
             </div>
         }
+        <app-npc-competencias
+            [categoria]="dadosCompetencias().categoria"
+            [atributos]="dadosCompetencias().atributos"
+            [competencias]="dadosCompetencias().competencias"
+            [editavel]="gerenciavel() && formulario.emEdicaoDe('atributos')"
+            [desabilitado]="edicao.salvando()"
+            (competenciasAlteradas)="formulario.formulario.controls.competencias.setValue($event)"
+        />
         @if (formulario.emEdicaoDe("atributos")) {
             <p class="npc-atributos__aviso">Alterar atributos mantém os recursos salvos.</p>
+            <p class="npc-atributos__aviso">
+                O modificador soma ao resultado; o ajuste D20 altera apenas o pool do teste.
+            </p>
         }
     </div>
 </app-cartao>

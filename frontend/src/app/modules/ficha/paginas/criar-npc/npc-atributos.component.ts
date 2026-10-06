@@ -7,9 +7,10 @@ import { Stat } from "../../../../shared/ui/stat/stat.component";
 import { NpcCriacaoFormulario } from "./npc-criacao-formulario.service";
 
 import { GRUPOS_ATRIBUTOS } from "../../npc-atributos-campos";
+import { NpcCompetencias } from "../../componentes/npc-visualizacao/npc-competencias.component";
 
 @Component({
-    selector: "app-npc-atributos", imports: [ReactiveFormsModule, StepInput, Botao, Stat],
+    selector: "app-npc-atributos", imports: [ReactiveFormsModule, StepInput, Botao, Stat, NpcCompetencias],
     templateUrl: "./npc-atributos.component.html", styleUrl: "./npc-etapa.scss",
 })
 export class NpcAtributos {

@@ -6,8 +6,8 @@
 > planejamento visual revisado em 2026-09-30; contrato, motor e backend NPC concluídos
 > em `m4-05`/`m4-06`/`m4-07`.
 
-> **Adequações ao livro corrente:** P-100 e P-101/01/02/03 concluídas; m4-19 ativa ainda
-> implementará Competências/testes de NPC. Ataques/Equipamentos: investigação concluída,
+> **Adequações ao livro corrente:** P-100, P-101/01/02/03 e M4-19 concluídas;
+> Competências/testes privados de NPC entregues. Ataques/Equipamentos: investigação concluída,
 > decisões do autor registradas, spec executável preparada em `m4-20` (depende da `m4-19`).
 > O escopo original abaixo não equivale a conformidade integral com Guia v4.2.0.
 

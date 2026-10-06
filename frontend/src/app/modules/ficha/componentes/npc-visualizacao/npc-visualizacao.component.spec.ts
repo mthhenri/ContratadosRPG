@@ -10,6 +10,7 @@ import { criarFichaNpcTeste } from "../../testing/ficha-npc.fixture";
 import { NpcHabilidadesLista } from "./npc-habilidades-lista.component";
 import { NpcIdentidade } from "./npc-identidade.component";
 import { NpcVisualizacao } from "./npc-visualizacao.component";
+import { NpcRolagemService } from "../../npc-rolagem.service";
 
 const aguardarMicrotarefas = () => new Promise((resolve) => setTimeout(resolve));
 
@@ -19,6 +20,7 @@ describe("NpcVisualizacao", () => {
         const api = { alterarFichaNpc: vi.fn((_id, alteracao) => of({ ...ficha, ...alteracao })) };
         TestBed.configureTestingModule({ imports: [NpcVisualizacao], providers: [
             FichaEdicaoNpcService, NpcEdicaoFormulario,
+            { provide: NpcRolagemService, useValue: { rolar: vi.fn() } },
             { provide: FichaService, useValue: api },
             { provide: TemaService, useValue: { accentEfetivo: () => "var(--accent)" } },
         ] });
@@ -66,7 +68,7 @@ describe("NpcVisualizacao", () => {
             });
             expect(card.querySelector("app-stat, app-campo")).toBeNull();
             expect(card.querySelector(".ficha-atributo__rolar, .ficha-atributo__estrela, " +
-                ".ficha-atributo__maestria, .ficha-atributo__lesao, .ficha-atributo__mod-valor, " +
+                ".ficha-atributo__maestria, .ficha-atributo__lesao, " +
                 ".ficha-atributo__dados-badge")).toBeNull();
             expect(card.textContent).not.toContain("Alterar atributos mantém os recursos salvos");
         });
@@ -76,14 +78,15 @@ describe("NpcVisualizacao", () => {
             pagina.iniciar("atributos"); fixture.detectChanges();
             const card = raiz.querySelector("app-npc-atributos")!;
             expect(card.querySelectorAll(".ficha-atributo--edicao")).toHaveLength(10);
-            expect(card.querySelectorAll("app-step-input")).toHaveLength(10);
+            expect(card.querySelectorAll("app-step-input")).toHaveLength(30);
             expect(card.querySelector(".ficha-atributo__modificador, .ficha-atributo__dados"))
-                .toBeNull();
+                .not.toBeNull();
             expect(card.textContent).toContain("Alterar atributos mantém os recursos salvos");
             formulario.formulario.controls.atributos.controls.destreza.setValue(2);
             await formulario.salvar(); fixture.detectChanges();
             const gravado = api.alterarFichaNpc.mock.calls[0][1].dados;
-            expect(gravado).toEqual({ ...ficha.dados,
+            expect(gravado).toMatchObject({ ...ficha.dados, competencias: [],
+                modificadoresTeste: { luta: 0 }, dadosTeste: { luta: 0 },
                 atributos: { ...ficha.dados.atributos, destreza: 2 } });
             expect(card.textContent).not.toContain("Alterar atributos mantém os recursos salvos");
         });

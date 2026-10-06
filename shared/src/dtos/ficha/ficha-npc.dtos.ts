@@ -16,6 +16,12 @@ export interface FichaNpcDadosDto {
     readonly cooperacao: number;
     /** Reusa os dez atributos; Civil inicia com Luta/Pontaria 0, salvo exceção do mestre. */
     readonly atributos: FichaAtributosDto;
+    /** Ausência identifica legado não configurado; seleção explícita segue a Categoria. */
+    readonly competencias?: readonly (keyof FichaAtributosDto)[];
+    /** Ajustes manuais de resultado, separados do valor base do atributo. */
+    readonly modificadoresTeste?: Partial<Record<keyof FichaAtributosDto, number>>;
+    /** Ajustes manuais exclusivos do pool D20; não alteram dados de Competência. */
+    readonly dadosTeste?: Partial<Record<keyof FichaAtributosDto, number>>;
     readonly vidaMaxima: number;
     /** Pode exceder a máxima editável, como nas demais fichas. */
     readonly vidaAtual: number;

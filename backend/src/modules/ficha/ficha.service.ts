@@ -1031,7 +1031,7 @@ export class FichaService {
         }) === 0) {
             throw new UnauthorizedAccessException();
         }
-        validarDadosNpc(dto.dados);
+        validarDadosNpc(dto.dados, true);
         this.validarCor(dto.cor);
         const dados = this.resolverCondicoesNpc(dto.dados);
         // Mesma fronteira JSONB da criatura (m4-03); o contrato público permanece próprio.
@@ -1067,10 +1067,10 @@ export class FichaService {
         if (!ficha) throw new ResourceNotFoundException("Ficha");
         await this.validarPermissaoEdicao(ficha, usuarioAtivo);
         this.validarTipoFicha(ficha, TipoFichaEnum.NPC);
-        validarDadosNpc(dto.dados);
+        const anteriores = ficha.dados as unknown as FichaNpcDadosDto;
+        validarDadosNpc(dto.dados, anteriores.competencias !== undefined);
         this.validarCor(dto.cor);
         this.validarImagemFoco(dto.imagemFoco);
-        const anteriores = ficha.dados as unknown as FichaNpcDadosDto;
         const dados = this.resolverCondicoesNpc(
             preservarCamposPrivados(anteriores, dto.dados), anteriores,
         );
