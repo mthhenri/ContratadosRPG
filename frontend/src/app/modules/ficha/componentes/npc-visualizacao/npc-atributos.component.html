@@ -1,0 +1,84 @@
+<app-cartao titulo="Atributos" [cabecalhoQuebravel]="true">
+    <span cartaoIndice>//</span>
+    @if (gerenciavel() && !formulario.emEdicaoDe("atributos")) {
+        <button
+            cartaoFim
+            app-botao-icone
+            tamanho="padrao"
+            type="button"
+            aria-label="Editar atributos"
+            [appTooltip]="formulario.tooltipBloqueio('atributos') ?? 'Editar atributos'"
+            [disabled]="edicao.salvando() || formulario.bloqueadoPorOutro('atributos')"
+            (click)="iniciar()"
+        >
+            <app-icone nome="editar" />
+        </button>
+    }
+    <div
+        #editor
+        class="npc-atributos"
+        tabindex="-1"
+        [class.npc__editor--ativo]="formulario.emEdicaoDe('atributos')"
+        [attr.aria-busy]="edicao.salvando() && formulario.emEdicaoDe('atributos') ? true : null"
+        (keydown)="aoTeclaBloco($event)"
+    >
+        @if (formulario.emEdicaoDe("atributos")) {
+            <app-npc-bloco-acoes
+                [salvando]="edicao.salvando()"
+                [bloquearSalvar]="violacoes().length > 0"
+                (salvar)="formulario.salvar()"
+                (cancelar)="formulario.cancelar()"
+            />
+            @for (violacao of violacoes(); track violacao) {
+                <p class="npc__erro" role="alert">{{ violacao }}</p>
+            }
+            @if (formulario.erroFormulario()) {
+                <p class="npc__erro" role="alert">{{ formulario.erroFormulario() }}</p>
+            }
+            @if (edicao.erro()) {
+                <p class="npc__erro" role="alert">{{ edicao.erro() }}</p>
+            }
+        }
+        @for (grupo of grupos; track grupo.nome) {
+            <div class="npc-atributos__grupo">
+                <span class="npc-atributos__rotulo-grupo">{{ grupo.nome }}</span>
+                <div
+                    class="npc-atributos__grade"
+                    [class.npc-atributos__grade--edicao]="formulario.emEdicaoDe('atributos')"
+                >
+                    @for (campo of grupo.campos; track campo.chave) {
+                        <app-atributo-ficha
+                            [sigla]="campo.sigla"
+                            [nome]="campo.nome"
+                            [valor]="dados().atributos[campo.chave]"
+                            [dt]="dt(campo.chave)"
+                            [editando]="gerenciavel() && formulario.emEdicaoDe('atributos')"
+                            [mostrarMaestria]="false"
+                            [mostrarLesao]="false"
+                            [mostrarModificador]="false"
+                            [mostrarDados]="false"
+                            [mostrarRolar]="false"
+                        >
+                            <app-step-input
+                                atributoValor
+                                [formControl]="
+                                    formulario.formulario.controls.atributos.controls[campo.chave]
+                                "
+                                [min]="0"
+                                [digitavel]="false"
+                                tamanho="grande"
+                                variante="discreto"
+                                [ariaRotulo]="campo.nome"
+                                [bloquearAumentar]="edicao.salvando()"
+                                [bloquearDiminuir]="edicao.salvando()"
+                            />
+                        </app-atributo-ficha>
+                    }
+                </div>
+            </div>
+        }
+        @if (formulario.emEdicaoDe("atributos")) {
+            <p class="npc-atributos__aviso">Alterar atributos mantém os recursos salvos.</p>
+        }
+    </div>
+</app-cartao>

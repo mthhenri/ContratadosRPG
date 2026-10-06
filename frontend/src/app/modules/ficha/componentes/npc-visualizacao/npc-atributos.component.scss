@@ -1,0 +1,58 @@
+@use "tema/breakpoints" as bp;
+
+:host {
+    display: block;
+    min-width: 0;
+}
+// Mesma régua da ficha completa do Jogador (.ficha-atributos--2col + ui-34):
+// gap 8/6px e leitura fluida com piso de 120px; edição 5 / 2 / 1 colunas.
+.npc-atributos {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+    &__grupo {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+    &__rotulo-grupo {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        color: var(--text-dim);
+        text-align: center;
+    }
+    &__grade {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 6px;
+        &--edicao {
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            @include bp.tablet {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+            @include bp.mobile {
+                grid-template-columns: 1fr;
+            }
+        }
+    }
+    &__aviso {
+        margin: 0;
+        font: 11px/1.6 var(--font-mono);
+        color: var(--text-dim);
+    }
+}
+.npc__editor--ativo {
+    padding-left: var(--space-12);
+    border-left: 2px solid var(--accent);
+    &:focus {
+        outline: none;
+    }
+}
+.npc__erro {
+    margin: 0;
+    font: 13px/1.5 var(--font-sans);
+    color: var(--erro);
+}

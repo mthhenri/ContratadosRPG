@@ -1,0 +1,90 @@
+@if (editando()) {
+    <div class="ficha-atributo__identidade">
+        @if (mostrarMaestria()) {
+            <button
+                class="ficha-atributo__maestria"
+                type="button"
+                [class.ficha-atributo__maestria--ativa]="maestria()"
+                [disabled]="!maestriaHabilitada()"
+                [attr.aria-label]="'Maestria em ' + nome()"
+                [appTooltip]="dicaMaestria()"
+                (click)="maestriaAlternada.emit()"
+            >
+                ★
+            </button>
+        }
+        <span
+            class="ficha-atributo__abrev"
+            [class.ficha-atributo__abrev--dica]="dicaEdicao() === null"
+            [attr.tabindex]="dicaEdicao() === null ? 0 : null"
+            [attr.aria-label]="dicaEdicao() ?? descricao()"
+            [appTooltip]="dicaEdicao() ?? descricao()"
+            >{{ sigla() }}</span
+        >
+    </div>
+    <div class="ficha-atributo__stepper"><ng-content select="[atributoValor]" /></div>
+    @if (mostrarModificador()) {
+        <div class="ficha-atributo__modificador" [appTooltip]="'Modificador de teste de ' + nome()">
+            <app-icone nome="modificador" />
+            <ng-content select="[atributoModificador]" />
+        </div>
+    }
+    @if (mostrarDados()) {
+        <div class="ficha-atributo__dados" [appTooltip]="'Ajuste manual de dados de ' + nome()">
+            <app-icone nome="d20" />
+            <ng-content select="[atributoDados]" />
+        </div>
+    }
+} @else {
+    @if (mostrarRolar() && podeRolar()) {
+        <button
+            app-botao-icone
+            tamanho="mini"
+            class="ficha-atributo__rolar"
+            type="button"
+            [attr.aria-label]="'Rolar teste de ' + nome()"
+            [appTooltip]="'Rolar teste de ' + nome()"
+            (click)="rolar.emit()"
+        >
+            <app-icone nome="d20" />
+        </button>
+    }
+    <span
+        class="ficha-atributo__abrev ficha-atributo__abrev--dica"
+        tabindex="0"
+        [appTooltip]="descricao()"
+        [attr.aria-label]="descricao()"
+    >
+        @if (mostrarMaestria() && maestria()) {
+            <span class="ficha-atributo__estrela" aria-hidden="true">★</span>
+        }
+        {{ sigla() }}
+        @if (mostrarMaestria() && maestria()) {
+            <span class="ficha-atributo__estrela" aria-hidden="true">★</span>
+        }
+    </span>
+    <span class="ficha-atributo__valor">
+        {{ valor() }}
+        @if (mostrarLesao() && lesao() > 0) {
+            <span class="ficha-atributo__lesao" [appTooltip]="dicaLesao()">−{{ lesao() }}</span>
+        }
+    </span>
+    @if (mostrarModificador()) {
+        <span
+            class="ficha-atributo__mod-valor"
+            [class.ficha-atributo__mod-valor--ativo]="modificador() !== 0"
+            [appTooltip]="'Modificador de teste de ' + nome()"
+            >{{ modificador() >= 0 ? "+" : "" }}{{ modificador() }}</span
+        >
+    }
+    @if (mostrarDados() && dados() !== 0) {
+        <span
+            class="ficha-atributo__dados-badge"
+            [appTooltip]="'Ajuste manual de dados: ' + (dados() > 0 ? '+' : '') + dados()"
+            [attr.aria-label]="'Ajuste manual de dados: ' + (dados() > 0 ? '+' : '') + dados()"
+        >
+            <app-icone nome="d20" />
+            {{ dados() > 0 ? "+" : "" }}{{ dados() }}
+        </span>
+    }
+}

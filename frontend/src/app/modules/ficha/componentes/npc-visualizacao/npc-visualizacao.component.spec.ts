@@ -1,6 +1,6 @@
 import { TestBed } from "@angular/core/testing";
 import { By } from "@angular/platform-browser";
-import { of } from "rxjs";
+import { of, Subject, throwError } from "rxjs";
 import { CategoriaNpcEnum } from "@contratados-rpg/shared/enums";
 import { TemaService } from "../../../../core/services/tema.service";
 import { FichaService } from "../../ficha.service";
@@ -34,12 +34,104 @@ describe("NpcVisualizacao", () => {
     }
 
     it("Civil conserva Vida e snapshots, sem controles de Energia ou gestão para leitor", () => {
-        const { raiz, pagina } = montar(false);
+        const { raiz } = montar(false);
         expect(raiz.textContent).toContain("Sem Energia");
         expect(raiz.textContent).toContain("77");
         expect(raiz.querySelectorAll("input, textarea, select")).toHaveLength(0);
         expect(raiz.textContent).not.toContain("Adicionar habilidade");
-        expect(pagina.dt("vigor")).toBeGreaterThan(0);
+        expect(raiz.querySelector('app-npc-atributos [aria-label="Vigor — DT 17"]')).not.toBeNull();
+    });
+
+    describe("Atributos no ladrilho compartilhado do Jogador (m4-18)", () => {
+        it("mostra os dez valores base na ordem Físicos/Mentais, com sigla e DT acessível", () => {
+            const { raiz, ficha } = montar(false);
+            const card = raiz.querySelector("app-npc-atributos")!;
+            expect(card).not.toBeNull();
+            expect(Array.from(card.querySelectorAll(".npc-atributos__rotulo-grupo"))
+                .map((grupo) => grupo.textContent?.trim())).toEqual(["Físicos", "Mentais"]);
+            const nomes = ["Destreza", "Força", "Luta", "Pontaria", "Vigor", "Intelecto",
+                "Medicina", "Sentidos", "Social", "Vontade"];
+            const siglas = ["DES", "FOR", "LUT", "PON", "VIG", "INT", "MED", "SEN", "SOC", "VON"];
+            const valores = Object.values(ficha.dados.atributos);
+            const ladrilhos = Array.from(card.querySelectorAll("app-atributo-ficha"));
+            expect(ladrilhos).toHaveLength(10);
+            ladrilhos.forEach((ladrilho, indice) => {
+                const sigla = ladrilho.querySelector(".ficha-atributo__abrev")!;
+                expect(sigla.textContent?.trim()).toBe(siglas[indice]);
+                expect(sigla.getAttribute("aria-label"))
+                    .toBe(`${nomes[indice]} — DT ${10 + ficha.dados.nivel + valores[indice] * 2}`);
+                expect(sigla.getAttribute("tabindex")).toBe("0");
+                expect(ladrilho.querySelector(".ficha-atributo__valor")?.textContent?.trim())
+                    .toBe(String(valores[indice]));
+            });
+            expect(card.querySelector("app-stat, app-campo")).toBeNull();
+            expect(card.querySelector(".ficha-atributo__rolar, .ficha-atributo__estrela, " +
+                ".ficha-atributo__maestria, .ficha-atributo__lesao, .ficha-atributo__mod-valor, " +
+                ".ficha-atributo__dados-badge")).toBeNull();
+            expect(card.textContent).not.toContain("Alterar atributos mantém os recursos salvos");
+        });
+
+        it("edita na mesma caixa com stepper e persiste só atributos, conservando snapshots", async () => {
+            const { raiz, pagina, fixture, formulario, api, ficha } = montar(true);
+            pagina.iniciar("atributos"); fixture.detectChanges();
+            const card = raiz.querySelector("app-npc-atributos")!;
+            expect(card.querySelectorAll(".ficha-atributo--edicao")).toHaveLength(10);
+            expect(card.querySelectorAll("app-step-input")).toHaveLength(10);
+            expect(card.querySelector(".ficha-atributo__modificador, .ficha-atributo__dados"))
+                .toBeNull();
+            expect(card.textContent).toContain("Alterar atributos mantém os recursos salvos");
+            formulario.formulario.controls.atributos.controls.destreza.setValue(2);
+            await formulario.salvar(); fixture.detectChanges();
+            const gravado = api.alterarFichaNpc.mock.calls[0][1].dados;
+            expect(gravado).toEqual({ ...ficha.dados,
+                atributos: { ...ficha.dados.atributos, destreza: 2 } });
+            expect(card.textContent).not.toContain("Alterar atributos mantém os recursos salvos");
+        });
+
+        it.each([-1, 1.5, 3])("valor inválido %s bloqueia Salvar com erro dentro do card", (valor) => {
+            const { raiz, pagina, fixture, formulario } = montar(true);
+            pagina.iniciar("atributos"); fixture.detectChanges();
+            formulario.formulario.controls.atributos.controls.destreza.setValue(valor);
+            fixture.detectChanges();
+            const card = raiz.querySelector("app-npc-atributos")!;
+            const salvar = Array.from(card.querySelectorAll<HTMLButtonElement>("button[app-botao]"))
+                .find((botao) => botao.textContent?.trim() === "Salvar")!;
+            expect(salvar.disabled).toBe(true);
+            expect(card.querySelector('[role="alert"]')).not.toBeNull();
+        });
+
+        it("conserva o rascunho e apresenta falha dentro do card; Cancelar descarta", async () => {
+            const { raiz, pagina, fixture, formulario, api, edicao } = montar(true);
+            api.alterarFichaNpc.mockImplementationOnce(() => throwError(() =>
+                ({ error: { mensagem: "Falha controlada" } })));
+            pagina.iniciar("atributos"); fixture.detectChanges();
+            formulario.formulario.controls.atributos.controls.destreza.setValue(2);
+            expect(await formulario.salvar()).toBe(false); fixture.detectChanges();
+            const card = raiz.querySelector("app-npc-atributos")!;
+            expect(card.querySelector('[role="alert"]')?.textContent)
+                .toContain("Não foi possível salvar. Rascunho mantido para tentar novamente.");
+            expect(card.querySelectorAll(".ficha-atributo--edicao")).toHaveLength(10);
+            expect(edicao.rascunho()?.dados.atributos.destreza).toBe(2);
+            formulario.cancelar(); fixture.detectChanges();
+            expect(card.querySelectorAll(".ficha-atributo--edicao")).toHaveLength(0);
+            expect(edicao.ficha()?.dados.atributos.destreza).toBe(1);
+        });
+
+        it("durante o PUT todos os passos ficam bloqueados e o bloco anuncia ocupado", async () => {
+            const { raiz, pagina, fixture, formulario, api, ficha } = montar(true);
+            const resposta = new Subject<typeof ficha>();
+            api.alterarFichaNpc.mockImplementationOnce(() => resposta);
+            pagina.iniciar("atributos"); fixture.detectChanges();
+            formulario.formulario.controls.atributos.controls.destreza.setValue(2);
+            const salvamento = formulario.salvar(); fixture.detectChanges();
+            const card = raiz.querySelector("app-npc-atributos")!;
+            expect(card.querySelector('[aria-busy="true"]')).not.toBeNull();
+            expect(Array.from(card.querySelectorAll<HTMLButtonElement>("app-step-input button"))
+                .every((botao) => botao.disabled)).toBe(true);
+            resposta.next({ ...ficha, dados: { ...ficha.dados,
+                atributos: { ...ficha.dados.atributos, destreza: 2 } } });
+            resposta.complete(); expect(await salvamento).toBe(true);
+        });
     });
 
     it("editar o nome não altera a cor da ficha (campos avulsos independentes)", async () => {
@@ -180,7 +272,7 @@ describe("NpcVisualizacao", () => {
             const { pagina, fixture } = montar(true);
             pagina.iniciar("atributos"); fixture.detectChanges();
             await aguardarMicrotarefas();
-            expect(document.activeElement?.tagName).toBe("INPUT");
+            expect(document.activeElement?.getAttribute("aria-label")).toBe("Diminuir Destreza");
             expect(document.activeElement?.closest(".npc__editor--ativo")).not.toBeNull();
         });
 

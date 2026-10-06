@@ -1,5 +1,61 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-05 — m4-18: NPC e Jogador compartilham o ladrilho de atributo
+
+**Pedido e recorte.** Atributos do NPC iguais aos do Jogador, sem antecipar mecânica da
+`m4-19`. Dependências `m4-16`/`m4-17` concluídas. Skills `task-flow`, `design-fidelity`,
+`verify` e `convencoes-check` exercitadas; fontes e análogos documentados no
+[relatório com medidas, capturas e resultados](../reviews/m4-18-verificacao.md).
+Autor pediu usar apenas o stack já rodando: API 3100/SPA 4300 reutilizadas; nenhum serviço
+iniciado ou encerrado. Diagnóstico antes de editar com Jogador/Criatura/NPC em leitura e
+edição: NPC tinha nome/DT em `app-stat`, campos digitáveis e aviso fixo; Jogador tinha
+sigla, caixa compacta, tooltip, stepper sem digitação e grade fluida. Medidas antes/depois
+incluem card, ladrilho, gap e colunas; NPC desktop leitura 362,9→253px de altura, mobile
+729,0→497,0px (o piso fluido 120px redistribui a grade). Valores completos no relatório.
+
+**Implementação.** `shared/ui/atributo-ficha/` extrai a receita aprovada do Jogador, com
+sigla/tooltip/valor e cinco chaves `mostrar*` (true por padrão), Maestria/lesão/modificador/
+dados recebidos e eventos `rolar`/`maestriaAlternada`. Controles editáveis são projetados;
+nenhuma fórmula ou decisão de permissão entra no primitivo. Jogador conserva handlers,
+rascunhos e helpers e perde seu SCSS local; template 2585→2430 linhas (155 a menos).
+O tamanho compacto atravessa a encapsulação via variável CSS. A estrela de Maestria e
+sua receita aprovada foram extraídas integralmente, sem reinventar comportamento.
+
+`NpcAtributos` retira o card/foco/encaminhamento de edição do componente principal extenso.
+Usa os mesmos dez atributos, siglas, caixa, grade e stepper `grande`/`discreto`, sem
+digitação, mínimo 0 e trava ao salvar. DT vem de `shared/regras/npc`; exibe valor base e
+zero, desliga as cinco linhas e só avisa sobre recursos em edição. FormGroup, limites por
+categoria, snapshots, PUT, permissões e eventos existentes preservados. O chip opcional de
+fórmula foi perguntado, mas não houve resposta; ficou a apresentação mínima com DT no
+tooltip. Criatura preservada; unificação futura em `I-048`. DESIGN e MEMORY apontam o
+primitivo; I-047 aponta a spec em `done/`; próxima task `m4-19`.
+
+**Verificado.** 24 pares antes/depois do Jogador com **zero pixels diferentes**, nos quatro
+viewports (1920×1080, 960×1080, 1366×768, 360×800), fichas base/estados, mestre leitura/
+edição e leitor; Maestria, lesão, modificador +4/-2 e dados +2/-1 cobertos. Seus 164 testes
+permanecem intactos. NPC Civil/Veterano × mestre/leitor × quatro viewports: leitura,
+tooltip hover/foco/toque, edição válida/limite, salvando, erro e histórico aberto. GET
+depois de salvar muda somente Destreza, conservando todo o restante de dados. Leitor não
+tem lápis. Alvos móveis ≥44px; nenhum overflow/erro de execução. Agente principal
+inspecionou pessoalmente capturas da UI real: mesma densidade/hierarquia/controles do
+análogo, contraste/foco presentes, sem divergência final. Corrigidas encapsulação/tamanho
+compacto e expectativas de foco/erro antes do gate final; captura do tooltip repetida
+após sua transição terminar. Revisão independente sem achado concreto.
+
+Testes focados finais **243/243** (205 da task + 38 feed); suíte ampla: shared **1073/1073**,
+backend **953 passaram/1 falhou/1 pulado**, frontend **2925 passaram/1 falhou**. Falhas
+externas separadas: `P-095` já registrado (empate de datas no feed); novo `P-096`
+(mock/expectativa criam datas separadas por 1ms). Ambos os arquivos intocados, specs
+isolados passaram (38 feed/16 backend); continuam abertos, sem correção fora do recorte.
+Lint raiz executado (shared/backend, inclusive tsc, limpos); erro de variável de teste não
+usada corrigido e frontend reexecutado: zero erros, 26404 warnings de legado; três TS novos
+sem warnings. Build frontend passou, warning de bundle 556,39kB acima de 450kB, budget
+inalterado. Registros temporários (campanha 33, fichas 181–185) removidos por soft delete
+depois dos gates; usuários locais preexistentes preservados. Nenhum gate da task pendente.
+Após autorização do autor, removidos scripts, logs e cópias temporárias da verificação;
+preservados o relatório e as evidências selecionadas para auditoria.
+
+
 ## 2026-10-05 — Dado na conta da quantidade de dados: `(1d6)d20` passa a rolar
 
 **O que mudou.** Pedido do autor, sem spec: `(1d6)d20` dava "Fonte desconhecida "d"" porque a conta de quantidade (I-041)

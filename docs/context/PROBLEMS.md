@@ -29,6 +29,16 @@
 
 ## Ativos
 
+### P-096 — Teste de listagem de rolagens compara dois instantes do relógio · `ABERTO` · backend/testes
+
+- **Sintoma:** `rolagem.service.spec.ts` › "m8-02: aceita ESPECTADOR" falha intermitentemente
+  apenas em `createdDate` (diferença de 1 ms); execução isolada passa (16/16).
+- **Causa:** o mock retorna `[criarResumo()]` e a expectativa chama `criarResumo()` novamente;
+  a fixture usa `new Date().toISOString()` em cada chamada. Arquivo intocado pela `m4-18`.
+- **Contorno:** rodar o spec isolado. **Correção:** data fixa na fixture ou reutilizar o resumo
+  que alimentou o mock na expectativa.
+- **Desde:** 2026-10-05, encontrado no gate amplo da `m4-18`; relógio real já presente no teste.
+
 ### P-095 — Teste de reconexão do feed é intermitente por empate de milissegundo · `ABERTO` · frontend/testes
 
 - **Sintoma:** `campanha-detalhe-dados.service.spec.ts` › "reconexao$ traz uma rolagem feita durante a queda para o

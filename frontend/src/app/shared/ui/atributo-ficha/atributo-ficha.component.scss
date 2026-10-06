@@ -1,0 +1,247 @@
+@use "tema/breakpoints" as bp;
+
+// m4-18: espaços fora da escala são os valores medidos do Jogador aprovado (7/6/3px).
+// Preservados na extração para garantir diferença visual zero; não são nova escala.
+@mixin alvo-de-toque($posicionar: true) {
+    @include bp.mobile {
+        @if $posicionar {
+            position: relative;
+        }
+
+        &::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: bp.$alvo-toque;
+            height: bp.$alvo-toque;
+        }
+    }
+}
+
+.ficha-atributo__identidade {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+:host {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 7px 6px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+
+    // Dadinho de rolar teste (m3-22): sempre no canto superior direito do box, discreto até o
+    // hover/foco. ui-30: `app-botao-icone[tamanho="mini"]` — cor/hover já são dele; só sobram
+    // posição e tamanho.
+    .ficha-atributo__rolar {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        width: 22px;
+        height: 22px;
+        font-size: 13px;
+        color: var(--text-mute);
+
+        // `app-botao-icone[tamanho="mini"]` infla o próprio host pra 44×44 no mobile (piso de toque
+        // — ver `:host` em `botao-icone.component.scss`); `min-width`/`min-height` viram um piso que
+        // o `width`/`height` de 22px acima não derruba, então o desenho crescia sem mudar a âncora
+        // (top/right), e o dadinho ficava boiando longe do canto (centro do host inflado), não
+        // encostado nele. Aqui o desenho volta a 22×22 e ganha a área de toque como pseudo-elemento
+        // (`alvo-de-toque($posicionar: false)`) sem mudar a âncora — sempre no canto superior
+        // direito, em qualquer viewport.
+        @include bp.mobile {
+            min-width: 22px;
+            min-height: 22px;
+        }
+
+        @include alvo-de-toque($posicionar: false);
+    }
+
+    .ficha-atributo__abrev {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-family: var(--font-mono);
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-mute);
+
+        // Hover/foco revela a DT do atributo (m3-55) — mesmo sinal visual de `.ficha-barra__rotulo--dica`
+        // (Vida/Energia): sublinhado pontilhado + cursor de ajuda avisam que há mais info ali.
+        &--dica {
+            cursor: help;
+            text-decoration: underline dotted var(--text-mute);
+            text-underline-offset: 3px;
+            border-radius: var(--radius-tight);
+
+            // A regra global de foco (`_base.scss`) só cobre `a`/`button` — este rótulo precisa do
+            // próprio tratamento por ser focável via `tabindex` sem ser um controle nativo.
+            &:focus-visible {
+                outline: 2px solid var(--accent-border);
+                outline-offset: 2px;
+            }
+        }
+    }
+
+    .ficha-atributo__valor {
+        display: inline-flex;
+        align-items: baseline;
+        justify-content: center;
+        gap: 4px;
+        font-family: var(--font-mono);
+        font-size: var(--atributo-valor-tamanho, 22px);
+        font-weight: 700;
+        color: var(--text);
+        line-height: 1;
+    }
+
+    // Penalidade de lesão sobre o atributo ("−N"): sinal em accent ao lado do valor efetivo.
+    .ficha-atributo__lesao {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--accent);
+        line-height: 1;
+    }
+
+    // Box do atributo com Maestria: borda accent discreta.
+    @at-root :host(.ficha-atributo--maestria) {
+        border-color: var(--accent-border);
+    }
+
+    // Box lesionado (efetivo < base): leve tinta accent para sinalizar a penalidade em jogo.
+    @at-root :host(.ficha-atributo--lesionado) {
+        background: color-mix(in srgb, var(--accent) 6%, var(--surface-2));
+    }
+
+    .ficha-atributo__stepper {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        width: 100%;
+    }
+
+    // Modificador de teste — envolve o texto só-leitura na grade (glance) ou o
+    // `app-step-input[digitavel=false]` na edição, mesma caixa nos dois modos. `font-size` menor
+    // que o corpo pra escalar o ícone (`app-icone`, 1.15em) junto — sem isso ele herda o tamanho
+    // do card e fica grande demais perto do stepper mini. `width: 100%` + `justify-content: center`
+    // centraliza o grupo ícone+stepper na largura da caixa, e não só o bloco como um todo (que já
+    // saía centralizado pelo `align-items` da caixa, mas com o ícone puxando o conjunto pra esquerda
+    // visualmente).
+    .ficha-atributo__modificador {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        width: 100%;
+        font-size: 10px;
+        color: var(--text-dim);
+    }
+
+    .ficha-atributo__mod-valor {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        line-height: 1;
+        font-weight: 700;
+        color: var(--text-mute);
+        min-width: 17px;
+        text-align: center;
+
+        &--ativo {
+            color: var(--accent);
+        }
+
+        // Acompanha o crescimento do stepper no mobile — 11px ficava perdido ao lado de um botão 40px.
+        @include bp.mobile {
+            min-width: 22px;
+        }
+    }
+
+    // Ajuste manual de dados (m3-6x): passo -/+ que soma na CONTAGEM de dados do pool, não no
+    // atributo nem no resultado — mesmo tratamento visual do `__modificador`, só com um ícone de
+    // dado pra não confundir as duas linhas (uma soma no resultado, a outra na quantidade de dados).
+    .ficha-atributo__dados {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        width: 100%;
+        font-size: 10px;
+        color: var(--text-dim);
+    }
+
+    // Badge de leitura (só renderizado quando há ajuste ativo — ver template) — mesmo tratamento
+    // discreto do `__lesao`, com o ícone de dado pra diferenciar da penalidade de lesão.
+    .ficha-atributo__dados-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--accent);
+        line-height: 1;
+
+        app-icone {
+            width: 10px;
+            height: 10px;
+        }
+    }
+
+    // Estrelas de Maestria flanqueando a abreviação do atributo (★ PON ★).
+    .ficha-atributo__estrela {
+        font-size: 10px;
+        line-height: 1;
+        color: var(--accent);
+    }
+
+    // Alvo de Maestria (edição): estrela togglável, só habilitada com 6+.
+    .ficha-atributo__maestria {
+        font-family: var(--font-mono);
+        font-size: 13px;
+        line-height: 1;
+        padding: 2px 6px;
+        color: var(--text-mute);
+        background: transparent;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        cursor: pointer;
+        transition:
+            color 0.15s ease,
+            border-color 0.15s ease,
+            background-color 0.15s ease;
+
+        &:hover:not(:disabled) {
+            color: var(--accent);
+            border-color: var(--accent-border);
+        }
+
+        &--ativa {
+            color: var(--accent);
+            border-color: var(--accent);
+            background: var(--accent-dim);
+        }
+
+        &:disabled {
+            opacity: 0.3;
+            cursor: default;
+        }
+    }
+}
+
+:host(.ficha-atributo--edicao) {
+    // A regra compacta do Jogador já reduzia o gap de edição de 7 para 3px.
+    gap: 3px;
+}
+.ficha-atributo__maestria {
+    @include alvo-de-toque;
+}

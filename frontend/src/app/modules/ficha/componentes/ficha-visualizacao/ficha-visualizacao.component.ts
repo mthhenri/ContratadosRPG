@@ -1,3 +1,4 @@
+import { AtributoFicha } from "../../../../shared/ui/atributo-ficha/atributo-ficha.component";
 import { IMAGEM_MIMES_ACCEPT, IMAGEM_MIMES_PERMITIDOS } from '@contratados-rpg/shared/validators';
 import { NgTemplateOutlet } from '@angular/common';
 import {
@@ -366,6 +367,7 @@ export interface AjusteClasse {
 @Component({
   selector: 'app-ficha-visualizacao',
   imports: [
+    AtributoFicha,
     NgTemplateOutlet,
     ReactiveFormsModule,
     HoldRepeat,

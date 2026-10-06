@@ -29,10 +29,10 @@
 
 ### I-047 — Ladrilho de atributo do NPC igual ao da Criatura · frontend/ficha
 
-- **Promovida em 2026-10-05** a `docs/specs/backlog/m4-18-ficha-npc-atributos-como-jogador.spec.md`: o autor pediu que os
+- **Promovida em 2026-10-05** a `docs/specs/done/m4-18-ficha-npc-atributos-como-jogador.spec.md`: o autor pediu que os
   atributos do NPC sejam exibidos **iguais aos do Jogador** (a ideia original citava a Criatura). A spec extrai o ladrilho do
   Jogador para `app-atributo-ficha` (o NPC usa o mesmo, com linhas opcionais); a rolagem/modificador/dados do NPC viraram a
-  `m4-19`; **unificar a Criatura** ao mesmo ladrilho segue como ideia a abrir quando a `m4-18` fechar.
+  `m4-19`; **unificar a Criatura** ao mesmo ladrilho está na `I-048`.
 
 ### I-041 — Montador de rolagem enxuto: ações base + guias · frontend/rolagem
 
@@ -234,6 +234,17 @@
   só Chromium) continua descartada como via principal; pode voltar como upgrade opcional.
 
 ## Abertas
+
+### I-048 — Unificar o ladrilho de atributo da Criatura · frontend/ficha
+
+- **Ideia:** consumir `app-atributo-ficha` também na Criatura, hoje com receita própria
+  `criatura__atributo-card`, quando houver spec dedicada para mapear sua edição e estados.
+- **Origem:** decisão de escopo da `m4-18` (2026-10-05), que extraiu o ladrilho do Jogador e o
+  adotou no NPC sem migrar a Criatura.
+- **Por quê:** reduzir a receita visual duplicada, conservando a mecânica própria de
+  Modificador de quatro níveis e o comportamento aprovado da Criatura.
+- **Custo aparente:** frontend, adaptação dos controles projetados e regressão visual antes/
+  depois; não pressupõe alteração de regra, DTO ou persistência.
 
 ### I-046 — Imagem de registro no guia de criação de NPC · frontend/ficha
 

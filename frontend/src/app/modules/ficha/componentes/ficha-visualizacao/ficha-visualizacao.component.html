@@ -1145,280 +1145,123 @@
                                             grupo.rotulo
                                         }}</span>
                                         @if (editandoAtributos()) {
-                                            <!-- Edição reusa a mesma caixa da leitura (`.ficha-atributo`), a pedido: os três
-                     valores editáveis (atributo, modificador de teste, dados) viram steppers
-                     `app-step-input[digitavel=false]` dentro do mesmo corpo, no lugar dos textos
-                     estáticos — a Maestria muda de estrela decorativa para botão de alternância. -->
                                             <div
                                                 class="ficha-atributos__grade ficha-atributos__grade--edicao"
                                             >
                                                 @for (campo of grupo.campos; track campo.chave) {
-                                                    <div
-                                                        class="ficha-atributo ficha-atributo--edicao"
+                                                    <app-atributo-ficha
+                                                        [sigla]="campo.abrev"
+                                                        [nome]="campo.nome"
+                                                        [valor]="
+                                                            rascunhoAtributos()?.[campo.chave] ?? 0
+                                                        "
+                                                        [dt]="dtAtributo(campo.chave)"
+                                                        [editando]="true"
+                                                        [dicaEdicao]="campo.nome"
+                                                        [maestria]="
+                                                            rascunhoMaestria() === campo.chave
+                                                        "
+                                                        [maestriaHabilitada]="
+                                                            maestriaHabilitada(campo.chave)
+                                                        "
+                                                        [dicaMaestria]="
+                                                            'Maestria em ' +
+                                                            campo.nome +
+                                                            ' — requer ' +
+                                                            limiteMaestria +
+                                                            '+ pontos'
+                                                        "
+                                                        (maestriaAlternada)="
+                                                            alternarMaestria(campo.chave)
+                                                        "
                                                     >
-                                                        <div class="ficha-atributo__identidade">
-                                                            <button
-                                                                class="ficha-atributo__maestria"
-                                                                type="button"
-                                                                [class.ficha-atributo__maestria--ativa]="
-                                                                    rascunhoMaestria() ===
+                                                        <app-step-input
+                                                            atributoValor
+                                                            [valorExterno]="
+                                                                rascunhoAtributos()?.[
                                                                     campo.chave
-                                                                "
-                                                                [disabled]="
-                                                                    !maestriaHabilitada(campo.chave)
-                                                                "
-                                                                [attr.aria-label]="
-                                                                    'Maestria em ' + campo.nome
-                                                                "
-                                                                [appTooltip]="
-                                                                    'Maestria em ' +
-                                                                    campo.nome +
-                                                                    ' — requer ' +
-                                                                    limiteMaestria +
-                                                                    '+ pontos'
-                                                                "
-                                                                (click)="
-                                                                    alternarMaestria(campo.chave)
-                                                                "
-                                                            >
-                                                                ★
-                                                            </button>
-                                                            <span
-                                                                class="ficha-atributo__abrev"
-                                                                [appTooltip]="campo.nome"
-                                                                >{{ campo.abrev }}</span
-                                                            >
-                                                        </div>
-
-                                                        <div class="ficha-atributo__stepper">
-                                                            <app-step-input
-                                                                [valorExterno]="
-                                                                    rascunhoAtributos()?.[
-                                                                        campo.chave
-                                                                    ] ?? 0
-                                                                "
-                                                                [digitavel]="false"
-                                                                tamanho="grande"
-                                                                variante="discreto"
-                                                                [ariaRotulo]="campo.nome"
-                                                                (valorAlterado)="
-                                                                    definirAtributoRascunho(
-                                                                        campo.chave,
-                                                                        $event
-                                                                    )
-                                                                "
-                                                            />
-                                                        </div>
-
-                                                        <!-- Modificador de teste (soma na fórmula rolada, ex.: Amplificador aplicado) —
-                         só editável aqui, na mesma tela de edição dos atributos. -->
-                                                        <div
-                                                            class="ficha-atributo__modificador"
-                                                            [appTooltip]="
-                                                                'Modificador de teste de ' +
+                                                                ] ?? 0
+                                                            "
+                                                            [digitavel]="false"
+                                                            tamanho="grande"
+                                                            variante="discreto"
+                                                            [ariaRotulo]="campo.nome"
+                                                            (valorAlterado)="
+                                                                definirAtributoRascunho(
+                                                                    campo.chave,
+                                                                    $event
+                                                                )
+                                                            "
+                                                        />
+                                                        <app-step-input
+                                                            atributoModificador
+                                                            [valorExterno]="
+                                                                rascunhoModificadoresTeste()?.[
+                                                                    campo.chave
+                                                                ] ?? 0
+                                                            "
+                                                            [digitavel]="false"
+                                                            [comSinal]="true"
+                                                            tamanho="micro"
+                                                            variante="discreto"
+                                                            [ariaRotulo]="
+                                                                'modificador de teste de ' +
                                                                 campo.nome
                                                             "
-                                                        >
-                                                            <app-icone [nome]="'modificador'" />
-                                                            <app-step-input
-                                                                [valorExterno]="
-                                                                    rascunhoModificadoresTeste()?.[
-                                                                        campo.chave
-                                                                    ] ?? 0
-                                                                "
-                                                                [digitavel]="false"
-                                                                [comSinal]="true"
-                                                                tamanho="micro"
-                                                                variante="discreto"
-                                                                [ariaRotulo]="
-                                                                    'modificador de teste de ' +
-                                                                    campo.nome
-                                                                "
-                                                                (valorAlterado)="
-                                                                    definirModificadorTesteRascunho(
-                                                                        campo.chave,
-                                                                        $event
-                                                                    )
-                                                                "
-                                                            />
-                                                        </div>
-
-                                                        <!-- Ajuste manual de dados: quantos D20 o atributo rola nos testes/rolagens,
-                         sem alterar o valor base (Energia/Deslocamento/Vida/Maestria intocados). -->
-                                                        <div
-                                                            class="ficha-atributo__dados"
-                                                            [appTooltip]="
-                                                                'Ajuste manual de dados de ' +
-                                                                campo.nome
+                                                            (valorAlterado)="
+                                                                definirModificadorTesteRascunho(
+                                                                    campo.chave,
+                                                                    $event
+                                                                )
                                                             "
-                                                        >
-                                                            <app-icone [nome]="'d20'" />
-                                                            <app-step-input
-                                                                [valorExterno]="
-                                                                    rascunhoDadosTeste()?.[
-                                                                        campo.chave
-                                                                    ] ?? 0
-                                                                "
-                                                                [digitavel]="false"
-                                                                [comSinal]="true"
-                                                                tamanho="micro"
-                                                                variante="discreto"
-                                                                [ariaRotulo]="
-                                                                    'dados de teste de ' +
-                                                                    campo.nome
-                                                                "
-                                                                (valorAlterado)="
-                                                                    definirDadosTesteRascunho(
-                                                                        campo.chave,
-                                                                        $event
-                                                                    )
-                                                                "
-                                                            />
-                                                        </div>
-                                                    </div>
+                                                        />
+                                                        <app-step-input
+                                                            atributoDados
+                                                            [valorExterno]="
+                                                                rascunhoDadosTeste()?.[
+                                                                    campo.chave
+                                                                ] ?? 0
+                                                            "
+                                                            [digitavel]="false"
+                                                            [comSinal]="true"
+                                                            tamanho="micro"
+                                                            variante="discreto"
+                                                            [ariaRotulo]="
+                                                                'dados de teste de ' + campo.nome
+                                                            "
+                                                            (valorAlterado)="
+                                                                definirDadosTesteRascunho(
+                                                                    campo.chave,
+                                                                    $event
+                                                                )
+                                                            "
+                                                        />
+                                                    </app-atributo-ficha>
                                                 }
                                             </div>
                                         } @else {
                                             <div class="ficha-atributos__grade">
                                                 @for (campo of grupo.campos; track campo.chave) {
-                                                    <div
-                                                        class="ficha-atributo"
-                                                        [class.ficha-atributo--maestria]="
-                                                            maestriaAtual() === campo.chave
+                                                    <app-atributo-ficha
+                                                        [sigla]="campo.abrev"
+                                                        [nome]="campo.nome"
+                                                        [valor]="atributosEfetivos()[campo.chave]"
+                                                        [dt]="dtAtributo(campo.chave)"
+                                                        [maestria]="maestriaAtual() === campo.chave"
+                                                        [lesao]="penalidadesLesao()[campo.chave]"
+                                                        [dicaLesao]="
+                                                            'Base ' +
+                                                            atributos()[campo.chave] +
+                                                            ' · lesão −' +
+                                                            penalidadesLesao()[campo.chave]
                                                         "
-                                                        [class.ficha-atributo--lesionado]="
-                                                            penalidadesLesao()[campo.chave] > 0
+                                                        [modificador]="
+                                                            modificadorTeste(campo.chave)
                                                         "
-                                                    >
-                                                        @if (podeRolar()) {
-                                                            <button
-                                                                app-botao-icone
-                                                                tamanho="mini"
-                                                                class="ficha-atributo__rolar"
-                                                                type="button"
-                                                                [attr.aria-label]="
-                                                                    'Rolar teste de ' + campo.nome
-                                                                "
-                                                                [appTooltip]="
-                                                                    'Rolar teste de ' + campo.nome
-                                                                "
-                                                                (click)="rolarTesteAtributo(campo)"
-                                                            >
-                                                                <app-icone [nome]="'d20'" />
-                                                            </button>
-                                                        }
-                                                        <!-- Abreviação = o "rótulo" do atributo — hover/foco revela o nome + a DT dele
-                           (shared/regras/dt, m3-55), mesma base de `rolarTesteAtributo`. Único
-                           `[appTooltip]` do box: antes a `div` também tinha um (só `campo.nome`) —
-                           como `pointerenter` não borbulha mas dispara em todo ancestro cujo "tem o
-                           ponteiro dentro" virou verdadeiro, os dois abriam juntos ao passar o mouse
-                           bem na abreviação (dois balões sobrepostos). Focável (tabindex) porque um
-                           `<span>` sem isso nunca recebe foco por teclado — sem tabindex o tooltip
-                           nunca abriria via `focusin`. -->
-                                                        <span
-                                                            class="ficha-atributo__abrev ficha-atributo__abrev--dica"
-                                                            tabindex="0"
-                                                            [appTooltip]="
-                                                                campo.nome +
-                                                                ' — DT ' +
-                                                                dtAtributo(campo.chave)
-                                                            "
-                                                            [attr.aria-label]="
-                                                                campo.nome +
-                                                                ' — DT ' +
-                                                                dtAtributo(campo.chave)
-                                                            "
-                                                        >
-                                                            @if (maestriaAtual() === campo.chave) {
-                                                                <span
-                                                                    class="ficha-atributo__estrela"
-                                                                    aria-hidden="true"
-                                                                    >★</span
-                                                                >
-                                                            }
-                                                            {{ campo.abrev }}
-                                                            @if (maestriaAtual() === campo.chave) {
-                                                                <span
-                                                                    class="ficha-atributo__estrela"
-                                                                    aria-hidden="true"
-                                                                    >★</span
-                                                                >
-                                                            }
-                                                        </span>
-                                                        <span class="ficha-atributo__valor">
-                                                            {{ atributosEfetivos()[campo.chave] }}
-                                                            @if (
-                                                                penalidadesLesao()[campo.chave] > 0
-                                                            ) {
-                                                                <span
-                                                                    class="ficha-atributo__lesao"
-                                                                    [appTooltip]="
-                                                                        'Base ' +
-                                                                        atributos()[campo.chave] +
-                                                                        ' · lesão −' +
-                                                                        penalidadesLesao()[
-                                                                            campo.chave
-                                                                        ]
-                                                                    "
-                                                                >
-                                                                    −{{
-                                                                        penalidadesLesao()[
-                                                                            campo.chave
-                                                                        ]
-                                                                    }}
-                                                                </span>
-                                                            }
-                                                        </span>
-                                                        <!-- Modificador de teste — só leitura aqui; a edição fica atrás do lápis de
-                           Atributos. Linha própria (não a mesma da lesão: são selos parecidos —
-                           mono, negrito, accent quando ativos — e colados no valor ficam
-                           indistinguíveis). Sempre visível, inclusive em +0. -->
-                                                        <span
-                                                            class="ficha-atributo__mod-valor"
-                                                            [class.ficha-atributo__mod-valor--ativo]="
-                                                                modificadorTeste(campo.chave) !== 0
-                                                            "
-                                                            [appTooltip]="
-                                                                'Modificador de teste de ' +
-                                                                campo.nome
-                                                            "
-                                                        >
-                                                            {{
-                                                                modificadorTeste(campo.chave) >= 0
-                                                                    ? "+"
-                                                                    : ""
-                                                            }}{{ modificadorTeste(campo.chave) }}
-                                                        </span>
-                                                        <!-- Ajuste manual de dados — só aparece quando há algo ativo (±N); a maioria
-                           das fichas nunca mexe nisso, então fica invisível por padrão em vez de
-                           somar mais um elemento sempre-visível ao card. -->
-                                                        @if (dadosTesteDe(campo.chave) !== 0) {
-                                                            <span
-                                                                class="ficha-atributo__dados-badge"
-                                                                [appTooltip]="
-                                                                    'Ajuste manual de dados: ' +
-                                                                    (dadosTesteDe(campo.chave) > 0
-                                                                        ? '+'
-                                                                        : '') +
-                                                                    dadosTesteDe(campo.chave)
-                                                                "
-                                                                [attr.aria-label]="
-                                                                    'Ajuste manual de dados: ' +
-                                                                    (dadosTesteDe(campo.chave) > 0
-                                                                        ? '+'
-                                                                        : '') +
-                                                                    dadosTesteDe(campo.chave)
-                                                                "
-                                                            >
-                                                                <app-icone [nome]="'d20'" />
-                                                                {{
-                                                                    dadosTesteDe(campo.chave) > 0
-                                                                        ? "+"
-                                                                        : ""
-                                                                }}{{ dadosTesteDe(campo.chave) }}
-                                                            </span>
-                                                        }
-                                                    </div>
+                                                        [dados]="dadosTesteDe(campo.chave)"
+                                                        [podeRolar]="podeRolar()"
+                                                        (rolar)="rolarTesteAtributo(campo)"
+                                                    />
                                                 }
                                             </div>
                                         }
@@ -2312,7 +2155,9 @@
                                             variante="primario"
                                             tamanho="pequeno"
                                             type="button"
-                                            (click)="confirmarHistoria(editorHistoria.confirmarValor())"
+                                            (click)="
+                                                confirmarHistoria(editorHistoria.confirmarValor())
+                                            "
                                         >
                                             Salvar
                                         </button>

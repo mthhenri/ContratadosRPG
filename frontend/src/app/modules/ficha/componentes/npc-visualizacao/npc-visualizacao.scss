@@ -67,24 +67,6 @@
             outline: none;
         }
     }
-    &__atributos {
-        display: grid;
-        grid-template-columns: repeat(5, minmax(0, 1fr));
-        gap: var(--space-8);
-    }
-    &__subtitulo {
-        margin: 0;
-        font: 600 10px/1.5 var(--font-mono);
-        letter-spacing: var(--tracking-label);
-        text-transform: uppercase;
-        color: var(--text-dim);
-    }
-    &__subtitulo--centro {
-        text-align: center;
-    }
-    &__atributos app-stat {
-        text-align: center;
-    }
     &__texto {
         margin: 0;
         font: 14px/1.65 var(--font-sans);
@@ -118,14 +100,6 @@
         }
         &__campos {
             grid-template-columns: 1fr;
-        }
-        &__atributos {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-    }
-    @container (max-width: 570px) {
-        &__atributos {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
         }
     }
 }
