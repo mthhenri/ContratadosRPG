@@ -495,7 +495,8 @@ uma linha `--positive` no topo ("N versões novas desde a sua última visita"). 
   `contorno` no fim do trilho direito (`sticky`); abaixo de 1240px, `app-botao-icone` flutuante no canto
   inferior direito (`sticky` no fim da coluna — `fixed` não serve: o contêiner de container query contém
   descendentes fixos). Ícone `chevron` girado 180°. O clique rola ao topo, limpa o fragmento da URL
-  (`replaceUrl`) e zera o destaque do sumário.
+  (`replaceUrl`) e zera o destaque do sumário. Voltar ao topo **rolando** (de volta a ~0px depois de ter saído) faz o mesmo
+  com o fragmento: um F5 não leva de volta ao capítulo.
 
 ### Sumário "Nesta versão" (`sumario-patchnote`, pn-09)
 

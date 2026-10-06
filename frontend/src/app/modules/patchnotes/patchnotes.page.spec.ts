@@ -505,6 +505,22 @@ describe('PatchnotesPage', () => {
       expect(raiz().querySelector('.patchnotes__trilho-direito [aria-current="location"]')).toBeNull();
     });
 
+    it('voltar ao topo rolando também limpa o fragmento, para o F5 não levar de volta', async () => {
+      await abrir('/patchnotes/1.1.0#cenas');
+      await responderIndice(TRES_VERSOES);
+      await responderNota(notaTres('1.1.0', COM_RESUMO));
+      // Abrir já no topo, antes de rolar até o capítulo, não conta como "voltar".
+      rolarPara(0);
+      await harness.fixture.whenStable();
+      expect(TestBed.inject(Router).url).toBe('/patchnotes/1.1.0#cenas');
+
+      rolarPara(900);
+      rolarPara(0);
+      await harness.fixture.whenStable();
+
+      expect(TestBed.inject(Router).url).toBe('/patchnotes/1.1.0');
+    });
+
     it('o botão flutuante faz o mesmo', async () => {
       await abrir('/patchnotes/1.1.0#cenas');
       await responderIndice(TRES_VERSOES);

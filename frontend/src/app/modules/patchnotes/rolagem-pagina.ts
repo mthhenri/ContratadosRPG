@@ -23,3 +23,25 @@ export function rolarAoTopo(suave: boolean): void {
   const reduzMovimento = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
   window.scrollTo({ top: 0, behavior: suave && !reduzMovimento ? 'smooth' : 'auto' });
 }
+
+/**
+ * Avisa quando a leitura **volta** ao topo da página depois de ter saído dele (pn-11). Só conta a volta:
+ * abrir a página já no topo (ex.: um link com fragmento, antes de rolar até ele) não dispara. Mesmas
+ * regras de injeção e de ciclo de vida de `sinalRolagemPassou`.
+ */
+export function aoVoltarAoTopo(aoVoltar: () => void): void {
+  const destroyRef = inject(DestroyRef);
+  afterNextRender(() => {
+    let saiu = false;
+    const verificar = (): void => {
+      if (window.scrollY > 50) {
+        saiu = true;
+      } else if (saiu && window.scrollY <= 2) {
+        saiu = false;
+        aoVoltar();
+      }
+    };
+    window.addEventListener('scroll', verificar, { passive: true });
+    destroyRef.onDestroy(() => window.removeEventListener('scroll', verificar));
+  });
+}

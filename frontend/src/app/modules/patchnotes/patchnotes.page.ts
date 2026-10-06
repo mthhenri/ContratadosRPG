@@ -47,7 +47,7 @@ import {
   versoesNovasPatchnote,
 } from './patchnote-formato';
 import { PatchnoteService } from './patchnote.service';
-import { rolarAoTopo, sinalRolagemPassou } from './rolagem-pagina';
+import { aoVoltarAoTopo, rolarAoTopo, sinalRolagemPassou } from './rolagem-pagina';
 import { SumarioPatchnote } from './sumario-patchnote/sumario-patchnote.component';
 
 type EstadoNota = 'carregando' | 'ok' | 'inexistente' | 'falha';
@@ -238,6 +238,8 @@ export class PatchnotesPage {
 
   constructor() {
     this.carregarIndice();
+    // Voltou ao topo rolando: o fragmento da URL deixa de valer (um F5 não deve levar de volta ao capítulo).
+    aoVoltarAoTopo(() => this.limparFragmento());
     this.destroyRef.onDestroy(() => {
       this.assinaturaNota?.unsubscribe();
       this.desconectarObservador?.();
@@ -315,11 +317,16 @@ export class PatchnotesPage {
    * destaque do sumário — o observador fica quieto durante a subida para não repintar capítulos.
    */
   protected voltarAoTopo(): void {
+    this.observadorSilenciadoAte = performance.now() + 900;
+    rolarAoTopo(true);
+    this.limparFragmento();
+  }
+
+  /** Tira o fragmento da URL (sem empilhar histórico) e zera o destaque do sumário. */
+  private limparFragmento(): void {
     const versao = this.nota()?.versao;
     this.destinoRolado = null;
     this.capituloAtivo.set(null);
-    this.observadorSilenciadoAte = performance.now() + 900;
-    rolarAoTopo(true);
     if (versao && this.fragmento()) {
       void this.router.navigate(['/patchnotes', versao], { replaceUrl: true });
     }
