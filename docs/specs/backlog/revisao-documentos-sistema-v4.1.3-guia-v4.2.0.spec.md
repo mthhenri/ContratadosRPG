@@ -38,7 +38,7 @@ Este arquivo coordena tasks; não é uma implementação única.
 | [P-101-02](../done/p-101-02-criatura-dt-e-modificadores.spec.md) | DT e consumidores do modificador fixo | Concluída; guia/ficha/leitor e preservação de snapshots |
 | [P-101-03](../done/p-101-03-criatura-referencias-e-cadencia.spec.md) | Exemplos/referências; Cadência já compatível | Concluída; algoritmo preservado e propostas editoriais registradas |
 | [P-102](../done/p-102-referencias-documentos-vigentes.spec.md) | README/schema/design/specs operacionais e comentários | Concluída; correspondência de fontes, histórico preservado e pipeline de PDFs conferido |
-| [NPC ataques/equipamentos](../done/npc-ataques-e-equipamentos-guia-v4.2.0.spec.md) | Investigação concluída — [matriz e decisões](../../reviews/npc-ataques-equipamentos-investigacao.md) | Falta decisão do autor (faixa de Patente Equivalente por Categoria) antes de gerar tasks; não expandir m4-19 |
+| [NPC ataques/equipamentos](../done/npc-ataques-e-equipamentos-guia-v4.2.0.spec.md) | Investigação concluída — [matriz e decisões](../../reviews/npc-ataques-equipamentos-investigacao.md) | Decisões resolvidas; spec executável [m4-20](m4-20-npc-ataques-e-equipamentos.spec.md) preparada, depende da m4-19 |
 
 ## Cobertura da comparação dos documentos
 

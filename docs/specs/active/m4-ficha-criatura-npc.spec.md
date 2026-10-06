@@ -6,9 +6,10 @@
 > planejamento visual revisado em 2026-09-30; contrato, motor e backend NPC concluídos
 > em `m4-05`/`m4-06`/`m4-07`.
 
-> **Adequações ao livro corrente:** P-100 e P-101/01/02/03 concluídas; m4-19 ativa
-> ainda implementará Competências/testes de NPC, e Ataques/Equipamentos têm investigação
-> própria. O escopo original abaixo não equivale a conformidade integral com Guia v4.2.0.
+> **Adequações ao livro corrente:** P-100 e P-101/01/02/03 concluídas; m4-19 ativa ainda
+> implementará Competências/testes de NPC. Ataques/Equipamentos: investigação concluída,
+> decisões do autor registradas, spec executável preparada em `m4-20` (depende da `m4-19`).
+> O escopo original abaixo não equivale a conformidade integral com Guia v4.2.0.
 
 > **Decisão (ex-pendência do `m3-10`):** Criatura e NPC seguem a mesma convenção da ficha de
 > jogador — **snapshot na criação + máximos editáveis** (Vida Máxima, Defesa/Bloquear/Esquivar,
@@ -59,6 +60,8 @@ criação do `docs/core/guia_de_mestre-v4.2.0.md`.
 
 `m4-08` (criação) → `m4-08b` (ficha pronta) →
 `m4-09` (listagem/revelação integrada) → `m4-10` (polimento responsivo).
+`m4-19` (Competências/teste de atributo) → `m4-20` (ataques/equipamentos, depende da `m4-19`)
+seguem a segunda revisão do NPC (após `m4-16`/`17`/`18`), fora da ordem original acima.
 
 São quatro tasks restantes, preservando os números originais. `m4-05`/`m4-06`/`m4-07` já
 entregaram contrato, motor e backend de NPC: volume validado pela tabela do guia; cap de Civil

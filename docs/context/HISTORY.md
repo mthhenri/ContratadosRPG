@@ -1,5 +1,20 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-06 — m4-20: spec executável de ataques/equipamentos de NPC preparada
+
+Com as três decisões da investigação resolvidas, escrita `m4-20-npc-ataques-e-equipamentos`
+(`docs/specs/backlog/`) — task do milestone M4, depois da `m4-19`. Contrato: `FichaNpcDadosDto`
+ganha `inventario?: readonly CarrinhoItemDto[]` (reuso do DTO do agente) e
+`patenteEquivalente?: PatenteEnum` (patente escolhida pelo mestre dentro da faixa válida da
+Categoria). Regra pura: tabela `CategoriaNpcEnum → PatenteEnum[]` (fonte do limite de
+modificação, lido direto de `LIMITES_MODIFICACAO` sem Prestígio) e veto de
+Proteções/Explosivos para Civil, reusando a mesma dupla de categorias já decidida para o
+Civil jogador em `civil-guia-criacao`. UI: análogos `ficha-inventario` do jogador e o seletor
+de Competências da `m4-19`. Sem sistema de dinheiro/orçamento para o NPC — o mestre atribui
+equipamento diretamente. Milestone `m4-ficha-criatura-npc` e o guarda-chuva de revisão de
+documentos atualizados para apontar a nova task. Spec preparada; implementação depende de
+autorização própria, como as demais desta fila. Nenhum código alterado nesta rodada.
+
 ## 2026-10-06 — Investigação NPC Ataques/Equipamentos: matriz e decisões para o autor
 
 Spec `npc-ataques-e-equipamentos-guia-v4.2.0` movida de `backlog/` para `active/` e

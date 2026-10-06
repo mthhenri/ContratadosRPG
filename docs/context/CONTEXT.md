@@ -43,11 +43,10 @@
 > NPC (m4-19) pendente; documentação P-102, Criaturas P-101-01/02/03, fixtures P-095/096
 > e documentação P-098 concluídas por autorizações próprias.
 > Ataques/equipamentos NPC: [investigação concluída](../reviews/npc-ataques-equipamentos-investigacao.md)
-> (spec em `done/`) — matriz de reaproveitamento do motor de compras do agente, sem
-> implementação. Autor decidiu: Categoria Civil do NPC segue a mesma restrição de categoria
-> do Civil jogador (sem Proteções/Explosivos); e, na faixa de Patente Equivalente por
-> Categoria (cada Categoria cobre 2–3 patentes do agente), o mestre escolhe a patente exata
-> por NPC, em vez de um piso/teto fixo. Falta só escrever a spec executável numerada.
+> (spec em `done/`); decisões do autor (Civil segue restrição do Civil jogador; mestre
+> escolhe a Patente Equivalente por NPC dentro da faixa da Categoria) incorporadas na spec
+> executável [`m4-20`](../specs/backlog/m4-20-npc-ataques-e-equipamentos.spec.md), preparada
+> no backlog, depende da `m4-19`, sem implementação ainda.
 > Autor autorizou versionar a preparação documental das specs.
 > [P-095](../specs/done/p-095-fixture-rolagens-feed-deterministica.spec.md) e
 > [P-096](../specs/done/p-096-fixture-resumo-rolagem-deterministica.spec.md) concluídas:
