@@ -30,6 +30,7 @@ import {
   TermoDadoDto,
 } from './rolagem.dtos';
 import { TipoDanoEnum } from '../../enums';
+import { aplicarReducaoCustoEnergia } from '../agente/amplificador';
 import type { FichaAtributosDto, FichaHabilidadeDto, FichaRolagemDto, FichaRolagemPassoDto } from '../../dtos/ficha';
 
 /**
@@ -772,6 +773,7 @@ function rolarInterpretadaUnica(
 export function resolverPreset(dto: PresetResolverDto): PlanoPresetDto {
   const { preset } = dto;
   const habilidadesFicha = dto.habilidades ?? [];
+  const amplificadores = dto.amplificadores ?? [];
 
   // Resolve os nomes de habilidade de um passo nas habilidades da ficha (ignora nomes ausentes).
   const resolverVinculo = (nomes: readonly string[] | undefined): FichaHabilidadeDto[] =>
@@ -799,7 +801,10 @@ export function resolverPreset(dto: PresetResolverDto): PlanoPresetDto {
       formula: passo.formula,
       interpretacao,
       ...(passo.descricao ? { descricao: passo.descricao } : {}),
-      energiaGasta: vinculadas.reduce((soma, habilidade) => soma + (habilidade.custoEnergia ?? 0), 0),
+      energiaGasta: vinculadas.reduce(
+        (soma, habilidade) => soma + aplicarReducaoCustoEnergia(amplificadores, habilidade.custoEnergia ?? 0),
+        0,
+      ),
       energiaVariavel: vinculadas.some((habilidade) => habilidade.custoEnergia === null),
       habilidadesVinculadas: vinculadas.map((habilidade) => habilidade.nome),
       critico: passo.critico ?? false,

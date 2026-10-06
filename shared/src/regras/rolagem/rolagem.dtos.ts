@@ -1,5 +1,6 @@
 import type { FichaAtributosDto, FichaHabilidadeDto, FichaRolagemDto } from '../../dtos/ficha';
 import type { TipoDanoEnum } from '../../enums';
+import type { AmplificadorAplicadoDto } from '../compras';
 
 /**
  * DTOs do motor de rolagem (m3-15; dano tipado m3-18; gramática v3 m3-29; **gramática v4 m3-46**):
@@ -330,6 +331,8 @@ export interface PresetResolverDto {
   readonly proficiencia?: number | null;
   /** Habilidades da ficha — usadas para resolver `preset.habilidades` (nomes) em Energia (m3-31). */
   readonly habilidades?: readonly FichaHabilidadeDto[];
+  /** Amplificadores do inventário — o desconto de `Conservador` reduz o custo de Energia de cada habilidade. */
+  readonly amplificadores?: readonly AmplificadorAplicadoDto[];
 }
 
 /** Um passo do preset já interpretado (m3-21; m3-22). As habilidades **só** contam Energia (efeitos aposentados em m3-31). */

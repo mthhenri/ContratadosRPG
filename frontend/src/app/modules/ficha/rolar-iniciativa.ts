@@ -62,6 +62,7 @@ export function rolarIniciativaDaFicha(dados: FichaJogadorDadosDto): PassoExecut
     proficiencia: calcularProficiencia({ classe: dados.classe, nivel: dados.nivel }),
     nivel: dados.nivel,
     habilidadesDisponiveis: dados.habilidades,
+    amplificadores: dados.inventario.amplificadores,
     indicePasso: 0,
     dadoExtraIniciativa: dadoExtraIniciativaDaFicha(dados),
   });

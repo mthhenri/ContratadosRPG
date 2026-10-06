@@ -560,6 +560,22 @@ describe('presets + runner encadeado — resolverPreset/rolarPasso (m3-21)', () 
     expect(resultado?.grupos).toEqual([{ tipoDano: TipoDanoEnum.FISICO, total: 16 }]);
   });
 
+  it('aplica o desconto de Conservador (sistema-v4.1.0, amplificadores) à energia de cada ocorrência', () => {
+    const preset: FichaRolagemDto = {
+      nome: 'Ataque',
+      formula: '2d8 [Físico]',
+      habilidades: ['Força Bruta', 'Força Bruta'],
+    };
+    const plano = resolverPreset({
+      preset,
+      atributos,
+      habilidades: [forcaBruta],
+      amplificadores: [{ nome: 'Conservador', empilhamentos: 1 }],
+    });
+    expect(plano.passos[0].energiaGasta).toBe(6); // (4 − 1) × 2 ocorrências
+    expect(plano.energiaGasta).toBe(6);
+  });
+
   it('a mesma habilidade repetida no passo soma a energia por ocorrência (multiconjunto; m3-31)', () => {
     const preset: FichaRolagemDto = {
       nome: 'Ataque',

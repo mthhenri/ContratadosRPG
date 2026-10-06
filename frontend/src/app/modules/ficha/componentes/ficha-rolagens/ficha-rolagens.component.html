@@ -460,7 +460,7 @@
                         <span class="ficha-rol__hab-nome">{{ habilidade.nome }}</span>
                         <span class="ficha-rol__hab-custo"
                             >{{
-                                habilidade.custoEnergia === null ? "X" : habilidade.custoEnergia
+                                habilidade.custoEnergia === null ? "X" : custoComDesconto(habilidade.custoEnergia)
                             }}
                             E</span
                         >

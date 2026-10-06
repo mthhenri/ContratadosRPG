@@ -1,4 +1,5 @@
 import type { FichaAtributosDto, FichaHabilidadeDto, FichaRolagemDto } from '@contratados-rpg/shared/dtos/ficha';
+import type { AmplificadorAplicadoDto } from '@contratados-rpg/shared/regras/compras';
 import { resolverPreset, rolarPasso, type ResultadoRolagemDto } from '@contratados-rpg/shared/regras/rolagem';
 
 /**
@@ -32,6 +33,8 @@ export interface ExecutarPassoPresetDto {
   readonly proficiencia: number | null;
   readonly nivel: number;
   readonly habilidadesDisponiveis: readonly FichaHabilidadeDto[];
+  /** Amplificadores do inventário — aplicam o desconto de `Conservador` na Energia debitada. */
+  readonly amplificadores?: readonly AmplificadorAplicadoDto[];
   /** Índice do passo a rolar (0 = primária). */
   readonly indicePasso: number;
   /** Valor de Energia informado pro custo variável (`[X E]`) do preset, se houver. */
@@ -68,6 +71,7 @@ export function executarPassoPreset(dto: ExecutarPassoPresetDto): PassoExecutado
     atributos: dto.atributos,
     proficiencia: dto.proficiencia,
     habilidades: dto.habilidadesDisponiveis,
+    amplificadores: dto.amplificadores,
   });
   const passo = plano.passos[dto.indicePasso];
   if (!passo) {

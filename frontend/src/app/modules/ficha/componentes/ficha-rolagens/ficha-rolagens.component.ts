@@ -10,6 +10,8 @@ import type {
   FichaRolagemDto,
   FichaRolagemPassoDto,
 } from '@contratados-rpg/shared/dtos/ficha';
+import type { AmplificadorAplicadoDto } from '@contratados-rpg/shared/regras/compras';
+import { aplicarReducaoCustoEnergia } from '@contratados-rpg/shared/regras/agente';
 import {
   ABREVIACOES_ATRIBUTO,
   resolverPreset,
@@ -118,6 +120,8 @@ export class FichaRolagens {
   readonly nivel = input<number>(0);
   /** Habilidades da ficha — o pool que cada passo pode anexar (energia + efeitos). */
   readonly habilidadesDisponiveis = input<readonly FichaHabilidadeDto[]>([]);
+  /** Amplificadores do inventário — `Conservador` reduz a Energia das habilidades do preset. */
+  readonly amplificadores = input<readonly AmplificadorAplicadoDto[]>([]);
   /** Dono/mestre edita; para os demais é só leitura + rolar (a página liga por `podeGerenciar`). */
   readonly editavel = input(false);
   /**
@@ -211,8 +215,9 @@ export class FichaRolagens {
     const atributos = this.atributos();
     const proficiencia = this.proficiencia();
     const habilidades = this.habilidadesDisponiveis();
+    const amplificadores = this.amplificadores();
     return this.rolagens().map((preset, indice) => {
-      const plano = resolverPreset({ preset, atributos, proficiencia, habilidades });
+      const plano = resolverPreset({ preset, atributos, proficiencia, habilidades, amplificadores });
       return {
         indice,
         nome: preset.nome,
@@ -222,6 +227,11 @@ export class FichaRolagens {
       };
     });
   });
+
+  /** Custo de Energia já com o desconto de `Conservador` (mesma regra do motor do preset). */
+  protected custoComDesconto(custoEnergia: number): number {
+    return aplicarReducaoCustoEnergia(this.amplificadores(), custoEnergia);
+  }
 
   protected readonly vazio = computed(() => this.rolagens().length === 0);
 
@@ -438,6 +448,7 @@ export class FichaRolagens {
       proficiencia: this.proficiencia(),
       nivel: this.nivel(),
       habilidadesDisponiveis: this.habilidadesDisponiveis(),
+      amplificadores: this.amplificadores(),
       indicePasso,
       energiaVariavel: this.energiaVariavelDe(preset.indice, indicePasso),
       critico,
