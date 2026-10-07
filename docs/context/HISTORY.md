@@ -1,5 +1,27 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-06 — Versão 1.6.0 preparada com patchnote aprovado
+
+O autor aprovou o texto integral da nota e o número 1.6.0 após revisar o rascunho.
+Nota gravada em `docs/patchnotes/1.6.0.md`, cobrindo o bloco de 14 commits pendentes:
+crítico de teste conforme Sistema v4.1.3, livros atuais, Competências e testes privados
+de NPC, equipamentos/Patente Equivalente/ataques e adequações da criação de NPC e Criatura.
+Correções de fixtures e manutenção documental não viraram itens de produto na nota;
+melhorias da página de patchnotes já cobertas na 1.5.0 não foram repetidas.
+
+Versão alterada na raiz e alinhada por `npm run versao:sincronizar` nos três
+workspaces, lock e `shared/src/versao.ts`. Build do shared aprovado; suíte completa
+do shared com 1.152 testes em 68 arquivos aprovada. `npm run patchnotes:publicar --
+--dry-run docs/patchnotes/1.6.0.md` validou formato e índice no armazenamento local,
+sem escrita. `node scripts/ci/publicar-versao.mjs --dry-run`, com GITHUB_SHA do
+checkout, confirmou versão/nota e tag futura v1.6.0; tags anteriores já existentes
+preservadas. Diff revisado e `git diff --check` aprovado.
+
+Preparação versionada com coautoria Codex. Publicação no R2, tag e deploy ficam
+pendentes do envio ao remoto e da execução do workflow, sem alegação de validação
+da 1.6.0 em produção. Nenhuma tag local criada; arquivos temporários e proposta M10
+fora do escopo preservados.
+
 ## 2026-10-06 — M4-20 concluída: equipamento, Patente Equivalente e ataques privados do NPC
 
 Continuação da implementação ativa da M4-20, dependente da M4-19 já concluída. Inventário
