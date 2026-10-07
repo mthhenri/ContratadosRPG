@@ -125,10 +125,12 @@ ou consumo de contexto. O caminho preferido é o menor processo que produza
 evidência suficiente e confiável de conformidade. Seja rigoroso com as regras e
 eficiente na forma de cumpri-las.
 
-- Use subagentes somente quando houver trabalho independente e paralelismo
-  realmente útil. Envie a cada um apenas o contexto necessário para sua
-  responsabilidade e evite que vários agentes investiguem ou validem o mesmo
-  recorte sem uma justificativa concreta.
+- Use subagentes ou agentes externos somente quando houver ganho concreto —
+  trabalho independente com paralelismo realmente útil, preservação do contexto
+  principal ou revisão independente (critérios em "Orquestração multiagente").
+  Envie a cada um apenas o contexto necessário para sua responsabilidade e evite
+  que vários agentes investiguem ou validem o mesmo recorte sem uma justificativa
+  concreta.
 - Não replique documentos extensos, histórico completo ou saídas de ferramentas
   quando um resumo preciso, referências a arquivos e intervalos relevantes forem
   suficientes.
@@ -229,6 +231,28 @@ Antes de declarar uma tarefa pronta:
 Esta regra é deliberadamente mais forte que uma preferência de estilo: ela é a
 definição de pronto do repositório. **Qualidade acima de velocidade** é uma
 decisão do autor e prevalece sobre a pressa de entregar uma feature.
+
+## Orquestração multiagente
+
+O agente que recebe o pedido do autor — Claude Code ou Codex — é o
+**orquestrador**: interpreta, planeja, decide a arquitetura, sintetiza e responde
+pelo resultado. Ele decide **sozinho**, sem o autor pedir, quando executar direto,
+quando delegar a um subagente Claude (`.claude/agents/` e o `Explore` embutido) e
+quando consultar o outro agente externo (`scripts/agentes/codex-delegar.sh` ou
+`scripts/agentes/claude-delegar.sh`). A política, os limites e os comandos estão
+na skill `orquestracao`; leia-a antes de delegar.
+
+- Execução direta é o padrão. Delegue só com ganho concreto: paralelismo real,
+  busca mecânica ampla, saída longa de testes, bug sem progresso após duas
+  tentativas, ou revisão independente de alteração relevante ou de risco.
+- Na revisão independente, passe problema, requisitos e onde está o diff — nunca
+  a sua conclusão — e só depois compare as análises.
+- Agente delegado não delega (profundidade 1), não faz commit nem push e não
+  repete consulta equivalente sem informação nova.
+- Resultado de agente é evidência a verificar, não verdade; o gate de qualidade
+  acima vale integralmente para trabalho delegado.
+- Quando houver delegação significativa, informe ao autor em uma linha: agente,
+  modelo, para quê e o resultado relevante.
 
 ## Estrutura e arquitetura
 

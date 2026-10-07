@@ -30,6 +30,9 @@ Thumbs.db
 # Claude Code — configuração local/pessoal (a skill do projeto fica versionada)
 .claude/settings.local.json
 
+# Orquestração multiagente — registro e vagas das delegações (scripts/agentes/)
+.agentes/
+
 # Superpowers — workspace de scratch (ledgers, briefs, diffs de revisão, sessões de brainstorm)
 .superpowers/
 
