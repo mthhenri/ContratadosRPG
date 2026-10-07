@@ -1,5 +1,48 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-06 — M4-20 concluída: equipamento, Patente Equivalente e ataques privados do NPC
+
+Continuação da implementação ativa da M4-20, dependente da M4-19 já concluída. Inventário
+opcional reusa CarrinhoItemDto; Patente Equivalente é escolhida explicitamente na faixa da
+Categoria, sem piso/teto automático. Civil não recebe patente, Proteções ou Explosivos.
+SCHEMA/OpenAPI alinhados no JSONB, sem migration ou reescrita das fontes autorais.
+
+Motor puro valida faixa, teto de empilhamentos/total da tabela existente, teto próprio e
+conflitos de catálogo. Bônus de defesa somam aos snapshots manuais; resistências reusam o
+motor do agente, sem Maestria/Formação/amplificadores/orçamento/sobrecarga. Services de
+listagem/invalidação e mapper do encontro passam a usar esses valores efetivos; SQL somente
+projeta o inventário. Backend valida profundamente a estrutura REST antes da regra pura.
+
+Criação tem seis etapas com catálogo/carrinho compartilhado, patente opcional e revisão do
+equipamento. Ficha ganha aba Equipamento, rascunho atômico, quantidade/modificações e estado
+equipado. Componentes e CSS próprios evitam crescer o componente extenso com nova
+responsabilidade. Luta/Pontaria encaminham o teste da M4-19, dano interpretável usa motor,
+bandeja e registro privados. Leitor consulta sem editar/rolar/equipar. Fórmulas narrativas
+com faixa/Corpo ficam explícitas para escolha manual, sem inventar uma regra de dano do NPC.
+
+Revisão independente encontrou teto próprio de catálogo ignorado; correção e regressões
+adicionadas. Gate visual pessoal com os análogos FichaInventario, GuiaEquipamentoLoja e
+NpcCompetencias encontrou índice vazio no cartão, rótulos de patente sem acento e alvos
+mobile menores que 44 px. Corrigidos com ícone/rótulos canônicos e receita mobile existente;
+caixas dos itens atribuídos também passaram a consumir app-cartao, com nova inspeção pessoal
+nos quatro viewports e repetição da suíte completa frontend (3.037 testes).
+seletores sem patente/Civil não oferecem modificações e ficam bloqueados ao salvar.
+
+Builds dos três workspaces, typechecks e lint passaram (zero erros, avisos conhecidos).
+Suítes completas: shared 1.152/68 arquivos; backend 994/53 arquivos + 1 skipped;
+frontend 3.037/215 arquivos. Testes afetados, OpenAPI, lint e build frontend repetidos após
+os ajustes finais. Vinte cadastros completos foram salvos pela UI; cinco Categorias em
+1920×1080, 360×800, 960×1080 e 1366×768. Leitura/edição/catalogo/leitor, foco, salvando,
+erro, duas bases e alvos de toque conferidos. REST comprovou Elite 12/13 e 18/19, patente
+fora da faixa e veto Civil; legado GET/PUT preservou recursos e campos ausentes. Mestre e
+leitor receberam equipamento por socket sem reload, com sentinela preservada; dano privado
+conferido no registro REST. Limpeza conferida por posse/nome: seis usuários, três campanhas
+e 42 fichas por soft delete; zero fixtures ativos desta execução. Alterações e cenários
+anteriores fora do escopo preservados. [Relatório, comandos e capturas](../reviews/m4-20-verificacao.md).
+
+Spec movida de active para done com gates completos. Após o fecho, o autor autorizou
+o commit da implementação, documentação e evidências da M4-20.
+
 ## 2026-10-06 — M4-19 concluída: Competências e testes privados do NPC
 
 Após o pedido de fechar decisões e implementar, o autor pediu continuar com as propostas

@@ -137,7 +137,7 @@
                 <fieldset [disabled]="enviando()" class="guia__etapa-campos">
                     @switch (etapa()) { @case (0) { <app-npc-identidade /> } @case (1) {
                     <app-npc-atributos /> } @case (2) { <app-npc-habilidades /> } @case (3) {
-                    <app-npc-conduta /> } @case (4) {
+                    <app-npc-equipamento-inicial /> } @case (4) { <app-npc-conduta /> } @case (5) {
                     <app-npc-revisao (corrigir)="irEtapa($event)" /> } }
                 </fieldset>
                 @if (mostrarErros() && criacao.violacoesEtapa(etapa()).length) {
@@ -239,6 +239,11 @@
                 <span>Ativas por turno</span><b>{{ criacao.volume().limitePorTurno }} usos</b>
             </div>
             } } @if (etapa() >= 3 || visitado() >= 3) {
+            <div class="guia__resumo-linha">
+                <span>Equipamento</span>
+                <b>{{ criacao.estado().inventario.length }} item(ns)</b>
+            </div>
+            } @if (etapa() >= 4 || visitado() >= 4) {
             <div class="guia__resumo-linha guia__resumo-linha--texto">
                 <span>Fuga</span><b>{{ criacao.estado().gatilhosFuga || 'A definir' }}</b>
             </div>

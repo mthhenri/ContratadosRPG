@@ -14,6 +14,7 @@ import { Campo } from "../../../../shared/ui/campo/campo.component";
 import { Cartao } from "../../../../shared/ui/cartao/cartao.component";
 import { NpcEdicaoFormulario, type GrupoEdicaoNpc } from "../../npc-edicao-formulario.service";
 import { NpcBlocoAcoes } from "./npc-bloco-acoes.component";
+import { NpcEquipamento } from "./npc-equipamento.component";
 import { NpcIdentidade } from "./npc-identidade.component";
 import { NpcHabilidadesLista } from "./npc-habilidades-lista.component";
 import { NpcSanidadeLista } from "./npc-sanidade-lista.component";
@@ -21,7 +22,8 @@ import { NpcSanidadeLista } from "./npc-sanidade-lista.component";
 @Component({
     selector: "app-npc-visualizacao",
     imports: [ReactiveFormsModule, Icone, Tooltip, AbaPainel, Aba, Abas, BotaoIcone, Campo, Cartao,
-        NpcAtributos, NpcBlocoAcoes, NpcIdentidade, NpcHabilidadesLista, NpcSanidadeLista],
+        NpcAtributos, NpcBlocoAcoes, NpcIdentidade, NpcHabilidadesLista, NpcSanidadeLista,
+        NpcEquipamento],
     templateUrl: "./npc-visualizacao.component.html", styleUrl: "./npc-visualizacao.scss",
 })
 export class NpcVisualizacao {
@@ -35,7 +37,7 @@ export class NpcVisualizacao {
     readonly ficha = computed(() => this.edicao.rascunho() ?? this.edicao.ficha());
     readonly dados = computed(() => this.ficha()!.dados);
     readonly aba = signal("habilidades");
-    readonly abas = ["habilidades", "conduta", "sanidade"] as const;
+    readonly abas = ["habilidades", "equipamento", "conduta", "sanidade"] as const;
     readonly camposConduta = [
         { chave: "gatilhosFuga", nome: "Gatilhos de fuga" },
         { chave: "prioridadesAlvo", nome: "Prioridades de alvo" },

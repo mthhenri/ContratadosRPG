@@ -23,7 +23,10 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-10-06 · M4-19 concluída: Competências, ajustes, dadinho e
+> **Última revisão:** 2026-10-06 · M4-20 concluída: equipamento e Patente Equivalente
+> explícita do NPC, ataques privados e bônus sobre snapshots. Gates completos, cinco
+> Categorias e quatro viewports: [evidências](../reviews/m4-20-verificacao.md).
+> M4-19 concluída: Competências, ajustes, dadinho e
 > rolagens privadas do NPC. Crítico +2 uma vez pelo D20 mantido; indicador fixo
 > “Rolagens ocultas”; legado preservado. Gates completos e app real nos quatro
 > viewports: [evidências](../reviews/m4-19-verificacao.md).
@@ -48,8 +51,9 @@
 > Ataques/equipamentos NPC: [investigação concluída](../reviews/npc-ataques-equipamentos-investigacao.md)
 > (spec em `done/`); decisões do autor (Civil segue restrição do Civil jogador; mestre
 > escolhe a Patente Equivalente por NPC dentro da faixa da Categoria) incorporadas na spec
-> executável [`m4-20`](../specs/backlog/m4-20-npc-ataques-e-equipamentos.spec.md), preparada
-> no backlog, com dependência `m4-19` concluída; sem implementação ainda.
+> executável [`m4-20`](../specs/done/m4-20-npc-ataques-e-equipamentos.spec.md), concluída
+> após continuação da implementação: inventário opcional, limite da patente escolhida,
+> veto Civil, defesa/resistências por motor compartilhado e leitor sem gestão/rolagem.
 > Autor autorizou versionar a preparação documental das specs.
 > [P-095](../specs/done/p-095-fixture-rolagens-feed-deterministica.spec.md) e
 > [P-096](../specs/done/p-096-fixture-resumo-rolagem-deterministica.spec.md) concluídas:
@@ -871,8 +875,13 @@ Servidor força rolagem privada; indicador fixo “Rolagens ocultas”. Crítico
 pelo D20 mantido, sem dobrar Competência/Nível/ajustes, por contexto explícito no shared.
 Legado abre/salva recursos sem configuração automática; conflitos mantêm escolhas.
 [Gates completos, REST/socket e limpeza](../reviews/m4-19-verificacao.md).
-Próxima task NPC: [M4-20](../specs/backlog/m4-20-npc-ataques-e-equipamentos.spec.md),
-no backlog com execução dependente de autorização própria. Fontes preservadas.
+[M4-20](../specs/done/m4-20-npc-ataques-e-equipamentos.spec.md) concluída: seis etapas de
+criação, aba Equipamento, Patente Equivalente escolhida dentro da Categoria, limites do
+catálogo/patente e veto Civil. Defesas efetivas/resistências consomem motores compartilhados,
+sem alterar bases manuais ou aplicar orçamento/peso máximo. Ataques encaminham M4-19 e
+dano interpretável usa bandeja privada; leitor apenas consulta. Cinco Categorias e quatro
+viewports, REST/socket/legado e limpeza: [gates](../reviews/m4-20-verificacao.md).
+Sem próxima implementação de NPC automaticamente autorizada. Fontes preservadas.
 P-097-01 corrigiu crítico de teste com um pool;
 [P-099](../specs/backlog/p-099-critico-teste-com-dados-adicionais.spec.md) teve a proposta
 global descartada pelo autor; arquivo preservado como memória, sem execução ou dependência
@@ -3508,7 +3517,9 @@ versionadas no commit `767b47bf`; P-102 documental executada após autorização
 com evidências em `docs/reviews/p-102-verificacao.md`, versionadas em commit próprio
 após autorização do autor.
 Versionamento da preparação documental autorizado pelo autor.
-NPC ataques/equipamento é investigação separada. Exemplos autorais incoerentes
+NPC ataques/equipamento foi especificado e entregue na M4-20; sem pendência técnica da task.
+Fórmulas narrativas com faixa/Corpo continuam exigindo escolha manual, sem nova regra de NPC.
+Exemplos autorais incoerentes
 registrados para revisão, sem alterar fontes; fórmula geral prevalece sobre exemplo.
 
 A única que existia — **identidade visual do site** — está **resolvida**: tema "Terminal de

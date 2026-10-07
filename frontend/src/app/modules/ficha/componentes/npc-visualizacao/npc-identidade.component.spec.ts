@@ -1,6 +1,6 @@
 import { TestBed } from "@angular/core/testing";
 import { of, throwError } from "rxjs";
-import { CategoriaNpcEnum } from "@contratados-rpg/shared/enums";
+import { CategoriaNpcEnum, ItemCategoriaEnum } from "@contratados-rpg/shared/enums";
 import type { FichaNpcRecuperadaDto } from "@contratados-rpg/shared/dtos/ficha";
 import { TemaService } from "../../../../core/services/tema.service";
 import { FichaService } from "../../ficha.service";
@@ -39,6 +39,22 @@ describe("NpcIdentidade (m4-17)", () => {
 
     const barrasRecurso = (raiz: HTMLElement) =>
         Array.from(raiz.querySelectorAll<HTMLElement>("app-barra-recurso .barra-recurso"));
+
+    it.each([false, true])("mostra total defensivo, mas edita a base manual (gestão %s)", (gestao) => {
+        const ficha = npc({ bloquear: 21, inventario: [{ nome: "Colete de Kevlar",
+            categoria: ItemCategoriaEnum.PROTECOES, custo: 1500, peso: 2,
+            quantidade: 1, guardada: false, equipado: true,
+            modificacoes: [{ nome: "Resistente", empilhamentos: 2 }] }] });
+        const { raiz, formulario, fixture } = montar(gestao, ficha);
+        const bloco = Array.from(raiz.querySelectorAll("app-stat"))
+            .find((elemento) => elemento.textContent?.includes("Bloquear"))!;
+        expect(bloco.textContent).toContain("22");
+        if (gestao) {
+            formulario.editarAvulso("bloquear"); fixture.detectChanges();
+            expect(raiz.querySelector<HTMLInputElement>('input[aria-label="Bloquear"]')?.value)
+                .toBe("21");
+        }
+    });
 
     it("Vida e Energia usam a barra de recurso compacta", () => {
         const { raiz } = montar(false, elite());

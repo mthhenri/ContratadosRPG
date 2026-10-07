@@ -1,6 +1,7 @@
 import { CategoriaNpcEnum } from "../../enums";
 import type { FichaNpcDadosDto, FichaNpcValidadaDto } from "../../dtos/ficha";
 import { validarAtributosCategoria } from "./atributos";
+import { validarEquipamentoNpc } from "./equipamento";
 import { validarVolumeHabilidades } from "./habilidades";
 import { validarCompetenciasNpc, validarAjustesTesteNpc } from "./testes";
 
@@ -19,6 +20,7 @@ export function validarFichaNpc(dados: FichaNpcDadosDto): FichaNpcValidadaDto {
         ...validarVolumeHabilidades({ categoria: dados.categoria, habilidades: dados.habilidades }),
         ...validarCompetenciasNpc(dados),
         ...validarAjustesTesteNpc(dados),
+        ...validarEquipamentoNpc(dados),
     ];
     if (!Number.isInteger(dados.nivel) || dados.nivel < 0 || dados.nivel > 20) {
         violacoes.push("nível: deve ser inteiro entre 0 e 20");

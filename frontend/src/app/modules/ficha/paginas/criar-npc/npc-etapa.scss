@@ -12,6 +12,11 @@
 }
 
 .guia {
+    &__patentes {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-8);
+    }
     &__etapa {
         display: grid;
         align-content: start;

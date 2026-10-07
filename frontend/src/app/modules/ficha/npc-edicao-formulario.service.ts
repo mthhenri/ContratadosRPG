@@ -1,10 +1,11 @@
 import { DestroyRef, Injectable, computed, effect, inject, signal } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormArray, FormBuilder, FormControl, Validators } from "@angular/forms";
-import { HabilidadeTipoNpcEnum, CategoriaNpcEnum } from "@contratados-rpg/shared/enums";
+import { HabilidadeTipoNpcEnum, CategoriaNpcEnum, PatenteEnum } from "@contratados-rpg/shared/enums";
 import type {
     FichaAtributosDto, FichaNpcHabilidadeDto, FichaNpcRecuperadaDto, FichaSequelaDto, FichaTraumaDto,
 } from "@contratados-rpg/shared/dtos/ficha";
+import type { CarrinhoItemDto } from "@contratados-rpg/shared/regras/compras";
 import { FichaEdicaoNpcService } from "./ficha-edicao-npc.service";
 import { mesclarDocumento } from "./mesclar-ficha";
 import { criarMapaAjustesNpc } from "./npc-ajustes-formulario";
@@ -12,13 +13,13 @@ import { CHAVES_ATRIBUTOS_NPC } from "@contratados-rpg/shared/regras/npc";
 
 /** Blocos de vários campos — lápis some, Salvar/Cancelar aparecem no próprio bloco (m4-16). */
 export type GrupoEdicaoNpc = "atributos" | "conduta" | "habilidades" | "sequelas" | "traumas"
-    | "anotacoes";
+    | "anotacoes" | "equipamento";
 const TEXTO_OBRIGATORIO = [Validators.required, Validators.pattern(/\S/)];
 
 /** Rótulo humano de cada bloco/valor avulso, usado no aviso "Conclua ou cancele a edição de X". */
 const ROTULOS_EDICAO: Record<string, string> = {
     atributos: "Atributos", conduta: "Conduta", habilidades: "Habilidades",
-    sequelas: "Sequelas", traumas: "Traumas", anotacoes: "Anotações",
+    sequelas: "Sequelas", traumas: "Traumas", anotacoes: "Anotações", equipamento: "Equipamento",
     nome: "nome", funcao: "função narrativa", categoria: "categoria", nivel: "nível",
     cooperacao: "Cooperação", defesaBase: "Defesa", bloquear: "Bloquear", esquivar: "Esquivar",
     vidaMaxima: "Vida máxima", energiaMaxima: "Energia máxima",
@@ -86,6 +87,8 @@ export class NpcEdicaoFormulario {
         gatilhosFuga: ["", TEXTO_OBRIGATORIO], prioridadesAlvo: ["", TEXTO_OBRIGATORIO],
         reacaoFerimentoSevero: ["", TEXTO_OBRIGATORIO], anotacoes: "",
         habilidades: this.habilidades, sequelas: this.sequelas, traumas: this.traumas,
+        patenteEquivalente: new FormControl<PatenteEnum | null>(null),
+        inventario: new FormControl<readonly CarrinhoItemDto[]>([], { nonNullable: true }),
     });
     /** Algum bloco ou valor avulso em edição — os demais gatilhos ficam bloqueados. */
     readonly ocupado = computed(() => this.grupo() !== null || this.campoAvulso() !== null);
@@ -233,7 +236,9 @@ export class NpcEdicaoFormulario {
             competencias: dados.competencias ?? [],
             modificadoresTeste: Object.fromEntries(CHAVES_ATRIBUTOS_NPC.map((chave) => [chave, dados.modificadoresTeste?.[chave] ?? 0])),
             dadosTeste: Object.fromEntries(CHAVES_ATRIBUTOS_NPC.map((chave) => [chave, dados.dadosTeste?.[chave] ?? 0])),
-            anotacoes: dados.anotacoes ?? "" }, { emitEvent: false });
+            anotacoes: dados.anotacoes ?? "",
+            patenteEquivalente: dados.patenteEquivalente ?? null,
+            inventario: dados.inventario ?? [] }, { emitEvent: false });
         this.preencherLista(this.habilidades, dados.habilidades, criarHabilidadeFormulario);
         this.preencherLista(this.sequelas, dados.sanidade.sequelas, criarSequelaFormulario);
         this.preencherLista(this.traumas, dados.sanidade.traumas, criarTraumaFormulario);
@@ -279,6 +284,8 @@ export class NpcEdicaoFormulario {
             case "traumas": return { ...base, dados: { ...dados,
                 sanidade: { ...dados.sanidade, traumas: valor.traumas } } };
             case "anotacoes": return { ...base, dados: { ...dados, anotacoes: valor.anotacoes } };
+            case "equipamento": return { ...base, dados: { ...dados, inventario: valor.inventario,
+                patenteEquivalente: valor.patenteEquivalente ?? undefined } };
             default: return base;
         }
     }

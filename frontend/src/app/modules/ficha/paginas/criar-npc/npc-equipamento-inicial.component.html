@@ -1,0 +1,55 @@
+<div class="guia__etapa">
+    <div class="guia__introducao">
+        <span class="guia__introducao-codigo">EQUIPAMENTO // INICIAL</span>
+        <p>
+            Monte o inventário inicial deste NPC. Sem orçamento nem limite de peso — o mestre
+            atribui o que julgar adequado. Escolha a Patente Equivalente para definir o acesso a
+            modificações; os itens poderão ser modificados e equipados depois do registro.
+        </p>
+    </div>
+    @if (patentes().length) {
+        <div class="guia__patentes">
+            @for (patente of patentes(); track patente) {
+                <button
+                    app-botao
+                    type="button"
+                    tamanho="medio"
+                    estilo="contorno"
+                    [variante]="
+                        criacao.estado().patenteEquivalente === patente ? 'primario' : 'secundario'
+                    "
+                    [attr.aria-pressed]="criacao.estado().patenteEquivalente === patente"
+                    [attr.aria-label]="'Patente equivalente ' + rotulosPatente[patente]"
+                    (click)="selecionarPatente(patente)"
+                >
+                    {{ rotulosPatente[patente] }}
+                </button>
+            }
+        </div>
+        <p class="guia__ajuda">
+            Nenhuma seleção significa sem modificações. Clique novamente para desmarcar.
+        </p>
+    } @else {
+        <p class="guia__ajuda">Civil não tem Patente Equivalente nem acesso a modificações.</p>
+    }
+    @if (
+        criacao.estado().patenteEquivalente &&
+        !patentes().includes(criacao.estado().patenteEquivalente!)
+    ) {
+        <button
+            app-botao
+            type="button"
+            tamanho="medio"
+            variante="secundario"
+            estilo="contorno"
+            (click)="selecionarPatente(null)"
+        >
+            Remover patente anterior
+        </button>
+    }
+    <app-guia-equipamento-loja
+        [itens]="criacao.estado().inventario"
+        [categoriasVetadas]="categoriasVetadas()"
+        (itensMudaram)="criacao.formulario.controls.inventario.setValue($event)"
+    />
+</div>

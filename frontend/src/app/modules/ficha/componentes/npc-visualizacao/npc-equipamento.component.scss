@@ -1,0 +1,66 @@
+@use "../../../../../styles/tema/breakpoints" as bp;
+
+// Identidade de controles e cartões pertence a shared/ui; aqui só a composição do bloco.
+.npc-equip {
+    min-width: 0;
+    &__patente,
+    &__catalogo {
+        display: grid;
+        gap: var(--space-8);
+    }
+    &__patente-opcoes,
+    &__categorias,
+    &__controles,
+    &__mods,
+    &__mod-chip {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--space-8);
+        min-width: 0;
+    }
+    &__catalogo-gatilho {
+        justify-self: start;
+    }
+    &__grade {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr));
+        gap: var(--space-8);
+        max-height: 360px;
+        overflow-y: auto;
+        padding: var(--space-4);
+    }
+    &__cartao {
+        min-width: 0;
+    }
+    &__item {
+        min-width: 0;
+    }
+    &__item-conteudo {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-8);
+        min-width: 0;
+    }
+    &__mod-select {
+        flex: 1 1 180px;
+    }
+    &__remover {
+        margin-left: auto;
+    }
+    &__resistencias {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: var(--space-8);
+        @include bp.mobile {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+    // Mesma receita mobile do bloco .npc: dimensiona os controles projetados sem repintá-los.
+    @include bp.mobile {
+        .campo__controle,
+        [app-botao] {
+            min-height: bp.$alvo-toque;
+        }
+    }
+}

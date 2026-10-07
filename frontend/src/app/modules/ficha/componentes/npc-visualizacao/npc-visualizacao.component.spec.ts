@@ -216,7 +216,7 @@ describe("NpcVisualizacao", () => {
             const { raiz } = montar(true);
             const abas = Array.from(raiz.querySelectorAll("button[app-aba]"));
             expect(abas.map((aba) => aba.textContent?.trim()))
-                .toEqual(["Habilidades", "Conduta", "Sanidade"]);
+                .toEqual(["Habilidades", "Equipamento", "Conduta", "Sanidade"]);
             for (const aba of abas) {
                 expect(aba.querySelector("app-icone")).not.toBeNull();
                 expect(aba.querySelector(".abas__rotulo")).not.toBeNull();

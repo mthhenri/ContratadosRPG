@@ -81,7 +81,7 @@ describe("NpcCriar", () => {
         pagina.avancar();
         expect(pagina.etapa()).toBe(0);
         expect(pagina.mostrarErros()).toBe(true);
-        pagina.irEtapa(4); fixture.detectChanges();
+        pagina.irEtapa(5); fixture.detectChanges();
         const botao = fixture.nativeElement.querySelector("app-npc-revisao button") as HTMLButtonElement;
         botao.click();
         expect(pagina.etapa()).toBe(0);
@@ -99,12 +99,12 @@ describe("NpcCriar", () => {
 
     it("envio ocupado não duplica e bloqueia navegação; falha mantém dados e admite retry", () => {
         const { pagina, api, resposta } = montar("7");
-        preencherCivil(pagina); pagina.irEtapa(4);
+        preencherCivil(pagina); pagina.irEtapa(5);
         const dados = pagina.criacao.dados();
         pagina.registrar(); pagina.registrar(); pagina.irEtapa(0);
         expect(api.criarFichaNpc).toHaveBeenCalledExactlyOnceWith({ campanhaId: 7,
             nome: "Helena", dados });
-        expect(pagina.etapa()).toBe(4);
+        expect(pagina.etapa()).toBe(5);
         expect(pagina.podeSair()).toBe(false);
         resposta.error(new Error("Falha temporária"));
         expect(pagina.enviando()).toBe(false);
@@ -166,12 +166,12 @@ describe("NpcCriar", () => {
         it("Roteiro bloqueia passos à frente e marca Em preenchimento / Disponível / Aguardando", () => {
             const { fixture, pagina } = montar();
             const raiz = fixture.nativeElement as HTMLElement;
-            expect(legendas(raiz)).toEqual(["Em preenchimento", "Aguardando", "Aguardando", "Aguardando", "Aguardando"]);
-            expect(passos(raiz).map((p) => p.disabled)).toEqual([false, true, true, true, true]);
+            expect(legendas(raiz)).toEqual(["Em preenchimento", "Aguardando", "Aguardando", "Aguardando", "Aguardando", "Aguardando"]);
+            expect(passos(raiz).map((p) => p.disabled)).toEqual([false, true, true, true, true, true]);
             pagina.criacao.formulario.patchValue({ nome: "Helena", funcao: "Contato" });
             pagina.avancar(); fixture.detectChanges();
-            expect(legendas(raiz)).toEqual(["Disponível", "Em preenchimento", "Aguardando", "Aguardando", "Aguardando"]);
-            expect(passos(raiz).map((p) => p.disabled)).toEqual([false, false, true, true, true]);
+            expect(legendas(raiz)).toEqual(["Disponível", "Em preenchimento", "Aguardando", "Aguardando", "Aguardando", "Aguardando"]);
+            expect(passos(raiz).map((p) => p.disabled)).toEqual([false, false, true, true, true, true]);
             expect(passos(raiz)[0].querySelector("app-icone")).not.toBeNull();
             passos(raiz)[0].click(); fixture.detectChanges();
             expect(pagina.etapa()).toBe(0);
@@ -205,12 +205,13 @@ describe("NpcCriar", () => {
             const { fixture, pagina } = montar();
             const raiz = fixture.nativeElement as HTMLElement;
             const codigos: string[] = [];
-            for (let indice = 0; indice < 5; indice++) {
+            for (let indice = 0; indice < 6; indice++) {
                 pagina.irEtapa(indice); fixture.detectChanges();
                 codigos.push(raiz.querySelector(".guia__introducao-codigo")?.textContent?.trim() ?? "");
             }
             expect(codigos).toEqual(["IDENTIDADE // PESSOA", "ATRIBUTOS // RECURSOS",
-                "PASSIVAS // ATIVAS", "CONDUTA // SANIDADE", "REVISÃO // REGISTRO"]);
+                "PASSIVAS // ATIVAS", "EQUIPAMENTO // INICIAL", "CONDUTA // SANIDADE",
+                "REVISÃO // REGISTRO"]);
         });
     });
 

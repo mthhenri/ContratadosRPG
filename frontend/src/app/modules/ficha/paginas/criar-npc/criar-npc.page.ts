@@ -17,6 +17,7 @@ import { NpcCriacaoFormulario } from "./npc-criacao-formulario.service";
 import { NpcIdentidade } from "./npc-identidade.component";
 import { NpcAtributos } from "./npc-atributos.component";
 import { NpcHabilidades } from "./npc-habilidades.component";
+import { NpcEquipamentoInicial } from "./npc-equipamento-inicial.component";
 import { NpcConduta } from "./npc-conduta.component";
 import { NpcRevisao } from "./npc-revisao.component";
 import { Icone } from "../../../../shared/icone/icone.component";
@@ -28,7 +29,7 @@ import { Icone } from "../../../../shared/icone/icone.component";
 @Component({
     selector: "app-npc-criar", providers: [NpcCriacaoFormulario],
     imports: [Botao, BotaoIcone, Cartao, Stat, Icone, Modal, NgTemplateOutlet, UpperCasePipe,
-        NpcIdentidade, NpcAtributos, NpcHabilidades, NpcConduta, NpcRevisao],
+        NpcIdentidade, NpcAtributos, NpcHabilidades, NpcEquipamentoInicial, NpcConduta, NpcRevisao],
     templateUrl: "./criar-npc.page.html", styleUrl: "./criar-npc.page.scss",
 })
 export class NpcCriar {
@@ -41,7 +42,7 @@ export class NpcCriar {
     private readonly tituloEtapa = viewChild<ElementRef<HTMLElement>>("tituloEtapa");
     private readonly campanhaRota = lerParamRota(inject(ActivatedRoute), "campanhaId");
     readonly campanhaId = this.campanhaRota === null ? null : Number(this.campanhaRota);
-    readonly etapas = ["Identidade", "Atributos e recursos", "Habilidades",
+    readonly etapas = ["Identidade", "Atributos e recursos", "Habilidades", "Equipamento inicial",
         "Conduta e sanidade", "Revisão"] as const;
     readonly etapa = signal(0);
     readonly resumoAberto = signal(false);

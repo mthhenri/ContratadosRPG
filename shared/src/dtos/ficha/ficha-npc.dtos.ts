@@ -1,4 +1,5 @@
-import type { CategoriaNpcEnum, HabilidadeTipoNpcEnum } from "../../enums";
+import type { CategoriaNpcEnum, HabilidadeTipoNpcEnum, PatenteEnum } from "../../enums";
+import type { CarrinhoItemDto } from "../../regras/compras";
 import type { FichaAtributosDto, FichaSequelaDto, FichaTraumaDto } from "./ficha.dtos";
 
 /**
@@ -30,6 +31,18 @@ export interface FichaNpcDadosDto {
     readonly defesaBase: number;
     readonly bloquear: number;
     readonly esquivar: number;
+    /**
+     * Patente do agente escolhida pelo mestre dentro da faixa válida da `categoria` (Guia —
+     * "Patente Equivalente"; `shared/regras/npc` valida o subconjunto). Ausente = sem acesso a
+     * modificações; Categoria Civil nunca recebe este campo (abaixo do piso do enum).
+     */
+    readonly patenteEquivalente?: PatenteEnum;
+    /**
+     * Reusa o carrinho do agente (`CarrinhoItemDto`), sem o envelope `FichaInventarioDto` do
+     * Jogador — NPC não tem amplificadores (Guia não os menciona). Ausente/`[]` = sem
+     * equipamento; NPC antigo continua legível. Categoria Civil não aceita Proteções/Explosivos.
+     */
+    readonly inventario?: readonly CarrinhoItemDto[];
     readonly energia: FichaNpcEnergiaDto;
     readonly sanidade: FichaNpcSanidadeDto;
     readonly habilidades: readonly FichaNpcHabilidadeDto[];

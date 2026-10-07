@@ -5,12 +5,13 @@ import { map, pairwise, startWith } from "rxjs";
 import type {
     FichaAtributosDto, FichaNpcDadosDto, FichaNpcHabilidadeDto,
 } from "@contratados-rpg/shared/dtos/ficha";
-import { CategoriaNpcEnum, HabilidadeTipoNpcEnum } from "@contratados-rpg/shared/enums";
+import type { CarrinhoItemDto } from "@contratados-rpg/shared/regras/compras";
+import { CategoriaNpcEnum, HabilidadeTipoNpcEnum, PatenteEnum } from "@contratados-rpg/shared/enums";
 import {
     calcularBloquear, calcularDefesaBase, calcularDtAtributo, calcularEnergia, calcularEsquivar,
     calcularVidaMaxima, consultarAtributosCriacao, obterPontosELimitePorCategoria,
     obterReferenciaCategoria, obterReferenciaCooperacao, obterVolumeHabilidadesPorCategoria,
-    validarVolumeHabilidades, validarCompetenciasNpc,
+    validarVolumeHabilidades, validarCompetenciasNpc, validarEquipamentoNpc,
 } from "@contratados-rpg/shared/regras/npc";
 
 function criarHabilidadeFormulario(tipo: HabilidadeTipoNpcEnum) {
@@ -52,6 +53,8 @@ export class NpcCriacaoFormulario {
             intelecto: 1, medicina: 1, sentidos: 1, social: 1, vontade: 1,
         }),
         habilidades: this.habilidades,
+        inventario: new FormControl<readonly CarrinhoItemDto[]>([], { nonNullable: true }),
+        patenteEquivalente: new FormControl<PatenteEnum | null>(null),
         gatilhosFuga: ["", Validators.required], prioridadesAlvo: ["", Validators.required],
         reacaoFerimentoSevero: ["", Validators.required],
         sequelas: this.sequelas, traumas: this.traumas, anotacoes: "",
@@ -101,6 +104,8 @@ export class NpcCriacaoFormulario {
                 ...(habilidade.tipo === HabilidadeTipoNpcEnum.ATIVA
                     ? { custoEnergia: habilidade.custoEnergia } : {}),
             })),
+            ...(estado.inventario.length ? { inventario: estado.inventario } : {}),
+            ...(estado.patenteEquivalente ? { patenteEquivalente: estado.patenteEquivalente } : {}),
             condutaCombate: { gatilhosFuga: estado.gatilhosFuga.trim(),
                 prioridadesAlvo: estado.prioridadesAlvo.trim(),
                 reacaoFerimentoSevero: estado.reacaoFerimentoSevero.trim() },
@@ -115,7 +120,7 @@ export class NpcCriacaoFormulario {
             ...(estado.anotacoes.trim() ? { anotacoes: estado.anotacoes.trim() } : {}),
         };
     });
-    readonly pendencias = computed(() => [0, 1, 2, 3].flatMap((etapa) =>
+    readonly pendencias = computed(() => [0, 1, 2, 3, 4].flatMap((etapa) =>
         this.violacoesEtapa(etapa).map((mensagem) => ({ etapa, mensagem }))));
     readonly passivas = computed(() => this.dados().habilidades.filter(
         (habilidade) => habilidade.tipo === HabilidadeTipoNpcEnum.PASSIVA).length);
@@ -202,7 +207,8 @@ export class NpcCriacaoFormulario {
                     ? [`Defina o custo da habilidade ${indice + 1}`] : []),
             ]),
         ];
-        if (etapa === 3) return [
+        if (etapa === 3) return validarEquipamentoNpc(dados);
+        if (etapa === 4) return [
             ...(Object.values(dados.condutaCombate).some((texto) => !texto)
                 ? ["Complete os três campos de conduta de combate"] : []),
             ...([...dados.sanidade.sequelas, ...dados.sanidade.traumas].some((linha) => !linha.nome)

@@ -7,6 +7,16 @@ import type { CarrinhoItemDto } from '@contratados-rpg/shared/regras/compras';
 import { GuiaEquipamentoLoja } from './guia-equipamento-loja.component';
 
 describe('GuiaEquipamentoLoja', () => {
+  it('veto novo remove itens da categoria que estava ativa, mesmo sem busca', () => {
+    const { fixture, raiz } = montar();
+    const protecoes = Array.from(raiz.querySelectorAll<HTMLButtonElement>('.loja__categoria'))
+      .find((botao) => botao.textContent?.includes('Proteções'))!;
+    protecoes.click(); fixture.detectChanges();
+    expect(raiz.textContent).toContain('Colete Leve');
+    fixture.componentRef.setInput('categoriasVetadas', [ItemCategoriaEnum.PROTECOES]);
+    fixture.detectChanges();
+    expect(raiz.querySelector('.loja__grade')?.textContent).not.toContain('Colete Leve');
+  });
   function montar(itens: readonly CarrinhoItemDto[] = []) {
     TestBed.configureTestingModule({ imports: [GuiaEquipamentoLoja] });
     const fixture = TestBed.createComponent(GuiaEquipamentoLoja);
@@ -67,5 +77,24 @@ describe('GuiaEquipamentoLoja', () => {
     expect(emitidos[0]).toHaveLength(1);
     expect(emitidos[0][0].nome).toBe('Pistola');
     expect(emitidos[0][0].categoria).toBe(ItemCategoriaEnum.ARMAS_DE_FOGO);
+  });
+
+  it('categoriasVetadas esconde a aba da categoria e seus itens na busca cruzada (m4-20)', () => {
+    TestBed.configureTestingModule({ imports: [GuiaEquipamentoLoja] });
+    const fixture = TestBed.createComponent(GuiaEquipamentoLoja);
+    fixture.componentRef.setInput('itens', []);
+    fixture.componentRef.setInput('categoriasVetadas', [ItemCategoriaEnum.ARMAS_DE_FOGO]);
+    fixture.detectChanges();
+    const raiz = fixture.nativeElement as HTMLElement;
+
+    const abas = Array.from(raiz.querySelectorAll('.loja__categoria')).map((el) => el.textContent?.trim());
+    expect(abas.some((rotulo) => rotulo?.includes('Armas de Fogo'))).toBe(false);
+
+    const campoBusca = raiz.querySelector<HTMLInputElement>('.loja__busca-campo')!;
+    campoBusca.value = 'Pistola';
+    campoBusca.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    const nomes = Array.from(raiz.querySelectorAll('.loja__item-nome')).map((n) => n.textContent?.trim());
+    expect(nomes).not.toContain('Pistola');
   });
 });

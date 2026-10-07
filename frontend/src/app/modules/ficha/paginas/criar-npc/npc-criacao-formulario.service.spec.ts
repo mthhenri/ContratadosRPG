@@ -1,5 +1,5 @@
 import { TestBed } from "@angular/core/testing";
-import { CategoriaNpcEnum, HabilidadeTipoNpcEnum } from "@contratados-rpg/shared/enums";
+import { CategoriaNpcEnum, HabilidadeTipoNpcEnum, PatenteEnum } from "@contratados-rpg/shared/enums";
 import { NpcCriacaoFormulario } from "./npc-criacao-formulario.service";
 
 describe("NpcCriacaoFormulario", () => {
@@ -7,6 +7,15 @@ describe("NpcCriacaoFormulario", () => {
         TestBed.configureTestingModule({ providers: [NpcCriacaoFormulario] });
         return TestBed.inject(NpcCriacaoFormulario);
     }
+
+    it("criação conserva escolha explícita de patente e acusa troca para Categoria incompatível", () => {
+        const criacao = montar();
+        criacao.formulario.controls.patenteEquivalente.setValue(PatenteEnum.OPERADOR);
+        expect(criacao.dados().patenteEquivalente).toBe(PatenteEnum.OPERADOR);
+        expect(criacao.violacoesEtapa(3)).toEqual([]);
+        criacao.formulario.controls.categoria.setValue(CategoriaNpcEnum.CIVIL);
+        expect(criacao.violacoesEtapa(3).join(" ")).toContain("Civil");
+    });
 
     it("aceita o Operativo do Guia v4.2.0 com Social zero e mantém o snapshot", () => {
         const criacao = montar();
@@ -123,7 +132,7 @@ describe("NpcCriacaoFormulario", () => {
     it("revisão aponta etapa correta para conteúdo obrigatório vazio ou inválido", () => {
         const criacao = montar();
         expect(new Set(criacao.pendencias().map(({ etapa }) => etapa)))
-            .toEqual(new Set([0, 1, 2, 3]));
+            .toEqual(new Set([0, 1, 2, 4]));
         criacao.adicionarHabilidade(HabilidadeTipoNpcEnum.ATIVA);
         criacao.habilidades.at(0).patchValue({ nomeNeutro: "A", descricao: "B", custoEnergia: -1 });
         expect(criacao.violacoesEtapa(2).join(" ")).toContain("custo");

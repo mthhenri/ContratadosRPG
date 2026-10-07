@@ -9,6 +9,7 @@ import { Icone } from "../../../../shared/icone/icone.component";
 import { renderizarMarkdownSeguro } from "../../../../shared/markdown/markdown-seguro";
 import { NpcCriacaoFormulario } from "./npc-criacao-formulario.service";
 import { GRUPOS_ATRIBUTOS } from "../../npc-atributos-campos";
+import { ROTULOS_PATENTE } from "../../../simulacao/rotulos";
 
 /** Prévia em duas colunas da ficha planejada, sem segunda entrada para o mesmo campo. */
 @Component({
@@ -17,6 +18,7 @@ import { GRUPOS_ATRIBUTOS } from "../../npc-atributos-campos";
     templateUrl: "./npc-revisao.component.html", styleUrl: "./npc-etapa.scss",
 })
 export class NpcRevisao {
+    readonly rotulosPatente = ROTULOS_PATENTE;
     readonly criacao = inject(NpcCriacaoFormulario);
     private readonly sanitizer = inject(DomSanitizer);
     readonly anotacoesHtml = computed(() =>

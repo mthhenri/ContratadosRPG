@@ -12,7 +12,10 @@
 > `app-atributo-ficha`. Indicador fixo “Rolagens ocultas” no cabeçalho; bandeja e
 > histórico privados só para gestão. Competências não alteram o atributo nem a DT.
 > P-100 já adequou zero/redistribuição na criação. [Gates M4-19](../reviews/m4-19-verificacao.md).
-> Ataques/Equipamentos seguem na spec própria M4-20 preparada, sem implementação aqui.
+> **M4-20 (2026-10-06):** Equipamento inicial acrescenta uma etapa ao assistente.
+> Na ficha, aba Equipamento com catálogo, Patente Equivalente explícita, modificações e
+> estado equipado; leitura por jogador sem controles. Bônus somam aos snapshots, sem
+> regravar suas bases. [Gates M4-20](../reviews/m4-20-verificacao.md).
 
 ## Intenção
 
@@ -30,13 +33,14 @@ e a progressão completa do agente não são modelos de conteúdo para copiar.
 | Recursos e edição | `frontend/src/app/modules/ficha/componentes/ficha-visualizacao/ficha-visualizacao.component.*` | Vida/Energia, leitura numérica, edição no lugar, foco e hierarquia; sem transportar campos exclusivos de agente |
 | Ações da página | `frontend/src/app/modules/ficha/paginas/visualizar-criatura/visualizar-criatura.page.*` | `app-coluna-acoes`, cabeçalho da campanha, conteúdo que se adapta ao painel lateral aberto, ações inferiores no celular |
 | Lista | `frontend/src/app/modules/ficha/componentes/cartao-ficha-acervo/` e painel `CampanhaDetalhe` | Cartão por tipo e blocos separados já existentes; NPC mostra Categoria/Nível |
+| Equipamento e Patente Equivalente | `componentes/ficha-inventario/`, `componentes/guia-equipamento-loja/` e `npc-visualizacao/npc-competencias.component.*` | Catálogo/carrinho, iconografia por categoria e stats do item; seleção restrita por Categoria com botões médios/contorno e leitura por chips |
 
 Consultar o código vigente antes de implementar. O mockup `examples/ficha-de-criatura.html`
 tem divergências registradas em `examples/README.md`: não usar seu antigo dashboard de três
 colunas nem seu cabeçalho como alvo novo. O análogo define linguagem e composição, não autoriza
 copiar controles locais que já tenham primitivo em `shared/ui/`.
 
-## Criação — cinco etapas
+## Criação — seis etapas
 
 Agrupar o roteiro do guia sem omitir conteúdo. Saúde, Defesa e Energia calculadas não precisam
 de três telas só para confirmar números. Nenhuma etapa exige campos que o contrato não prevê.
@@ -46,8 +50,9 @@ de três telas só para confirmar números. Nenhuma etapa exige campos que o con
 | 1. Identidade | Nome, função narrativa, Categoria, Nível e Cooperação; ajuda contextual de Categoria e Cooperação | Nome/função, Categoria/Nível e número + faixa textual de Cooperação |
 | 2. Atributos e recursos | Dez atributos em grupos Físicos/Mentais; orçamento e limite visíveis; exceção de combate do Civil explícita; prévia de Vida, Defesa/Bloquear/Esquivar e Energia | Recursos iniciais e modelo de Energia; valores derivados pelo motor |
 | 3. Habilidades | Lista de Passivas/Ativas e editor; nome neutro, narrativo opcional, custo quando Ativa, descrição e restrição; orientação de assinatura, custo e impacto tático do guia | Contagens por tipo e orientação de volume/limite por turno |
-| 4. Conduta e sanidade | Gatilhos de fuga, prioridades de alvo, reação a ferimento severo; Sequelas/Traumas e Anotações opcionais conforme o contrato | Conduta resumida; indicar campos opcionais vazios sem erro |
-| 5. Revisão | Prévia organizada como a ficha pronta, pendências com destino à etapa correspondente e ação Registrar NPC | Tudo que será salvo; nenhuma segunda entrada para o mesmo campo |
+| 4. Equipamento inicial | Catálogo/carrinho compartilhado e Patente Equivalente opcional, escolhida na faixa da Categoria; Civil sem Proteções/Explosivos nem patente | Quantidade de itens; sem orçamento/peso máximo; modificações e estado equipado são configurados após o registro |
+| 5. Conduta e sanidade | Gatilhos de fuga, prioridades de alvo, reação a ferimento severo; Sequelas/Traumas e Anotações opcionais conforme o contrato | Conduta resumida; indicar campos opcionais vazios sem erro |
+| 6. Revisão | Prévia organizada como a ficha pronta, pendências com destino à etapa correspondente e ação Registrar NPC | Tudo que será salvo, inclusive equipamento e patente; nenhuma segunda entrada para o mesmo campo |
 
 As orientações de Categoria e Cooperação não ganham tabelas longas abertas em todas as telas:
 usar texto curto e ajuda contextual existente. Cooperação é independente da Categoria; nunca
@@ -64,7 +69,8 @@ separadamente; não prometer que foi salvo copiando a mensagem do guia de criatu
 Nível são metadados compactos; Cooperação mostra valor e faixa por texto, sem depender de cor.
 Usar a composição perfil/combate da criatura, adaptada ao conteúdo humano: Vida e, quando
 aplicável, Energia; Defesa/Bloquear/Esquivar em linha de stats. Não criar NA, VD, Tenacidade,
-Modificadores de criatura, Patente, Maestria ou inventário de agente no NPC.
+Modificadores de criatura, Prestígio, Maestria ou orçamento de agente no NPC. Patente Equivalente
+e inventário usam somente o recorte especificado na M4-20.
 
 **Atributos.** Abaixo de Identidade, os mesmos dez atributos e agrupamentos do jogador. O valor
 do atributo é o dado principal; a DT contextual é secundária, calculada pelo motor sob demanda,
@@ -90,6 +96,15 @@ de turno para a ficha. Modelos e faixas vêm de `shared/regras/npc`, sem tabelas
 **Acesso.** O estado de concessão e a privacidade de rolagens são informações distintas.
 Revelação seletiva usa a gestão de acesso existente; não usar um toggle global de visibilidade
 como substituto de conceder/revogar acesso a jogadores. Não oferecer edição a quem só lê.
+
+**Equipamento.** Aba própria no cartão de detalhes; edição por bloco com Salvar/Cancelar.
+Patente Equivalente nunca é escolhida automaticamente, nem mesmo no Lendário com opção única.
+Sem patente, não oferecer adicionar modificações. Catálogo usa `app-cartao` com ícone projetado,
+`app-campo` e botões canônicos; quantidade/empilhamentos usam `app-step-input`. Não transportar
+amplificadores/fragmentos ou orçamento. Resistências em stats e bônus de defesa efetivos
+consomem o motor compartilhado; edição da Defesa/Bloquear/Esquivar mantém a base manual.
+Luta/Pontaria encaminham o teste da M4-19 e dano interpretável usa a bandeja privada existente.
+Fórmulas narrativas com faixa/Corpo permanecem explícitas para escolha manual, sem fórmula nova.
 
 Imagem, cor e enquadramento, se atendidos pelos metadados e endpoints genéricos de ficha,
 reutilizam a solução existente. Não criar um novo contrato de retrato dentro de `dados`.

@@ -181,7 +181,10 @@ export class FichaRepository extends BaseRepository {
               ficha.dados->'identidade'->'origem'->>'nome' AS "origemNome",
               ficha.dados->'atributos' AS atributos,
               COALESCE(ficha.dados->'habilidades', '[]'::jsonb) AS habilidades,
-              COALESCE(ficha.dados->'inventario'->'itens', '[]'::jsonb) AS itens,
+              CASE WHEN jsonb_typeof(ficha.dados->'inventario') = 'array'
+                   THEN ficha.dados->'inventario'
+                   ELSE COALESCE(ficha.dados->'inventario'->'itens', '[]'::jsonb)
+              END AS itens,
               COALESCE(ficha.dados->'inventario'->'amplificadores', '[]'::jsonb) AS amplificadores,
               (ficha.dados->>'dinheiro')::numeric AS dinheiro,
               (ficha.dados->'atributos'->>'vontade')::int AS vontade,

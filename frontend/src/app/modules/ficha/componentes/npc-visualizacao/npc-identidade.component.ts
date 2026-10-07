@@ -6,7 +6,8 @@ import { CategoriaNpcEnum } from "@contratados-rpg/shared/enums";
 import { IMAGEM_MIMES_ACCEPT } from "@contratados-rpg/shared/validators";
 import type { FichaImagemFocoDto } from "@contratados-rpg/shared/dtos/ficha";
 import { calcularEnergia, obterReferenciaCategoria,
-    obterReferenciaCooperacao } from "@contratados-rpg/shared/regras/npc";
+    obterReferenciaCooperacao, calcularDefesasNpc } from "@contratados-rpg/shared/regras/npc";
+import { calcularBonusDefesaEquipamento } from "@contratados-rpg/shared/regras/agente";
 import { Icone } from "../../../../shared/icone/icone.component";
 import { AutoFocus } from "../../../../shared/auto-focus/auto-focus.directive";
 import { FocoImagem } from "../../../../shared/foco-imagem.directive";
@@ -74,6 +75,19 @@ export class NpcIdentidade {
     readonly erroCooperacao = signal<string | null>(null);
     private readonly barraCooperacao = viewChild(BarraEscala);
     readonly civil = computed(() => this.dados().categoria === CategoriaNpcEnum.CIVIL);
+    /** Bônus de equipamento (itens equipados do `inventario`) somado **por cima** do snapshot
+     * manual de Defesa/Bloquear/Esquivar (`m4-20`) — nunca escrito de volta na ficha, mesmo
+     * padrão "manual + equipamento" de `calcularBonusDefesaEquipamento` no agente. */
+    readonly bonusEquipamento = computed(() =>
+        calcularBonusDefesaEquipamento(this.dados().inventario ?? []));
+    readonly defesas = computed(() => calcularDefesasNpc(this.dados()));
+    readonly notaDefesa = computed(() => this.textoNotaBonus(this.bonusEquipamento().defesa));
+    readonly notaBloquear = computed(() => this.textoNotaBonus(this.bonusEquipamento().bloqueio));
+    readonly notaEsquivar = computed(() => this.textoNotaBonus(this.bonusEquipamento().esquiva));
+
+    private textoNotaBonus(bonus: number): string {
+        return bonus !== 0 ? `${bonus > 0 ? "+" : ""}${bonus} equip.` : "";
+    }
     readonly pool = computed(() => typeof calcularEnergia({ categoria: this.dados().categoria,
         destreza: this.dados().atributos.destreza }) !== "number");
     /** Violação específica do valor avulso em edição (nível/cooperação têm regra própria em

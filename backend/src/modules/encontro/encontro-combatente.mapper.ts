@@ -13,6 +13,7 @@ import {
   montarResistencias,
 } from '@contratados-rpg/shared/regras/agente';
 import { somarResistenciasCriaturaPorTipo } from '@contratados-rpg/shared/regras/criatura';
+import { calcularDefesasNpc } from "@contratados-rpg/shared/regras/npc";
 import {
   obterDadoExtraIniciativaFormacao,
   obterResistenciaFormacao,
@@ -118,11 +119,11 @@ function resolverEstadoDaCriatura(dados: FichaCriaturaDadosDto): EstadoDoCombate
 }
 
 /**
- * Resistência a dano por tipo (m7-17) — só agente e criatura têm ficha tipada o bastante pra
- * calcular. Agente reusa o mesmo motor da aba Combate da ficha (`montarResistencias`: manual +
+ * Resistência a dano por tipo (m7-17). Agente reusa o motor da aba Combate da ficha
+ * (`montarResistencias`: manual +
  * equipamento + Formação, incluindo Maestria de Vigor quando aplicável); criatura soma as linhas
- * de `resistencias` (`subtipo` não distingue aqui). NPC (sem bloco de resistências no contrato) e
- * avulso saem `null` — não é `0`, é "não existe".
+ * de `resistencias` (`subtipo` não distingue aqui). NPC usa o equipamento (m4-20), sem
+ * Maestria/Formação/amplificadores; NPC legado sem inventário e avulso saem `null`.
  */
 function resolverResistencias(linha: EncontroCombatenteLinhaDto): Partial<Record<TipoDanoEnum, number>> | null {
   if (linha.fichaId === null || linha.fichaDados === null) {
@@ -144,6 +145,14 @@ function resolverResistencias(linha: EncontroCombatenteLinhaDto): Partial<Record
   }
   if (linha.tipoFicha === TipoFichaEnum.CRIATURA) {
     return somarResistenciasCriaturaPorTipo((linha.fichaDados as FichaCriaturaDadosDto).resistencias ?? []);
+  }
+  if (linha.tipoFicha === TipoFichaEnum.NPC) {
+    const dados = linha.fichaDados as FichaNpcDadosDto;
+    if (!dados.inventario?.length) return null;
+    const resistencias = montarResistencias({ itens: dados.inventario, amplificadores: [] });
+    return Object.fromEntries(resistencias.map(
+      (resistencia) => [resistencia.tipo, resistencia.total],
+    ));
   }
   return null;
 }
@@ -188,17 +197,18 @@ function resolverEstadoDoAvulso(linha: EncontroCombatenteLinhaDto): EstadoDoComb
 }
 
 /**
- * NPC lê snapshots e recursos do contrato próprio (m4-07), sem regras de equipamento de agente.
+ * NPC lê snapshots e recursos do contrato próprio, somando só o equipamento (m4-20).
  */
 function resolverEstadoDoNpc(dados: FichaNpcDadosDto): EstadoDoCombatente {
+  const defesas = calcularDefesasNpc(dados);
   return {
     vidaAtual: dados.vidaAtual,
     vidaMaxima: dados.vidaMaxima,
     energiaAtual: dados.energia.atual,
     energiaMaxima: dados.energia.maxima,
-    defesa: dados.defesaBase,
-    esquiva: dados.esquivar,
-    bloqueio: dados.bloquear,
+    defesa: defesas.defesa,
+    esquiva: defesas.esquiva,
+    bloqueio: defesas.bloqueio,
     contraAtaque: null,
     destreza: dados.atributos.destreza,
     iniciativaBonus: 0,

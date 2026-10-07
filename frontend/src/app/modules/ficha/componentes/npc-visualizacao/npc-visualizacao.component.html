@@ -26,17 +26,21 @@
                             [nome]="
                                 destino === 'habilidades'
                                     ? 'habilidades'
-                                    : destino === 'conduta'
-                                      ? 'combate'
-                                      : 'sanidade'
+                                    : destino === 'equipamento'
+                                      ? 'armazenamento'
+                                      : destino === 'conduta'
+                                        ? 'combate'
+                                        : 'sanidade'
                             "
                         />
                         <span class="abas__rotulo">{{
                             destino === "habilidades"
                                 ? "Habilidades"
-                                : destino === "conduta"
-                                  ? "Conduta"
-                                  : "Sanidade"
+                                : destino === "equipamento"
+                                  ? "Equipamento"
+                                  : destino === "conduta"
+                                    ? "Conduta"
+                                    : "Sanidade"
                         }}</span>
                     </button>
                 }
@@ -54,6 +58,9 @@
                             }
                             @case ("sanidade") {
                                 <app-npc-sanidade-lista [gerenciavel]="gerenciavel()" />
+                            }
+                            @case ("equipamento") {
+                                <app-npc-equipamento [gerenciavel]="gerenciavel()" />
                             }
                             @case ("conduta") {
                                 <div

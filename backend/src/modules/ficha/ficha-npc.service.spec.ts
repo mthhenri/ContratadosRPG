@@ -3,7 +3,8 @@ import type {
     FichaNpcDadosDto, FichaNpcVitalidadeInternoAlterarDto, FichaRecuperadaDto,
 } from "@contratados-rpg/shared/dtos/ficha";
 import {
-    CategoriaNpcEnum, HabilidadeTipoNpcEnum, TipoCampanhaMembroPapelEnum, TipoFichaEnum,
+    CategoriaNpcEnum, HabilidadeTipoNpcEnum, ItemCategoriaEnum, PatenteEnum,
+    TipoCampanhaMembroPapelEnum, TipoFichaEnum,
 } from "@contratados-rpg/shared/enums";
 import type { ArmazenamentoProvedor } from "../../core/armazenamento";
 import { BusinessException, UnauthorizedAccessException } from "../../core/exceptions";
@@ -48,6 +49,7 @@ describe("FichaService — NPC (m4-07)", () => {
         criarFicha: vi.fn(), recuperarPorId: vi.fn(), alterarFicha: vi.fn(),
         recuperarAcesso: vi.fn(), atribuirCampanha: vi.fn(), alterarVitalidadeNpc: vi.fn(),
         alterarImagem: vi.fn(),
+        listarPorCampanha: vi.fn(),
     };
     const campanha = { recuperarMembro: vi.fn(), contarCampanhasComoMestre: vi.fn() };
     const gateway = {
@@ -183,6 +185,56 @@ describe("FichaService — NPC (m4-07)", () => {
             tipo: TipoFichaEnum.NPC, cor: "#123456", imagemFoco: { x: 40, y: 60 },
             dados: { vidaMaxima: 999, energia: { maxima: 99 }, anotacoes: "Segredo do mestre" },
         });
+    });
+
+    it("listagem NPC soma bônus aos snapshots sem expor o inventário interno (m4-20)", async () => {
+        repositorio.listarPorCampanha.mockResolvedValue([{
+            id: 7, tipo: TipoFichaEnum.NPC, nome: "Rafael", defesa: 45, esquiva: 47,
+            bloqueio: 48, vidaMaxima: 999, energiaMaxima: 99,
+            inventarioMaximo: null, amplificadores: [], vontade: 1,
+            itens: [{
+                nome: "Colete de Kevlar", categoria: ItemCategoriaEnum.PROTECOES,
+                custo: 1500, peso: 2, quantidade: 1, guardada: false, equipado: true,
+                modificacoes: [{ nome: "Resistente", empilhamentos: 3 }],
+            }],
+        }]);
+        const [resultado] = await service.listarFichas({ campanhaId: 3 }, mestre);
+        expect(resultado).toMatchObject({
+            defesa: 45, esquiva: 47, bloqueio: 50, vidaMaxima: 999, energiaMaxima: 99,
+        });
+        expect(resultado).not.toHaveProperty("itens");
+        expect(resultado.sobrecarregado).toBeUndefined();
+    });
+
+    it("NPC legado sem inventário mantém snapshots na listagem", async () => {
+        repositorio.listarPorCampanha.mockResolvedValue([{
+            id: 7, tipo: TipoFichaEnum.NPC, nome: "Rafael", defesa: 45, esquiva: 47,
+            bloqueio: 48, vidaMaxima: 999, energiaMaxima: 99,
+        }]);
+        const [resultado] = await service.listarFichas({ campanhaId: 3 }, mestre);
+        expect(resultado).toMatchObject({
+            defesa: 45, esquiva: 47, bloqueio: 48, vidaMaxima: 999, energiaMaxima: 99,
+        });
+    });
+
+    it("equipar proteção invalida os números da listagem sem alterar snapshots (m4-20)", async () => {
+        const dados = {
+            ...criarDados(), patenteEquivalente: PatenteEnum.OPERADOR,
+            inventario: [{
+                nome: "Colete de Kevlar", categoria: ItemCategoriaEnum.PROTECOES,
+                custo: 0, peso: 0, quantidade: 1, guardada: false, equipado: false,
+                modificacoes: [{ nome: "Resistente", empilhamentos: 2 }],
+            }],
+        };
+        ficha = { ...ficha, dados: dados as unknown as FichaRecuperadaDto["dados"] };
+        const resultado = await service.alterarFichaNpc({
+            id: 7, nome: "Rafael",
+            dados: { ...dados, inventario: [{ ...dados.inventario[0], equipado: true }] },
+        }, mestre);
+        expect(gateway.emitirFichaRecortesAlterados).toHaveBeenCalledWith({
+            campanhaId: 3, fichas: true, membros: false,
+        });
+        expect(resultado.dados).toMatchObject({ defesaBase: 15, esquivar: 17, bloquear: 17 });
     });
 
     it("ativa Morrendo a zero e mantém a condição após cura até remoção explícita", async () => {

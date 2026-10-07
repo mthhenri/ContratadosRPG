@@ -3,7 +3,8 @@
 > Task do milestone `m4-ficha-criatura-npc.spec.md`, depois de `m4-19`. Spec executável
 > decorrente da [investigação concluída](../../reviews/npc-ataques-equipamentos-investigacao.md)
 > (spec investigativa em `done/`) e das decisões do autor registradas ali em 2026-10-06.
-> **Preparada; implementação depende de autorização própria de execução.**
+> **Concluída em 2026-10-06**, após continuação da implementação ativa pelo autor.
+> [Gates, revisão e evidências](../../reviews/m4-20-verificacao.md).
 
 ## Objetivo
 

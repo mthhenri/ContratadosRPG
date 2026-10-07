@@ -130,6 +130,29 @@
             </section>
             <section class="guia__etapa">
                 <div class="guia__subsecao">
+                    <span>Equipamento</span>
+                    <i></i>
+                </div>
+                <p class="guia__ajuda">
+                    Patente Equivalente:
+                    {{
+                        criacao.dados().patenteEquivalente
+                            ? rotulosPatente[criacao.dados().patenteEquivalente!]
+                            : "Nenhuma — sem modificações"
+                    }}
+                </p>
+                @if (!criacao.dados().inventario?.length) {
+                    <app-estado-vazio titulo="Sem equipamento" tamanho="compacto" />
+                } @else {
+                    <div class="guia__acoes">
+                        @for (item of criacao.dados().inventario; track $index) {
+                            <app-chip variante="sutil">{{ item.nome }}</app-chip>
+                        }
+                    </div>
+                }
+            </section>
+            <section class="guia__etapa">
+                <div class="guia__subsecao">
                     <span>Conduta</span>
                     <i></i>
                 </div>

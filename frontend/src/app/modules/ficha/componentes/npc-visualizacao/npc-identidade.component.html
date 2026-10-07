@@ -232,11 +232,16 @@
                     }
 
                     <div class="npc-identidade__stats">
-                        <app-stat rotulo="Defesa" [valor]="dados().defesaBase" tamanho="fino">
+                        <app-stat
+                            rotulo="Defesa"
+                            [valor]="defesas().defesa"
+                            [nota]="notaDefesa()"
+                            tamanho="fino"
+                        >
                             @if (gerenciavel()) {
                                 <app-valor-editavel
                                     appStatValor
-                                    [valor]="dados().defesaBase"
+                                    [valor]="defesas().defesa"
                                     [editando]="formulario.emEdicaoDe('defesaBase')"
                                     [desabilitado]="formulario.bloqueadoPorOutro('defesaBase')"
                                     [tooltip]="formulario.tooltipBloqueio('defesaBase')"
@@ -262,11 +267,16 @@
                                 </app-valor-editavel>
                             }
                         </app-stat>
-                        <app-stat rotulo="Bloquear" [valor]="dados().bloquear" tamanho="fino">
+                        <app-stat
+                            rotulo="Bloquear"
+                            [valor]="defesas().bloqueio"
+                            [nota]="notaBloquear()"
+                            tamanho="fino"
+                        >
                             @if (gerenciavel()) {
                                 <app-valor-editavel
                                     appStatValor
-                                    [valor]="dados().bloquear"
+                                    [valor]="defesas().bloqueio"
                                     [editando]="formulario.emEdicaoDe('bloquear')"
                                     [desabilitado]="formulario.bloqueadoPorOutro('bloquear')"
                                     [tooltip]="formulario.tooltipBloqueio('bloquear')"
@@ -292,11 +302,16 @@
                                 </app-valor-editavel>
                             }
                         </app-stat>
-                        <app-stat rotulo="Esquivar" [valor]="dados().esquivar" tamanho="fino">
+                        <app-stat
+                            rotulo="Esquivar"
+                            [valor]="defesas().esquiva"
+                            [nota]="notaEsquivar()"
+                            tamanho="fino"
+                        >
                             @if (gerenciavel()) {
                                 <app-valor-editavel
                                     appStatValor
-                                    [valor]="dados().esquivar"
+                                    [valor]="defesas().esquiva"
                                     [editando]="formulario.emEdicaoDe('esquivar')"
                                     [desabilitado]="formulario.bloqueadoPorOutro('esquivar')"
                                     [tooltip]="formulario.tooltipBloqueio('esquivar')"

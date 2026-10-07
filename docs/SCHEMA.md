@@ -696,7 +696,31 @@ exigem a seleção canônica. Alterar recursos não acrescenta escolhas ao legad
 Os dados de Categoria não entram no atributo, nos recursos ou na DT
 (`10 + Nível + 2 × Atributo`). Crítico do D20 mantido soma +2 uma vez ao teste,
 sem dobrar Competência/Nível/fixo. Rolagens do NPC são sempre privadas e exclusivas do mestre,
-inclusive histórico. Ataques/equipamentos seguem em task própria; sem coluna ou migration nova.
+inclusive histórico.
+
+**M4-20 — Ataques e equipamentos:** `inventario` reusa `CarrinhoItemDto`
+(`shared/regras/compras`) sem o envelope `FichaInventarioDto` do Jogador — NPC não tem
+amplificadores (Guia não os menciona). `patenteEquivalente` é a patente do agente que o
+mestre escolheu para este NPC, restrita ao subconjunto válido da `categoria` (Guia —
+"Patente Equivalente"); o limite de modificações por item é lido direto de
+`LIMITES_MODIFICACAO` (sem Prestígio). Categoria Civil não tem patente equivalente e não pode
+ter Proteções/Explosivos no inventário — mesma dupla vetada já decidida para o Civil jogador.
+Ambos os campos são opcionais; ausência é legado sem equipamento. Sem coluna ou migration
+nova (JSONB).
+
+Defesa/Bloquear/Esquivar persistidos continuam bases manuais: ficha, listagens e encontro
+apresentam `calcularDefesasNpc` (base + equipamento). Resistências do equipamento em uso
+vêm de `montarResistencias`; não ganham snapshot próprio no JSONB. Equipamento não aplica
+orçamento, teto de peso ou sobrecarga do agente. Modificações respeitam o catálogo, conflitos
+e limites da patente escolhida; ausência de patente não permite modificações.
+
+| Categoria | Patente(s) equivalente(s) |
+|---|---|
+| Civil | nenhuma |
+| Operativo | Agente, Operador |
+| Veterano | Experiente, Veterano |
+| Elite | Força Tarefa, Força Tarefa Especial, Operações Especiais |
+| Lendário | Líder Operacional |
 
 ```jsonc
 {
@@ -721,6 +745,11 @@ inclusive histórico. Ataques/equipamentos seguem em task própria; sem coluna o
   "defesaBase": 18,                     // snapshot: 10 + Nível (m3-10: editável depois)
   "bloquear": 21,                       // snapshot: Defesa Base + VIG
   "esquivar": 21,                       // snapshot: Defesa Base + DES
+  "patenteEquivalente": "VETERANO",     // PatenteEnum escolhida pelo mestre dentro da faixa da Categoria; ausente = sem modificação
+  "inventario": [                       // CarrinhoItemDto (shared/regras/compras), sem amplificadores; ausente/[] = sem equipamento
+    { "nome": "Pistola Padrão", "categoria": "ARMAS_DE_FOGO", "custo": 300, "peso": 1,
+      "quantidade": 1, "guardada": false, "modificacoes": [] }
+  ],
   "energia": {                          // modelo depende da Categoria; maxima/atual 0 e recarga null para Civil
     "maxima": 21,                       // Veterano = Reserva Fixa: 12 + DES × 3; Elite/Lendário usam Pool + Recarga
     "atual": 21,

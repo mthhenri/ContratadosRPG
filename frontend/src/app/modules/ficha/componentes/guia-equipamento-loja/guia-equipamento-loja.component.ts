@@ -73,11 +73,16 @@ interface CartaoItemVM {
 export class GuiaEquipamentoLoja {
   /** Itens já escolhidos para o kit — controlado pelo passo, este componente nunca guarda estado próprio. */
   readonly itens = input.required<readonly CarrinhoItemDto[]>();
+  /** Categorias fora do catálogo exibido (ex.: Civil sem Proteções/Explosivos) — `[]` = sem veto. */
+  readonly categoriasVetadas = input<readonly ItemCategoriaEnum[]>([]);
   /** Emite a lista inteira a cada adição/remoção/ajuste de quantidade. */
   readonly itensMudaram = output<readonly CarrinhoItemDto[]>();
 
-  /** Só as categorias com item de verdade no catálogo (exclui Amplificador/Fragmentos, vazios aqui). */
-  protected readonly categorias = computed(() => CATALOGO_CATEGORIAS.filter((c) => (CATALOGO_ITENS[c.categoria]?.length ?? 0) > 0));
+  /** Só as categorias com item de verdade no catálogo (exclui Amplificador/Fragmentos, vazios aqui),
+   *  menos as vetadas pelo consumidor (`categoriasVetadas`). */
+  protected readonly categorias = computed(() => CATALOGO_CATEGORIAS.filter(
+    (c) => (CATALOGO_ITENS[c.categoria]?.length ?? 0) > 0 && !this.categoriasVetadas().includes(c.categoria),
+  ));
   protected readonly iconesCategoria = ICONES_CATEGORIA;
   protected readonly categoriaAtiva = signal<ItemCategoriaEnum>(ItemCategoriaEnum.CORPO_A_CORPO);
   protected readonly busca = new FormControl('', { nonNullable: true });
@@ -102,7 +107,7 @@ export class GuiaEquipamentoLoja {
       }
     } else {
       const categoria = this.categoriaAtiva();
-      for (const item of CATALOGO_ITENS[categoria] ?? []) {
+      for (const item of this.categoriasVetadas().includes(categoria) ? [] : CATALOGO_ITENS[categoria] ?? []) {
         bruto.push({ item, categoria });
       }
     }

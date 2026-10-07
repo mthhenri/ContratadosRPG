@@ -1,6 +1,7 @@
-import type { CategoriaNpcEnum } from "../../enums";
+import type { CategoriaNpcEnum, PatenteEnum } from "../../enums";
 import type { FichaAtributosDto } from "./ficha.dtos";
 import type { FichaNpcDadosDto, FichaNpcHabilidadeDto } from "./ficha-npc.dtos";
+import type { CarrinhoItemDto } from "../../regras/compras";
 
 /** Dados derivados da Categoria; nunca ajuste manual persistido. */
 export interface NpcCompetenciasDto {
@@ -99,4 +100,17 @@ export interface NpcVolumeHabilidadesValidarDto {
 /** Mesmo envelope de validação de coerência usado pela criatura. */
 export interface FichaNpcValidadaDto {
     readonly violacoes: readonly string[];
+}
+
+/** Entrada de `obterLimiteModificacoesNpc`: a patente que o mestre escolheu para o NPC. */
+export interface NpcLimiteModificacoesObterDto {
+    readonly patenteEquivalente?: PatenteEnum;
+}
+
+/** Snapshots defensivos e equipamento do NPC, inclusive no recorte resumido de listagem. */
+export interface NpcDefesasCalcularDto {
+    readonly defesaBase: number;
+    readonly bloquear: number;
+    readonly esquivar: number;
+    readonly inventario?: readonly CarrinhoItemDto[];
 }

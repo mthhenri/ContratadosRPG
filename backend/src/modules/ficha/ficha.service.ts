@@ -74,7 +74,7 @@ import {
 } from '@contratados-rpg/shared/regras/agente';
 import { calcularResumoCompras, type CarrinhoItemDto } from '@contratados-rpg/shared/regras/compras';
 import { validarFichaCriatura, validarRealocacaoAtributos } from '@contratados-rpg/shared/regras/criatura';
-import { resolverMorrendo } from "@contratados-rpg/shared/regras/npc";
+import { calcularDefesasNpc, resolverMorrendo } from "@contratados-rpg/shared/regras/npc";
 import {
   aplicarFormacaoAosDerivados,
   experimentoComPeculiaridade,
@@ -369,6 +369,16 @@ export class FichaService {
    * `inventarioMaximo` bruto pra fora do backend — esses só existem pra alimentar este cálculo.
    */
   private paraResumoPublico(fichaInterna: FichaResumoInternoDto): FichaResumoDto {
+    const defesasNpc = fichaInterna.tipo === TipoFichaEnum.NPC
+      && fichaInterna.defesa !== undefined && fichaInterna.esquiva !== undefined
+      && fichaInterna.bloqueio !== undefined
+      ? calcularDefesasNpc({
+          defesaBase: fichaInterna.defesa,
+          esquivar: fichaInterna.esquiva,
+          bloquear: fichaInterna.bloqueio,
+          inventario: fichaInterna.itens,
+        })
+      : null;
     const statsEfetivos =
       fichaInterna.tipo === TipoFichaEnum.JOGADOR
         ? calcularStatsEfetivos({
@@ -416,9 +426,9 @@ export class FichaService {
       machucado: fichaInterna.machucado,
       inconsciente: fichaInterna.inconsciente,
       prestigio: fichaInterna.prestigio,
-      defesa: statsEfetivos?.defesa ?? fichaInterna.defesa,
-      esquiva: statsEfetivos?.esquiva ?? fichaInterna.esquiva,
-      bloqueio: statsEfetivos?.bloqueio ?? fichaInterna.bloqueio,
+      defesa: statsEfetivos?.defesa ?? defesasNpc?.defesa ?? fichaInterna.defesa,
+      esquiva: statsEfetivos?.esquiva ?? defesasNpc?.esquiva ?? fichaInterna.esquiva,
+      bloqueio: statsEfetivos?.bloqueio ?? defesasNpc?.bloqueio ?? fichaInterna.bloqueio,
       contraAtaque: statsEfetivos?.contraAtaque ?? fichaInterna.contraAtaque,
       personalidade: fichaInterna.personalidade,
       origemNome: fichaInterna.origemNome,
@@ -435,6 +445,8 @@ export class FichaService {
    * máximo não há o que comparar.
    */
   private calcularSobrecarregado(fichaInterna: FichaResumoInternoDto): boolean | undefined {
+    // NPC recebe equipamento diretamente; não participa do teto de inventário de agente.
+    if (fichaInterna.tipo === TipoFichaEnum.NPC) return undefined;
     if (fichaInterna.inventarioMaximo === undefined) {
       return undefined;
     }
@@ -1223,11 +1235,12 @@ export class FichaService {
   private recorteListaFichas(ficha: FichaRecuperadaDto, tipo: TipoFichaEnum): unknown {
     if (tipo === TipoFichaEnum.NPC) {
       const dados = ficha.dados as unknown as FichaNpcDadosDto;
+      const defesas = calcularDefesasNpc(dados);
       return {
         nome: ficha.nome, cor: ficha.cor, imagemUrl: ficha.imagemUrl,
         nivel: dados.nivel, categoria: dados.categoria, cooperacao: dados.cooperacao,
         vidaAtual: dados.vidaAtual, vidaMaxima: dados.vidaMaxima, energia: dados.energia,
-        defesa: dados.defesaBase, esquiva: dados.esquivar, bloqueio: dados.bloquear,
+        defesa: defesas.defesa, esquiva: defesas.esquiva, bloqueio: defesas.bloqueio,
         morrendo: dados.condicoes?.morrendo ?? false,
       };
     }

@@ -4247,6 +4247,54 @@ export const schemasContratosPublicos = {
         "additionalProperties": false,
         "description": "Mesmo envelope de validação de coerência usado pela criatura."
     },
+    "NpcLimiteModificacoesObterDto": {
+        "type": "object",
+        "properties": {
+            "patenteEquivalente": {
+                "type": "string",
+                "enum": [
+                    "AGENTE",
+                    "OPERADOR",
+                    "EXPERIENTE",
+                    "VETERANO",
+                    "FORCA_TAREFA",
+                    "FORCA_TAREFA_ESPECIAL",
+                    "OPERACOES_ESPECIAIS",
+                    "LIDER_OPERACIONAL"
+                ]
+            }
+        },
+        "additionalProperties": false,
+        "description": "Entrada de `obterLimiteModificacoesNpc`: a patente que o mestre escolheu para o NPC."
+    },
+    "NpcDefesasCalcularDto": {
+        "type": "object",
+        "properties": {
+            "defesaBase": {
+                "type": "number"
+            },
+            "bloquear": {
+                "type": "number"
+            },
+            "esquivar": {
+                "type": "number"
+            },
+            "inventario": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "additionalProperties": true
+                }
+            }
+        },
+        "required": [
+            "defesaBase",
+            "bloquear",
+            "esquivar"
+        ],
+        "additionalProperties": false,
+        "description": "Snapshots defensivos e equipamento do NPC, inclusive no recorte resumido de listagem."
+    },
     "FichaNpcMorrendoResolverDto": {
         "type": "object",
         "properties": {
@@ -4624,6 +4672,28 @@ export const schemasContratosPublicos = {
             },
             "esquivar": {
                 "type": "number"
+            },
+            "patenteEquivalente": {
+                "type": "string",
+                "enum": [
+                    "AGENTE",
+                    "OPERADOR",
+                    "EXPERIENTE",
+                    "VETERANO",
+                    "FORCA_TAREFA",
+                    "FORCA_TAREFA_ESPECIAL",
+                    "OPERACOES_ESPECIAIS",
+                    "LIDER_OPERACIONAL"
+                ],
+                "description": "Patente do agente escolhida pelo mestre dentro da faixa válida da `categoria` (Guia —\n\"Patente Equivalente\"; `shared/regras/npc` valida o subconjunto). Ausente = sem acesso a\nmodificações; Categoria Civil nunca recebe este campo (abaixo do piso do enum)."
+            },
+            "inventario": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "description": "Reusa o carrinho do agente (`CarrinhoItemDto`), sem o envelope `FichaInventarioDto` do\nJogador — NPC não tem amplificadores (Guia não os menciona). Ausente/`[]` = sem\nequipamento; NPC antigo continua legível. Categoria Civil não aceita Proteções/Explosivos."
             },
             "energia": {
                 "$ref": "#/components/schemas/FichaNpcEnergiaDto"

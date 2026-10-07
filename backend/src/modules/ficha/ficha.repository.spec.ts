@@ -10,6 +10,9 @@ describe('FichaRepository', () => {
         await repositorio.listarPorCampanha({ campanhaId: 2 });
         const [sql, parametros] = raw.mock.calls[0] as [string, Record<string, unknown>];
         expect(sql).toContain("ficha.dados->>'categoria' AS categoria");
+        expect(sql).toContain("jsonb_typeof(ficha.dados->'inventario') = 'array'");
+        expect(sql).toContain("THEN ficha.dados->'inventario'");
+        expect(sql).toContain("ELSE COALESCE(ficha.dados->'inventario'->'itens', '[]'::jsonb)");
         expect(sql).toContain("ficha.is_deleted = false");
         expect(parametros).toEqual({ campanhaId: 2 });
     });
