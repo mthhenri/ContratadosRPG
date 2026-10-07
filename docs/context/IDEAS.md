@@ -235,6 +235,65 @@
 
 ## Abertas
 
+### I-056 — PDF das Regras com Paged.js · frontend/regras
+
+- **Ideia:** trocar a impressão nativa da `m10-10` por Paged.js só na exportação, para ter sumário com
+  número de página e referências internas "nome, p. N".
+- **Origem:** decisão do autor na quebra do M10 (impressão nativa agora, Paged.js como expansão).
+- **Por quê:** o PDF fica completo como o do Docs era — hoje o sumário sai sem páginas.
+- **Custo aparente:** uma dependência só no fluxo de exportação, CSS de mídia paginada, testes de
+  impressão. Nada muda no leitor.
+
+### I-055 — Ingestão de .docx no normalizador das Regras · frontend/regras
+
+- **Ideia:** o normalizador ler a exportação `.docx` do Docs em vez do `.md`.
+- **Origem:** revisão do exemplão do M10 (`docs/design/propostas/m10-regras-exemplao.html`) com o autor e os testers, 2026-10-06; anotada em `m10-regras.spec.md`. O autor topou a troca, para depois.
+- **Por quê:** o `.docx` preserva estrutura (tabelas, estilos) que o `.md` achata, reduzindo os
+  casos explícitos de tabela de layout.
+- **Custo aparente:** muda só a entrada do normalizador; a árvore canônica continua a mesma.
+
+### I-054 — Pontes site → regra · frontend/regras/ficha
+
+- **Ideia:** "Ver regra" em condição, atributo e habilidade da ficha, abrindo o painel de Regras na
+  seção certa.
+- **Origem:** revisão do exemplão do M10 (`docs/design/propostas/m10-regras-exemplao.html`) com o autor e os testers, 2026-10-06; anotada em `m10-regras.spec.md`.
+- **Por quê:** quem joga consulta a regra sem sair do contexto da ficha.
+- **Custo aparente:** mapa estável entre conceitos do `shared/` e âncoras do formato canônico (por
+  ID, não por nome); depende do leitor da M10.
+
+### I-053 — Editor do sistema no site · regras/documentação
+
+- **Ideia:** escrever o Sistema e o Guia dentro do site, gravando direto o formato canônico; inclui ver
+  versões antigas só para leitura.
+- **Origem:** revisão do exemplão do M10 (`docs/design/propostas/m10-regras-exemplao.html`) com o autor e os testers, 2026-10-06; anotada em `m10-regras.spec.md`. Pedido original do autor para depois do leitor.
+- **Por quê:** tira o Google Docs do fluxo e permite o texto único.
+- **Custo aparente:** alto — editor por tipo de bloco, persistência/versões, permissão de autor;
+  provável mudança do normalizador e dos tipos para `shared/`.
+
+### I-052 — Texto único: catálogos do shared vindos do documento · regras/shared
+
+- **Ideia:** habilidades, itens e demais catálogos do `shared/regras` gerados a partir dos verbetes
+  do documento, por ID (não por nome — "6º Sentido" geral ≠ o do Assassino).
+- **Origem:** revisão do exemplão do M10 (`docs/design/propostas/m10-regras-exemplao.html`) com o autor e os testers, 2026-10-06; anotada em `m10-regras.spec.md`.
+- **Por quê:** acaba a divergência entre o texto das Regras e o que o motor usa.
+- **Custo aparente:** alto — IDs estáveis no documento, depende do editor (I-053).
+
+### I-051 — IA sobre trecho das Regras · frontend/regras
+
+- **Ideia:** selecionar um trecho das Regras e perguntar o que significa.
+- **Origem:** revisão do exemplão do M10 (`docs/design/propostas/m10-regras-exemplao.html`) com o autor e os testers, 2026-10-06; anotada em `m10-regras.spec.md`. Relaciona-se à I-015.
+- **Por quê:** tira dúvida de regra no ponto em que ela surge.
+- **Custo aparente:** o mesmo da I-015 (provedor, custo, respostas erradas sobre regra), recortado.
+
+### I-050 — Refino de desenho dos ícones de identidade · frontend/ícones
+
+- **Ideia:** revisar o desenho de três ícones já decididos na `m10-03`: Suporte (cruz em círculo) ×
+  Paramédico (cruz) aparecem juntos no dossiê do Suporte e se confundem; as espadas do Combatente quase
+  viram um "X" em tamanho pequeno; a Silhueta do Civil lembra "perfil de usuário".
+- **Origem:** revisão do exemplão do M10 (`docs/design/propostas/m10-regras-exemplao.html`) com o autor e os testers, 2026-10-06; anotada em `m10-regras.spec.md`. O autor preferiu seguir com os escolhidos por ora.
+- **Por quê:** legibilidade em 14–16px e distinção dentro do mesmo dossiê.
+- **Custo aparente:** só desenho + votação curta; troca de SVG no `app-icone`.
+
 ### I-049 — Pasta de descarte de specs com memória da decisão · processo/documentação
 
 - **Ideia:** considerar uma pasta `discard` ou `trash` junto de `backlog`, `active` e `done`
@@ -585,7 +644,7 @@
 
 ### I-015 — M10 sugerido: assistência por IA · inteligência artificial
 
-- **Ideia:** integrar assistência de IA — possivelmente como M10 — em diferentes pontos do produto:
+- **Ideia:** integrar assistência de IA em diferentes pontos do produto:
   no guia de criação de personagem, como ajuda para dúvidas sobre o sistema e como ferramenta de
   escrita e preparação para o mestre.
 - **Origem:** conversa com o autor em 2026-08-11, ao levantar módulos futuros para a plataforma.
@@ -596,7 +655,8 @@
   permissões, custos e limites de uso, privacidade dos dados da campanha, prevenção de respostas
   incorretas sobre regras e UX específica para cada caso. Provedor ainda não definido (Gemini,
   OpenAI ou outro); também falta decidir se será uma experiência única ou recursos independentes.
-  A numeração M10 é sugestão, não decisão de roadmap.
+  A numeração M10 sugerida foi ocupada pelas Regras (`m10-regras.spec.md`, 2026-10-06); o número
+  desta ideia fica para quando for promovida.
 
 ### I-016 — M11 sugerido: tabletop virtual e biblioteca de tokens · campanha/mapa
 

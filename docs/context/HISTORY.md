@@ -1,5 +1,25 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-06 — M10 Regras: decisões fechadas e quebra em tasks
+
+Conversa de 05–06/10 com o autor e os testers sobre trocar os PDFs de regras da topbar por um leitor
+próprio. O visual foi decidido sobre um exemplão standalone (`docs/design/propostas/m10-regras-exemplao.html`,
+abas Protótipo/Decisões/Ícones), compartilhado com os testers. Decisões finais do autor: página em
+**coluna à esquerda** (~960px, trilho + documento alinhados à esquerda; largura total descartada);
+normalizador em `frontend/scripts/` (só o build do front consome, sem emenda à §6 do SYSTEM.SPEC);
+módulo `modules/regras`; PDF por **impressão nativa** com Paged.js como expansão futura (limite:
+sumário sem número de página e links sem "p. N"); ok final em Módulos de fragmento, Ficha completa e
+Tabelas de layout. Os 18 ícones de identidade foram votados com os testers (Lutador = halter,
+Civil = silhueta, Criatura = logo SCP); o refino de desenho ficou para depois (I-050).
+
+Quebra: guarda-chuva `m10-regras.spec.md` + `m10-01`…`m10-11` em `docs/specs/backlog/`. Fora da
+numeração, a pedido do autor: `icones-recursos-sistema` (trio Vida/Energia/Defesa no site todo,
+entrega 1 é pré-requisito da `m10-07`, mais o levantamento de outros ícones e dos glifos de texto
+usados como ícone) e `regras-glossario` (esboço independente). Itens que ficaram de fora viraram
+I-050…I-056 no IDEAS (refino de ícones, IA sobre trecho, texto único, editor, pontes site → regra,
+`.docx`, Paged.js); a I-015 deixou de reivindicar o número M10. O exemplão segue sem commit até o
+autor pedir.
+
 ## 2026-10-06 — Versão 1.6.0 preparada com patchnote aprovado
 
 O autor aprovou o texto integral da nota e o número 1.6.0 após revisar o rascunho.
