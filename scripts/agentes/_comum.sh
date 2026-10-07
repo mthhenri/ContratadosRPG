@@ -35,7 +35,8 @@ verificar_ligado() {
   local destino="$1"
   local variavel
   variavel="AGENTES_$(printf '%s' "$destino" | tr '[:lower:]' '[:upper:]')"
-  case "${!variavel:-on}" in
+  local valor="${!variavel:-on}"
+  case "$(printf '%s' "$valor" | tr '[:upper:]' '[:lower:]')" in
     off|0|false|desligado) falhar 3 "integração com $destino desligada ($variavel=${!variavel}). Execute a tarefa sem delegar." ;;
   esac
 }
@@ -63,8 +64,26 @@ verificar_duplicada() {
   fi
 }
 
-# Vagas simultâneas por destino (AGENTES_MAX_PARALELO, padrão 2).
+# Valida o tempo-limite (minutos inteiros ≥ 1).
+validar_minutos() {
+  [[ "$1" =~ ^[1-9][0-9]*$ ]] || falhar 2 "--tempo-limite deve ser um inteiro de minutos ≥ 1: $1"
+}
+
+# Garante que uma opção recebeu valor ($1 = nome, $2 = quantidade de argumentos restantes).
+exigir_valor() {
+  (( $2 >= 2 )) || falhar 2 "falta o valor de $1"
+}
+
+# Vagas simultâneas por destino (AGENTES_MAX_PARALELO, padrão 2). Ao sair — inclusive
+# por SIGINT/SIGTERM — encerra o agente filho (AGENTES_FILHO) e libera a vaga; sem
+# isso o `timeout`, que roda no próprio grupo de processos, deixaria o agente vivo.
 AGENTES_VAGA=""
+AGENTES_FILHO=""
+liberar() {
+  [[ -n "$AGENTES_FILHO" ]] && kill -TERM "$AGENTES_FILHO" 2>/dev/null
+  [[ -n "$AGENTES_VAGA" ]] && rm -rf "$AGENTES_VAGA"
+  return 0
+}
 ocupar_vaga() {
   local destino="$1" maximo="${AGENTES_MAX_PARALELO:-2}" indice
   mkdir -p "$AGENTES_ESTADO/vagas"
@@ -77,7 +96,8 @@ ocupar_vaga() {
     if mkdir "$vaga" 2>/dev/null; then
       echo "$$" > "$vaga/pid"
       AGENTES_VAGA="$vaga"
-      trap 'rm -rf "$AGENTES_VAGA"' EXIT
+      trap liberar EXIT
+      trap 'exit 143' INT TERM
       return 0
     fi
   done
@@ -102,12 +122,14 @@ hash_tarefa() {
   if command -v sha256sum >/dev/null; then sha256sum; else shasum -a 256; fi | cut -c1-16
 }
 
-# `timeout` do GNU coreutils (gtimeout no macOS com Homebrew); sem ele, roda sem limite.
-com_tempo_limite() {
-  local minutos="$1"; shift
-  if command -v timeout >/dev/null; then timeout "${minutos}m" "$@"
-  elif command -v gtimeout >/dev/null; then gtimeout "${minutos}m" "$@"
-  else "$@"
+# Prefixo de tempo-limite em TEMPO_LIMITE: `timeout` do GNU coreutils (gtimeout no
+# macOS com Homebrew); sem ele, roda sem limite. Array (não função) para que `$!`
+# de um comando em segundo plano seja o próprio processo do limite/agente.
+TEMPO_LIMITE=()
+definir_tempo_limite() {
+  if command -v timeout >/dev/null; then TEMPO_LIMITE=(timeout "${1}m")
+  elif command -v gtimeout >/dev/null; then TEMPO_LIMITE=(gtimeout "${1}m")
+  else TEMPO_LIMITE=(env)
   fi
 }
 

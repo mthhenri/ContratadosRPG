@@ -3335,7 +3335,8 @@ Orquestração multiagente: o agente principal (Claude Code ou Codex) delega por
 subagentes Claude (`.claude/agents/`: `implementador` sonnet, `revisor` opus, `testador` haiku, além
 do `Explore` embutido) e ao outro agente externo por `scripts/agentes/codex-delegar.sh` /
 `claude-delegar.sh` (sandbox read-only ou workspace-write sem rede no Codex; ferramentas restritas no
-Claude; profundidade 1, deduplicação 24 h, 2 simultâneas por destino). Política na skill
+Claude; profundidade 1 — hook `PreToolUse` impede subagente de chamar os wrappers —, deduplicação
+24 h, 2 simultâneas por destino). Política na skill
 `orquestracao`. No ambiente cloud o Codex depende de `api.openai.com` liberado na rede do ambiente e
 de `CODEX_API_KEY`; sem isso o wrapper sai com `7`/`8` e o orquestrador segue sem delegar.
 

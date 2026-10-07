@@ -12,8 +12,11 @@
 #
 # Modos e permissões (impostas por --allowedTools/--disallowedTools):
 #   consulta       só leitura: Read, Grep, Glob e git diff/log/show/status.
-#   implementacao  edita arquivos e roda build/test/lint do npm; sem commit,
-#                  push, reset, checkout, rm nem subagentes.
+#   implementacao  edita arquivos e roda build/test/lint do npm; commit, push,
+#                  reset, checkout, rm e subagentes negados como comandos diretos.
+# Limite honesto: ao contrário do Codex, não há sandbox de sistema — código que o
+# próprio agente escreva e rode via `npm run test` não é isolado. Revise o diff.
+# --setting-sources project,local ignora as regras `allow` do usuário (~/.claude).
 #
 # Variáveis: AGENTES_CLAUDE=off desliga · AGENTES_CLAUDE_MODELO fixa o modelo ·
 # CLAUDE_BIN aponta o executável · AGENTES_MAX_PARALELO limita simultâneas.
@@ -22,6 +25,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/_comum.sh"
 
 modo="" esforco="" modelo="${AGENTES_CLAUDE_MODELO:-}" agente="" orcamento="2" diretorio="" arquivo_tarefa="" minutos=30 forcar=0
 while (( $# )); do
+  [[ "$1" == --* && "$1" != --forcar && "$1" != --help ]] && exigir_valor "$1" "$#"
   case "$1" in
     --modo) modo="$2"; shift 2 ;;
     --esforco) esforco="$2"; shift 2 ;;
@@ -39,7 +43,8 @@ done
 
 leitura=(Read Grep Glob "Bash(git diff:*)" "Bash(git log:*)" "Bash(git show:*)" "Bash(git status:*)")
 proibidas=(Agent Task "Bash(git push:*)" "Bash(git commit:*)" "Bash(git reset:*)" "Bash(git checkout:*)"
-  "Bash(git clean:*)" "Bash(git rebase:*)" "Bash(rm:*)" "Bash(scripts/agentes/*)")
+  "Bash(git clean:*)" "Bash(git rebase:*)" "Bash(rm:*)" "Bash(scripts/agentes/*)"
+  "Bash(git * --output*)")
 case "$modo" in
   consulta)
     modelo="${modelo:-opus}"; esforco="${esforco:-high}"
@@ -52,6 +57,7 @@ case "$modo" in
 esac
 case "$esforco" in low|medium|high|xhigh|max) ;; *) falhar 2 "--esforco inválido: $esforco" ;; esac
 
+validar_minutos "$minutos"
 verificar_ligado claude
 verificar_profundidade
 diretorio="$(resolver_diretorio "$diretorio")"
@@ -77,6 +83,7 @@ argumentos=(-p
   --effort "$esforco"
   --permission-mode "$permissao"
   --no-session-persistence
+  --setting-sources project,local
   --output-format text
   --max-budget-usd "$orcamento"
   --allowedTools "${permitidas[@]}"
@@ -88,14 +95,19 @@ printf '%q ' "$claude_bin" "${argumentos[@]}" > "$pasta/comando.txt"
 estado_git > "$pasta/git-antes.txt"
 inicio=$SECONDS
 status=0
-(cd "$diretorio" && AGENTES_PROFUNDIDADE=1 com_tempo_limite "$minutos" "$claude_bin" "${argumentos[@]}" \
-  < "$pasta/tarefa.md" > "$pasta/resposta.md" 2> "$pasta/stderr.log") || status=$?
+definir_tempo_limite "$minutos"
+(cd "$diretorio" && AGENTES_PROFUNDIDADE=1 exec "${TEMPO_LIMITE[@]}" "$claude_bin" "${argumentos[@]}" \
+  < "$pasta/tarefa.md" > "$pasta/resposta.md" 2> "$pasta/stderr.log") &
+AGENTES_FILHO=$!
+wait "$AGENTES_FILHO" || status=$?
+AGENTES_FILHO=""
 duracao=$(( SECONDS - inicio ))
+(( status == 0 )) && [[ ! -s "$pasta/resposta.md" ]] && status=1
 registrar claude "$modo" "$modelo${agente:+/$agente}" "$esforco" "$duracao" "$status" "$hash" "$pasta"
 
 relativa="${pasta#"$AGENTES_RAIZ"/}"
 estado_git > "$pasta/git-depois.txt"
-if (( status == 0 )) && [[ -s "$pasta/resposta.md" ]]; then
+if (( status == 0 )); then
   cat "$pasta/resposta.md"
   echo
   relatar_alteracoes "$pasta/git-antes.txt" "$pasta/git-depois.txt"
@@ -103,5 +115,5 @@ if (( status == 0 )) && [[ -s "$pasta/resposta.md" ]]; then
 else
   echo "[delegacao] claude $modo falhou (status $status, ${duracao}s). Últimas linhas de $relativa/stderr.log:" >&2
   tail -n 15 "$pasta/stderr.log" >&2
-  exit $(( status == 0 ? 1 : status ))
+  exit "$status"
 fi

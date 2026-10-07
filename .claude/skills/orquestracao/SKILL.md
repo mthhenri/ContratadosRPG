@@ -58,7 +58,8 @@ scripts/agentes/codex-delegar.sh --modo implementacao [--esforco medium] --taref
 ```
 
 Escreva a tarefa num arquivo do scratchpad, não no repositório. Saída: a resposta
-final do Codex + uma linha `[delegacao] …`; registro completo em
+final do Codex, a lista de arquivos que ele alterou (com alerta se tocou
+configuração de agentes/CI) e uma linha `[delegacao] …`; registro completo em
 `.agentes/execucoes/` (ignorado pelo git).
 
 **Claude** (a partir do Codex, quando o Codex é o orquestrador):
@@ -69,7 +70,8 @@ scripts/agentes/claude-delegar.sh --modo implementacao --agente implementador --
 ```
 
 O sandbox do Codex corta rede; a chamada precisa de aprovação para rodar fora
-dele — peça ao usuário, não contorne.
+dele — peça ao usuário, não contorne. No modo implementação o Claude chamado não
+tem sandbox de sistema (só ferramentas restritas): revise o diff que ele deixar.
 
 Códigos de saída dos dois wrappers: `3` integração desligada · `4` você já é um
 agente delegado · `5` consulta duplicada · `6` limite de simultâneas · `7` CLI
@@ -91,7 +93,9 @@ não autenticada · `8` sem rede até o provedor · `127` CLI ausente. Em qualqu
 ## 5. Limites (anti-loop e custo)
 
 - **Profundidade 1**: agente delegado não delega. Subagentes Claude não têm a
-  ferramenta `Agent`; os wrappers recusam quando `AGENTES_PROFUNDIDADE≥1`.
+  ferramenta `Agent` e o hook `scripts/agentes/hook-profundidade.sh` bloqueia os
+  wrappers quando chamados de dentro de subagente; os wrappers recusam quando
+  `AGENTES_PROFUNDIDADE≥1` (processo externo delegado).
 - **Por tarefa do usuário**: no máximo 2 consultas ao Codex e 1 rodada de revisão
   independente, salvo informação nova relevante. Até 4 subagentes Claude em paralelo.
 - **Simultâneas**: os wrappers aceitam no máximo 2 execuções por destino

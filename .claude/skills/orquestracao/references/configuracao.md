@@ -10,7 +10,7 @@
 | Wrapper Claude → Codex | `scripts/agentes/codex-delegar.sh` |
 | Wrapper Codex → Claude | `scripts/agentes/claude-delegar.sh` |
 | Guardas comuns e cabeçalho | `scripts/agentes/_comum.sh`, `scripts/agentes/cabecalho-delegado.md` |
-| Permissão automática do wrapper | `.claude/settings.json` (`permissions.allow`) |
+| Permissão automática do wrapper e hook de profundidade | `.claude/settings.json` (`permissions.allow`, `hooks.PreToolUse` → `scripts/agentes/hook-profundidade.sh`) |
 | Registro das chamadas externas | `.agentes/delegacoes.log` e `.agentes/execucoes/` (ignorados pelo git) |
 
 ## Modelos
@@ -45,6 +45,23 @@ implementação; troque com `--modelo` ou `AGENTES_CLAUDE_MODELO`.
   estar em *Allowed domains* da política de rede do ambiente, e a chave entra como
   variável de ambiente do ambiente — nunca no chat nem no repositório.
 
+## Permissões efetivas
+
+| Destino/modo | Barreira | Pode | Não pode |
+|---|---|---|---|
+| Codex `consulta` | sandbox `read-only` do Codex | ler o repositório | escrever, rede |
+| Codex `implementacao` | sandbox `workspace-write` | escrever no repositório | escrever em `.git`, `/tmp` ou fora do repo; rede |
+| Claude `consulta` | `--allowedTools`/`--disallowedTools` | Read/Grep/Glob, git diff/log/show/status | Edit/Write, outros Bash, `git … --output` |
+| Claude `implementacao` | idem (sem sandbox de sistema) | editar, `npm run build/test/lint`, `npx tsc` | commit/push/reset/checkout/clean/rebase/rm como comando direto |
+
+Ambos: variáveis de ambiente reduzidas no Codex (`shell_environment_policy.inherit=core`),
+regras `allow` do usuário ignoradas no Claude (`--setting-sources project,local`).
+Risco residual conhecido: no modo consulta o agente consegue **ler** `.env` local;
+o cabeçalho proíbe, mas não há barreira técnica.
+
+O `.claude/settings.json` do projeto só vale depois que o workspace for marcado
+como confiável no Claude Code (diálogo de confiança na primeira execução interativa).
+
 ## Desligar temporariamente
 
 - Só nesta máquina: em `.claude/settings.local.json` (ignorado pelo git)
@@ -56,8 +73,8 @@ implementação; troque com `--modelo` ou `AGENTES_CLAUDE_MODELO`.
 
 1. Apague `scripts/agentes/`, `.claude/agents/{implementador,revisor,testador}.md`,
    `.claude/skills/orquestracao/` e `.agents/skills/orquestracao/`.
-2. Remova de `.claude/settings.json` as entradas `scripts/agentes/...` (ou o arquivo,
-   se só tiver elas).
+2. Remova de `.claude/settings.json` as entradas `scripts/agentes/...` e o hook
+   `PreToolUse` correspondente (ou o arquivo, se só tiver eles).
 3. Remova a seção "Orquestração multiagente" de `CLAUDE.md` **e** `AGENTS.md`.
 4. Remova `.agentes/` do `.gitignore` e a linha correspondente de
    `docs/context/MEMORY.md`.
