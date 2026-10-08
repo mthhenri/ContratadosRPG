@@ -19,6 +19,7 @@ Estas são as fontes da verdade. Em conflito entre código e documento, **o docu
 
 | Assunto | Fonte | Ler antes de |
 |---|---|---|
+| Normalizador e formato canônico das Regras (M10-01) | `frontend/scripts/normalizar-regras.mjs`; `frontend/src/app/modules/regras/regras.model.ts`; fixtures/testes em `frontend/scripts/fixtures/regras/` e `normalizar-regras.test.mjs`; [verificação](../reviews/m10-01-verificacao.md) | ampliar o parser na m10-02 ou consumir os assets `public/regras/` no leitor |
 | Constituição do projeto — precede tudo | [`docs/SYSTEM.SPEC.md`](../SYSTEM.SPEC.md) | qualquer implementação |
 | Convenções de código (referência rápida) | [`docs/CONVENTIONS.md`](../CONVENTIONS.md) | escrever qualquer arquivo |
 | **Regras do jogo — jogador** | [`docs/core/sistema-v4.1.3.md`](../core/sistema-v4.1.3.md) | tocar em **qualquer** fórmula, tabela de progressão ou regra de domínio |

@@ -1,0 +1,1 @@
+Você pode **zerar um atributo**, transferindo o ponto inicial para outro atributo ao criar sua ficha. No entanto, um atributo zerado implica em **rodar dois dados** e escolher o **menor valor**. Para saber mais sobre os testes e rolagens, veja o capítulo **Regras Gerais**, na [Página 34](#⬡-gerais).

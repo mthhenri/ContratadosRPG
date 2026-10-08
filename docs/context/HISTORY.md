@@ -1,5 +1,41 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-07 — M10-01: normalizador de núcleo e formato canônico
+
+Spec implementada e movida de backlog por active para done. O contrato público dos
+livros fica em `frontend/src/app/modules/regras/regras.model.ts`, com uniões por
+`tipo`; o normalizador em `frontend/scripts/normalizar-regras.mjs` produz os dois
+JSONs estáticos em `prestart`/`prebuild`, selecionando a versão pelo nome das fontes.
+Não altera regras, livros, PDF ou UI. Hierarquia por glifos, âncoras com colisões
+desambiguadas, tradução dos ids do Docs, links com o título de destino, tarjas,
+habilidades, listas, notas, exemplos e tabelas de dados cobrem o núcleo. Estruturas
+de layout e definições de imagens ficam genéricas, preservando o Markdown original.
+
+A revisão encontrou habilidades nas linhas posteriores de um mesmo parágrafo
+(Fortificações de Determinado). O separador foi corrigido, com fixture literal e
+teste específico. Os 20 testes do núcleo usam 14 recortes reais e os dois livros
+completos: sequência do texto plano e pontuação preservadas, 191+103 seções com
+âncoras únicas, quatro links internos do corpo resolvidos, referências inexistentes
+avisadas no teste, e publicação determinística conferida contra o contrato TypeScript.
+
+Gates: build de produção final aprovado, JSONs idênticos nos assets principal e
+isolado, prestart aprovado; shared 69 arquivos/1.157 testes, backend 53 arquivos/
+994 aprovados+1 ignorado; lint dos três workspaces sem erros (avisos do legado),
+modelo novo sem avisos. A suíte Angular na árvore compartilhada teve 3.036 aprovados
+e uma falha no teste do cartão NPC afetado pela m4-21 em edição concorrente. Para
+conferir a regressão da m10-01 separadamente, uma cópia temporária do HEAD versionado
+com somente esta implementação e o corpus dos testes passou 215 arquivos/3.037 testes,
+além dos 20 do núcleo. Alterações concorrentes preservadas; cópia temporária removida.
+
+Os 71 avisos esperados foram inventariados por documento e linha: 47 tabelas de layout
+pendentes da m10-02, oito definições de imagens preservadas e 16 colisões legítimas de
+títulos. Zero link sem destino nos livros atuais. Restrição de fontes/arquivos temporários
+do sandbox e falhas transitórias do compilador foram separadas dos resultados finais;
+o aviso de budget existente permaneceu sem elevar o teto. Sem mudança visual, não há
+gate de UI nesta task. Evidências e limites em `docs/reviews/m10-01-verificacao.md`.
+M10 fica em 1/11, próxima task de normalização m10-02. Autor autorizou commit específico
+da M10-01; demais frentes preservadas, sem push.
+
 ## 2026-10-07 — Revisão Sistema v4.1.3/Guia v4.2.0: guarda-chuva fechado
 
 Autor autorizou o fecho após conferir que as adequações técnicas já estavam concluídas.

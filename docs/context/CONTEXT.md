@@ -38,7 +38,9 @@
 > [checagens documentais](../reviews/p-102-verificacao.md), versionadas em commit próprio
 > após autorização do autor. P-095/P-096/P-098/P-100
 > já versionadas separadamente; P-097 e livros/leitor em grupos próprios.
-> Dados sintéticos/resíduos limpos. M10 (Regras) quebrado em `m10-01`…`m10-11` (`m10-regras.spec.md`, 2026-10-06).
+> Dados sintéticos/resíduos limpos. M10 (Regras): `m10-01` concluída, formato canônico
+> e normalizador de núcleo no build; `m10-02`…`m10-11` seguem no backlog.
+> [Gates e avisos do núcleo](../reviews/m10-01-verificacao.md).
 > **Última decisão registrada:** Sistema do Jogador v4.1.3
 > incorporado em `p-097-01`: crítico soma +2 uma vez no teste; dano/cura continuam
 > dobrando dados e valores. Motor, média do montador e leitor de documentos corrigidos.
@@ -2100,11 +2102,12 @@ incluindo todos os ajustes avulsos de pós-milestone.
 |---|---|---|
 | `civil-guia-criacao` | ficha | mapeia o escopo de `PROBLEMS.md` `P-018` (o guia de criação trata a classe Civil como um agente comum em vários passos) — spec de levantamento, ainda não implementa |
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
-| `m10-01`…`m10-11` | regras | M10 — leitor próprio das Regras no lugar dos PDFs: normalizador no build, ícones de identidade, SVG SCP, `app-gaveta`, página/painel/celular, pesquisa, exportar PDF (impressão nativa) e remoção do PDF; guarda-chuva `m10-regras` |
+| `m10-02`…`m10-11` | regras | M10 — núcleo do normalizador entregue na `m10-01`; faltam casos ricos, ícones de identidade, SVG SCP, `app-gaveta`, página/painel/celular, pesquisa, exportar PDF (impressão nativa) e remoção do PDF; guarda-chuva `m10-regras` |
 | `icones-recursos-sistema` | frontend/ícones | trio Vida/Energia/Defesa no `app-icone` (pré-requisito da `m10-07`), adoção no site todo com `appTooltip` por extenso e levantamento de outros ícones/glifos |
 | `regras-glossario` | regras | esboço independente do M10: termos marcados com cartão; pontos a fechar com o autor |
 
-Milestones ainda não abertos: `m5-guia-missao`. M10 `m10-regras` quebrado, nenhuma task iniciada. O M8 `m8-espectadores-campanha` está **concluído**
+Milestones ainda não abertos: `m5-guia-missao`. M10 `m10-regras` em execução: `m10-01` concluída;
+próxima task do normalizador é `m10-02`. O M8 `m8-espectadores-campanha` está **concluído**
 (`m8-01`…`m8-06`).
 
 ---
@@ -2144,7 +2147,7 @@ reproduzem isoladas (arquivo único), não na suíte completa.
 | M6 | Gestão de Usuários e Papéis | **concluído** — `m6-01`…`m6-08` (`m6-08`: impersonação administrativa auditável) |
 | M7 | Encontro de Combate | **concluído** — 8 tasks originais (`m7-01` contrato, `m7-02` motor puro, `m7-03` backend de montagem, `m7-04` backend de condução/tempo real, `m7-05` painel do mestre, `m7-06` visão do jogador, `m7-07` log da rodada, `m7-08` refinamento mobile) + 9 ajustes de pós-milestone (`m7-09`…`m7-17`, ver seção 4 "Encontro de Combate"). Numeração M7 é sugestão, não decisão de roadmap |
 | M8 | Espectadores e Prévias de Campanha | **concluído** — `m8-01`…`m8-06` (banco + contratos do papel ESPECTADOR; backend de permissões e as duas projeções de leitura; frontend de entrada/gestão de convites-membros/Painel do espectador ao vivo/Prévia de jogador fidedigna/visão read-only de Iniciativa; `m8-06` fechou com gate de validação integrada entre 4 contas reais). Numeração M8 é sugestão, não decisão de roadmap — ver `docs/context/IDEAS.md` |
-| M10 | Regras (documentos do sistema no site) | **quebrado** — `m10-01`…`m10-11` no backlog (2026-10-06); fonte visual `docs/design/propostas/m10-regras-exemplao.html` |
+| M10 | Regras (documentos do sistema no site) | **em execução, 1/11** — `m10-01` concluída; `m10-02`…`m10-11` no backlog; fonte visual `docs/design/propostas/m10-regras-exemplao.html` |
 
 ---
 
@@ -2152,6 +2155,15 @@ reproduzem isoladas (arquivo único), não na suíte completa.
 
 > Catálogo por capacidade. O detalhe task a task (o **porquê** de cada decisão) está no
 > `HISTORY.md` — busque pelo código da task.
+
+### Regras — formato canônico (M10-01)
+
+`frontend/scripts/normalizar-regras.mjs` gera `public/regras/sistema.json` e `guia.json`
+em `prestart`/`prebuild`, a partir da versão mais recente dos Markdown em `docs/core/`.
+Contrato em `modules/regras/regras.model.ts`; 20 testes de núcleo integram o `test`
+do frontend. Hierarquia, âncoras, links e blocos gerais estão tipados; estruturas ricas
+continuam genéricas com aviso até a m10-02. PDFs e leitor atuais continuam ativos.
+[Cobertura, avisos e regressão isolada](../reviews/m10-01-verificacao.md).
 
 ### Motor de regras — `shared/regras/` (funções puras, zero dependências)
 
