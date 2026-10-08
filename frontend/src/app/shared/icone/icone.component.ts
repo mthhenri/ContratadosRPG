@@ -45,6 +45,9 @@ import { Component, input } from '@angular/core';
  * global das regras) e de `caderno`; `imagem`, moldura com montanha ("photo") — tipo de documento
  * de imagem (o de texto usa `anotacoes`); `tamanho-real`/`ajustar-largura`, setas para fora/para
  * dentro ("arrows-maximize"/"arrows-minimize") — alternância de tamanho do leitor de imagem.
+ * Família de identidade (m10-03): classes, arquétipos, subclasses de experimento, Civil e NPC,
+ * para os dossiês do leitor de Regras (M10) e futuros consumidores. Desenhos aprovados em
+ * `docs/design/propostas/m10-regras-exemplao.html`, objeto ICO, opção `dec`.
  */
 export type IconeNome =
   | 'agente'
@@ -144,7 +147,24 @@ export type IconeNome =
   | 'biblioteca'
   | 'imagem'
   | 'tamanho-real'
-  | 'ajustar-largura';
+  | 'ajustar-largura'
+    | "combatente"
+    | "especialista"
+    | "suporte"
+    | "lutador"
+    | "mercenario"
+    | "vanguarda"
+    | "engenheiro"
+    | "assassino"
+    | "academico"
+    | "paramedico"
+    | "diplomata"
+    | "comandante"
+    | "bestial"
+    | "artificial"
+    | "hibrido"
+    | "civil"
+    | "npc";
 
 /**
  * Ícone monocromático de linha (SVG inline, `stroke: currentColor`) — reutilizado nos menus de

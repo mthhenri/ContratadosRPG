@@ -1,5 +1,40 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-08 — M10-03: catálogo de ícones de identidade aprovado
+
+A [spec](../specs/done/m10-03-icones-identidade.spec.md) acrescenta 17 nomes e SVGs ao
+`app-icone`, copiados das opções `dec` do objeto `ICO` no exemplão de Regras: classes,
+nove arquétipos, três subclasses, Civil e NPC. O 18º nome listado, Criatura, continua
+reservado à M10-04 conforme a exclusão expressa. Preservados traço 1.75, viewBox 24,
+currentColor, pontas/junções arredondadas, ponto preenchido da mira, adaga a 45° e
+aria-hidden. Nenhum consumidor ou desenho antigo mudou. Família e uso previsto
+registrados em DESIGN; ponteiro no MEMORY. I-050 e recursos permanecem no próprio escopo.
+
+Testes novos compararam a árvore SVG completa com o desenho aprovado e a distinção
+entre os 17 nomes/seis vizinhos existentes. Ciclo: 18 falhas novas antes dos SVGs;
+27/27 aprovados depois. Gate amplo: shared 1.157 aprovados (69 arquivos), backend
+994 + 1 skipped (53 arquivos), Angular 3.071 (215 arquivos, rodada direta final).
+Lint geral sem erros; único aviso novo corrigido, passe focado sem avisos novos.
+Template formatado e diff revisado por convencoes-check; ampliar o catálogo mantém
+a responsabilidade do componente, dispensando refatorar seu template extenso.
+
+Verificação pessoal com skill verify: componentes Angular reais, Cartao e TemaService,
+em composição temporária para expor os nomes ainda sem consumidor. Todos os 17 em
+14/16/24px, lado a lado com ícones atuais, nas bases escura/clara, em 1920×1080,
+360×800, 960×1080 e 1366×768. Oito cenários, 102 SVGs por cenário, dimensões/traço
+confirmados, sem overflow ou erro de página; mesma densidade/peso visual. Sem ajuste
+na geometria decidida. Composição removida e entrada original restaurada antes dos
+gates finais. [Capturas, medidas e resultados](../reviews/m10-03-verificacao.md).
+
+Limites externos separados: EPERM do Vite no sandbox exigiu reexecução fora dele.
+Build Angular de produção aprovado com CI=true/2 workers (P-104), bundle inicial
+560,55 kB com aviso de 450 kB. A troca do livro v4.1.4 já existente na sessão,
+versionada separadamente em e3da359d, deixou scripts/testes com caminhos v4.1.3:
+prebuild npm falha por PDF ausente; normalizador tem 34 pass/6 fail e interrompe a
+cadeia npm antes de Angular. P-105 registrado aberto; preparo/publicação de livros
+em checkout limpo não comprovados. Código dos ícones aprovado pelas suítes Angular,
+shared/backend, build Angular e inspeção visual; não se afirma cadeia npm verde.
+
 ## 2026-10-07 — M10-02: casos explícitos dos livros reconhecidos no normalizador
 
 Pedido do autor depois do núcleo M10-01. A

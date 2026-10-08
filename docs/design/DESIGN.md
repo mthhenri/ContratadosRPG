@@ -191,6 +191,31 @@ Os dois últimos (`.topbar`, `.abas`) foram extraídos direto de `layout.compone
 nunca tinham sido documentados aqui. Ver as telas em [`examples/`](examples/README.md) para o
 resultado renderizado de cada um.
 
+### Ícones de identidade (`m10-03`)
+
+O catálogo canônico `app-icone` (`frontend/src/app/shared/icone/`) reúne a família de
+identidade decidida no [exemplão de Regras](propostas/m10-regras-exemplao.html), objeto
+`ICO`, opção `dec`. SVGs de contorno em `viewBox="0 0 24 24"`, traço `1.75`, pontas e
+junções arredondadas; herdam `currentColor`, sem cor própria, nas bases clara e escura.
+A mira de Mercenário conserva o ponto central preenchido; Assassino conserva a rotação
+de 45°. Como os demais ícones, são decorativos (`aria-hidden`): o consumidor fornece
+o rótulo acessível quando os usa em um controle.
+
+| Família | Nomes em `IconeNome` | Desenhos aprovados |
+|---|---|---|
+| Classes | `combatente`, `especialista`, `suporte` | Espadas cruzadas, bússola, cruz em círculo |
+| Arquétipos do Combatente | `lutador`, `mercenario`, `vanguarda` | Halter, mira, escudo com avanço |
+| Arquétipos do Especialista | `engenheiro`, `assassino`, `academico` | Chave, adaga a 45°, capelo |
+| Arquétipos do Suporte | `paramedico`, `diplomata`, `comandante` | Cruz, balança, divisas |
+| Subclasses de experimento | `bestial`, `artificial`, `hibrido` | Garras, circuito, hélice |
+| Personagem/ficha | `civil`, `npc` | Silhueta, peão |
+
+Destinados aos dossiês de Classe, arquétipos, subclasses e blocos do Guia no leitor de
+Regras (M10-07), e disponíveis a outros consumidores. A M10-03 só acrescenta os 17 nomes:
+não substitui ícones nas telas atuais. `criatura` depende do SVG SCP da M10-04 e ainda
+não faz parte do catálogo. Refinos de Suporte × Paramédico, espadas pequenas e silhueta
+permanecem em `IDEAS.md` I-050; recursos Vida/Energia/Defesa têm spec própria.
+
 ### Escolha de botão
 
 Use `app-botao` quando a ação possui rótulo visual, severidade ou uma ação principal/secundária

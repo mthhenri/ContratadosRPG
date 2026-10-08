@@ -817,5 +817,86 @@
             <path d="M16 3.13a4 4 0 0 1 0 7.75" />
             <path d="M21 21v-2a4 4 0 0 0 -3 -3.85" />
         }
+        <!-- Identidade M10-03 — opções aprovadas no exemplão (ICO, dec). -->
+        @case ("combatente") {
+            <path d="M4 4l10.5 10.5M4 4h3.5l9 9M20 4l-10.5 10.5M20 4h-3.5l-9 9" />
+            <path d="M13 16.5l4.5-4.5M7 12l4.5 4.5M16 15l4 4M8 15l-4 4" />
+        }
+        @case ("especialista") {
+            <circle cx="12" cy="12" r="9" />
+            <path d="M15.5 8.5 13.4 13.4 8.5 15.5l2.1-4.9z" />
+        }
+        @case ("suporte") {
+            <circle cx="12" cy="12" r="9" />
+            <path d="M10 7h4v3h3v4h-3v3h-4v-3H7v-4h3z" />
+        }
+        @case ("lutador") {
+            <rect x="5" y="6.5" width="3" height="11" rx="1" />
+            <rect x="16" y="6.5" width="3" height="11" rx="1" />
+            <path d="M8 12h8M3 9.5v5M21 9.5v5" />
+        }
+        @case ("mercenario") {
+            <circle cx="12" cy="12" r="7" />
+            <path d="M12 2.5v4M12 17.5v4M2.5 12h4M17.5 12h4" />
+            <circle cx="12" cy="12" r=".8" fill="currentColor" />
+        }
+        @case ("vanguarda") {
+            <path d="M12 3l7 3v5c0 5-3 8.5-7 10-4-1.5-7-5-7-10V6z" />
+            <path d="M8.5 13.5 12 10l3.5 3.5" />
+        }
+        @case ("engenheiro") {
+            <path
+                d="M14.5 6.5a4 4 0 0 0-5.3 5.3L4 17a2.1 2.1 0 0 0 3 3l5.2-5.2a4 4 0 0 0 5.3-5.3l-2.5 2.5-2.5-.5-.5-2.5z"
+            />
+        }
+        @case ("assassino") {
+            <g transform="rotate(45 12 12)">
+                <path d="M12 2.5 14 5v8.5h-4V5z" />
+                <path d="M8 13.5h8" />
+                <path d="M12 13.5v5" />
+                <circle cx="12" cy="20" r="1.5" />
+            </g>
+        }
+        @case ("academico") {
+            <path d="M2.5 9 12 5l9.5 4L12 13z" />
+            <path d="M6.5 11v4.5c3 2.5 8 2.5 11 0V11" />
+            <path d="M21.5 9v5" />
+        }
+        @case ("paramedico") {
+            <path d="M9.5 3.5h5v6h6v5h-6v6h-5v-6h-6v-5h6z" />
+        }
+        @case ("diplomata") {
+            <path d="M12 4v16M7.5 20h9M5 7h14" />
+            <path d="M5 7l-2.5 6a2.5 2.5 0 0 0 5 0zM19 7l-2.5 6a2.5 2.5 0 0 0 5 0z" />
+        }
+        @case ("comandante") {
+            <path d="M5 9l7-4 7 4M5 14l7-4 7 4M5 19l7-4 7 4" />
+        }
+        @case ("bestial") {
+            <path d="M6 3.5c-1.5 5-.5 11 2.5 16.5" />
+            <path d="M11 3c-1.3 5.5-.3 11.5 3 17.5" />
+            <path d="M16 3.5c-1 5 0 10 3 15" />
+        }
+        @case ("artificial") {
+            <rect x="6.5" y="6.5" width="11" height="11" rx="1.5" />
+            <rect x="9.5" y="9.5" width="5" height="5" rx=".5" />
+            <path
+                d="M9.5 3v3.5M14.5 3v3.5M9.5 17.5V21M14.5 17.5V21M3 9.5h3.5M3 14.5h3.5M17.5 9.5H21M17.5 14.5H21"
+            />
+        }
+        @case ("hibrido") {
+            <path d="M7 3c0 6 10 6 10 12s-10 3-10 6" />
+            <path d="M17 3c0 6-10 6-10 12s10 3 10 6" />
+            <path d="M8.5 6.5h7M9 12h6M8.5 17.5h7" />
+        }
+        @case ("civil") {
+            <circle cx="12" cy="8" r="4" />
+            <path d="M4.5 20.5c.8-4 3.8-6.5 7.5-6.5s6.7 2.5 7.5 6.5" />
+        }
+        @case ("npc") {
+            <circle cx="12" cy="6" r="2.5" />
+            <path d="M9.5 10h5l1 7h-7z" />
+            <path d="M6.5 20.5h11M7.5 17h9" />
+        }
     }
 </svg>

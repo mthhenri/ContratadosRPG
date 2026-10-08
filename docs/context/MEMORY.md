@@ -19,6 +19,7 @@ Estas são as fontes da verdade. Em conflito entre código e documento, **o docu
 
 | Assunto | Fonte | Ler antes de |
 |---|---|---|
+| Ícones de identidade (M10-03) | `frontend/src/app/shared/icone/` (`IconeNome`/SVGs/testes); família em `docs/design/DESIGN.md`, decisões em `docs/design/propostas/m10-regras-exemplao.html` (`ICO`, `dec`); [verificação](../reviews/m10-03-verificacao.md) | consumir as classes, arquétipos, subclasses, Civil e NPC no leitor de Regras |
 | Normalizador e formato canônico das Regras (M10-01/02) | `frontend/scripts/normalizar-regras.mjs` e `regras-{personagens,equipamentos,guia}.mjs`; `frontend/src/app/modules/regras/regras.model.ts`; fixtures em `scripts/fixtures/regras/` e `regras-explicitos/`, testes nos respectivos `.test.mjs`; [núcleo](../reviews/m10-01-verificacao.md), [casos explícitos](../reviews/m10-02-verificacao.md) | alterar o parser ou consumir os assets `public/regras/` no leitor |
 | Constituição do projeto — precede tudo | [`docs/SYSTEM.SPEC.md`](../SYSTEM.SPEC.md) | qualquer implementação |
 | Convenções de código (referência rápida) | [`docs/CONVENTIONS.md`](../CONVENTIONS.md) | escrever qualquer arquivo |
