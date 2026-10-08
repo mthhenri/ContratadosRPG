@@ -2,6 +2,32 @@
 
 // Análogo: trilhos e sumário dos patchnotes; largura/coluna do exemplão aprovado M10.
 .regras {
+    &__pesquisa-contador {
+        position: sticky;
+        top: var(--altura-topbar);
+        z-index: 3;
+        display: flex;
+        align-items: center;
+        gap: var(--space-8);
+        padding: var(--space-8) var(--space-16);
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        font: 500 12px var(--font-mono);
+    }
+    &--painel .regras__pesquisa-contador {
+        top: 0;
+    }
+    &--gaveta:not(.regras--painel) .regras__pesquisa-contador {
+        top: calc(var(--altura-topbar) + 60px);
+    }
+    &__documento ::ng-deep .regras-pesquisa__marca {
+        background: var(--accent-dim);
+        color: var(--text);
+        &--atual {
+            outline: 1px solid var(--accent);
+            outline-offset: 1px;
+        }
+    }
     display: grid;
     grid-template-columns: 320px minmax(0, 960px);
     justify-content: start;

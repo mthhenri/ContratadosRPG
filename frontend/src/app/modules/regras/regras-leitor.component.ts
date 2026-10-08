@@ -9,6 +9,11 @@ import { Gaveta } from "../../shared/ui/gaveta/gaveta.component";
 import { RegrasLeituraStore } from "./regras-leitura.store";
 import { RegrasLeitorContexto } from "./regras-leitor-contexto";
 import { RegrasConsultaService } from "./regras-consulta.service";
+import { RegrasPesquisaController } from "./regras-pesquisa.controller";
+import { RegrasPesquisa } from "./regras-pesquisa.component";
+import { RegrasPesquisaProjecao } from "./regras-pesquisa-projecao.component";
+import { BotaoIcone } from "../../shared/ui/botao-icone/botao-icone.component";
+import { Tooltip } from "../../shared/tooltip/tooltip.directive";
 import { Icone } from "../../shared/icone/icone.component";
 import { Botao } from "../../shared/ui/botao/botao.component";
 import { Cartao } from "../../shared/ui/cartao/cartao.component";
@@ -25,14 +30,16 @@ import { construirSumarioRegras, listarAncorasRegras } from "./regras-sumario";
 
 @Component({
     selector: "app-regras-leitor",
-    providers: [RegrasLeitorContexto],
+    providers: [RegrasLeitorContexto, RegrasPesquisaController],
     imports: [NgTemplateOutlet, Icone, Botao, Cartao, Esqueleto, EstadoVazio,
-        Segmentado, SegmentadoItem, Gaveta,
+        Segmentado, SegmentadoItem, Gaveta, RegrasPesquisa, RegrasPesquisaProjecao,
+        BotaoIcone, Tooltip,
         RegrasConteudoRender],
     templateUrl: "./regras-leitor.component.html",
     styleUrl: "./regras-leitor.component.scss",
     changeDetection: ChangeDetectionStrategy.OnPush,
-    host: { "(window:resize)": "redimensionarViewport()" },
+    host: { "(window:resize)": "redimensionarViewport()",
+        "(keydown)": "pesquisa.tratarTecla($event)" },
 })
 export class RegrasLeitor {
     readonly livro = input.required<RegrasDocumento["id"]>();
@@ -44,6 +51,7 @@ export class RegrasLeitor {
     readonly secaoAlterada = output<string | null>();
     private readonly memoria = inject(RegrasLeituraStore);
     private readonly consulta = inject(RegrasConsultaService);
+    protected readonly pesquisa = inject(RegrasPesquisaController);
     protected readonly gavetaAberta = signal(false);
     protected readonly mobile = signal(window.innerWidth <= 560);
     protected readonly usarGaveta = computed(() =>
@@ -136,6 +144,7 @@ export class RegrasLeitor {
     }
 
     private carregarDocumento(livro: RegrasDocumento["id"]): void {
+        this.pesquisa.desconectarDocumento();
         this.geracao++;
         this.desconectar?.();
         this.assinatura?.unsubscribe();
@@ -146,6 +155,8 @@ export class RegrasLeitor {
             next: (documento) => {
                 this.documento.set(documento);
                 this.estado.set("ok");
+                this.pesquisa.conectarDocumento(documento, this.elemento.nativeElement,
+                    (marca, ancora) => this.posicionarOcorrencia(marca, ancora));
             },
             error: () => this.estado.set("falha"),
         });
@@ -160,8 +171,11 @@ export class RegrasLeitor {
                 if (geracao !== this.geracao || this.destroyRef.destroyed) {
                     return;
                 }
+                const corpo = this.elemento.nativeElement
+                    .querySelector<HTMLElement>(".regras__documento");
+                if (!corpo) return;
                 this.posicionarAncora(fragmento, false);
-                this.desconectar = observarSecaoRegras(this.elemento.nativeElement,
+                this.desconectar = observarSecaoRegras(corpo,
                     listarAncorasRegras(documento.filhos), (ancora) => {
                         if (!this.emPainel() && this.consulta.aberto()) return;
                         if (performance.now() < this.silenciadoAte) {
@@ -181,8 +195,8 @@ export class RegrasLeitor {
     }
 
     private posicionarAncora(ancora: string | null, suave: boolean): void {
-        const alvo = ancora ? [...this.elemento.nativeElement
-            .querySelectorAll<HTMLElement>("[data-ancora-regras]")]
+        const corpo = this.elemento.nativeElement.querySelector<HTMLElement>(".regras__documento");
+        const alvo = ancora ? [...(corpo?.querySelectorAll<HTMLElement>("[data-ancora-regras]") ?? [])]
             .find((titulo) => titulo.dataset["ancoraRegras"] === ancora) : undefined;
         if (alvo) {
             const reduzMovimento = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
@@ -235,19 +249,43 @@ export class RegrasLeitor {
         if (!this.usarGaveta()) this.gavetaAberta.set(false);
     }
 
+    protected selecionarResultado(indice: number): void {
+        this.gavetaAberta.set(false);
+        this.pesquisa.selecionarOcorrencia(indice);
+    }
+
+    protected abrirOutroDocumento(): void {
+        this.trocarDocumento(this.livro() === "sistema" ? "guia" : "sistema");
+    }
+
+    private posicionarOcorrencia(marca: HTMLElement, ancora: string | null): void {
+        if (!this.emPainel() && this.consulta.aberto()) return;
+        const distancia = marca.getBoundingClientRect().top - this.linhaLeitura();
+        const area = this.emPainel() ? this.areaRolagem() : null;
+        if (area) area.scrollTo({ top: area.scrollTop + distancia, behavior: "auto" });
+        else window.scrollTo({ top: window.scrollY + distancia, behavior: "auto" });
+        this.ativo.set(ancora); this.alterarUrl(ancora);
+        // Clique em resultado leva foco ao texto; teclado/setas continuam no controle de busca.
+        if (!this.elemento.nativeElement.contains(document.activeElement)) {
+            marca.tabIndex = -1; marca.focus({ preventScroll: true });
+        }
+    }
+
     private areaRolagem(): HTMLElement | undefined {
         return this.elemento.nativeElement.querySelector<HTMLElement>(".regras__rolagem")
             ?? undefined;
     }
 
     private linhaLeitura(): number {
+        const contador = this.elemento.nativeElement
+            .querySelector(".regras__pesquisa-contador")?.getBoundingClientRect().height ?? 0;
         if (this.emPainel()) {
-            return (this.areaRolagem()?.getBoundingClientRect().top ?? 0) + 12;
+            return (this.areaRolagem()?.getBoundingClientRect().top ?? 0) + contador + 12;
         }
-        const estilo = getComputedStyle(this.elemento.nativeElement);
-        const topbar = Number.parseFloat(estilo.getPropertyValue("--altura-topbar")) || 52;
+        // O token usa rem; medir a barra evita tratar sua parte numérica como pixels.
+        const topbar = document.querySelector(".topbar")?.getBoundingClientRect().height ?? 0;
         const barra = this.elemento.nativeElement.querySelector(".regras__barra");
-        return topbar + (barra?.getBoundingClientRect().height ?? 0) + 16;
+        return topbar + (barra?.getBoundingClientRect().height ?? 0) + contador + 16;
     }
 
     private alterarUrl(ancora: string | null): void {

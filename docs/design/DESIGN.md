@@ -215,6 +215,17 @@ própria; download provisório dos PDFs anteriores e crédito CC BY-SA no rodap�
 [Gates e limites](../specs/done/m10-06-pagina-regras/m10-06-verificacao.md).
 [Painel, celular e comparação com a Biblioteca](../specs/done/m10-08-painel-flutuante-e-celular/m10-08-verificacao.md).
 
+Desde M10-09, pesquisa no topo do trilho/gaveta segue a busca da Biblioteca:
+`app-campo` compacto com ícone busca, resultados em `app-botao` secundário/texto/
+pequeno, caminho mono e trecho seguro com `mark`. Mínimo de dois caracteres como
+o exemplão; normalização sem caixa/acento, tarjas excluídas. Resultados substituem
+sumário, com `app-estado-vazio` compacto quando não há resultado. Contador sticky
+e `app-botao-icone` compacto navegam ocorrências; Enter/Shift+Enter também navegam,
+Esc limpa. Alvos mobile seguem 44px. Outro livro usa botão secundário/link/pequeno.
+Destaques usam `--accent-dim`/`--text`, ocorrência atual com contorno `--accent`.
+Rolagem posiciona o destaque abaixo da barra e do contador medidos na aplicação.
+[Pesquisa, comparação visual e gates](../specs/done/m10-09-pesquisa-regras/m10-09-verificacao.md).
+
 **Uso da marca (decisão do autor, M10-04, 08/10/2026):** a marca própria
 ContratadosRPG — SCP misturado com D20, assets `frontend/public/logo-{black,white}.*`
 — é o padrão geral, inclusive na entrada Regras e nos níveis de ameaça.

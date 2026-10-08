@@ -1,0 +1,81 @@
+<app-campo
+    rotulo="Pesquisar no livro"
+    icone="busca"
+    tamanho="compacto"
+    dica="A partir de 2 caracteres. Enter / Shift+Enter navegam; Esc limpa."
+>
+    <input
+        class="campo__controle"
+        type="text"
+        inputmode="search"
+        enterkeyhint="search"
+        autocomplete="off"
+        placeholder="Pesquisar…"
+        [formControl]="termo"
+        maxlength="160"
+    />
+</app-campo>
+@if (pesquisa.termo().trim().length >= 2) {
+    <div class="regras-pesquisa__resultados">
+        @if (pesquisa.resultados().length === 0) {
+            <app-estado-vazio
+                tamanho="compacto"
+                icone="busca"
+                titulo="Nenhum resultado neste livro."
+                linhaApoio="Tente outra palavra ou consulte o outro livro."
+            />
+        } @else {
+            <p class="regras-pesquisa__quantidade" role="status">
+                {{ pesquisa.resultados().length }} resultados
+            </p>
+            <ol class="regras-pesquisa__lista">
+                @for (resultado of pesquisa.resultados(); track $index) {
+                    <li>
+                        <button
+                            app-botao
+                            variante="secundario"
+                            estilo="texto"
+                            tamanho="pequeno"
+                            class="regras-pesquisa__resultado"
+                            [class.regras-pesquisa__resultado--atual]="
+                                pesquisa.selecionado() === $index
+                            "
+                            (click)="selecionar.emit($index)"
+                        >
+                            <span class="regras-pesquisa__caminho">{{
+                                resultado.caminho.join(" › ")
+                            }}</span>
+                            <span class="regras-pesquisa__trecho"
+                                >{{ resultado.antes }}<mark>{{ resultado.destaque }}</mark
+                                >{{ resultado.depois }}</span
+                            >
+                        </button>
+                    </li>
+                }
+            </ol>
+        }
+        @if (pesquisa.quantidadeOutro()) {
+            <button
+                app-botao
+                variante="secundario"
+                estilo="link"
+                tamanho="pequeno"
+                class="regras-pesquisa__outro"
+                (click)="abrirOutro.emit()"
+            >
+                {{ pesquisa.quantidadeOutro() }} resultados no outro documento →
+            </button>
+        }
+        @if (pesquisa.falhaOutro()) {
+            <button
+                app-botao
+                variante="secundario"
+                estilo="link"
+                tamanho="pequeno"
+                (click)="pesquisa.carregarOutro()"
+            >
+                Tentar consultar o outro livro
+            </button>
+        }
+    </div>
+}

@@ -1,0 +1,57 @@
+@use "tema/breakpoints" as bp;
+
+:host {
+    display: contents;
+}
+.regras-pesquisa {
+    &__resultados {
+        overflow-y: auto;
+        min-height: 0;
+    }
+    &__quantidade {
+        margin: 0 0 var(--space-8);
+        font: 500 11px var(--font-mono);
+    }
+    &__lista {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+    &__resultado {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        text-align: left;
+        width: 100%;
+        white-space: normal;
+        gap: var(--space-8);
+        text-transform: none;
+        border-left: 2px solid transparent;
+        &--atual {
+            border-left-color: var(--accent);
+            background: var(--accent-dim);
+        }
+    }
+    &__caminho {
+        color: var(--text-dim);
+        font: 500 10px/1.5 var(--font-mono);
+    }
+    &__trecho {
+        font: 400 12px/1.6 var(--font-sans);
+    }
+    &__outro {
+        width: 100%;
+        white-space: normal;
+        text-align: left;
+    }
+    @include bp.mobile {
+        &__resultado,
+        &__outro {
+            min-height: bp.$alvo-toque;
+        }
+    }
+}
+mark {
+    background: var(--accent-dim);
+    color: var(--text);
+}

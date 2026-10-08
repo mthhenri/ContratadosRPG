@@ -1,5 +1,48 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-08 — M10-08 commitada; M10-09: pesquisa das Regras
+
+Autor autorizou commit M10-08 e execução M10-09. Commit `95cdfad6`, 36 arquivos,
+gate staged aprovado e trailer `Co-authored-by: Codex <noreply@openai.com>` conferido.
+M10-09 implementada/verificada, spec e anexos em `done/`, sem commit nesta entrega.
+
+Pesquisa literal frontend sobre o conteúdo canônico apresentado, sem caixa/acento,
+a partir de dois caracteres como o exemplão. Campo segue Biblioteca M9-05, caminho
+e trecho substituem sumário; destaques seguros no texto, contador/setas, Enter/
+Shift+Enter e Esc. Outro livro conserva termo, com contagem pela mesma projeção.
+Tarjas interrompem texto pesquisável; abas ocultas são reveladas antes de navegar.
+Termo e índice por livro vivem na memória da sessão entre página e painel.
+
+Responsabilidades extraídas em função pura, adaptador de projeção/marcas,
+controlador por leitor e componente de busca; evita acrescentar toda a pesquisa
+ao leitor extenso e duplicar receitas dos blocos. Projeção oculta do outro livro
+usa cache existente, `hidden`/`inert`, IDs próprios e fica fora do observador de
+seção. Angular conserva seus nós de texto originais; destaque não interpola HTML.
+Nenhum primitivo, parser, asset, regra, contrato compartilhado ou backend alterado.
+
+Revisão independente por subagente Codex, modelo da sessão, identificou Enter
+duplicado, contador sobrepondo destino e projeção oculta contaminando âncoras/IDs.
+Principal corrigiu propagação, linha de leitura e isolamento, com regressões.
+Inspeção pessoal adicional mediu a barra: token `3.25rem` estava sendo tratado
+como pixels. Corrigida medição da barra real, com regressão e verificação do
+destaque abaixo do contador. Memória da ocorrência e guarda da página de fundo
+com painel aberto também conferidas.
+
+Aplicação real em 1920×1080, 1366×768, 960×1080 e 360×800, claro/escuro: busca,
+teclado/setas, troca Sistema/Guia, resultado vazio, Esc, gaveta, painel e abas.
+Ricochete revela Mercenário; MORRENDO encontra 29 ocorrências no Sistema e cinco
+no Guia; nivel de ameaca encontra cinco no Guia. IDs únicos, URL de fundo
+preservada e ausência de overflow horizontal conferidos. Comparação pessoal com
+Biblioteca/leitor confirmou densidade, controles, foco, contraste e alvos mobile.
+
+Gate Angular: 231 arquivos, 3.117 testes passaram, excluindo dois corpus legados
+P-106. Build direto passou (initial 589,03 kB, aviso de budget preexistente), lint
+dos três workspaces zero erros e recorte final zero avisos; organização e diff
+conferidos. P-105/P-106 seguem abertos: assets locais já preparados, sem afirmar
+regeneração limpa ou suíte integral sem exclusões. Shared/backend preservam a
+evidência M10-06, sem mudança nesta task. [Relatório e limites](../specs/done/m10-09-pesquisa-regras/m10-09-verificacao.md).
+Próxima task M10-10, exportar PDF por impressão nativa. Nenhum push realizado.
+
 ## 2026-10-08 — M10-07 commitada; M10-08: painel e celular
 
 Autor autorizou commit M10-07 e início M10-08. Commit `348f76f2`, 67 arquivos,

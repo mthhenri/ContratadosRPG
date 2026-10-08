@@ -32,7 +32,11 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-10-08 · M10-08: painel global, gaveta mobile e memória
+> **Última revisão:** 2026-10-08 · M10-09: pesquisa nos dois livros, destaques,
+> contador/teclado e memória entre página/painel entregues; quatro viewports,
+> claro/escuro e estados de busca conferidos. M10-08 commitada em `95cdfad6`.
+> [Verificação da pesquisa](../specs/done/m10-09-pesquisa-regras/m10-09-verificacao.md).
+> M10-08: painel global, gaveta mobile e memória
 > por livro entregues; cinco viewports, claro/escuro, topbar/ficha, Biblioteca,
 > navegação e teclado conferidos. M10-07 commitada em `348f76f2`.
 > [Verificação e limites](../specs/done/m10-08-painel-flutuante-e-celular/m10-08-verificacao.md).
@@ -72,12 +76,12 @@
 > [checagens documentais](../specs/done/p-102-referencias-documentos-vigentes/p-102-verificacao.md), versionadas em commit próprio
 > após autorização do autor. P-095/P-096/P-098/P-100
 > já versionadas separadamente; P-097 e livros/leitor em grupos próprios.
-> Dados sintéticos/resíduos limpos. M10 (Regras): `m10-01`…`m10-08` concluídas,
+> Dados sintéticos/resíduos limpos. M10 (Regras): `m10-01`…`m10-09` concluídas,
 > normalizador, ícones/marcas e gaveta entregues. Desenhos, paleta/fundos e crédito
 > aprovados; marca própria atual preservada, com detalhes condensados em 16–24px.
 > SCP oficial somente na identidade de Criatura; marca própria SCP + D20 em Regras,
 > níveis e usos gerais. [Contrato de marcas](../design/MARCAS.md).
-> Próxima task: `m10-09`, pesquisa. `m10-09`…`m10-11` no backlog.
+> Próxima task: `m10-10`, exportar PDF por impressão nativa. `m10-10`…`m10-11` no backlog.
 > `icones-recursos-sistema` ativa: entrega 1 concluída; adoção ampla/levantamento abertos.
 > [Gates, contagens e avisos dos casos explícitos](../specs/done/m10-02-normalizador-casos-explicitos/m10-02-verificacao.md).
 > **Última decisão registrada:** Sistema do Jogador v4.1.3
@@ -2146,14 +2150,14 @@ incluindo todos os ajustes avulsos de pós-milestone.
 |---|---|---|
 | `civil-guia-criacao` | ficha | mapeia o escopo de `PROBLEMS.md` `P-018` (o guia de criação trata a classe Civil como um agente comum em vários passos) — spec de levantamento, ainda não implementa |
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
-| `m10-09`…`m10-11` | regras | M10 — leitor rico, painel/celular entregues; faltam pesquisa, exportar PDF (impressão nativa) e remoção do PDF; guarda-chuva `m10-regras` |
+| `m10-10`…`m10-11` | regras | M10 — leitor rico, painel/celular e pesquisa entregues; faltam exportar PDF (impressão nativa) e remoção do PDF; guarda-chuva `m10-regras` |
 | `regras-glossario` | regras | esboço independente do M10: termos marcados com cartão; pontos a fechar com o autor |
 
 Spec avulsa ativa: `icones-recursos-sistema`, entrega 1 concluída; faltam adoção ampla
 com tooltip por extenso e levantamento de outros ícones/glifos.
 
-Milestones ainda não abertos: `m5-guia-missao`. M10 `m10-regras` em execução: `m10-01`…`m10-08`
-concluídas; próxima task `m10-09`, pesquisa. O M8 `m8-espectadores-campanha` está **concluído**
+Milestones ainda não abertos: `m5-guia-missao`. M10 `m10-regras` em execução: `m10-01`…`m10-09`
+concluídas; próxima task `m10-10`, exportar PDF. O M8 `m8-espectadores-campanha` está **concluído**
 (`m8-01`…`m8-06`).
 
 ---
@@ -2193,7 +2197,7 @@ reproduzem isoladas (arquivo único), não na suíte completa.
 | M6 | Gestão de Usuários e Papéis | **concluído** — `m6-01`…`m6-08` (`m6-08`: impersonação administrativa auditável) |
 | M7 | Encontro de Combate | **concluído** — 8 tasks originais (`m7-01` contrato, `m7-02` motor puro, `m7-03` backend de montagem, `m7-04` backend de condução/tempo real, `m7-05` painel do mestre, `m7-06` visão do jogador, `m7-07` log da rodada, `m7-08` refinamento mobile) + 9 ajustes de pós-milestone (`m7-09`…`m7-17`, ver seção 4 "Encontro de Combate"). Numeração M7 é sugestão, não decisão de roadmap |
 | M8 | Espectadores e Prévias de Campanha | **concluído** — `m8-01`…`m8-06` (banco + contratos do papel ESPECTADOR; backend de permissões e as duas projeções de leitura; frontend de entrada/gestão de convites-membros/Painel do espectador ao vivo/Prévia de jogador fidedigna/visão read-only de Iniciativa; `m8-06` fechou com gate de validação integrada entre 4 contas reais). Numeração M8 é sugestão, não decisão de roadmap — ver `docs/context/IDEAS.md` |
-| M10 | Regras (documentos do sistema no site) | **em execução, 8/11** — `m10-01`…`m10-08` concluídas; `m10-09`…`m10-11` no backlog; fonte visual `docs/specs/backlog/m10-regras/m10-regras-exemplao.html` |
+| M10 | Regras (documentos do sistema no site) | **em execução, 9/11** — `m10-01`…`m10-09` concluídas; `m10-10`…`m10-11` no backlog; fonte visual `docs/specs/backlog/m10-regras/m10-regras-exemplao.html` |
 
 ---
 
@@ -3244,7 +3248,7 @@ Módulo renomeado de "Calculadora" (M1) para "Simulação" (rota `/simulacao`, t
 o nome antigo colidia com a calculadora aritmética real da ficha
 (`shared/calculadora-flutuante/`, botão "Abrir calculadora"), que não muda de nome nem de escopo.
 
-### Leitor e painel de Regras (M10-06/07/08) — `frontend/modules/regras`
+### Leitor, painel e pesquisa de Regras (M10-06/07/08/09) — `frontend/modules/regras`
 
 Topbar Regras e ação da ficha abrem painel global; ↗ abre `/regras/sistema` ou
 `/regras/guia` na seção atual. `RegrasLeitor` é o corpo comum, `RegrasPage` cuida
@@ -3258,6 +3262,13 @@ máximo 960px à esquerda e tabelas com rolagem própria/coluna fixa no celular.
 Painel normal e página mobile usam gaveta; painel maximizado desktop usa dois
 trilhos. Rolagem local no painel, cache compartilhado e carga somente ao abrir.
 Skeleton e erro/retry próprios; crédito CC BY-SA no rodapé.
+Pesquisa literal a partir de dois caracteres, sem caixa/acento, sobre a projeção
+canônica; caminho/trecho substituem sumário. Destaques, contador e Enter/Shift+Enter,
+setas e Esc; outro livro abre com o mesmo termo. Abas ocultas são reveladas ao
+navegar, tarjas não casam. Termo e ocorrência por livro são memória da sessão entre
+página/painel. Projeção oculta do outro livro tem IDs próprios e não participa do
+observador de seção; painel aberto não muda URL/rolagem da página de fundo.
+[Verificação da pesquisa](../specs/done/m10-09-pesquisa-regras/m10-09-verificacao.md).
 PDFs anteriores são download provisório em `/documentos/`; arquivos do antigo leitor
 permanecem até M10-11, mas o layout não o monta. Blocos ricos entregues na M10-07:
 dossiês/arquétipos/origens, equipamentos/modificações/módulos, Guia e ficha completa;

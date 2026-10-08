@@ -3,6 +3,8 @@ import { of } from "rxjs";
 import { RegrasDocumento } from "./regras.model";
 import { RegrasLeitor } from "./regras-leitor.component";
 import { RegrasService } from "./regras.service";
+import { RegrasPesquisaController } from "./regras-pesquisa.controller";
+import { RegrasLeituraStore } from "./regras-leitura.store";
 
 describe("Leitor compartilhado de Regras", () => {
     const documento: RegrasDocumento = {
@@ -45,5 +47,48 @@ describe("Leitor compartilhado de Regras", () => {
         guia.click();
         expect(trocar).toHaveBeenCalledWith("guia");
         leitor.destroy();
+    });
+
+    it("trata Enter uma única vez e Esc limpa antes do fechamento da gaveta", () => {
+        const leitor = TestBed.createComponent(RegrasLeitor);
+        leitor.componentRef.setInput("livro", "sistema"); leitor.detectChanges();
+        const pesquisa = leitor.debugElement.injector.get(RegrasPesquisaController);
+        TestBed.inject(RegrasLeituraStore).alterarTermoPesquisa("vida");
+        leitor.detectChanges();
+        const navegar = vi.spyOn(pesquisa, "navegar").mockImplementation(() => undefined);
+        const campo = leitor.nativeElement.querySelector("app-regras-pesquisa input");
+        campo.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+        expect(navegar).toHaveBeenCalledExactlyOnceWith(1);
+        campo.dispatchEvent(new KeyboardEvent("keydown", {
+            key: "Enter", shiftKey: true, bubbles: true,
+        }));
+        expect(navegar).toHaveBeenLastCalledWith(-1);
+        campo.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+        expect(pesquisa.termo()).toBe(""); leitor.destroy();
+    });
+
+    it("isola IDs da projeção do outro livro mesmo com âncoras compartilhadas", () => {
+        const leitor = TestBed.createComponent(RegrasLeitor);
+        leitor.componentRef.setInput("livro", "sistema"); leitor.detectChanges();
+        const pesquisa = leitor.debugElement.injector.get(RegrasPesquisaController);
+        pesquisa.outroDocumento.set({ ...documento, id: "guia" }); leitor.detectChanges();
+        const raiz = leitor.nativeElement as HTMLElement;
+        const titulos = [...raiz.querySelectorAll<HTMLElement>('[data-ancora-regras="vida"]')];
+        expect(titulos).toHaveLength(2);
+        expect(titulos[0].id).not.toBe(titulos[1].id);
+        leitor.destroy();
+    });
+
+    it("mede a barra em pixels mesmo quando o token está em rem, sem cobrir a ocorrência", () => {
+        const leitor = TestBed.createComponent(RegrasLeitor);
+        leitor.componentRef.setInput("livro", "sistema"); leitor.detectChanges();
+        TestBed.inject(RegrasLeituraStore).alterarTermoPesquisa("vida"); leitor.detectChanges();
+        const barra = document.createElement("header"); barra.className = "topbar";
+        barra.style.height = "3.25rem"; document.body.append(barra);
+        vi.spyOn(barra, "getBoundingClientRect").mockReturnValue({ height: 52 } as DOMRect);
+        const contador = leitor.nativeElement.querySelector(".regras__pesquisa-contador");
+        vi.spyOn(contador, "getBoundingClientRect").mockReturnValue({ height: 43 } as DOMRect);
+        expect(leitor.componentInstance["linhaLeitura"]()).toBe(111);
+        barra.remove(); leitor.destroy();
     });
 });
