@@ -273,7 +273,7 @@ Você pode **zerar um atributo**, transferindo o ponto inicial para outro atribu
 
 	Todos os atributos tem seu maior ponto de ápice, sendo ele, a **Maestria**. Esse ápice é **único**, sendo **impossível** de repeti-lo em sua ficha. Para adquirir uma maestria, a única forma é colocando **dois pontos de atributo** em um atributo que já possua 6 pontos. Com isso, o atributo receberá um **bônus adicional diferenciado** para cada atributo, sendo permanente e sem custo de energia, sendo eles:
 
-| Luta Ao obter um crítico em um ataque físico, realiza um ataque simples adicional com a arma no qual não pode ser reagido | Social Uma vez por missão, pode remover a última penalidade adquirida por um aliado nessa missão |
+| Luta Ao obter um crítico em um ataque físico, realiza um ataque simples adicional com a arma no qual não pode ser reagido (Limite de Luta ÷ 2 ataques adicionais). | Social Uma vez por missão, pode remover a última penalidade adquirida por um aliado nessa missão |
 | :---- | :---- |
 | **Pontaria** Atirar sempre é considerado mirando | **Intelecto** Soma seu segundo melhor dado do teste (max. 5\) ao seu melhor dado do teste |
 | **Força** Soma seu dano de Corpo em ataques físicos | **Medicina** Não falha mais em nenhum tipo de item medicinal |
@@ -490,7 +490,7 @@ As classes oferecem uma forma clara de **personalizar** o estilo de jogo e maxim
 | :---- | :---- | :---- |
 | **⬦ Saúde** Vida \= 20 \+ **VIG** × 3 Energia \= 22 \+ **DES** × 3 |  |  |
 | **⬦ Progressão por Nível** \[Vida\] a cada Nível recebe: 4 \+ **VIG** × 2 \[Energia\] a cada Nível recebe: 7 \+ **DES** × 2 |  |  |
-| **⬦ Arquétipos  ◻ Engenheiro** Modificação Improvisada \[0 E\] Uma vez por cena e por item, utilizando sua ação de movimento, adiciona uma modificação (ou empilhamento) à um equipamento seu ou de um aliado adjacente até o fim da cena. Não segue a regra de Bloqueio ou Limite de Empilhamentos da modificação. Requer um teste de **Intelecto** DT 15\. Em caso de falha, dura apenas 2 turnos. **◻ Assassino** Ceifador \[6 E\] Muda o dano furtivo de 1D6 para 1D8 e dobra o valor fixo (Ex: 2D6+2 se torna 2D8+4).  **◻ Acadêmico** Sabichão \[0 E\] Críticos em testes onde o efeito não é dano constam como \+3 no resultado e críticos em testes de ataque concedem \+1 no resultado. |  |  |
+| **⬦ Arquétipos  ◻ Engenheiro** Modificação Improvisada \[0 E\] Uma vez por cena e por item, utilizando sua ação de movimento, adiciona uma modificação (ou empilhamento) à um equipamento seu ou de um aliado adjacente até o fim da cena. Não segue a regra de Bloqueio ou Limite de Empilhamentos da modificação. Requer um teste de **Intelecto** DT 15\. Em caso de falha, dura apenas 2 turnos. **◻ Assassino** Ceifador \[6 E\] Muda o dano furtivo de 1D6 para 1D8 e dobra o valor fixo (Ex: 2D6+2 se torna 2D8+4).  **◻ Acadêmico** Sabichão \[0 E\] Ao obter um crítico, o bônus recebido no resultado se torna \+3 ao invés de \+2. |  |  |
 |  |  |  |
 
 | ◻ Engenheiro *“Foco em equipamentos e explosivos”*  ⬦ Atributos Bônus \+1 em Intelecto \+1 em Força ou Destreza | ◻ Assassino *“Foco em furtividade”* ⬦ Atributos Bônus \+1 em Destreza \+1 em Luta ou Pontaria | ◻ Acadêmico *“Foco em investigação e análise”* ⬦ Atributos Bônus \+1 em Intelecto \+1 em ESCOLHA ( \- LUT ou PON) |
@@ -1227,8 +1227,8 @@ A Dificuldade de um Teste (DT) é o **valor alvo mínimo a ser atingido** para o
 ### **⬥ Crítico e Margem de Crítico** {#⬥-crítico-e-margem-de-crítico}
 
 	Todos os testes possuem uma **Margem de Crítico** natural de 1, ou seja, um único valor é seu valor para obter um “Crítico”. A margem sempre inicia no topo, ou seja, no maior valor do dado, no caso de *Contratados \- RPG*, este valor é o 20\. A margem de crítico pode ser reduzida apenas de duas formas, sendo elas a **Habilidade “Chance Crítica”** e o **Fragmento de Módulo I**. Um crítico tem duas “formas de resultado”, sendo ela quando ele é obtido em algo que causa um dado resultante (ex: dano) e a outra quando é um teste de atributo.  
-	O efeito quando se causa dado resultante é simples: **Dobrar e Incrementar**. Um crítico em algo que resulta em dados irá dobrar todos os dados e valores fixos (flat ou atributo) resultante, isso com todas as bonificações aplicadas, então no caso de dano, se um Lutador dá um ataque, usando Força Bruta, usando uma arma corpo a corpo Pesada, ele causaria 3D10 \+ **Força** × 6, e se ele obter um crítico, seria 6D10 \+ **Força** × 12\. No caso de cura com uma bandagem, iria de 2D4 para 4D4 de cura.  
-	O efeito de quando é um teste (ou seja, sem dado resultante), obter um crítico iria lhe garantir apenas um valor fixo ao fim do teste, aumentando-o em \+2.
+	Independente da forma, todo crítico concede **\+2 ao resultado** do teste, seja um ataque, seja um teste de resistência, seja uma investigação. Se você obtiver um crítico o teste ganha \+2 no resultado.  
+	Já quando o efeito é de dado resultante é simples: **Dobrar**. Um crítico em algo que resulta em dados irá dobrar todos os dados e valores fixos (flat ou atributo) resultante, isso com todas as bonificações aplicadas, então no caso de dano, se um Lutador dá um ataque, usando Força Bruta, usando uma arma corpo a corpo Pesada, ele causaria 3D10 \+ **Força** × 6, e se ele obter um crítico, seria 6D10 \+ **Força** × 12\. No caso de cura com uma bandagem, iria de 2D4 para 4D4 de cura.
 
 ### **⬥ Tipos de Dano** {#⬥-tipos-de-dano}
 
