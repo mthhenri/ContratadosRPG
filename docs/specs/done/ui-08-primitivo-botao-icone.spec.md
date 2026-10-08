@@ -1,6 +1,6 @@
 # ui-08-primitivo-botao-icone.spec.md
 
-> Evolução filha da auditoria `ui-06`. Origem: `docs/design/AUDITORIA-BIBLIOTECA-VISUAL.md`.
+> Evolução filha da auditoria `ui-06`. Origem: `docs/specs/done/ui-06-auditoria-conformidade-biblioteca-visual/AUDITORIA-BIBLIOTECA-VISUAL.md`.
 
 ## Objetivo
 

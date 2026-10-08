@@ -32,7 +32,7 @@ pedem uma evolução pequena de um primitivo existente ou que justificam um novo
 
 ## Dependências
 
-- `docs/design/DESIGN.md`, `docs/design/AUDITORIA-BIBLIOTECA-VISUAL.md` e `shared/ui/`.
+- `docs/design/DESIGN.md`, `docs/specs/done/ui-06-auditoria-conformidade-biblioteca-visual/AUDITORIA-BIBLIOTECA-VISUAL.md` e `shared/ui/`.
 - Tasks `ui-01`…`ui-26` concluídas.
 
 ## Riscos e Mitigação

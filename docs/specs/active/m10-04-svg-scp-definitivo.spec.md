@@ -3,12 +3,12 @@
 > Task do milestone `m10-regras.spec.md`. Independente. **Envolve desenho: cada versão do SVG passa
 > pela aprovação do autor antes de entrar no produto.**
 
-> **Estado em 2026-10-08:** [prancha v1](../../design/propostas/m10-04-scp-aprovacao.html)
+> **Estado em 2026-10-08:** [prancha v1](m10-04-svg-scp-definitivo/m10-04-scp-aprovacao.html)
 > preparada e inspecionada nos quatro viewports. O autor revisou o uso: logo SCP oficial
 > somente na identidade de Criatura; marca própria SCP + D20 nos níveis e em Regras.
 > A prancha passa a separar os dois usos, preservando os assets oficiais preparados.
 > Paleta/fundos, crédito e gates de incorporação permanecem abertos.
-> [Evidências e etapas abertas](../../reviews/m10-04-proposta-v1.md).
+> [Evidências e etapas abertas](m10-04-svg-scp-definitivo/m10-04-proposta-v1.md).
 
 ## Objetivo
 
@@ -34,7 +34,7 @@ de ícone. No exemplão, a silhueta dos níveis vem da imagem original do Docs (
    `docs/design/tema/_tokens.scss` (dark e light). Catastrófica (preta) ganha fundo claro.
 3. **Crédito CC BY-SA 3.0** do logo SCP no rodapé das Regras (texto conferido com o autor) e
    registro da licença em `docs/design/`.
-4. Prancha de aprovação (HTML standalone em `docs/design/propostas/`) com os tamanhos e os 8 níveis.
+4. Prancha de aprovação (HTML standalone na pasta de anexos desta spec) com os tamanhos e os 8 níveis.
 
 ## Fora de escopo
 

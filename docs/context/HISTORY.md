@@ -1,5 +1,40 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-08 — Organização documental: anexos junto das specs, artefatos locais
+
+Antes de retomar a M10, o autor pediu revisar pastas versionadas e impedir a
+dispersão entre reviews, auditorias e Superpowers. Inventário: 510 arquivos em
+reviews (463 imagens, 26,58 MiB), dois em auditorias e 51 planos/designs em
+Superpowers; propostas visuais pontuais e duas auditorias de design também eram
+material de execução. Realocados 591 arquivos: 88 anexos junto das specs e 503
+artefatos locais (476 PNG + 27 JSON, 27,92 MiB), preservados por hash em `.artifacts/`.
+Livros, contrato visual, exemplos aprovados, assets de produto/seed, corpus e
+modelos reutilizáveis mantidos. Render segue o fallback autorizado já registrado.
+
+Cinco contratos sem task original ganharam registros retrospectivos, sem
+recertificar gates. Seis documentos de quatro recortes sem fecho convincente
+ficaram no backlog de conferência; usabilidade permanece ativa. A rodada histórica
+de ficha oculta continua arquivada conforme P-098, com cobertura restante agora
+registrada numa task de retomada no backlog. Estados/aprovações da M10 preservados.
+
+Política em SYSTEM.SPEC §3.1, espelhos AGENTS/CLAUDE e skills task-flow/verify;
+verificador local e CI recusam caminhos dispersos, anexos órfãos, mídia de execução
+e espelhos divergentes, inclusive no índice. Sete testes passaram, com Git real
+temporário; índice candidato aprovado sem tocar o índice real. Links conferidos
+sem nova quebra; revisão independente encontrou 26 exemplos TypeScript afetados
+pela conversão inicial, restaurados e conferidos em 558 fences. Destinos antigos
+em specs abertas e escapes de capturas no guard também corrigidos. Gerador e
+verificador da prancha realocados/exercitados, quatro viewports sem overflow;
+principal inspecionou desktop/mobile e fonte equivalente à original preservada.
+Testes Git e navegador precisaram execução fora do sandbox; passaram. Sintaxe,
+validação das skills, espelhos e diff conferidos. Nenhum comportamento/estilo do
+produto alterado; comentário de template recebeu somente novo ponteiro.
+
+Fecho e mapa completo em
+[verificação da organização](../specs/done/organizacao-documentacao-e-artefatos/verificacao.md).
+Sem commit/push e sem reescrever o histórico Git; binários dos commits anteriores
+permanecem nele. Avaliações pendentes acima não foram executadas nem encerradas.
+
 ## 2026-10-08 — M10-04: logo oficial reservado à identidade de Criatura
 
 Após revisar a prancha, o autor preferiu a marca própria ContratadosRPG
@@ -26,7 +61,7 @@ de aprovação de cada desenho antes da incorporação foi preservada. Preparado
 dois SVGs preenchidos em viewBox 24 (ícone com aro exterior reforçado e silhueta
 com espessura de referência), prancha standalone de 16 a 96px, originais do
 livro ao lado e crédito candidato CC BY-SA 3.0. Fonte vetorial e autores
-registrados em `docs/design/propostas/m10-04/README.md`.
+registrados em `docs/specs/active/m10-04-svg-scp-definitivo/proposta/README.md`.
 
 Paleta extraída das oito imagens embutidas no Sistema v4.1.4 por RGB modal dos
 pixels de alfa máximo, sem amostrar sombras/relevo. Quatro originais têm alfa 128;
@@ -38,7 +73,7 @@ Prancha renderizada no Edge/Playwright e inspecionada pessoalmente em 1920×1080
 360×800, 960×1080 e 1366×768, com ambas as bases. Cada cenário: 44 SVGs, 16 níveis,
 dimensões conferidas, imagens completas, zero erro de página/overflow.
 Scripts conferidos com `node --check`, SVGs validados como XML, HTML formatado.
-[Evidências e pendências](../reviews/m10-04-proposta-v1.md).
+[Evidências e pendências](../specs/active/m10-04-svg-scp-definitivo/m10-04-proposta-v1.md).
 
 Task permanece aberta para aprovação dos desenhos, paleta/fundos e crédito.
 Não houve incorporação ao produto, mudança na topbar ou no leitor. Gates de
@@ -69,7 +104,7 @@ em composição temporária para expor os nomes ainda sem consumidor. Todos os 1
 360×800, 960×1080 e 1366×768. Oito cenários, 102 SVGs por cenário, dimensões/traço
 confirmados, sem overflow ou erro de página; mesma densidade/peso visual. Sem ajuste
 na geometria decidida. Composição removida e entrada original restaurada antes dos
-gates finais. [Capturas, medidas e resultados](../reviews/m10-03-verificacao.md).
+gates finais. [Capturas, medidas e resultados](../specs/done/m10-03-icones-identidade/m10-03-verificacao.md).
 
 Limites externos separados: EPERM do Vite no sandbox exigiu reexecução fora dele.
 Build Angular de produção aprovado com CI=true/2 workers (P-104), bundle inicial
@@ -116,7 +151,7 @@ fora dele. Sem UI nesta task, gate visual não aplicável.
 
 Os avisos caíram de 71 para 41: 17 tabelas fora das assinaturas explícitas, 8 definições de
 imagem e 7 colisões de âncora no Sistema; 9 colisões no Guia. A lista por linha e justificativa
-está na [verificação](../reviews/m10-02-verificacao.md); conteúdo integral preservado.
+está na [verificação](../specs/done/m10-02-normalizador-casos-explicitos/m10-02-verificacao.md); conteúdo integral preservado.
 Spec em `done`, M10 em 2/11; renderização rica é M10-07. Alterações concorrentes M4-21
 preservadas. Autor autorizou o commit específico da M10-02 em 2026-10-08; sem push.
 
@@ -161,7 +196,7 @@ não viu nenhum controle de edição. A inspeção achou cinco divergências, co
 entrega: patente quebrando o ladrilho, stepper largo demais, foco invisível no seletor de cor,
 textos quebrando no celular e, só ao vivo, **o conteúdo da Biblioteca vazando sobre o rodapé
 do `app-modal` no celular**. A grade passou a limitar a própria altura, e o defeito latente do
-primitivo ficou em `P-103`. Evidências: [verificação](../reviews/m4-21-verificacao.md).
+primitivo ficou em `P-103`. Evidências: [verificação](../specs/done/m4-21-ficha-npc-revisao-visual-usabilidade/m4-21-verificacao.md).
 Fora de escopo: o assistente de criação (`I-057`).
 
 ## 2026-10-07 — M10-01: normalizador de núcleo e formato canônico
@@ -196,7 +231,7 @@ pendentes da m10-02, oito definições de imagens preservadas e 16 colisões leg
 títulos. Zero link sem destino nos livros atuais. Restrição de fontes/arquivos temporários
 do sandbox e falhas transitórias do compilador foram separadas dos resultados finais;
 o aviso de budget existente permaneceu sem elevar o teto. Sem mudança visual, não há
-gate de UI nesta task. Evidências e limites em `docs/reviews/m10-01-verificacao.md`.
+gate de UI nesta task. Evidências e limites em `docs/specs/done/m10-01-normalizador-nucleo/m10-01-verificacao.md`.
 M10 fica em 1/11, próxima task de normalização m10-02. Autor autorizou commit específico
 da M10-01; demais frentes preservadas, sem push.
 
@@ -304,7 +339,7 @@ não tem sandbox de sistema; em consulta, `.env` local continua legível; o
 ## 2026-10-06 — M10 Regras: decisões fechadas e quebra em tasks
 
 Conversa de 05–06/10 com o autor e os testers sobre trocar os PDFs de regras da topbar por um leitor
-próprio. O visual foi decidido sobre um exemplão standalone (`docs/design/propostas/m10-regras-exemplao.html`,
+próprio. O visual foi decidido sobre um exemplão standalone (`docs/specs/backlog/m10-regras/m10-regras-exemplao.html`,
 abas Protótipo/Decisões/Ícones), compartilhado com os testers. Decisões finais do autor: página em
 **coluna à esquerda** (~960px, trilho + documento alinhados à esquerda; largura total descartada);
 normalizador em `frontend/scripts/` (só o build do front consome, sem emenda à §6 do SYSTEM.SPEC);
@@ -381,7 +416,7 @@ fora da faixa e veto Civil; legado GET/PUT preservou recursos e campos ausentes.
 leitor receberam equipamento por socket sem reload, com sentinela preservada; dano privado
 conferido no registro REST. Limpeza conferida por posse/nome: seis usuários, três campanhas
 e 42 fichas por soft delete; zero fixtures ativos desta execução. Alterações e cenários
-anteriores fora do escopo preservados. [Relatório, comandos e capturas](../reviews/m4-20-verificacao.md).
+anteriores fora do escopo preservados. [Relatório, comandos e capturas](../specs/done/m4-20-npc-ataques-e-equipamentos/m4-20-verificacao.md).
 
 Spec movida de active para done com gates completos. Após o fecho, o autor autorizou
 o commit da implementação, documentação e evidências da M4-20.
@@ -417,7 +452,7 @@ real para evitar alteração de largura da coleta de página completa.
 REST/socket com mestre e leitor confirmaram privacidade/feed/notas. Soft delete de
 22 fichas, três usuários, uma campanha e vínculos/rolagens; nenhum sintético ativo.
 Credenciais, scripts/logs e capturas redundantes removidos; M10 e M4-20 preservadas.
-Spec em `done/`; [evidências completas](../reviews/m4-19-verificacao.md).
+Spec em `done/`; [evidências completas](../specs/done/m4-19-npc-testes-de-atributo-regra-e-rolagem/m4-19-verificacao.md).
 Sem pendência M4-19; equipamento/ataques continuam em M4-20 com autorização própria.
 
 ## 2026-10-06 — m4-20: spec executável de ataques/equipamentos de NPC preparada
@@ -455,7 +490,7 @@ piso do enum). Fluxo de teste/dano como duas operações separadas já tem prece
 sistema: `FichaCriaturaAtaqueDto` já persiste `teste` e `dano` como fórmulas independentes,
 roladas sem encadeamento automático — mesma régua de P-099 (descartada).
 
-Documento completo: [`docs/reviews/npc-ataques-equipamentos-investigacao.md`](../reviews/npc-ataques-equipamentos-investigacao.md).
+Documento completo: [`docs/specs/done/npc-ataques-e-equipamentos-guia-v4.2.0/npc-ataques-equipamentos-investigacao.md`](../specs/done/npc-ataques-e-equipamentos-guia-v4.2.0/npc-ataques-equipamentos-investigacao.md).
 Spec movida para `done/` — a investigação em si está completa.
 
 Autor decidiu, na mesma data: a Categoria Civil do NPC segue a mesma restrição de categoria
@@ -512,7 +547,7 @@ escopo documental e prova de código/UI preservados. Reviews antigos e specs ant
 done preservados; este bloco acrescido sem reescrever o histórico anterior.
 
 P-102 movida para done e retirada de PROBLEMS, CONTEXT/MEMORY/fila atualizados.
-[Relatório](../reviews/p-102-verificacao.md), inventário e checagens guardados;
+[Relatório](../specs/done/p-102-referencias-documentos-vigentes/p-102-verificacao.md), inventário e checagens guardados;
 scripts/resultados temporários removidos. Proposta M10 preservada. P-102 sem commit próprio;
 nenhuma pendência técnica dela, sem encerrar m4-19 nem investigações/revisões separadas.
 
@@ -556,7 +591,7 @@ salvou/reabriu negativos200 e preservou snapshot livre Social−4/Força12/Vida7
 ataques por igualdade integral. Leitor vê DT/bônus, sem editar/rolar ou receber anotações.
 
 Quatro specs movidas para done; P-101 retirada de PROBLEMS, contexto/fila/ponteiros atualizados.
-[Matriz, propostas e evidências](../reviews/p-101-verificacao.md). Fichas196–199, campanha35 e
+[Matriz, propostas e evidências](../specs/done/p-101-criaturas-guia-v4.2.0/p-101-verificacao.md). Fichas196–199, campanha35 e
 contas57/58 sintéticas excluídas por soft delete REST; fichas/campanha retornam404. Removidos
 17 arquivos transitórios da P-101 (5.643.337 bytes), com alvos regulares conferidos na raiz:
 helpers, logs e sessão; provas finais preservadas. Proposta M10 intocada
@@ -594,7 +629,7 @@ delete. Nenhum arquivo `.tmp-*` ficou na raiz. Planos, propostas, evidências fi
 imagens de comparação foram preservados; referências históricas a scripts/logs locais
 descrevem a rodada original e não significam retenção permanente desses descartáveis.
 
-Autor escolheu deixar `docs/design/propostas/m10-regras-exemplao.html` para a conversa
+Autor escolheu deixar `docs/specs/backlog/m10-regras/m10-regras-exemplao.html` para a conversa
 da M10: arquivo preservado e fora dos commits. Não houve push, publicação ou mudança
 de versão. P-099 continua descartada e M4-19/P-101/P-102 mantêm seus estados próprios.
 
@@ -632,7 +667,7 @@ sintéticos excluídos por soft delete; GET confirmou 404 de fichas/campanha. He
 logs e sessão temporários removidos; evidências sem credenciais preservadas.
 
 Spec movida para done; P-100 removida de PROBLEMS, CONTEXT/fila/dependência m4-19
-alinhados. [Relatório completo](../reviews/p-100-verificacao.md). Nenhuma pendência
+alinhados. [Relatório completo](../specs/done/p-100-npc-criacao-atributo-zero/p-100-verificacao.md). Nenhuma pendência
 desta task. M4-19 continua aberta; P-101/P-102 seguem suas specs, P-099 descartada.
 Sem commit nesta rodada; alterações anteriores e arquivos de outras tarefas preservados.
 
@@ -790,7 +825,7 @@ conforme decisão histórica. P-093 arredondamento permanece ACEITO.
 
 Specs P-098/099/100/101 preparadas em backlog; P-095/096 já tinham specs e continuam
 abertas, pois mudanças de livro não corrigem fixtures que consultam relógio real.
-Relatório em `docs/reviews/m4-19-revisao-guia-v4.2.0.md`. Verificação documental e
+Relatório em `docs/specs/done/m4-19-npc-testes-de-atributo-regra-e-rolagem/m4-19-revisao-guia-v4.2.0.md`. Verificação documental e
 reproduções sem persistência; nenhum gate de aplicação repetido sem implementação.
 Limpeza dos 14 logs temporários `.tmp-p097-*.log`; evidências e documentos preservados.
 
@@ -830,7 +865,7 @@ com estados crítico/normal/margem ampliada, ajuda e PDF renderizado; POST/201 g
 os mesmos totais. Capturas pessoalmente inspecionadas contra os componentes atuais,
 sem overflow ou divergência visual. PDF servido e de build idênticos ao canônico;
 leitor nativo observado com renderização completa, mobile com canvas. Ficha de teste
-186 removida por soft delete. Relato completo em [verificação P-097](../reviews/p-097-verificacao.md).
+186 removida por soft delete. Relato completo em [verificação P-097](../specs/done/p-097-01-critico-e-sistema-v4.1.3/p-097-verificacao.md).
 
 P-097 retirado dos ativos. P-095/P-096 passaram nesta rodada, mas permanecem abertos
 e sem alteração de fixture. m4-19 continua em `active/` aguardando o novo Guia de
@@ -988,7 +1023,7 @@ m4-19 permanece aberta em `active/`; três specs futuras em `backlog/`.
 **Recorte executado.** Spec movida de `backlog/` para `active/`; dependências m4-16/17/18
 confirmadas em `done/`. Executado somente o item 1, conforme a parada obrigatória antes de
 contrato/regra/UI. Skills `task-flow` e `regras-do-jogo` aplicadas. Relatório completo em
-[m4-19-auditoria](../reviews/m4-19-auditoria.md), com trechos/linhas das duas fontes canônicas,
+[m4-19-auditoria](../specs/done/m4-19-npc-testes-de-atributo-regra-e-rolagem/m4-19-auditoria.md), com trechos/linhas das duas fontes canônicas,
 quatro tabelas de probabilidades exatas, alternativas e impacto nos consumidores.
 
 **Conclusões e proposta, ainda sem decisão do autor.** Guia define Nível como Proficiência
@@ -1059,7 +1094,7 @@ instância que atendeu o `POST` é esvaziada. Isso está documentado em `CONTEXT
 **Pedido e recorte.** Atributos do NPC iguais aos do Jogador, sem antecipar mecânica da
 `m4-19`. Dependências `m4-16`/`m4-17` concluídas. Skills `task-flow`, `design-fidelity`,
 `verify` e `convencoes-check` exercitadas; fontes e análogos documentados no
-[relatório com medidas, capturas e resultados](../reviews/m4-18-verificacao.md).
+[relatório com medidas, capturas e resultados](../specs/done/m4-18-ficha-npc-atributos-como-jogador/m4-18-verificacao.md).
 Autor pediu usar apenas o stack já rodando: API 3100/SPA 4300 reutilizadas; nenhum serviço
 iniciado ou encerrado. Diagnóstico antes de editar com Jogador/Criatura/NPC em leitura e
 edição: NPC tinha nome/DT em `app-stat`, campos digitáveis e aviso fixo; Jogador tinha
@@ -1769,7 +1804,7 @@ autor, fora da spec). A leitura do motor mostrou que a regra de atributo zerado 
 `ATRdM…kh` nu, e não para `(ATR±n)dM`/`(ATR*Y)dM`, que travam em 0 dado — corrige o que eu disse antes ao autor; virou a
 decisão **D1**, em aberto na spec do motor, junto de D2 (divisor que vira zero na rolagem) e D3 (só a quantidade de dados,
 sem bônus fixo por conta). `I-041` foi para "Promovidas"; o corpus de 78 fórmulas e das 10 dos jogadores ficou em
-`docs/design/propostas/montador-rolagem-formulas.json`. Nenhum código de produto foi alterado; o autor ainda precisa revisar
+`docs/specs/active/montador-rolagem-experimento/montador-rolagem-formulas.json`. Nenhum código de produto foi alterado; o autor ainda precisa revisar
 as specs (D1 a D3, o `localStorage`, o gate centralizado e a correção da linha 2045 em `docs/core`).
 
 ## 2026-10-02 — Montador de rolagem: enquadramento da spec e extensão do motor decididos (sem spec)
@@ -1913,7 +1948,7 @@ autor: escolher uma mescla; só então nasce a spec.
 
 ## 2026-10-01 — Montador de rolagem: decisões do autor e cinco versões visuais (sem spec)
 
-Sobre as cinco decisões levantadas pela proposta de `docs/design/propostas/montador-rolagem-simplificado.html`,
+Sobre as cinco decisões levantadas pela proposta de `docs/specs/active/montador-rolagem-experimento/montador-rolagem-simplificado.html`,
 o autor decidiu: (1) a **janela flutuante fica**; (3) tipo de dano com **nome completo no botão**, sigla
 válida na fórmula; (5) **primitivos novos autorizados**. As decisões 2 ("Testar atributo" como ação base) e
 4 (tokenização exportada do `shared`) o autor disse não ter entendido; os mockups assumem o modo explícito
@@ -1937,7 +1972,7 @@ se quer protótipo clicável; só depois disso nasce a spec e vale o gate visual
 O autor pediu uma mexida no visual do `MontadorRolagem`, "menos burocrático e confuso", com só ações
 base e guias de instrução para o resto, e várias opções de POC. Nenhum código de produto foi
 alterado e nenhuma spec foi aberta: o material ficou em
-`docs/design/propostas/montador-rolagem-simplificado.html` (HTML único, interativo, desktop e
+`docs/specs/active/montador-rolagem-experimento/montador-rolagem-simplificado.html` (HTML único, interativo, desktop e
 360×800, mesmo formato de `investigacao-jogador-esquadrao.html`). Conteúdo: diagnóstico com 12
 achados (oito de UX, quatro de UI), régua base × contextual × guia com o destino de cada controle
 de hoje, o baseline "Atual" transcrito do template com anotações ligáveis, e sete direções —
@@ -1988,7 +2023,7 @@ legados não alterados. Revisão independente somente do código sem achados aci
 não substituiu a inspeção principal. Sem DTO, regra, fórmula, endpoint ou permissão novos.
 
 Spec em done; nenhuma pendência obrigatória. Evidência auditável no relatório
-`docs/reviews/m4-10-verificacao.md`; contexto, mapa e documentação do Modal atualizados.
+`docs/specs/done/m4-10-refinamento-mobile-criatura-npc/m4-10-verificacao.md`; contexto, mapa e documentação do Modal atualizados.
 Cenário próprio: oito fichas 82–89 e campanha 10 conferidos e excluídos logicamente pela
 API; GETs posteriores 404, acesso temporário revogado. Nenhum dado do autor descartado.
 M4-09 já enviada em 03926a60; M4-10 fechada para commit/envio próprio, como solicitado,
@@ -2043,7 +2078,7 @@ frontend/backend e lint dos três workspaces passaram (zero erros, avisos legado
 Arquivos novos sem avisos de lint. P-004/P-092 permanecem preexistentes. Verificação pessoal
 em 1920×1080, 1366×768, 960×1080 e 360×800, incluindo vazios, filtros, nomes longos,
 leitor, carga, erro/repetição, ocupado, concedido/revogado e entradas das fichas/assistentes.
-Análogos, controles, correções e evidência em `docs/reviews/m4-09-verificacao.md`.
+Análogos, controles, correções e evidência em `docs/specs/done/m4-09-frontend-listagem-revelacao-mestre/m4-09-verificacao.md`.
 
 Spec em `done/`, nenhuma pendência obrigatória da task. Cenário de teste próprio mantido
 para a M4-10 e posterior limpeza. Autor autorizou commit separado e envio ao remoto antes
@@ -2053,7 +2088,7 @@ de iniciar M4-10; esta também deverá ser concluída, commitada e enviada separ
 A M4-08b foi commitada separadamente em `deebdff3a482845d409c117d3772c32596827bb4`;
 `git log -1 --format=full` confirmou o trailer `Co-authored-by: Codex
 <noreply@openai.com>` e o checkout ficou limpo antes de ativar a próxima task. O registro
-completo da entrega e dos gates está abaixo e em `docs/reviews/m4-08b-verificacao.md`.
+completo da entrega e dos gates está abaixo e em `docs/specs/done/m4-08b-frontend-visualizacao-npc/m4-08b-verificacao.md`.
 
 Por pedido do autor, a spec M4-09 saiu de `backlog/` para `active/`. O primeiro recorte é
 `FichaAcessoEstadoService`, fornecido por componente, para separar a gestão de acesso do
@@ -2121,7 +2156,7 @@ A inspeção corrigiu controle nativo visível de retrato, largura/densidade de 
 ausente adotando valor do input, slot de ação do estado vazio e rótulo da campanha esmagado
 por nome longo. Remoção remota de campos opcionais também deixou de reaparecer no formulário.
 Comparação final: mesma família, hierarquia e controles dos análogos, sem HTML genérico.
-Inventário de APIs, cobertura e limites: `docs/reviews/m4-08b-verificacao.md`.
+Inventário de APIs, cobertura e limites: `docs/specs/done/m4-08b-frontend-visualizacao-npc/m4-08b-verificacao.md`.
 
 **Gates de código:** 889 testes shared; 948 backend e um skip preexistente; integração frontend
 com 2.682 testes, seguida de regressão final de 54 testes em nove arquivos. Builds dos três
@@ -2567,11 +2602,11 @@ mantendo abertas as decisões e consumidores externos a esta task.
 
 O autor escolheu o POC A (alternância Rolagens/Esquadrão), com Esquadrão inicialmente aberto, e
 incluiu a Investigação em somente leitura na prévia de jogador do mestre. O protótipo comparativo
-foi registrado em `docs/design/propostas/investigacao-jogador-esquadrao.html`; a spec detalhada
+foi registrado em `docs/specs/done/m7-27-investigacao-jogador-visao-esquadrao/investigacao-jogador-esquadrao.html`; a spec detalhada
 voltou ao backlog como `m7-27-investigacao-jogador-visao-esquadrao.spec.md`, task complementar do
 módulo M7 posterior a `m7-25`. O guarda-chuva `m7-cenas` e o estado atual em `CONTEXT.md` apontam
 para ela sem alterar a contagem das seis tasks originais. Um plano de implementação permanece em
-`docs/superpowers/plans/2026-09-29-m7-27-investigacao-jogador-esquadrao.md`. Nenhum código de
+`docs/specs/done/m7-27-investigacao-jogador-visao-esquadrao/2026-09-29-m7-27-investigacao-jogador-esquadrao.md`. Nenhum código de
 produto foi alterado; a spec só vai a `active/` quando a execução começar.
 
 ## 2026-09-29 — patchnotes-versao-sistema (fecho): validado em produção
@@ -2867,7 +2902,7 @@ ocultação/remoção, reordenação com Biblioteca flutuante e reconexão real 
 a UI e a comparou com Investigação/Biblioteca: mesma casca, densidade, controles e estados,
 sem overflow; retry mobile ≥44px e agente preservado após desselecionar. Cenário temporário
 limpo via soft delete, sem mudar as fixtures existentes. Spec em `done/`, sem pendência
-obrigatória; [matriz e capturas](../reviews/fix-documentos-investigacao/VERIFICACAO.md).
+obrigatória; [matriz e capturas](../specs/done/fix-documentos-investigacao-selecao-e-leitura/VERIFICACAO.md).
 
 ## 2026-09-29 — fix-ficha-oculta-eventos-campanha: eventos da sala ampla sem identidade de ficha oculta
 
@@ -2999,7 +3034,7 @@ carga, reconexão após evento perdido, revogação e troca de tipos/encerrament
 sem erros JS. Shared 772/772; backend 804/804; frontend integrado 2542 aprovados e duas falhas
 na navegação do jogador alterada em paralelo (expectativas antigas de volta ao hub). Recorte
 frontend final 72/72; builds passaram; lint sem erros, orçamento inicial conhecido permanece.
-Specs encerradas com evidências em `docs/reviews/espectador-documentos-cena/RELATORIO.md`.
+Specs encerradas com evidências em `docs/specs/done/espectador-documentos-cena/RELATORIO.md`.
 Alterações das outras sessões preservadas; commit desta tarefa autorizado pelo autor.
 Antes de gravar, index exportado e testado isoladamente: backend 787/787, frontend 2541/2541
 e build backend passaram. Mudanças paralelas de navegação e auditoria ficaram fora do commit.
@@ -3071,7 +3106,7 @@ janela da `m9-11` (casca, densidade, estados): os controles são os mesmos primi
 ## 2026-09-29 — Auditoria de ficha oculta: evidências e specs posteriores
 
 Executada a parte estática e uma primeira rodada REST/WS da spec exclusivamente investigativa,
-movida para `active/`. [Relatório e matriz](../auditorias/ficha-oculta-todos-consumidores.md)
+movida para `active/`. [Relatório e matriz](../specs/done/auditoria-ficha-oculta-todos-consumidores/ficha-oculta-todos-consumidores.md)
 cobrem campanha/membros, acervo, agregados, cenas/encontro, prévias, leitura/flutuante/avatar,
 inventários, rolagens, busca/cadernos e eventos. Confirmados nome/id de oculta no encontro para
 B/espectador, fichaId no evento amplo de visibilidade e concessão que permite listar/abrir a
@@ -4653,7 +4688,7 @@ Desconexão isolada no contexto do jogador com espera de 48 s e confirmação do
 socket; servidor compartilhado preservado. Sem replay dos eventos perdidos.
 
 Carga inicial também observada em 360×800; Caderno só buscou páginas ao abrir, e 5 s de repouso
-não produziram fetch/XHR de dados. Relatório e evidências em `docs/reviews/requests-2026-09-26.md`.
+não produziram fetch/XHR de dados. Relatório e evidências em `docs/specs/done/requests-correcoes/requests-2026-09-26.md`.
 Campanha/fichas excluídas via API, leituras posteriores 404; contas mantidas como autorizado.
 Nenhuma correção de código. P-084 de inventário/feeds/Encontro e jornadas de espectador seguem
 sem reprodução; o resultado não certifica todas as rotas. Revisão do diff documental e
@@ -4668,7 +4703,7 @@ credenciais de desenvolvimento falhou; a criação de contas/campanha isoladas f
 pela revisão automática de aprovação por persistir dados. Autorização específica solicitada,
 com limpeza posterior de campanha/fichas e permanência das contas. Nenhuma campanha existente
 foi alterada. P-082…P-086 permanecem apenas com evidência estática; a revisão autenticada está
-aberta. Detalhes em `docs/reviews/requests-2026-09-26.md`. Diff desta rodada somente documental,
+aberta. Detalhes em `docs/specs/done/requests-correcoes/requests-2026-09-26.md`. Diff desta rodada somente documental,
 sem mudanças de aplicação ou build/lint/testes.
 
 ## 2026-09-26 — m7-21: contrato e schema da Cena, com backfill dos encontros existentes
@@ -4724,7 +4759,7 @@ restante do código, que usa aspas simples). Sem UI, então sem gate visual.
 Pedido do autor: conferir momento, desperdício e escopo de dados das requests. Rastreados
 serviços HTTP, consumidores de campanha/ficha/Encontro, sessão, guards, prévias, histórico e
 Caderno, incluindo emissores de eventos e consultas relevantes do backend. Relatório:
-[`requests-2026-09-26.md`](../reviews/requests-2026-09-26.md).
+[`requests-2026-09-26.md`](../specs/done/requests-correcoes/requests-2026-09-26.md).
 
 Registrados `P-082` a `P-086`: seleção de ficha sem isolamento de GET/autosave; duplicação de
 carga após reconexão anterior; ressincronização incompleta; invalidação ampla a cada edição;
@@ -7434,7 +7469,7 @@ maximizar em lugar nenhum do cabeçalho.
 Task avulsa de refinamento do `MontadorRolagem` (`ui-35`/`ui-36`), pedida pelo autor depois de
 usar a v1 de verdade e achar fórmulas inválidas/imprevisíveis com mais de um dado, atributo
 repetido ou tipo de dano. Spec: `docs/specs/done/montador-rolagem-ajustes.spec.md`. Plano de
-execução em `docs/superpowers/plans/2026-09-16-montador-rolagem-ajustes.md` (4 tasks, TDD
+execução em `docs/specs/done/montador-rolagem-ajustes/2026-09-16-montador-rolagem-ajustes.md` (4 tasks, TDD
 task-a-task) — as tasks 1–3 (composição pura, gramática do motor, integração/persistência) já
 estavam implementadas e commitadas quando esta sessão retomou o trabalho; esta entrada fecha a
 task 4 (gates, verificação visual e documentação) e corrige uma regressão achada nesse gate.
@@ -7662,7 +7697,7 @@ Spec: `docs/specs/done/ui-35-montador-rolagem.spec.md`.
 Inspeção especializada solicitada pelo autor, com desktop 1920×1080, tela dividida
 960×1080 (corrigindo o pedido inicial de vertical), notebook 1366×768 e mobile 360×800.
 Resultados, matriz de cobertura, evidências, dados criados e pendências estão em
-[`RELATORIO.md`](../reviews/usabilidade-2026-09-13/RELATORIO.md). Foram exercitados guia
+[`RELATORIO.md`](../specs/active/usabilidade-2026-09-13/RELATORIO.md). Foram exercitados guia
 de agente até criação, ficha e persistência de recurso, caderno com salvamento e retomada,
 iniciativa até encerramento, rolagem e calculadoras. O relatório prioriza oito recortes,
 com destaque para legibilidade do esquadrão, nomes acessíveis da navegação compacta e
@@ -12039,7 +12074,7 @@ migração, projeção mais flexível das ações de modal. Caderno, Leitor de D
 ficha fornecem três casos reais para um novo `app-segmentado`, semanticamente diferente de abas.
 
 O diagnóstico completo, falsos positivos e ordem sugerida ficaram em
-`docs/design/AUDITORIA-COMPONENTES-FANTASMA.md`; os desvios atuais são `P-051`…`P-056`. Nenhum HTML,
+`docs/specs/done/ui-27-auditoria-componentes-fantasma/AUDITORIA-COMPONENTES-FANTASMA.md`; os desvios atuais são `P-051`…`P-056`. Nenhum HTML,
 SCSS ou TypeScript foi alterado, portanto não houve mudança visual para capturar nem suíte de
 frontend a executar. Foram verificados o inventário reproduzível, links/caminhos documentais,
 formatação e diff completo; cada correção futura permanece aberta e exigirá spec e gate visual
@@ -13672,7 +13707,7 @@ regra de domínio.
 
 Auditado todo o frontend contra a biblioteca própria em `shared/ui/` e o tema Terminal de
 Contenção, sem corrigir de passagem. A matriz versionada em
-`docs/design/AUDITORIA-BIBLIOTECA-VISUAL.md` registra o inventário reproduzível (68 templates,
+`docs/specs/done/ui-06-auditoria-conformidade-biblioteca-visual/AUDITORIA-BIBLIOTECA-VISUAL.md` registra o inventário reproduzível (68 templates,
 719 botões, 320 campos nativos, 165 usos de `app-botao`, 93 de `app-campo`, 42 cartões, 18 stats,
 26 steppers, 3 chips, 15 modais e 224 tooltips), as exceções de widget composto e a decisão de
 cada família. As cópias dos seletores-base permanecem eliminadas e PrimeNG não voltou; a única
@@ -15678,7 +15713,7 @@ do autor na revisão de backlog):
 - `I-018` (inventário de esquadrão sem esperar Base) — já implementado: componentes
   `InventarioEsquadrao`/`InventarioEsquadraoSidebar` (frontend), `CampanhaInventarioItemDto` e as
   rotas de mandar/pegar item (backend), a partir de
-  `docs/superpowers/specs/2026-08-12-inventario-de-esquadrao-design.md`. Movido para "Promovidas".
+  `docs/specs/done/registro-inventario-de-esquadrao/2026-08-12-inventario-de-esquadrao-design.md`. Movido para "Promovidas".
 
 Confirmado por busca no código (`InventarioEsquadrao`, `CampanhaInventarioItemDto`) antes de fechar
 as duas — nenhuma das duas foi removida "de cabeça".
@@ -18505,7 +18540,7 @@ cadernos entre si. A busca PostgreSQL combina, por filtros permitidos ao papel, 
 anotações de ficha. Na interface, o Caderno será uma janela não modal na mesma pilha de utilitários
 da Calculadora e dos Documentos, arrastável, redimensionável e minimizável no desktop e adaptada como
 painel no mobile. A especificação de design está em
-`docs/superpowers/specs/2026-08-12-cadernos-campanha-busca-design.md`.
+`docs/specs/done/registro-cadernos-privados-e-busca/2026-08-12-cadernos-campanha-busca-design.md`.
 
 ## 2026-08-12 — Busca de documentos e anotações: PostgreSQL primeiro
 
@@ -20557,8 +20592,8 @@ em `PROBLEMS.md` antes, mas confirmado independente do diff).
 ## layout-lista-edicao-atributos — lista vertical na edição de atributos (2026-08-02)
 
 Sem código de task de milestone — plano em
-`docs/superpowers/plans/2026-08-02-layout-lista-edicao-atributos.md`, design em
-`docs/superpowers/specs/2026-08-02-layout-lista-edicao-atributos-design.md`.
+`docs/specs/done/m3-38-ficha-redesenho-comparacao-visual/2026-08-02-layout-lista-edicao-atributos.md`, design em
+`docs/specs/done/m3-38-ficha-redesenho-comparacao-visual/2026-08-02-layout-lista-edicao-atributos-design.md`.
 
 **O problema.** O card de edição de atributos (`FichaVisualizacao`) usava uma grade de caixas
 compactas (2 colunas), cada uma empilhando verticalmente abreviação, valor com stepper `−`/`+`,
@@ -20597,8 +20632,8 @@ componente, nenhum depende da marcação alterada, e todos continuaram passando 
 ## ajuste-manual-dados-atributo — ajuste manual de dados de teste por atributo (2026-08-02)
 
 Sem código de task de milestone (nenhuma task do plano em curso era dona do item) — plano em
-`docs/superpowers/plans/2026-08-02-ajuste-manual-dados-atributo.md`, design em
-`docs/superpowers/specs/2026-08-02-ajuste-manual-dados-atributo-design.md`.
+`docs/specs/done/registro-ajuste-manual-dados-atributo/2026-08-02-ajuste-manual-dados-atributo.md`, design em
+`docs/specs/done/registro-ajuste-manual-dados-atributo/2026-08-02-ajuste-manual-dados-atributo-design.md`.
 
 **O problema.** Cada atributo da ficha fazia dupla função: era a fonte dos derivados (Energia,
 Deslocamento, Vida, Maestria) **e** a contagem de dados rolada nos testes desse atributo. Não havia
@@ -22945,7 +22980,7 @@ trabalho vindo por PR fora do fluxo de spec continua em aberto em `IDEAS.md` `I-
 > **pode negativar**, reusa o `ajusteVitalidade` de m3-10) e o **chip com origem** ("Classe -
 > Especialista" quando é de outra classe/arquétipo; cor por categoria, **Personalidade = accent do
 > tema**). +6 testes frontend (270). `lint`/`build` verdes (bundle **569,77 kB**). Design em
-> `docs/superpowers/specs/2026-07-14-habilidades-do-sistema-design.md`; stub visual conferido.
+> `docs/specs/done/m3-13-ficha-editor-habilidades/2026-07-14-habilidades-do-sistema-design.md`; stub visual conferido.
 > **Verificação de render pendente** — validado por testes/build, não dirigido no navegador ainda.)
 >
 > (**m3-13 — editor de Habilidades no próprio lugar**: preenche a aba

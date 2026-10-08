@@ -12,7 +12,8 @@ description: >
 
 > A regra em si vive em `CLAUDE.md`/`AGENTS.md` ("Fluxo orientado por especificação" e "Gate
 > obrigatório de qualidade e conclusão") — em conflito, o documento vence e esta skill é
-> corrigida. O que esta skill acrescenta é a **ordem de execução** e os **formatos copiáveis**
+> corrigida. Destinos e artefatos seguem `docs/SYSTEM.SPEC.md` §3.1, inclusive quando uma skill
+> externa sugerir suas próprias pastas. O que esta skill acrescenta é a **ordem de execução** e os **formatos copiáveis**
 > de `docs/context/`, que hoje não estão reunidos em lugar nenhum.
 
 ## 1. Abrir
@@ -20,9 +21,16 @@ description: >
 - Mover `docs/specs/backlog/<tarefa>.spec.md` → `docs/specs/active/`.
 - Spec de milestone (`m0-*`…`m7-*`) ou guarda-chuva: **quebrar em tasks numeradas antes de
   implementar** — não implementar o arquivo guarda-chuva direto.
-- Spec em `docs/specs/done/` é registro histórico — nunca reescrever, só ler.
+- Spec em `docs/specs/done/` é registro histórico — preservar requisitos e decisões;
+  realocação permite só correções mecânicas dos ponteiros conforme `SYSTEM.SPEC.md` §3.1.
 - Sem spec ainda para o pedido? Escrever uma nova com `docs/specs/TEMPLATE.spec.md` antes de
   tocar código (seções obrigatórias marcadas no próprio template).
+- Antes de gravar plano/design/revisão/auditoria, localizar a spec proprietária e usar
+  `docs/specs/<estado>/<tarefa>/`. Não aceitar os destinos padrão de Superpowers/GSD ou
+  outros plugins quando criarem outro ciclo. Anexo não é uma segunda spec.
+- Antes da verificação, criar `.artifacts/<tarefa>/` para capturas, logs, dumps e cenários
+  temporários. Gravar somente o relatório textual junto da spec; fontes/assets/fixtures
+  definidos pela spec são distintos de saídas brutas. Não usar `git add -f` para evidências.
 
 ## 2. Implementar
 
@@ -57,6 +65,8 @@ nomear um DTO, use a skill `dto-conventions`; para verificar UI ao vivo, use `ve
 ## 4. Fechar
 
 1. Mover a spec para `docs/specs/done/`.
+   Mover também sua pasta de anexos e corrigir os ponteiros; não mover avaliação parcial
+   para `done/` só porque já existe relatório.
 2. `HISTORY.md`: bloco novo **no topo** (nunca no fim) — ver formato abaixo.
 3. `CONTEXT.md`: editar **só as seções afetadas** — nunca um bullet de diário acrescentado sem
    reorganizar a seção existente.
@@ -71,6 +81,10 @@ nomear um DTO, use a skill `dto-conventions`; para verificar UI ao vivo, use `ve
 Antes de declarar pronto, listar o que foi verificado e o que ficou pendente. Item sem
 verificação obrigatória (gate de teste que não rodou, gate visual não executado) fica **aberto**,
 não "concluído" — mesmo que o resto da task esteja pronto.
+
+Rodar `npm run repo:verificar`. Conferir que o relatório versionado registra resultados e
+limites, identifica evidência local e não depende de uma captura ausente para explicar o
+veredito. Fonte do jogo/design, corpus de aceite e fixture reproduzível não são lixo de teste.
 
 ## Formatos copiáveis de `docs/context/`
 
@@ -105,3 +119,5 @@ para lá em vez de inventar uma regra nova aqui.
 Todo commit leva `Co-authored-by:` identificando o agente (`CLAUDE.md` "Coautoria de commits").
 Depois de commitar, confira com `git log -1` ou `git show` que o trailer foi gravado de verdade —
 não assuma que a mensagem passada ao comando chegou intacta.
+Antes, com os arquivos preparados, rodar `npm run repo:verificar -- --staged`; o modo padrão
+confere a árvore local, enquanto `--staged` confere o conteúdo efetivamente preparado.

@@ -98,6 +98,17 @@ O conteúdo da documentação do projeto é em português.
 3. Mova a especificação para `docs/specs/done/` ao terminar.
 4. Atualize `docs/context/` conforme as regras acima.
 
+Todo material da tarefa fica junto da spec: planos, designs pontuais, propostas,
+revisões, auditorias e verificação em `docs/specs/<estado>/<tarefa>/`, com
+`<tarefa>.spec.md` ao lado. Mova spec e anexos juntos. A política canônica está
+em `docs/SYSTEM.SPEC.md` §3.1; ela prevalece sobre destinos padrão de plugins,
+inclusive Superpowers. Nunca crie depósitos paralelos por ferramenta/atividade.
+Capturas e saídas brutas ficam em `.artifacts/<tarefa>/`, ignorada pelo Git;
+o relatório textual registra as evidências e seus limites. Antes do fecho rode
+`npm run repo:verificar`; antes do commit, após preparar os arquivos, rode
+`npm run repo:verificar -- --staged`. Correções mecânicas de ponteiros por
+realocação são permitidas em specs concluídas, sem reescrever requisitos ou decisões.
+
 Specs de milestone (`m0-*` a `m5-*`) devem ser divididas em tarefas numeradas
 antes da implementação. Specs em `done/` são registro histórico e não devem ser
 reescritas.

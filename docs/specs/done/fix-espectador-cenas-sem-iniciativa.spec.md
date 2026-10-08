@@ -34,6 +34,6 @@ rota compatível e acesso "Cena atual" para espectador e prévia. Investigação
 à iniciativa, reconexão, isolamento de campanhas, respostas antigas e encerramento verificados.
 Stack real observado em quatro viewports. Builds/lint e testes do recorte passaram; duas falhas
 externas da suíte frontend ampla pertencem à navegação do jogador alterada em paralelo.
-Evidências: `docs/reviews/espectador-documentos-cena/RELATORIO.md`.
+Evidências: `docs/specs/done/espectador-documentos-cena/RELATORIO.md`.
 
 Integrar com `jogador-acesso-somente-cena-atual.spec.md`: o acesso atual do backend a encerradas citado no diagnóstico é evidência do estado anterior, não autorização para preservar histórico do jogador. O autor restringiu JOGADOR à cena atual em 2026-09-29; esta spec não decide acesso histórico de ESPECTADOR. A projeção de agentes também passa pelo contrato de `auditoria-ficha-oculta-todos-consumidores.spec.md`.

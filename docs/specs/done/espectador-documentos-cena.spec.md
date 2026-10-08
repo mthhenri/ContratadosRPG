@@ -37,4 +37,4 @@ Aceites verificados no stack real com contas separadas e prévia, incluindo quat
 permissões, respostas antigas, eventos, reconexão e revogação. Builds e lint passaram;
 shared 772/772, backend 804/804 e recorte frontend final 72/72. Suíte frontend ampla teve duas
 falhas de navegação do jogador na tarefa paralela, discriminadas no relatório.
-Evidências: `docs/reviews/espectador-documentos-cena/RELATORIO.md`.
+Evidências: `docs/specs/done/espectador-documentos-cena/RELATORIO.md`.

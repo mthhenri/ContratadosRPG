@@ -1,6 +1,6 @@
 # UI-12 — Tokens semânticos de estado
 
-> Filha da auditoria visual (`docs/design/AUDITORIA-BIBLIOTECA-VISUAL.md`, seção Tokens).
+> Filha da auditoria visual (`docs/specs/done/ui-06-auditoria-conformidade-biblioteca-visual/AUDITORIA-BIBLIOTECA-VISUAL.md`, seção Tokens).
 > Corrige semântica de cor sem tocar em layout.
 
 ## Objetivo

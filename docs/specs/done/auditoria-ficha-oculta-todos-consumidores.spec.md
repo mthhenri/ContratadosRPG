@@ -2,7 +2,7 @@
 
 ## Execução em 2026-09-29 — aberta
 
-[Relatório, matriz e roteiro de retomada](../../auditorias/ficha-oculta-todos-consumidores.md).
+[Relatório, matriz e roteiro de retomada](auditoria-ficha-oculta-todos-consumidores/ficha-oculta-todos-consumidores.md).
 Três divergências confirmadas encaminhadas para specs de correção: identidade no encontro,
 eventos amplos e concessão versus ocultação. Testes existentes: 5 arquivos / 280 testes passaram;
 cenário sintético com M/A/B/S reproduziu REST e WebSocket. Nenhum código alterado.
@@ -18,7 +18,7 @@ Autor, 2026-09-29: ficha oculta de um jogador não aparece para outros jogadores
 
 Esta tarefa é exclusivamente investigativa: identificar, comprovar e documentar os consumidores e possíveis vazamentos, sem implementar correções. Não alterar código de aplicação, contratos, schema, estilos ou testes versionados. Não assumir que todos os fluxos estão quebrados.
 
-Os entregáveis são um relatório em `docs/auditorias/ficha-oculta-todos-consumidores.md` e, quando houver achados confirmados, uma ou mais specs de correção em `docs/specs/backlog/`. A execução dessas specs é uma tarefa posterior e não está autorizada pela execução desta auditoria.
+Os entregáveis são um relatório em `docs/specs/done/auditoria-ficha-oculta-todos-consumidores/ficha-oculta-todos-consumidores.md` e, quando houver achados confirmados, uma ou mais specs de correção em `docs/specs/backlog/`. A execução dessas specs é uma tarefa posterior e não está autorizada pela execução desta auditoria.
 
 ## Evidências iniciais
 

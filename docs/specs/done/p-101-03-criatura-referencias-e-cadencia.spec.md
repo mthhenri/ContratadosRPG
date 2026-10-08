@@ -51,4 +51,4 @@ com teste existente aprovado; só referências de comentário foram alteradas. B
 NPC do produto não copia as condições/DTs alteradas no livro, sem mudança funcional.
 Propostas editoriais concretas registradas: Fraco+6→+5 nos três atributos e narrativa
 de Social “três”→“dois pontos”. Fontes autorais intactas; revisão editorial do autor
-permanece separada. [Matriz, gates e propostas](../../reviews/p-101-verificacao.md).
+permanece separada. [Matriz, gates e propostas](p-101-criaturas-guia-v4.2.0/p-101-verificacao.md).

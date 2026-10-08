@@ -83,7 +83,7 @@ bônus; qualquer outra conta é "Termo desconhecido".
 5. **Guia de fórmulas** (`guia-formula.component.ts`): seção nova com os exemplos do autor, a regra de
    arredondamento ("sempre para baixo, uma vez, no fim da conta", e parênteses para somar antes de arredondar), as
    formas `((conta))dM` e `(conta)` de bônus, e a nota do crítico ("no crítico, o que vem de atributos e de números dobra; o que vem de `PROF` e `NIV` não").
-6. **Corpus**: `docs/design/propostas/montador-rolagem-formulas.json` (10 fórmulas dos jogadores + 78 de bateria)
+6. **Corpus**: `docs/specs/active/montador-rolagem-experimento/montador-rolagem-formulas.json` (10 fórmulas dos jogadores + 78 de bateria)
    usado como snapshot de regressão.
 
 ## Critérios de Aceite

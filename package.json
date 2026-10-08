@@ -10,6 +10,8 @@
     "frontend"
   ],
   "scripts": {
+    "repo:verificar": "node scripts/verificar-organizacao.mjs",
+    "repo:test": "node --test scripts/verificar-organizacao.test.mjs",
     "postinstall": "npm run build --workspace=shared",
     "build:shared": "npm run build --workspace=shared",
     "lint": "npm run lint --workspaces",

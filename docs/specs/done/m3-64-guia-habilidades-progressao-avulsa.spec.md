@@ -1,7 +1,7 @@
 # m3-64 — Guia: habilidades iniciais, progressão avulsa e resumo de identidade
 
 > Implementa o design aprovado em
-> `docs/superpowers/specs/2026-08-07-guia-habilidades-progressao-e-resumo-identidade-design.md`.
+> `docs/specs/done/m3-64-guia-habilidades-progressao-avulsa/2026-08-07-guia-habilidades-progressao-e-resumo-identidade-design.md`.
 
 ## Objetivo
 

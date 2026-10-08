@@ -9,6 +9,10 @@
 
 ## Entregáveis
 
+> Planos, propostas, auditorias e relatório da task: pasta `<tarefa>/` ao lado
+> desta spec, movida junto dela. Capturas e saídas brutas: `.artifacts/<tarefa>/`
+> (local, ignorada). Política: `docs/SYSTEM.SPEC.md` §3.1.
+
 *(obrigatória)* Lista **numerada** — cada item é uma coisa verificável, não uma frase vaga.
 Prosa quando o "como" importa (decisão de ferramenta, formato de arquivo, exemplo de código);
 não force todo entregável a virar um bullet de uma linha se a task pedir mais contexto.

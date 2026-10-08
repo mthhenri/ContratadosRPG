@@ -44,7 +44,7 @@ Criatura, incluindo atributos negativos, conforme Guia v4.2.0 > Realocação de 
 ## Dependências
 
 - Guia v4.2.0 > Atributos/Realocação (`:421–439`), Sistema > Testes/desvantagem.
-- P-101 e matriz da [revisão](../../reviews/m4-19-revisao-guia-v4.2.0.md).
+- P-101 e matriz da [revisão](m4-19-npc-testes-de-atributo-regra-e-rolagem/m4-19-revisao-guia-v4.2.0.md).
 
 ## Fecho — 2026-10-06
 
@@ -54,4 +54,4 @@ teto, fração e orçamento inválidos rejeitados. Edição posterior preserva s
 Rolagem de negativo já correta, confirmada com novos casos; preview simbólico adequado.
 Na inspeção real, corrigido clamp que deixava digitação e estado divergentes.
 Gates amplos e jornadas nos quatro viewports aprovados; dados sintéticos e temporários
-limpos. [Fecho integrado e evidências](../../reviews/p-101-verificacao.md).
+limpos. [Fecho integrado e evidências](p-101-criaturas-guia-v4.2.0/p-101-verificacao.md).

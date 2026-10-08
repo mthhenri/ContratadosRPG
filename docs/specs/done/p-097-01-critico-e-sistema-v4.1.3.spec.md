@@ -50,7 +50,7 @@ PDF atualizado no leitor do produto, preservando a rolagem crítica de dano/cura
 
 - `docs/core/sistema-v4.1.3.md`, `docs/core/guia_de_mestre-v4.0.0.md`.
 - `docs/SYSTEM.SPEC.md`, `docs/CONVENTIONS.md`, `docs/design/DESIGN.md` e tema.
-- [Revisão P-097](../../reviews/p-097-sistema-v4.1.3.md).
+- [Revisão P-097](p-097-revisao-critico-testes/p-097-sistema-v4.1.3.md).
 
 ## Riscos e Mitigação
 

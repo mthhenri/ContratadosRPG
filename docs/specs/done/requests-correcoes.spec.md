@@ -52,7 +52,7 @@ possivelmente atingidos por P-082 sem auditoria e autorização próprias.
 
 ## Dependências
 
-- [Revisão e evidências](../../reviews/requests-2026-09-26.md).
+- [Revisão e evidências](requests-correcoes/requests-2026-09-26.md).
 - SYSTEM.SPEC §8/§9/§14, CONVENTIONS, PROBLEMS, DESIGN e skills task-flow, tempo-real,
   convencoes-check e verify.
 - Conferir estado de m7-23 antes de implementar: se Cenas já tiver substituído rotas/painéis

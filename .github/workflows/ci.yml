@@ -29,6 +29,11 @@ jobs:
           cache: npm
 
       # postinstall compila o pacote shared (backend/frontend dependem dele).
+      - name: Organização do repositório e espelhos de agentes
+        run: |
+          npm run repo:test
+          npm run repo:verificar -- --staged
+
       - name: Install dependencies
         run: npm install
 

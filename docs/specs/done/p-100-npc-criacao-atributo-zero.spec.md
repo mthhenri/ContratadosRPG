@@ -1,7 +1,7 @@
 # p-100-npc-criacao-atributo-zero.spec.md
 
 > Task avulsa de PROBLEMS P-100. **2026-10-06: execução autorizada pelo autor.**
-> **Concluída em 2026-10-06.** [Gates e evidências](../../reviews/p-100-verificacao.md).
+> **Concluída em 2026-10-06.** [Gates e evidências](p-100-npc-criacao-atributo-zero/p-100-verificacao.md).
 
 ## Objetivo
 

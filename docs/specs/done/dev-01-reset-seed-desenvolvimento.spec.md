@@ -48,4 +48,4 @@ testes manuais em desenvolvimento.
 ## Fonte de design
 
 Detalhamento aprovado em
-[`docs/superpowers/specs/2026-08-11-reset-seed-desenvolvimento-design.md`](../../superpowers/specs/2026-08-11-reset-seed-desenvolvimento-design.md).
+[`docs/specs/done/dev-01-reset-seed-desenvolvimento/2026-08-11-reset-seed-desenvolvimento-design.md`](dev-01-reset-seed-desenvolvimento/2026-08-11-reset-seed-desenvolvimento-design.md).

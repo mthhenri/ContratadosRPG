@@ -47,7 +47,7 @@
   `(ATR±n)dM`, `(…)#N`, composto, explosão — para um guia embutido no painel, com exemplos que se
   inserem no visor; leitura em português da fórmula sob o visor.
 - **Origem:** pedido do autor em 2026-10-01 (montador "burocrático e confuso"); análise de UX/UI e sete
-  direções de POC em [`docs/design/propostas/montador-rolagem-simplificado.html`](../design/propostas/montador-rolagem-simplificado.html).
+  direções de POC em [`docs/specs/active/montador-rolagem-experimento/montador-rolagem-simplificado.html`](../specs/active/montador-rolagem-experimento/montador-rolagem-simplificado.html).
 - **Por quê:** hoje são cerca de 75 controles em 9 grupos, com teclado de calculadora, parênteses que
   geram fórmula inválida, operadores que agem num alvo oculto e ajuda só em tooltip/modal fora do
   contexto (medido no POC; achados 1–8 e A–D na página).
@@ -212,7 +212,7 @@
   jogadores. O upgrade "mesa investigativa/mapa mental" registrado nesta entrada foi levado à spec
   como item de "Fora de escopo", não implementado. Os **cadernos privados**, que já tinham saído
   desta ideia, continuam em
-  `docs/superpowers/specs/2026-08-12-cadernos-campanha-busca-design.md`, sem mudança.
+  `docs/specs/done/registro-cadernos-privados-e-busca/2026-08-12-cadernos-campanha-busca-design.md`, sem mudança.
 
 ### I-028 — Pesquisar na descrição da habilidade · ficha/habilidades
 
@@ -257,7 +257,7 @@
 ### I-055 — Ingestão de .docx no normalizador das Regras · frontend/regras
 
 - **Ideia:** o normalizador ler a exportação `.docx` do Docs em vez do `.md`.
-- **Origem:** revisão do exemplão do M10 (`docs/design/propostas/m10-regras-exemplao.html`) com o autor e os testers, 2026-10-06; anotada em `m10-regras.spec.md`. O autor topou a troca, para depois.
+- **Origem:** revisão do exemplão do M10 (`docs/specs/backlog/m10-regras/m10-regras-exemplao.html`) com o autor e os testers, 2026-10-06; anotada em `m10-regras.spec.md`. O autor topou a troca, para depois.
 - **Por quê:** o `.docx` preserva estrutura (tabelas, estilos) que o `.md` achata, reduzindo os
   casos explícitos de tabela de layout.
 - **Custo aparente:** muda só a entrada do normalizador; a árvore canônica continua a mesma.
@@ -266,7 +266,7 @@
 
 - **Ideia:** "Ver regra" em condição, atributo e habilidade da ficha, abrindo o painel de Regras na
   seção certa.
-- **Origem:** revisão do exemplão do M10 (`docs/design/propostas/m10-regras-exemplao.html`) com o autor e os testers, 2026-10-06; anotada em `m10-regras.spec.md`.
+- **Origem:** revisão do exemplão do M10 (`docs/specs/backlog/m10-regras/m10-regras-exemplao.html`) com o autor e os testers, 2026-10-06; anotada em `m10-regras.spec.md`.
 - **Por quê:** quem joga consulta a regra sem sair do contexto da ficha.
 - **Custo aparente:** mapa estável entre conceitos do `shared/` e âncoras do formato canônico (por
   ID, não por nome); depende do leitor da M10.
@@ -275,7 +275,7 @@
 
 - **Ideia:** escrever o Sistema e o Guia dentro do site, gravando direto o formato canônico; inclui ver
   versões antigas só para leitura.
-- **Origem:** revisão do exemplão do M10 (`docs/design/propostas/m10-regras-exemplao.html`) com o autor e os testers, 2026-10-06; anotada em `m10-regras.spec.md`. Pedido original do autor para depois do leitor.
+- **Origem:** revisão do exemplão do M10 (`docs/specs/backlog/m10-regras/m10-regras-exemplao.html`) com o autor e os testers, 2026-10-06; anotada em `m10-regras.spec.md`. Pedido original do autor para depois do leitor.
 - **Por quê:** tira o Google Docs do fluxo e permite o texto único.
 - **Custo aparente:** alto — editor por tipo de bloco, persistência/versões, permissão de autor;
   provável mudança do normalizador e dos tipos para `shared/`.
@@ -284,14 +284,14 @@
 
 - **Ideia:** habilidades, itens e demais catálogos do `shared/regras` gerados a partir dos verbetes
   do documento, por ID (não por nome — "6º Sentido" geral ≠ o do Assassino).
-- **Origem:** revisão do exemplão do M10 (`docs/design/propostas/m10-regras-exemplao.html`) com o autor e os testers, 2026-10-06; anotada em `m10-regras.spec.md`.
+- **Origem:** revisão do exemplão do M10 (`docs/specs/backlog/m10-regras/m10-regras-exemplao.html`) com o autor e os testers, 2026-10-06; anotada em `m10-regras.spec.md`.
 - **Por quê:** acaba a divergência entre o texto das Regras e o que o motor usa.
 - **Custo aparente:** alto — IDs estáveis no documento, depende do editor (I-053).
 
 ### I-051 — IA sobre trecho das Regras · frontend/regras
 
 - **Ideia:** selecionar um trecho das Regras e perguntar o que significa.
-- **Origem:** revisão do exemplão do M10 (`docs/design/propostas/m10-regras-exemplao.html`) com o autor e os testers, 2026-10-06; anotada em `m10-regras.spec.md`. Relaciona-se à I-015.
+- **Origem:** revisão do exemplão do M10 (`docs/specs/backlog/m10-regras/m10-regras-exemplao.html`) com o autor e os testers, 2026-10-06; anotada em `m10-regras.spec.md`. Relaciona-se à I-015.
 - **Por quê:** tira dúvida de regra no ponto em que ela surge.
 - **Custo aparente:** o mesmo da I-015 (provedor, custo, respostas erradas sobre regra), recortado.
 
@@ -300,7 +300,7 @@
 - **Ideia:** revisar o desenho de três ícones já decididos na `m10-03`: Suporte (cruz em círculo) ×
   Paramédico (cruz) aparecem juntos no dossiê do Suporte e se confundem; as espadas do Combatente quase
   viram um "X" em tamanho pequeno; a Silhueta do Civil lembra "perfil de usuário".
-- **Origem:** revisão do exemplão do M10 (`docs/design/propostas/m10-regras-exemplao.html`) com o autor e os testers, 2026-10-06; anotada em `m10-regras.spec.md`. O autor preferiu seguir com os escolhidos por ora.
+- **Origem:** revisão do exemplão do M10 (`docs/specs/backlog/m10-regras/m10-regras-exemplao.html`) com o autor e os testers, 2026-10-06; anotada em `m10-regras.spec.md`. O autor preferiu seguir com os escolhidos por ora.
 - **Por quê:** legibilidade em 14–16px e distinção dentro do mesmo dossiê.
 - **Custo aparente:** só desenho + votação curta; troca de SVG no `app-icone`.
 
@@ -630,7 +630,7 @@
 - **Origem:** pedido do autor ao revisar o menu "⋯" do painel de campanha (2026-08-08) — junto do
   pedido de trazer as ações de ficha (remover/excluir) e o "Acesso de visualização" para fora da
   ficha completa, para o painel do jogador (ver
-  `docs/superpowers/specs/2026-08-08-painel-jogador-acoes-ficha-design.md`).
+  `docs/specs/backlog/legado-superpowers-conferir-fecho/2026-08-08-painel-jogador-acoes-ficha-design.md`).
 - **Por quê:** a granularidade atual força tudo-ou-nada; um dono que quer compartilhar só parte da
   ficha (ex.: vitalidade para o grupo, mas não o histórico pessoal) não tem opção hoje.
 - **Custo aparente:** médio-alto — schema (uma concessão precisaria guardar quais seções/campos

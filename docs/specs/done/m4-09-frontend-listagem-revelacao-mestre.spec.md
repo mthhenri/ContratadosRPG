@@ -69,4 +69,4 @@ Listagem/revelação integrada, atalhos e filtro entregues. Análogos aprovados:
 Estado de acesso separado do painel extenso; API e permissões existentes preservadas.
 Evento existente de visibilidade emitido após concessão/revogação persistida.
 Gates de código, quatro viewports e dois usuários sem F5 concluídos;
-registro completo em `docs/reviews/m4-09-verificacao.md`. Próxima task: M4-10.
+registro completo em `docs/specs/done/m4-09-frontend-listagem-revelacao-mestre/m4-09-verificacao.md`. Próxima task: M4-10.

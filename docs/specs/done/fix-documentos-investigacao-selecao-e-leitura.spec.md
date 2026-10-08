@@ -41,5 +41,5 @@ e listagem protegida por geração. Segundo clique limpa foco sem afetar a Bibli
 
 773 testes shared, 815 backend e 2566 frontend passaram; teste opt-in de foco também exercitado
 contra PostgreSQL real. Builds e lint sem erros. Roteiro completo e comparação visual pessoal
-em [VERIFICACAO.md](../../reviews/fix-documentos-investigacao/VERIFICACAO.md), com capturas e
+em [VERIFICACAO.md](fix-documentos-investigacao-selecao-e-leitura/VERIFICACAO.md), com capturas e
 limites dos avisos preexistentes. Nenhuma pendência obrigatória desta spec.

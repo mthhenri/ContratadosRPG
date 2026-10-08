@@ -1,6 +1,6 @@
 # Eventos de campanha sem identidade de ficha oculta
 
-Origem: [FO-02 da auditoria](../../auditorias/ficha-oculta-todos-consumidores.md#fo-02--eventos-identificam-ficha-oculta-para-a-sala-ampla).
+Origem: [FO-02 da auditoria](auditoria-ficha-oculta-todos-consumidores/ficha-oculta-todos-consumidores.md#fo-02--eventos-identificam-ficha-oculta-para-a-sala-ampla).
 
 ## Objetivo
 

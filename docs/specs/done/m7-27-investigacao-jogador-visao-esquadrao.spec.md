@@ -40,7 +40,7 @@ de ampliar primitivo.
 
 ### POC visual para decisão · 2026-09-29
 
-[`docs/design/propostas/investigacao-jogador-esquadrao.html`](../../design/propostas/investigacao-jogador-esquadrao.html)
+[`docs/specs/done/m7-27-investigacao-jogador-visao-esquadrao/investigacao-jogador-esquadrao.html`](m7-27-investigacao-jogador-visao-esquadrao/investigacao-jogador-esquadrao.html)
 compara as três composições acima em desktop e numa janela de 360×800. É um protótipo
 descartável, com dados ilustrativos; a opção A foi aprovada, ainda sem implementação no Angular.
 
@@ -99,7 +99,7 @@ consultar o autor conforme `AGENTS.md`.
 - **Aplicação real:** Postgres, API NestJS e SPA Angular locais; campanha sintética com mestre, dois jogadores com ficha e um sem ficha, eliminada ao final pelas rotas de exclusão lógica. Inspeção pessoal do jogador e da prévia em **1920×1080, 1366×768, 960×1080 e 360×800**; sem erro de página nem overflow horizontal. Documentos precedem seletor e ficha no mobile. Cartões, controles, tipografia, estados e hierarquia preservam a identidade do análogo. Ajustados os alvos de toque do seletor e de “Ver ficha” para 44 px em 360 px.
 - **Estados interativos:** Esquadrão/Rolagens alternam; documento apresentado abre em leitura; ficha alheia concedida abre na janela normal do jogador e em modal somente leitura na prévia. Sem concessão, há só carteirinha, sem vitais ou abertura. Revogação em duas sessões abertas fechou as fichas e retirou ações/vitais sem recarga; ocultação removeu o cartão de terceiro da sessão real e prévia, preservando a própria ficha do dono. Jogador sem ficha manteve esquadrão/documento. Reconexão real de Socket.IO refez membros no jogador e a projeção na prévia.
 - **Permissão da prévia:** tráfego observado restrito a `previa-jogador`, `previa-jogador/:fichaId`, `painel-espectador/cena-ativa` e `painel-espectador/cena/:cenaId/documento`; não houve GET normal de ficha/lista com privilégio do mestre. A ação Cenas do detalhe em prévia aponta para essa rota.
-- **Gates:** `npm run test --workspace=frontend -- --watch=false` — 185 arquivos/2.628 testes passaram; `npm run build --workspace=frontend` — passou, com aviso preexistente de orçamento do bundle inicial; `npm run lint --workspace=frontend` — 0 erros, 24.569 avisos de estilo do repositório; `npx tsc -p frontend/tsconfig.app.json --noEmit` e `git diff --check` — passaram. A matriz em `docs/auditorias/ficha-oculta-todos-consumidores.md` recebeu o recorte desta tela; a auditoria geral continua com outras decisões abertas.
+- **Gates:** `npm run test --workspace=frontend -- --watch=false` — 185 arquivos/2.628 testes passaram; `npm run build --workspace=frontend` — passou, com aviso preexistente de orçamento do bundle inicial; `npm run lint --workspace=frontend` — 0 erros, 24.569 avisos de estilo do repositório; `npx tsc -p frontend/tsconfig.app.json --noEmit` e `git diff --check` — passaram. A matriz em `docs/specs/done/auditoria-ficha-oculta-todos-consumidores/ficha-oculta-todos-consumidores.md` recebeu o recorte desta tela; a auditoria geral continua com outras decisões abertas.
 
 ## Fora de escopo
 

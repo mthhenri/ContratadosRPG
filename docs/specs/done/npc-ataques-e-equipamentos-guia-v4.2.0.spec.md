@@ -2,7 +2,7 @@
 
 > Spec investigativa decorrente da nova seção Ataques e Equipamentos do Guia v4.2.0.
 > **Proposta para revisão; sem implementação ou commit agora.** Não integra m4-19.
-> **2026-10-06: investigação concluída.** [Matriz e proposta completas](../../reviews/npc-ataques-equipamentos-investigacao.md),
+> **2026-10-06: investigação concluída.** [Matriz e proposta completas](npc-ataques-e-equipamentos-guia-v4.2.0/npc-ataques-equipamentos-investigacao.md),
 > incluindo a ambiguidade da Patente Equivalente (cada Categoria mapeia pra uma faixa de
 > 2–3 patentes, não uma só) e as decisões que faltam do autor antes de gerar tasks executáveis.
 

@@ -1,6 +1,15 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Auditoria de ficha oculta — cobertura ainda parcial:** [matriz e evidências](../auditorias/ficha-oculta-todos-consumidores.md).
+> **Organização documental:** tarefas, planos, propostas e relatórios agora ficam
+> juntos em `docs/specs/<estado>/`, conforme [política §3.1](../SYSTEM.SPEC.md#31-documentação-de-tarefa-e-artefatos-de-execução)
+> e [mapa](../specs/README.md). Capturas/saídas brutas ficam em `.artifacts/`, local
+> e ignorada; `repo:verificar` e CI conferem destinos e espelhos. A usabilidade
+> segue em `active/`; [quatro recortes legados sem fecho comprovado](../specs/backlog/legado-superpowers-conferir-fecho.spec.md)
+> e [retomada da cobertura de ficha oculta](../specs/backlog/auditoria-ficha-oculta-retomada-cobertura.spec.md)
+> estão no backlog, sem implementação executada por esta organização. Estado da M10 preservado.
+> [Inventário, destinos e gates desta organização](../specs/done/organizacao-documentacao-e-artefatos/verificacao.md).
+
+> **Auditoria de ficha oculta — cobertura ainda parcial:** [matriz e evidências](../specs/done/auditoria-ficha-oculta-todos-consumidores/ficha-oculta-todos-consumidores.md).
 > [Spec investigativa arquivada em `done/`](../specs/done/auditoria-ficha-oculta-todos-consumidores.spec.md);
 > o relatório não comprova fecho integral. As três divergências confirmadas (eventos FO-02,
 > concessão/leitura FO-03, identidade no encontro FO-01) estão corrigidas. Regras decididas
@@ -12,9 +21,9 @@
 > **Requests — revisão de 2026-09-26 fechada:** as seis tasks do guarda-chuva
 > [requests-correcoes](../specs/done/requests-correcoes.spec.md) (`p-082`…`p-086` +
 > `requests-inventario-sob-demanda`) estão concluídas, specs em `done/`; `P-082`…`P-086` fechados
-> em `PROBLEMS.md`. [Evidências e limites da revisão original](../reviews/requests-2026-09-26.md).
+> em `PROBLEMS.md`. [Evidências e limites da revisão original](../specs/done/requests-correcoes/requests-2026-09-26.md).
 
-> **Avaliação de usabilidade aberta:** [relatório e cobertura dos quatro viewports](../reviews/usabilidade-2026-09-13/RELATORIO.md).
+> **Avaliação de usabilidade aberta:** [relatório e cobertura dos quatro viewports](../specs/active/usabilidade-2026-09-13/RELATORIO.md).
 > Oito propostas de melhoria aguardam revisão; specs no backlog somente após aprovação do autor.
 > A retomada das jornadas autenticadas depende de restabelecer Docker/Postgres local, indisponível
 > na verificação de 15/09. Pendências e dados de teste mantidos estão discriminados no relatório.
@@ -24,36 +33,36 @@
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
 > **Última revisão:** 2026-10-08 · M10-03: 17 ícones de identidade adicionados e
-> verificados em 14/16/24px, claro/escuro e quatro viewports; [evidências](../reviews/m10-03-verificacao.md).
+> verificados em 14/16/24px, claro/escuro e quatro viewports; [evidências](../specs/done/m10-03-icones-identidade/m10-03-verificacao.md).
 > Preparo dos livros e testes do normalizador pendentes por caminhos v4.1.3 (P-105).
 > M4-21 concluída: ficha de NPC revista para se aproximar
 > do Jogador — Patente e Categoria só na Identidade, cor pelo retrato, Competência no ladrilho,
 > equipamento no layout do inventário, Biblioteca de Referência nas habilidades, abas Conduta ·
-> Equipamento · Habilidades · Sanidade. Três viewports: [evidências](../reviews/m4-21-verificacao.md).
+> Equipamento · Habilidades · Sanidade. Três viewports: [evidências](../specs/done/m4-21-ficha-npc-revisao-visual-usabilidade/m4-21-verificacao.md).
 > M4-20 concluída: equipamento e Patente Equivalente
 > explícita do NPC, ataques privados e bônus sobre snapshots. Gates completos, cinco
-> Categorias e quatro viewports: [evidências](../reviews/m4-20-verificacao.md).
+> Categorias e quatro viewports: [evidências](../specs/done/m4-20-npc-ataques-e-equipamentos/m4-20-verificacao.md).
 > M4-19 concluída: Competências, ajustes, dadinho e
 > rolagens privadas do NPC. Crítico +2 uma vez pelo D20 mantido; indicador fixo
 > “Rolagens ocultas”; legado preservado. Gates completos e app real nos quatro
-> viewports: [evidências](../reviews/m4-19-verificacao.md).
+> viewports: [evidências](../specs/done/m4-19-npc-testes-de-atributo-regra-e-rolagem/m4-19-verificacao.md).
 > P-101 e tasks01/02/03 concluídas após autorização
 > de execução conjunta: realocação total3/negativos, DT compartilhada e referências
 > do Guia alinhadas. Gates e app real nos quatro viewports aprovados; evidências em
-> [P-101](../reviews/p-101-verificacao.md), commitada com as três filhas em `767b47bf`.
+> [P-101](../specs/done/p-101-criaturas-guia-v4.2.0/p-101-verificacao.md), commitada com as três filhas em `767b47bf`.
 > P-102 concluiu o alinhamento dos ponteiros operacionais, com histórico/livros preservados;
-> [checagens documentais](../reviews/p-102-verificacao.md), versionadas em commit próprio
+> [checagens documentais](../specs/done/p-102-referencias-documentos-vigentes/p-102-verificacao.md), versionadas em commit próprio
 > após autorização do autor. P-095/P-096/P-098/P-100
 > já versionadas separadamente; P-097 e livros/leitor em grupos próprios.
 > Dados sintéticos/resíduos limpos. M10 (Regras): `m10-01`, `m10-02` e `m10-03` concluídas,
 > núcleo/casos explícitos do normalizador e ícones de identidade entregues; `m10-04` em `active/`,
-> [prancha SCP v1](../design/propostas/m10-04-scp-aprovacao.html) aguardando aprovação dos
+> [prancha SCP v1](../specs/active/m10-04-svg-scp-definitivo/m10-04-scp-aprovacao.html) aguardando aprovação dos
 > desenhos, paleta/fundos e crédito antes da incorporação. Autor revisou o uso:
 > SCP oficial somente na identidade de Criatura; marca própria SCP + D20 em Regras,
 > níveis e usos gerais. Refino da marca própria permanece aberto.
-> [Evidências e gates pendentes](../reviews/m10-04-proposta-v1.md).
+> [Evidências e gates pendentes](../specs/active/m10-04-svg-scp-definitivo/m10-04-proposta-v1.md).
 > `m10-05`…`m10-11` no backlog.
-> [Gates, contagens e avisos dos casos explícitos](../reviews/m10-02-verificacao.md).
+> [Gates, contagens e avisos dos casos explícitos](../specs/done/m10-02-normalizador-casos-explicitos/m10-02-verificacao.md).
 > **Última decisão registrada:** Sistema do Jogador v4.1.3
 > incorporado em `p-097-01`: crítico soma +2 uma vez no teste; dano/cura continuam
 > dobrando dados e valores. Motor, média do montador e leitor de documentos corrigidos.
@@ -65,7 +74,7 @@
 > e documentação P-098 concluídas por autorizações próprias. M4-20 também concluída;
 > sem pendência técnica do guarda-chuva. Questões editoriais dos livros permanecem
 > registradas sob decisão do autor, sem bloquear o fecho autorizado.
-> Ataques/equipamentos NPC: [investigação concluída](../reviews/npc-ataques-equipamentos-investigacao.md)
+> Ataques/equipamentos NPC: [investigação concluída](../specs/done/npc-ataques-e-equipamentos-guia-v4.2.0/npc-ataques-equipamentos-investigacao.md)
 > (spec em `done/`); decisões do autor (Civil segue restrição do Civil jogador; mestre
 > escolhe a Patente Equivalente por NPC dentro da faixa da Categoria) incorporadas na spec
 > executável [`m4-20`](../specs/done/m4-20-npc-ataques-e-equipamentos.spec.md), concluída
@@ -81,7 +90,7 @@
 > Antes: `m4-18-ficha-npc-atributos-como-jogador` concluída
 > (spec em `done/`): Jogador e NPC usam `app-atributo-ficha`; no NPC, siglas/DT e steppers com a
 > mesma caixa/grade do Jogador, sem Maestria, lesão, modificador, dados ou rolagem. Regressão do
-> Jogador: 24 pares de capturas idênticos. Evidências em `docs/reviews/m4-18-verificacao.md`.
+> Jogador: 24 pares de capturas idênticos. Evidências em `docs/specs/done/m4-18-ficha-npc-atributos-como-jogador/m4-18-verificacao.md`.
 > Antes: `m4-17-ficha-npc-coluna-identidade-compacta` concluída
 > (spec em `done/`): cartão Identidade do NPC extraído para `npc-identidade`, foto 175, `app-stat` `fino` (com slot
 > `[appStatValor]`), Vida/Energia compactas e Cooperação no novo primitivo `app-barra-escala`; Identidade com a altura da Criatura.
@@ -891,18 +900,18 @@ Dadinho por atributo; leitor vê bônus sem editar/rolar/histórico; Anotações
 Servidor força rolagem privada; indicador fixo “Rolagens ocultas”. Crítico +2 uma vez
 pelo D20 mantido, sem dobrar Competência/Nível/ajustes, por contexto explícito no shared.
 Legado abre/salva recursos sem configuração automática; conflitos mantêm escolhas.
-[Gates completos, REST/socket e limpeza](../reviews/m4-19-verificacao.md).
+[Gates completos, REST/socket e limpeza](../specs/done/m4-19-npc-testes-de-atributo-regra-e-rolagem/m4-19-verificacao.md).
 [M4-20](../specs/done/m4-20-npc-ataques-e-equipamentos.spec.md) concluída: seis etapas de
 criação, aba Equipamento, Patente Equivalente escolhida dentro da Categoria, limites do
 catálogo/patente e veto Civil. Defesas efetivas/resistências consomem motores compartilhados,
 sem alterar bases manuais ou aplicar orçamento/peso máximo. Ataques encaminham M4-19 e
 dano interpretável usa bandeja privada; leitor apenas consulta. Cinco Categorias e quatro
-viewports, REST/socket/legado e limpeza: [gates](../reviews/m4-20-verificacao.md).
+viewports, REST/socket/legado e limpeza: [gates](../specs/done/m4-20-npc-ataques-e-equipamentos/m4-20-verificacao.md).
 [M4-21](../specs/done/m4-21-ficha-npc-revisao-visual-usabilidade.spec.md) concluída (pedido do
 autor): Patente e Categoria editadas só na Identidade (troca que invalida a ficha abre Atributos
 com a nova no rascunho), cor pelo retrato, Competência marcada no ladrilho, Equipamento no layout
 do inventário do Jogador e "＋ Da biblioteca"/"＋ Personalizada" nas habilidades
-([gates](../reviews/m4-21-verificacao.md)). Assistente de criação ainda no arranjo antigo (`I-057`).
+([gates](../specs/done/m4-21-ficha-npc-revisao-visual-usabilidade/m4-21-verificacao.md)). Assistente de criação ainda no arranjo antigo (`I-057`).
 Sem próxima implementação de NPC automaticamente autorizada. Fontes preservadas.
 P-097-01 corrigiu crítico de teste com um pool;
 [P-099](../specs/backlog/p-099-critico-teste-com-dados-adicionais.spec.md) teve a proposta
@@ -910,16 +919,16 @@ global descartada pelo autor; arquivo preservado como memória, sem execução o
 executável. [P-100](../specs/done/p-100-npc-criacao-atributo-zero.spec.md)
 concluída: criação aceita zero, devolve o ponto e preserva teto/orçamento, exceções Civil
 e zeros escolhidos na troca de Categoria. Foco do StepInput corrigido com autorização;
-[gates e app real nos quatro viewports](../reviews/p-100-verificacao.md) aprovados.
+[gates e app real nos quatro viewports](../specs/done/p-100-npc-criacao-atributo-zero/p-100-verificacao.md) aprovados.
 Adequações de Criaturas
 [P-101](../specs/done/p-101-criaturas-guia-v4.2.0.spec.md) e tasks01/02/03 concluídas:
 realocação de até três retirados no total, negativos e DT contextual centralizados;
 criação validada sem reaplicar orçamento na edição. Vida/Defesa/ataques livres preservados.
 Cadência já drena turnos excedentes ao fim; referências do exemplo alinhadas.
-[Gates e matriz](../reviews/p-101-verificacao.md) aprovados nos quatro viewports.
+[Gates e matriz](../specs/done/p-101-criaturas-guia-v4.2.0/p-101-verificacao.md) aprovados nos quatro viewports.
 Propostas editoriais Fraco+6→+5 e narrativa de Social três→dois aguardam o autor;
 fontes intactas, sem pendência técnica na P-101.
-Ponteiros P-098 e [P-102](../reviews/p-102-verificacao.md) concluídos; investigação de
+Ponteiros P-098 e [P-102](../specs/done/p-102-referencias-documentos-vigentes/p-102-verificacao.md) concluídos; investigação de
 equipamento/ataques NPC em M4-20 própria; Competências/testes entregues na m4-19.
 [revisão consolidada](../specs/done/revisao-documentos-sistema-v4.1.3-guia-v4.2.0.spec.md)
 fechada por autorização do autor em 2026-10-07, incluindo M4-20 concluída;
@@ -2098,14 +2107,14 @@ migração e está em `HISTORY.md`).
 
 `m4-08b-frontend-visualizacao-npc` está concluída, spec em `done/`: ficha dedicada lazy,
 edição por rascunho, entradas por tipo, leitura concedida, metadados e utilitários compatíveis.
-Gates e verificação pessoal nos quatro viewports em `docs/reviews/m4-08b-verificacao.md`.
+Gates e verificação pessoal nos quatro viewports em `docs/specs/done/m4-08b-frontend-visualizacao-npc/m4-08b-verificacao.md`.
 `m4-09` está concluída, spec em `done/`: listagem integrada, acesso seletivo, atalhos
-e filtro do acervo. Gates e reconexão real em `docs/reviews/m4-09-verificacao.md`.
+e filtro do acervo. Gates e reconexão real em `docs/specs/done/m4-09-frontend-listagem-revelacao-mestre/m4-09-verificacao.md`.
 `m4-10` está concluída, spec em `done/`: progresso/navegação mobile, resumos dos dois
 assistentes em Modal inferior, piso de toque dos primitivos, reflow e ações inferiores.
 Autor autorizou ampliar Modal/ValorEditavel/BarraRecurso/ColunaAcoes. Gate pessoal nos
 seis viewports, 2703 testes frontend, build/lint aprovados e revisão independente sem
-achados. Evidência em `docs/reviews/m4-10-verificacao.md`; cenário próprio limpo.
+achados. Evidência em `docs/specs/done/m4-10-refinamento-mobile-criatura-npc/m4-10-verificacao.md`; cenário próprio limpo.
 M4-09 foi commitada/enviada em `03926a60`; M4-10 fecha com commit/envio separado.
 `m8-06` está concluída; módulo inteiro fechado.
 `ui-23` (stat sem valor/rodapé do cartão) já foi concluída — ver `HISTORY.md`
@@ -2160,12 +2169,12 @@ reproduzem isoladas (arquivo único), não na suíte completa.
 | M1 | Calculadora com paridade | **concluído** (`m1-01`…`m1-20`), incluindo os 2 passos operacionais de plataforma (Cloudflare Pages no ar, repo antigo arquivado) |
 | M2 | Auth + Campanhas | **concluído**, incluindo o redesenho do painel (`m2-01`…`m2-09` + extensões `m2-10`…`m2-17`; `m2-18` lista, `m2-19` detalhe/mestre, `m2-20` detalhe/jogador, `m2-21` abas + Rolagens na lateral + menu de ficha do jogador) |
 | M3 | Ficha de Jogador | **em andamento** — CRUD, editores, tempo real e rolagens prontos; guia de criação completo (`m3-57`/`m3-58`/`m3-59` — base, melhorias de nível, equipamento inicial); cor (`m3-61`) e avatar (`m3-62`) de identidade por ficha prontos; falta só `m3-53` |
-| M4 | Ficha de Criatura/NPC | **tasks concluídas** — `m4-01`…`m4-08b`, ajustes de criatura, `m4-11`, `m4-12`, `m4-13`, `m4-14` e `m4-15` concluídos; revisão do NPC encerrada. NPC tem motor puro, API tipada, criação dedicada e ficha própria em `/fichas/npc/:id` e `/campanhas/:campanhaId/npc/:id`. Edição do mestre por valor avulso (Enter) ou bloco (Salvar/Cancelar no próprio bloco), um de cada vez, snapshots preservados (`m4-16`); cartão Identidade compacto com a altura da Criatura e Cooperação em `app-barra-escala` (`m4-17`); Atributos em `npc-atributos` com `app-atributo-ficha` compartilhado com o Jogador e cinco linhas opcionais desligadas no NPC (`m4-18`, 24 pares de regressão visual idênticos); jogador concedido só lê. Notas privadas, retrato/cor/foco e utilitários compatíveis usam APIs existentes. Revogação limpa/redireciona; eventos e reconexão recuperam GET autorizado. Entradas por criação/acervo/painel funcionam; filtro/botão do acervo e revelação integrada concluídos na `m4-09`; refinamento mobile concluído na `m4-10`, incluindo os primitivos autorizados. Gates em `docs/reviews/m4-08b-verificacao.md`, `m4-09-verificacao.md`, `m4-10-verificacao.md` e `m4-18-verificacao.md`. Checagem global do shared limpa desde a correção do `P-092` (2026-10-04) |
+| M4 | Ficha de Criatura/NPC | **tasks concluídas** — `m4-01`…`m4-08b`, ajustes de criatura, `m4-11`, `m4-12`, `m4-13`, `m4-14` e `m4-15` concluídos; revisão do NPC encerrada. NPC tem motor puro, API tipada, criação dedicada e ficha própria em `/fichas/npc/:id` e `/campanhas/:campanhaId/npc/:id`. Edição do mestre por valor avulso (Enter) ou bloco (Salvar/Cancelar no próprio bloco), um de cada vez, snapshots preservados (`m4-16`); cartão Identidade compacto com a altura da Criatura e Cooperação em `app-barra-escala` (`m4-17`); Atributos em `npc-atributos` com `app-atributo-ficha` compartilhado com o Jogador e cinco linhas opcionais desligadas no NPC (`m4-18`, 24 pares de regressão visual idênticos); jogador concedido só lê. Notas privadas, retrato/cor/foco e utilitários compatíveis usam APIs existentes. Revogação limpa/redireciona; eventos e reconexão recuperam GET autorizado. Entradas por criação/acervo/painel funcionam; filtro/botão do acervo e revelação integrada concluídos na `m4-09`; refinamento mobile concluído na `m4-10`, incluindo os primitivos autorizados. Gates em `docs/specs/done/m4-08b-frontend-visualizacao-npc/m4-08b-verificacao.md`, `m4-09-verificacao.md`, `m4-10-verificacao.md` e `m4-18-verificacao.md`. Checagem global do shared limpa desde a correção do `P-092` (2026-10-04) |
 | M5 | Guia de Missão | não iniciado |
 | M6 | Gestão de Usuários e Papéis | **concluído** — `m6-01`…`m6-08` (`m6-08`: impersonação administrativa auditável) |
 | M7 | Encontro de Combate | **concluído** — 8 tasks originais (`m7-01` contrato, `m7-02` motor puro, `m7-03` backend de montagem, `m7-04` backend de condução/tempo real, `m7-05` painel do mestre, `m7-06` visão do jogador, `m7-07` log da rodada, `m7-08` refinamento mobile) + 9 ajustes de pós-milestone (`m7-09`…`m7-17`, ver seção 4 "Encontro de Combate"). Numeração M7 é sugestão, não decisão de roadmap |
 | M8 | Espectadores e Prévias de Campanha | **concluído** — `m8-01`…`m8-06` (banco + contratos do papel ESPECTADOR; backend de permissões e as duas projeções de leitura; frontend de entrada/gestão de convites-membros/Painel do espectador ao vivo/Prévia de jogador fidedigna/visão read-only de Iniciativa; `m8-06` fechou com gate de validação integrada entre 4 contas reais). Numeração M8 é sugestão, não decisão de roadmap — ver `docs/context/IDEAS.md` |
-| M10 | Regras (documentos do sistema no site) | **em execução, 3/11** — `m10-01`/`m10-02`/`m10-03` concluídas; `m10-04`…`m10-11` no backlog; fonte visual `docs/design/propostas/m10-regras-exemplao.html` |
+| M10 | Regras (documentos do sistema no site) | **em execução, 3/11** — `m10-01`/`m10-02`/`m10-03` concluídas; `m10-04`…`m10-11` no backlog; fonte visual `docs/specs/backlog/m10-regras/m10-regras-exemplao.html` |
 
 ---
 
@@ -2184,7 +2193,7 @@ e `regras-guia.mjs`: 3 classes, 9 arquétipos, 2 origens, 5 módulos, 100 equipa
 67 modificações, 8 níveis de ameaça; Guia com 2 roteiros, identidade, atributos,
 3 habilidades de criatura e ficha completa da Estátua. Fonte e campos ricos preservados,
 sem cálculo; assinatura incompleta cai como genérico com linha de origem.
-Os 41 avisos remanescentes estão justificados na [verificação M10-02](../reviews/m10-02-verificacao.md).
+Os 41 avisos remanescentes estão justificados na [verificação M10-02](../specs/done/m10-02-normalizador-casos-explicitos/m10-02-verificacao.md).
 Build de produção aprovado em modo CI; falha nativa com cache local contornada em P-104.
 PDFs e leitor atuais continuam ativos; renderização dos blocos ricos é M10-07.
 
@@ -2194,7 +2203,7 @@ PDFs e leitor atuais continuam ativos; renderização dos blocos ricos é M10-07
 exemplão de Regras (`ICO`, `dec`): classes, nove arquétipos, três subclasses, Civil e NPC.
 Catálogo e SVGs preservam o contrato atual; nenhum consumidor do site foi trocado.
 `criatura` depende da M10-04 e o leitor rico da M10-07. Família documentada em
-`DESIGN.md`; [capturas e gates](../reviews/m10-03-verificacao.md). Build Angular e
+`DESIGN.md`; [capturas e gates](../specs/done/m10-03-icones-identidade/m10-03-verificacao.md). Build Angular e
 suítes de aplicação aprovados; a cadeia npm de assets/normalizador permanece com
 falhas externas à task após a troca do livro (P-105), sem validação de preparo limpo.
 
@@ -2788,7 +2797,7 @@ desenhos foram confirmados em `1920×1080` e `360×800` sem overflow.
 Dois cuidados que valem pra qualquer tela: `<select>` de edição usa `[selected]` na `<option>` (com
 `[value]` no `<select>` as opções do `@for` ainda não existem e o controle abre na 1ª), e `.botao`
 precisa ser copiado pro SCSS de cada componente (a definição da página não atravessa o
-encapsulamento). O refinamento mobile mais amplo de criatura/NPC foi concluído em `m4-10`; ver `docs/reviews/m4-10-verificacao.md`.
+encapsulamento). O refinamento mobile mais amplo de criatura/NPC foi concluído em `m4-10`; ver `docs/specs/done/m4-10-refinamento-mobile-criatura-npc/m4-10-verificacao.md`.
 
 **Enquadramento do avatar (pan/zoom) — jogador e criatura.** Retomada do que `m3-62` tinha deixado
 fora de escopo ("crop/editor de imagem no client"), sem processamento de imagem no servidor: só um
@@ -2963,7 +2972,7 @@ da Biblioteca e protege GETs/respostas de escrita por geração; troca de cena l
 antes de publicar a nova identidade. Foco usa transação e bloqueio da cena, liberando o índice
 único parcial antes de marcar outro vínculo. O espectador usa a projeção dedicada e
 `DocumentosCenaEspectador`, com a mesma abertura voluntária, independente do foco do mestre.
-Evidências da correção em `docs/reviews/fix-documentos-investigacao/VERIFICACAO.md`.
+Evidências da correção em `docs/specs/done/fix-documentos-investigacao-selecao-e-leitura/VERIFICACAO.md`.
 
 Tela de Iniciativa (painel de uma cena com iniciativa) com
 duas visões em páginas separadas (`ui-39`): `PainelCenaShell` (antes `PainelEncontroShell`) resolve o papel
@@ -3417,7 +3426,7 @@ Decisões que **continuam governando código novo**. Não as re-litigue sem fala
   lê e pesquisa páginas dos jogadores; jogadores nunca acessam cadernos entre si. A busca unifica
   cadernos e anotações de ficha com fontes combináveis conforme o papel. O Caderno é um utilitário
   flutuante junto de Calculadora e Documentos; contrato e decisões em
-  `docs/superpowers/specs/2026-08-12-cadernos-campanha-busca-design.md`.
+  `docs/specs/done/registro-cadernos-privados-e-busca/2026-08-12-cadernos-campanha-busca-design.md`.
 - **Edição no próprio lugar** — toggle inline na mesma tela, nunca uma página de formulário
   separada. Vale para ficha, campanha e perfil.
 - **Enum de coluna relacional é tabela `tipo_*`** (SYSTEM.SPEC §10.2.12, proibição #24). A exceção
@@ -3440,7 +3449,7 @@ Decisões que **continuam governando código novo**. Não as re-litigue sem fala
   três modais, stats da Simulação, estados vazios densos e os três seletores segmentados — todos
   já cobertos pelos primitivos (o último par, `P-055`/`P-056`, ganhou `[tamanho]="compacto"` em
   `app-estado-vazio` e o novo primitivo `app-segmentado`, ver `HISTORY.md`). Matriz original em
-  `docs/design/AUDITORIA-COMPONENTES-FANTASMA.md` (registro histórico — os itens já não estão mais
+  `docs/specs/done/ui-27-auditoria-componentes-fantasma/AUDITORIA-COMPONENTES-FANTASMA.md` (registro histórico — os itens já não estão mais
   ativos): `P-051` — esqueletos — fechou em 2026-09-05; `P-052` — cabeçalho de cartão da Iniciativa
   — fechou em 2026-09-06, `app-cartao` ganhou `[semCaixa]`; `P-053` — casca interna dos três modais
   — e `P-054` — stats da Simulação — fecharam também em 2026-09-06, `app-stat` ganhou
@@ -3538,7 +3547,7 @@ Armadilhas que já custaram retrabalho neste repositório. Cada uma tem um epis�
   entre regra e exemplo "A Estátua"**: Fraco em VD 30 (fórmula dá +5, exemplo mostra "+6") e
   narrativa de Social base2→zero (“três pontos”, retirada efetiva de dois). Fraqueza agora
   consta26 no livro e no produto (P-101); propostas editoriais restantes em
-  `docs/reviews/p-101-verificacao.md`. Quando o próprio documento se contradiz entre regra
+  `docs/specs/done/p-101-criaturas-guia-v4.2.0/p-101-verificacao.md`. Quando o próprio documento se contradiz entre regra
   geral e exemplo pontual, a **fórmula geral vence** (decisão de abertura da `m4-02`) — o exemplo é
   mais sujeito a erro de transcrição. Ver `shared/src/regras/criatura/modificadores.ts` e
   `a-estatua.spec.ts`. Relevante para `m4-06` (`shared/regras/npc`) se a Biblioteca de Referência
@@ -3567,7 +3576,7 @@ Armadilhas que já custaram retrabalho neste repositório. Cada uma tem um epis�
 **m4-19 — decisões fechadas e implementadas:** Nível + Competências, ajustes e dadinho;
 crítico +2 uma vez no teste NPC, sem dobrar dados de Categoria; indicador fixo
 “Rolagens ocultas”, servidor força privacidade. Sem pendência da task.
-[Fecho e evidências](../reviews/m4-19-verificacao.md).
+[Fecho e evidências](../specs/done/m4-19-npc-testes-de-atributo-regra-e-rolagem/m4-19-verificacao.md).
 **Crítico — contexto da operação preservado:** a publicação define +2 no teste
 sem dado resultante e dobra no dano/cura. Autor esclareceu que teste e rolagem
 resultante posterior são separados; API não pode deduzir a segunda da primeira.
@@ -3577,7 +3586,7 @@ M4-19 identifica explicitamente o teste NPC, distinguindo Competência dentro do
 de dano/cura posteriores; classificador de fórmulas livres preservado.
 P-095/096/098/100, P-101-01/02/03 e P-102 concluídas. P-101 e as três filhas
 versionadas no commit `767b47bf`; P-102 documental executada após autorização,
-com evidências em `docs/reviews/p-102-verificacao.md`, versionadas em commit próprio
+com evidências em `docs/specs/done/p-102-referencias-documentos-vigentes/p-102-verificacao.md`, versionadas em commit próprio
 após autorização do autor.
 Versionamento da preparação documental autorizado pelo autor.
 NPC ataques/equipamento foi especificado e entregue na M4-20; sem pendência técnica da task.

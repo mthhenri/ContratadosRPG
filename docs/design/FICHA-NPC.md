@@ -1,7 +1,7 @@
 # Ficha de NPC — contrato visual da M4
 
 > Contrato refinado e implementado em 2026-09-30 (`m4-08`/`m4-08b`).
-> Evidências: `docs/reviews/m4-08b-verificacao.md`. Listagem integrada segue na `m4-09`.
+> Evidências: `docs/specs/done/m4-08b-frontend-visualizacao-npc/m4-08b-verificacao.md`. Listagem integrada segue na `m4-09`.
 > Este documento define apresentação e composição; regras e forma dos dados continuam em
 > `docs/core/guia_de_mestre-v4.2.0.md` (Guia de Criação de NPCs) e `docs/SCHEMA.md`
 > (`FichaNpcDadosDto`). Tokens e primitivos seguem `docs/design/DESIGN.md`.
@@ -11,7 +11,7 @@
 > canônicos médios/contorno e leitura por chips; atributo usa dadinho e ajustes do
 > `app-atributo-ficha`. Indicador fixo “Rolagens ocultas” no cabeçalho; bandeja e
 > histórico privados só para gestão. Competências não alteram o atributo nem a DT.
-> P-100 já adequou zero/redistribuição na criação. [Gates M4-19](../reviews/m4-19-verificacao.md).
+> P-100 já adequou zero/redistribuição na criação. [Gates M4-19](../specs/done/m4-19-npc-testes-de-atributo-regra-e-rolagem/m4-19-verificacao.md).
 > **M4-21 (2026-10-07, revisão do autor):** ficha mais próxima do Jogador. Abas Conduta ·
 > Equipamento · Habilidades · Sanidade (Conduta abre). Patente Equivalente é ladrilho editável na
 > Identidade, em linha inteira abaixo de Categoria | Nível (duas colunas iguais), para nenhum
@@ -22,11 +22,11 @@
 > marcada no próprio ladrilho (`app-atributo-ficha`), com faixa DT · Competências · Modificador.
 > Equipamento no desenho do inventário do Jogador; Habilidades com "＋ Da biblioteca" (Biblioteca
 > de Referência do Guia em `shared/regras/npc`) e "＋ Personalizada", ambas no rascunho do bloco.
-> [Gates M4-21](../reviews/m4-21-verificacao.md). Onde este bloco diverge do texto abaixo, ele vence.
+> [Gates M4-21](../specs/done/m4-21-ficha-npc-revisao-visual-usabilidade/m4-21-verificacao.md). Onde este bloco diverge do texto abaixo, ele vence.
 > **M4-20 (2026-10-06):** Equipamento inicial acrescenta uma etapa ao assistente.
 > Na ficha, aba Equipamento com catálogo, Patente Equivalente explícita, modificações e
 > estado equipado; leitura por jogador sem controles. Bônus somam aos snapshots, sem
-> regravar suas bases. [Gates M4-20](../reviews/m4-20-verificacao.md).
+> regravar suas bases. [Gates M4-20](../specs/done/m4-20-npc-ataques-e-equipamentos/m4-20-verificacao.md).
 
 ## Intenção
 

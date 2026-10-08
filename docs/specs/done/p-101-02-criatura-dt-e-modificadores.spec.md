@@ -52,4 +52,4 @@ removido após inventário. Guia e ficha apresentam DT, inclusive durante ediç�
 leitor autorizado; bônus permanece separado do atributo/pool. Encontro e resumos não
 precisam de campo derivado novo. Vida/Defesa/fórmulas livres preservadas por provas REST
 e salvamento/reabertura real. Gates e comparação pessoal nos quatro viewports aprovados.
-[Fecho integrado e evidências](../../reviews/p-101-verificacao.md).
+[Fecho integrado e evidências](p-101-criaturas-guia-v4.2.0/p-101-verificacao.md).

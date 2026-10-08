@@ -62,4 +62,4 @@ defeito ainda aguardando correção em outra sessão.
 - Nenhuma dependência executável; nenhuma outra task depende da execução da P-099.
 - Referências históricas: decisão do autor em 2026-10-06; Sistema v4.1.3 > Crítico;
   Guia v4.2.0 > NPC > Modificadores.
-- [Revisão e reprodução histórica](../../reviews/m4-19-revisao-guia-v4.2.0.md).
+- [Revisão e reprodução histórica](../done/m4-19-npc-testes-de-atributo-regra-e-rolagem/m4-19-revisao-guia-v4.2.0.md).

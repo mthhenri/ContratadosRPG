@@ -1,6 +1,6 @@
 # Precedência de ocultação sobre concessão de ficha de jogador
 
-Origem: [FO-03 da auditoria](../../auditorias/ficha-oculta-todos-consumidores.md#fo-03--concessão-anterior-supera-ocultação-em-leitura-e-listagem). **Decisão obrigatória antes da implementação:** formalizar com o autor a precedência de `oculta` sobre acesso explícito histórico, como exigido pela spec investigativa. Comportamento atual confirmado; não é uma correção já aplicada ou autorizada pela auditoria.
+Origem: [FO-03 da auditoria](auditoria-ficha-oculta-todos-consumidores/ficha-oculta-todos-consumidores.md#fo-03--concessão-anterior-supera-ocultação-em-leitura-e-listagem). **Decisão obrigatória antes da implementação:** formalizar com o autor a precedência de `oculta` sobre acesso explícito histórico, como exigido pela spec investigativa. Comportamento atual confirmado; não é uma correção já aplicada ou autorizada pela auditoria.
 
 ## Objetivo
 

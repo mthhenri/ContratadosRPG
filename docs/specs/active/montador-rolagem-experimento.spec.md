@@ -52,8 +52,8 @@ preferência de usuário (por exemplo "completo" ou "essencial") gravada.
 
 - Canvas "Montador de rolagem" (Artifact do autor, privado): E3.1, E3.2 e E3.3, desktop `1920×1080` e `360×800`,
   todas navegáveis. Histórico, achados, números de controles e resultados das baterias em `IDEAS.md` `I-041` e
-  `HISTORY.md` (2026-10-02); POC anterior em `docs/design/propostas/montador-rolagem-simplificado.html`.
-- Corpus de aceite no repositório: `docs/design/propostas/montador-rolagem-formulas.json` (10 fórmulas dos
+  `HISTORY.md` (2026-10-02); POC anterior em `docs/specs/active/montador-rolagem-experimento/montador-rolagem-simplificado.html`.
+- Corpus de aceite no repositório: `docs/specs/active/montador-rolagem-experimento/montador-rolagem-formulas.json` (10 fórmulas dos
   jogadores + 78 de bateria). Medido no mockup com o motor real como juiz: E3.1 e E3.3 acertam 54 de 78 (3
   divergem), E3.2 acerta 58 (nenhuma diverge); nas dez dos jogadores, E3.1/E3.3 9 de 10 e E3.2 10 de 10.
 - **O que o mockup limita e o produto não deve herdar:** números por passo de −10 a +60 (no produto, campo

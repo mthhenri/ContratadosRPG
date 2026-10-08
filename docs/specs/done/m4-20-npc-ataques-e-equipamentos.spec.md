@@ -1,10 +1,10 @@
 # m4-20-npc-ataques-e-equipamentos.spec.md
 
 > Task do milestone `m4-ficha-criatura-npc.spec.md`, depois de `m4-19`. Spec executável
-> decorrente da [investigação concluída](../../reviews/npc-ataques-equipamentos-investigacao.md)
+> decorrente da [investigação concluída](npc-ataques-e-equipamentos-guia-v4.2.0/npc-ataques-equipamentos-investigacao.md)
 > (spec investigativa em `done/`) e das decisões do autor registradas ali em 2026-10-06.
 > **Concluída em 2026-10-06**, após continuação da implementação ativa pelo autor.
-> [Gates, revisão e evidências](../../reviews/m4-20-verificacao.md).
+> [Gates, revisão e evidências](m4-20-npc-ataques-e-equipamentos/m4-20-verificacao.md).
 
 ## Objetivo
 
@@ -97,7 +97,7 @@ para aquele NPC dentro da faixa da sua Categoria.
 - `m4-19` (motor de teste de atributo/Competência) deve estar em `done/` antes do fecho
   integrado desta task — o teste de ataque reusa esse motor; pode-se preparar contrato/regra
   pura em paralelo, mas o gate de UI integrado espera a `m4-19`.
-- [Investigação e decisões](../../reviews/npc-ataques-equipamentos-investigacao.md) (`done/`).
+- [Investigação e decisões](npc-ataques-e-equipamentos-guia-v4.2.0/npc-ataques-equipamentos-investigacao.md) (`done/`).
 - `civil-guia-criacao` (backlog) — fonte do veto de categoria do Civil, reusado aqui.
 - `shared/regras/compras`, `shared/regras/agente/{defesa,resistencia}.ts`, `shared/regras/dados/patente.dados.ts`.
 - `docs/design/FICHA-NPC.md`; `SCHEMA.md` (`FichaNpcDadosDto`).

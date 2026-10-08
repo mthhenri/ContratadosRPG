@@ -80,6 +80,6 @@ achados. Aplicação real percorrida nos seis viewports com os dois assistentes,
 categorias, listas/abas, edição/leitura, teclado/foco, Cooperação, histórico, resumos
 e campanha. Análogo de jogador observado após a alteração dos primitivos.
 
-Resultado e critérios registrados em `docs/reviews/m4-10-verificacao.md`.
+Resultado e critérios registrados em `docs/specs/done/m4-10-refinamento-mobile-criatura-npc/m4-10-verificacao.md`.
 Cenário próprio limpo por soft delete. Nenhuma pendência obrigatória da task;
 fecho com commit separado e envio ao remoto conforme autorização do autor.

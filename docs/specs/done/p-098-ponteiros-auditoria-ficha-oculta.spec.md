@@ -13,7 +13,7 @@ pendente. Corrigir a descrição de estado com esse limite explícito.
 
 ## Entregáveis
 
-1. Conferir a spec em `done/` e `docs/auditorias/ficha-oculta-todos-consumidores.md`;
+1. Conferir a spec em `done/` e `docs/specs/done/auditoria-ficha-oculta-todos-consumidores/ficha-oculta-todos-consumidores.md`;
    distinguir investigação encerrada de decisões/hipóteses que continuam pendentes.
 2. Corrigir o link “spec investigativa ativa” em `docs/context/MEMORY.md` e os
    trechos afetados de CONTEXT que ainda dizem `active/`. MEMORY contém somente ponteiros.

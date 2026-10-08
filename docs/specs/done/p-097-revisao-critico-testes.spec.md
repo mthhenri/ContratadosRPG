@@ -1,7 +1,7 @@
 # p-097-revisao-critico-testes.spec.md
 
 > Revisão concluída em 2026-10-06 após publicação pelo autor do Sistema v4.1.3.
-> Contrato e comparação em [revisão P-097](../../reviews/p-097-sistema-v4.1.3.md).
+> Contrato e comparação em [revisão P-097](p-097-revisao-critico-testes/p-097-sistema-v4.1.3.md).
 > A orientação de aguardar abaixo registra o escopo original; o pedido posterior
 > de corrigir conforme o documento autoriza a execução separada
 > `p-097-01-critico-e-sistema-v4.1.3.spec.md`. Esta revisão não alterou código.
@@ -65,7 +65,7 @@ da auditoria em regra aprovada.
 - Documento revisado do autor ou decisão explícita sobre qual versão rege a correção.
 - `docs/core/sistema-v4.1.0.md`, `docs/core/guia_de_mestre-v4.0.0.md`,
   `docs/SYSTEM.SPEC.md`, `docs/CONVENTIONS.md` e skill `regras-do-jogo`.
-- [Auditoria m4-19](../../reviews/m4-19-auditoria.md), especialmente a reprodução de
+- [Auditoria m4-19](m4-19-npc-testes-de-atributo-regra-e-rolagem/m4-19-auditoria.md), especialmente a reprodução de
   `rolagem.ts` e a distinção entre regra escrita e motor atual.
 
 ## Riscos e Mitigação

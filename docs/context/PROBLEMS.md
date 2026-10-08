@@ -45,7 +45,7 @@
 - **Correção:** alinhar preparo, publicação, referências do leitor e testes à fonte
   vigente em tarefa própria; não restaurar o livro antigo nem misturar com M10-03.
 - **Desde:** observado no gate M10-03 em 2026-10-08, após a troca de livro já presente
-  no começo da sessão. [Resultados separados](../reviews/m10-03-verificacao.md).
+  no começo da sessão. [Resultados separados](../specs/done/m10-03-icones-identidade/m10-03-verificacao.md).
 
 ### P-104 — Build Angular encerra com falha nativa usando cache local · `CONTORNADO` · ferramentas/local
 

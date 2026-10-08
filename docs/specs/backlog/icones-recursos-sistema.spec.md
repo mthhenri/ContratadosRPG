@@ -1,7 +1,7 @@
 # icones-recursos-sistema.spec.md
 
 > **Spec avulsa, fora da numeração do M10** (pedido do autor, 2026-10-06). Nasce da revisão do
-> exemplão do M10 (`docs/design/propostas/m10-regras-exemplao.html`, aba *Ícones*), onde o trio
+> exemplão do M10 (`docs/specs/backlog/m10-regras/m10-regras-exemplao.html`, aba *Ícones*), onde o trio
 > Vida/Energia/Defesa foi decidido. A **entrega 1** é pré-requisito da `m10-07`; as demais correm
 > no seu próprio ritmo. Pode ser quebrada em tasks numeradas se o levantamento (entrega 3) crescer.
 
@@ -35,7 +35,7 @@ escritos, e levantar com o autor que outros ícones fariam falta ao sistema.
      que faz papel de ícone de interface (candidato a `app-icone`).
    - **Conceitos do sistema sem ícone** que aparecem como rótulo repetido nas telas (tirados de
      `docs/core/` e das telas reais — nunca inventar conceito).
-   - Entrega: prancha HTML em `docs/design/propostas/` no formato da aba *Ícones* do exemplão (três
+   - Entrega: prancha HTML nos anexos desta spec no formato da aba *Ícones* do exemplão (três
      opções por item, votação do autor/testers). Implementar só o que for aprovado, em task própria.
 
 ## Verificação

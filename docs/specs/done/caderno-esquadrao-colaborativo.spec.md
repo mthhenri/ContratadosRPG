@@ -1,6 +1,6 @@
 # Caderno do esquadrão colaborativo
 
-> Task avulsa especificada em `docs/superpowers/specs/2026-08-27-caderno-esquadrao-colaborativo-design.md`.
+> Task avulsa especificada em `docs/specs/done/caderno-esquadrao-colaborativo/2026-08-27-caderno-esquadrao-colaborativo-design.md`.
 
 ## Objetivo
 
@@ -25,4 +25,4 @@ Comentários, anexos, histórico de versões, permissões por página e colabora
 
 ## Dependências
 
-`docs/SYSTEM.SPEC.md`, `docs/CONVENTIONS.md`, `docs/design/DESIGN.md` e o desenho aprovado em `docs/superpowers/specs/2026-08-27-caderno-esquadrao-colaborativo-design.md`.
+`docs/SYSTEM.SPEC.md`, `docs/CONVENTIONS.md`, `docs/design/DESIGN.md` e o desenho aprovado em `docs/specs/done/caderno-esquadrao-colaborativo/2026-08-27-caderno-esquadrao-colaborativo-design.md`.

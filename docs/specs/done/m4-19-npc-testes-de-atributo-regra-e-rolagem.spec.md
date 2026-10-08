@@ -4,7 +4,7 @@
 > **2026-10-06: execução autorizada.** Após o pedido de fechar decisões e implementar,
 > o autor pediu para continuar. Execução segue as duas propostas apresentadas:
 > crítico +2 uma vez no teste e indicador fixo de privacidade no cabeçalho.
-> [Revisão vigente](../../reviews/m4-19-revisao-guia-v4.2.0.md).
+> [Revisão vigente](m4-19-npc-testes-de-atributo-regra-e-rolagem/m4-19-revisao-guia-v4.2.0.md).
 > Auditoria/opções/probabilidades de 05/10 são evidência histórica, não contrato atual.
 
 ## Objetivo
@@ -124,8 +124,8 @@ com leitor autorizado sem edição e rolagens privadas.
 - [P-100](../done/p-100-npc-criacao-atributo-zero.spec.md) concluída antes do fecho integrado;
   revisão do contrato de crítico no fluxo explicitamente escolhido, sem executar P-099.
 - Fontes novas, SCHEMA, CONVENTIONS e docs/design; decisão m3-31.
-- [Auditoria histórica](../../reviews/m4-19-auditoria.md) e
-  [revisão vigente](../../reviews/m4-19-revisao-guia-v4.2.0.md).
+- [Auditoria histórica](m4-19-npc-testes-de-atributo-regra-e-rolagem/m4-19-auditoria.md) e
+  [revisão vigente](m4-19-npc-testes-de-atributo-regra-e-rolagem/m4-19-revisao-guia-v4.2.0.md).
 
 ## Riscos e Mitigação
 
@@ -141,4 +141,4 @@ Contrato, validação, persistência, criação/configuração, dadinho, bandeja
 privados entregues. Crítico +2 uma vez pelo mantido, sem dobrar Competência; P-099
 preservada como descarte. Legado sem configuração automática; conflitos mantêm escolhas.
 Gates completos, aplicação real nos quatro viewports e privacidade REST/socket verificadas
-em [relatório final](../../reviews/m4-19-verificacao.md). Dados sintéticos e resíduos limpos.
+em [relatório final](m4-19-npc-testes-de-atributo-regra-e-rolagem/m4-19-verificacao.md). Dados sintéticos e resíduos limpos.

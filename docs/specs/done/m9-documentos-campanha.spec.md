@@ -8,7 +8,7 @@
 > somente pelas tasks `m9-01`…`m9-06`, cada uma com a sua spec em `docs/specs/backlog/` (quebra feita
 > em 2026-09-26 — ver "Quebra em tasks" e "Ajustes da quebra"). Os **cadernos privados**, que antes
 > faziam parte desta ideia, já foram especificados separadamente
-> (`docs/superpowers/specs/2026-08-12-cadernos-campanha-busca-design.md`) e não são reabertos aqui.
+> (`docs/specs/done/registro-cadernos-privados-e-busca/2026-08-12-cadernos-campanha-busca-design.md`) e não são reabertos aqui.
 
 ## Objetivo
 

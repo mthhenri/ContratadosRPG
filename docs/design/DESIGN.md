@@ -197,12 +197,12 @@ resultado renderizado de cada um.
 ContratadosRPG — SCP misturado com D20, assets `frontend/public/logo-{black,white}.*`
 — é o padrão geral, inclusive na entrada Regras e nos níveis de ameaça.
 O logo SCP oficial fica reservado à identidade de Criatura. Os SVGs oficiais
-preparados na [prancha M10-04](propostas/m10-04-scp-aprovacao.html) são preservados;
+preparados na [prancha M10-04](../specs/active/m10-04-svg-scp-definitivo/m10-04-scp-aprovacao.html) são preservados;
 o refino da marca própria e a incorporação ao catálogo seguem na task ativa.
 Essa decisão prevalece sobre o uso anterior do logo oficial no exemplão.
 
 O catálogo canônico `app-icone` (`frontend/src/app/shared/icone/`) reúne a família de
-identidade decidida no [exemplão de Regras](propostas/m10-regras-exemplao.html), objeto
+identidade decidida no [exemplão de Regras](../specs/backlog/m10-regras/m10-regras-exemplao.html), objeto
 `ICO`, opção `dec`. SVGs de contorno em `viewBox="0 0 24 24"`, traço `1.75`, pontas e
 junções arredondadas; herdam `currentColor`, sem cor própria, nas bases clara e escura.
 A mira de Mercenário conserva o ponto central preenchido; Assassino conserva a rotação
@@ -605,7 +605,8 @@ os controles do mestre.
   mantém documentos, rolagens e agentes; tablet/mobile empilham, com cartões na largura disponível.
   Carregamento decorativo em contêiner anunciado, vazio e erro com botão canônico de tentar
   novamente. Não exibe presença ou controles de mestre. Evidências comparadas em
-  `docs/reviews/espectador-documentos-cena/`.
+  `docs/specs/done/espectador-documentos-cena/RELATORIO.md`;
+  capturas locais em `.artifacts/espectador-documentos-cena/`.
 - **Visão da mesa (jogador e espectador, `m9-05`):** a mesma biblioteca **menos** os controles —
   sem "Novo documento", sem chip de estado (para a mesa, tudo é revelado), sem setas e sem ações no
   documento aberto; o cartão ocupa a coluna inteira. Vazio: "Nenhum documento revelado ainda." /

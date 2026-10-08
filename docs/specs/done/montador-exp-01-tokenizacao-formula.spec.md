@@ -21,7 +21,7 @@ mudar nenhum resultado de rolagem — é o modelo que as versões novas do monta
 
 ## Critérios de Aceite
 
-- Toda fórmula do corpus (`docs/design/propostas/montador-rolagem-formulas.json`) válida no motor tem peças e
+- Toda fórmula do corpus (`docs/specs/active/montador-rolagem-experimento/montador-rolagem-formulas.json`) válida no motor tem peças e
   `montarFormula(tokenizarFormula(texto))` é interpretada igual ao original; as inválidas devolvem `null`.
 - Os testes existentes do motor não mudam; `npm run test --workspace=shared` verde; lint sem erro.
 

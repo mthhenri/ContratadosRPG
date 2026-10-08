@@ -1,6 +1,6 @@
 # Ausência de agente oculto nos recortes de encontro
 
-Origem: [FO-01 da auditoria](../../auditorias/ficha-oculta-todos-consumidores.md#fo-01--identidade-da-ficha-oculta-na-iniciativa), confirmado REST/WS em 2026-09-29.
+Origem: [FO-01 da auditoria](auditoria-ficha-oculta-todos-consumidores/ficha-oculta-todos-consumidores.md#fo-01--identidade-da-ficha-oculta-na-iniciativa), confirmado REST/WS em 2026-09-29.
 
 ## Objetivo
 

@@ -41,7 +41,7 @@ Este arquivo coordena tasks; não é uma implementação única.
 | [P-101-02](../done/p-101-02-criatura-dt-e-modificadores.spec.md) | DT e consumidores do modificador fixo | Concluída; guia/ficha/leitor e preservação de snapshots |
 | [P-101-03](../done/p-101-03-criatura-referencias-e-cadencia.spec.md) | Exemplos/referências; Cadência já compatível | Concluída; algoritmo preservado e propostas editoriais registradas |
 | [P-102](../done/p-102-referencias-documentos-vigentes.spec.md) | README/schema/design/specs operacionais e comentários | Concluída; correspondência de fontes, histórico preservado e pipeline de PDFs conferido |
-| [NPC ataques/equipamentos](../done/npc-ataques-e-equipamentos-guia-v4.2.0.spec.md) | Investigação concluída — [matriz e decisões](../../reviews/npc-ataques-equipamentos-investigacao.md) | Decisões resolvidas; [m4-20](../done/m4-20-npc-ataques-e-equipamentos.spec.md) concluída, com [gates e evidências](../../reviews/m4-20-verificacao.md) |
+| [NPC ataques/equipamentos](../done/npc-ataques-e-equipamentos-guia-v4.2.0.spec.md) | Investigação concluída — [matriz e decisões](npc-ataques-e-equipamentos-guia-v4.2.0/npc-ataques-equipamentos-investigacao.md) | Decisões resolvidas; [m4-20](../done/m4-20-npc-ataques-e-equipamentos.spec.md) concluída, com [gates e evidências](m4-20-npc-ataques-e-equipamentos/m4-20-verificacao.md) |
 
 ## Cobertura da comparação dos documentos
 
@@ -70,8 +70,8 @@ Comparação contra os livros anteriores no Git, normalizando espaços, `&nbsp;`
   (ver tabela e relatório acima), após autorização própria.
 - **Exemplos/editorial do autor:** Fraco+6 versus fórmula+5, Social base2→zero versus
   “três pontos”, versão interna e grafia de Porte. Propostas e divergências registradas em
-  [P-101](../../reviews/p-101-verificacao.md) e na
-  [revisão dos documentos](../../reviews/m4-19-revisao-guia-v4.2.0.md), preservadas para
+  [P-101](p-101-criaturas-guia-v4.2.0/p-101-verificacao.md) e na
+  [revisão dos documentos](m4-19-npc-testes-de-atributo-regra-e-rolagem/m4-19-revisao-guia-v4.2.0.md), preservadas para
   decisão do autor, sem alterar os livros ou autorizar correção editorial neste fecho.
   P-093 arredondamento continua ACEITO por decisão anterior.
 
@@ -107,5 +107,5 @@ sem repetir build, lint, testes ou inspeção visual sem mudança relevante.
 
 ## Dependências
 
-- Sistema v4.1.3/Guia v4.2.0; [revisão detalhada](../../reviews/m4-19-revisao-guia-v4.2.0.md).
+- Sistema v4.1.3/Guia v4.2.0; [revisão detalhada](m4-19-npc-testes-de-atributo-regra-e-rolagem/m4-19-revisao-guia-v4.2.0.md).
 - Esclarecimentos do autor nesta conversa; revisão conjunta antes de executar correções.

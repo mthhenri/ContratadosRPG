@@ -62,7 +62,7 @@ os consumidores das regras confirmadas, preservando fichas antigas e decisões d
 
 - Guia v4.2.0 > Criaturas > Realocação, Modificadores, DT, Cadência e A Estátua.
 - `docs/SYSTEM.SPEC.md`, `docs/CONVENTIONS.md`, `docs/SCHEMA.md`, `docs/design/`.
-- Decisão histórica de m4-02: fórmula geral vence exemplo; [revisão inicial](../../reviews/m4-19-revisao-guia-v4.2.0.md).
+- Decisão histórica de m4-02: fórmula geral vence exemplo; [revisão inicial](m4-19-npc-testes-de-atributo-regra-e-rolagem/m4-19-revisao-guia-v4.2.0.md).
 
 ## Fecho integrado — 2026-10-06
 
@@ -73,4 +73,4 @@ edição dos livros. Propostas editoriais apresentadas no relatório, sem pendê
 Gates: 5.089 testes aprovados + 1 skip existente, builds/lint sem erros e aplicação real
 nos quatro viewports, inspecionada pessoalmente. Contexto atualizado, P-101 retirada
 de PROBLEMS, dados sintéticos e resíduos temporários limpos; nenhum commit nesta execução.
-[Matriz completa, verificação e limites](../../reviews/p-101-verificacao.md).
+[Matriz completa, verificação e limites](p-101-criaturas-guia-v4.2.0/p-101-verificacao.md).

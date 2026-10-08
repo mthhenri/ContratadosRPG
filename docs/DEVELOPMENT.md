@@ -1,5 +1,13 @@
 # Ambiente de desenvolvimento
 
+## Documentação de tarefas e verificação do repositório
+
+Specs e seus anexos seguem [`SYSTEM.SPEC.md` §3.1](SYSTEM.SPEC.md#31-documentação-de-tarefa-e-artefatos-de-execução)
+e o [mapa de specs](specs/README.md). Capturas e saídas brutas vão para
+`.artifacts/<tarefa>/`, ignorada pelo Git. Antes de fechar uma tarefa execute
+`npm run repo:test` e `npm run repo:verificar`; depois de preparar um commit,
+execute `npm run repo:verificar -- --staged`. O CI verifica o índice e os espelhos.
+
 ## Banco local reproduzível
 
 O comando abaixo **apaga sem backup** o volume PostgreSQL local deste repositório, recria o schema

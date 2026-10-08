@@ -63,6 +63,6 @@ passaram. PDFs existentes idênticos por SHA-256 em fonte/public/saída; pipelin
 links e diff conferidos. Sem novo build/lint amplo/gate visual pelo recorte documental
 com código/UI preservados. P-093 ACEITO e editorial autoral intactos.
 
-[Relatório e evidências](../../reviews/p-102-verificacao.md). Resíduos temporários
+[Relatório e evidências](p-102-referencias-documentos-vigentes/p-102-verificacao.md). Resíduos temporários
 limpos; proposta M10 preservada. Nenhuma pendência técnica desta tarefa; P-102 sem
 commit próprio nesta execução. P-101 e as três filhas já versionadas em `767b47bf`.

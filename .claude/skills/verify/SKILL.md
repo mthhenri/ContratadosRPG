@@ -8,6 +8,12 @@ description: Como levantar o stack real (Postgres + NestJS + Angular) e dirigir 
 Roda o app de verdade e observa. Testes e lint são complementares, mas não substituem a
 verificação manual quando ela for necessária.
 
+Antes de capturar evidência, localizar a spec dona. Destinos seguem
+`docs/SYSTEM.SPEC.md` §3.1: screenshots, logs, dumps e cenários temporários em
+`.artifacts/<tarefa>/`; relatório textual em `docs/specs/<estado>/<tarefa>/`.
+Não gravar saídas brutas no relatório nem em pastas paralelas. O relato precisa
+explicar os resultados/limites sem depender de imagem local para seu veredito.
+
 ## Levantar o stack
 
 ```bash

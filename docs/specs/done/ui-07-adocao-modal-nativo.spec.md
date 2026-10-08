@@ -1,6 +1,6 @@
 # ui-07-adocao-modal-nativo.spec.md
 
-> Correção filha da auditoria `ui-06`. Origem: `docs/design/AUDITORIA-BIBLIOTECA-VISUAL.md`.
+> Correção filha da auditoria `ui-06`. Origem: `docs/specs/done/ui-06-auditoria-conformidade-biblioteca-visual/AUDITORIA-BIBLIOTECA-VISUAL.md`.
 
 ## Objetivo
 

@@ -141,6 +141,44 @@ contratados-rpg/
 
 ---
 
+### 3.1 Documentação de tarefa e artefatos de execução
+
+Todo trabalho executável tem uma única spec em
+`docs/specs/{backlog,active,done}/<tarefa>.spec.md`. Planos, decisões de design da
+tarefa, propostas, revisões, auditorias e relatórios de verificação são **anexos**
+em `docs/specs/<estado>/<tarefa>/`, com a spec proprietária ao lado. Mova a spec
+e seus anexos juntos ao mudar de estado; corrija os ponteiros de forma mecânica.
+Não crie ciclos paralelos por ferramenta ou tipo de atividade (`reviews/`,
+`auditorias/`, `superpowers/`, `plans/`, `design/propostas/` ou equivalentes).
+Essa regra prevalece sobre destinos padrão de plugins e skills externas.
+
+A spec define o escopo e o aceite; o plano apenas ordena a execução. Auditoria
+parcial continua em `active/`, mesmo com relatório produzido. Um registro
+retrospectivo identifica expressamente seu alcance: não transforma uma proposta
+antiga em requisito aprovado nem comprova conclusão de produto. Rodadas históricas
+arquivadas por decisão expressa permanecem em `done/`, com a cobertura restante
+registrada numa task aberta; arquivar a rodada não encerra essa cobertura. Specs concluídas
+preservam requisitos e decisões; só seus ponteiros podem ser corrigidos numa
+realocação documental, sem reescrever o conteúdo histórico.
+
+Capturas, vídeos, logs, dumps, cenários temporários e JSONs de resultados brutos
+ficam em `.artifacts/<tarefa>/`, **ignorada pelo Git**, ou em scratch externo.
+Nunca force sua inclusão. O relatório textual versionado registra métodos,
+comandos/resultados, viewports/estados, comparação, achados e limites; informe
+quando uma evidência é local e não vem no clone. Arquivo gerado só vira fonte
+versionada quando for asset necessário do produto, fonte canônica ou fixture
+reproduzível definida pela spec — não por ter sido usado na verificação.
+
+Documentação permanente continua no seu lugar: regras em `docs/core/`, design
+canônico em `docs/design/`, contexto em `docs/context/`, notas de versão em
+`docs/patchnotes/` e modelos reutilizáveis em `docs/generic_base/`. Esses documentos
+não são depósitos de execução; propostas pontuais pertencem à sua tarefa.
+
+Execute `npm run repo:verificar` antes do fecho e
+`npm run repo:verificar -- --staged` depois de preparar um commit. O CI verifica
+os caminhos versionados e os espelhos de agentes/skills; `.gitignore` sozinho
+não protege contra arquivo já rastreado ou inclusão forçada.
+
 ## 4. Regras de Linguagem
 
 ### Princípio
