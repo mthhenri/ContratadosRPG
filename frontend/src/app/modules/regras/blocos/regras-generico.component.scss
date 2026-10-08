@@ -1,0 +1,10 @@
+:host {
+    display: block;
+}
+p {
+    margin: 0 0 var(--space-12);
+    font-size: 15px;
+    line-height: 1.65;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+}

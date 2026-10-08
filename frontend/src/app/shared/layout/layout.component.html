@@ -72,16 +72,16 @@
                 <app-icone nome="simulacao" />
                 <span>Simulação</span>
             </a>
-            <button
+            <a
                 app-botao
                 class="topbar__item"
-                type="button"
-                aria-label="Abrir documentos"
-                (click)="abrirDocumentos()"
+                routerLink="/regras"
+                routerLinkActive="topbar__item--ativo"
+                aria-label="Abrir Regras"
             >
-                <app-icone nome="documentos" />
-                <span>Documentos</span>
-            </button>
+                <app-icone nome="contratados" />
+                <span>Regras</span>
+            </a>
         </nav>
 
         <div class="topbar__acoes">
@@ -145,7 +145,10 @@
                                 <span>Novidades</span>
                                 <span class="topbar__perfil-versao-numero">
                                     @if (versaoService.versaoNova()) {
-                                        <span class="topbar__versao-ponto" aria-hidden="true"></span>
+                                        <span
+                                            class="topbar__versao-ponto"
+                                            aria-hidden="true"
+                                        ></span>
                                     }
                                     v{{ versaoService.versao }}
                                 </span>
@@ -190,5 +193,3 @@
 <main class="conteudo" [class.conteudo--isolado]="rotaIsolada()">
     <router-outlet />
 </main>
-
-<ng-container #leitorDocumentosContainer />

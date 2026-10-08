@@ -1,0 +1,18 @@
+<div class="regras-habilidade">
+    <div class="regras-habilidade__nome">
+        <span aria-hidden="true">{{ bloco().glifo }}</span> {{ bloco().nome }}
+    </div>
+    <div class="regras-habilidade__selos">
+        <app-chip severidade="secundario" tom="contorno">{{ bloco().custo }} E</app-chip>
+        @if (bloco().reacao) {
+            <app-chip severidade="primario" tom="contorno">REAÇÃO</app-chip>
+        }
+    </div>
+    <p>
+        <app-regras-inline
+            [trechos]="bloco().trechos"
+            [documento]="documento()"
+            (navegarAncora)="navegarAncora.emit($event)"
+        />
+    </p>
+</div>

@@ -1,0 +1,10 @@
+<aside class="regras-exemplo" aria-label="Exemplo">
+    <div class="regras-exemplo__rotulo">// Exemplo</div>
+    <p>
+        <app-regras-inline
+            [trechos]="bloco().trechos"
+            [documento]="documento()"
+            (navegarAncora)="navegarAncora.emit($event)"
+        />
+    </p>
+</aside>

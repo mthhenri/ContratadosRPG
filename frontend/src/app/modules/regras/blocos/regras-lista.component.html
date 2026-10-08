@@ -1,0 +1,25 @@
+@if (bloco().ordenada) {
+    <ol class="regras-lista" [start]="bloco().inicio">
+        @for (item of bloco().itens; track $index) {
+            <li>
+                <app-regras-conteudo
+                    [filhos]="item"
+                    [documento]="documento()"
+                    (navegarAncora)="navegarAncora.emit($event)"
+                />
+            </li>
+        }
+    </ol>
+} @else {
+    <ul class="regras-lista">
+        @for (item of bloco().itens; track $index) {
+            <li>
+                <app-regras-conteudo
+                    [filhos]="item"
+                    [documento]="documento()"
+                    (navegarAncora)="navegarAncora.emit($event)"
+                />
+            </li>
+        }
+    </ul>
+}

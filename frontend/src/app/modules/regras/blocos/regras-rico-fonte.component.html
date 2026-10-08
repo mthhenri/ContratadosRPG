@@ -1,0 +1,95 @@
+@if (tabela(); as fonte) {
+    <app-regras-tabela
+        [bloco]="fonte"
+        [documento]="documento()"
+        (navegarAncora)="navegarAncora.emit($event)"
+    />
+}
+@if (bloco().tipo === "roteiro") {
+    @let roteiro = bloco();
+    @if (roteiro.tipo === "roteiro") {
+        <ol class="regras-fonte__roteiro">
+            @for (etapa of roteiro.etapas; track $index) {
+                <li [value]="etapa.ordem">
+                    <strong
+                        ><app-regras-inline
+                            [trechos]="etapa.titulo"
+                            [documento]="documento()"
+                            (navegarAncora)="navegarAncora.emit($event)"
+                    /></strong>
+                    <p class="regras-fonte__texto">
+                        <app-regras-inline
+                            [trechos]="etapa.descricao"
+                            [documento]="documento()"
+                            (navegarAncora)="navegarAncora.emit($event)"
+                        />
+                    </p>
+                </li>
+            }
+        </ol>
+        <app-regras-conteudo
+            [filhos]="roteiro.filhos"
+            [documento]="documento()"
+            (navegarAncora)="navegarAncora.emit($event)"
+        />
+    }
+}
+@let fonte = bloco();
+@if (fonte.tipo === "habilidade-criatura") {
+    <p class="regras-fonte__texto">
+        <strong>{{ fonte.rotulo }}</strong>
+        <app-regras-inline
+            [trechos]="fonte.trechos"
+            [documento]="documento()"
+            (navegarAncora)="navegarAncora.emit($event)"
+        />
+    </p>
+}
+@if (fonte.tipo === "ficha-criatura") {
+    <h5 class="regras-fonte__titulo">{{ fonte.nome }}</h5>
+    <app-regras-tabela
+        [bloco]="fonte.identidade"
+        [documento]="documento()"
+        (navegarAncora)="navegarAncora.emit($event)"
+    />
+    <app-regras-tabela
+        [bloco]="fonte.atributos"
+        [documento]="documento()"
+        (navegarAncora)="navegarAncora.emit($event)"
+    />
+    @if (saude(); as tabelaSaude) {
+        <app-regras-tabela
+            [bloco]="tabelaSaude"
+            [documento]="documento()"
+            (navegarAncora)="navegarAncora.emit($event)"
+        />
+    }
+    @for (ataque of fonte.ataques; track $index) {
+        <p class="regras-fonte__texto">
+            <strong>{{ ataque.nome }}</strong> · {{ ataque.acao }} · {{ ataque.teste }} ·
+            {{ ataque.dano }}
+            <app-regras-inline
+                [trechos]="ataque.efeito"
+                [documento]="documento()"
+                (navegarAncora)="navegarAncora.emit($event)"
+            />
+        </p>
+    }
+    <app-regras-conteudo
+        [filhos]="fonte.habilidades"
+        [documento]="documento()"
+        (navegarAncora)="navegarAncora.emit($event)"
+    />
+    <app-regras-conteudo
+        [filhos]="fonte.filhos"
+        [documento]="documento()"
+        (navegarAncora)="navegarAncora.emit($event)"
+    />
+}
+@if (fonte.tipo === "classe" && fonte.filhos?.length) {
+    <app-regras-conteudo
+        [filhos]="fonte.filhos ?? []"
+        [documento]="documento()"
+        (navegarAncora)="navegarAncora.emit($event)"
+    />
+}

@@ -1,0 +1,10 @@
+<aside class="regras-nota" aria-label="Nota">
+    <div class="regras-nota__rotulo">// Nota</div>
+    <p>
+        <app-regras-inline
+            [trechos]="bloco().trechos"
+            [documento]="documento()"
+            (navegarAncora)="navegarAncora.emit($event)"
+        />
+    </p>
+</aside>

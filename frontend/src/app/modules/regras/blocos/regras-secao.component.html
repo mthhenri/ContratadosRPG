@@ -1,0 +1,45 @@
+<section class="regras-secao" [class.regras-secao--verbete]="bloco().nivel === 4">
+    @switch (bloco().nivel) {
+        @case (1) {
+            <h2
+                class="regras-secao__capitulo"
+                [id]="bloco().ancora"
+                [attr.data-ancora-regras]="bloco().ancora"
+            >
+                <span aria-hidden="true">{{ bloco().glifo }}</span> {{ bloco().titulo }}
+            </h2>
+        }
+        @case (2) {
+            <h3
+                class="regras-secao__titulo"
+                [id]="bloco().ancora"
+                [attr.data-ancora-regras]="bloco().ancora"
+            >
+                <span aria-hidden="true">{{ bloco().glifo }}</span> {{ bloco().titulo }}
+            </h3>
+        }
+        @case (3) {
+            <h4
+                class="regras-secao__subtitulo"
+                [id]="bloco().ancora"
+                [attr.data-ancora-regras]="bloco().ancora"
+            >
+                <span aria-hidden="true">{{ bloco().glifo }}</span> {{ bloco().titulo }}
+            </h4>
+        }
+        @case (4) {
+            <h5
+                class="regras-secao__verbete"
+                [id]="bloco().ancora"
+                [attr.data-ancora-regras]="bloco().ancora"
+            >
+                <span aria-hidden="true">{{ bloco().glifo }}</span> {{ bloco().titulo }}
+            </h5>
+        }
+    }
+    <app-regras-conteudo
+        [filhos]="bloco().filhos"
+        [documento]="documento()"
+        (navegarAncora)="navegarAncora.emit($event)"
+    />
+</section>

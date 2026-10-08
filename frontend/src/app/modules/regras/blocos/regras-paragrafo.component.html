@@ -1,0 +1,7 @@
+<p class="regras-paragrafo">
+    <app-regras-inline
+        [trechos]="bloco().trechos"
+        [documento]="documento()"
+        (navegarAncora)="navegarAncora.emit($event)"
+    />
+</p>

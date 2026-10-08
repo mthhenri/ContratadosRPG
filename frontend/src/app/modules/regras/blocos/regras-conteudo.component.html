@@ -1,0 +1,67 @@
+@for (bloco of filhos(); track $index) {
+    @switch (bloco.tipo) {
+        @case ("secao") {
+            <app-regras-secao
+                [bloco]="bloco"
+                [documento]="documento()"
+                (navegarAncora)="navegarAncora.emit($event)"
+            />
+        }
+        @case ("paragrafo") {
+            <app-regras-paragrafo
+                [bloco]="bloco"
+                [documento]="documento()"
+                (navegarAncora)="navegarAncora.emit($event)"
+            />
+        }
+        @case ("lista") {
+            <app-regras-lista
+                [bloco]="bloco"
+                [documento]="documento()"
+                (navegarAncora)="navegarAncora.emit($event)"
+            />
+        }
+        @case ("nota") {
+            <app-regras-nota
+                [bloco]="bloco"
+                [documento]="documento()"
+                (navegarAncora)="navegarAncora.emit($event)"
+            />
+        }
+        @case ("exemplo") {
+            <app-regras-exemplo
+                [bloco]="bloco"
+                [documento]="documento()"
+                (navegarAncora)="navegarAncora.emit($event)"
+            />
+        }
+        @case ("tabela") {
+            <app-regras-tabela
+                [bloco]="bloco"
+                [documento]="documento()"
+                (navegarAncora)="navegarAncora.emit($event)"
+            />
+        }
+        @case ("habilidade") {
+            <app-regras-habilidade
+                [bloco]="bloco"
+                [documento]="documento()"
+                (navegarAncora)="navegarAncora.emit($event)"
+            />
+        }
+        @case ("generico") {
+            <app-regras-generico
+                [bloco]="bloco"
+                [documento]="documento()"
+                (navegarAncora)="navegarAncora.emit($event)"
+            />
+        }
+        @default {
+            <app-regras-rico-fonte
+                [bloco]="bloco"
+                [documento]="documento()"
+                (navegarAncora)="navegarAncora.emit($event)"
+            />
+        }
+    }
+}

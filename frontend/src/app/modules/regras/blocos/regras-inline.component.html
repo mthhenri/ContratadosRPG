@@ -1,0 +1,49 @@
+@for (trecho of trechos(); track $index) {
+    @switch (trecho.tipo) {
+        @case ("texto") {
+            <span [textContent]="trecho.texto"></span>
+        }
+        @case ("negrito") {
+            <strong
+                ><app-regras-inline
+                    [trechos]="trecho.filhos"
+                    [documento]="documento()"
+                    (navegarAncora)="navegarAncora.emit($event)"
+            /></strong>
+        }
+        @case ("italico") {
+            <em
+                ><app-regras-inline
+                    [trechos]="trecho.filhos"
+                    [documento]="documento()"
+                    (navegarAncora)="navegarAncora.emit($event)"
+            /></em>
+        }
+        @case ("tarja") {
+            <span
+                class="regras-inline__tarja"
+                [style.width.ch]="larguraTarja(trecho.comprimento)"
+                role="img"
+                aria-label="Trecho censurado"
+            ></span>
+        }
+        @case ("link-interno") {
+            <a
+                [href]="'/regras/' + documento() + '#' + trecho.ancora"
+                (click)="navegar($event, trecho.ancora)"
+                >{{ trecho.texto }}</a
+            >
+        }
+        @case ("link-externo") {
+            <a [href]="trecho.destino" target="_blank" rel="noopener noreferrer"
+                ><app-regras-inline
+                    [trechos]="trecho.filhos"
+                    [documento]="documento()"
+                    (navegarAncora)="navegarAncora.emit($event)"
+            /></a>
+        }
+        @case ("nivel-ameaca") {
+            <span [textContent]="trecho.texto"></span>
+        }
+    }
+}

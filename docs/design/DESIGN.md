@@ -194,6 +194,24 @@ resultado renderizado de cada um.
 
 ### Ícones de identidade (`m10-03`)
 
+### Página pública de Regras (M10-06)
+
+`modules/regras` usa os trilhos de leitura dos patchnotes e a página/Coluna do
+exemplão M10: sumário sticky à esquerda, documento até 960px alinhado à esquerda,
+cartões nos dois trilhos, títulos mono e texto sans. Seções usam a hierarquia de
+glifos ⬢/⬡/⬥/⬦; verbetes têm filete. Nota usa amarelo fixo e Exemplo usa `--accent`.
+Tarja sólida segue Documento de contenção. Tabelas têm rolagem local, fade e primeira
+coluna fixa no celular. Habilidades básicas são listas densas com chip existente
+`N E` secundário/contorno e REAÇÃO primário/contorno, até o ícone de recurso próprio.
+
+Controles: `app-segmentado` Sistema/Guia, `app-botao` completo para PDF/retry,
+`app-esqueleto` e `app-estado-vazio`; links de sumário seguem a receita dos patchnotes.
+Item ativo acompanha a leitura; link interno foca e pisca o título, respeitando
+movimento reduzido. No mobile, sumário acima do documento com altura de até 240px
+e controles com alvo de 44px, provisoriamente até M10-08. Topbar usa Regras e marca
+própria; download provisório dos PDFs anteriores e crédito CC BY-SA no rodapé.
+[Gates e limites](../specs/done/m10-06-pagina-regras/m10-06-verificacao.md).
+
 **Uso da marca (decisão do autor, M10-04, 08/10/2026):** a marca própria
 ContratadosRPG — SCP misturado com D20, assets `frontend/public/logo-{black,white}.*`
 — é o padrão geral, inclusive na entrada Regras e nos níveis de ameaça.

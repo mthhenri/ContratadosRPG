@@ -1,0 +1,38 @@
+<div
+    appOverflowFade
+    class="regras-tabela"
+    tabindex="0"
+    role="region"
+    aria-label="Tabela de regras, role horizontalmente para ver todas as colunas"
+>
+    <table>
+        <thead>
+            <tr>
+                @for (celula of bloco().cabecalho; track $index) {
+                    <th scope="col">
+                        <app-regras-inline
+                            [trechos]="celula"
+                            [documento]="documento()"
+                            (navegarAncora)="navegarAncora.emit($event)"
+                        />
+                    </th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @for (linha of bloco().linhas; track $index) {
+                <tr>
+                    @for (celula of linha; track $index) {
+                        <td>
+                            <app-regras-inline
+                                [trechos]="celula"
+                                [documento]="documento()"
+                                (navegarAncora)="navegarAncora.emit($event)"
+                            />
+                        </td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

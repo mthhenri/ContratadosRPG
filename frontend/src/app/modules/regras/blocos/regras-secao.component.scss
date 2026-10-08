@@ -1,0 +1,44 @@
+:host {
+    display: block;
+}
+.regras-secao {
+    &--verbete {
+        border-left: 2px solid var(--border-strong);
+        padding: var(--space-4) 0 var(--space-4) var(--space-16);
+        margin: var(--space-16) 0;
+        color: var(--text-dim);
+    }
+    &__capitulo,
+    &__titulo,
+    &__subtitulo,
+    &__verbete {
+        scroll-margin-top: calc(var(--altura-topbar) + var(--space-20));
+        color: var(--text);
+    }
+    &__capitulo {
+        font: 500 11px var(--font-mono);
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        color: var(--text-mute);
+        margin: 44px 0 var(--space-8);
+    }
+    &__capitulo span {
+        color: var(--accent);
+    }
+    &__titulo {
+        font: 600 22px var(--font-mono);
+        margin: var(--space-8) 0 var(--space-20);
+        padding-bottom: var(--space-12);
+        border-bottom: 1px solid var(--border);
+    }
+    &__subtitulo {
+        font-family: var(--font-mono);
+        font-size: 17px;
+        font-weight: 600;
+        margin: 28px 0 var(--space-8);
+    }
+    &__verbete {
+        font: 600 13px var(--font-mono);
+        margin: 0 0 var(--space-4);
+    }
+}

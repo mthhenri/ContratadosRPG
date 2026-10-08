@@ -1,8 +1,6 @@
 import {
   Component,
   ElementRef,
-  Injector,
-  ViewContainerRef,
   computed,
   inject,
   signal,
@@ -56,7 +54,6 @@ export class Layout {
   protected readonly sessaoService = inject(SessaoService);
   protected readonly topbarContexto = inject(TopbarContextoService);
   protected readonly versaoService = inject(VersaoService);
-  private readonly injector = inject(Injector);
   private readonly router = inject(Router);
   private readonly urlAtual = toSignal(
     this.router.events.pipe(
@@ -65,10 +62,6 @@ export class Layout {
     ),
     { initialValue: this.router.url },
   );
-  private readonly leitorDocumentosContainer = viewChild.required('leitorDocumentosContainer', {
-    read: ViewContainerRef,
-  });
-  private leitorDocumentosMontado = false;
 
   // `read: ElementRef` explícito (ui-28): sem ele, `#perfilGatilho` passaria a resolver a
   // instância do componente `Botao` (agora que o botão leva `app-botao`), não o `ElementRef`
@@ -102,19 +95,6 @@ export class Layout {
     }
     this.fecharPerfil();
     this.perfilGatilho()?.nativeElement.focus();
-  }
-
-  /** Abre o leitor global sem navegar nem alterar os demais utilitários da topbar. */
-  protected async abrirDocumentos(): Promise<void> {
-    const [{ LeitorDocumentos }, { LeitorDocumentosService }] = await Promise.all([
-      import('../leitor-documentos/leitor-documentos.component'),
-      import('../leitor-documentos/leitor-documentos.service'),
-    ]);
-    if (!this.leitorDocumentosMontado) {
-      this.leitorDocumentosContainer().createComponent(LeitorDocumentos);
-      this.leitorDocumentosMontado = true;
-    }
-    this.injector.get(LeitorDocumentosService).abrir();
   }
 
   /** Encerra a sessão e leva o usuário de volta à tela de login. */

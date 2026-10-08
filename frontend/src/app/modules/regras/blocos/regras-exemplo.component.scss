@@ -1,0 +1,25 @@
+:host {
+    display: block;
+}
+.regras-exemplo {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-left: 2px solid var(--accent);
+    border-radius: var(--radius-control);
+    padding: var(--space-12) var(--space-16);
+    margin: var(--space-16) 0;
+}
+.regras-exemplo__rotulo {
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    margin-bottom: var(--space-4);
+}
+p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.65;
+    overflow-wrap: anywhere;
+}

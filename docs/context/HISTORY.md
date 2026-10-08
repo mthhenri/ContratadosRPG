@@ -1,5 +1,38 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-08 — M10-04 commitada; M10-06: página pública de Regras
+
+Autor pediu commit da M10-04 e início da M10-06, depois autorizou continuação.
+M10-04 versionada em `9d1a81d6`, após gate staged, com trailer Codex conferido.
+M10-06 implementada e verificada, sem commit nesta entrega; spec/anexos em `done/`.
+
+Nova página pública lazy `/regras/sistema` e `/regras/guia`, redirect de `/regras`,
+cache HTTP concorrente e retry após falha. Trilhos alinhados à esquerda, sumário
+até nível 3 e títulos até nível 4 navegáveis; versão do JSON. Componentes por tipo
+básico, inline sem HTML cru, listas/notas/exemplos/tabelas/habilidades e fallback
+preservando conteúdo rico até M10-07. Topbar Documentos vira Regras com a marca
+própria; layout deixa de montar leitor global. PDFs anteriores seguem para download
+provisório e crédito CC BY-SA fica no rodapé. M10-07…11 continuam no backlog.
+
+URL acompanha leitura sem empilhar histórico por scroll; link interno foca/pisca
+destino, movimento reduzido respeitado; âncora inexistente limpa fragmento e avisa
+no topo. Análogo registrado: patchnotes e exemplão M10 página/Coluna. Dois workers
+com modelo padrão herdado dividiram carga/árvore e blocos; revisão independente
+encontrou último capítulo curto sem atingir topo. Principal reproduziu/corrigiu,
+revisou diff e inspecionou pessoalmente app real nos quatro viewports e duas bases.
+Gate também corrigiu cartão do documento, espaços de pontuação, arredondamento da
+linha de leitura e visibilidade da piscada em saltos longos. Mobile usa sumário
+acima, provisório até M10-08; tabelas têm rolagem local/fade/coluna fixa.
+
+Angular amplo: 218 arquivos/3.077 testes passaram excluindo os dois specs afetados
+por P-106, configuração temporária removida do código. Lint sem erros; build Angular
+direto passou (581,26 kB, aviso 450 kB). Carga/erro/retry, PDF HTTP 200, navegação,
+âncoras, último capítulo, teclado/foco/Voltar e movimento reduzido conferidos.
+Shared/backend/normalizador inalterados: gates da M10-04 reutilizados sem repetir.
+P-105 e P-106 continuam abertos: prebuild/normalizador v4.1.3 e corpus realocado;
+assets existentes exibem Sistema v4.1.3/Guia v4.2.0. Não se declara suíte global verde.
+[Relatório e limites](../specs/done/m10-06-pagina-regras/m10-06-verificacao.md).
+
 ## 2026-10-08 — M10-04: marcas aprovadas, tokens de ameaça e licença incorporados
 
 Autor aprovou desenhos, paleta/fundos e crédito e autorizou incorporação/gates.

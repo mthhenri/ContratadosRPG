@@ -1,0 +1,20 @@
+<div class="regras-generico">
+    @if (bloco().trechos.length) {
+        <p>
+            <app-regras-inline
+                [trechos]="bloco().trechos"
+                [documento]="documento()"
+                (navegarAncora)="navegarAncora.emit($event)"
+            />
+        </p>
+    } @else if (!bloco().filhos?.length) {
+        <p>{{ bloco().origemMarkdown }}</p>
+    }
+    @if (bloco().filhos; as filhos) {
+        <app-regras-conteudo
+            [filhos]="filhos"
+            [documento]="documento()"
+            (navegarAncora)="navegarAncora.emit($event)"
+        />
+    }
+</div>

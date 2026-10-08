@@ -1,0 +1,54 @@
+@use "tema/breakpoints" as bp;
+
+:host {
+    display: block;
+    min-width: 0;
+}
+.regras-tabela {
+    overflow-x: auto;
+    margin: var(--space-16) 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+
+    &.overflow-fade--direita {
+        mask-image: linear-gradient(
+            to right,
+            currentColor calc(100% - var(--space-16)),
+            transparent
+        );
+    }
+}
+table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 13px;
+    line-height: 1.55;
+}
+th,
+td {
+    padding: var(--space-8) var(--space-12);
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    min-width: 100px;
+}
+th {
+    background: var(--bg);
+    font-family: var(--font-mono);
+    font-weight: 600;
+}
+td {
+    color: var(--text-dim);
+    background: var(--surface);
+}
+tr:last-child td {
+    border-bottom: 0;
+}
+@include bp.mobile {
+    th:first-child,
+    td:first-child {
+        position: sticky;
+        left: 0;
+        z-index: 1;
+        box-shadow: 8px 0 10px -10px var(--text-mute);
+    }
+}

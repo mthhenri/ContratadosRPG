@@ -9,6 +9,11 @@ import { redirecionarEncontroParaCena } from './modules/cena/redirecionar-encont
 
 export const routes: Routes = [
   {
+    path: "regras",
+    loadChildren: () => import("./modules/regras/regras.routes")
+      .then((modulo) => modulo.regrasRoutes),
+  },
+  {
     path: 'janela/ficha/:fichaId/historico-rolagens',
     canActivate: [autenticacaoGuard],
     loadComponent: () =>
