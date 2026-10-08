@@ -1,5 +1,32 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-07 — Mod `painel-orquestracao` e teste da orquestração no Windows
+
+Tarefa de infraestrutura de agentes, fora do fluxo de spec. Complementa a orquestração
+multiagente registrada logo abaixo.
+
+**Teste no Windows (Git Bash, `claude` 2.1.219 do PATH; `codex` ausente).** Guardas dos
+wrappers com `codex` falso (consulta, repetição, desligado, profundidade, diretório fora do
+projeto, modo inválido, `--tempo-limite`, opção sem valor, CLI ausente, relatório de
+alterações), encerramento do agente ao matar o wrapper, hook de profundidade (isolado e ao
+vivo com subagente `testador`), `claude-delegar.sh` real em consulta, carga dos três agentes
+(aliases resolveram para haiku-4-5, sonnet-5 e opus-5). Tudo passou. Pendências: Codex não
+testado no Windows (sandbox nativa difere da de Linux); sem `.gitattributes`, e com
+`core.autocrlf=true` um checkout futuro pode converter os `.sh` para CRLF.
+
+**Mod versionado em `.claude/mods/painel-orquestracao/`** (mods exigem Claude Code ≥ 2.1.289,
+carregados com `claude --plugin-dir`): status line com contexto e custo da sessão, delegações
+em andamento lidas de `.agentes/`, `/painel`, faixa acima do prompt e aviso ao fim do turno
+quando `CLAUDE.md`/`AGENTS.md` ou `.claude/skills`/`.agents/skills` divergem. Verificado:
+`claude plugin validate` aprovado, `tsc` estrito contra os tipos da build sem erros (pegou
+índices possivelmente `undefined` e o matcher de união de ferramentas, corrigidos), módulo
+carregado pelo motor real via `--plugin-dir` (log de depuração: `session.start` e
+`turn.complete` executaram sem erro). `claude plugin test` se recusou a rodar na 2.1.289
+(chave de liberação de módulos de hooks desligada) e, após a extensão ir para a 2.1.293,
+executou: 3 testes aprovados (`tests/painel.test.ts`, só funções puras). **Não verificado:**
+a aparência da status line, da faixa e do painel `/painel`; o aviso de divergência numa
+edição real; nenhum teste de integração dos hooks.
+
 ## 2026-10-07 — Orquestração multiagente: subagentes Claude, wrappers Codex/Claude e revisão independente
 
 Pedido do autor: o agente principal decide sozinho quando executar direto, delegar a

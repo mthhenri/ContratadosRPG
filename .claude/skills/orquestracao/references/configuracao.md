@@ -12,6 +12,13 @@
 | Guardas comuns e cabeçalho | `scripts/agentes/_comum.sh`, `scripts/agentes/cabecalho-delegado.md` |
 | Permissão automática do wrapper e hook de profundidade | `.claude/settings.json` (`permissions.allow`, `hooks.PreToolUse` → `scripts/agentes/hook-profundidade.sh`) |
 | Registro das chamadas externas | `.agentes/delegacoes.log` e `.agentes/execucoes/` (ignorados pelo git) |
+| Mod de painel (opcional) | `.claude/mods/painel-orquestracao/` — status de contexto/custo, delegações em andamento, `/painel` e aviso de cópias divergentes (`CLAUDE.md`≠`AGENTS.md`, `.claude/skills`≠`.agents/skills`) |
+
+O mod não carrega sozinho: inicie o Claude Code com
+`claude --plugin-dir .claude/mods/painel-orquestracao`. Exige Claude Code ≥ 2.1.289 (mods
+são recurso novo; o `claude` do PATH pode ser mais antigo — na extensão do VS Code o binário
+fica em `~/.vscode/extensions/anthropic.claude-code-*/resources/native-binary/`). Validar:
+`claude plugin validate .claude/mods/painel-orquestracao`.
 
 ## Modelos
 
@@ -78,3 +85,5 @@ como confiável no Claude Code (diálogo de confiança na primeira execução in
 3. Remova a seção "Orquestração multiagente" de `CLAUDE.md` **e** `AGENTS.md`.
 4. Remova `.agentes/` do `.gitignore` e a linha correspondente de
    `docs/context/MEMORY.md`.
+5. Se usar o mod de painel, apague `.claude/mods/painel-orquestracao/` (ele funciona
+   sozinho, sem os wrappers, mas sem eles só mostra contexto/custo e as cópias).

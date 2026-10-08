@@ -1,0 +1,7 @@
+{
+  "name": "painel-orquestracao",
+  "version": "0.1.0",
+  "description": "Status de contexto/custo, delegações em andamento (scripts/agentes) e sentinela das cópias CLAUDE.md/AGENTS.md e .claude/.agents skills.",
+  "author": { "name": "ContratadosRPG" },
+  "types": "./types/index.d.ts"
+}
