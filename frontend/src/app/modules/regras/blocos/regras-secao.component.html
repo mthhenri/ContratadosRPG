@@ -15,7 +15,12 @@
                 [id]="bloco().ancora"
                 [attr.data-ancora-regras]="bloco().ancora"
             >
-                <span aria-hidden="true">{{ bloco().glifo }}</span> {{ bloco().titulo }}
+                @if (iconeIdentidade(bloco().titulo); as icone) {
+                    <app-icone [nome]="icone" />
+                } @else {
+                    <span aria-hidden="true">{{ bloco().glifo }}</span>
+                }
+                {{ bloco().titulo }}
             </h3>
         }
         @case (3) {

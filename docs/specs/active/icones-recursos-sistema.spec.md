@@ -17,7 +17,8 @@ escritos, e levantar com o autor que outros ícones fariam falta ao sistema.
 
 - Vida, Energia e Defesa são um **trio preenchido** — exceção deliberada ao resto do `app-icone`,
   que é contorno.
-- Vida: opção **A** (o pulso, que lembra a rachadura do Machucado) com **raio cheio** na Energia.
+- Vida: opção **A**, coração cheio **sem pulso**, com **raio cheio** na Energia.
+  Confirmação explícita do autor em 08/10/2026; corrige a descrição anterior do pulso.
 - Valor com ícone sempre tem **`appTooltip` por extenso** ("3 de Energia", "12 de Vida") — o ícone
   sozinho não pode ser a única leitura do valor.
 

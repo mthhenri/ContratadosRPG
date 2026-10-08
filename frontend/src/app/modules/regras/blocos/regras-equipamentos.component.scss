@@ -1,0 +1,58 @@
+@use "tema/breakpoints" as bp;
+
+:host {
+    display: block;
+}
+.regras-equipamentos {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 var(--space-20);
+    &__item {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: var(--space-8) var(--space-12);
+        padding: var(--space-12) 0;
+        border-top: 1px solid var(--border);
+        align-content: start;
+        min-width: 0;
+    }
+    &__nome {
+        margin: 0;
+        font: 600 13px var(--font-mono);
+        overflow-wrap: anywhere;
+    }
+    &__custo {
+        font: 400 12px var(--font-mono);
+        color: var(--warning);
+    }
+    &__selos {
+        grid-column: 1 / -1;
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-4);
+    }
+    &__selos app-chip {
+        max-width: 100%;
+        min-width: 0;
+    }
+    &__selo-texto {
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+    &__descricao {
+        grid-column: 1 / -1;
+        margin: 0;
+        font-size: 13.5px;
+        line-height: 1.55;
+        color: var(--text-dim);
+        overflow-wrap: anywhere;
+    }
+    &__descricao strong {
+        color: var(--text);
+    }
+}
+@include bp.mobile {
+    .regras-equipamentos {
+        grid-template-columns: 1fr;
+    }
+}

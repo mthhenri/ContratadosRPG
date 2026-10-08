@@ -1,0 +1,24 @@
+<ol class="regras-guia__roteiro">
+    @for (etapa of bloco().etapas; track $index) {
+        <li [value]="etapa.ordem">
+            <strong
+                ><app-regras-inline
+                    [trechos]="etapa.titulo"
+                    [documento]="documento()"
+                    (navegarAncora)="navegarAncora.emit($event)"
+            /></strong>
+            <p>
+                <app-regras-inline
+                    [trechos]="etapa.descricao"
+                    [documento]="documento()"
+                    (navegarAncora)="navegarAncora.emit($event)"
+                />
+            </p>
+        </li>
+    }
+</ol>
+<app-regras-conteudo
+    [filhos]="bloco().filhos"
+    [documento]="documento()"
+    (navegarAncora)="navegarAncora.emit($event)"
+/>

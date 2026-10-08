@@ -1,0 +1,59 @@
+@use "tema/breakpoints" as bp;
+
+:host {
+    display: block;
+}
+.regras-modulos {
+    &__grade app-cartao {
+        --pad-card: var(--space-12);
+        min-width: 0;
+    }
+    &__grade {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: var(--space-8);
+    }
+    &__conteudo {
+        display: grid;
+        gap: var(--space-8);
+        justify-items: start;
+    }
+    &__rotulo {
+        font: 500 10px var(--font-mono);
+        color: var(--text-dim);
+        text-transform: uppercase;
+    }
+    &__nivel {
+        font: 600 22px var(--font-mono);
+    }
+    &__recurso {
+        font-size: 11.5px;
+        color: var(--text-dim);
+    }
+    &__escala {
+        display: flex;
+        justify-content: space-between;
+        gap: var(--space-8);
+        margin-top: var(--space-8);
+        font: 400 10.5px var(--font-mono);
+        color: var(--text-dim);
+        text-transform: uppercase;
+    }
+}
+@include bp.mobile {
+    .regras-modulos__grade app-cartao {
+        --pad-card: var(--space-4);
+    }
+    .regras-modulos__grade {
+        gap: var(--space-4);
+    }
+    .regras-modulos__conteudo {
+        justify-items: center;
+    }
+    .regras-modulos__nivel {
+        font-size: 16px;
+    }
+    .regras-modulos__recurso {
+        display: none;
+    }
+}

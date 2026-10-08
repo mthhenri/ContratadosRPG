@@ -1,0 +1,41 @@
+@use "tema/breakpoints" as bp;
+:host {
+    display: block;
+    min-width: 0;
+    margin: var(--space-16) 0;
+}
+.regras-origens {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-16);
+    > app-cartao {
+        min-width: 0;
+    }
+    &__citacao {
+        margin: 0 0 var(--space-16);
+        font-size: 14px;
+        line-height: 1.65;
+        color: var(--text-dim);
+    }
+    &__campos {
+        margin: 0;
+        font-size: 13.5px;
+        line-height: 1.65;
+        dt {
+            margin: var(--space-16) 0 var(--space-4);
+            font: 600 11px var(--font-mono);
+            color: var(--text-dim);
+            letter-spacing: var(--tracking-label);
+            text-transform: uppercase;
+        }
+        dd {
+            margin: 0;
+            overflow-wrap: anywhere;
+        }
+    }
+}
+@include bp.mobile {
+    .regras-origens {
+        grid-template-columns: 1fr;
+    }
+}

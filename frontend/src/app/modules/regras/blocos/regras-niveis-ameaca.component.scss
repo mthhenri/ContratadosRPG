@@ -1,0 +1,19 @@
+@use "tema/breakpoints" as bp;
+:host {
+    display: block;
+    margin: var(--space-16) 0;
+}
+.regras-niveis {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-12);
+    p {
+        margin: var(--space-8) 0 0;
+        color: var(--text-dim);
+    }
+}
+@include bp.mobile {
+    .regras-niveis {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

@@ -1,5 +1,42 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-08 — M10-06 commitada; M10-07: blocos ricos do leitor
+
+Autor autorizou commit M10-06 e início M10-07. Commit `5faec0f6`, 54 arquivos,
+gate staged aprovado e trailer Codex conferido. M10-07 implementada e verificada,
+spec/anexos em `done/`, sem commit nesta entrega.
+
+Leitor apresenta dossiês das três classes, nove arquétipos em abas com habilidade
+inicial/melhorias, origens, habilidades em duas colunas, equipamentos densos sem
+tabela, danos Uma/Duas Mãos, modificações ■□ e cinco módulos V → I. Guia ganhou
+roteiro numerado, identidade/atributos, tipos de habilidades e ficha completa da
+Estátua. NAs usam marca própria/paleta M10-04. Contratos e fonte preservados,
+nenhuma fórmula/normalizador/JSON alterados; componentes extraídos por responsabilidade.
+
+Entrega 1 da spec avulsa de recursos incorporou trio preenchido `vida`, `energia`,
+`defesa` e tooltips por extenso. Autor confirmou coração cheio sem pulso, opção A,
+resolvendo divergência da descrição anterior; raio/escudo seguem exemplão. Spec avulsa
+permanece ativa pelas entregas 2/3, sem adoção ampla no site nesta tarefa.
+
+Integração Angular exigiu `forwardRef` nos imports recursivos. Inspeção real detectou
+números do roteiro escondidos pelo reset e grade de atributos repetida; corrigidos
+com âncoras originais preservadas. Revisão independente encontrou chips longos e
+repetição de regeneração/ataques: bônus em texto, resistências em chips separados,
+prosa preservada sem ataques repetidos. Correções reconferidas no app real.
+
+Gates: 225 arquivos/3.093 testes Angular aprovados (dois specs de corpus excluídos
+por P-106); lint dos três workspaces e novamente frontend, zero erros; build CI
+581,93 kB, aviso de budget 450 kB. Preparo de assets/normalizador P-105 e corpus P-106
+permanecem abertos e discriminados. Verificação pessoal com skill `verify`, quatro
+viewports, claro/escuro, nove arquétipos, tabelas móveis, foco/tooltip e trio 14/16/24px;
+sem overflow após correções. Servidor próprio 4301, instância anterior preservada.
+
+Dois subagentes Codex no modelo herdado implementaram recortes independentes
+(dossiês e equipamentos); o segundo revisou o diff fora de seu recorte e encontrou
+os dois P2 corrigidos. Principal integrou Guia/ficha, revisou e inspecionou pessoalmente.
+[Verificação completa e limites](../specs/done/m10-07-blocos-ricos/m10-07-verificacao.md).
+Próxima task M10-08; nenhuma publicação/push nesta entrega.
+
 ## 2026-10-08 — M10-04 commitada; M10-06: página pública de Regras
 
 Autor pediu commit da M10-04 e início da M10-06, depois autorizou continuação.

@@ -1,0 +1,18 @@
+<article class="regras-guia__habilidade">
+    <div class="regras-guia__linha">
+        <h5>{{ bloco().nome }}</h5>
+        <app-chip
+            [severidade]="bloco().categoria === 'PASSIVA' ? 'secundario' : 'primario'"
+            tom="contorno"
+        >
+            {{ bloco().categoria }}
+        </app-chip>
+    </div>
+    <p>
+        <app-regras-inline
+            [trechos]="bloco().trechos"
+            [documento]="documento()"
+            (navegarAncora)="navegarAncora.emit($event)"
+        />
+    </p>
+</article>

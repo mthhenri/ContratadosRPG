@@ -7,6 +7,16 @@ import { Icone, IconeNome } from './icone.component';
  * `currentColor`, sem emoji) e desenha formas diferentes conforme o `nome`.
  */
 describe('Icone', () => {
+    it("incorpora o trio preenchido aprovado, sem confundir Vida com Machucado", () => {
+        for (const nome of ["vida", "energia", "defesa"] as const) {
+            const svg = montar(nome).querySelector("svg")!;
+            expect(svg.getAttribute("fill")).toBe("currentColor");
+            expect(svg.getAttribute("stroke")).toBe("none");
+            expect(svg.querySelectorAll("path")).toHaveLength(1);
+        }
+        expect(assinatura("vida")).not.toBe(assinatura("machucado"));
+        expect(assinatura("energia")).not.toBe(assinatura("defesa"));
+    });
   function montar(nome: IconeNome) {
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({ imports: [Icone] });

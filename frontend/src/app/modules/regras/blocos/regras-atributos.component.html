@@ -1,0 +1,15 @@
+<div class="regras-guia__atributos">
+    @for (atributo of bloco().atributos; track $index) {
+        <div>
+            <app-stat [rotulo]="atributo.nome" [valor]="atributo.valor" tamanho="compacto" />
+            <p
+                [class]="
+                    'regras-guia__modificador regras-guia__modificador--' +
+                    corModificador(atributo.modificador)
+                "
+            >
+                {{ atributo.modificador }} {{ atributo.bonus }}
+            </p>
+        </div>
+    }
+</div>

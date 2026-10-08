@@ -1,0 +1,20 @@
+@use "tema/breakpoints" as bp;
+:host {
+    display: block;
+    min-width: 0;
+}
+.regras-conteudo__bloco {
+    display: contents;
+}
+.regras-conteudo__habilidades {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 var(--space-20);
+    margin: var(--space-12) 0;
+    align-items: start;
+}
+@include bp.mobile {
+    .regras-conteudo__habilidades {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

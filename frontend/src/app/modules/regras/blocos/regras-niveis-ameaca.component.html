@@ -1,0 +1,14 @@
+<div class="regras-niveis">
+    @for (nivel of bloco().niveis; track nivel.nivel) {
+        <app-cartao>
+            <app-regras-ameaca [nivel]="nivel.nivel" />
+            <p>
+                <app-regras-inline
+                    [trechos]="nivel.descricao"
+                    [documento]="documento()"
+                    (navegarAncora)="navegarAncora.emit($event)"
+                />
+            </p>
+        </app-cartao>
+    }
+</div>

@@ -169,7 +169,10 @@ export type IconeNome =
     | "npc"
     | "scp"
     | "criatura"
-    | "contratados";
+    | "contratados"
+    | "vida"
+    | "energia"
+    | "defesa";
 
 /**
  * Ícone monocromático de linha (SVG inline, `stroke: currentColor`) — reutilizado nos menus de
@@ -192,6 +195,6 @@ export class Icone {
     /** SCP oficial só em Criatura; nossa marca é a referência de Regras e níveis. */
     protected readonly glifo = computed(() => this.nome() === "criatura" ? "scp" : this.nome());
     protected readonly preenchido = computed(() =>
-        this.glifo() === "scp" || this.glifo() === "contratados",
+        ["scp", "contratados", "vida", "energia", "defesa"].includes(this.glifo()),
     );
 }

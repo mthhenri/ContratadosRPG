@@ -73,14 +73,16 @@ describe("RegrasConteudoRender", () => {
         expect(raiz.querySelector('[id="vida"][data-ancora-regras]')).not.toBeNull();
         expect(raiz.querySelector("ol")?.start).toBe(3);
         expect(raiz.querySelectorAll("app-chip").length).toBe(2);
-        expect(raiz.textContent).toContain("X E");
+        expect(raiz.querySelector('[aria-label="X de Energia"]')).not.toBeNull();
+        expect(raiz.querySelector('app-icone[nome="energia"]')).not.toBeNull();
         expect(raiz.textContent).toContain("REAÇÃO");
         expect(raiz.querySelectorAll("tbody td").length).toBe(2);
     });
 
-    it("preserva a fonte dos blocos ricos e filhos do genérico", () => {
+    it("renderiza dados ricos tipados e preserva filhos do genérico", () => {
         const fixture = renderizar([
-            { tipo: "modulos", modulos: [], cabecalho: [[{ tipo: "texto", texto: "Módulo" }]],
+            { tipo: "modulos", modulos: [{ nivel: "V", energiaMaxima: 3 }],
+                cabecalho: [[{ tipo: "texto", texto: "Módulo" }]],
                 linhas: [[[{ tipo: "texto", texto: "V" }]]] },
             { tipo: "generico", motivo: "Fonte", origemMarkdown: "", trechos: [], filhos: [
                 { tipo: "nota", trechos: [{ tipo: "texto", texto: "Observação preservada" }] },

@@ -1,0 +1,157 @@
+<app-cartao>
+    <app-regras-conteudo
+        [filhos]="introducao()"
+        [documento]="documento()"
+        (navegarAncora)="navegarAncora.emit($event)"
+    />
+    <header class="regras-ficha__cabecalho">
+        <app-regras-ameaca [nivel]="nivel()" />
+        <div>
+            <h3>{{ bloco().nome }}</h3>
+            <blockquote>
+                <app-regras-inline
+                    [trechos]="conceito()"
+                    [documento]="documento()"
+                    (navegarAncora)="navegarAncora.emit($event)"
+                />
+            </blockquote>
+        </div>
+    </header>
+    <h4
+        class="regras-ficha__divisor"
+        [id]="ancora('Identidade')"
+        [attr.data-ancora-regras]="ancora('Identidade')"
+    >
+        ⬦ Identidade
+    </h4>
+    <app-regras-identidade
+        [bloco]="bloco().identidade"
+        [documento]="documento()"
+        (navegarAncora)="navegarAncora.emit($event)"
+    />
+    <h4
+        class="regras-ficha__divisor"
+        [id]="ancora('Atributos')"
+        [attr.data-ancora-regras]="ancora('Atributos')"
+    >
+        ⬦ Atributos
+    </h4>
+    <app-regras-conteudo
+        [filhos]="apoio('Atributos')"
+        [documento]="documento()"
+        (navegarAncora)="navegarAncora.emit($event)"
+    />
+    <app-regras-atributos [bloco]="bloco().atributos" />
+    <h4
+        class="regras-ficha__divisor"
+        [id]="ancora('Saúde, Defesa e Resistências')"
+        [attr.data-ancora-regras]="ancora('Saúde, Defesa e Resistências')"
+    >
+        ⬦ Saúde, Defesa e Resistências
+    </h4>
+    <app-regras-conteudo
+        [filhos]="apoio('Saúde, Defesa e Resistências')"
+        [documento]="documento()"
+        (navegarAncora)="navegarAncora.emit($event)"
+    />
+    <div class="regras-ficha__saude">
+        <app-stat rotulo="Vida máxima" variante="vida" tamanho="compacto">
+            <span
+                appStatValor
+                class="regras-ficha__valor"
+                [appTooltip]="bloco().vidaMaxima + ' de Vida'"
+                tabindex="0"
+            >
+                <app-icone nome="vida" /> {{ bloco().vidaMaxima }}
+            </span>
+        </app-stat>
+        <app-stat rotulo="Defesa base" tamanho="compacto">
+            <span
+                appStatValor
+                class="regras-ficha__valor"
+                [appTooltip]="bloco().defesaBase + ' de Defesa'"
+                tabindex="0"
+            >
+                <app-icone nome="defesa" /> {{ bloco().defesaBase }}
+            </span>
+        </app-stat>
+    </div>
+    <div class="regras-ficha__chips">
+        @for (resistencia of resistencias(); track $index) {
+            <app-chip severidade="secundario" tom="contorno">{{ resistencia }}</app-chip>
+        }
+        <app-chip severidade="perigo" tom="contorno"
+            ><app-regras-inline
+                [trechos]="bloco().fraquezas"
+                [documento]="documento()"
+                (navegarAncora)="navegarAncora.emit($event)"
+        /></app-chip>
+    </div>
+    <h4
+        class="regras-ficha__divisor"
+        [id]="ancora('Regeneração e Deslocamento')"
+        [attr.data-ancora-regras]="ancora('Regeneração e Deslocamento')"
+    >
+        ⬦ Regeneração e Deslocamento
+    </h4>
+    <app-regras-conteudo
+        [filhos]="apoio('Regeneração e Deslocamento')"
+        [documento]="documento()"
+        (navegarAncora)="navegarAncora.emit($event)"
+    />
+    @if (!apoio("Regeneração e Deslocamento").length) {
+        @for (campo of deslocamentos(); track campo.rotulo) {
+            <p>
+                <strong>{{ campo.rotulo }}: </strong
+                ><app-regras-inline
+                    [trechos]="campo.trechos"
+                    [documento]="documento()"
+                    (navegarAncora)="navegarAncora.emit($event)"
+                />
+            </p>
+        }
+    }
+    <h4
+        class="regras-ficha__divisor"
+        [id]="ancora('Ações, Ataques e Habilidades')"
+        [attr.data-ancora-regras]="ancora('Ações, Ataques e Habilidades')"
+    >
+        ⬦ Ações, Ataques e Habilidades
+    </h4>
+    <app-regras-conteudo
+        [filhos]="apoio('Ações, Ataques e Habilidades')"
+        [documento]="documento()"
+        (navegarAncora)="navegarAncora.emit($event)"
+    />
+    <app-chip severidade="secundario" tom="contorno">Cadência {{ bloco().cadencia }}</app-chip>
+    <div class="regras-ficha__ataques">
+        @for (ataque of bloco().ataques; track $index) {
+            <article>
+                <h5>{{ ataque.nome }}</h5>
+                <div class="regras-ficha__chips">
+                    <app-chip severidade="secundario" tom="contorno">{{ ataque.acao }}</app-chip>
+                    <app-chip severidade="secundario" tom="contorno"
+                        >Teste {{ ataque.teste }}</app-chip
+                    >
+                    <app-chip severidade="perigo" tom="contorno">Dano {{ ataque.dano }}</app-chip>
+                </div>
+                <p>
+                    <app-regras-inline
+                        [trechos]="ataque.efeito"
+                        [documento]="documento()"
+                        (navegarAncora)="navegarAncora.emit($event)"
+                    />
+                </p>
+            </article>
+        }
+    </div>
+    <div class="regras-ficha__habilidades">
+        @for (habilidade of bloco().habilidades; track $index) {
+            <app-regras-habilidade-criatura
+                [bloco]="habilidade"
+                [documento]="documento()"
+                (navegarAncora)="navegarAncora.emit($event)"
+            />
+        }
+    </div>
+</app-cartao>

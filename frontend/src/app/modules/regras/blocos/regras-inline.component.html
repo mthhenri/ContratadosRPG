@@ -1,7 +1,13 @@
 @for (trecho of trechos(); track $index) {
     @switch (trecho.tipo) {
         @case ("texto") {
-            <span [textContent]="trecho.texto"></span>
+            @if (iconeSubclasse(trecho.texto); as icone) {
+                <span class="regras-inline__subclasse"
+                    ><app-icone [nome]="icone" /> <span [textContent]="trecho.texto"></span
+                ></span>
+            } @else {
+                <span [textContent]="trecho.texto"></span>
+            }
         }
         @case ("negrito") {
             <strong
@@ -43,7 +49,7 @@
             /></a>
         }
         @case ("nivel-ameaca") {
-            <span [textContent]="trecho.texto"></span>
+            <app-regras-ameaca [nivel]="trecho.nivel" [rotulo]="trecho.texto" />
         }
     }
 }

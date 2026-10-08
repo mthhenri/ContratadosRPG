@@ -19,3 +19,11 @@ strong {
     border-radius: var(--radius-tight);
     user-select: none;
 }
+:host .regras-inline__subclasse {
+    display: flex;
+    align-items: center;
+    gap: var(--space-8);
+    font-family: var(--font-mono);
+    font-size: 17px;
+    margin: var(--space-20) 0 var(--space-8);
+}

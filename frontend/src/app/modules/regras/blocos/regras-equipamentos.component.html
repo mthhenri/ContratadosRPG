@@ -1,0 +1,75 @@
+<div class="regras-equipamentos" [attr.aria-label]="bloco().categoria">
+    @for (item of bloco().itens; track $index) {
+        <article class="regras-equipamentos__item">
+            <h4 class="regras-equipamentos__nome">{{ item.nome }}</h4>
+            <span class="regras-equipamentos__custo">
+                <app-regras-inline
+                    [trechos]="item.custo"
+                    [documento]="documento()"
+                    (navegarAncora)="navegarAncora.emit($event)"
+                />
+            </span>
+            <div class="regras-equipamentos__selos">
+                @for (dano of item.danos; track $index) {
+                    <app-chip severidade="secundario" tom="contorno">
+                        <span class="regras-equipamentos__selo-texto"
+                            >{{ dano.rotulo }} ·
+                            <app-regras-inline
+                                [trechos]="dano.trechos"
+                                [documento]="documento()"
+                                (navegarAncora)="navegarAncora.emit($event)"
+                        /></span>
+                    </app-chip>
+                }
+                @if (item.porte) {
+                    <app-chip severidade="secundario" tom="contorno">
+                        <span class="regras-equipamentos__selo-texto"
+                            >PORTE ·
+                            <app-regras-inline
+                                [trechos]="item.porte"
+                                [documento]="documento()"
+                                (navegarAncora)="navegarAncora.emit($event)"
+                        /></span>
+                    </app-chip>
+                }
+                <app-chip severidade="secundario" tom="contorno">
+                    <span class="regras-equipamentos__selo-texto"
+                        >PESO ·
+                        <app-regras-inline
+                            [trechos]="item.peso"
+                            [documento]="documento()"
+                            (navegarAncora)="navegarAncora.emit($event)"
+                    /></span>
+                </app-chip>
+            </div>
+            @if (item.descricao.length) {
+                <p class="regras-equipamentos__descricao">
+                    <app-regras-inline
+                        [trechos]="item.descricao"
+                        [documento]="documento()"
+                        (navegarAncora)="navegarAncora.emit($event)"
+                    />
+                </p>
+            }
+            @if (item.especificacoes?.length) {
+                <p class="regras-equipamentos__descricao">
+                    <app-regras-inline
+                        [trechos]="item.especificacoes!"
+                        [documento]="documento()"
+                        (navegarAncora)="navegarAncora.emit($event)"
+                    />
+                </p>
+            }
+            @if (item.duracao?.length) {
+                <p class="regras-equipamentos__descricao">
+                    <strong>Duração:</strong>&ngsp;
+                    <app-regras-inline
+                        [trechos]="item.duracao!"
+                        [documento]="documento()"
+                        (navegarAncora)="navegarAncora.emit($event)"
+                    />
+                </p>
+            }
+        </article>
+    }
+</div>

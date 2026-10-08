@@ -1,0 +1,40 @@
+<div class="regras-origens">
+    @for (origem of bloco().origens; track origem.nome) {
+        <app-cartao [titulo]="origem.nome" [cabecalhoQuebravel]="true">
+            <span cartaoIndice aria-hidden="true">◻</span>
+            <p class="regras-origens__citacao">
+                <app-regras-inline
+                    [trechos]="origem.citacao"
+                    [documento]="documento()"
+                    (navegarAncora)="navegarAncora.emit($event)"
+                />
+            </p>
+            <dl class="regras-origens__campos">
+                <dt>Formação</dt>
+                <dd>
+                    <app-regras-inline
+                        [trechos]="origem.formacao"
+                        [documento]="documento()"
+                        (navegarAncora)="navegarAncora.emit($event)"
+                    />
+                </dd>
+                <dt>Especialidade</dt>
+                <dd>
+                    <app-regras-inline
+                        [trechos]="origem.especialidade"
+                        [documento]="documento()"
+                        (navegarAncora)="navegarAncora.emit($event)"
+                    />
+                </dd>
+                <dt>Saber de Campo</dt>
+                <dd>
+                    <app-regras-inline
+                        [trechos]="origem.saberCampo"
+                        [documento]="documento()"
+                        (navegarAncora)="navegarAncora.emit($event)"
+                    />
+                </dd>
+            </dl>
+        </app-cartao>
+    }
+</div>

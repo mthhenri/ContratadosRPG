@@ -1,67 +1,154 @@
-@for (bloco of filhos(); track $index) {
-    @switch (bloco.tipo) {
-        @case ("secao") {
-            <app-regras-secao
-                [bloco]="bloco"
-                [documento]="documento()"
-                (navegarAncora)="navegarAncora.emit($event)"
-            />
+@for (grupo of grupos(); track $index) {
+    <div
+        [class.regras-conteudo__habilidades]="grupo.habilidades && grupo.blocos.length > 1"
+        [class.regras-conteudo__bloco]="!grupo.habilidades || grupo.blocos.length === 1"
+    >
+        @for (bloco of grupo.blocos; track $index) {
+            @switch (bloco.tipo) {
+                @case ("secao") {
+                    <app-regras-secao
+                        [bloco]="bloco"
+                        [documento]="documento()"
+                        (navegarAncora)="navegarAncora.emit($event)"
+                    />
+                }
+                @case ("paragrafo") {
+                    <app-regras-paragrafo
+                        [bloco]="bloco"
+                        [documento]="documento()"
+                        (navegarAncora)="navegarAncora.emit($event)"
+                    />
+                }
+                @case ("lista") {
+                    <app-regras-lista
+                        [bloco]="bloco"
+                        [documento]="documento()"
+                        (navegarAncora)="navegarAncora.emit($event)"
+                    />
+                }
+                @case ("nota") {
+                    <app-regras-nota
+                        [bloco]="bloco"
+                        [documento]="documento()"
+                        (navegarAncora)="navegarAncora.emit($event)"
+                    />
+                }
+                @case ("exemplo") {
+                    <app-regras-exemplo
+                        [bloco]="bloco"
+                        [documento]="documento()"
+                        (navegarAncora)="navegarAncora.emit($event)"
+                    />
+                }
+                @case ("tabela") {
+                    <app-regras-tabela
+                        [bloco]="bloco"
+                        [documento]="documento()"
+                        (navegarAncora)="navegarAncora.emit($event)"
+                    />
+                }
+                @case ("habilidade") {
+                    <app-regras-habilidade
+                        [bloco]="bloco"
+                        [documento]="documento()"
+                        (navegarAncora)="navegarAncora.emit($event)"
+                    />
+                }
+                @case ("generico") {
+                    <app-regras-generico
+                        [bloco]="bloco"
+                        [documento]="documento()"
+                        (navegarAncora)="navegarAncora.emit($event)"
+                    />
+                }
+                @case ("classe") {
+                    <app-regras-classe
+                        [bloco]="bloco"
+                        [documento]="documento()"
+                        (navegarAncora)="navegarAncora.emit($event)"
+                    />
+                }
+                @case ("arquetipos") {
+                    <app-regras-arquetipos
+                        [bloco]="bloco"
+                        [documento]="documento()"
+                        (navegarAncora)="navegarAncora.emit($event)"
+                    />
+                }
+                @case ("origens") {
+                    <app-regras-origens
+                        [bloco]="bloco"
+                        [documento]="documento()"
+                        (navegarAncora)="navegarAncora.emit($event)"
+                    />
+                }
+                @case ("equipamentos") {
+                    <app-regras-equipamentos
+                        [bloco]="bloco"
+                        [documento]="documento()"
+                        (navegarAncora)="navegarAncora.emit($event)"
+                    />
+                }
+                @case ("modificacoes") {
+                    <app-regras-modificacoes
+                        [bloco]="bloco"
+                        [documento]="documento()"
+                        (navegarAncora)="navegarAncora.emit($event)"
+                    />
+                }
+                @case ("modulos") {
+                    <app-regras-modulos
+                        [bloco]="bloco"
+                        [documento]="documento()"
+                        (navegarAncora)="navegarAncora.emit($event)"
+                    />
+                }
+                @case ("roteiro") {
+                    <app-regras-roteiro
+                        [bloco]="bloco"
+                        [documento]="documento()"
+                        (navegarAncora)="navegarAncora.emit($event)"
+                    />
+                }
+                @case ("identidade") {
+                    <app-regras-identidade
+                        [bloco]="bloco"
+                        [documento]="documento()"
+                        (navegarAncora)="navegarAncora.emit($event)"
+                    />
+                }
+                @case ("atributos") {
+                    <app-regras-atributos [bloco]="bloco" />
+                }
+                @case ("habilidade-criatura") {
+                    <app-regras-habilidade-criatura
+                        [bloco]="bloco"
+                        [documento]="documento()"
+                        (navegarAncora)="navegarAncora.emit($event)"
+                    />
+                }
+                @case ("ficha-criatura") {
+                    <app-regras-ficha-criatura
+                        [bloco]="bloco"
+                        [documento]="documento()"
+                        (navegarAncora)="navegarAncora.emit($event)"
+                    />
+                }
+                @case ("niveis-ameaca") {
+                    <app-regras-niveis-ameaca
+                        [bloco]="bloco"
+                        [documento]="documento()"
+                        (navegarAncora)="navegarAncora.emit($event)"
+                    />
+                }
+                @default {
+                    <app-regras-rico-fonte
+                        [bloco]="bloco"
+                        [documento]="documento()"
+                        (navegarAncora)="navegarAncora.emit($event)"
+                    />
+                }
+            }
         }
-        @case ("paragrafo") {
-            <app-regras-paragrafo
-                [bloco]="bloco"
-                [documento]="documento()"
-                (navegarAncora)="navegarAncora.emit($event)"
-            />
-        }
-        @case ("lista") {
-            <app-regras-lista
-                [bloco]="bloco"
-                [documento]="documento()"
-                (navegarAncora)="navegarAncora.emit($event)"
-            />
-        }
-        @case ("nota") {
-            <app-regras-nota
-                [bloco]="bloco"
-                [documento]="documento()"
-                (navegarAncora)="navegarAncora.emit($event)"
-            />
-        }
-        @case ("exemplo") {
-            <app-regras-exemplo
-                [bloco]="bloco"
-                [documento]="documento()"
-                (navegarAncora)="navegarAncora.emit($event)"
-            />
-        }
-        @case ("tabela") {
-            <app-regras-tabela
-                [bloco]="bloco"
-                [documento]="documento()"
-                (navegarAncora)="navegarAncora.emit($event)"
-            />
-        }
-        @case ("habilidade") {
-            <app-regras-habilidade
-                [bloco]="bloco"
-                [documento]="documento()"
-                (navegarAncora)="navegarAncora.emit($event)"
-            />
-        }
-        @case ("generico") {
-            <app-regras-generico
-                [bloco]="bloco"
-                [documento]="documento()"
-                (navegarAncora)="navegarAncora.emit($event)"
-            />
-        }
-        @default {
-            <app-regras-rico-fonte
-                [bloco]="bloco"
-                [documento]="documento()"
-                (navegarAncora)="navegarAncora.emit($event)"
-            />
-        }
-    }
+    </div>
 }

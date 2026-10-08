@@ -1,0 +1,79 @@
+@use "tema/breakpoints" as bp;
+:host {
+    display: block;
+    margin: var(--space-16) 0;
+}
+.regras-ficha {
+    &__cabecalho {
+        display: flex;
+        gap: var(--space-16);
+        align-items: flex-start;
+        h3 {
+            margin: 0;
+            font-family: var(--font-mono);
+            font-size: 20px;
+        }
+    }
+    blockquote {
+        margin: var(--space-8) 0 0;
+        font-style: italic;
+        color: var(--text-dim);
+    }
+    &__divisor {
+        scroll-margin-top: calc(var(--altura-topbar) + var(--space-20));
+        margin: var(--space-20) 0 var(--space-12);
+        padding-top: var(--space-12);
+        border-top: 1px solid var(--border);
+        font-family: var(--font-mono);
+        font-size: 12px;
+        color: var(--text-dim);
+    }
+    &__saude,
+    &__ataques,
+    &__habilidades {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--space-16);
+    }
+    &__valor {
+        display: flex;
+        align-items: center;
+        gap: var(--space-8);
+        flex-wrap: wrap;
+        overflow-wrap: anywhere;
+        font-size: 20px;
+    }
+    &__chips {
+        display: flex;
+        gap: var(--space-8);
+        flex-wrap: wrap;
+        margin: var(--space-12) 0;
+        app-chip {
+            min-width: 0;
+            max-width: 100%;
+            overflow-wrap: anywhere;
+        }
+    }
+    &__ataques {
+        margin-top: var(--space-16);
+        article {
+            border-top: 1px solid var(--border);
+            padding-top: var(--space-12);
+        }
+        h5 {
+            margin: 0;
+            font-family: var(--font-mono);
+            font-size: 13px;
+        }
+    }
+}
+@include bp.mobile {
+    .regras-ficha__cabecalho {
+        flex-direction: column;
+    }
+    .regras-ficha__saude,
+    .regras-ficha__ataques,
+    .regras-ficha__habilidades {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

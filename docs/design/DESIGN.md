@@ -192,8 +192,6 @@ Os dois últimos (`.topbar`, `.abas`) foram extraídos direto de `layout.compone
 nunca tinham sido documentados aqui. Ver as telas em [`examples/`](examples/README.md) para o
 resultado renderizado de cada um.
 
-### Ícones de identidade (`m10-03`)
-
 ### Página pública de Regras (M10-06)
 
 `modules/regras` usa os trilhos de leitura dos patchnotes e a página/Coluna do
@@ -201,8 +199,8 @@ exemplão M10: sumário sticky à esquerda, documento até 960px alinhado à esq
 cartões nos dois trilhos, títulos mono e texto sans. Seções usam a hierarquia de
 glifos ⬢/⬡/⬥/⬦; verbetes têm filete. Nota usa amarelo fixo e Exemplo usa `--accent`.
 Tarja sólida segue Documento de contenção. Tabelas têm rolagem local, fade e primeira
-coluna fixa no celular. Habilidades básicas são listas densas com chip existente
-`N E` secundário/contorno e REAÇÃO primário/contorno, até o ícone de recurso próprio.
+coluna fixa no celular. Habilidades são listas densas com chip de Energia (ícone +
+valor) secundário/contorno e REAÇÃO primário/contorno, com tooltip por extenso.
 
 Controles: `app-segmentado` Sistema/Guia, `app-botao` completo para PDF/retry,
 `app-esqueleto` e `app-estado-vazio`; links de sumário seguem a receita dos patchnotes.
@@ -222,6 +220,28 @@ paleta/fundos e crédito foram aprovados em 08/10/2026. `app-icone` oferece `scp
 distribuído em `frontend/public/marcas/`; geometria própria existente preservada.
 Uso, escalas, tokens de ameaça e licença: [MARCAS.md](MARCAS.md).
 Essa decisão prevalece sobre o uso anterior do logo oficial no exemplão.
+
+### Blocos ricos de Regras (M10-07)
+
+Dossiês/origens usam `app-cartao`, Vida/Energia/Defesa usam `app-stat` com valor
+projetado e ícone de recurso. Arquétipos usam `app-abas` com ícone, habilidade inicial,
+habilidades e melhorias gerais. Habilidades e equipamentos formam grades densas de
+duas colunas que recolhem a uma no celular. Danos Uma/Duas Mãos têm chips distintos;
+modificações conservam ■□ e Bloqueia. Cinco módulos permanecem V → I, com tooltip
+explícito de Energia Máxima; identidade/atributos/roteiro e ficha do Guia preservam
+texto explicativo e âncoras. Ameaças usam a marca própria com paleta/fundos M10-04.
+Comparação pessoal com exemplão e app real, quatro tamanhos e duas bases:
+[verificação](../specs/done/m10-07-blocos-ricos/m10-07-verificacao.md).
+
+### Trio de recursos (`icones-recursos-sistema`, entrega 1)
+
+`vida`, `energia` e `defesa` são a exceção preenchida do `app-icone`: coração cheio
+sem pulso (opção A confirmada pelo autor em 08/10/2026), raio e escudo do exemplão.
+Herdam `currentColor`, sem stroke; valores têm rótulo acessível e `appTooltip` por
+extenso. Conferidos em 14/16/24px, claro/escuro. A adoção no restante do site permanece
+aberta na [spec avulsa](../specs/active/icones-recursos-sistema.spec.md).
+
+### Ícones de identidade (`m10-03`)
 
 O catálogo canônico `app-icone` (`frontend/src/app/shared/icone/`) reúne a família de
 identidade decidida no [exemplão de Regras](../specs/backlog/m10-regras/m10-regras-exemplao.html), objeto
@@ -244,7 +264,7 @@ Destinados aos dossiês de Classe, arquétipos, subclasses e blocos do Guia no l
 Regras (M10-07), e disponíveis a outros consumidores. A M10-03 só acrescenta os 17 nomes:
 não substitui ícones nas telas atuais. `criatura` entrou no catálogo pela M10-04.
 Refinos de Suporte × Paramédico, espadas pequenas e silhueta
-permanecem em `IDEAS.md` I-050; recursos Vida/Energia/Defesa têm spec própria.
+permanecem em `IDEAS.md` I-050; recursos Vida/Energia/Defesa seguem a seção do trio acima.
 
 ### Escolha de botão
 

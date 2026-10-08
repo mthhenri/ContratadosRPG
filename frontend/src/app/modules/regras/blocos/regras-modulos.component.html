@@ -1,0 +1,26 @@
+<div class="regras-modulos">
+    <div class="regras-modulos__grade">
+        @for (modulo of bloco().modulos; track $index) {
+            <app-cartao>
+                <div class="regras-modulos__conteudo">
+                    <span class="regras-modulos__rotulo">Módulo</span>
+                    <strong class="regras-modulos__nivel">{{ modulo.nivel }}</strong>
+                    <app-chip
+                        severidade="secundario"
+                        tom="contorno"
+                        tabindex="0"
+                        [appTooltip]="
+                            'Consome ' +
+                            modulo.energiaMaxima +
+                            ' de Energia Máxima enquanto estiver com você. Cessa ao retirar o fragmento do inventário.'
+                        "
+                    >
+                        <app-icone nome="energia" /> −{{ modulo.energiaMaxima }}
+                    </app-chip>
+                    <span class="regras-modulos__recurso">Energia Máxima</span>
+                </div>
+            </app-cartao>
+        }
+    </div>
+    <div class="regras-modulos__escala"><span>← mais fraco</span><span>mais forte →</span></div>
+</div>

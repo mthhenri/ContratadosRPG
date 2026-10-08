@@ -32,7 +32,10 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-10-08 · M10-06: página pública de Regras, blocos básicos,
+> **Última revisão:** 2026-10-08 · M10-07: blocos ricos e trio de recursos entregues;
+> quatro viewports, claro/escuro, nove arquétipos, tabelas e tooltips conferidos.
+> [Verificação e limites](../specs/done/m10-07-blocos-ricos/m10-07-verificacao.md).
+> M10-06 commitada em `5faec0f6`: página pública de Regras, blocos básicos,
 > sumário/URL, troca de livro e download provisório entregues; quatro viewports,
 > duas bases e estados de navegação/carga/erro conferidos.
 > [Verificação e limites](../specs/done/m10-06-pagina-regras/m10-06-verificacao.md).
@@ -65,12 +68,13 @@
 > [checagens documentais](../specs/done/p-102-referencias-documentos-vigentes/p-102-verificacao.md), versionadas em commit próprio
 > após autorização do autor. P-095/P-096/P-098/P-100
 > já versionadas separadamente; P-097 e livros/leitor em grupos próprios.
-> Dados sintéticos/resíduos limpos. M10 (Regras): `m10-01`…`m10-06` concluídas,
+> Dados sintéticos/resíduos limpos. M10 (Regras): `m10-01`…`m10-07` concluídas,
 > normalizador, ícones/marcas e gaveta entregues. Desenhos, paleta/fundos e crédito
 > aprovados; marca própria atual preservada, com detalhes condensados em 16–24px.
 > SCP oficial somente na identidade de Criatura; marca própria SCP + D20 em Regras,
 > níveis e usos gerais. [Contrato de marcas](../design/MARCAS.md).
-> Próxima task: `m10-07`, renderização rica. `m10-07`…`m10-11` no backlog.
+> Próxima task: `m10-08`, painel e celular. `m10-08`…`m10-11` no backlog.
+> `icones-recursos-sistema` ativa: entrega 1 concluída; adoção ampla/levantamento abertos.
 > [Gates, contagens e avisos dos casos explícitos](../specs/done/m10-02-normalizador-casos-explicitos/m10-02-verificacao.md).
 > **Última decisão registrada:** Sistema do Jogador v4.1.3
 > incorporado em `p-097-01`: crítico soma +2 uma vez no teste; dano/cura continuam
@@ -2138,12 +2142,14 @@ incluindo todos os ajustes avulsos de pós-milestone.
 |---|---|---|
 | `civil-guia-criacao` | ficha | mapeia o escopo de `PROBLEMS.md` `P-018` (o guia de criação trata a classe Civil como um agente comum em vários passos) — spec de levantamento, ainda não implementa |
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
-| `m10-07`…`m10-11` | regras | M10 — normalizador, ícones/marcas, `app-gaveta` e página básica entregues; faltam renderização rica, painel/celular, pesquisa, exportar PDF (impressão nativa) e remoção do PDF; guarda-chuva `m10-regras` |
-| `icones-recursos-sistema` | frontend/ícones | trio Vida/Energia/Defesa no `app-icone` (pré-requisito da `m10-07`), adoção no site todo com `appTooltip` por extenso e levantamento de outros ícones/glifos |
+| `m10-08`…`m10-11` | regras | M10 — leitor rico entregue; faltam painel/celular, pesquisa, exportar PDF (impressão nativa) e remoção do PDF; guarda-chuva `m10-regras` |
 | `regras-glossario` | regras | esboço independente do M10: termos marcados com cartão; pontos a fechar com o autor |
 
-Milestones ainda não abertos: `m5-guia-missao`. M10 `m10-regras` em execução: `m10-01`…`m10-06`
-concluídas; próxima task `m10-07`, renderização rica. O M8 `m8-espectadores-campanha` está **concluído**
+Spec avulsa ativa: `icones-recursos-sistema`, entrega 1 concluída; faltam adoção ampla
+com tooltip por extenso e levantamento de outros ícones/glifos.
+
+Milestones ainda não abertos: `m5-guia-missao`. M10 `m10-regras` em execução: `m10-01`…`m10-07`
+concluídas; próxima task `m10-08`, painel e celular. O M8 `m8-espectadores-campanha` está **concluído**
 (`m8-01`…`m8-06`).
 
 ---
@@ -2183,7 +2189,7 @@ reproduzem isoladas (arquivo único), não na suíte completa.
 | M6 | Gestão de Usuários e Papéis | **concluído** — `m6-01`…`m6-08` (`m6-08`: impersonação administrativa auditável) |
 | M7 | Encontro de Combate | **concluído** — 8 tasks originais (`m7-01` contrato, `m7-02` motor puro, `m7-03` backend de montagem, `m7-04` backend de condução/tempo real, `m7-05` painel do mestre, `m7-06` visão do jogador, `m7-07` log da rodada, `m7-08` refinamento mobile) + 9 ajustes de pós-milestone (`m7-09`…`m7-17`, ver seção 4 "Encontro de Combate"). Numeração M7 é sugestão, não decisão de roadmap |
 | M8 | Espectadores e Prévias de Campanha | **concluído** — `m8-01`…`m8-06` (banco + contratos do papel ESPECTADOR; backend de permissões e as duas projeções de leitura; frontend de entrada/gestão de convites-membros/Painel do espectador ao vivo/Prévia de jogador fidedigna/visão read-only de Iniciativa; `m8-06` fechou com gate de validação integrada entre 4 contas reais). Numeração M8 é sugestão, não decisão de roadmap — ver `docs/context/IDEAS.md` |
-| M10 | Regras (documentos do sistema no site) | **em execução, 6/11** — `m10-01`…`m10-06` concluídas; `m10-07`…`m10-11` no backlog; fonte visual `docs/specs/backlog/m10-regras/m10-regras-exemplao.html` |
+| M10 | Regras (documentos do sistema no site) | **em execução, 7/11** — `m10-01`…`m10-07` concluídas; `m10-08`…`m10-11` no backlog; fonte visual `docs/specs/backlog/m10-regras/m10-regras-exemplao.html` |
 
 ---
 
@@ -2204,14 +2210,14 @@ e `regras-guia.mjs`: 3 classes, 9 arquétipos, 2 origens, 5 módulos, 100 equipa
 sem cálculo; assinatura incompleta cai como genérico com linha de origem.
 Os 41 avisos remanescentes estão justificados na [verificação M10-02](../specs/done/m10-02-normalizador-casos-explicitos/m10-02-verificacao.md).
 Build de produção aprovado em modo CI; falha nativa com cache local contornada em P-104.
-PDFs antigos seguem como download provisório na página; renderização dos blocos ricos é M10-07.
+PDFs antigos seguem como download provisório na página; blocos ricos entregues na M10-07.
 
 ### Ícones de identidade (M10-03)
 
 `app-icone` (`frontend/src/app/shared/icone/`) oferece 17 desenhos aprovados no
 exemplão de Regras (`ICO`, `dec`): classes, nove arquétipos, três subclasses, Civil e NPC.
-Catálogo e SVGs preservam o contrato atual; nenhum consumidor do site foi trocado.
-`criatura` disponível pela M10-04; leitor rico na M10-07. Família documentada em
+Catálogo e SVGs preservam o contrato atual; o leitor rico M10-07 consome os ícones.
+`criatura` disponível pela M10-04. Família documentada em
 `DESIGN.md`; [capturas e gates](../specs/done/m10-03-icones-identidade/m10-03-verificacao.md). Build Angular e
 suítes de aplicação aprovados; a cadeia npm de assets/normalizador permanece com
 falhas externas à task após a troca do livro (P-105), sem validação de preparo limpo.
@@ -3244,7 +3250,12 @@ topo com aviso. Blocos básicos separados por tipo, cartões nos dois trilhos, d
 máximo 960px à esquerda e tabelas com rolagem própria/coluna fixa no celular. Até M10-08,
 sumário fica acima no mobile. Skeleton e erro/retry próprios; crédito CC BY-SA no rodapé.
 PDFs anteriores são download provisório em `/documentos/`; arquivos do antigo leitor
-permanecem até M10-11, mas o layout não o monta. Blocos ricos ficam na M10-07.
+permanecem até M10-11, mas o layout não o monta. Blocos ricos entregues na M10-07:
+dossiês/arquétipos/origens, equipamentos/modificações/módulos, Guia e ficha completa;
+componentes separados em `blocos/`, sem duplicar fórmulas. NAs usam marca própria.
+Trio preenchido `vida`/`energia`/`defesa` disponível no catálogo; no leitor, valores
+com tooltip por extenso. Vida A, coração cheio sem pulso, confirmada pelo autor.
+[Verificação dos blocos ricos](../specs/done/m10-07-blocos-ricos/m10-07-verificacao.md).
 [Verificação e limites](../specs/done/m10-06-pagina-regras/m10-06-verificacao.md).
 
 ### Biblioteca de componentes própria — `frontend/src/app/shared/ui/`

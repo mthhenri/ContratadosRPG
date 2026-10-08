@@ -1,0 +1,47 @@
+:host {
+    display: inline-block;
+}
+.regras-ameaca {
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-8);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: var(--space-4) var(--space-8);
+    border-radius: var(--radius-compact);
+    background: var(--ameaca-fundo-escuro);
+    &:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+    }
+    app-icone {
+        font-size: 20px;
+    }
+    &--desconhecida {
+        color: var(--ameaca-desconhecida);
+    }
+    &--nula {
+        color: var(--ameaca-nula);
+    }
+    &--baixa {
+        color: var(--ameaca-baixa);
+    }
+    &--media {
+        color: var(--ameaca-media);
+    }
+    &--alta {
+        color: var(--ameaca-alta);
+    }
+    &--extrema {
+        color: var(--ameaca-extrema);
+        background: var(--ameaca-fundo-claro);
+    }
+    &--catastrofica {
+        color: var(--ameaca-catastrofica);
+        background: var(--ameaca-fundo-claro);
+    }
+    &--apocaliptica {
+        color: var(--ameaca-apocaliptica);
+    }
+}

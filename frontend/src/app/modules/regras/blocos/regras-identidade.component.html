@@ -1,0 +1,16 @@
+<dl class="regras-guia__identidade">
+    @for (campo of bloco().campos; track $index) {
+        <dt>{{ campo.rotulo }}</dt>
+        <dd>
+            @if (campo.nivel !== undefined) {
+                <app-regras-ameaca [nivel]="campo.nivel" [rotulo]="lerTexto(campo.valor)" />
+            } @else {
+                <app-regras-inline
+                    [trechos]="campo.valor"
+                    [documento]="documento()"
+                    (navegarAncora)="navegarAncora.emit($event)"
+                />
+            }
+        </dd>
+    }
+</dl>

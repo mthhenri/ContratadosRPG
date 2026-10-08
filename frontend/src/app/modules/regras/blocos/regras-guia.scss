@@ -1,0 +1,104 @@
+@use "tema/breakpoints" as bp;
+:host {
+    display: block;
+    min-width: 0;
+}
+.regras-guia {
+    &__identidade {
+        display: grid;
+        grid-template-columns: minmax(100px, 160px) minmax(0, 1fr);
+        gap: var(--space-8) var(--space-16);
+        margin: var(--space-16) 0;
+        dt {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--text-dim);
+        }
+        dd {
+            margin: 0;
+            overflow-wrap: anywhere;
+        }
+    }
+    &__atributos {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: var(--space-12);
+        margin: var(--space-16) 0;
+    }
+    &__modificador {
+        margin: var(--space-4) 0 0;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        &--forte {
+            color: var(--positive);
+        }
+        &--medio {
+            color: var(--energy);
+        }
+        &--fraco {
+            color: var(--text-dim);
+        }
+        &--fragil {
+            color: var(--warning);
+        }
+    }
+    &__roteiro {
+        list-style: decimal;
+        margin: var(--space-16) 0;
+        padding-left: calc(var(--space-20) * 2);
+        li {
+            padding: var(--space-12) 0;
+            border-bottom: 1px solid var(--border);
+        }
+        li::marker {
+            font-family: var(--font-mono);
+            color: var(--accent);
+            font-weight: 700;
+        }
+        strong {
+            font-family: var(--font-mono);
+            font-size: 13px;
+        }
+        p {
+            margin: var(--space-4) 0 0;
+            color: var(--text-dim);
+        }
+    }
+    &__linha {
+        display: flex;
+        align-items: center;
+        gap: var(--space-8);
+        flex-wrap: wrap;
+    }
+    &__habilidade {
+        border-top: 1px solid var(--border);
+        padding: var(--space-12) 0;
+        h5 {
+            margin: 0;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            flex: 1;
+        }
+        p {
+            margin: var(--space-8) 0 0;
+            color: var(--text-dim);
+        }
+    }
+}
+@include bp.tablet {
+    .regras-guia__atributos {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+@include bp.mobile {
+    .regras-guia__atributos {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .regras-guia__identidade {
+        grid-template-columns: minmax(0, 1fr);
+        gap: var(--space-4);
+        dd {
+            margin-bottom: var(--space-12);
+        }
+    }
+}

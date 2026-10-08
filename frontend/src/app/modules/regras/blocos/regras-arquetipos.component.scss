@@ -1,0 +1,43 @@
+@use "tema/breakpoints" as bp;
+:host {
+    display: block;
+    min-width: 0;
+}
+.regras-arquetipos {
+    &__titulo {
+        margin: var(--space-20) 0 var(--space-12);
+        font: 600 13px var(--font-mono);
+    }
+    &__painel {
+        padding-top: var(--space-16);
+        min-width: 0;
+    }
+    &__citacao {
+        margin: 0 0 var(--space-16);
+        color: var(--text-dim);
+        font-size: 14px;
+        line-height: 1.65;
+    }
+    &__rotulo {
+        display: block;
+        margin: var(--space-16) 0 var(--space-8);
+        color: var(--text-dim);
+        font: 600 11px var(--font-mono);
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+    }
+    &__bonus {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--space-8) var(--space-12);
+    }
+    &__bonus &__rotulo {
+        margin: 0;
+    }
+}
+@include bp.mobile {
+    button[app-aba] {
+        min-height: bp.$alvo-toque;
+    }
+}
