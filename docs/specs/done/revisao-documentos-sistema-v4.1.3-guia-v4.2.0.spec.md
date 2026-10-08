@@ -7,6 +7,9 @@
 > Correções de P-097-01 já realizadas permanecem como estão; nenhum rollback implícito.
 > P-095/P-096/P-098/P-100, P-101/01/02/03, P-102 e M4-19 tiveram execução autorizada e foram concluídas em 2026-10-06;
 > demais tasks conservam suas autorizações e pendências próprias.
+> **Fechada em 2026-10-07 por autorização do autor:** todas as adequações técnicas,
+> incluindo M4-20, concluídas com evidências nos respectivos relatórios. Questões
+> editoriais permanecem sob decisão autoral, registradas abaixo; não bloqueiam este fecho.
 
 ## Objetivo
 
@@ -31,14 +34,14 @@ Este arquivo coordena tasks; não é uma implementação única.
 | [P-095](../done/p-095-fixture-rolagens-feed-deterministica.spec.md) | Datas determinísticas e ordem do teste de reconexão | Concluída; testes e documentação |
 | [P-096](../done/p-096-fixture-resumo-rolagem-deterministica.spec.md) | Data estável e fixture única no teste de espectador | Concluída; testes e documentação |
 | [P-098](../done/p-098-ponteiros-auditoria-ficha-oculta.spec.md) | Ponteiros da spec arquivada; cobertura parcial da auditoria preservada | Concluída; documental |
-| [P-099](p-099-critico-teste-com-dados-adicionais.spec.md) | Memória da proposta e motivo do descarte | DESCARTADA — NÃO EXECUTAR; arquivo preservado |
+| [P-099](../backlog/p-099-critico-teste-com-dados-adicionais.spec.md) | Memória da proposta e motivo do descarte | DESCARTADA — NÃO EXECUTAR; arquivo preservado |
 | [P-100](../done/p-100-npc-criacao-atributo-zero.spec.md) | Zero e redistribuição na criação de NPC | Concluída; gates e criação/reabertura em quatro viewports |
 | [m4-19](../done/m4-19-npc-testes-de-atributo-regra-e-rolagem.spec.md) | Competências, ajustes, dadinho, leitura/privacidade | Concluída; +2 uma vez no teste explícito NPC, indicador fixo e gates completos |
 | [P-101-01](../done/p-101-01-criatura-realocacao-atributos.spec.md) | Realocação total3, várias origens e negativo | Concluída; shared/criação/REST e edição preservada |
 | [P-101-02](../done/p-101-02-criatura-dt-e-modificadores.spec.md) | DT e consumidores do modificador fixo | Concluída; guia/ficha/leitor e preservação de snapshots |
 | [P-101-03](../done/p-101-03-criatura-referencias-e-cadencia.spec.md) | Exemplos/referências; Cadência já compatível | Concluída; algoritmo preservado e propostas editoriais registradas |
 | [P-102](../done/p-102-referencias-documentos-vigentes.spec.md) | README/schema/design/specs operacionais e comentários | Concluída; correspondência de fontes, histórico preservado e pipeline de PDFs conferido |
-| [NPC ataques/equipamentos](../done/npc-ataques-e-equipamentos-guia-v4.2.0.spec.md) | Investigação concluída — [matriz e decisões](../../reviews/npc-ataques-equipamentos-investigacao.md) | Decisões resolvidas; spec executável [m4-20](m4-20-npc-ataques-e-equipamentos.spec.md) preparada, depende da m4-19 |
+| [NPC ataques/equipamentos](../done/npc-ataques-e-equipamentos-guia-v4.2.0.spec.md) | Investigação concluída — [matriz e decisões](../../reviews/npc-ataques-equipamentos-investigacao.md) | Decisões resolvidas; [m4-20](../done/m4-20-npc-ataques-e-equipamentos.spec.md) concluída, com [gates e evidências](../../reviews/m4-20-verificacao.md) |
 
 ## Cobertura da comparação dos documentos
 
@@ -47,10 +50,10 @@ Comparação contra os livros anteriores no Git, normalizando espaços, `&nbsp;`
 
 | Alteração textual | Destino/decisão |
 |---|---|
-| Sistema: três parágrafos de Crítico, incluindo cura como dado resultante | P-097-01 já executada; interpretação teste/resultado reaberta para revisão pelo esclarecimento do autor, sem inferência/rollback |
+| Sistema: três parágrafos de Crítico, incluindo cura como dado resultante | P-097-01 executada; interpretação teste/resultado fechada na M4-19, sem inferência de ação futura nem rollback; P-099 descartada |
 | Guia: Nível/atributos/Competências de NPC | m4-19 e P-100 |
 | Guia: DTs contextuais de habilidades NPC | P-101-03, apenas onde referências do produto reproduzem o conteúdo |
-| Guia: Ataques/Equipamentos, acesso por Categoria e ausência de Dano Furtivo padrão | Investigação NPC ataques/equipamentos concluída; decisão de Patente Equivalente pendente |
+| Guia: Ataques/Equipamentos, acesso por Categoria e ausência de Dano Furtivo padrão | Investigação e M4-20 concluídas; mestre escolhe Patente Equivalente na faixa da Categoria, Civil segue suas restrições |
 | Guia: realocação de vários atributos, zero/negativo | P-101-01 |
 | Guia: modificador no total, DT com metade truncada | P-101-02; rolagem de Criatura já usa bônus fixo corretamente |
 | Guia: sobra de turnos no fim | P-101-03: código e teste existentes já fazem isso |
@@ -58,16 +61,29 @@ Comparação contra os livros anteriores no Git, normalizando espaços, `&nbsp;`
 | Guia: exemplo de porte3×3 passa a Enorme (com grafia “Enomes”) | Tabela já é Enorme3×3/Gigante5×5; detalhe editorial para revisão autoral, sem alterar tabela |
 | Demais mudanças: nomenclatura, paginação, títulos, ênfase e exemplos narrativos | Sem cálculo novo por si só; P-102 para referências correntes pertinentes |
 
-## Decisões ainda para revisão
+## Decisões técnicas fechadas e questões editoriais preservadas
 
 - **Crítico/ocultação — fechados na M4-19:** +2 uma vez no teste explícito NPC, sem
   dobrar dados de Competência; indicador fixo “Rolagens ocultas”, sem transição pública.
   A API genérica não conhece intenção futura; P-099 continua descartada.
-- **NPC equipamento/ataques:** investigação e decisões concluídas; M4-20 preparada
-  (ver tabela acima), com execução dependente de autorização própria.
+- **NPC equipamento/ataques:** investigação, decisões e M4-20 concluídas
+  (ver tabela e relatório acima), após autorização própria.
 - **Exemplos/editorial do autor:** Fraco+6 versus fórmula+5, Social base2→zero versus
-  “três pontos”, versão interna e grafia de Porte. Preparar proposta para o autor;
-  não alterar os livros. P-093 arredondamento continua ACEITO por decisão anterior.
+  “três pontos”, versão interna e grafia de Porte. Propostas e divergências registradas em
+  [P-101](../../reviews/p-101-verificacao.md) e na
+  [revisão dos documentos](../../reviews/m4-19-revisao-guia-v4.2.0.md), preservadas para
+  decisão do autor, sem alterar os livros ou autorizar correção editorial neste fecho.
+  P-093 arredondamento continua ACEITO por decisão anterior.
+
+## Fecho e verificação documental
+
+Autor autorizou fechar o guarda-chuva em 2026-10-07. Conferidos os estados das tasks,
+os relatórios de M4-19/M4-20/P-101/P-102 e os links relativos da spec movida para `done/`.
+Fila e cobertura atualizadas para refletir a M4-20 entregue e as decisões técnicas resolvidas.
+P-099 permanece descartada; questões editoriais acima permanecem registradas sob decisão
+autoral. Sem pendência técnica deste guarda-chuva. Este fecho documental não altera código,
+UI ou fontes do jogo; os gates de implementação continuam nos relatórios das tasks,
+sem repetir build, lint, testes ou inspeção visual sem mudança relevante.
 
 ## Critérios de Aceite
 

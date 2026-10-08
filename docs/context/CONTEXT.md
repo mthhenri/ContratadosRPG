@@ -45,9 +45,11 @@
 > Guia de Mestre v4.2.0 incorporado na m4-19 para Nível + Competências,
 > dadinho, ajustes e privacidade, com execução autorizada pelo autor. Proposta global
 > P-099 permanece descartada: contexto explícito do teste NPC não infere dano/cura posteriores.
-> [Fila consolidada de specs](../specs/backlog/revisao-documentos-sistema-v4.1.3-guia-v4.2.0.spec.md):
+> [Revisão consolidada fechada em 2026-10-07](../specs/done/revisao-documentos-sistema-v4.1.3-guia-v4.2.0.spec.md):
 > NPC (m4-19), documentação P-102, Criaturas P-101-01/02/03, fixtures P-095/096
-> e documentação P-098 concluídas por autorizações próprias.
+> e documentação P-098 concluídas por autorizações próprias. M4-20 também concluída;
+> sem pendência técnica do guarda-chuva. Questões editoriais dos livros permanecem
+> registradas sob decisão do autor, sem bloquear o fecho autorizado.
 > Ataques/equipamentos NPC: [investigação concluída](../reviews/npc-ataques-equipamentos-investigacao.md)
 > (spec em `done/`); decisões do autor (Civil segue restrição do Civil jogador; mestre
 > escolhe a Patente Equivalente por NPC dentro da faixa da Categoria) incorporadas na spec
@@ -899,8 +901,9 @@ Propostas editoriais Fraco+6→+5 e narrativa de Social três→dois aguardam o 
 fontes intactas, sem pendência técnica na P-101.
 Ponteiros P-098 e [P-102](../reviews/p-102-verificacao.md) concluídos; investigação de
 equipamento/ataques NPC em M4-20 própria; Competências/testes entregues na m4-19.
-[fila consolidada](../specs/backlog/revisao-documentos-sistema-v4.1.3-guia-v4.2.0.spec.md)
-tem versionamento documental autorizado; demais correções aguardam revisão.
+[revisão consolidada](../specs/done/revisao-documentos-sistema-v4.1.3-guia-v4.2.0.spec.md)
+fechada por autorização do autor em 2026-10-07, incluindo M4-20 concluída;
+questões editoriais preservadas para decisão autoral, sem pendência técnica do guarda-chuva.
 [P-095](../specs/done/p-095-fixture-rolagens-feed-deterministica.spec.md) concluída:
 fixture determinística, datas distintas na reconexão e expectativa `[2, 1]` preservada.
 [P-096](../specs/done/p-096-fixture-resumo-rolagem-deterministica.spec.md) concluída:

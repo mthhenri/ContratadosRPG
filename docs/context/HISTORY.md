@@ -1,5 +1,22 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-07 — Revisão Sistema v4.1.3/Guia v4.2.0: guarda-chuva fechado
+
+Autor autorizou o fecho após conferir que as adequações técnicas já estavam concluídas.
+Spec `revisao-documentos-sistema-v4.1.3-guia-v4.2.0` passou de backlog por active para done;
+fila, cobertura e decisões corrigidas para refletir M4-20 entregue e interpretação de
+Crítico fechada na M4-19. Link da proposta P-099 ajustado para sua localização no backlog,
+preservando o descarte explícito. Questões editoriais de Fraco/Social, versão interna e
+grafia de Porte permanecem registradas para decisão autoral nos relatórios referenciados;
+este fecho não autoriza alterar os livros e não deixa pendência técnica do guarda-chuva.
+
+Conferidos estados das specs, relatórios de M4-19/M4-20/P-101/P-102, links locais do
+guarda-chuva e ponteiros operacionais afetados; diff documental revisado e checagem de
+whitespace executada. CONTEXT atualizado somente nos trechos da revisão consolidada.
+Nenhuma mudança de código, UI ou regra; gates técnicos anteriores preservados nos
+relatórios, sem repetição de build, lint, testes ou inspeção visual nesta tarefa documental.
+Sem commit, push ou publicação neste fecho.
+
 ## 2026-10-07 — Mod `painel-orquestracao` e teste da orquestração no Windows
 
 Tarefa de infraestrutura de agentes, fora do fluxo de spec. Complementa a orquestração

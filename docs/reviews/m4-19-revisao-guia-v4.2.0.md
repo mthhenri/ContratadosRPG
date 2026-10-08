@@ -8,7 +8,7 @@ posterior (Medicina→cura, ataque→dano) são operações distintas. A API nã
 a segunda pela fórmula da primeira. P-099 foi descartada expressamente pelo autor;
 arquivo preservado só como memória, sem trabalho de implementação futuro.
 O caso específico de Competência, incluído pelo Guia no próprio teste de NPC, fica
-na revisão desse fluxo. [Fila consolidada das specs](../specs/backlog/revisao-documentos-sistema-v4.1.3-guia-v4.2.0.spec.md).
+na revisão desse fluxo. [Fila consolidada das specs](../specs/done/revisao-documentos-sistema-v4.1.3-guia-v4.2.0.spec.md).
 
 ## O que já foi corrigido e o que ainda não foi
 
