@@ -11,6 +11,36 @@
         <span class="npc-lista__contagem">{{ ficha()!.dados.habilidades.length }}</span>
         <span class="npc-lista__regua"></span>
         @if (gerenciavel()) {
+            <div class="npc-habilidades__adicionar">
+                <button
+                    app-botao
+                    type="button"
+                    tamanho="pequeno"
+                    variante="primario"
+                    estilo="contorno"
+                    [disabled]="
+                        formulario.edicao.salvando() || formulario.bloqueadoPorOutro('habilidades')
+                    "
+                    [appTooltip]="formulario.tooltipBloqueio('habilidades') ?? ''"
+                    (click)="abrirBiblioteca()"
+                >
+                    ＋ Da biblioteca
+                </button>
+                <button
+                    app-botao
+                    type="button"
+                    tamanho="pequeno"
+                    variante="secundario"
+                    estilo="contorno"
+                    [disabled]="
+                        formulario.edicao.salvando() || formulario.bloqueadoPorOutro('habilidades')
+                    "
+                    [appTooltip]="formulario.tooltipBloqueio('habilidades') ?? ''"
+                    (click)="adicionar()"
+                >
+                    ＋ Personalizada
+                </button>
+            </div>
             @if (modoEdicao()) {
                 <app-npc-bloco-acoes
                     [cabecalho]="true"
@@ -25,7 +55,9 @@
                     class="npc-lista__cabecalho-acao"
                     type="button"
                     aria-label="Editar habilidades"
-                    [appTooltip]="formulario.tooltipBloqueio('habilidades') ?? 'Editar habilidades'"
+                    [appTooltip]="
+                        formulario.tooltipBloqueio('habilidades') ?? 'Editar ou remover habilidades'
+                    "
                     [disabled]="
                         formulario.edicao.salvando() || formulario.bloqueadoPorOutro('habilidades')
                     "
@@ -34,19 +66,6 @@
                     <app-icone nome="editar" />
                 </button>
             }
-            <button
-                app-botao-icone
-                class="npc-lista__cabecalho-acao npc-lista__cabecalho-acao--adicionar"
-                type="button"
-                aria-label="Adicionar habilidade"
-                [appTooltip]="formulario.tooltipBloqueio('habilidades') ?? 'Adicionar habilidade'"
-                [disabled]="
-                    formulario.edicao.salvando() || formulario.bloqueadoPorOutro('habilidades')
-                "
-                (click)="adicionar()"
-            >
-                <app-icone nome="mais" />
-            </button>
         }
     </header>
     @if (modoEdicao()) {
@@ -177,3 +196,105 @@
         }
     </ul>
 </section>
+@if (bibliotecaAberta()) {
+    <app-modal
+        [aberto]="true"
+        titulo="Biblioteca de Referência"
+        largura="880px"
+        (fechou)="bibliotecaAberta.set(false)"
+    >
+        <div class="npc-biblioteca">
+            <p class="npc__nota">
+                Modelos do Guia do Mestre para usar ou adaptar. Adicionar entra no rascunho da
+                lista; salve quando o volume da Categoria fechar.
+            </p>
+            <app-segmentado rotulo="Categoria dos modelos" class="npc-biblioteca__filtro">
+                @for (opcao of categoriasBiblioteca; track opcao.categoria) {
+                    <button
+                        app-segmentado-item
+                        type="button"
+                        [ativo]="categoriaBiblioteca() === opcao.categoria"
+                        (click)="categoriaBiblioteca.set(opcao.categoria)"
+                    >
+                        {{ opcao.rotulo }}
+                    </button>
+                }
+            </app-segmentado>
+            <ul class="npc-biblioteca__grade" appOverflowFade>
+                @for (modelo of modelosBiblioteca(); track modelo.habilidade.nomeNeutro) {
+                    <li>
+                        <app-cartao
+                            class="npc-biblioteca__cartao"
+                            [titulo]="modelo.habilidade.nomeNeutro"
+                        >
+                            <app-icone cartaoIndice nome="habilidades" />
+                            <div class="npc-biblioteca__corpo">
+                                <div class="npc-lista__cabecalho-item">
+                                    <app-chip variante="sutil">
+                                        {{
+                                            modelo.habilidade.tipo === tipos.PASSIVA
+                                                ? "Passiva"
+                                                : "Ativa"
+                                        }}
+                                        @if (modelo.habilidade.tipo === tipos.ATIVA) {
+                                            · {{ modelo.habilidade.custoEnergia }} Energia
+                                        }
+                                    </app-chip>
+                                    @if (modelo.habilidade.restricao) {
+                                        <app-chip variante="sutil">{{
+                                            modelo.habilidade.restricao
+                                        }}</app-chip>
+                                    }
+                                </div>
+                                <p class="npc__nota">Ex.: {{ modelo.habilidade.nomeNarrativo }}</p>
+                                <p class="npc__texto">{{ modelo.habilidade.descricao }}</p>
+                                <button
+                                    app-botao
+                                    type="button"
+                                    tamanho="pequeno"
+                                    estilo="contorno"
+                                    class="npc-biblioteca__adicionar"
+                                    [variante]="
+                                        naLista(modelo.habilidade.nomeNeutro)
+                                            ? 'secundario'
+                                            : 'primario'
+                                    "
+                                    [disabled]="
+                                        naLista(modelo.habilidade.nomeNeutro) ||
+                                        formulario.edicao.salvando()
+                                    "
+                                    [attr.aria-label]="'Adicionar ' + modelo.habilidade.nomeNeutro"
+                                    (click)="adicionarDaBiblioteca(modelo.habilidade)"
+                                >
+                                    {{
+                                        naLista(modelo.habilidade.nomeNeutro)
+                                            ? "Na lista"
+                                            : "+ Adicionar"
+                                    }}
+                                </button>
+                            </div>
+                        </app-cartao>
+                    </li>
+                }
+            </ul>
+        </div>
+        <div modalAcoes class="npc-biblioteca__acoes">
+            <div class="npc-biblioteca__estado">
+                <span class="npc__nota">{{ resumoVolume() }}</span>
+                @for (violacao of violacoes(); track violacao) {
+                    <span class="npc__erro" role="alert">{{ violacao }}</span>
+                }
+            </div>
+            <button
+                app-botao
+                type="button"
+                tamanho="medio"
+                variante="secundario"
+                estilo="contorno"
+                (click)="bibliotecaAberta.set(false)"
+            >
+                Concluir
+            </button>
+        </div>
+    </app-modal>
+}

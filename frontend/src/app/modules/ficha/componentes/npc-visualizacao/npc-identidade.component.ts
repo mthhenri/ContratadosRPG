@@ -2,11 +2,12 @@ import { Component, computed, effect, inject, input, output, signal, viewChild }
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormControl, ReactiveFormsModule } from "@angular/forms";
 import { TemaService } from "../../../../core/services/tema.service";
-import { CategoriaNpcEnum } from "@contratados-rpg/shared/enums";
+import { CategoriaNpcEnum, type PatenteEnum } from "@contratados-rpg/shared/enums";
 import { IMAGEM_MIMES_ACCEPT } from "@contratados-rpg/shared/validators";
 import type { FichaImagemFocoDto } from "@contratados-rpg/shared/dtos/ficha";
-import { calcularEnergia, obterReferenciaCategoria,
-    obterReferenciaCooperacao, calcularDefesasNpc } from "@contratados-rpg/shared/regras/npc";
+import { calcularEnergia, obterReferenciaCategoria, obterReferenciaCooperacao,
+    calcularDefesasNpc, listarPatentesEquivalentes, validarFichaNpc, CHAVES_ATRIBUTOS_NPC,
+} from "@contratados-rpg/shared/regras/npc";
 import { calcularBonusDefesaEquipamento } from "@contratados-rpg/shared/regras/agente";
 import { Icone } from "../../../../shared/icone/icone.component";
 import { AutoFocus } from "../../../../shared/auto-focus/auto-focus.directive";
@@ -20,7 +21,17 @@ import { Stat, StatValor } from "../../../../shared/ui/stat/stat.component";
 import { ValorEditavel } from "../../../../shared/ui/valor-editavel/valor-editavel.component";
 import { BarraRecurso } from "../../../../shared/ui/barra-recurso/barra-recurso.component";
 import { BarraEscala } from "../../../../shared/ui/barra-escala/barra-escala.component";
-import { NpcEdicaoFormulario } from "../../npc-edicao-formulario.service";
+import {
+    NpcEdicaoFormulario, aplicarCategoriaNpc, removerPatenteNpc,
+} from "../../npc-edicao-formulario.service";
+
+/** Violações que o bloco Atributos resolve: valor de atributo, Competências e ajustes de teste. */
+function corrigivelEmAtributos(violacao: string): boolean {
+    const campo = violacao.split(":")[0];
+    return campo === "competências" || campo === "dadosTeste" || campo === "modificadoresTeste"
+        || (CHAVES_ATRIBUTOS_NPC as readonly string[]).includes(campo);
+}
+import { ROTULOS_PATENTE } from "../../../simulacao/rotulos";
 import { AjusteEnquadramentoImagem } from "../ajuste-enquadramento-imagem/ajuste-enquadramento-imagem.component";
 
 function referenciaCooperacao(cooperacao: number) {
@@ -75,6 +86,21 @@ export class NpcIdentidade {
     readonly erroCooperacao = signal<string | null>(null);
     private readonly barraCooperacao = viewChild(BarraEscala);
     readonly civil = computed(() => this.dados().categoria === CategoriaNpcEnum.CIVIL);
+    /** Patente Equivalente na Identidade (m4-21): faixa da Categoria exibida, nunca automática. */
+    readonly patentes = computed(() =>
+        listarPatentesEquivalentes({ categoria: this.dados().categoria }));
+    readonly rotulosPatente = ROTULOS_PATENTE;
+    readonly rotuloPatenteAtual = computed(() => {
+        if (this.civil()) return "—";
+        const patente = this.dados().patenteEquivalente;
+        return patente ? ROTULOS_PATENTE[patente] : "Sem patente";
+    });
+    /** Só no ladrilho sem edição — no do mestre, o botão do `app-valor-editavel` já é o alvo. */
+    readonly dicaPatente = computed(() => {
+        if (this.civil()) return "Civil não tem Patente Equivalente";
+        return this.gerenciavel() ? ""
+            : "Patente Equivalente: limite de acesso a equipamentos e modificações";
+    });
     /** Bônus de equipamento (itens equipados do `inventario`) somado **por cima** do snapshot
      * manual de Defesa/Bloquear/Esquivar (`m4-20`) — nunca escrito de volta na ficha, mesmo
      * padrão "manual + equipamento" de `calcularBonusDefesaEquipamento` no agente. */
@@ -95,6 +121,12 @@ export class NpcIdentidade {
      * foi de rede, não de validação (decisão 2, m4-16). */
     readonly violacoesNivel = computed(() => this.edicao.violacoes()
         .filter((violacao) => violacao.startsWith("nível:")));
+    /** Patente que deixa item modificado fora do limite: diz qual item/regra (m4-21). */
+    readonly violacoesPatente = computed(() => this.edicao.violacoes()
+        .filter((violacao) => violacao.startsWith("inventário:")
+            || violacao.startsWith("patente equivalente:")));
+    /** Troca de Categoria recusada por algo que o bloco Atributos não corrige (m4-21). */
+    readonly violacoesCategoria = signal<readonly string[]>([]);
 
     constructor() {
         effect(() => this.corSelecionada.setValue(this.ficha()?.cor ?? this.tema.accentEfetivo(),
@@ -134,10 +166,46 @@ export class NpcIdentidade {
                 identidadeNarrativa: { ...ficha.dados.identidadeNarrativa, funcao: valor } } }));
     }
 
+    /**
+     * Categoria só se edita aqui (m4-21). Se a ficha continua válida com a Categoria nova, salva
+     * na hora (patente fora da faixa sai junto); se Competências/atributos deixam de fechar, abre
+     * o bloco Atributos com a Categoria nova no rascunho em vez de um PUT que seria rejeitado.
+     */
     confirmarCategoria(valor: string): void {
         const categoria = valor as CategoriaNpcEnum;
-        void this.formulario.confirmarAvulso("categoria",
-            (ficha) => ({ ...ficha, dados: { ...ficha.dados, categoria } }));
+        const salva = this.edicao.ficha();
+        this.violacoesCategoria.set([]);
+        if (!salva || categoria === salva.dados.categoria) {
+            this.formulario.cancelarAvulso(); return;
+        }
+        const mutar = (ficha: NonNullable<typeof salva>) =>
+            ({ ...ficha, dados: aplicarCategoriaNpc(ficha.dados, categoria) });
+        const violacoes = validarFichaNpc(mutar(salva).dados).violacoes;
+        if (violacoes.length === 0) {
+            void this.formulario.confirmarAvulso("categoria", mutar); return;
+        }
+        this.formulario.cancelarAvulso();
+        // Habilidades/inventário não se corrigem no bloco Atributos: abrir o bloco deixaria um
+        // rascunho impossível de salvar. Mostra o motivo e mantém a Categoria salva.
+        const bloqueantes = violacoes.filter((violacao) => !corrigivelEmAtributos(violacao));
+        if (bloqueantes.length > 0) {
+            const rotulo = obterReferenciaCategoria({ categoria }).rotulo;
+            this.violacoesCategoria.set(bloqueantes.map((violacao) =>
+                `Para mudar para ${rotulo}, ajuste antes — ${violacao}`));
+            return;
+        }
+        this.formulario.iniciarTrocaCategoria(categoria);
+    }
+
+    /** Vazio = "Sem patente" (ausência da chave no contrato); faixa validada pelo motor. */
+    confirmarPatente(valor: string): void {
+        const patente = (valor || null) as PatenteEnum | null;
+        if (patente === (this.edicao.ficha()?.dados.patenteEquivalente ?? null)) {
+            this.formulario.cancelarAvulso(); return;
+        }
+        void this.formulario.confirmarAvulso("patenteEquivalente", (ficha) => ({ ...ficha,
+            dados: patente ? { ...ficha.dados, patenteEquivalente: patente }
+                : removerPatenteNpc(ficha.dados) }));
     }
 
     /** Sem clamp de faixa — um nível fora de 0–20 chega ao PUT e `validarFichaNpc` rejeita,

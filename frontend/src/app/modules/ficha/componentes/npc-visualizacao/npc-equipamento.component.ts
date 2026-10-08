@@ -1,14 +1,16 @@
 import { Component, ElementRef, computed, effect, inject, input, signal, viewChild } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormControl, ReactiveFormsModule } from "@angular/forms";
-import { CategoriaNpcEnum, ItemCategoriaEnum, PatenteEnum } from "@contratados-rpg/shared/enums";
+import { CategoriaNpcEnum, ItemCategoriaEnum } from "@contratados-rpg/shared/enums";
 import {
     CATALOGO_CATEGORIAS, CATALOGO_ITENS, calcularStatItem, listarModificacoesDisponiveis,
     verificarConflitoModificacao, resolverDadosItem, ehEscudo,
     type CarrinhoItemDto, type ItemCatalogo, type ModificacaoDados,
     type StatItemDto,
 } from "@contratados-rpg/shared/regras/compras";
-import { CATEGORIAS_VETADAS_NPC_CIVIL, listarPatentesEquivalentes } from "@contratados-rpg/shared/regras/npc";
+import {
+    CATEGORIAS_VETADAS_NPC_CIVIL, contarEmpilhamentosModificacoes, obterLimiteModificacoesNpc,
+} from "@contratados-rpg/shared/regras/npc";
 import { Icone, type IconeNome } from "../../../../shared/icone/icone.component";
 import { OverflowFade } from "../../../../shared/overflow-fade/overflow-fade.directive";
 import { Tooltip } from "../../../../shared/tooltip/tooltip.directive";
@@ -17,7 +19,6 @@ import { BotaoIcone } from "../../../../shared/ui/botao-icone/botao-icone.compon
 import { Chip } from "../../../../shared/ui/chip/chip.component";
 import { EstadoVazio } from "../../../../shared/ui/estado-vazio/estado-vazio.component";
 import { Campo } from "../../../../shared/ui/campo/campo.component";
-import { Cartao } from "../../../../shared/ui/cartao/cartao.component";
 import { StepInput } from "../../../../shared/ui/stepper/step-input.component";
 import { Stat } from "../../../../shared/ui/stat/stat.component";
 import { montarResistencias } from "@contratados-rpg/shared/regras/agente";
@@ -25,6 +26,7 @@ import { NpcEdicaoFormulario } from "../../npc-edicao-formulario.service";
 import { NpcRolagemService } from "../../npc-rolagem.service";
 import { NpcBlocoAcoes } from "./npc-bloco-acoes.component";
 import { ROTULOS_PATENTE } from "../../../simulacao/rotulos";
+import type { FichaNpcRecuperadaDto } from "@contratados-rpg/shared/dtos/ficha";
 import { validarFormula } from "@contratados-rpg/shared/regras/rolagem";
 
 /** Ícone de categoria — mesma tradução local de `guia-equipamento-loja`/`ficha-inventario`. */
@@ -62,6 +64,7 @@ interface ItemEquipamentoVM {
     readonly pesoTexto: string;
     readonly quantidade: number;
     readonly stat: string | null;
+    readonly modsUsados: number;
     readonly ehProtecao: boolean;
     readonly equipado: boolean;
     readonly ehArma: boolean;
@@ -73,10 +76,12 @@ interface ItemEquipamentoVM {
 }
 
 /**
- * Equipamento do NPC (`m4-20`): Patente Equivalente (restrita à faixa da `categoria`, Guia —
- * "Patente Equivalente") + inventário (`CarrinhoItemDto[]`, reusa o contrato do agente sem o
- * envelope `FichaInventarioDto` — NPC não tem amplificadores). Mesmo padrão de bloco de
- * `NpcHabilidadesLista` (lápis no cabeçalho, `NpcBlocoAcoes`, rascunho via `NpcEdicaoFormulario`).
+ * Equipamento do NPC (`m4-20`; layout do inventário do Jogador desde a `m4-21`): inventário
+ * (`CarrinhoItemDto[]`, reusa o contrato do agente sem o envelope `FichaInventarioDto` — NPC não
+ * tem amplificadores). A Patente Equivalente é escolhida na Identidade; aqui só limita as
+ * modificações. Mesmo padrão de bloco de `NpcHabilidadesLista` (lápis no cabeçalho,
+ * `NpcBlocoAcoes`, rascunho via `NpcEdicaoFormulario`); "+ Adicionar itens" abre o bloco sozinho.
+ * Equipar/guardar Proteção fora do bloco salva na hora, como o toggle do Jogador.
  *
  * **Nenhuma regra de jogo vive aqui**: dano/resistência/bônus vêm de `calcularStatItem`
  * (`shared/regras/compras`), a mesma função do agente — o limite de modificação por patente e o
@@ -86,7 +91,7 @@ interface ItemEquipamentoVM {
 @Component({
     selector: "app-npc-equipamento",
     imports: [ReactiveFormsModule, Icone, OverflowFade, Tooltip, Botao, BotaoIcone, Chip,
-        EstadoVazio, NpcBlocoAcoes, Campo, Cartao, StepInput, Stat],
+        EstadoVazio, NpcBlocoAcoes, Campo, StepInput, Stat],
     templateUrl: "./npc-equipamento.component.html",
     styleUrls: ["./npc-visualizacao.scss", "./npc-equipamento.component.scss"],
 })
@@ -104,15 +109,26 @@ export class NpcEquipamento {
             || violacao.startsWith("patente equivalente:")));
 
     readonly ehCivil = computed(() => this.dados().categoria === CategoriaNpcEnum.CIVIL);
-    readonly faixaPatente = computed(() =>
-        listarPatentesEquivalentes({ categoria: this.dados().categoria }));
     readonly patenteAtual = computed(() => this.dados().patenteEquivalente ?? null);
+    readonly limite = computed(() =>
+        obterLimiteModificacoesNpc({ patenteEquivalente: this.patenteAtual() ?? undefined }));
+    readonly textoLimite = computed(() => {
+        if (this.ehCivil()) return "Civil: sem Proteções, Explosivos ou modificações.";
+        const limite = this.limite();
+        if (!limite) return "Sem Patente Equivalente — defina na Identidade para modificar itens.";
+        return `${ROTULOS_PATENTE[limite.patente]}: até ${limite.maxModificacoes} modificações `
+            + `por item, ${limite.maxEmpilhamentos} empilhamentos cada.`;
+    });
+    /** Item com o painel "Modificar" aberto e item com o ✕ pedindo confirmação (um de cada). */
+    readonly modificandoIndice = signal<number | null>(null);
+    readonly confirmandoRemocao = signal<number | null>(null);
+    /** Falha de equipar/guardar fora do bloco — não há campo aberto para segurar o erro. */
+    readonly erroEquipar = signal<string | null>(null);
     readonly resistencias = computed(() => montarResistencias({
         itens: this.dados().inventario ?? [], amplificadores: [],
     }));
     readonly podeRolar = computed(() => this.gerenciavel() && !this.formulario.ocupado()
         && !this.formulario.edicao.salvando());
-    private readonly controlesModificacao = new Map<number, FormControl<string>>();
 
     /** Categorias oferecidas no painel "Adicionar item" — vetadas (Civil) somem da lista. */
     protected readonly categoriasVetadas = computed(() =>
@@ -138,6 +154,8 @@ export class NpcEquipamento {
                 if (elemento) setTimeout(() => elemento.focus());
             } else {
                 this.catalogoAberto.set(false);
+                this.modificandoIndice.set(null);
+                this.confirmandoRemocao.set(null);
             }
         });
     }
@@ -162,7 +180,7 @@ export class NpcEquipamento {
             .map(({ item, categoria }) => ({
             item, categoria,
             custoTexto: `$${item.custo.toLocaleString("pt-BR")}`,
-            pesoTexto: `${this.formatarPeso(item.peso)} slot${item.peso !== 1 ? "s" : ""}`,
+            pesoTexto: this.textoSlots(item.peso),
             stat: this.formatarStatCatalogo(item),
         }));
     });
@@ -178,9 +196,10 @@ export class NpcEquipamento {
             return {
                 indice, nome: item.apelido ?? item.nome, categoria: item.categoria,
                 categoriaRotulo: this.rotuloCategoria(item.categoria),
-                pesoTexto: this.formatarPeso(item.peso * item.quantidade),
+                pesoTexto: this.textoSlots(item.peso * item.quantidade),
                 quantidade: item.quantidade,
                 stat: this.formatarStat(stat),
+                modsUsados: contarEmpilhamentosModificacoes(item),
                 ehProtecao: item.categoria === ItemCategoriaEnum.PROTECOES,
                 equipado: item.equipado === true,
                 ehArma: !!stat?.dano || ehEscudo(item),
@@ -201,13 +220,19 @@ export class NpcEquipamento {
         return CATALOGO_CATEGORIAS.find((entrada) => entrada.categoria === categoria)?.rotulo ?? "";
     }
 
-    /** Rótulo humano; o código do enum permanece intacto no documento salvo. */
-    rotuloPatente(patente: PatenteEnum): string {
-        return ROTULOS_PATENTE[patente];
+    /** "Modificar" só com patente escolhida e algo a fazer (adicionar ou ajustar). */
+    podeModificar(item: ItemEquipamentoVM): boolean {
+        return !this.ehCivil() && this.limite() !== null
+            && (item.modsDisponiveis.length > 0 || item.modsAtivas.length > 0);
     }
 
-    private formatarPeso(valor: number): string {
-        return valor % 1 === 0 ? String(valor) : valor.toFixed(1);
+    alternarModificar(indice: number): void {
+        this.modificandoIndice.update((atual) => atual === indice ? null : indice);
+    }
+
+    private textoSlots(valor: number): string {
+        const numero = valor % 1 === 0 ? String(valor) : valor.toFixed(1);
+        return `${numero} slot${valor !== 1 ? "s" : ""}`;
     }
 
     private formatarStatCatalogo(item: ItemCatalogo): string | null {
@@ -233,27 +258,6 @@ export class NpcEquipamento {
         this.formulario.formulario.controls.inventario.setValue(inventario);
     }
 
-    /** Controle reativo de seleção por item; a escolha é aplicada ao rascunho e limpa. */
-    controleModificacao(indice: number): FormControl<string> {
-        let controle = this.controlesModificacao.get(indice);
-        if (!controle) {
-            controle = new FormControl("", { nonNullable: true });
-            this.controlesModificacao.set(indice, controle);
-        }
-        if (this.formulario.edicao.salvando()) controle.disable({ emitEvent: false });
-        else controle.enable({ emitEvent: false });
-        return controle;
-    }
-
-    /** Delega a aplicação da seleção, inclusive a opção vazia, sem indexar item inexistente. */
-    selecionarModificacao(indice: number): void {
-        const controle = this.controleModificacao(indice);
-        const modificacao = this.itensVM()[indice]?.modsDisponiveis
-            .find((opcao) => opcao.nome === controle.value);
-        if (modificacao) this.adicionarModificacao(indice, modificacao);
-        controle.setValue("");
-    }
-
     /** Lápis do cabeçalho — liga o modo de edição do bloco (padrão de `NpcHabilidadesLista`). */
     iniciar(): void {
         if (this.gerenciavel()) this.formulario.iniciar("equipamento");
@@ -274,14 +278,14 @@ export class NpcEquipamento {
         }
     }
 
-    /** Clicar na patente já selecionada desmarca — ausência = sem modificação permitida. */
-    selecionarPatente(patente: PatenteEnum): void {
-        if (!this.gerenciavel() || !this.modoEdicao() || this.formulario.edicao.salvando()) return;
-        const controle = this.formulario.formulario.controls.patenteEquivalente;
-        controle.setValue(controle.value === patente ? null : patente);
-    }
-
+    /** "+ Adicionar itens" também abre o bloco — adicionar não exige o lápis antes. */
     alternarCatalogo(): void {
+        if (!this.gerenciavel() || this.formulario.edicao.salvando()) return;
+        if (!this.modoEdicao()) {
+            this.iniciar();
+            if (this.modoEdicao()) this.catalogoAberto.set(true);
+            return;
+        }
         this.catalogoAberto.update((atual) => !atual);
     }
 
@@ -297,6 +301,8 @@ export class NpcEquipamento {
     }
 
     removerItem(indice: number): void {
+        this.confirmandoRemocao.set(null);
+        this.modificandoIndice.set(null);
         this.alterarInventario((this.dados().inventario ?? []).filter((_, i) => i !== indice));
     }
 
@@ -307,10 +313,25 @@ export class NpcEquipamento {
     }
 
     /** Só Proteções equipadas somam Esquiva/Bloqueio/Defesa/resistência
-     * (`shared/regras/agente`). */
-    alternarEquipado(indice: number): void {
-        this.alterarInventario((this.dados().inventario ?? [])
-            .map((item, i) => i === indice ? { ...item, equipado: !item.equipado } : item));
+     * (`shared/regras/agente`). No bloco entra no rascunho; fora dele salva só este campo. */
+    async alternarEquipado(indice: number): Promise<void> {
+        if (!this.gerenciavel() || this.formulario.edicao.salvando()) return;
+        const alternar = (inventario: readonly CarrinhoItemDto[]) => inventario
+            .map((item, i) => i === indice ? { ...item, equipado: !item.equipado } : item);
+        if (this.modoEdicao()) {
+            this.alterarInventario(alternar(this.dados().inventario ?? []));
+            return;
+        }
+        this.erroEquipar.set(null);
+        this.formulario.editarAvulso("equiparItem");
+        if (!this.formulario.emEdicaoDe("equiparItem")) return;
+        await this.formulario.confirmarAvulso("equiparItem", (ficha: FichaNpcRecuperadaDto) =>
+            ({ ...ficha, dados: { ...ficha.dados,
+                inventario: alternar(ficha.dados.inventario ?? []) } }));
+        if (!this.formulario.emEdicaoDe("equiparItem")) return;
+        this.erroEquipar.set(this.formulario.edicao.violacoes()[0]
+            ?? this.formulario.edicao.erro() ?? "Não foi possível alterar o item.");
+        this.formulario.cancelarAvulso();
     }
 
     adicionarModificacao(indice: number, modificacao: ModificacaoDados): void {

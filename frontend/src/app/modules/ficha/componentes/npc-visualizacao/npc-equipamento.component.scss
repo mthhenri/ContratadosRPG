@@ -1,63 +1,264 @@
 @use "../../../../../styles/tema/breakpoints" as bp;
 
-// Identidade de controles e cartões pertence a shared/ui; aqui só a composição do bloco.
+// Equipamento do NPC no desenho do inventário do Jogador (`ficha-inventario`, m4-21): mesmas
+// medidas de catálogo, cartão, linha de item e stat. Botões, chips, campos e steppers são os
+// primitivos de `shared/ui`; aqui ficam só composição, tipografia da linha e os "caixas" locais
+// (receita de consumidor do Jogador, não primitivo).
 .npc-equip {
     min-width: 0;
-    &__patente,
-    &__catalogo {
-        display: grid;
-        gap: var(--space-8);
-    }
-    &__patente-opcoes,
-    &__categorias,
-    &__controles,
-    &__mods,
-    &__mod-chip {
+    font-family: var(--font-mono);
+
+    &__acoes {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
-        gap: var(--space-8);
-        min-width: 0;
+        gap: var(--space-8) var(--space-12);
     }
-    &__catalogo-gatilho {
-        justify-self: start;
+
+    &__limite {
+        font-size: 11px;
+        color: var(--text-mute);
     }
-    &__grade {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr));
-        gap: var(--space-8);
-        max-height: 360px;
-        overflow-y: auto;
-        padding: var(--space-4);
-    }
-    &__cartao {
-        min-width: 0;
-    }
-    &__item {
-        min-width: 0;
-    }
-    &__item-conteudo {
+
+    // === Catálogo (busca + categorias + grade) — `ficha-inv__catalogo` ===
+    &__catalogo {
         display: flex;
         flex-direction: column;
+        gap: 12px;
+        padding: 12px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-control);
+    }
+
+    &__categorias {
+        display: flex;
+        flex-wrap: wrap;
         gap: var(--space-8);
+    }
+
+    &__grade {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(min(210px, 100%), 1fr));
+        gap: 12px;
+        max-height: 360px;
+        margin: 0;
+        padding: 0 4px 0 0;
+        overflow-y: auto;
+        list-style: none;
+
+        @include bp.mobile {
+            max-height: none;
+            overflow-y: visible;
+            padding-right: 0;
+        }
+    }
+
+    &__cartao {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-width: 0;
+        padding: 12px;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-control);
+    }
+
+    &__cartao-nome {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text);
+    }
+
+    &__cartao-stat {
+        font-size: 11px;
+        color: var(--energy);
+    }
+
+    &__cartao-desc {
+        font-family: var(--font-sans);
+        font-size: 12px;
+        color: var(--text-dim);
+    }
+
+    &__cartao-meta {
+        font-size: 12px;
+        color: var(--text-mute);
+    }
+
+    &__cartao-adicionar {
+        margin-top: auto;
+    }
+
+    // === Lista de itens — `ficha-inv__lista`/`__item` ===
+    &__lista {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    &__item {
+        min-width: 0;
+        padding: 12px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-control);
+    }
+
+    &__item-cabecalho {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 10px 16px;
+    }
+
+    &__item-identidade {
+        flex: 1 1 auto;
         min-width: 0;
     }
-    &__mod-select {
-        flex: 1 1 180px;
+
+    &__item-nome {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--text);
+        overflow-wrap: anywhere;
     }
-    &__remover {
+
+    &__item-categoria {
+        margin-left: 8px;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-mute);
+    }
+
+    &__item-controles,
+    &__item-acoes,
+    &__item-remover {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+    }
+
+    // Stepper de quantidade compacto, como o "×N" do Jogador — o primitivo estica o campo.
+    &__item-acoes app-step-input,
+    &__mod-tag app-step-input {
+        width: 112px;
+
+        @include bp.mobile {
+            width: 136px;
+        }
+    }
+
+    &__item-controles {
+        justify-content: flex-end;
+        gap: 10px 12px;
         margin-left: auto;
     }
+
+    &__peso {
+        font-size: 12px;
+        color: var(--text-mute);
+        white-space: nowrap;
+    }
+
+    &__remover-texto {
+        font-size: 12px;
+        color: var(--text-dim);
+    }
+
+    &__tag {
+        display: inline-block;
+        margin-left: 4px;
+        padding: 1px 5px;
+        font-size: 10px;
+        white-space: nowrap;
+        color: var(--positive);
+        border: 1px solid color-mix(in srgb, var(--positive) 45%, transparent);
+        border-radius: var(--radius-compact);
+    }
+
+    &__contagem {
+        color: var(--text-mute);
+    }
+
+    // Linha "Dano X [Tipo]" + rolagens — `ficha-inv__item-stat`.
+    &__item-stat {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        margin-top: 8px;
+        font-size: 12px;
+        color: var(--energy);
+    }
+
+    &__nota-manual {
+        font-size: 11px;
+        color: var(--text-mute);
+    }
+
+    &__item-desc {
+        margin-top: 8px;
+        font-family: var(--font-sans);
+        font-size: 12px;
+        color: var(--text-dim);
+    }
+
+    // Modificações ativas e painel "Modificar" — `ficha-inv__mods-ativas`/`__mod-tag`.
+    &__mods,
+    &__mod-painel {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
+        margin-top: 10px;
+    }
+
+    &__mod-painel {
+        padding: 10px;
+        border: 1px dashed var(--border-strong);
+        border-radius: var(--radius-control);
+    }
+
+    &__mod-tag {
+        display: inline-flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 8px;
+        font-size: 11px;
+        color: var(--text);
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-control);
+    }
+
     &__resistencias {
         display: grid;
         grid-template-columns: repeat(5, minmax(0, 1fr));
         gap: var(--space-8);
+
         @include bp.mobile {
             grid-template-columns: repeat(2, minmax(0, 1fr));
         }
     }
-    // Mesma receita mobile do bloco .npc: dimensiona os controles projetados sem repintá-los.
+
+    // Mesma receita mobile do Jogador: piso de toque nos controles da linha, sem repintá-los.
     @include bp.mobile {
+        &__item-cabecalho {
+            flex-direction: column;
+        }
+
+        &__item-controles {
+            justify-content: flex-start;
+            margin-left: 0;
+        }
+
         .campo__controle,
         [app-botao] {
             min-height: bp.$alvo-toque;

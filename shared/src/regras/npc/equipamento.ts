@@ -74,7 +74,7 @@ export function obterLimiteModificacoesNpc(
  * Empilhamentos de modificação de um item — cada empilhamento conta no limite da patente,
  * conforme `LimiteModificacoesDto.maxModificacoes` ("contando cada empilhamento").
  */
-function contarEmpilhamentosModificacoes(item: CarrinhoItemDto): number {
+export function contarEmpilhamentosModificacoes(item: CarrinhoItemDto): number {
     return item.modificacoes.reduce((total, modificacao) => total + modificacao.empilhamentos, 0);
 }
 

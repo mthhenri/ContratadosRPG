@@ -36,8 +36,9 @@ export class NpcVisualizacao {
     readonly imagemRemovida = output<void>();
     readonly ficha = computed(() => this.edicao.rascunho() ?? this.edicao.ficha());
     readonly dados = computed(() => this.ficha()!.dados);
-    readonly aba = signal("habilidades");
-    readonly abas = ["habilidades", "equipamento", "conduta", "sanidade"] as const;
+    readonly aba = signal("conduta");
+    /** Ordem pedida pelo autor (m4-21): Conduta abre por padrão. */
+    readonly abas = ["conduta", "equipamento", "habilidades", "sanidade"] as const;
     readonly camposConduta = [
         { chave: "gatilhosFuga", nome: "Gatilhos de fuga" },
         { chave: "prioridadesAlvo", nome: "Prioridades de alvo" },

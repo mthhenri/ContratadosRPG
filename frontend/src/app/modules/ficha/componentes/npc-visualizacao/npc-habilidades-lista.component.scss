@@ -1,0 +1,113 @@
+@use "tema/breakpoints" as bp;
+
+// Botões "＋ Da biblioteca"/"＋ Personalizada" (m4-21) — mesmo agrupamento de
+// `ficha-habilidades__add-grupo` do Jogador: juntos à direita da régua; no celular descem para uma
+// linha própria em largura total, com alvo de toque.
+.npc-habilidades__adicionar {
+    display: flex;
+    flex: none;
+    gap: 6px;
+
+    [app-botao] {
+        white-space: nowrap;
+    }
+
+    @include bp.mobile {
+        flex-basis: 100%;
+        flex-wrap: wrap;
+        order: 1;
+
+        [app-botao] {
+            flex: 1 1 auto;
+            min-height: bp.$alvo-toque;
+        }
+    }
+}
+
+// Modal da Biblioteca de Referência: filtro por Categoria e grade de cartões, mesma régua de
+// colunas da lista de habilidades (`npc-lista__itens`).
+.npc-biblioteca {
+    display: grid;
+    gap: var(--space-12);
+    min-width: 0;
+
+    &__filtro {
+        justify-self: start;
+        max-width: 100%;
+    }
+
+    // Bloco extenso limita a própria altura (convenção do `app-modal`, como `ficha-inv__grade`):
+    // cabeçalho, filtro e rodapé "Concluir" ficam sempre à vista; só a grade rola, com o fade
+    // de `appOverflowFade` nas bordas.
+    &__grade {
+        --fade-topo: 0px;
+        --fade-base: 0px;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: var(--space-8);
+        max-height: max(240px, calc(100dvh - 340px));
+        margin: 0;
+        padding: 0 4px 0 0;
+        overflow-y: auto;
+        list-style: none;
+
+        &.overflow-fade--topo,
+        &.overflow-fade--base {
+            mask-image: linear-gradient(
+                to bottom,
+                transparent 0,
+                #000 var(--fade-topo),
+                #000 calc(100% - var(--fade-base)),
+                transparent 100%
+            );
+        }
+
+        &.overflow-fade--topo {
+            --fade-topo: 24px;
+        }
+
+        &.overflow-fade--base {
+            --fade-base: 24px;
+        }
+
+        @include bp.mobile {
+            grid-template-columns: 1fr;
+            max-height: max(220px, calc(100dvh - 300px));
+        }
+    }
+
+    &__cartao {
+        height: 100%;
+    }
+
+    &__corpo {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-8);
+        height: 100%;
+    }
+
+    &__adicionar {
+        align-self: flex-start;
+        margin-top: auto;
+
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+    }
+
+    &__estado {
+        display: grid;
+        gap: var(--space-4);
+        min-width: 0;
+    }
+
+    &__acoes {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-8);
+        width: 100%;
+    }
+}

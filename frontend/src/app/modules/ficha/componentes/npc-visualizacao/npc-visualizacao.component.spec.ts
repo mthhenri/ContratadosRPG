@@ -1,7 +1,8 @@
 import { TestBed } from "@angular/core/testing";
 import { By } from "@angular/platform-browser";
 import { of, Subject, throwError } from "rxjs";
-import { CategoriaNpcEnum } from "@contratados-rpg/shared/enums";
+import { CategoriaNpcEnum, PatenteEnum } from "@contratados-rpg/shared/enums";
+import { listarBibliotecaHabilidadesNpc } from "@contratados-rpg/shared/regras/npc";
 import { TemaService } from "../../../../core/services/tema.service";
 import { FichaService } from "../../ficha.service";
 import { FichaEdicaoNpcService } from "../../ficha-edicao-npc.service";
@@ -15,8 +16,7 @@ import { NpcRolagemService } from "../../npc-rolagem.service";
 const aguardarMicrotarefas = () => new Promise((resolve) => setTimeout(resolve));
 
 describe("NpcVisualizacao", () => {
-    function montar(gerenciavel: boolean) {
-        const ficha = criarFichaNpcTeste();
+    function montar(gerenciavel: boolean, ficha = criarFichaNpcTeste()) {
         const api = { alterarFichaNpc: vi.fn((_id, alteracao) => of({ ...ficha, ...alteracao })) };
         TestBed.configureTestingModule({ imports: [NpcVisualizacao], providers: [
             FichaEdicaoNpcService, NpcEdicaoFormulario,
@@ -36,11 +36,13 @@ describe("NpcVisualizacao", () => {
     }
 
     it("Civil conserva Vida e snapshots, sem controles de Energia ou gestão para leitor", () => {
-        const { raiz } = montar(false);
+        const { raiz, pagina, fixture } = montar(false);
         expect(raiz.textContent).toContain("Sem Energia");
         expect(raiz.textContent).toContain("77");
         expect(raiz.querySelectorAll("input, textarea, select")).toHaveLength(0);
-        expect(raiz.textContent).not.toContain("Adicionar habilidade");
+        pagina.aba.set("habilidades"); fixture.detectChanges();
+        expect(raiz.textContent).not.toContain("＋ Personalizada");
+        expect(raiz.textContent).not.toContain("＋ Da biblioteca");
         expect(raiz.querySelector('app-npc-atributos [aria-label="Vigor — DT 17"]')).not.toBeNull();
     });
 
@@ -66,7 +68,12 @@ describe("NpcVisualizacao", () => {
                 expect(ladrilho.querySelector(".ficha-atributo__valor")?.textContent?.trim())
                     .toBe(String(valores[indice]));
             });
-            expect(card.querySelector("app-stat, app-campo")).toBeNull();
+            expect(card.querySelector("app-campo")).toBeNull();
+            // Faixa de resumo (m4-21) no lugar de Proficiência/Maestria; Civil sem Competências.
+            expect(Array.from(card.querySelectorAll(".npc-atributos__resumo app-stat"))
+                .map((stat) => stat.textContent?.replace(/\s+/g, " ").trim()))
+                .toEqual(["DT 10 + Nível + ATR×2", "Competências Nenhuma", "Modificador —"]);
+            expect(card.querySelector(".ficha-atributo__competencia")).toBeNull();
             expect(card.querySelector(".ficha-atributo__rolar, .ficha-atributo__estrela, " +
                 ".ficha-atributo__maestria, .ficha-atributo__lesao, " +
                 ".ficha-atributo__dados-badge")).toBeNull();
@@ -216,7 +223,7 @@ describe("NpcVisualizacao", () => {
             const { raiz } = montar(true);
             const abas = Array.from(raiz.querySelectorAll("button[app-aba]"));
             expect(abas.map((aba) => aba.textContent?.trim()))
-                .toEqual(["Habilidades", "Equipamento", "Conduta", "Sanidade"]);
+                .toEqual(["Conduta", "Equipamento", "Habilidades", "Sanidade"]);
             for (const aba of abas) {
                 expect(aba.querySelector("app-icone")).not.toBeNull();
                 expect(aba.querySelector(".abas__rotulo")).not.toBeNull();
@@ -224,7 +231,8 @@ describe("NpcVisualizacao", () => {
         });
 
         it("ícones por item de Habilidades só aparecem depois do lápis do cabeçalho", () => {
-            const { raiz, edicao, fixture } = montar(true);
+            const { raiz, edicao, fixture, pagina } = montar(true);
+            pagina.aba.set("habilidades");
             const ficha = criarFichaNpcTeste();
             edicao.definirFicha({ ...ficha, dados: { ...ficha.dados,
                 categoria: CategoriaNpcEnum.VETERANO, habilidades: [{
@@ -378,7 +386,8 @@ describe("NpcVisualizacao", () => {
         });
 
         it("Habilidades sem \"Concluir\": Salvar com item inválido reabre o item", async () => {
-            const { raiz, fixture, formulario, api } = montar(true);
+            const { raiz, fixture, formulario, api, pagina } = montar(true);
+            pagina.aba.set("habilidades"); fixture.detectChanges();
             const lista = fixture.debugElement.query(By.directive(NpcHabilidadesLista))
                 .componentInstance as NpcHabilidadesLista;
             lista.adicionar(); fixture.detectChanges();
@@ -392,10 +401,168 @@ describe("NpcVisualizacao", () => {
 
         it("Esc numa lista fora de edição não cancela outro bloco aberto", () => {
             const { raiz, pagina, fixture, formulario } = montar(true);
+            pagina.aba.set("habilidades");
             pagina.iniciar("atributos"); fixture.detectChanges();
             raiz.querySelector(".npc-lista")!.dispatchEvent(
                 new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
             expect(formulario.grupo()).toBe("atributos");
+        });
+    });
+
+    describe("revisão visual e de usabilidade (m4-21)", () => {
+        function elite() {
+            const ficha = criarFichaNpcTeste();
+            return { ...ficha, dados: { ...ficha.dados, categoria: CategoriaNpcEnum.ELITE,
+                atributos: { ...ficha.dados.atributos, luta: 3, pontaria: 2 },
+                competencias: ["destreza", "forca", "vigor", "intelecto"] as const,
+                patenteEquivalente: PatenteEnum.FORCA_TAREFA,
+                habilidades: listarBibliotecaHabilidadesNpc({ categoria: CategoriaNpcEnum.ELITE })
+                    .slice(0, 4).map(({ habilidade }) => habilidade) } };
+        }
+
+        it("Competência marca o ladrilho com o dado e o resumo conta X/Y", () => {
+            const { raiz } = montar(false, elite() as never);
+            const marcados = Array.from(raiz.querySelectorAll(
+                "app-npc-atributos .ficha-atributo--competencia .ficha-atributo__abrev"))
+                .map((sigla) => sigla.textContent?.trim());
+            expect(marcados).toEqual(["DES", "FOR", "VIG", "INT"]);
+            expect(raiz.querySelector(".ficha-atributo__competencia-selo")?.textContent?.trim())
+                .toBe("+2D6");
+            expect(raiz.querySelector(".npc-atributos__resumo")?.textContent).toContain("4/4");
+        });
+
+        it("bloco Atributos não edita Categoria; Competência alterna no próprio ladrilho", () => {
+            const { raiz, pagina, fixture, formulario } = montar(true, elite() as never);
+            pagina.iniciar("atributos"); fixture.detectChanges();
+            const card = raiz.querySelector("app-npc-atributos")!;
+            expect(card.querySelector('[aria-label="Categoria do rascunho"]')).toBeNull();
+            expect(card.querySelector("app-npc-competencias")).toBeNull();
+            const luta = card.querySelector<HTMLButtonElement>('[aria-label="Competência em Luta"]')!;
+            expect(luta.disabled).toBe(true); // limite de 4 já atingido
+            card.querySelector<HTMLButtonElement>('[aria-label="Competência em Força"]')!.click();
+            fixture.detectChanges();
+            expect(formulario.formulario.controls.competencias.value)
+                .toEqual(["destreza", "vigor", "intelecto"]);
+            expect(luta.disabled).toBe(false);
+            luta.click(); fixture.detectChanges();
+            expect(formulario.formulario.controls.competencias.value)
+                .toEqual(["destreza", "vigor", "intelecto", "luta"]);
+        });
+
+        it("Patente fica na Identidade e salva só esse campo", async () => {
+            const { raiz, fixture, api, pagina } = montar(true, elite() as never);
+            expect(raiz.querySelector("app-npc-identidade")?.textContent).toContain("Força Tarefa");
+            pagina.formulario.editarAvulso("patenteEquivalente"); fixture.detectChanges();
+            const seletor = raiz.querySelector<HTMLSelectElement>(
+                'select[aria-label="Patente Equivalente"]')!;
+            expect(Array.from(seletor.options).map((opcao) => opcao.textContent?.trim()))
+                .toEqual(["Sem patente", "Força Tarefa", "Força Tarefa Especial",
+                    "Operações Especiais"]);
+            seletor.value = PatenteEnum.OPERACOES_ESPECIAIS;
+            seletor.dispatchEvent(new Event("change"));
+            await aguardarMicrotarefas();
+            expect(api.alterarFichaNpc).toHaveBeenCalledTimes(1);
+            expect(api.alterarFichaNpc.mock.calls[0][1].dados.patenteEquivalente)
+                .toBe(PatenteEnum.OPERACOES_ESPECIAIS);
+        });
+
+        it("Civil mostra Patente \"—\" sem edição", () => {
+            const { raiz } = montar(true);
+            expect(raiz.querySelector('[aria-label="Editar patente equivalente"]')).toBeNull();
+            expect(raiz.querySelector("app-npc-identidade")?.textContent).toContain("Patente");
+        });
+
+        it("troca que invalida só Competências abre Atributos com a nova e salva num PUT",
+            async () => {
+                const { identidade, formulario, edicao, api, fixture, raiz } =
+                    montar(true, elite() as never);
+                formulario.editarAvulso("categoria");
+                identidade.confirmarCategoria(CategoriaNpcEnum.VETERANO);
+                fixture.detectChanges();
+                expect(api.alterarFichaNpc).not.toHaveBeenCalled();
+                expect(formulario.grupo()).toBe("atributos");
+                expect(edicao.rascunho()?.dados.categoria).toBe(CategoriaNpcEnum.VETERANO);
+                // Força Tarefa não está na faixa do Veterano: sai junto com a troca.
+                expect(edicao.rascunho()?.dados.patenteEquivalente).toBeUndefined();
+                // O blur do <select> que sai do DOM não pode desfazer o bloco recém-aberto.
+                formulario.cancelarAvulso();
+                expect(formulario.grupo()).toBe("atributos");
+                raiz.querySelector<HTMLButtonElement>('[aria-label="Competência em Força"]')!
+                    .click();
+                fixture.detectChanges();
+                expect(edicao.violacoes()).toEqual([]);
+                expect(await formulario.salvar()).toBe(true);
+                const gravado = api.alterarFichaNpc.mock.calls[0][1].dados;
+                expect(gravado.categoria).toBe(CategoriaNpcEnum.VETERANO);
+                expect(gravado.competencias).toEqual(["destreza", "vigor", "intelecto"]);
+                expect("patenteEquivalente" in gravado).toBe(false);
+            });
+
+        it("troca que invalida habilidades não abre bloco sem saída — explica na Identidade",
+            () => {
+                const { identidade, formulario, edicao, api, fixture, raiz } =
+                    montar(true, elite() as never);
+                formulario.editarAvulso("categoria");
+                identidade.confirmarCategoria(CategoriaNpcEnum.LENDARIO);
+                fixture.detectChanges();
+                expect(api.alterarFichaNpc).not.toHaveBeenCalled();
+                expect(formulario.grupo()).toBeNull();
+                expect(edicao.rascunho()).toBeNull();
+                expect(raiz.querySelector("app-npc-identidade [role=alert]")?.textContent)
+                    .toContain("Para mudar para Lendário, ajuste antes — habilidades:");
+            });
+
+        it("Patente que estoura modificação de item explica qual item", async () => {
+            const ficha = elite();
+            const { formulario, fixture, raiz, api } = montar(true, { ...ficha, dados: {
+                ...ficha.dados, inventario: [{ nome: "Colete de Kevlar",
+                    categoria: "PROTECOES" as never, custo: 500, peso: 2, quantidade: 1,
+                    guardada: false, modificacoes: [{ nome: "Resistente", empilhamentos: 2 }] }],
+            } } as never);
+            formulario.editarAvulso("patenteEquivalente"); fixture.detectChanges();
+            const seletor = raiz.querySelector<HTMLSelectElement>(
+                'select[aria-label="Patente Equivalente"]')!;
+            seletor.value = "";
+            seletor.dispatchEvent(new Event("change"));
+            await aguardarMicrotarefas(); fixture.detectChanges();
+            expect(api.alterarFichaNpc).not.toHaveBeenCalled();
+            expect(raiz.querySelector("app-npc-identidade")?.textContent)
+                .toContain("modificação sem patente equivalente escolhida");
+        });
+
+        it("cor da ficha é escolhida pelo retrato; sem faixa de rodapé", () => {
+            const { raiz } = montar(true);
+            expect(raiz.querySelector(
+                '.npc-identidade__avatar input[type="color"][aria-label="Cor de identidade da ficha"]'))
+                .not.toBeNull();
+            expect(raiz.querySelector(".npc-identidade__rodape")).toBeNull();
+        });
+
+        it("\"＋ Personalizada\" abre item em branco no rascunho, já em edição", () => {
+            const { raiz, pagina, fixture, formulario } = montar(true, elite() as never);
+            pagina.aba.set("habilidades"); fixture.detectChanges();
+            Array.from(raiz.querySelectorAll<HTMLButtonElement>("button"))
+                .find((botao) => botao.textContent?.trim() === "＋ Personalizada")!.click();
+            fixture.detectChanges();
+            expect(formulario.grupo()).toBe("habilidades");
+            expect(formulario.habilidades.length).toBe(5);
+            expect(raiz.querySelector(".npc-lista__item--editando input")).not.toBeNull();
+        });
+
+        it("\"Da biblioteca\" filtra pela Categoria e adiciona ao rascunho do bloco", () => {
+            const { raiz, pagina, fixture, formulario } = montar(true, elite() as never);
+            pagina.aba.set("habilidades"); fixture.detectChanges();
+            const lista = fixture.debugElement.query(By.directive(NpcHabilidadesLista))
+                .componentInstance as NpcHabilidadesLista;
+            lista.abrirBiblioteca(); fixture.detectChanges();
+            expect(lista.categoriaBiblioteca()).toBe(CategoriaNpcEnum.ELITE);
+            expect(lista.modelosBiblioteca()).toHaveLength(6);
+            expect(lista.naLista("Condicionamento Extremo")).toBe(true);
+            lista.adicionarDaBiblioteca(lista.modelosBiblioteca()[5].habilidade);
+            fixture.detectChanges();
+            expect(formulario.grupo()).toBe("habilidades");
+            expect(formulario.habilidades.length).toBe(5);
+            expect(raiz.textContent).toContain("Pressão Interrogatória");
         });
     });
 });

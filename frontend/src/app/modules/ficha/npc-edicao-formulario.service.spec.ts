@@ -1,9 +1,9 @@
 import { TestBed } from "@angular/core/testing";
 import { of, throwError } from "rxjs";
-import { HabilidadeTipoNpcEnum, CategoriaNpcEnum } from "@contratados-rpg/shared/enums";
+import { HabilidadeTipoNpcEnum, CategoriaNpcEnum, PatenteEnum } from "@contratados-rpg/shared/enums";
 import { FichaService } from "./ficha.service";
 import { FichaEdicaoNpcService } from "./ficha-edicao-npc.service";
-import { NpcEdicaoFormulario } from "./npc-edicao-formulario.service";
+import { NpcEdicaoFormulario, aplicarCategoriaNpc } from "./npc-edicao-formulario.service";
 import { criarFichaNpcTeste } from "./testing/ficha-npc.fixture";
 
 describe("NpcEdicaoFormulario", () => {
@@ -202,5 +202,39 @@ describe("NpcEdicaoFormulario", () => {
         expect(formulario.grupo()).toBeNull();
         expect(formulario.bloqueadoPorOutro("atributos")).toBe(true);
         expect(formulario.tooltipBloqueio("atributos")).toContain("nome");
+    });
+});
+
+describe("aplicarCategoriaNpc (m4-21)", () => {
+    const dados = { ...criarFichaNpcTeste().dados, categoria: CategoriaNpcEnum.ELITE,
+        patenteEquivalente: PatenteEnum.FORCA_TAREFA,
+        competencias: ["destreza", "forca"] as ("destreza" | "forca")[] };
+
+    it("tira patente fora da faixa nova e deixa competências para o mestre decidir", () => {
+        const resultado = aplicarCategoriaNpc(dados, CategoriaNpcEnum.VETERANO);
+        expect(resultado.categoria).toBe(CategoriaNpcEnum.VETERANO);
+        expect("patenteEquivalente" in resultado).toBe(false);
+        expect(resultado.competencias).toEqual(["destreza", "forca"]);
+        expect(aplicarCategoriaNpc(dados, CategoriaNpcEnum.ELITE).patenteEquivalente)
+            .toBe(PatenteEnum.FORCA_TAREFA);
+    });
+
+    it("cancelarAvulso sem valor avulso aberto não descarta o bloco em edição", () => {
+        TestBed.resetTestingModule();
+        const ficha = criarFichaNpcTeste();
+        TestBed.configureTestingModule({ providers: [FichaEdicaoNpcService, NpcEdicaoFormulario,
+            { provide: FichaService, useValue: { alterarFichaNpc: vi.fn() } }] });
+        TestBed.inject(FichaEdicaoNpcService).definirFicha(ficha);
+        const formulario = TestBed.inject(NpcEdicaoFormulario);
+        formulario.iniciar("atributos");
+        formulario.cancelarAvulso();
+        expect(formulario.grupo()).toBe("atributos");
+        expect(formulario.edicao.rascunho()).not.toBeNull();
+    });
+
+    it("Civil zera Competências — a única lista válida — e tira a patente", () => {
+        const resultado = aplicarCategoriaNpc(dados, CategoriaNpcEnum.CIVIL);
+        expect(resultado.competencias).toEqual([]);
+        expect(resultado.patenteEquivalente).toBeUndefined();
     });
 });

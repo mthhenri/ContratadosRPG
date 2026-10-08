@@ -12,6 +12,17 @@
 > `app-atributo-ficha`. Indicador fixo “Rolagens ocultas” no cabeçalho; bandeja e
 > histórico privados só para gestão. Competências não alteram o atributo nem a DT.
 > P-100 já adequou zero/redistribuição na criação. [Gates M4-19](../reviews/m4-19-verificacao.md).
+> **M4-21 (2026-10-07, revisão do autor):** ficha mais próxima do Jogador. Abas Conduta ·
+> Equipamento · Habilidades · Sanidade (Conduta abre). Patente Equivalente é ladrilho editável na
+> Identidade, em linha inteira abaixo de Categoria | Nível (duas colunas iguais), para nenhum
+> nome de patente quebrar; Categoria só muda ali — se a nova invalida só
+> Competências/atributos, abre o bloco Atributos com ela no rascunho; se invalida habilidades ou
+> inventário, a Identidade lista o motivo e mantém a salva. Cor pelo retrato (como o Jogador), sem
+> faixa de rodapé; selos do retrato nas medidas do Jogador com fundo translúcido. Competência é
+> marcada no próprio ladrilho (`app-atributo-ficha`), com faixa DT · Competências · Modificador.
+> Equipamento no desenho do inventário do Jogador; Habilidades com "＋ Da biblioteca" (Biblioteca
+> de Referência do Guia em `shared/regras/npc`) e "＋ Personalizada", ambas no rascunho do bloco.
+> [Gates M4-21](../reviews/m4-21-verificacao.md). Onde este bloco diverge do texto abaixo, ele vence.
 > **M4-20 (2026-10-06):** Equipamento inicial acrescenta uma etapa ao assistente.
 > Na ficha, aba Equipamento com catálogo, Patente Equivalente explícita, modificações e
 > estado equipado; leitura por jogador sem controles. Bônus somam aos snapshots, sem
@@ -76,8 +87,8 @@ e inventário usam somente o recorte especificado na M4-20.
 do atributo é o dado principal; a DT contextual é secundária, calculada pelo motor sob demanda,
 sem campo único de DT salvo. Nenhum modificador Forte/Médio/Fraco/Frágil da criatura.
 
-**Detalhes.** Coluna direita com `app-abas`: Habilidades · Conduta · Sanidade. Habilidades abre
-por padrão; Passivas e Ativas ficam identificadas em seus cartões, com custo só em Ativas.
+**Detalhes.** Coluna direita com `app-abas`: Conduta · Equipamento · Habilidades · Sanidade
+(`m4-21`); Conduta abre por padrão; Passivas e Ativas ficam identificadas em seus cartões, com custo só em Ativas.
 Conduta apresenta os três campos de combate e a função narrativa sem repetir um formulário
 inteiro. Sanidade usa as listas de Sequelas/Traumas previstas no contrato. Anotações permanecem
 no utilitário próprio, com a privacidade existente; não entram em uma aba pública.
@@ -97,10 +108,13 @@ de turno para a ficha. Modelos e faixas vêm de `shared/regras/npc`, sem tabelas
 Revelação seletiva usa a gestão de acesso existente; não usar um toggle global de visibilidade
 como substituto de conceder/revogar acesso a jogadores. Não oferecer edição a quem só lê.
 
-**Equipamento.** Aba própria no cartão de detalhes; edição por bloco com Salvar/Cancelar.
-Patente Equivalente nunca é escolhida automaticamente, nem mesmo no Lendário com opção única.
-Sem patente, não oferecer adicionar modificações. Catálogo usa `app-cartao` com ícone projetado,
-`app-campo` e botões canônicos; quantidade/empilhamentos usam `app-step-input`. Não transportar
+**Equipamento.** Aba própria no cartão de detalhes, no desenho do inventário do Jogador (`m4-21`):
+"+ Adicionar itens" abre catálogo e bloco; linhas com Modificar ▾, Equipado/Na mochila, slots e ✕
+com confirmação; edição por bloco com Salvar/Cancelar (equipar fora do bloco salva na hora).
+Patente Equivalente fica na Identidade e nunca é escolhida automaticamente, nem no Lendário com
+opção única; trocar a Categoria para uma faixa que não a contém a remove junto.
+Sem patente, não oferecer adicionar modificações. Catálogo usa a caixa e a grade do catálogo do
+Jogador (`ficha-inv__cartao`), `app-campo` e botões canônicos; quantidade/empilhamentos usam `app-step-input`. Não transportar
 amplificadores/fragmentos ou orçamento. Resistências em stats e bônus de defesa efetivos
 consomem o motor compartilhado; edição da Defesa/Bloquear/Esquivar mantém a base manual.
 Luta/Pontaria encaminham o teste da M4-19 e dano interpretável usa a bandeja privada existente.

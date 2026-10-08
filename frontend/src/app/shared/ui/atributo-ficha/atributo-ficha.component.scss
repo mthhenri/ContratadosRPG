@@ -117,6 +117,30 @@
         border-color: var(--accent-border);
     }
 
+    // Competência de NPC (m4-21, pedido do autor): borda na cor de destaque do tema com um brilho
+    // leve — na leitura e na edição, para o mestre ver o que já marcou. Só tokens (`--accent-dim`/
+    // `--accent-border` já são misturas do `--accent` do usuário).
+    @at-root :host(.ficha-atributo--competencia) {
+        border-color: var(--accent);
+        box-shadow:
+            0 0 0 1px var(--accent-dim),
+            0 0 8px var(--accent-border);
+    }
+
+    // Selo do dado da Competência no canto superior esquerdo — espelha o dadinho de rolar (canto
+    // superior direito) sem mudar a altura do ladrilho.
+    .ficha-atributo__competencia-selo {
+        position: absolute;
+        top: 6px;
+        left: 6px;
+        font-family: var(--font-mono);
+        font-size: 9px;
+        font-weight: 700;
+        line-height: 1;
+        letter-spacing: 0.04em;
+        color: var(--accent);
+    }
+
     // Box lesionado (efetivo < base): leve tinta accent para sinalizar a penalidade em jogo.
     @at-root :host(.ficha-atributo--lesionado) {
         background: color-mix(in srgb, var(--accent) 6%, var(--surface-2));
@@ -236,12 +260,49 @@
             cursor: default;
         }
     }
+
+    // Alvo de Competência (edição, m4-21): mesmo desenho do alvo de Maestria, com o ícone de dado
+    // a mais no lugar da estrela.
+    .ficha-atributo__competencia {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        line-height: 1;
+        padding: 2px 5px;
+        color: var(--text-mute);
+        background: transparent;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        cursor: pointer;
+        transition:
+            color 0.15s ease,
+            border-color 0.15s ease,
+            background-color 0.15s ease;
+
+        &:hover:not(:disabled) {
+            color: var(--accent);
+            border-color: var(--accent-border);
+        }
+
+        &--ativa {
+            color: var(--accent);
+            border-color: var(--accent);
+            background: var(--accent-dim);
+        }
+
+        &:disabled {
+            opacity: 0.3;
+            cursor: default;
+        }
+    }
 }
 
 :host(.ficha-atributo--edicao) {
     // A regra compacta do Jogador já reduzia o gap de edição de 7 para 3px.
     gap: 3px;
 }
-.ficha-atributo__maestria {
+.ficha-atributo__maestria,
+.ficha-atributo__competencia {
     @include alvo-de-toque;
 }

@@ -13,6 +13,20 @@
                 ★
             </button>
         }
+        @if (mostrarCompetencia()) {
+            <button
+                class="ficha-atributo__competencia"
+                type="button"
+                [class.ficha-atributo__competencia--ativa]="competencia()"
+                [disabled]="!competenciaHabilitada()"
+                [attr.aria-pressed]="competencia()"
+                [attr.aria-label]="'Competência em ' + nome()"
+                [appTooltip]="dicaCompetencia()"
+                (click)="competenciaAlternada.emit()"
+            >
+                <app-icone nome="dado-mais" />
+            </button>
+        }
         <span
             class="ficha-atributo__abrev"
             [class.ficha-atributo__abrev--dica]="dicaEdicao() === null"
@@ -75,6 +89,14 @@
             [class.ficha-atributo__mod-valor--ativo]="modificador() !== 0"
             [appTooltip]="'Modificador de teste de ' + nome()"
             >{{ modificador() >= 0 ? "+" : "" }}{{ modificador() }}</span
+        >
+    }
+    @if (mostrarCompetencia() && competencia()) {
+        <span
+            class="ficha-atributo__competencia-selo"
+            [appTooltip]="'Competência: ' + rotuloCompetencia() + ' no teste'"
+            [attr.aria-label]="'Competência: ' + rotuloCompetencia() + ' no teste'"
+            >{{ rotuloCompetencia() }}</span
         >
     }
     @if (mostrarDados() && dados() !== 0) {

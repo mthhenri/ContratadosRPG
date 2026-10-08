@@ -62,6 +62,7 @@ criação do `docs/core/guia_de_mestre-v4.2.0.md`.
 `m4-09` (listagem/revelação integrada) → `m4-10` (polimento responsivo).
 `m4-19` (Competências/teste de atributo) → `m4-20` (ataques/equipamentos, depende da `m4-19`)
 seguem a segunda revisão do NPC (após `m4-16`/`17`/`18`), fora da ordem original acima.
+`m4-21` (revisão visual e de usabilidade da ficha pronta, pedido do autor) veio depois da `m4-20`.
 
 São quatro tasks restantes, preservando os números originais. `m4-05`/`m4-06`/`m4-07` já
 entregaram contrato, motor e backend de NPC: volume validado pela tabela do guia; cap de Civil

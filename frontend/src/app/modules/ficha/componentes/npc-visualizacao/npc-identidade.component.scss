@@ -67,24 +67,52 @@
     }
 
     // Caixa do retrato com os selos (enquadrar no canto superior esquerdo, remover no superior
-    // direito, trocar no inferior direito) — mesma disposição do avatar da Criatura.
+    // direito, trocar no inferior direito) — medidas do avatar do Jogador (`ficha-ident__avatar`,
+    // m4-21): selos meio para fora da caixa, por isso o recorte da foto mora em `__retrato`.
     &__avatar {
         position: relative;
         width: var(--npc-identidade-retrato);
-        // O selo de troca sai 8px abaixo do retrato; a margem evita que ele encoste na barra.
+        // O selo de troca sai 4px abaixo do retrato; a margem evita que ele encoste na barra.
         margin-bottom: var(--space-4);
+
+        &--editavel {
+            cursor: pointer;
+        }
+
+        // O seletor de cor é invisível: o foco de teclado aparece como anel no próprio retrato.
+        &:has(.npc-identidade__cor-entrada:focus-visible) .npc-identidade__retrato {
+            outline: 2px solid var(--accent-border);
+            outline-offset: 2px;
+        }
     }
 
+    // Borda de 2px e listras tingidas pela cor da ficha — mesma receita do Jogador; sem cor
+    // definida, `--border-strong` dos dois lados do mix devolve o cinza neutro de sempre.
     &__retrato {
         width: 100%;
         aspect-ratio: 1;
         overflow: hidden;
-        border: 1px solid var(--cor-ficha, var(--border-strong));
-        border-radius: var(--radius-control);
-        background: repeating-linear-gradient(
+        border: 2px solid var(--cor-ficha, var(--border-strong));
+        border-radius: var(--radius-card);
+        background-color: color-mix(
+            in srgb,
+            var(--cor-ficha, var(--border-strong)) 14%,
+            var(--surface-2)
+        );
+        background-image: repeating-linear-gradient(
             135deg,
-            var(--surface-2) 0 3px,
-            var(--surface) 3px 9px
+            color-mix(
+                    in srgb,
+                    color-mix(
+                            in srgb,
+                            var(--cor-ficha, var(--border-strong)) 60%,
+                            var(--border-strong)
+                        )
+                        20%,
+                    transparent
+                )
+                0 3px,
+            transparent 3px 9px
         );
 
         img {
@@ -94,27 +122,43 @@
         }
     }
 
-    // `app-botao-icone[redondo]` — raio, cor, borda e hover são do primitivo; só sobram posição e
-    // tamanho do selo (mesma receita de `criatura__avatar-*`).
+    // Seletor de cor nativo invisível cobrindo o retrato (só o mestre) — clicar em qualquer ponto
+    // da foto abre o picker, como no Jogador (`ficha-ident__cor-entrada`).
+    &__cor-entrada {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        padding: 0;
+        border: 0;
+        opacity: 0;
+        cursor: pointer;
+    }
+
+    // `app-botao-icone[redondo]` — raio, cor, borda, hover e piso de toque mobile são do
+    // primitivo. Tamanho e posição do Jogador (24px nos cantos de cima, 28px no de baixo, 4px
+    // para fora); o fundo translúcido sobre a foto é o acabamento do NPC aprovado pelo autor.
     &__selo {
         position: absolute;
         z-index: 1;
-        font-size: 9px;
+        background: color-mix(in srgb, var(--bg) 70%, transparent);
+        border-color: var(--border-strong);
+        color: var(--text-dim);
 
         &--enquadrar,
         &--remover {
-            top: 5px;
-            width: 16px;
-            height: 16px;
-            background: color-mix(in srgb, var(--bg) 75%, transparent);
+            top: -4px;
+            width: 24px;
+            height: 24px;
+            font-size: 11px;
         }
 
         &--enquadrar {
-            left: 5px;
+            left: -4px;
         }
 
         &--remover {
-            right: 5px;
+            right: -4px;
 
             &:hover {
                 color: var(--vida);
@@ -123,10 +167,11 @@
         }
 
         &--upload {
-            right: -8px;
-            bottom: -8px;
-            width: 20px;
-            height: 20px;
+            right: -4px;
+            bottom: -4px;
+            width: 28px;
+            height: 28px;
+            font-size: 13px;
         }
     }
 
@@ -140,9 +185,15 @@
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: var(--space-8);
 
-        &--duas {
+        // Categoria | Nível lado a lado e a Patente numa linha inteira abaixo (pedido do autor,
+        // m4-21): "Força Tarefa Especial"/"Operações Especiais" cabem sem quebrar o ladrilho.
+        &--identificacao {
             grid-template-columns: repeat(2, minmax(0, 1fr));
         }
+    }
+
+    &__patente {
+        grid-column: 1 / -1;
     }
 
     &__linha {
@@ -198,48 +249,6 @@
         font: 12px/1.5 var(--font-sans);
         color: var(--erro);
     }
-
-    // Faixa de rodapé em uma linha: chips de classificação e, à direita, a cor da ficha (era uma
-    // linha própria sob o retrato).
-    &__rodape {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: var(--space-8);
-        margin-top: var(--space-12);
-        padding-top: var(--space-8);
-        border-top: 1px solid var(--border);
-    }
-
-    &__cor {
-        display: inline-flex;
-        align-items: center;
-        gap: var(--space-8);
-        margin-left: auto;
-        cursor: pointer;
-    }
-
-    &__cor-rotulo {
-        font: 600 9px var(--font-mono);
-        text-transform: uppercase;
-        letter-spacing: var(--tracking-label);
-        color: var(--text-mute);
-    }
-
-    &__cor-entrada {
-        width: 24px;
-        height: 24px;
-        padding: 0;
-        background: none;
-        border: 1px solid var(--border);
-        border-radius: var(--radius-control);
-        cursor: pointer;
-
-        &:disabled {
-            opacity: 0.55;
-            cursor: default;
-        }
-    }
 }
 
 // Coluna estreita (painel lateral aberto, tela dividida): perfil em cima, combate embaixo — mesmo
@@ -267,11 +276,6 @@
 
     .npc-identidade__entrada {
         min-height: bp.$alvo-toque;
-    }
-
-    .npc-identidade__cor-entrada {
-        width: bp.$alvo-toque;
-        height: bp.$alvo-toque;
     }
 
     [app-botao] {

@@ -1,5 +1,49 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-07 — M4-21: ficha de NPC revista para se aproximar da ficha do Jogador
+
+Pedido do autor depois da M4-20, numa revisão visual e de usabilidade da ficha pronta. Ele
+decidiu na abertura: inventário no layout do Jogador, Competência como toggle no ladrilho (o que
+amplia `app-atributo-ficha`), habilidades "Da biblioteca" + "Personalizada" e verificação ao vivo.
+Spec [m4-21](../specs/done/m4-21-ficha-npc-revisao-visual-usabilidade.spec.md).
+
+**O que mudou.** Abas Conduta · Equipamento · Habilidades · Sanidade, com Conduta aberta por
+padrão. A Patente Equivalente saiu da aba Equipamento e virou ladrilho editável na Identidade, em linha
+inteira abaixo de Categoria | Nível (ajuste do autor após a entrega: nome longo não quebra).
+A Categoria agora só muda na Identidade: os botões do bloco Atributos saíram. Como Competências e
+cap dependem dela, trocar para uma Categoria que invalida a ficha abre o bloco Atributos com a
+nova no rascunho. As consequências sem escolha vão juntas: a patente fora da faixa sai e Civil
+zera Competências (`aplicarCategoriaNpc`). A faixa de rodapé saiu: a cor se escolhe clicando no
+retrato, como no Jogador, e os selos ganharam o tamanho do Jogador, mantendo o fundo translúcido
+de que o autor gostou. Competência virou botão `dado-mais` no ladrilho, e o atributo marcado
+ganha borda `--accent` com brilho e o selo do dado. A faixa DT · Competências · Modificador
+substituiu a lista de chips. O Equipamento foi redesenhado no layout do `ficha-inventario`, sem
+copiar o primitivo: são primitivos com dimensão explícita mais receitas locais de linha e
+catálogo. Em Habilidades entraram "＋ Da biblioteca", com a Biblioteca de Referência do Guia em
+`shared/regras/npc/biblioteca.ts` (22 modelos, teste que lê o próprio Guia), e
+"＋ Personalizada". As duas entram no rascunho do bloco, porque o volume da Categoria é validado
+no conjunto e um PUT por item falharia abaixo do mínimo.
+
+**Revisão independente** (`revisor`): a troca de Categoria podia abrir um bloco Atributos
+impossível de salvar (habilidades/inventário inválidos) e um `blur` podia descartar o rascunho
+aberto pela troca. Agora só abre o bloco quando tudo se corrige ali, senão a Identidade explica;
+o `cancelarAvulso` sem valor aberto não cancela mais o bloco (confirmado ao vivo). Também:
+erros específicos da Patente, bloco Equipamento sem regravar a Patente, fórmula da DT e contagem
+de empilhamentos vindas do `shared`.
+
+**Testes.** shared 1.157, backend 994 (+1 skipped), frontend 3.053; lint 0 erros; builds ok.
+Novos: Biblioteca × Guia, primitivo com/sem Competência, Patente avulsa, troca de Categoria pelo
+rascunho, `aplicarCategoriaNpc`, abas, biblioteca e equipamento no layout novo.
+
+**Ao vivo.** Os 16 estados foram verificados em `1920×1080`, `360×800` e `960×1080`, com mestre,
+leitor com concessão, Elite completo e Civil. Não houve overflow nem erro de página, e o leitor
+não viu nenhum controle de edição. A inspeção achou cinco divergências, corrigidas antes da
+entrega: patente quebrando o ladrilho, stepper largo demais, foco invisível no seletor de cor,
+textos quebrando no celular e, só ao vivo, **o conteúdo da Biblioteca vazando sobre o rodapé
+do `app-modal` no celular**. A grade passou a limitar a própria altura, e o defeito latente do
+primitivo ficou em `P-103`. Evidências: [verificação](../reviews/m4-21-verificacao.md).
+Fora de escopo: o assistente de criação (`I-057`).
+
 ## 2026-10-07 — M10-01: normalizador de núcleo e formato canônico
 
 Spec implementada e movida de backlog por active para done. O contrato público dos

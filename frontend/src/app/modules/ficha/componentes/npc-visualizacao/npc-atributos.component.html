@@ -29,28 +29,6 @@
                 (salvar)="formulario.salvar()"
                 (cancelar)="formulario.cancelar()"
             />
-            <div class="npc-atributos__categorias" aria-label="Categoria do rascunho">
-                @for (categoria of categorias; track categoria.categoria) {
-                    <button
-                        app-botao
-                        type="button"
-                        tamanho="medio"
-                        estilo="contorno"
-                        [variante]="
-                            dadosCompetencias().categoria === categoria.categoria
-                                ? 'primario'
-                                : 'secundario'
-                        "
-                        [attr.aria-pressed]="dadosCompetencias().categoria === categoria.categoria"
-                        [disabled]="edicao.salvando()"
-                        (click)="
-                            formulario.formulario.controls.categoria.setValue(categoria.categoria)
-                        "
-                    >
-                        {{ categoria.rotulo }}
-                    </button>
-                }
-            </div>
             @for (violacao of violacoes(); track violacao) {
                 <p class="npc__erro" role="alert">{{ violacao }}</p>
             }
@@ -61,6 +39,23 @@
                 <p class="npc__erro" role="alert">{{ edicao.erro() }}</p>
             }
         }
+        <div class="npc-atributos__resumo">
+            <app-stat rotulo="DT" [valor]="formulaDt" tamanho="fino" />
+            <app-stat
+                rotulo="Competências"
+                [valor]="
+                    referenciaCompetencias().quantidade > 0
+                        ? competenciasAtuais().length + '/' + referenciaCompetencias().quantidade
+                        : 'Nenhuma'
+                "
+                tamanho="fino"
+            />
+            <app-stat
+                rotulo="Modificador"
+                [valor]="rotuloDadoCompetencia() || '—'"
+                tamanho="fino"
+            />
+        </div>
         @for (grupo of grupos; track grupo.nome) {
             <div class="npc-atributos__grupo">
                 <span class="npc-atributos__rotulo-grupo">{{ grupo.nome }}</span>
@@ -76,6 +71,12 @@
                             [dt]="dt(campo.chave)"
                             [editando]="gerenciavel() && formulario.emEdicaoDe('atributos')"
                             [mostrarMaestria]="false"
+                            [mostrarCompetencia]="referenciaCompetencias().quantidade > 0"
+                            [competencia]="competenciaMarcada(campo.chave)"
+                            [competenciaHabilitada]="competenciaHabilitada(campo.chave)"
+                            [dicaCompetencia]="dicaCompetencia(campo.chave, campo.nome)"
+                            [rotuloCompetencia]="rotuloDadoCompetencia()"
+                            (competenciaAlternada)="alternarCompetencia(campo.chave)"
                             [mostrarLesao]="false"
                             [modificador]="dados().modificadoresTeste?.[campo.chave] ?? 0"
                             [dados]="dados().dadosTeste?.[campo.chave] ?? 0"
@@ -128,15 +129,14 @@
                 </div>
             </div>
         }
-        <app-npc-competencias
-            [categoria]="dadosCompetencias().categoria"
-            [atributos]="dadosCompetencias().atributos"
-            [competencias]="dadosCompetencias().competencias"
-            [editavel]="gerenciavel() && formulario.emEdicaoDe('atributos')"
-            [desabilitado]="edicao.salvando()"
-            (competenciasAlteradas)="formulario.formulario.controls.competencias.setValue($event)"
-        />
         @if (formulario.emEdicaoDe("atributos")) {
+            @if (referenciaCompetencias().quantidade > 0) {
+                <p class="npc-atributos__aviso">
+                    Use o dado em cada atributo para marcar até
+                    {{ referenciaCompetencias().quantidade }} Competências; atributo 0 não pode ser
+                    escolhido. A Categoria muda na Identidade.
+                </p>
+            }
             <p class="npc-atributos__aviso">Alterar atributos mantém os recursos salvos.</p>
             <p class="npc-atributos__aviso">
                 O modificador soma ao resultado; o ajuste D20 altera apenas o pool do teste.

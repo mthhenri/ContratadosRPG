@@ -235,6 +235,16 @@
 
 ## Abertas
 
+### I-057 — Assistente de NPC no mesmo arranjo da ficha · frontend/ficha
+
+- **Ideia:** levar à criação de NPC as decisões da `m4-21`: Patente Equivalente na etapa
+  Identidade (junto de Categoria/Nível), Competências marcadas no ladrilho de atributo e
+  "＋ Da biblioteca" na etapa Habilidades.
+- **Origem:** `m4-21` — a revisão do autor foi sobre a ficha pronta; o assistente ficou fora de
+  escopo e ainda escolhe a patente na etapa Equipamento e Competências por botões.
+- **Por quê:** o mestre aprende um arranjo na criação e encontra outro na ficha.
+- **Custo aparente:** só UI; o motor, a Biblioteca e o primitivo ampliado já existem.
+
 ### I-056 — PDF das Regras com Paged.js · frontend/regras
 
 - **Ideia:** trocar a impressão nativa da `m10-10` por Paged.js só na exportação, para ter sumário com

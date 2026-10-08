@@ -29,6 +29,21 @@
 
 ## Ativos
 
+### P-103 — `app-modal` encolhe o corpo em vez de rolar o diálogo · `CONTORNADO` · frontend/ui
+
+- **Sintoma:** com conteúdo mais alto que a tela (ex.: Biblioteca de Referência do NPC em
+  `360×800`), o texto do corpo transborda **por cima** do rodapé `[modalAcoes]`, que fica
+  inclicável. Achado ao vivo no gate da `m4-21`.
+- **Causa:** o `<dialog>` é `display: flex; flex-direction: column` com `overflow-y: auto`, mas
+  `.modal__corpo` tem `min-height: 0` e o `flex-shrink: 1` padrão — o corpo encolhe abaixo do
+  conteúdo (que vaza, `overflow: visible`) e o diálogo nunca chega a rolar, contrariando o
+  próprio comentário do primitivo ("um modal genuinamente alto rola o `<dialog>` inteiro").
+- **Contorno:** o consumidor limita a altura do próprio bloco extenso (`max-height` +
+  `overflow-y: auto` + `appOverflowFade`), como `ficha-inv__grade` e `npc-biblioteca__grade`.
+- **Correção:** `flex: 0 0 auto` (ou `flex-shrink: 0`) em `.modal__corpo`, verificando ao vivo
+  os consumidores atuais de `app-modal` — mudança de primitivo, decisão do autor.
+- **Desde:** `ui-02` (introdução do `app-modal`); exposto na `m4-21`.
+
 ### P-099 — Rastreamento de rolagem resultante: proposta descartada · `ACEITO` · rolagem/contrato
 
 - **Sintoma:** expressão genérica não informa se o usuário fará dano/cura depois;

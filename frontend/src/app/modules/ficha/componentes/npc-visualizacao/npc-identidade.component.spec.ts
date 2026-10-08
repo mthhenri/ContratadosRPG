@@ -100,17 +100,17 @@ describe("NpcIdentidade (m4-17)", () => {
         expect(chips).toContain("Sem Energia");
     });
 
-    it("Defesa/Bloquear/Esquivar e Categoria/Nível são app-stat fino", () => {
+    it("Categoria/Nível/Patente e Defesa/Bloquear/Esquivar são app-stat fino", () => {
         const { raiz } = montar(false);
         const ladrilhos = Array.from(raiz.querySelectorAll<HTMLElement>(
             ".npc-identidade__combate app-stat .stat"));
         expect(ladrilhos.map((ladrilho) =>
             ladrilho.querySelector(".stat__rotulo")?.textContent?.trim()))
-            .toEqual(["Categoria", "Nível", "Defesa", "Bloquear", "Esquivar"]);
+            .toEqual(["Categoria", "Nível", "Patente", "Defesa", "Bloquear", "Esquivar"]);
         for (const ladrilho of ladrilhos) expect(ladrilho.classList).toContain("stat--fino");
         expect(ladrilhos.map((ladrilho) =>
             ladrilho.querySelector(".stat__valor")?.textContent?.trim()))
-            .toEqual(["Civil", "3", "18", "23", "21"]);
+            .toEqual(["Civil", "3", "—", "18", "23", "21"]);
     });
 
     it("mestre edita o ladrilho fino no lugar (valor avulso dentro do app-stat)", async () => {

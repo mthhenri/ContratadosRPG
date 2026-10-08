@@ -78,6 +78,27 @@ describe("AtributoFicha", () => {
         expect(raiz.querySelector(".ficha-atributo__dados")?.textContent).toContain("Dados");
     });
 
+    it("Competência fica desligada por padrão (Jogador/Criatura não mudam)", () => {
+        const { raiz } = montar({ competencia: true, editando: true });
+        expect(raiz.querySelector(".ficha-atributo__competencia")).toBeNull();
+        expect(raiz.classList.contains("ficha-atributo--competencia")).toBe(false);
+    });
+
+    it("Competência marca o ladrilho com o dado na leitura e alterna na edição", () => {
+        const { fixture, raiz, componente } = montar({ mostrarCompetencia: true,
+            competencia: true, rotuloCompetencia: "+2D6" });
+        expect(raiz.classList.contains("ficha-atributo--competencia")).toBe(true);
+        expect(raiz.querySelector(".ficha-atributo__competencia-selo")?.textContent?.trim())
+            .toBe("+2D6");
+        fixture.componentRef.setInput("editando", true); fixture.detectChanges();
+        const alternar = vi.fn(); componente.competenciaAlternada.subscribe(alternar);
+        const botao = raiz.querySelector<HTMLButtonElement>(".ficha-atributo__competencia")!;
+        expect(botao.getAttribute("aria-pressed")).toBe("true");
+        botao.click(); expect(alternar).toHaveBeenCalledTimes(1);
+        fixture.componentRef.setInput("competenciaHabilitada", false); fixture.detectChanges();
+        expect(botao.disabled).toBe(true);
+    });
+
     it("dados zero ocultam badge, modificador zero continua +0", () => {
         const { raiz } = montar({ dados: 0, modificador: 0 });
         expect(raiz.querySelector(".ficha-atributo__dados-badge")).toBeNull();

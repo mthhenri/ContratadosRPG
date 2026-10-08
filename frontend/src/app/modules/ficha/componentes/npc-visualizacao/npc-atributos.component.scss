@@ -43,10 +43,22 @@
         font: 11px/1.6 var(--font-mono);
         color: var(--text-dim);
     }
-    &__categorias {
-        display: flex;
-        flex-wrap: wrap;
-        gap: var(--space-8);
+    // Faixa de resumo no lugar de Proficiência/Maestria do Jogador (`ficha-atributos__resumo`):
+    // três caixas lado a lado; uma por linha só quando a coluna não comporta.
+    &__resumo {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+        margin-bottom: 2px;
+
+        // Coluna estreita: a fórmula da DT ocupa a linha inteira, como no Jogador.
+        @include bp.mobile {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+
+            > :first-child {
+                grid-column: 1 / -1;
+            }
+        }
     }
 }
 .npc__editor--ativo {

@@ -3,13 +3,16 @@ import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormArray, FormBuilder, FormControl, Validators } from "@angular/forms";
 import { HabilidadeTipoNpcEnum, CategoriaNpcEnum, PatenteEnum } from "@contratados-rpg/shared/enums";
 import type {
-    FichaAtributosDto, FichaNpcHabilidadeDto, FichaNpcRecuperadaDto, FichaSequelaDto, FichaTraumaDto,
+    FichaAtributosDto, FichaNpcDadosDto, FichaNpcHabilidadeDto, FichaNpcRecuperadaDto,
+    FichaSequelaDto, FichaTraumaDto,
 } from "@contratados-rpg/shared/dtos/ficha";
 import type { CarrinhoItemDto } from "@contratados-rpg/shared/regras/compras";
 import { FichaEdicaoNpcService } from "./ficha-edicao-npc.service";
 import { mesclarDocumento } from "./mesclar-ficha";
 import { criarMapaAjustesNpc } from "./npc-ajustes-formulario";
-import { CHAVES_ATRIBUTOS_NPC } from "@contratados-rpg/shared/regras/npc";
+import {
+    CHAVES_ATRIBUTOS_NPC, listarPatentesEquivalentes, obterCompetenciasPorCategoria,
+} from "@contratados-rpg/shared/regras/npc";
 
 /** Blocos de vários campos — lápis some, Salvar/Cancelar aparecem no próprio bloco (m4-16). */
 export type GrupoEdicaoNpc = "atributos" | "conduta" | "habilidades" | "sequelas" | "traumas"
@@ -21,10 +24,35 @@ const ROTULOS_EDICAO: Record<string, string> = {
     atributos: "Atributos", conduta: "Conduta", habilidades: "Habilidades",
     sequelas: "Sequelas", traumas: "Traumas", anotacoes: "Anotações", equipamento: "Equipamento",
     nome: "nome", funcao: "função narrativa", categoria: "categoria", nivel: "nível",
+    patenteEquivalente: "Patente Equivalente", equiparItem: "Equipamento",
     cooperacao: "Cooperação", defesaBase: "Defesa", bloquear: "Bloquear", esquivar: "Esquivar",
     vidaMaxima: "Vida máxima", energiaMaxima: "Energia máxima",
     recargaPorTurno: "Recarga por turno",
 };
+
+/** `dados` sem a chave `patenteEquivalente` — ausência é "sem patente" no contrato. */
+export function removerPatenteNpc(dados: FichaNpcDadosDto): FichaNpcDadosDto {
+    const restante: { -readonly [Chave in keyof FichaNpcDadosDto]: FichaNpcDadosDto[Chave] } =
+        { ...dados };
+    delete restante.patenteEquivalente;
+    return restante;
+}
+
+/**
+ * Consequências obrigatórias de trocar a Categoria (m4-21), sem escolher nada pelo mestre: a
+ * patente fora da faixa nova sai (o motor a rejeitaria) e, sem Competências na Categoria nova, a
+ * única lista válida é a vazia. Competências a mais/a menos ficam para o mestre decidir.
+ */
+export function aplicarCategoriaNpc(
+    dados: FichaNpcDadosDto, categoria: CategoriaNpcEnum,
+): FichaNpcDadosDto {
+    const patente = dados.patenteEquivalente;
+    const base = patente && !listarPatentesEquivalentes({ categoria }).includes(patente)
+        ? removerPatenteNpc(dados) : dados;
+    const semCompetencias = obterCompetenciasPorCategoria({ categoria }).quantidade === 0;
+    return { ...base, categoria,
+        ...(semCompetencias && base.competencias !== undefined ? { competencias: [] } : {}) };
+}
 
 export function criarHabilidadeFormulario(habilidade?: FichaNpcHabilidadeDto) {
     const tipo = new FormControl(habilidade?.tipo ?? HabilidadeTipoNpcEnum.PASSIVA,
@@ -156,6 +184,22 @@ export class NpcEdicaoFormulario {
             dados: { ...ficha.dados, competencias: ficha.dados.competencias ?? [] } }));
     }
 
+    /**
+     * Troca de Categoria que invalida a ficha (m4-21): a Categoria só se edita na Identidade, mas
+     * Competências e cap de atributos dependem dela — abre o bloco Atributos com a Categoria nova
+     * no rascunho, para o mestre ajustar tudo e confirmar num só Salvar (Cancelar mantém a salva).
+     */
+    iniciarTrocaCategoria(categoria: CategoriaNpcEnum): void {
+        this.iniciar("atributos");
+        const rascunho = this.edicao.rascunho();
+        if (this.grupo() !== "atributos" || !rascunho) return;
+        const dados = aplicarCategoriaNpc(rascunho.dados, categoria);
+        const controles = this.formulario.controls;
+        controles.patenteEquivalente.setValue(dados.patenteEquivalente ?? null, { emitEvent: false });
+        controles.competencias.setValue(dados.competencias ?? [], { emitEvent: false });
+        controles.categoria.setValue(categoria);
+    }
+
     cancelar(): void {
         this.edicao.cancelarEdicao();
         if (!this.edicao.salvando()) {
@@ -188,7 +232,9 @@ export class NpcEdicaoFormulario {
      * falha mantém o valor editável com o erro inline até o autor corrigir ou cancelar de vez).
      */
     cancelarAvulso(): void {
-        if (this.edicao.salvando()) return;
+        // Sem valor avulso aberto não há o que cancelar: o `blur` do campo que sai do DOM depois
+        // de uma troca de Categoria descartaria o rascunho do bloco Atributos aberto por ela.
+        if (this.edicao.salvando() || this.campoAvulso() === null) return;
         if (this.edicao.edicaoPendente()) this.edicao.cancelarEdicao();
         this.campoAvulso.set(null);
         this.restaurarFoco();
@@ -262,7 +308,10 @@ export class NpcEdicaoFormulario {
         const valor = this.formulario.getRawValue();
         const dados = base.dados;
         switch (this.grupo()) {
-            case "atributos": return { ...base, dados: { ...dados, atributos: valor.atributos, categoria: valor.categoria,
+            case "atributos": return { ...base, dados: {
+                ...(valor.patenteEquivalente ? { ...dados,
+                    patenteEquivalente: valor.patenteEquivalente } : removerPatenteNpc(dados)),
+                atributos: valor.atributos, categoria: valor.categoria,
                 competencias: valor.competencias, modificadoresTeste: valor.modificadoresTeste,
                 dadosTeste: valor.dadosTeste } };
             case "habilidades": return { ...base, dados: { ...dados,
@@ -284,8 +333,9 @@ export class NpcEdicaoFormulario {
             case "traumas": return { ...base, dados: { ...dados,
                 sanidade: { ...dados.sanidade, traumas: valor.traumas } } };
             case "anotacoes": return { ...base, dados: { ...dados, anotacoes: valor.anotacoes } };
-            case "equipamento": return { ...base, dados: { ...dados, inventario: valor.inventario,
-                patenteEquivalente: valor.patenteEquivalente ?? undefined } };
+            // Patente é da Identidade (m4-21): o bloco não a regrava, ou um Salvar apagaria
+            // a escolhida em outra aba/dispositivo durante a edição.
+            case "equipamento": return { ...base, dados: { ...dados, inventario: valor.inventario } };
             default: return base;
         }
     }

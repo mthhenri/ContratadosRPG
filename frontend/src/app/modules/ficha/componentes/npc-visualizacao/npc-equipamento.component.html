@@ -1,3 +1,6 @@
+<!-- Equipamento do NPC no layout do inventário do Jogador (`ficha-inventario`, m4-21): "+ Adicionar
+     itens" abre o catálogo, itens em linhas com ações à direita e stat + rolagens embaixo. A
+     Patente Equivalente mora na Identidade; aqui só aparece o limite que ela dá. -->
 <section
     #secaoLista
     class="npc-lista npc-equip"
@@ -22,11 +25,12 @@
             } @else {
                 <button
                     app-botao-icone
-                    tamanho="compacto"
                     class="npc-lista__cabecalho-acao"
                     type="button"
                     aria-label="Editar equipamento"
-                    [appTooltip]="formulario.tooltipBloqueio('equipamento') ?? 'Editar equipamento'"
+                    [appTooltip]="
+                        formulario.tooltipBloqueio('equipamento') ?? 'Modificar ou remover itens'
+                    "
                     [disabled]="
                         formulario.edicao.salvando() || formulario.bloqueadoPorOutro('equipamento')
                     "
@@ -46,307 +50,351 @@
                 {{ formulario.erroFormulario() || formulario.edicao.erro() }}
             </p>
         }
+    } @else if (erroEquipar()) {
+        <p class="npc__erro" role="alert">{{ erroEquipar() }}</p>
     }
-    <div class="npc-equip__patente">
-        <h4 class="npc-lista__titulo">Patente Equivalente</h4>
-        @if (ehCivil()) {
-            <p class="npc__nota">Categoria Civil não tem Patente Equivalente — sem modificação.</p>
-        } @else if (modoEdicao()) {
-            <div class="npc-equip__patente-opcoes">
-                @for (patente of faixaPatente(); track patente) {
+
+    <div class="npc-equip__acoes">
+        @if (gerenciavel()) {
+            <button
+                app-botao
+                type="button"
+                tamanho="medio"
+                variante="primario"
+                [attr.aria-expanded]="catalogoAberto()"
+                [disabled]="
+                    formulario.edicao.salvando() || formulario.bloqueadoPorOutro('equipamento')
+                "
+                [appTooltip]="formulario.tooltipBloqueio('equipamento') ?? ''"
+                (click)="alternarCatalogo()"
+            >
+                {{ catalogoAberto() ? "Fechar catálogo" : "+ Adicionar itens" }}
+            </button>
+        }
+        <span class="npc-equip__limite">{{ textoLimite() }}</span>
+    </div>
+
+    @if (gerenciavel() && modoEdicao() && catalogoAberto()) {
+        <section class="npc-equip__catalogo" aria-label="Catálogo de itens">
+            <app-campo rotulo="Pesquisar item" tamanho="compacto">
+                <input
+                    class="campo__controle"
+                    type="search"
+                    placeholder="Pesquisar item…"
+                    autocomplete="off"
+                    aria-label="Pesquisar item do catálogo"
+                    [formControl]="buscaCatalogo"
+                />
+            </app-campo>
+            <nav class="npc-equip__categorias" aria-label="Categorias do catálogo">
+                @for (categoria of categoriasCatalogo(); track categoria.categoria) {
                     <button
                         app-botao
                         type="button"
-                        tamanho="medio"
+                        tamanho="pequeno"
                         estilo="contorno"
-                        [variante]="patenteAtual() === patente ? 'primario' : 'secundario'"
-                        [attr.aria-pressed]="patenteAtual() === patente"
-                        [attr.aria-label]="'Patente equivalente ' + patente"
-                        [disabled]="formulario.edicao.salvando()"
-                        (click)="selecionarPatente(patente)"
+                        [variante]="
+                            !buscaCatalogo.value && categoriaAtivaCatalogo() === categoria.categoria
+                                ? 'primario'
+                                : 'secundario'
+                        "
+                        [attr.aria-pressed]="
+                            !buscaCatalogo.value && categoriaAtivaCatalogo() === categoria.categoria
+                        "
+                        [disabled]="!!buscaCatalogo.value || formulario.edicao.salvando()"
+                        (click)="selecionarCategoriaCatalogo(categoria.categoria)"
                     >
-                        {{ rotuloPatente(patente) }}
+                        <app-icone [nome]="iconesCategoria[categoria.categoria]" />{{
+                            categoria.rotulo
+                        }}
                     </button>
                 }
-            </div>
-            <p class="npc__nota">
-                Escolha a patente para definir o limite de modificações por item. Clique novamente
-                para desmarcar.
-            </p>
-        } @else if (patenteAtual()) {
-            <app-chip variante="sutil">{{ rotuloPatente(patenteAtual()!) }}</app-chip>
-        } @else {
-            <p class="npc__nota">Nenhuma escolhida — sem modificação permitida.</p>
-        }
-    </div>
-    @if (gerenciavel() && modoEdicao()) {
-        <button
-            app-botao
-            type="button"
-            tamanho="medio"
-            estilo="contorno"
-            variante="secundario"
-            class="npc-equip__catalogo-gatilho"
-            [attr.aria-expanded]="catalogoAberto()"
-            [disabled]="formulario.edicao.salvando()"
-            (click)="alternarCatalogo()"
-        >
-            {{ catalogoAberto() ? "Fechar catálogo" : "+ Adicionar item" }}
-        </button>
-        @if (catalogoAberto()) {
-            <section class="npc-equip__catalogo">
-                <app-campo rotulo="Pesquisar item" tamanho="compacto">
-                    <input
-                        class="campo__controle"
-                        type="search"
-                        placeholder="Pesquisar item…"
-                        autocomplete="off"
-                        aria-label="Pesquisar item do catálogo"
-                        [formControl]="buscaCatalogo"
-                    />
-                </app-campo>
-                <nav class="npc-equip__categorias" aria-label="Categorias do catálogo">
-                    @for (categoria of categoriasCatalogo(); track categoria.categoria) {
-                        <button
-                            app-botao
-                            type="button"
-                            tamanho="pequeno"
-                            estilo="contorno"
-                            class="npc-equip__categoria"
-                            [variante]="
-                                !buscaCatalogo.value &&
-                                categoriaAtivaCatalogo() === categoria.categoria
-                                    ? 'primario'
-                                    : 'secundario'
-                            "
-                            [attr.aria-pressed]="
-                                !buscaCatalogo.value &&
-                                categoriaAtivaCatalogo() === categoria.categoria
-                            "
-                            [disabled]="!!buscaCatalogo.value || formulario.edicao.salvando()"
-                            (click)="selecionarCategoriaCatalogo(categoria.categoria)"
-                        >
-                            <app-icone [nome]="iconesCategoria[categoria.categoria]" />{{
-                                categoria.rotulo
-                            }}
-                        </button>
+            </nav>
+            @if (cartoesCatalogo().length === 0) {
+                <app-estado-vazio tamanho="compacto" titulo="Nenhum item encontrado." />
+            } @else {
+                <ul class="npc-equip__grade" appOverflowFade>
+                    @for (
+                        cartao of cartoesCatalogo();
+                        track cartao.categoria + "/" + cartao.item.nome
+                    ) {
+                        <li class="npc-equip__cartao">
+                            <span class="npc-equip__cartao-nome">{{ cartao.item.nome }}</span>
+                            @if (cartao.stat) {
+                                <span class="npc-equip__cartao-stat">{{ cartao.stat }}</span>
+                            }
+                            @if (cartao.item.descricao) {
+                                <span class="npc-equip__cartao-desc">{{
+                                    cartao.item.descricao
+                                }}</span>
+                            }
+                            <span class="npc-equip__cartao-meta">{{ cartao.pesoTexto }}</span>
+                            <button
+                                app-botao
+                                type="button"
+                                tamanho="pequeno"
+                                variante="primario"
+                                [fluido]="true"
+                                class="npc-equip__cartao-adicionar"
+                                [attr.aria-label]="'Adicionar ' + cartao.item.nome"
+                                [disabled]="formulario.edicao.salvando()"
+                                (click)="adicionarItem(cartao)"
+                            >
+                                + Adicionar
+                            </button>
+                        </li>
                     }
-                </nav>
-                @if (cartoesCatalogo().length === 0) {
-                    <app-estado-vazio tamanho="compacto" titulo="Nenhum item encontrado." />
-                } @else {
-                    <div class="npc-equip__grade" appOverflowFade>
-                        @for (
-                            cartao of cartoesCatalogo();
-                            track cartao.categoria + "/" + cartao.item.nome
-                        ) {
-                            <app-cartao class="npc-equip__cartao" [titulo]="cartao.item.nome">
-                                <app-icone
-                                    cartaoIndice
-                                    [nome]="iconesCategoria[cartao.categoria]"
-                                />
-                                @if (cartao.stat) {
-                                    <p class="npc__nota">{{ cartao.stat }}</p>
-                                }
-                                <p class="npc__nota">
-                                    {{ cartao.custoTexto }} · {{ cartao.pesoTexto }}
-                                </p>
-                                <button
-                                    app-botao
-                                    type="button"
-                                    tamanho="pequeno"
-                                    variante="primario"
-                                    estilo="contorno"
-                                    class="npc-equip__cartao-add"
-                                    [attr.aria-label]="'Adicionar ' + cartao.item.nome"
-                                    [disabled]="formulario.edicao.salvando()"
-                                    (click)="adicionarItem(cartao)"
-                                >
-                                    + Adicionar
-                                </button>
-                            </app-cartao>
-                        }
-                    </div>
-                }
-            </section>
-        }
+                </ul>
+            }
+        </section>
     }
-    <ul class="npc-lista__itens">
+
+    <ul class="npc-equip__lista">
         @for (item of itensVM(); track item.indice) {
             <li class="npc-equip__item">
-                <app-cartao>
-                    <div class="npc-equip__item-conteudo">
-                        <div class="npc-lista__cabecalho-item">
-                            <span class="npc-lista__nome">{{ item.nome }}</span>
-                            <app-chip variante="sutil">{{ item.categoriaRotulo }}</app-chip>
-                            @if (item.ehProtecao) {
-                                <app-chip
-                                    [severidade]="item.equipado ? 'sucesso' : 'secundario'"
-                                    tom="contorno"
-                                >
-                                    {{ item.equipado ? "Equipado" : "Na mochila" }}
-                                </app-chip>
+                <div class="npc-equip__item-cabecalho">
+                    <div class="npc-equip__item-identidade">
+                        <span class="npc-equip__item-nome"
+                            >{{ item.nome }}
+                            @if (item.quantidade > 1) {
+                                <span class="npc-equip__tag">×{{ item.quantidade }}</span>
                             }
-                        </div>
-                        @if (item.stat) {
-                            <p class="npc__nota">{{ item.stat }}</p>
-                        }
-                        @if (item.descricao) {
-                            <p class="npc__nota">{{ item.descricao }}</p>
-                        }
-                        <p class="npc__nota">
-                            {{ item.pesoTexto }} slot(s) · ×{{ item.quantidade }}
-                        </p>
-                        @if (gerenciavel() && !modoEdicao() && item.ehArma) {
-                            <div class="npc-equip__controles">
-                                <button
-                                    app-botao
-                                    type="button"
-                                    tamanho="pequeno"
-                                    variante="secundario"
-                                    estilo="contorno"
-                                    [disabled]="!podeRolar()"
-                                    (click)="rolagens.rolar('luta', 'Luta')"
-                                >
-                                    <app-icone nome="dado" /> Luta
-                                </button>
-                                <button
-                                    app-botao
-                                    type="button"
-                                    tamanho="pequeno"
-                                    variante="secundario"
-                                    estilo="contorno"
-                                    [disabled]="!podeRolar()"
-                                    (click)="rolagens.rolar('pontaria', 'Pontaria')"
-                                >
-                                    <app-icone nome="dado" /> Pontaria
-                                </button>
-                                @if (item.danoRolavel) {
+                        </span>
+                        <span class="npc-equip__item-categoria">{{ item.categoriaRotulo }}</span>
+                    </div>
+                    <div class="npc-equip__item-controles">
+                        @if (gerenciavel() && modoEdicao()) {
+                            <div class="npc-equip__item-acoes">
+                                @if (podeModificar(item)) {
                                     <button
                                         app-botao
                                         type="button"
                                         tamanho="pequeno"
-                                        variante="primario"
                                         estilo="contorno"
-                                        [disabled]="!podeRolar()"
-                                        (click)="rolagens.rolarDano(item.indice)"
+                                        [variante]="
+                                            modificandoIndice() === item.indice
+                                                ? 'primario'
+                                                : 'secundario'
+                                        "
+                                        [attr.aria-label]="'Modificar ' + item.nome"
+                                        [attr.aria-expanded]="modificandoIndice() === item.indice"
+                                        [disabled]="formulario.edicao.salvando()"
+                                        (click)="alternarModificar(item.indice)"
                                     >
-                                        <app-icone nome="dado" /> Dano
-                                    </button>
-                                } @else {
-                                    <p class="npc__nota">
-                                        Este dano exige escolha manual da fórmula.
-                                    </p>
-                                }
-                            </div>
-                        }
-                        @if (item.modsAtivas.length > 0) {
-                            <div class="npc-equip__mods">
-                                @for (mod of item.modsAtivas; track mod.nome) {
-                                    <div class="npc-equip__mod-chip">
-                                        <app-chip variante="sutil"
-                                            >{{ mod.nome }} ×{{ mod.empilhamentos }}</app-chip
-                                        >
-                                        @if (gerenciavel() && modoEdicao()) {
-                                            <app-step-input
-                                                tamanho="mini"
-                                                [valorExterno]="mod.empilhamentos"
-                                                [min]="mod.minimo"
-                                                [max]="mod.maximo"
-                                                [bloquearDiminuir]="formulario.edicao.salvando()"
-                                                [bloquearAumentar]="formulario.edicao.salvando()"
-                                                [ariaRotulo]="'Empilhamentos de ' + mod.nome"
-                                                (valorAlterado)="
-                                                    ajustarModificacao(
-                                                        item.indice,
-                                                        mod.nome,
-                                                        $event
-                                                    )
-                                                "
-                                            />
-                                            <button
-                                                app-botao-icone
-                                                tamanho="compacto"
-                                                type="button"
-                                                [attr.aria-label]="'Remover ' + mod.nome"
-                                                [appTooltip]="'Remover ' + mod.nome"
-                                                [disabled]="formulario.edicao.salvando()"
-                                                (click)="removerModificacao(item.indice, mod.nome)"
+                                        <app-icone nome="editar" />
+                                        Modificar
+                                        @if (limite(); as limite) {
+                                            <span class="npc-equip__contagem"
+                                                >{{ item.modsUsados }}/{{
+                                                    limite.maxModificacoes
+                                                }}</span
                                             >
-                                                <app-icone nome="excluir" />
-                                            </button>
                                         }
-                                    </div>
+                                        <span aria-hidden="true">{{
+                                            modificandoIndice() === item.indice ? "▴" : "▾"
+                                        }}</span>
+                                    </button>
                                 }
-                            </div>
-                        }
-                        @if (gerenciavel() && modoEdicao()) {
-                            <div class="npc-equip__controles">
                                 <app-step-input
                                     tamanho="mini"
                                     [valorExterno]="item.quantidade"
-                                    [min]="0"
+                                    [min]="1"
                                     [bloquearDiminuir]="formulario.edicao.salvando()"
                                     [bloquearAumentar]="formulario.edicao.salvando()"
                                     [ariaRotulo]="'Quantidade de ' + item.nome"
                                     (valorAlterado)="ajustarQuantidade(item.indice, $event)"
                                 />
-                                @if (item.ehProtecao) {
-                                    <button
-                                        app-botao
-                                        type="button"
-                                        tamanho="pequeno"
-                                        estilo="contorno"
-                                        [variante]="item.equipado ? 'positivo' : 'secundario'"
-                                        [attr.aria-label]="
-                                            (item.equipado ? 'Equipado' : 'Na mochila') +
-                                            ' — alternar'
-                                        "
-                                        [disabled]="formulario.edicao.salvando()"
-                                        (click)="alternarEquipado(item.indice)"
-                                    >
-                                        {{ item.equipado ? "Equipado" : "Na mochila" }}
-                                    </button>
-                                }
-                                @if (
-                                    patenteAtual() && !ehCivil() && item.modsDisponiveis.length > 0
-                                ) {
-                                    <app-campo
-                                        rotulo="Modificação"
-                                        tamanho="compacto"
-                                        class="npc-equip__mod-select"
-                                    >
-                                        <select
-                                            class="campo__controle"
-                                            [formControl]="controleModificacao(item.indice)"
-                                            [attr.aria-label]="
-                                                'Adicionar modificação em ' + item.nome
-                                            "
-                                            (change)="selecionarModificacao(item.indice)"
-                                        >
-                                            <option value="">+ Modificação…</option>
-                                            @for (mod of item.modsDisponiveis; track mod.nome) {
-                                                <option [value]="mod.nome">{{ mod.nome }}</option>
-                                            }
-                                        </select>
-                                    </app-campo>
-                                }
-                                <button
-                                    app-botao-icone
-                                    tamanho="compacto"
-                                    class="npc-equip__remover"
-                                    type="button"
-                                    [attr.aria-label]="'Remover ' + item.nome"
-                                    [appTooltip]="'Remover ' + item.nome"
-                                    [disabled]="formulario.edicao.salvando()"
-                                    (click)="removerItem(item.indice)"
-                                >
-                                    <app-icone nome="excluir" />
-                                </button>
                             </div>
                         }
+                        @if (item.ehProtecao) {
+                            @if (gerenciavel()) {
+                                <button
+                                    app-botao
+                                    type="button"
+                                    tamanho="pequeno"
+                                    estilo="contorno"
+                                    [variante]="item.equipado ? 'primario' : 'secundario'"
+                                    [appTooltip]="'Só Proteções equipadas somam nas defesas e resistências'"
+                                    [attr.aria-label]="
+                                        (item.equipado ? 'Equipado' : 'Na mochila') +
+                                        ' — ' +
+                                        item.nome +
+                                        ': alternar'
+                                    "
+                                    [disabled]="
+                                        formulario.edicao.salvando() ||
+                                        (!modoEdicao() && formulario.ocupado())
+                                    "
+                                    (click)="alternarEquipado(item.indice)"
+                                >
+                                    <app-icone [nome]="item.equipado ? 'vestida' : 'guardada'" />
+                                    {{ item.equipado ? "Equipado" : "Na mochila" }}
+                                </button>
+                            } @else {
+                                <app-chip
+                                    [severidade]="item.equipado ? 'sucesso' : 'secundario'"
+                                    tom="contorno"
+                                    >{{ item.equipado ? "Equipado" : "Na mochila" }}</app-chip
+                                >
+                            }
+                        }
+                        <span class="npc-equip__peso">{{ item.pesoTexto }}</span>
+                        @if (gerenciavel() && modoEdicao()) {
+                            <span class="npc-equip__item-remover">
+                                @if (confirmandoRemocao() === item.indice) {
+                                    <span class="npc-equip__remover-texto">Remover item?</span>
+                                    <button
+                                        app-botao-icone
+                                        tamanho="compacto"
+                                        type="button"
+                                        variante="perigo"
+                                        aria-label="Confirmar remoção"
+                                        appTooltip="Confirmar remoção"
+                                        (click)="removerItem(item.indice)"
+                                    >
+                                        <app-icone nome="check" />
+                                    </button>
+                                    <button
+                                        app-botao-icone
+                                        tamanho="compacto"
+                                        type="button"
+                                        aria-label="Cancelar remoção"
+                                        appTooltip="Cancelar"
+                                        (click)="confirmandoRemocao.set(null)"
+                                    >
+                                        <app-icone nome="desfazer" />
+                                    </button>
+                                } @else {
+                                    <button
+                                        app-botao-icone
+                                        tamanho="compacto"
+                                        type="button"
+                                        [attr.aria-label]="'Remover item ' + item.nome"
+                                        appTooltip="Remover"
+                                        [disabled]="formulario.edicao.salvando()"
+                                        (click)="confirmandoRemocao.set(item.indice)"
+                                    >
+                                        ✕
+                                    </button>
+                                }
+                            </span>
+                        }
                     </div>
-                </app-cartao>
+                </div>
+
+                @if (item.stat || (gerenciavel() && !modoEdicao() && item.ehArma)) {
+                    <div class="npc-equip__item-stat">
+                        @if (item.stat) {
+                            <span>{{ item.stat }}</span>
+                        }
+                        @if (gerenciavel() && !modoEdicao() && item.ehArma) {
+                            <button
+                                app-botao
+                                type="button"
+                                tamanho="pequeno"
+                                variante="secundario"
+                                estilo="contorno"
+                                [attr.aria-label]="'Rolar teste de Luta com ' + item.nome"
+                                [disabled]="!podeRolar()"
+                                (click)="rolagens.rolar('luta', 'Luta')"
+                            >
+                                <app-icone nome="d20" /> Luta
+                            </button>
+                            <button
+                                app-botao
+                                type="button"
+                                tamanho="pequeno"
+                                variante="secundario"
+                                estilo="contorno"
+                                [attr.aria-label]="'Rolar teste de Pontaria com ' + item.nome"
+                                [disabled]="!podeRolar()"
+                                (click)="rolagens.rolar('pontaria', 'Pontaria')"
+                            >
+                                <app-icone nome="d20" /> Pontaria
+                            </button>
+                            @if (item.danoRolavel) {
+                                <button
+                                    app-botao
+                                    type="button"
+                                    tamanho="pequeno"
+                                    variante="secundario"
+                                    estilo="contorno"
+                                    [attr.aria-label]="'Rolar dano de ' + item.nome"
+                                    [disabled]="!podeRolar()"
+                                    (click)="rolagens.rolarDano(item.indice)"
+                                >
+                                    <app-icone nome="d20" /> Rolar dano
+                                </button>
+                            } @else {
+                                <span class="npc-equip__nota-manual"
+                                    >Dano com escolha manual da fórmula.</span
+                                >
+                            }
+                        }
+                    </div>
+                }
+                @if (item.descricao) {
+                    <div class="npc-equip__item-desc">{{ item.descricao }}</div>
+                }
+                @if (item.modsAtivas.length > 0 || modificandoIndice() === item.indice) {
+                    <div class="npc-equip__mods">
+                        @for (mod of item.modsAtivas; track mod.nome) {
+                            <span class="npc-equip__mod-tag">
+                                <span class="npc-equip__mod-nome"
+                                    >{{ mod.nome }} ×{{ mod.empilhamentos }}</span
+                                >
+                                @if (gerenciavel() && modificandoIndice() === item.indice) {
+                                    <app-step-input
+                                        tamanho="mini"
+                                        [valorExterno]="mod.empilhamentos"
+                                        [min]="mod.minimo"
+                                        [max]="mod.maximo"
+                                        [bloquearDiminuir]="formulario.edicao.salvando()"
+                                        [bloquearAumentar]="formulario.edicao.salvando()"
+                                        [ariaRotulo]="'Empilhamentos de ' + mod.nome"
+                                        (valorAlterado)="
+                                            ajustarModificacao(item.indice, mod.nome, $event)
+                                        "
+                                    />
+                                    <button
+                                        app-botao-icone
+                                        tamanho="compacto"
+                                        type="button"
+                                        [attr.aria-label]="'Remover ' + mod.nome"
+                                        [appTooltip]="'Remover ' + mod.nome"
+                                        [disabled]="formulario.edicao.salvando()"
+                                        (click)="removerModificacao(item.indice, mod.nome)"
+                                    >
+                                        ✕
+                                    </button>
+                                }
+                            </span>
+                        }
+                    </div>
+                }
+                @if (gerenciavel() && modificandoIndice() === item.indice) {
+                    <div class="npc-equip__mod-painel">
+                        @if (item.modsDisponiveis.length === 0) {
+                            <span class="npc-equip__nota-manual"
+                                >Nenhuma outra modificação disponível para este item.</span
+                            >
+                        }
+                        @for (mod of item.modsDisponiveis; track mod.nome) {
+                            <button
+                                app-botao
+                                type="button"
+                                tamanho="pequeno"
+                                variante="secundario"
+                                estilo="contorno"
+                                [attr.aria-label]="'Adicionar modificação ' + mod.nome"
+                                [disabled]="formulario.edicao.salvando()"
+                                (click)="adicionarModificacao(item.indice, mod)"
+                            >
+                                + {{ mod.nome }}
+                            </button>
+                        }
+                    </div>
+                }
             </li>
         } @empty {
             <li>
@@ -354,7 +402,11 @@
                     titulo="Nenhum equipamento"
                     icone="armazenamento"
                     tamanho="compacto"
-                    linhaApoio="O mestre atribui o equipamento diretamente, sem orçamento."
+                    [linhaApoio]="
+                        gerenciavel()
+                            ? 'Use &quot;+ Adicionar itens&quot; para montá-lo — sem orçamento.'
+                            : 'O mestre ainda não atribuiu equipamento.'
+                    "
                 />
             </li>
         }

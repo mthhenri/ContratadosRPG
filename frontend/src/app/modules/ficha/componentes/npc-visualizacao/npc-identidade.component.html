@@ -66,7 +66,13 @@
                     ) {
                         <p class="npc-identidade__erro" role="alert">{{ edicao.erro() }}</p>
                     }
-                    <div class="npc-identidade__avatar">
+                    <!-- Retrato no padrão do Jogador (`ficha-ident__avatar`, m4-21): borda e listras
+                         carregam a cor da ficha; para o mestre, o seletor de cor nativo cobre o
+                         retrato inteiro e os selos ficam por cima, cada um com seu alvo. -->
+                    <div
+                        class="npc-identidade__avatar"
+                        [class.npc-identidade__avatar--editavel]="gerenciavel()"
+                    >
                         <div class="npc-identidade__retrato">
                             @if (documento.imagemUrl) {
                                 <img
@@ -77,6 +83,13 @@
                             }
                         </div>
                         @if (gerenciavel()) {
+                            <input
+                                type="color"
+                                class="npc-identidade__cor-entrada"
+                                aria-label="Cor de identidade da ficha"
+                                appTooltip="Cor de identidade da ficha"
+                                [formControl]="corSelecionada"
+                            />
                             @if (documento.imagemUrl) {
                                 <button
                                     app-botao-icone
@@ -119,7 +132,7 @@
                                 type="button"
                                 class="npc-identidade__selo npc-identidade__selo--upload"
                                 aria-label="Escolher retrato"
-                                appTooltip="Escolher retrato"
+                                appTooltip="Trocar retrato"
                                 [disabled]="formulario.ocupado() || edicao.edicaoPendente()"
                                 (click)="entradaRetato.click()"
                             >
@@ -151,7 +164,7 @@
                 </div>
 
                 <div class="npc-identidade__combate">
-                    <div class="npc-identidade__stats npc-identidade__stats--duas">
+                    <div class="npc-identidade__stats npc-identidade__stats--identificacao">
                         <app-stat rotulo="Categoria" [valor]="referencia().rotulo" tamanho="fino">
                             @if (gerenciavel()) {
                                 <app-valor-editavel
@@ -217,14 +230,71 @@
                                 </app-valor-editavel>
                             }
                         </app-stat>
+                        <app-stat
+                            class="npc-identidade__patente"
+                            rotulo="Patente"
+                            [valor]="rotuloPatenteAtual()"
+                            tamanho="fino"
+                            [appTooltip]="dicaPatente()"
+                        >
+                            @if (gerenciavel() && !civil()) {
+                                <app-valor-editavel
+                                    appStatValor
+                                    [valor]="rotuloPatenteAtual()"
+                                    [editando]="formulario.emEdicaoDe('patenteEquivalente')"
+                                    [desabilitado]="
+                                        formulario.bloqueadoPorOutro('patenteEquivalente')
+                                    "
+                                    [tooltip]="formulario.tooltipBloqueio('patenteEquivalente')"
+                                    variante="herdado"
+                                    [bloco]="true"
+                                    rotuloAria="patente equivalente"
+                                    (editarSolicitado)="
+                                        formulario.editarAvulso('patenteEquivalente')
+                                    "
+                                >
+                                    <select
+                                        #entradaPatente
+                                        appAutoFocus
+                                        class="npc-identidade__entrada npc-identidade__entrada--valor"
+                                        aria-label="Patente Equivalente"
+                                        (change)="confirmarPatente(entradaPatente.value)"
+                                        (keydown.escape)="formulario.cancelarAvulso()"
+                                        (blur)="formulario.cancelarAvulso()"
+                                    >
+                                        <option value="" [selected]="!dados().patenteEquivalente">
+                                            Sem patente
+                                        </option>
+                                        @for (patente of patentes(); track patente) {
+                                            <option
+                                                [value]="patente"
+                                                [selected]="patente === dados().patenteEquivalente"
+                                            >
+                                                {{ rotulosPatente[patente] }}
+                                            </option>
+                                        }
+                                    </select>
+                                </app-valor-editavel>
+                            }
+                        </app-stat>
                     </div>
+                    @for (violacao of violacoesCategoria(); track violacao) {
+                        <p class="npc-identidade__erro" role="alert">{{ violacao }}</p>
+                    }
+                    @if (formulario.emEdicaoDe("patenteEquivalente")) {
+                        @for (violacao of violacoesPatente(); track violacao) {
+                            <p class="npc-identidade__erro" role="alert">{{ violacao }}</p>
+                        }
+                    }
                     @if (formulario.emEdicaoDe("nivel")) {
                         @for (violacao of violacoesNivel(); track violacao) {
                             <p class="npc-identidade__erro" role="alert">{{ violacao }}</p>
                         }
                     }
                     @if (
-                        (formulario.emEdicaoDe("categoria") || formulario.emEdicaoDe("nivel")) &&
+                        (formulario.emEdicaoDe("categoria") ||
+                            formulario.emEdicaoDe("nivel") ||
+                            formulario.emEdicaoDe("patenteEquivalente")) &&
                         edicao.erro() &&
                         !violacoesNivel().length
                     ) {
@@ -435,21 +505,6 @@
                         }
                     }
                 </div>
-            </div>
-            <div class="npc-identidade__rodape">
-                <app-chip variante="sutil">{{ referencia().rotulo }}</app-chip>
-                <app-chip variante="sutil">Nível {{ dados().nivel }}</app-chip>
-                @if (gerenciavel()) {
-                    <label class="npc-identidade__cor">
-                        <span class="npc-identidade__cor-rotulo">Cor da ficha</span>
-                        <input
-                            type="color"
-                            class="npc-identidade__cor-entrada"
-                            aria-label="Cor de identificação do NPC"
-                            [formControl]="corSelecionada"
-                        />
-                    </label>
-                }
             </div>
         </fieldset>
     </app-cartao>

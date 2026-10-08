@@ -23,7 +23,11 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-10-06 · M4-20 concluída: equipamento e Patente Equivalente
+> **Última revisão:** 2026-10-07 · M4-21 concluída: ficha de NPC revista para se aproximar
+> do Jogador — Patente e Categoria só na Identidade, cor pelo retrato, Competência no ladrilho,
+> equipamento no layout do inventário, Biblioteca de Referência nas habilidades, abas Conduta ·
+> Equipamento · Habilidades · Sanidade. Três viewports: [evidências](../reviews/m4-21-verificacao.md).
+> M4-20 concluída: equipamento e Patente Equivalente
 > explícita do NPC, ataques privados e bônus sobre snapshots. Gates completos, cinco
 > Categorias e quatro viewports: [evidências](../reviews/m4-20-verificacao.md).
 > M4-19 concluída: Competências, ajustes, dadinho e
@@ -885,6 +889,11 @@ catálogo/patente e veto Civil. Defesas efetivas/resistências consomem motores 
 sem alterar bases manuais ou aplicar orçamento/peso máximo. Ataques encaminham M4-19 e
 dano interpretável usa bandeja privada; leitor apenas consulta. Cinco Categorias e quatro
 viewports, REST/socket/legado e limpeza: [gates](../reviews/m4-20-verificacao.md).
+[M4-21](../specs/done/m4-21-ficha-npc-revisao-visual-usabilidade.spec.md) concluída (pedido do
+autor): Patente e Categoria editadas só na Identidade (troca que invalida a ficha abre Atributos
+com a nova no rascunho), cor pelo retrato, Competência marcada no ladrilho, Equipamento no layout
+do inventário do Jogador e "＋ Da biblioteca"/"＋ Personalizada" nas habilidades
+([gates](../reviews/m4-21-verificacao.md)). Assistente de criação ainda no arranjo antigo (`I-057`).
 Sem próxima implementação de NPC automaticamente autorizada. Fontes preservadas.
 P-097-01 corrigiu crítico de teste com um pool;
 [P-099](../specs/backlog/p-099-critico-teste-com-dados-adicionais.spec.md) teve a proposta

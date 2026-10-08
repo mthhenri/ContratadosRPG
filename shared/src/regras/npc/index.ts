@@ -4,6 +4,7 @@ export * from "./defesa";
 export * from "./energia";
 export * from "./dt";
 export * from "./habilidades";
+export * from "./biblioteca";
 export * from "./validacao";
 export * from "./condicoes";
 export * from "./referencia";

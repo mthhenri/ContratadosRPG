@@ -15,6 +15,7 @@ import { BotaoIcone } from "../botao-icone/botao-icone.component";
         "[class.ficha-atributo--edicao]": "editando()",
         "[class.ficha-atributo--maestria]": "!editando() && mostrarMaestria() && maestria()",
         "[class.ficha-atributo--lesionado]": "!editando() && mostrarLesao() && lesao() > 0",
+        "[class.ficha-atributo--competencia]": "mostrarCompetencia() && competencia()",
     },
 })
 export class AtributoFicha {
@@ -36,9 +37,17 @@ export class AtributoFicha {
     readonly maestriaHabilitada = input(true);
     readonly dicaMaestria = input("");
     readonly dicaLesao = input("");
+    /** Competência de NPC (m4-21): desligada por padrão — Jogador e Criatura não a exibem. O
+     * consumidor decide elegibilidade (`competenciaHabilitada`) e o texto do dado (`+2D6`). */
+    readonly mostrarCompetencia = input(false);
+    readonly competencia = input(false);
+    readonly competenciaHabilitada = input(true);
+    readonly dicaCompetencia = input("");
+    readonly rotuloCompetencia = input("");
     /** O Jogador conserva a dica de edição original (só nome); NPC usa nome + DT também aqui. */
     readonly dicaEdicao = input<string | null>(null);
     readonly rolar = output<void>();
     readonly maestriaAlternada = output<void>();
+    readonly competenciaAlternada = output<void>();
     protected readonly descricao = computed(() => `${this.nome()} — DT ${this.dt()}`);
 }

@@ -1,0 +1,376 @@
+[
+  {
+    "viewport": "1920",
+    "estado": "cor-ao-carregar",
+    "desabilitada": [
+      false,
+      false,
+      false,
+      null,
+      null
+    ]
+  },
+  {
+    "viewport": "1920",
+    "estado": "leitura",
+    "overflow": 0
+  },
+  {
+    "viewport": "1920",
+    "estado": "patente-edicao",
+    "overflow": 0
+  },
+  {
+    "viewport": "1920",
+    "estado": "cor-apos-patente",
+    "desabilitada": [
+      false,
+      false,
+      false,
+      null,
+      null
+    ]
+  },
+  {
+    "viewport": "1920",
+    "estado": "atributos-edicao",
+    "overflow": 0
+  },
+  {
+    "viewport": "1920",
+    "estado": "cor-apos-atributos",
+    "desabilitada": [
+      true,
+      true,
+      false,
+      null,
+      null
+    ]
+  },
+  {
+    "viewport": "1920",
+    "estado": "equipamento-leitura",
+    "overflow": 0
+  },
+  {
+    "viewport": "1920",
+    "estado": "equipamento-catalogo",
+    "overflow": 0
+  },
+  {
+    "viewport": "1920",
+    "estado": "equipamento-modificar",
+    "overflow": 0
+  },
+  {
+    "viewport": "1920",
+    "estado": "habilidades",
+    "overflow": 0
+  },
+  {
+    "viewport": "1920",
+    "estado": "biblioteca",
+    "overflow": 0
+  },
+  {
+    "viewport": "1920",
+    "estado": "habilidades-rascunho",
+    "overflow": 0
+  },
+  {
+    "viewport": "1920",
+    "estado": "foco-cor",
+    "focado": [
+      "INPUT|npc-identidade__cor-entrada ng-untouched ng-pristine ng-valid|false",
+      "solid"
+    ]
+  },
+  {
+    "viewport": "1920",
+    "estado": "troca-lendario",
+    "grupo": null,
+    "categoriaRascunho": null,
+    "alertas": [
+      "Para mudar para Lendário, ajuste antes — habilidades: total deve estar entre 6 e 8",
+      "Para mudar para Lendário, ajuste antes — habilidades: mínimo de 4 passivas",
+      "Para mudar para Lendário, ajuste antes — inventário: \"Colete de Kevlar\" tem modificação sem patente equivalente escolhida"
+    ]
+  },
+  {
+    "viewport": "1920",
+    "estado": "erros",
+    "erros": []
+  },
+  {
+    "viewport": "1920",
+    "estado": "troca-veterano-aberta",
+    "grupo": "atributos",
+    "categoriaRascunho": "VETERANO",
+    "patenteRascunho": null,
+    "violacoes": [
+      "luta: valor acima do limite (4)",
+      "competências: selecione 3 atributos"
+    ]
+  },
+  {
+    "viewport": "1920",
+    "estado": "troca-veterano-salva",
+    "grupo": null,
+    "categoriaRascunho": null,
+    "patenteRascunho": null,
+    "violacoes": [],
+    "salva": {
+      "categoria": "VETERANO",
+      "competencias": [
+        "luta",
+        "destreza",
+        "vigor"
+      ],
+      "patente": null
+    },
+    "erros": []
+  },
+  {
+    "viewport": "1920",
+    "estado": "civil",
+    "overflow": 0,
+    "erros": []
+  },
+  {
+    "viewport": "1920",
+    "estado": "leitor",
+    "overflow": 0,
+    "botoesEdicao": 0,
+    "erros": []
+  },
+  {
+    "viewport": "360",
+    "estado": "cor-ao-carregar",
+    "desabilitada": [
+      false,
+      false,
+      false,
+      null,
+      null
+    ]
+  },
+  {
+    "viewport": "360",
+    "estado": "leitura",
+    "overflow": 0
+  },
+  {
+    "viewport": "360",
+    "estado": "patente-edicao",
+    "overflow": 0
+  },
+  {
+    "viewport": "360",
+    "estado": "cor-apos-patente",
+    "desabilitada": [
+      true,
+      true,
+      false,
+      null,
+      null
+    ]
+  },
+  {
+    "viewport": "360",
+    "estado": "atributos-edicao",
+    "overflow": 0
+  },
+  {
+    "viewport": "360",
+    "estado": "cor-apos-atributos",
+    "desabilitada": [
+      true,
+      true,
+      false,
+      null,
+      null
+    ]
+  },
+  {
+    "viewport": "360",
+    "estado": "equipamento-leitura",
+    "overflow": 0
+  },
+  {
+    "viewport": "360",
+    "estado": "equipamento-catalogo",
+    "overflow": 0
+  },
+  {
+    "viewport": "360",
+    "estado": "equipamento-modificar",
+    "overflow": 0
+  },
+  {
+    "viewport": "360",
+    "estado": "habilidades",
+    "overflow": 0
+  },
+  {
+    "viewport": "360",
+    "estado": "biblioteca",
+    "overflow": 0
+  },
+  {
+    "viewport": "360",
+    "estado": "habilidades-rascunho",
+    "overflow": 0
+  },
+  {
+    "viewport": "360",
+    "estado": "foco-cor",
+    "focado": [
+      "INPUT|npc-identidade__cor-entrada ng-untouched ng-pristine ng-valid|false",
+      "solid"
+    ]
+  },
+  {
+    "viewport": "360",
+    "estado": "troca-lendario",
+    "grupo": null,
+    "categoriaRascunho": null,
+    "alertas": [
+      "Para mudar para Lendário, ajuste antes — habilidades: total deve estar entre 6 e 8",
+      "Para mudar para Lendário, ajuste antes — habilidades: mínimo de 4 passivas",
+      "Para mudar para Lendário, ajuste antes — inventário: \"Colete de Kevlar\" tem modificação sem patente equivalente escolhida"
+    ]
+  },
+  {
+    "viewport": "360",
+    "estado": "erros",
+    "erros": []
+  },
+  {
+    "viewport": "360",
+    "estado": "civil",
+    "overflow": 0,
+    "erros": []
+  },
+  {
+    "viewport": "360",
+    "estado": "leitor",
+    "overflow": 0,
+    "botoesEdicao": 0,
+    "erros": []
+  },
+  {
+    "viewport": "960",
+    "estado": "cor-ao-carregar",
+    "desabilitada": [
+      false,
+      false,
+      false,
+      null,
+      null
+    ]
+  },
+  {
+    "viewport": "960",
+    "estado": "leitura",
+    "overflow": 0
+  },
+  {
+    "viewport": "960",
+    "estado": "patente-edicao",
+    "overflow": 0
+  },
+  {
+    "viewport": "960",
+    "estado": "cor-apos-patente",
+    "desabilitada": [
+      true,
+      true,
+      false,
+      null,
+      null
+    ]
+  },
+  {
+    "viewport": "960",
+    "estado": "atributos-edicao",
+    "overflow": 0
+  },
+  {
+    "viewport": "960",
+    "estado": "cor-apos-atributos",
+    "desabilitada": [
+      true,
+      true,
+      false,
+      null,
+      null
+    ]
+  },
+  {
+    "viewport": "960",
+    "estado": "equipamento-leitura",
+    "overflow": 0
+  },
+  {
+    "viewport": "960",
+    "estado": "equipamento-catalogo",
+    "overflow": 0
+  },
+  {
+    "viewport": "960",
+    "estado": "equipamento-modificar",
+    "overflow": 0
+  },
+  {
+    "viewport": "960",
+    "estado": "habilidades",
+    "overflow": 0
+  },
+  {
+    "viewport": "960",
+    "estado": "biblioteca",
+    "overflow": 0
+  },
+  {
+    "viewport": "960",
+    "estado": "habilidades-rascunho",
+    "overflow": 0
+  },
+  {
+    "viewport": "960",
+    "estado": "foco-cor",
+    "focado": [
+      "INPUT|npc-identidade__cor-entrada ng-untouched ng-pristine ng-valid|false",
+      "solid"
+    ]
+  },
+  {
+    "viewport": "960",
+    "estado": "troca-lendario",
+    "grupo": null,
+    "categoriaRascunho": null,
+    "alertas": [
+      "Para mudar para Lendário, ajuste antes — habilidades: total deve estar entre 6 e 8",
+      "Para mudar para Lendário, ajuste antes — habilidades: mínimo de 4 passivas",
+      "Para mudar para Lendário, ajuste antes — inventário: \"Colete de Kevlar\" tem modificação sem patente equivalente escolhida"
+    ]
+  },
+  {
+    "viewport": "960",
+    "estado": "erros",
+    "erros": []
+  },
+  {
+    "viewport": "960",
+    "estado": "civil",
+    "overflow": 0,
+    "erros": []
+  },
+  {
+    "viewport": "960",
+    "estado": "leitor",
+    "overflow": 0,
+    "botoesEdicao": 0,
+    "erros": []
+  }
+]
