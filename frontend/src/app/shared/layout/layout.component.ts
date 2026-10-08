@@ -15,6 +15,8 @@ import { LoadingService } from '../../core/services/loading.service';
 import { SessaoService } from '../../core/services/sessao.service';
 import { TopbarContextoService } from '../../core/services/topbar-contexto.service';
 import { VersaoService } from '../../core/services/versao.service';
+import { RegrasConsultaService } from '../../modules/regras/regras-consulta.service';
+import { RegrasFlutuante } from '../../modules/regras/regras-flutuante.component';
 import { ConfiguracoesTema } from '../configuracoes-tema/configuracoes-tema.component';
 import { Icone } from '../icone/icone.component';
 import { Marca } from '../marca/marca.component';
@@ -44,6 +46,7 @@ import { Notificacoes } from '../ui/notificacao/notificacao.component';
     Marca,
     Botao,
     IndicadorTempoReal,
+    RegrasFlutuante,
   ],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.scss',
@@ -54,6 +57,7 @@ export class Layout {
   protected readonly sessaoService = inject(SessaoService);
   protected readonly topbarContexto = inject(TopbarContextoService);
   protected readonly versaoService = inject(VersaoService);
+  protected readonly regrasConsulta = inject(RegrasConsultaService);
   private readonly router = inject(Router);
   private readonly urlAtual = toSignal(
     this.router.events.pipe(

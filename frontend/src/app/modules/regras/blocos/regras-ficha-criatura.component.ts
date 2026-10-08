@@ -1,4 +1,5 @@
-import { Component, computed, forwardRef, input, output } from "@angular/core";
+import { Component, computed, forwardRef, inject, input, output } from "@angular/core";
+import { RegrasLeitorContexto } from "../regras-leitor-contexto";
 import { Stat, StatValor } from "../../../shared/ui/stat/stat.component";
 import { Chip } from "../../../shared/ui/chip/chip.component";
 import { Cartao } from "../../../shared/ui/cartao/cartao.component";
@@ -25,6 +26,11 @@ export class RegrasFichaCriatura {
     readonly bloco = input.required<Ficha>();
     readonly documento = input<RegrasDocumento["id"]>("guia");
     readonly navegarAncora = output<string>();
+    private readonly contexto = inject(RegrasLeitorContexto, { optional: true });
+    protected identificador(titulo: string): string | undefined {
+        const ancora = this.ancora(titulo);
+        return ancora ? this.contexto?.identificar(ancora) ?? ancora : undefined;
+    }
     protected readonly nivel = computed(() =>
         this.bloco().identidade.campos.find((campo) => campo.nivel !== undefined)?.nivel ?? 0);
     protected readonly conceito = computed(() =>

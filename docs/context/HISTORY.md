@@ -1,5 +1,41 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-08 — M10-07 commitada; M10-08: painel e celular
+
+Autor autorizou commit M10-07 e início M10-08. Commit `348f76f2`, 67 arquivos,
+gate staged aprovado e trailer Codex conferido. M10-08 implementada e verificada,
+spec/anexos em `done/`, sem commit nesta entrega.
+
+Topbar e ficha flutuante abrem o mesmo painel global, carregado no primeiro uso.
+Corpo extraído para `RegrasLeitor`; página governa URL, casca governa janela e store
+lembra seção por livro durante a sessão. Painel normal/página mobile usam gaveta;
+maximizado desktop usa dois trilhos; ↗ abre seção atual. Cache existente preservado,
+IDs por instância permitem ler o mesmo livro na página e no painel simultaneamente.
+Nenhum primitivo, regra de domínio, parser ou backend foi alterado.
+
+Subagente Codex no modelo da sessão assumiu casca/entradas e revisão independente.
+A revisão identificou resize de janela minimizada gravando a última seção;
+principal corrigiu com guarda de área invisível/teste. Integração também isolou IDs,
+ajustou linha de leitura mobile e adiou foco para respeitar `inert` da gaveta.
+Cabeçalho mobile sem kicker evita apertar título e controles.
+
+Principal inspecionou aplicação real pela skill `verify`: 1920×1080, 1366×768,
+960×1080, 768×1024 e 360×800, claro/escuro, topbar e ficha, gaveta, links internos,
+foco, maximizar/restaurar, minimizar/resize, ↗ e memória entre livros. Biblioteca
+real usada como análogo; carga/erro/retry e Tab/Shift+Tab/Esc/véu conferidos.
+Dados sintéticos removidos por soft delete, inclusive tentativas de cenário.
+P-107 registra ação preexistente do cartão de ficha oculta da árvore acessível
+por ancestral `aria-hidden`; leitor de Regras não altera esse cartão.
+
+Gate final Angular: 230 arquivos/3.107 testes passaram, excluindo dois specs antigos
+de P-106. Lint zero erros, avisos preexistentes; recorte novo final sem avisos.
+Build passou, initial 589,03 kB com aviso do budget de 450 kB; `@defer` reduziu
+714,60 kB do corte inicial. P-105/P-106 seguem separados; prebuild/regeneração do
+corpus antigo não atestados, evidências shared/backend reutilizadas da M10-06.
+Revisão do diff, `git diff --check` e `repo:verificar` aprovados.
+[Fecho, resultados e limites](../specs/done/m10-08-painel-flutuante-e-celular/m10-08-verificacao.md).
+M10 em 8/11; próxima M10-09, pesquisa.
+
 ## 2026-10-08 — M10-06 commitada; M10-07: blocos ricos do leitor
 
 Autor autorizou commit M10-06 e início M10-07. Commit `5faec0f6`, 54 arquivos,

@@ -8,6 +8,7 @@ import { TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
 
 import { TopbarContextoService } from '../../core/services/topbar-contexto.service';
 import { VersaoService } from '../../core/services/versao.service';
+import { RegrasConsultaService } from '../../modules/regras/regras-consulta.service';
 import { Layout } from './layout.component';
 
 @Component({ selector: 'app-rota-layout-teste-a', template: '<p>Conteudo A</p>' })
@@ -107,14 +108,21 @@ describe('Layout — leitor global de documentos', () => {
   });
 
   it.each([['anônimo', false], ['autenticado', true]])(
-    'oferece Regras como link público para usuário %s', async (_cenario, autenticado) => {
+    'abre o painel público de Regras sem trocar rota para usuário %s', async (_cenario, autenticado) => {
       const { raiz } = await montar(autenticado as boolean);
-      const link = raiz.querySelector<HTMLAnchorElement>('nav a[href="/regras"]');
+      const link = raiz.querySelector<HTMLButtonElement>('nav button[aria-label="Abrir Regras"]');
       expect(link).not.toBeNull();
       expect(link!.textContent).toContain('Regras');
       expect(link!.getAttribute('aria-label')).toBe('Abrir Regras');
       expect(link!.querySelector('app-icone')?.getAttribute('nome')).toBe('contratados');
       expect(raiz.querySelector('app-leitor-documentos')).toBeNull();
+      expect(raiz.querySelectorAll('app-regras-flutuante')).toHaveLength(0);
+      const abrir = vi.spyOn(TestBed.inject(RegrasConsultaService), 'abrir')
+        .mockImplementation(() => undefined);
+      const url = TestBed.inject(Router).url;
+      link!.click();
+      expect(abrir).toHaveBeenCalledOnce();
+      expect(TestBed.inject(Router).url).toBe(url);
     },
   );
 });

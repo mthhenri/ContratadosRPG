@@ -4,6 +4,7 @@ import { filter } from 'rxjs';
 
 import { SessaoService } from '../../../../core/services/sessao.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
+import { RegrasConsultaService } from '../../../regras/regras-consulta.service';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
@@ -45,6 +46,7 @@ const BREAKPOINT_MOBILE = 560;
   },
 })
 export class FichaFlutuante {
+  protected readonly regrasConsulta = inject(RegrasConsultaService);
   private readonly tempoRealService = inject(TempoRealService);
   private readonly sessaoService = inject(SessaoService);
   private readonly notificacaoService = inject(NotificacaoService);

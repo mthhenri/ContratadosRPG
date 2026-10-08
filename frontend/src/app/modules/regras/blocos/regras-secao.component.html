@@ -3,7 +3,7 @@
         @case (1) {
             <h2
                 class="regras-secao__capitulo"
-                [id]="bloco().ancora"
+                [id]="identificador()"
                 [attr.data-ancora-regras]="bloco().ancora"
             >
                 <span aria-hidden="true">{{ bloco().glifo }}</span> {{ bloco().titulo }}
@@ -12,7 +12,7 @@
         @case (2) {
             <h3
                 class="regras-secao__titulo"
-                [id]="bloco().ancora"
+                [id]="identificador()"
                 [attr.data-ancora-regras]="bloco().ancora"
             >
                 @if (iconeIdentidade(bloco().titulo); as icone) {
@@ -26,7 +26,7 @@
         @case (3) {
             <h4
                 class="regras-secao__subtitulo"
-                [id]="bloco().ancora"
+                [id]="identificador()"
                 [attr.data-ancora-regras]="bloco().ancora"
             >
                 <span aria-hidden="true">{{ bloco().glifo }}</span> {{ bloco().titulo }}
@@ -35,7 +35,7 @@
         @case (4) {
             <h5
                 class="regras-secao__verbete"
-                [id]="bloco().ancora"
+                [id]="identificador()"
                 [attr.data-ancora-regras]="bloco().ancora"
             >
                 <span aria-hidden="true">{{ bloco().glifo }}</span> {{ bloco().titulo }}

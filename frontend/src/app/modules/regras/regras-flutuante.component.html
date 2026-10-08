@@ -1,0 +1,52 @@
+<app-painel-flutuante
+    id="regras"
+    titulo="Regras"
+    [kicker]="ehMobile() ? null : 'Biblioteca de referência'"
+    [aberto]="consulta.aberto()"
+    [mobile]="ehMobile()"
+    [maximizada]="maximizada()"
+    [largura]="ehMobile() ? null : tamanho().largura"
+    [altura]="ehMobile() ? null : tamanho().altura"
+    [posicaoInicial]="posicaoInicial"
+    [ignorarMinimizadoPersistido]="true"
+    (fechar)="fechar()"
+>
+    <ng-container painelAcoesExtras>
+        <button
+            app-botao-icone
+            tamanho="compacto"
+            type="button"
+            aria-label="Abrir página de Regras"
+            appTooltip="Abrir página de Regras"
+            (pointerdown)="$event.stopPropagation()"
+            (click)="abrirPagina()"
+        >
+            <app-icone nome="abrir-externo" />
+        </button>
+        @if (!ehMobile()) {
+            <button
+                app-botao-icone
+                tamanho="compacto"
+                type="button"
+                [attr.aria-label]="
+                    maximizada() ? 'Restaurar tamanho das Regras' : 'Maximizar Regras'
+                "
+                [appTooltip]="maximizada() ? 'Restaurar tamanho' : 'Maximizar'"
+                (pointerdown)="$event.stopPropagation()"
+                (click)="alternarMaximizacao()"
+            >
+                <span aria-hidden="true">{{ maximizada() ? "❐" : "□" }}</span>
+            </button>
+        }
+    </ng-container>
+    @if (iniciado() && consulta.aberto()) {
+        <app-regras-leitor
+            class="regras-flutuante__leitor"
+            [livro]="livro()"
+            [ancoraInicial]="ancoraInicial()"
+            [emPainel]="true"
+            [maximizada]="maximizada()"
+            (livroAlterado)="selecionarLivro($event)"
+        />
+    }
+</app-painel-flutuante>

@@ -205,10 +205,15 @@ valor) secundário/contorno e REAÇÃO primário/contorno, com tooltip por exten
 Controles: `app-segmentado` Sistema/Guia, `app-botao` completo para PDF/retry,
 `app-esqueleto` e `app-estado-vazio`; links de sumário seguem a receita dos patchnotes.
 Item ativo acompanha a leitura; link interno foca e pisca o título, respeitando
-movimento reduzido. No mobile, sumário acima do documento com altura de até 240px
-e controles com alvo de 44px, provisoriamente até M10-08. Topbar usa Regras e marca
+movimento reduzido. Desde M10-08, página mobile e painel normal usam `app-gaveta`
+de sumário, com texto na largura disponível e controles com alvo de 44px no celular.
+Painel maximizado desktop usa os dois trilhos da página. Topbar e ficha abrem um
+único `app-painel-flutuante` de Regras, carregado no primeiro uso; cabeçalho segue
+a Biblioteca M9-11/M9-12. ↗ abre a página na seção atual; memória separada por livro.
+Rolagem e gaveta locais, IDs isolados entre hospedeiros. Topbar usa Regras e marca
 própria; download provisório dos PDFs anteriores e crédito CC BY-SA no rodapé.
 [Gates e limites](../specs/done/m10-06-pagina-regras/m10-06-verificacao.md).
+[Painel, celular e comparação com a Biblioteca](../specs/done/m10-08-painel-flutuante-e-celular/m10-08-verificacao.md).
 
 **Uso da marca (decisão do autor, M10-04, 08/10/2026):** a marca própria
 ContratadosRPG — SCP misturado com D20, assets `frontend/public/logo-{black,white}.*`

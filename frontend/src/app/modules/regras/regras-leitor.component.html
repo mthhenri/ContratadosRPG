@@ -1,0 +1,178 @@
+<div class="regras" [class.regras--gaveta]="usarGaveta()" [class.regras--painel]="emPainel()">
+    @if (usarGaveta()) {
+        <div class="regras__barra">
+            <button
+                app-botao
+                variante="secundario"
+                estilo="contorno"
+                tamanho="pequeno"
+                posicaoIcone="esquerda"
+                type="button"
+                aria-label="Abrir sumário das Regras"
+                [attr.aria-expanded]="gavetaAberta()"
+                (click)="gavetaAberta.set(true)"
+            >
+                <span aria-hidden="true">☰</span> Sumário
+            </button>
+            <app-segmentado rotulo="Documento de Regras">
+                <button
+                    app-segmentado-item
+                    class="regras__seletor"
+                    type="button"
+                    [ativo]="livro() === 'sistema'"
+                    (click)="trocarDocumento('sistema')"
+                >
+                    Sistema
+                </button>
+                <button
+                    app-segmentado-item
+                    class="regras__seletor"
+                    type="button"
+                    [ativo]="livro() === 'guia'"
+                    (click)="trocarDocumento('guia')"
+                >
+                    Guia
+                </button>
+            </app-segmentado>
+        </div>
+    } @else {
+        <aside class="regras__trilho" aria-label="Navegação das Regras">
+            <app-cartao><ng-container [ngTemplateOutlet]="navegacao" /></app-cartao>
+        </aside>
+    }
+    <div class="regras__rolagem" [attr.inert]="gavetaAberta() ? '' : null">
+        <app-cartao class="regras__documento" [attr.aria-busy]="estado() === 'carregando'">
+            @if (documento(); as livroAberto) {
+                <app-regras-conteudo
+                    [filhos]="livroAberto.filhos"
+                    [documento]="livroAberto.id"
+                    (navegarAncora)="navegarAncora($event)"
+                />
+                <footer class="regras__credito">
+                    <a
+                        href="https://commons.wikimedia.org/wiki/File:SCP_Foundation_(emblem).svg"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        >Logo SCP</a
+                    >: far2; versão de alta resolução por Aelanna; vetor de Vizorsols e BmboB.
+                    Adaptado para ContratadosRPG. Licença
+                    <a
+                        href="https://creativecommons.org/licenses/by-sa/3.0/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        >CC BY-SA 3.0</a
+                    >.
+                </footer>
+            } @else if (estado() === "carregando") {
+                <div class="regras__esqueletos" role="status" aria-label="Carregando documento">
+                    <app-esqueleto class="regras__esqueleto-titulo" />
+                    @for (linha of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; track linha) {
+                        <app-esqueleto class="regras__esqueleto-linha" />
+                    }
+                </div>
+            } @else {
+                <app-estado-vazio
+                    icone="documentos"
+                    titulo="Não foi possível carregar as Regras."
+                    linhaApoio="Tente abrir o documento novamente."
+                >
+                    <button
+                        app-botao
+                        estadoVazioAcao
+                        class="regras__acao"
+                        variante="secundario"
+                        estilo="contorno"
+                        tamanho="pequeno"
+                        type="button"
+                        (click)="tentarNovamente()"
+                    >
+                        Tentar novamente
+                    </button>
+                </app-estado-vazio>
+            }
+        </app-cartao>
+    </div>
+    @if (usarGaveta()) {
+        <div class="regras__gaveta-area">
+            <app-gaveta [(aberta)]="gavetaAberta" rotulo="Sumário das Regras" lado="inicio">
+                <ng-container [ngTemplateOutlet]="navegacao" />
+            </app-gaveta>
+        </div>
+    }
+</div>
+<ng-template #navegacao>
+    <div class="regras__trilho-conteudo">
+        <app-segmentado rotulo="Documento de Regras" [fluido]="true">
+            <button
+                app-segmentado-item
+                class="regras__seletor"
+                type="button"
+                [ativo]="livro() === 'sistema'"
+                (click)="trocarDocumento('sistema')"
+            >
+                Sistema
+            </button>
+            <button
+                app-segmentado-item
+                class="regras__seletor"
+                type="button"
+                [ativo]="livro() === 'guia'"
+                (click)="trocarDocumento('guia')"
+            >
+                Guia
+            </button>
+        </app-segmentado>
+        @if (documento(); as livroAberto) {
+            <div class="regras__cabecalho">
+                <h1 class="regras__titulo">{{ livroAberto.titulo }} · v{{ livroAberto.versao }}</h1>
+                <a
+                    app-botao
+                    class="regras__acao"
+                    variante="secundario"
+                    estilo="link"
+                    tamanho="pequeno"
+                    posicaoIcone="esquerda"
+                    [href]="pdf()"
+                    download
+                >
+                    <app-icone nome="documentos" />PDF antigo
+                </a>
+            </div>
+            <nav class="regras__sumario" aria-label="Sumário do documento">
+                <ng-container
+                    [ngTemplateOutlet]="arvore"
+                    [ngTemplateOutletContext]="{ $implicit: sumario() }"
+                />
+            </nav>
+        } @else if (estado() === "carregando") {
+            <div class="regras__esqueletos" role="status" aria-label="Carregando sumário">
+                <app-esqueleto class="regras__esqueleto-titulo" />
+                @for (linha of [1, 2, 3, 4, 5, 6]; track linha) {
+                    <app-esqueleto class="regras__esqueleto-linha" />
+                }
+            </div>
+        }
+    </div>
+</ng-template>
+<ng-template #arvore let-itens>
+    <ol class="regras__lista">
+        @for (item of itens; track item.ancora) {
+            <li>
+                <a
+                    class="regras__sumario-item"
+                    [class.regras__sumario-item--capitulo]="item.nivel === 1"
+                    [attr.aria-current]="item.ancora === ativoSumario() ? 'location' : null"
+                    [href]="'/regras/' + livro() + '#' + item.ancora"
+                    (click)="clicarSumario($event, item.ancora)"
+                    >{{ item.titulo }}</a
+                >
+                @if (item.filhos.length) {
+                    <ng-container
+                        [ngTemplateOutlet]="arvore"
+                        [ngTemplateOutletContext]="{ $implicit: item.filhos }"
+                    />
+                }
+            </li>
+        }
+    </ol>
+</ng-template>

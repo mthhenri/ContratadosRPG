@@ -72,16 +72,20 @@
                 <app-icone nome="simulacao" />
                 <span>Simulação</span>
             </a>
-            <a
+            <button
                 app-botao
                 class="topbar__item"
-                routerLink="/regras"
-                routerLinkActive="topbar__item--ativo"
+                variante="secundario"
+                estilo="texto"
+                type="button"
+                [class.topbar__item--ativo]="regrasConsulta.aberto()"
+                [attr.aria-expanded]="regrasConsulta.aberto()"
                 aria-label="Abrir Regras"
+                (click)="regrasConsulta.abrir()"
             >
                 <app-icone nome="contratados" />
                 <span>Regras</span>
-            </a>
+            </button>
         </nav>
 
         <div class="topbar__acoes">
@@ -193,3 +197,9 @@
 <main class="conteudo" [class.conteudo--isolado]="rotaIsolada()">
     <router-outlet />
 </main>
+
+@if (!rotaIsolada()) {
+    @defer (when regrasConsulta.aberto()) {
+        <app-regras-flutuante />
+    }
+}

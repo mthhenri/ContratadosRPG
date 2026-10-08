@@ -8,6 +8,7 @@ import { SessaoService } from '../../../../core/services/sessao.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
 import { FichaService } from '../../ficha.service';
+import { RegrasConsultaService } from '../../../regras/regras-consulta.service';
 import { FichaFlutuante } from './ficha-flutuante.component';
 import type { FichaFlutuanteAlvo } from './ficha-flutuante.model';
 
@@ -127,6 +128,17 @@ describe('FichaFlutuante', () => {
     const elemento = fixture.nativeElement as HTMLElement;
     expect(elemento.querySelector('.painel-flutuante__janela')).not.toBeNull();
     expect(elemento.querySelector('app-ficha-flutuante-conteudo')).not.toBeNull();
+  });
+
+  it('abre a consulta global de Regras mantendo a ficha aberta', () => {
+    const { fixture } = montar();
+    fixture.componentInstance.abrir(alvoA);
+    fixture.detectChanges();
+    const elemento = fixture.nativeElement as HTMLElement;
+    elemento.querySelector<HTMLButtonElement>('[aria-label="Abrir Regras"]')!.click();
+    expect(TestBed.inject(RegrasConsultaService).aberto()).toBe(true);
+    expect(elemento.querySelector('.painel-flutuante__janela')).not.toBeNull();
+    expect(elemento.querySelector('app-regras-flutuante')).toBeNull();
   });
 
   it('fecha o alvo revogado mesmo durante a troca diferida de ficha', () => {

@@ -1,4 +1,5 @@
-import { Component, computed, forwardRef, input, output, signal } from "@angular/core";
+import { Component, computed, forwardRef, inject, input, output, signal } from "@angular/core";
+import { RegrasLeitorContexto } from "../regras-leitor-contexto";
 import { RegrasArquetipos as BlocoArquetipos, RegrasClasse, RegrasDocumento } from "../regras.model";
 import { Abas } from "../../../shared/ui/abas/abas.component";
 import { Aba } from "../../../shared/ui/abas/aba.component";
@@ -29,12 +30,14 @@ export class RegrasArquetipos {
             ? nome : this.bloco().arquetipos[0]?.nome;
     });
     protected readonly icone = recuperarIconeIdentidade;
+    private readonly contexto = inject(RegrasLeitorContexto, { optional: true });
     protected selecionar(nome: string): void { this.selecionado.set(nome); }
     protected habilidadeInicial(nome: string) {
         return this.iniciais().find(arquetipo => arquetipo.nome === nome)?.habilidadeInicial;
     }
     protected identificador(nome: string): string {
-        return "arquetipo-" + this.documento() + "-" + this.bloco().classe.toLowerCase()
+        const identificador = "arquetipo-" + this.documento() + "-" + this.bloco().classe.toLowerCase()
             + "-" + nome.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, "-");
+        return this.contexto?.identificar(identificador) ?? identificador;
     }
 }

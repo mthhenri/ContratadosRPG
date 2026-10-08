@@ -1,4 +1,5 @@
-import { Component, forwardRef, input, output } from "@angular/core";
+import { Component, forwardRef, inject, input, output } from "@angular/core";
+import { RegrasLeitorContexto } from "../regras-leitor-contexto";
 import { RegrasDocumento, RegrasSecao } from "../regras.model";
 import { RegrasConteudoRender } from "./regras-conteudo.component";
 import { Icone } from "../../../shared/icone/icone.component";
@@ -16,5 +17,9 @@ export class RegrasSecaoRender {
     readonly documento = input<RegrasDocumento["id"]>("sistema");
     readonly navegarAncora = output<string>();
     protected readonly iconeIdentidade = recuperarIconeIdentidade;
+    private readonly contexto = inject(RegrasLeitorContexto, { optional: true });
+    protected identificador(): string {
+        return this.contexto?.identificar(this.bloco().ancora) ?? this.bloco().ancora;
+    }
 }
 

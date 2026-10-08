@@ -29,6 +29,19 @@
 
 ## Ativos
 
+### P-107 — Ação de abrir ficha está sob ancestral `aria-hidden` · `ABERTO` · frontend/acessibilidade
+
+- **Sintoma:** botão "Abrir ficha de …" do cartão da campanha existe e funciona
+  visualmente, mas não aparece como botão na árvore acessível.
+- **Causa:** `espectador-ficha-card.component.html` projeta esse botão dentro de
+  `.espectador-ficha__avatar`, cujo `aria-hidden="true"` oculta toda a subárvore.
+- **Contorno:** no cenário de verificação, localizar pelo atributo `aria-label`;
+  isso não corrige o acesso por leitor de tela.
+- **Correção:** limitar a ocultação à imagem decorativa, preservando a ação na
+  árvore acessível; verificar campanha nos viewports/estados correspondentes.
+- **Desde:** comportamento preexistente, confirmado na verificação real da
+  M10-08 em 08/10/2026; fora do escopo do leitor de Regras.
+
 ### P-106 — Testes do montador conservam caminho anterior do corpus · `ABERTO` · testes/organização
 
 - **Sintoma:** a suíte shared falha em dois arquivos com ENOENT; a compilação dos

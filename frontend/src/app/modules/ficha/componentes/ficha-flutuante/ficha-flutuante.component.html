@@ -23,6 +23,18 @@
     (fechar)="fechar()"
     (minimizadoChange)="aoMinimizadoChange($event)"
 >
+    <button
+        painelAcoesExtras
+        app-botao-icone
+        tamanho="compacto"
+        type="button"
+        aria-label="Abrir Regras"
+        appTooltip="Abrir Regras"
+        (pointerdown)="$event.stopPropagation()"
+        (click)="regrasConsulta.abrir()"
+    >
+        <app-icone nome="contratados" />
+    </button>
     @if (!ehMobile()) {
         <button
             painelAcoesExtras
