@@ -1,0 +1,66 @@
+[
+    {
+        "nome": "Desconhecida",
+        "chave": "desconhecida",
+        "imagem": 1,
+        "cor": "#00fffc",
+        "alfaMaximo": 128,
+        "ocorrencias": 882
+    },
+    {
+        "nome": "Nula",
+        "chave": "nula",
+        "imagem": 2,
+        "cor": "#7fff8e",
+        "alfaMaximo": 255,
+        "ocorrencias": 333
+    },
+    {
+        "nome": "Baixa",
+        "chave": "baixa",
+        "imagem": 3,
+        "cor": "#fdff7f",
+        "alfaMaximo": 255,
+        "ocorrencias": 333
+    },
+    {
+        "nome": "Média",
+        "chave": "media",
+        "imagem": 4,
+        "cor": "#ffc77f",
+        "alfaMaximo": 255,
+        "ocorrencias": 333
+    },
+    {
+        "nome": "Alta",
+        "chave": "alta",
+        "imagem": 5,
+        "cor": "#ff7f7f",
+        "alfaMaximo": 255,
+        "ocorrencias": 333
+    },
+    {
+        "nome": "Extrema",
+        "chave": "extrema",
+        "imagem": 6,
+        "cor": "#7800ff",
+        "alfaMaximo": 128,
+        "ocorrencias": 878
+    },
+    {
+        "nome": "Catastrófica",
+        "chave": "catastrofica",
+        "imagem": 7,
+        "cor": "#000000",
+        "alfaMaximo": 128,
+        "ocorrencias": 884
+    },
+    {
+        "nome": "Apocalíptica",
+        "chave": "apocaliptica",
+        "imagem": 8,
+        "cor": "#ffffff",
+        "alfaMaximo": 128,
+        "ocorrencias": 278
+    }
+]

@@ -1,5 +1,50 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-08 — M10-04: logo oficial reservado à identidade de Criatura
+
+Após revisar a prancha, o autor preferiu a marca própria ContratadosRPG
+(SCP misturado com D20) nos níveis de ameaça, na entrada Regras e nos usos gerais.
+O logo SCP oficial fica somente na identidade de Criatura; os SVGs preparados
+e seus tamanhos são preservados. Isso é decisão de identidade do produto,
+sem tratar a observação do autor como nova proibição jurídica da licença.
+
+Spec ativa, guarda-chuva M10 e dependentes M10-06/07 alinhados; decisão registrada
+em DESIGN e CONTEXT. Prancha atualizada usando o SVG atual da marca própria
+recolorido, sem redesenho. Refino de legibilidade da marca, crédito e gates de
+incorporação seguem abertos; nenhum consumidor de produto alterado nesta revisão.
+Autor autorizou validar e commitar essa preparação. Verificação final aprovou
+os quatro viewports, dimensões e cores computadas, uso oficial somente na faixa
+Criatura e marca própria nas demais faixas/níveis. Originais conferidos byte a
+byte com o livro; paleta, alfa e contagens reproduzidos independentemente;
+dois SVGs com XML válido e sem raster/scripts/filtros. Sintaxe dos scripts,
+formatação e diff limpos. Commit de preparação, sem declarar a M10-04 concluída.
+
+## 2026-10-08 — M10-04: prancha SCP v1 preparada, aprovação pendente
+
+Pedido do autor para executar a M10-04. Spec movida para `active/`; sua exigência
+de aprovação de cada desenho antes da incorporação foi preservada. Preparados
+dois SVGs preenchidos em viewBox 24 (ícone com aro exterior reforçado e silhueta
+com espessura de referência), prancha standalone de 16 a 96px, originais do
+livro ao lado e crédito candidato CC BY-SA 3.0. Fonte vetorial e autores
+registrados em `docs/design/propostas/m10-04/README.md`.
+
+Paleta extraída das oito imagens embutidas no Sistema v4.1.4 por RGB modal dos
+pixels de alfa máximo, sem amostrar sombras/relevo. Quatro originais têm alfa 128;
+proposta sólida torna as cores opacas. Inspeção detectou e corrigiu a conversão
+do contorno exterior fechado e contrastes insuficientes: suporte claro para
+Extrema/Catastrófica, escuro para os demais níveis, sem alterar o RGB do livro.
+
+Prancha renderizada no Edge/Playwright e inspecionada pessoalmente em 1920×1080,
+360×800, 960×1080 e 1366×768, com ambas as bases. Cada cenário: 44 SVGs, 16 níveis,
+dimensões conferidas, imagens completas, zero erro de página/overflow.
+Scripts conferidos com `node --check`, SVGs validados como XML, HTML formatado.
+[Evidências e pendências](../reviews/m10-04-proposta-v1.md).
+
+Task permanece aberta para aprovação dos desenhos, paleta/fundos e crédito.
+Não houve incorporação ao produto, mudança na topbar ou no leitor. Gates de
+produto e skill `verify` em Angular real seguem após a aprovação; a inspeção
+da prancha não os substitui. Sem commit nesta etapa.
+
 ## 2026-10-08 — M10-03: catálogo de ícones de identidade aprovado
 
 A [spec](../specs/done/m10-03-icones-identidade.spec.md) acrescenta 17 nomes e SVGs ao

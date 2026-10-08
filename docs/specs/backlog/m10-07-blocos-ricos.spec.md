@@ -27,7 +27,9 @@ Renderizar os blocos tipados da `m10-02` no leitor.
    selo de tipo de habilidade de criatura.
 8. **Ficha completa** (A Estátua): logo do NA, citação, Vida/Defesa em destaque, resistências em
    chips, ataques em linha.
-9. **Níveis de ameaça:** silhueta SCP (`m10-04`) pintada pela cor do nível.
+9. **Níveis de ameaça:** silhueta da marca própria ContratadosRPG (SCP + D20,
+   `m10-04`) pintada pela cor do nível. O logo SCP oficial identifica somente
+   Criatura, não os níveis, inclusive o logo do NA da ficha completa acima.
 10. Chip de Energia e destaques de Vida/Defesa com `appTooltip` por extenso ("3 de Energia").
 
 ## Verificação

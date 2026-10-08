@@ -46,7 +46,13 @@
 > após autorização do autor. P-095/P-096/P-098/P-100
 > já versionadas separadamente; P-097 e livros/leitor em grupos próprios.
 > Dados sintéticos/resíduos limpos. M10 (Regras): `m10-01`, `m10-02` e `m10-03` concluídas,
-> núcleo/casos explícitos do normalizador e ícones de identidade entregues; `m10-04`…`m10-11` no backlog.
+> núcleo/casos explícitos do normalizador e ícones de identidade entregues; `m10-04` em `active/`,
+> [prancha SCP v1](../design/propostas/m10-04-scp-aprovacao.html) aguardando aprovação dos
+> desenhos, paleta/fundos e crédito antes da incorporação. Autor revisou o uso:
+> SCP oficial somente na identidade de Criatura; marca própria SCP + D20 em Regras,
+> níveis e usos gerais. Refino da marca própria permanece aberto.
+> [Evidências e gates pendentes](../reviews/m10-04-proposta-v1.md).
+> `m10-05`…`m10-11` no backlog.
 > [Gates, contagens e avisos dos casos explícitos](../reviews/m10-02-verificacao.md).
 > **Última decisão registrada:** Sistema do Jogador v4.1.3
 > incorporado em `p-097-01`: crítico soma +2 uma vez no teste; dano/cura continuam

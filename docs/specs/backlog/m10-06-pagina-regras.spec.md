@@ -32,7 +32,9 @@ entrada da topbar por **Regras**.
    (`app-notificacao` ou equivalente existente).
 5. **Estados:** `app-esqueleto` com a silhueta do trilho e do texto na abertura e na troca de
    documento.
-6. **Topbar:** "Documentos" vira **Regras** com o ícone `scp` (`m10-04`) e leva à página. O leitor de
+6. **Topbar:** "Documentos" vira **Regras** com a marca própria ContratadosRPG
+   (SCP + D20, preparada na `m10-04`), e leva à página. O logo SCP oficial fica
+   reservado à identidade de Criatura. O leitor de
    PDF continua acessível como **download provisório** do PDF antigo até a `m10-11`. Crédito
    CC BY-SA no rodapé das Regras.
 

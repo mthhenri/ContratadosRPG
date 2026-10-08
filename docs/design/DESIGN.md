@@ -193,6 +193,14 @@ resultado renderizado de cada um.
 
 ### Ícones de identidade (`m10-03`)
 
+**Uso da marca (decisão do autor, M10-04, 08/10/2026):** a marca própria
+ContratadosRPG — SCP misturado com D20, assets `frontend/public/logo-{black,white}.*`
+— é o padrão geral, inclusive na entrada Regras e nos níveis de ameaça.
+O logo SCP oficial fica reservado à identidade de Criatura. Os SVGs oficiais
+preparados na [prancha M10-04](propostas/m10-04-scp-aprovacao.html) são preservados;
+o refino da marca própria e a incorporação ao catálogo seguem na task ativa.
+Essa decisão prevalece sobre o uso anterior do logo oficial no exemplão.
+
 O catálogo canônico `app-icone` (`frontend/src/app/shared/icone/`) reúne a família de
 identidade decidida no [exemplão de Regras](propostas/m10-regras-exemplao.html), objeto
 `ICO`, opção `dec`. SVGs de contorno em `viewBox="0 0 24 24"`, traço `1.75`, pontas e

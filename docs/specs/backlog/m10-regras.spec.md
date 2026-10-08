@@ -46,8 +46,10 @@ PDF do Docs e o `pdfjs-dist` quando a exportação existir.
 
 Resumo; o detalhe e o desenho estão no exemplão (aba *Decisões*), que a task de cada bloco cita.
 
-- **Topbar:** "Documentos" vira **Regras**, com o **ícone SCP** (CC BY-SA 3.0 — crédito no rodapé de
-  Regras; SVG definitivo na `m10-04`).
+- **Topbar:** "Documentos" vira **Regras**, com a **marca própria ContratadosRPG
+  (SCP + D20)**. Decisão revista pelo autor em 08/10/2026: logo SCP oficial
+  reservado à identidade de Criatura; níveis e usos gerais usam a marca própria.
+  Assets definitivos e crédito CC BY-SA 3.0 preparados na `m10-04`.
 - **Abertura:** painel flutuante por padrão; ↗ abre a página completa (padrão da Biblioteca, `m9-11`).
 - **Página completa:** dois trilhos (análogo: leitura em trilhos dos patchnotes). Sumário fixo em
   árvore até ⬥, largo o bastante para não quebrar título; rolagem do site. **Coluna**: texto,
