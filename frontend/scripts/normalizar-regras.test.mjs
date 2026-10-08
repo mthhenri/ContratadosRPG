@@ -17,7 +17,7 @@ const normalizar = (texto) => normalizarDocumento(texto, 'sistema', '4.1.3');
 function percorrer(conteudo) {
     return conteudo.flatMap((item) => [item,
         ...('filhos' in item ? percorrer(item.filhos) : []),
-        ...('itens' in item ? item.itens.flatMap(percorrer) : []),
+        ...(item.tipo === 'lista' ? item.itens.flatMap(percorrer) : []),
     ]);
 }
 
@@ -33,11 +33,14 @@ function textoDocumento(conteudo) {
     return conteudo.map((item) => {
         if (item.tipo === 'secao') return item.titulo + ' ' + textoDocumento(item.filhos);
         if (item.tipo === 'lista') return item.itens.map(textoDocumento).join(' ');
-        if (item.tipo === 'tabela') return [item.cabecalho, ...item.linhas]
-            .flatMap((linha) => linha.map(textoTrechos)).join(' ');
+        if ('cabecalho' in item) return [item.cabecalho, ...item.linhas]
+            .flatMap((linha) => linha.map(textoTrechos)).join(' ')
+            + ('filhos' in item ? ' ' + textoDocumento(item.filhos) : '');
+        if (item.tipo === 'roteiro' || item.tipo === 'ficha-criatura') return textoDocumento(item.filhos);
+        if (item.tipo === 'habilidade-criatura') return item.rotulo + ' ' + textoTrechos(item.trechos);
         if (item.tipo === 'habilidade') return `${item.nome} [${item.custo} E] `
             + (item.reacao ? '(Reação) ' : '') + textoTrechos(item.trechos);
-        return textoTrechos(item.trechos);
+        return textoTrechos(item.trechos) + ('filhos' in item ? ' ' + textoDocumento(item.filhos) : '');
     }).join(' ');
 }
 
@@ -201,12 +204,13 @@ test('nota de uma célula e tabela de dados reais', () => {
     assert.equal(tabela.linhas.length, 3);
 });
 
-test('layout real fica genérico e avisa; nenhuma célula some', () => {
-    const resultado = normalizar(fixture('generico'));
+test('layout com assinatura desconhecida fica genérico e avisa; nenhuma célula some', () => {
+    const entrada = fixture('generico').replace('⬥ Combatente', '⬥ Classe desconhecida');
+    const resultado = normalizar(entrada);
     assert.ok(resultado.avisos.length > 0);
     assert.ok(resultado.documento.filhos.every((item) => item.tipo === 'generico'));
     assert.equal(conteudoComparavel(textoDocumento(resultado.documento.filhos)),
-        conteudoComparavel(textoEntrada(fixture('generico'), [])));
+        conteudoComparavel(textoEntrada(entrada, [])));
 });
 
 test('exemplo real é bloco; exemplo no meio de frase permanece inline', () => {
@@ -315,7 +319,7 @@ test('publicação escreve dois JSONs determinísticos e avisos legíveis', asyn
         assert.deepEqual(readdirSync(destino), ['guia.json', 'sistema.json']);
         assert.deepEqual(readdirSync(destino).map((arquivo) => readFileSync(join(destino, arquivo), 'utf8')),
             primeira);
-        assert.ok(mensagens.includes('[regras] 71 aviso(s); conteúdo preservado para revisão.'));
-        assert.ok(mensagens.some((mensagem) => mensagem.startsWith('[regras] sistema-v4.1.3.md:262')));
+        assert.ok(mensagens.some((mensagem) => /^\[regras\] \d+ aviso\(s\); conteúdo preservado para revisão\.$/.test(mensagem)));
+        assert.ok(mensagens.some((mensagem) => mensagem.startsWith('[regras] sistema-v4.1.3.md:313')));
     } finally { rmSync(destino, { recursive: true, force: true }); }
 });

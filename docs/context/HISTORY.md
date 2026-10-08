@@ -1,5 +1,45 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-07 — M10-02: casos explícitos dos livros reconhecidos no normalizador
+
+Pedido do autor depois do núcleo M10-01. A
+[spec](../specs/done/m10-02-normalizador-casos-explicitos.spec.md) foi implementada sem UI:
+reconhecedores separados de personagens/equipamentos/Guia, tipos próprios no formato
+canônico e agrupamento do dossiê de Classe e da ficha completa da Estátua. Assinaturas
+desconhecidas/incompletas conservam conteúdo como genérico e avisam a linha de origem.
+
+Conferência dos livros: 3 classes, 9 arquétipos/iniciais, 2 origens (Bombeiro e Alpinista
+Profissional), 5 módulos com Energia Máxima, 100 equipamentos, 67 modificações e 8 níveis
+de ameaça no Sistema; 2 roteiros (13/15 etapas), identidade rótulo/valor, dez atributos
+com modificadores, 3 habilidades sem Energia e uma ficha completa no Guia. Danos de
+Uma/Duas Mãos saem em dois valores literais; empilhamento/Bloqueia preservados. Nada é
+calculado ou completado. O Esmagamento da Estátua usa o dano do livro, mesmo divergindo
+do exemplão. Células/árvore originais ficam disponíveis para auditoria, além dos campos
+semânticos; o oráculo independente de texto da M10-01 percorre a fonte uma vez.
+
+Revisão independente encontrou três casos reproduzidos: próximo rótulo aceito como valor
+ausente de Porte/Regeneração/Deslocamento; prefixo “ameaça altamente” inferindo NA Alto;
+escapes do Docs separando número contraditório de uma referência NA. Todos corrigidos,
+com testes de regressão. Dois workers no modelo padrão implementaram os reconhecedores
+independentes de personagens/equipamentos e um revisor no modelo padrão revisou a
+integração; principal conferiu fonte, campos, contagens e gates. Delegados não fizeram commit.
+
+Verificação: 56 testes do normalizador, 21 novas fixtures literais, TypeScript/checkJs,
+texto/pontuação integral dos dois livros, links/âncoras e publicação determinística.
+Suítes amplas: shared 1.157; backend 994 + 1 skipped; Angular 3.053. Lint global sem erros,
+27.101 avisos existentes; recorte final de scripts/modelo sem avisos. `prestart` passou.
+Produção passou no modo de CI do Angular (`CI=true`, dois workers), sem mudar configurações;
+tentativas com cache local encerraram por falha nativa 3221225477, contornada em P-104.
+Assets públicos e publicados idênticos por SHA256; PDFs e worker mantidos. Aviso de budget
+557,18 kB/450 kB permanece. Primeira rodada no sandbox falhou por EPERM/rede, reexecutada
+fora dele. Sem UI nesta task, gate visual não aplicável.
+
+Os avisos caíram de 71 para 41: 17 tabelas fora das assinaturas explícitas, 8 definições de
+imagem e 7 colisões de âncora no Sistema; 9 colisões no Guia. A lista por linha e justificativa
+está na [verificação](../reviews/m10-02-verificacao.md); conteúdo integral preservado.
+Spec em `done`, M10 em 2/11; renderização rica é M10-07. Alterações concorrentes M4-21
+preservadas. Autor autorizou o commit específico da M10-02 em 2026-10-08; sem push.
+
 ## 2026-10-07 — M4-21: ficha de NPC revista para se aproximar da ficha do Jogador
 
 Pedido do autor depois da M4-20, numa revisão visual e de usabilidade da ficha pronta. Ele

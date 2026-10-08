@@ -29,6 +29,20 @@
 
 ## Ativos
 
+### P-104 — Build Angular encerra com falha nativa usando cache local · `CONTORNADO` · ferramentas/local
+
+- **Sintoma:** `npm run build --workspace=frontend` encerra no Windows com código
+  3221225477, durante Building, sem diagnóstico de erro TypeScript. Reproduzido em
+  tentativas separadas na M10-02; reduzir workers e desativar TS paralelo não resolveram.
+- **Causa:** não confirmada. O mesmo build de produção passou com `CI=true`, que desativa
+  o cache local por `@angular/build/src/utils/normalize-cache.js`. A evidência isola um
+  contorno de execução, não prova qual componente nativo ou arquivo de cache falhou.
+- **Contorno:** executar o build com `CI=true`; gate da M10-02 também usou
+  `NG_BUILD_MAX_WORKERS=2`. Não exige alterar `angular.json` nem limites de budget.
+- **Correção:** investigar o cache/runtime local em tarefa própria; não apagar caches de
+  processos concorrentes nem alterar dependências como parte do normalizador.
+- **Desde:** observado também no gate da M10-01; repetido na M10-02, 2026-10-07.
+
 ### P-103 — `app-modal` encolhe o corpo em vez de rolar o diálogo · `CONTORNADO` · frontend/ui
 
 - **Sintoma:** com conteúdo mais alto que a tela (ex.: Biblioteca de Referência do NPC em

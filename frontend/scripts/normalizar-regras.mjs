@@ -3,6 +3,10 @@ import { readFile, readdir, mkdir, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { Lexer } from 'marked';
+import { reconhecerEquipamentos } from './regras-equipamentos.mjs';
+import { reconhecerPersonagens } from './regras-personagens.mjs';
+import { marcarNiveis, reconhecerTabelaGuia, reconhecerHabilidadeCriatura,
+    reconhecerSecaoGuia, reconhecerNiveisAmeaca, marcarNivelNome } from './regras-guia.mjs';
 
 /** @typedef {import('../src/app/modules/regras/regras.model.js').RegrasDocumento} RegrasDocumento */
 /** @typedef {import('../src/app/modules/regras/regras.model.js').RegrasConteudo} RegrasConteudo */
@@ -71,6 +75,8 @@ export function normalizarDocumento(texto, id, versao) {
     const reservadas = new Set(titulos.map((titulo) => derivarAncora(titulo.titulo)));
     const utilizadas = new Set();
     const destinos = new Map();
+    /** @type {string[]} */
+    let caminho = [];
     for (const titulo of titulos) {
         const base = derivarAncora(titulo.titulo);
         let ancora = base;
@@ -125,11 +131,36 @@ export function normalizarDocumento(texto, id, versao) {
                         : { tipo: 'texto', texto: trecho });
             });
         }
-        return converter(Lexer.lexInline(conteudo), linha);
+        const trechos = converter(Lexer.lexInline(conteudo), linha);
+        /** @param {RegrasTrecho[]} partes */
+        const lerTexto = (partes) => partes.map((parte) => 'filhos' in parte
+            ? lerTexto(/** @type {RegrasTrecho[]} */ (parte.filhos))
+            : parte.tipo === 'tarja' ? '█'.repeat(parte.comprimento) : parte.texto).join('');
+        const textoCompleto = lerTexto(trechos);
+        /** Reúne escapes contíguos antes de classificar; negrito/itálico continuam intactos.
+         * @param {RegrasTrecho[]} partes @returns {RegrasTrecho[]} */
+        function marcar(partes) {
+            /** @type {RegrasTrecho[]} */
+            const reunidas = [];
+            for (const parte of partes) {
+                const anterior = reunidas.at(-1);
+                if (parte.tipo === 'texto' && anterior?.tipo === 'texto') {
+                    reunidas[reunidas.length - 1] = { tipo: 'texto', texto: anterior.texto + parte.texto };
+                } else reunidas.push(parte);
+            }
+            return reunidas.flatMap((parte) => parte.tipo === 'texto'
+                ? marcarNiveis(parte.texto, textoCompleto)
+                : 'filhos' in parte ? [{ ...parte,
+                    filhos: marcar(/** @type {RegrasTrecho[]} */ (parte.filhos)) }] : [parte]);
+        }
+        return marcar(trechos);
     }
 
     /** @param {string} conteudo @param {number} linha @returns {RegrasBloco} */
     function normalizarParagrafo(conteudo, linha) {
+        const habilidadeCriatura = id === 'guia' ? reconhecerHabilidadeCriatura(conteudo,
+            { secao: caminho.at(-1) ?? '', caminho, linha, inline: normalizarInline }) : null;
+        if (habilidadeCriatura) return habilidadeCriatura;
         const primeiraLinha = conteudo.split('\n')[0];
         const habilidade = limparTitulo(primeiraLinha).match(
             /^(?:([⬦◈◻])\s*)?(.+?)\s*\[(\d+|X) E\]\s*(?:-\s*)?(\(Reação\)\s*)?/,
@@ -159,7 +190,7 @@ export function normalizarDocumento(texto, id, versao) {
                 // O Docs também une exemplos e habilidades ao parágrafo anterior por quebra dura
                 // (como as Fortificações de Determinado). Cada linha especial abre seu bloco.
                 const partes = token.raw.trimEnd().split(
-                    /\n(?=\s*(?:\*?Exemplo:|\*{0,3}[⬦◈◻]\s+.+?\\?\[(?:\d+|X) E\\?\]))/,
+                    /\n(?=\s*(?:\*?Exemplo:|\*{0,3}[⬦◈◻]\s+.+?\\?\[(?:\d+|X) E\\?\]|.+?\\?\[(?:Passiva|Ativa|De Gatilho)\\?\]\s*\n))/,
                 );
                 let linhaParte = linha;
                 for (const parte of partes) {
@@ -167,19 +198,38 @@ export function normalizarDocumento(texto, id, versao) {
                     linhaParte += parte.split('\n').length;
                 }
             } else if (token.type === 'table') {
+                const tabela = /** @type {import('marked').Tokens.Table} */ (token);
+                const contexto = { secao: caminho.at(-1) ?? '', caminho, linha,
+                    inline: normalizarInline, paragrafo: normalizarParagrafo };
+                const explicito = id === 'sistema'
+                    ? reconhecerEquipamentos(tabela, contexto) ?? reconhecerPersonagens(tabela, contexto)
+                        ?? reconhecerNiveisAmeaca(tabela, contexto)
+                    : reconhecerTabelaGuia(tabela, contexto);
+                if (explicito) {
+                    blocos.push(explicito);
+                    linha += (token.raw.match(/\n/g) ?? []).length;
+                    continue;
+                }
                 const celulas = [token.header, ...token.rows];
                 if (token.header.length === 1 && token.rows.length === 0) {
                     blocos.push({ tipo: 'nota', trechos: normalizarInline(token.header[0].text, linha) });
                 } else {
                     // Conservador: tabelas com títulos/glifos, células narrativas no cabeçalho
                     // ou módulos são layout. A m10-02 acrescentará reconhecedores explícitos.
-                    const layout = token.header.some((celula) =>
+                    const rotulos = token.header.map((celula) => limparTitulo(celula.text));
+                    const dadosGuia = id === 'guia' && [
+                        ['Object Class', 'NA equivalente aproximado'],
+                        ['Perfil da criatura', 'Ataques recomendados'],
+                        ['Papel da habilidade', 'Usos esperados', 'Custo relativo ao pool'],
+                    ].some((esquema) => esquema.length === rotulos.length
+                        && esquema.every((rotulo, indice) => rotulo === rotulos[indice]));
+                    const layout = !dadosGuia && (token.header.some((celula) =>
                         /[⬢⬡⬥⬦◈◻▷]|\[Médio|\[Forte|\[Frágil|^Designação$|^Módulo [IV]+|^VIDA\b/.test(
                             limparEscapes(celula.text),
                         ) || celula.text.length > 100)
-                        || token.header.every((celula) => !celula.text || /\s/.test(celula.text));
+                        || token.header.every((celula) => !celula.text || /\s/.test(celula.text)));
                     if (layout) {
-                        const motivo = 'Tabela de layout preservada; caso específico da m10-02.';
+                        const motivo = 'Tabela de layout sem assinatura explícita completa; preservada como genérico.';
                         avisar(linha, motivo);
                         blocos.push({ tipo: 'generico', motivo, origemMarkdown: token.raw,
                             trechos: celulas.flatMap((celulasLinha, indiceLinha) =>
@@ -191,7 +241,11 @@ export function normalizarDocumento(texto, id, versao) {
                     } else blocos.push({ tipo: 'tabela',
                         cabecalho: token.header.map((celula) => normalizarInline(celula.text, linha)),
                         linhas: token.rows.map((celulasLinha, indiceLinha) => celulasLinha.map(
-                            (celula) => normalizarInline(celula.text, linha + indiceLinha + 2),
+                            (celula, indiceColuna) => {
+                                const trechos = normalizarInline(celula.text, linha + indiceLinha + 2);
+                                return ['NA', 'NA mínimo'].includes(rotulos[indiceColuna])
+                                    ? marcarNivelNome(trechos) : trechos;
+                            },
                         )) });
                 }
             } else if (token.type === 'list') {
@@ -216,7 +270,7 @@ export function normalizarDocumento(texto, id, versao) {
 
     /** @type {RegrasConteudo[]} */
     const filhos = [];
-    const pilha = [{ nivel: 0, filhos }];
+    const pilha = [{ nivel: 0, filhos, titulo: '' }];
     let inicio = 0;
     for (const titulo of titulos) {
         const trecho = linhas.slice(inicio, titulo.linha - 1).map((linha) => linha.texto).join('\n');
@@ -226,11 +280,43 @@ export function normalizarDocumento(texto, id, versao) {
         const filhosSecao = [];
         pilha.at(-1).filhos.push({ tipo: 'secao', nivel: titulo.nivel, glifo: titulo.glifo,
             titulo: titulo.titulo, ancora: titulo.ancora, filhos: filhosSecao });
-        pilha.push({ nivel: titulo.nivel, filhos: filhosSecao });
+        pilha.push({ nivel: titulo.nivel, filhos: filhosSecao, titulo: titulo.titulo });
+        caminho = pilha.slice(1).map((secao) => secao.titulo);
         inicio = titulo.linha;
     }
     const restante = linhas.slice(inicio).map((linha) => linha.texto).join('\n');
     pilha.at(-1).filhos.push(...normalizarBlocos(Lexer.lex(restante), inicio + 1));
+    /** Integra o dossiê e os casos que atravessam várias tabelas/seções do Guia.
+     * @param {RegrasConteudo[]} conteudo @param {string[]} ancestrais */
+    function agruparCasos(conteudo, ancestrais) {
+        for (let indice = 0; indice < conteudo.length; indice++) {
+            const item = conteudo[indice];
+            if (item.tipo === 'classe') {
+                const seguinte = conteudo[indice + 1];
+                if (seguinte?.tipo === 'arquetipos' && seguinte.classe === item.nome) {
+                    conteudo[indice] = { ...item, filhos: [seguinte] };
+                    conteudo.splice(indice + 1, 1);
+                }
+            }
+            if (item.tipo !== 'secao') continue;
+            const filhosSecao = /** @type {RegrasConteudo[]} */ (item.filhos);
+            agruparCasos(filhosSecao, [...ancestrais, item.titulo]);
+            if (id !== 'guia') continue;
+            const titulo = titulos.find((titulo) => titulo.ancora === item.ancora);
+            const fim = titulos.find((seguinte) => seguinte.linha > titulo.linha
+                && seguinte.nivel <= titulo.nivel)?.linha ?? linhas.length + 1;
+            const origemMarkdown = linhas.slice(titulo.linha, fim - 1)
+                .map((linha) => linha.texto).join('\n');
+            const resultado = reconhecerSecaoGuia(item, origemMarkdown,
+                { secao: item.titulo, caminho: ancestrais, linha: titulo.linha + 1,
+                    inline: normalizarInline });
+            if (resultado) {
+                conteudo[indice] = { ...item, filhos: [resultado.bloco] };
+                if (resultado.motivo) avisar(titulo.linha + 1, resultado.motivo);
+            }
+        }
+    }
+    agruparCasos(filhos, []);
     avisos.sort((primeiro, segundo) => primeiro.linha - segundo.linha);
     return { documento: { tipo: 'documento', id,
         titulo: id === 'sistema' ? 'Sistema' : 'Guia de Mestre', versao, filhos }, avisos };
