@@ -124,6 +124,12 @@
     /* --- Tipografia --- */
     --font-mono: "IBM Plex Mono", ui-monospace, monospace; /* dados, títulos, rótulos, números */
     --font-sans: "IBM Plex Sans", system-ui, sans-serif; /* corpo, textos longos */
+    /* Papel da exportação M10-10, independente da base/accent escolhidos. */
+    --papel-fundo: #ffffff;
+    --papel-superficie: #eef0f3;
+    --papel-texto: #12151a;
+    --papel-texto-secundario: #4a4f57;
+    --papel-borda: rgba(0, 0, 0, 0.16);
     --tracking-label: 0.12em; /* rótulos UPPERCASE */
 
     /* --- Forma (levemente arredondado) --- */

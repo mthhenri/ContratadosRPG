@@ -1,0 +1,38 @@
+<article class="regras-impressao">
+    <section class="regras-impressao__capa">
+        <app-icone nome="contratados" class="regras-impressao__marca" />
+        <h1>Contratados RPG</h1>
+        <h2>{{ documento().titulo }}</h2>
+        <p class="regras-impressao__versao">v{{ documento().versao }}</p>
+        <div class="regras-impressao__abertura">
+            <app-regras-conteudo [filhos]="abertura()" [documento]="documento().id" />
+        </div>
+    </section>
+    <nav class="regras-impressao__sumario" aria-label="Sumário do livro impresso">
+        <h2>Sumário</h2>
+        <ng-container
+            [ngTemplateOutlet]="arvore"
+            [ngTemplateOutletContext]="{ $implicit: sumario() }"
+        />
+    </nav>
+    <app-regras-conteudo [filhos]="conteudo()" [documento]="documento().id" />
+    <footer class="regras-impressao__credito">
+        Logo SCP: far2; versão de alta resolução por Aelanna; vetor de Vizorsols e BmboB. Adaptado
+        para ContratadosRPG. Licença CC BY-SA 3.0.
+    </footer>
+</article>
+<ng-template #arvore let-itens>
+    <ol>
+        @for (item of itens; track item.ancora) {
+            <li>
+                <a [href]="'#' + contexto.identificar(item.ancora)">{{ item.titulo }}</a>
+                @if (item.filhos.length) {
+                    <ng-container
+                        [ngTemplateOutlet]="arvore"
+                        [ngTemplateOutletContext]="{ $implicit: item.filhos }"
+                    />
+                }
+            </li>
+        }
+    </ol>
+</ng-template>

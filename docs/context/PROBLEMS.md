@@ -29,6 +29,18 @@
 
 ## Ativos
 
+### P-108 — Formatação do PDF de Regras precisa de revisão · `CONTORNADO` · frontend/impressão
+
+- **Sintoma:** autor avaliou o PDF da M10-10 como “bem estranho” e pediu revisão
+  substancial da formatação; apresentação editorial ainda não aprovada.
+- **Causa:** não investigada com o autor; geração/paginação técnica não comprova
+  qualidade editorial. Não atribuir defeitos específicos sem essa avaliação.
+- **Contorno:** exportação do Sistema temporariamente desativada na UI e no
+  service; exportação do Guia continua disponível.
+- **Correção:** [revisão da formatação](../specs/backlog/revisao-formatacao-pdf-regras.spec.md),
+  com corte visual aprovado e conferência completa antes de reativar o Sistema.
+- **Desde:** avaliação do autor em 08/10/2026 após a entrega da M10-10.
+
 ### P-107 — Ação de abrir ficha está sob ancestral `aria-hidden` · `ABERTO` · frontend/acessibilidade
 
 - **Sintoma:** botão "Abrir ficha de …" do cartão da campanha existe e funciona

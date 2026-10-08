@@ -26,6 +26,7 @@
             [id]="identificador(arquetipo.nome) + '-painel'"
             [attr.aria-labelledby]="identificador(arquetipo.nome) + '-aba'"
         >
+            <h4 class="regras-arquetipos__impressao">{{ arquetipo.nome }}</h4>
             @if (arquetipo.citacao.length) {
                 <p class="regras-arquetipos__citacao">
                     <app-regras-inline

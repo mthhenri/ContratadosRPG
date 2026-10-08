@@ -1,0 +1,210 @@
+app-regras-impressao {
+    display: none;
+}
+
+@media print {
+    html:has(body.regras-imprimindo) {
+        background: var(--papel-fundo) !important;
+        background-image: none !important;
+        color: var(--papel-texto);
+    }
+    @page regras-livro {
+        size: A4;
+        margin: 18mm 15mm;
+        background: var(--papel-fundo);
+        @top-left {
+            content: var(--regras-impressao-titulo);
+            font: 8pt var(--font-mono);
+            color: var(--papel-texto);
+        }
+        @bottom-right {
+            content: counter(page) " / " counter(pages);
+            font: 8pt var(--font-mono);
+            color: var(--papel-texto);
+        }
+    }
+    @page regras-livro:first {
+        margin: 0;
+        @top-left {
+            content: none;
+        }
+        @bottom-right {
+            content: none;
+        }
+    }
+    body.regras-imprimindo {
+        margin: 0;
+        background: var(--papel-fundo);
+        & > :not(app-regras-impressao) {
+            display: none !important;
+        }
+        app-regras-impressao {
+            display: block;
+            page: regras-livro;
+            --bg: var(--papel-superficie);
+            --surface: var(--papel-fundo);
+            --surface-2: var(--papel-superficie);
+            --text: var(--papel-texto);
+            --text-dim: var(--papel-texto-secundario);
+            --text-mute: var(--papel-texto-secundario);
+            --border: var(--papel-borda);
+            --border-strong: var(--papel-borda);
+            --accent: var(--vida);
+            color: var(--text);
+            background: var(--surface);
+            font: 10pt/1.45 var(--font-sans);
+            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact;
+        }
+        .regras-impressao {
+            &__capa {
+                min-height: 297mm;
+                padding: 20mm;
+                box-sizing: border-box;
+                text-align: center;
+                break-after: page;
+                h1 {
+                    margin: 8mm 0 2mm;
+                    font: 700 24pt var(--font-mono);
+                }
+                h2 {
+                    margin: 0 0 3mm;
+                    font: 600 18pt var(--font-mono);
+                }
+            }
+            &__marca {
+                display: inline-block;
+                font-size: 48pt;
+            }
+            &__versao {
+                font: 500 11pt var(--font-mono);
+                margin: 0 0 12mm;
+            }
+            &__abertura {
+                max-width: 160mm;
+                margin: auto;
+            }
+            &__abertura .regras-paragrafo {
+                font-size: 10pt;
+                white-space: pre-line;
+            }
+            &__sumario {
+                break-after: page;
+                h2 {
+                    font: 600 20pt var(--font-mono);
+                }
+                ol {
+                    list-style: none;
+                    padding-left: 4mm;
+                    margin: 0;
+                }
+                li {
+                    margin: 1mm 0;
+                }
+                a {
+                    color: var(--text);
+                    text-decoration: none;
+                }
+            }
+            &__credito {
+                margin-top: 8mm;
+                font-size: 8pt;
+                break-inside: avoid;
+            }
+        }
+        .regras-secao__capitulo {
+            break-before: page;
+        }
+        h2,
+        h3,
+        h4,
+        h5,
+        .regras-inline__subclasse {
+            break-after: avoid;
+            break-inside: avoid;
+        }
+        p,
+        li {
+            orphans: 3;
+            widows: 3;
+        }
+        .regras-paragrafo {
+            font-size: 10pt;
+            line-height: 1.45;
+        }
+        .regras-conteudo__habilidades,
+        .regras-equipamentos,
+        .regras-modificacoes,
+        .regras-origens,
+        .regras-niveis {
+            display: block;
+        }
+        .regras-habilidade,
+        .regras-secao--verbete,
+        .regras-guia__habilidade,
+        .regras-equipamentos__item,
+        .regras-modificacoes__item,
+        .regras-origens__item,
+        .regras-nota,
+        .regras-exemplo,
+        .regras-niveis__item,
+        .regras-ficha__ataques > article {
+            break-inside: avoid;
+        }
+        app-abas,
+        button,
+        app-tooltip {
+            display: none !important;
+        }
+        .regras-arquetipos__painel[hidden] {
+            display: block !important;
+        }
+        .regras-arquetipos__painel {
+            break-before: page;
+            margin-bottom: 8mm;
+        }
+        .regras-arquetipos__impressao {
+            display: block;
+            font: 600 15pt var(--font-mono);
+        }
+        .regras-tabela {
+            overflow: visible;
+            mask-image: none !important;
+        }
+        table {
+            table-layout: fixed;
+            width: 100%;
+            font-size: 9pt;
+        }
+        thead {
+            display: table-header-group;
+        }
+        tr {
+            break-inside: avoid;
+        }
+        th,
+        td {
+            min-width: 0 !important;
+            padding: 2mm !important;
+            position: static !important;
+            box-shadow: none !important;
+            overflow-wrap: anywhere;
+        }
+        .chip {
+            white-space: normal;
+            break-inside: avoid;
+        }
+        .stat {
+            break-inside: avoid;
+        }
+        .regras-modulos__recurso {
+            display: block !important;
+        }
+        a::after {
+            content: none !important;
+        }
+        .regras-inline__tarja {
+            print-color-adjust: exact;
+        }
+    }
+}

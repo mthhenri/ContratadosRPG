@@ -226,6 +226,18 @@ Destaques usam `--accent-dim`/`--text`, ocorrência atual com contorno `--accent
 Rolagem posiciona o destaque abaixo da barra e do contador medidos na aplicação.
 [Pesquisa, comparação visual e gates](../specs/done/m10-09-pesquisa-regras/m10-09-verificacao.md).
 
+Desde M10-10, `app-botao-icone` compacto com tooltip Exportar PDF fica ao lado
+do título/versão no trilho/gaveta. Projeção sob demanda reutiliza os blocos do
+leitor em papel A4 claro, com tokens `--papel-*`, IBM Plex, capa/tarjas/versão,
+sumário hierárquico e margens com livro/versão e página/total. Capítulos e
+arquétipos começam em novas páginas; caixas curtas/linhas permanecem inteiras,
+containers longos fragmentam. Cores de ameaça são preservadas. Controles e
+marcas de pesquisa ficam fora da impressão. Sumário sem páginas e referências
+por nome são limites da impressão nativa.
+[Inspeção dos livros e limites](../specs/done/m10-10-exportar-pdf/verificacao.md).
+Após avaliação do autor, a apresentação dos PDFs permanece em revisão (P-108).
+Exportar o Sistema está temporariamente desativado; o Guia permanece disponível.
+
 **Uso da marca (decisão do autor, M10-04, 08/10/2026):** a marca própria
 ContratadosRPG — SCP misturado com D20, assets `frontend/public/logo-{black,white}.*`
 — é o padrão geral, inclusive na entrada Regras e nos níveis de ameaça.

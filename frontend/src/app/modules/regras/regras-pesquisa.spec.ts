@@ -55,6 +55,7 @@ describe("Projeção e destaque seguro do formato canônico", () => {
     it("exclui controles, ícones e tarjas; mantém uma barreira na frase", () => {
         const raiz = document.createElement("div");
         raiz.innerHTML = '<button>Oculto</button><span aria-hidden="true">Oculto</span>'
+            + '<h4 class="regras-arquetipos__impressao">Oculto</h4>'
             + '<app-regras-inline>Classe <span class="regras-inline__tarja"></span>'
             + "inferior</app-regras-inline>";
         const textos = projetarTextosPesquisa(raiz);

@@ -1,5 +1,63 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-08 — M10-10: avaliação do autor e suspensão do PDF do Sistema
+
+Autor considerou a formatação do PDF “bem estranha” e pediu revisão substancial.
+Os gates da entrega anterior comprovaram geração/funcionamento, não aprovação
+editorial. Registrados P-108 e a spec de revisão no backlog. Sem inventar lista
+de defeitos: a avaliação detalhada e o corte representativo serão feitos nessa
+tarefa, com aprovação visual antes de reativar o Sistema.
+
+Botão de exportação do Sistema desativado na página/painel/gaveta e guarda no
+service bloqueia chamada direta. Guia continua exportável. Autor autorizou
+commit deste estado da M10-10 e execução da M10-11; remoção do legado está autorizada
+mesmo enquanto a exportação do Sistema permanece suspensa.
+
+## 2026-10-08 — M10-09 commitada; M10-10: exportação nativa dos livros
+
+Autor autorizou commit M10-09 e execução M10-10. Commit `251455ad`, 20 arquivos,
+gate staged aprovado e coautoria Codex conferida na mensagem gravada. M10-10
+implementada/verificada, spec/anexos em `done/`, sem commit nesta entrega.
+
+Exportar PDF no leitor compartilhado usa botão de ícone compacto/tooltip.
+Service cria componente Angular sob demanda, espera fontes e abre impressão
+nativa. Projeção independente reutiliza renderer/sumário/IDs; `afterprint` e
+falha removem projeção/restauram estado, com guarda de concorrência e retry.
+Nenhuma duplicação de regra ou acréscimo extenso de responsabilidade ao leitor.
+
+Papel claro por tokens próprios, A4, capa com tarjas/versão sem data, sumário,
+livro/versão nas margens e página/total. Capítulos/arquétipos em páginas novas;
+caixas/linhas inteiras, tabelas com cabeçalhos repetidos. Conteúdo longo fragmenta
+naturalmente. Cores de NA e crédito preservados; controles/marcas de busca ocultos.
+Sem dependência, Paged.js, alteração do parser/JSON/shared/backend ou remoção do legado.
+
+Inspeção pessoal encontrou margens herdando fundo escuro, título de condição
+isolado, arquétipo começando no fim da página e metadados de imagens base64
+impressos no fim do Sistema. Corrigidos papel no html, verbetes sem quebra,
+arquétipos em nova página e exclusão estrita das definições de imagens na
+projeção. Nota histórica de versão da abertura é substituída pela versão do
+asset; prosa genérica permanece. Cabeçalhos exclusivos de impressão ficam fora
+da pesquisa, com regressão. Um subagente Codex, modelo da sessão, mapeou riscos
+dos blocos ricos somente em leitura; principal verificou a renderização final.
+
+Aplicação real nos quatro viewports, claro/escuro, página/painel/gaveta,
+pesquisa/exportação/retorno e repetição. PDFs finais Sistema 109 páginas e Guia
+41, conferidos página a página. Chromium 148 e Edge 154 produziram texto,
+paginação e pixels idênticos em todas as páginas. Exportação mobile do Guia
+também conserva paginação desktop. Sem overflow ou base64/páginas vazias.
+
+232 arquivos/3.119 testes Angular aprovados; após correções, dois testes focados
+e build aprovados. Lint sem erros, recorte sem avisos; HTML/SCSS formatados.
+Limites preexistentes P-105 (prebuild) e P-106 (dois specs do corpus antigo),
+budget inicial e avisos de lint registrados separadamente. Build direto com
+assets locais, config temporária arquivada/removida. Shared/backend não tocados.
+PDFs/raster/capturas/logs ignorados em `.artifacts/m10-10-exportar-pdf/`.
+
+Sumário sem páginas e referências por nome são limites previstos. Diálogo do
+sistema/impressora física não inspecionados; PDF nativo automatizado usa A4,
+fundos habilitados e cabeçalhos automáticos desabilitados. Próxima task M10-11:
+remover leitor/PDF antigo. [Evidências e limites](../specs/done/m10-10-exportar-pdf/verificacao.md).
+
 ## 2026-10-08 — M10-08 commitada; M10-09: pesquisa das Regras
 
 Autor autorizou commit M10-08 e execução M10-09. Commit `95cdfad6`, 36 arquivos,

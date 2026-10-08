@@ -173,6 +173,20 @@
         @if (documento(); as livroAberto) {
             <div class="regras__cabecalho">
                 <h1 class="regras__titulo">{{ livroAberto.titulo }} · v{{ livroAberto.versao }}</h1>
+                <button
+                    app-botao-icone
+                    tamanho="compacto"
+                    aria-label="Exportar PDF"
+                    [appTooltip]="
+                        livroAberto.id === 'sistema'
+                            ? 'PDF do Sistema: formatação em revisão'
+                            : 'Exportar PDF'
+                    "
+                    [disabled]="livroAberto.id === 'sistema' || impressao.preparando()"
+                    (click)="impressao.exportarDocumento(livroAberto)"
+                >
+                    <app-icone nome="documentos" />
+                </button>
                 <a
                     app-botao
                     class="regras__acao"

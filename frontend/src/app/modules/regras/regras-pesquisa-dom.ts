@@ -4,7 +4,7 @@ export interface RegrasTextoProjetado extends RegrasTextoPesquisa {
     readonly nos: readonly { no: Text; inicio: number; fim: number }[];
 }
 
-const IGNORAR = "button, svg, [aria-hidden='true'], .regras__credito";
+const IGNORAR = "button, svg, [aria-hidden='true'], .regras__credito, .regras-arquetipos__impressao";
 
 /** Projeção já feita pelo renderer: nenhuma tabela-fonte auxiliar vira ocorrência duplicada. */
 export function projetarTextosPesquisa(raiz: HTMLElement): readonly RegrasTextoProjetado[] {

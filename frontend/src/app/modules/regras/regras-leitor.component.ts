@@ -10,6 +10,7 @@ import { RegrasLeituraStore } from "./regras-leitura.store";
 import { RegrasLeitorContexto } from "./regras-leitor-contexto";
 import { RegrasConsultaService } from "./regras-consulta.service";
 import { RegrasPesquisaController } from "./regras-pesquisa.controller";
+import { RegrasImpressaoService } from "./regras-impressao.service";
 import { RegrasPesquisa } from "./regras-pesquisa.component";
 import { RegrasPesquisaProjecao } from "./regras-pesquisa-projecao.component";
 import { BotaoIcone } from "../../shared/ui/botao-icone/botao-icone.component";
@@ -52,6 +53,7 @@ export class RegrasLeitor {
     private readonly memoria = inject(RegrasLeituraStore);
     private readonly consulta = inject(RegrasConsultaService);
     protected readonly pesquisa = inject(RegrasPesquisaController);
+    protected readonly impressao = inject(RegrasImpressaoService);
     protected readonly gavetaAberta = signal(false);
     protected readonly mobile = signal(window.innerWidth <= 560);
     protected readonly usarGaveta = computed(() =>

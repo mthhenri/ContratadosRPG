@@ -32,7 +32,16 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-10-08 · M10-09: pesquisa nos dois livros, destaques,
+> **Avaliação do autor:** formatação do PDF precisa de revisão substancial (P-108).
+> Exportação do Sistema temporariamente suspensa; Guia disponível. Revisão no
+> [backlog](../specs/backlog/revisao-formatacao-pdf-regras.spec.md), sem aprovação
+> editorial da apresentação entregue.
+>
+> **Última revisão:** 2026-10-08 · M10-10: exportação nativa dos dois livros,
+> capa/sumário/margens e papel claro entregues; PDFs de 109/41 páginas conferidos
+> integralmente em Chromium/Edge, quatro viewports e claro/escuro. M10-09 commitada
+> em `251455ad`. [Verificação da exportação](../specs/done/m10-10-exportar-pdf/verificacao.md).
+> M10-09: pesquisa nos dois livros, destaques,
 > contador/teclado e memória entre página/painel entregues; quatro viewports,
 > claro/escuro e estados de busca conferidos. M10-08 commitada em `95cdfad6`.
 > [Verificação da pesquisa](../specs/done/m10-09-pesquisa-regras/m10-09-verificacao.md).
@@ -76,12 +85,12 @@
 > [checagens documentais](../specs/done/p-102-referencias-documentos-vigentes/p-102-verificacao.md), versionadas em commit próprio
 > após autorização do autor. P-095/P-096/P-098/P-100
 > já versionadas separadamente; P-097 e livros/leitor em grupos próprios.
-> Dados sintéticos/resíduos limpos. M10 (Regras): `m10-01`…`m10-09` concluídas,
+> Dados sintéticos/resíduos limpos. M10 (Regras): `m10-01`…`m10-10` concluídas,
 > normalizador, ícones/marcas e gaveta entregues. Desenhos, paleta/fundos e crédito
 > aprovados; marca própria atual preservada, com detalhes condensados em 16–24px.
 > SCP oficial somente na identidade de Criatura; marca própria SCP + D20 em Regras,
 > níveis e usos gerais. [Contrato de marcas](../design/MARCAS.md).
-> Próxima task: `m10-10`, exportar PDF por impressão nativa. `m10-10`…`m10-11` no backlog.
+> Próxima task: `m10-11`, remover o PDF/leitor antigo; permanece no backlog.
 > `icones-recursos-sistema` ativa: entrega 1 concluída; adoção ampla/levantamento abertos.
 > [Gates, contagens e avisos dos casos explícitos](../specs/done/m10-02-normalizador-casos-explicitos/m10-02-verificacao.md).
 > **Última decisão registrada:** Sistema do Jogador v4.1.3
@@ -2150,14 +2159,14 @@ incluindo todos os ajustes avulsos de pós-milestone.
 |---|---|---|
 | `civil-guia-criacao` | ficha | mapeia o escopo de `PROBLEMS.md` `P-018` (o guia de criação trata a classe Civil como um agente comum em vários passos) — spec de levantamento, ainda não implementa |
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
-| `m10-10`…`m10-11` | regras | M10 — leitor rico, painel/celular e pesquisa entregues; faltam exportar PDF (impressão nativa) e remoção do PDF; guarda-chuva `m10-regras` |
+| `m10-11` | regras | M10 — leitor rico, painel/celular, pesquisa e exportação nativa entregues; falta remover leitor/PDF antigo; guarda-chuva `m10-regras` |
 | `regras-glossario` | regras | esboço independente do M10: termos marcados com cartão; pontos a fechar com o autor |
 
 Spec avulsa ativa: `icones-recursos-sistema`, entrega 1 concluída; faltam adoção ampla
 com tooltip por extenso e levantamento de outros ícones/glifos.
 
-Milestones ainda não abertos: `m5-guia-missao`. M10 `m10-regras` em execução: `m10-01`…`m10-09`
-concluídas; próxima task `m10-10`, exportar PDF. O M8 `m8-espectadores-campanha` está **concluído**
+Milestones ainda não abertos: `m5-guia-missao`. M10 `m10-regras` em execução: `m10-01`…`m10-10`
+concluídas; próxima task `m10-11`, remover leitor/PDF antigo. O M8 `m8-espectadores-campanha` está **concluído**
 (`m8-01`…`m8-06`).
 
 ---
@@ -2197,7 +2206,7 @@ reproduzem isoladas (arquivo único), não na suíte completa.
 | M6 | Gestão de Usuários e Papéis | **concluído** — `m6-01`…`m6-08` (`m6-08`: impersonação administrativa auditável) |
 | M7 | Encontro de Combate | **concluído** — 8 tasks originais (`m7-01` contrato, `m7-02` motor puro, `m7-03` backend de montagem, `m7-04` backend de condução/tempo real, `m7-05` painel do mestre, `m7-06` visão do jogador, `m7-07` log da rodada, `m7-08` refinamento mobile) + 9 ajustes de pós-milestone (`m7-09`…`m7-17`, ver seção 4 "Encontro de Combate"). Numeração M7 é sugestão, não decisão de roadmap |
 | M8 | Espectadores e Prévias de Campanha | **concluído** — `m8-01`…`m8-06` (banco + contratos do papel ESPECTADOR; backend de permissões e as duas projeções de leitura; frontend de entrada/gestão de convites-membros/Painel do espectador ao vivo/Prévia de jogador fidedigna/visão read-only de Iniciativa; `m8-06` fechou com gate de validação integrada entre 4 contas reais). Numeração M8 é sugestão, não decisão de roadmap — ver `docs/context/IDEAS.md` |
-| M10 | Regras (documentos do sistema no site) | **em execução, 9/11** — `m10-01`…`m10-09` concluídas; `m10-10`…`m10-11` no backlog; fonte visual `docs/specs/backlog/m10-regras/m10-regras-exemplao.html` |
+| M10 | Regras (documentos do sistema no site) | **em execução, 10/11** — `m10-01`…`m10-10` concluídas; `m10-11` no backlog; fonte visual `docs/specs/backlog/m10-regras/m10-regras-exemplao.html` |
 
 ---
 
