@@ -72,7 +72,7 @@ DTO, regra ou permissão. Os valores de cor estão nos tokens da prancha candida
 geometria é asset, não estilo de controle. Não se criou UI de produto ou primitivo.
 
 - `node --check` nos dois scripts: aprovado.
-- `npx prettier --check docs/specs/active/m10-04-svg-scp-definitivo/m10-04-scp-aprovacao.html`: aprovado.
+- `npx prettier --check docs/specs/done/m10-04-svg-scp-definitivo/m10-04-scp-aprovacao.html`: aprovado.
 - `verificar-prancha.mjs`: quatro viewports aprovados, cores computadas iguais
   à paleta, dimensões 16/20/24/32/48/64/96px com tolerância de 0,1px e identidades
   separadas por viewBox (oficial 24 em Criatura; marca existente 1000 nos níveis/Regras).

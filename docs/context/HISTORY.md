@@ -1,5 +1,33 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-08 — M10-04: marcas aprovadas, tokens de ameaça e licença incorporados
+
+Autor aprovou desenhos, paleta/fundos e crédito e autorizou incorporação/gates.
+Oficial reservado a Criatura (`scp`/`criatura`); marca própria SCP + D20 em
+`contratados`, para Regras, níveis e usos gerais. Quatro SVGs preenchidos em
+`public/marcas/`, `currentColor`, sem filtros/raster; vinte paths e margens da
+marca própria existente preservados, sem redesenho. Oito tokens de ameaça e
+fundos aprovados no design/runtime. Licença distribuída com os assets e contrato
+em `docs/design/MARCAS.md`; crédito preparado para o rodapé da M10-06.
+
+Principal inspecionou Angular real, skill verify, com `app-icone`/`d20` e cartões
+canônicos em 1920×1080, 1366×768, 960×1080 e 360×800, claro/escuro: sete tamanhos
+16–96px, oito níveis/fundos e crédito. Sem overflow/erros; fontes carregadas.
+Marca própria ocupa 74% × 69% da caixa: detalhes condensados em 16–24px e mais
+distintos em 48–96px, razão da proposta anterior de refino. Incorporação respeita
+o desenho aprovado; essa limitação ficou registrada. Composição temporária removida.
+
+Comparação XML de assets/template/originais e tokens aprovada; 31 testes focados
+e suíte Angular 214 arquivos/3.064 testes aprovados, excluindo dois specs P-106
+por configuração temporária. Lint três workspaces sem erros; build produção
+aprovado (580,23 kB inicial, aviso de orçamento existente). Gate agregado ainda
+falha por P-105/P-106: shared 974 testes aprovados/dois arquivos sem fixture;
+backend 994 aprovados/um ignorado; normalizador 34 aprovados/seis falhas por livro
+v4.1.3 ausente. Problemas preservados fora do escopo. Spec/anexos em `done/`;
+[relatório auditável](../specs/done/m10-04-svg-scp-definitivo/m10-04-verificacao.md).
+M10 em 5/11; próxima independente é M10-06. Sem commit da M10-04 nesta etapa;
+M10-05 já commitada em `1d7c9fe` com coautoria Codex.
+
 ## 2026-10-08 — M10-05: gaveta confinada ao contêiner, com foco e teclado
 
 Pedido para iniciar a próxima task da M10. M10-04 continua ativa para aprovação
@@ -93,7 +121,7 @@ de aprovação de cada desenho antes da incorporação foi preservada. Preparado
 dois SVGs preenchidos em viewBox 24 (ícone com aro exterior reforçado e silhueta
 com espessura de referência), prancha standalone de 16 a 96px, originais do
 livro ao lado e crédito candidato CC BY-SA 3.0. Fonte vetorial e autores
-registrados em `docs/specs/active/m10-04-svg-scp-definitivo/proposta/README.md`.
+registrados em `docs/specs/done/m10-04-svg-scp-definitivo/proposta/README.md`.
 
 Paleta extraída das oito imagens embutidas no Sistema v4.1.4 por RGB modal dos
 pixels de alfa máximo, sem amostrar sombras/relevo. Quatro originais têm alfa 128;
@@ -105,7 +133,7 @@ Prancha renderizada no Edge/Playwright e inspecionada pessoalmente em 1920×1080
 360×800, 960×1080 e 1366×768, com ambas as bases. Cada cenário: 44 SVGs, 16 níveis,
 dimensões conferidas, imagens completas, zero erro de página/overflow.
 Scripts conferidos com `node --check`, SVGs validados como XML, HTML formatado.
-[Evidências e pendências](../specs/active/m10-04-svg-scp-definitivo/m10-04-proposta-v1.md).
+[Evidências e pendências](../specs/done/m10-04-svg-scp-definitivo/m10-04-proposta-v1.md).
 
 Task permanece aberta para aprovação dos desenhos, paleta/fundos e crédito.
 Não houve incorporação ao produto, mudança na topbar ou no leitor. Gates de

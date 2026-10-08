@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, computed, input } from "@angular/core";
 
 /**
  * Nomes de ícone suportados. Os seis primeiros são as abas da simulacao (batem com o
@@ -47,7 +47,9 @@ import { Component, input } from '@angular/core';
  * dentro ("arrows-maximize"/"arrows-minimize") — alternância de tamanho do leitor de imagem.
  * Família de identidade (m10-03): classes, arquétipos, subclasses de experimento, Civil e NPC,
  * para os dossiês do leitor de Regras (M10) e futuros consumidores. Desenhos aprovados em
- * `docs/design/propostas/m10-regras-exemplao.html`, objeto ICO, opção `dec`.
+ * `docs/specs/backlog/m10-regras/m10-regras-exemplao.html`, objeto ICO, opção `dec`.
+ * Marcas preenchidas (m10-04): `scp`/`criatura` são o logo oficial, `contratados` é a marca
+ * SCP + D20. Geometria e crédito aprovados em `docs/design/MARCAS.md`.
  */
 export type IconeNome =
   | 'agente'
@@ -164,14 +166,18 @@ export type IconeNome =
     | "artificial"
     | "hibrido"
     | "civil"
-    | "npc";
+    | "npc"
+    | "scp"
+    | "criatura"
+    | "contratados";
 
 /**
  * Ícone monocromático de linha (SVG inline, `stroke: currentColor`) — reutilizado nos menus de
  * abas da simulacao e nas categorias da aba `compras`. **Não é emoji** (o tema "Terminal de
  * Contenção" proíbe emoji decorativo — por isso os `⚔ 🎯 …` do site antigo foram removidos nas
  * m1-06/m1-10): é um traço técnico que herda a cor do texto do controle (inclusive o accent no
- * estado ativo) e escala com a fonte (`1.15em`). Puramente decorativo → `aria-hidden`.
+ * estado ativo) e escala com a fonte (`1.15em`). As marcas usam preenchimento herdado sem
+ * traço; os demais glifos mantêm o contorno original. Puramente decorativo → `aria-hidden`.
  */
 @Component({
   selector: 'app-icone',
@@ -182,4 +188,10 @@ export type IconeNome =
 export class Icone {
   /** Qual glifo desenhar. */
   readonly nome = input.required<IconeNome>();
+
+    /** SCP oficial só em Criatura; nossa marca é a referência de Regras e níveis. */
+    protected readonly glifo = computed(() => this.nome() === "criatura" ? "scp" : this.nome());
+    protected readonly preenchido = computed(() =>
+        this.glifo() === "scp" || this.glifo() === "contratados",
+    );
 }

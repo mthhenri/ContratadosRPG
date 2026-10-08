@@ -32,7 +32,10 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-10-08 · M10-05: `app-gaveta` concluída, model e contenção
+> **Última revisão:** 2026-10-08 · M10-04: marcas aprovadas incorporadas,
+> catálogo `scp`/`criatura`/`contratados`, tokens e licença; 16–96px, duas bases e
+> quatro viewports conferidos. [Verificação e limites](../specs/done/m10-04-svg-scp-definitivo/m10-04-verificacao.md).
+> M10-05: `app-gaveta` concluída, model e contenção
 > local, foco/teclado/toque e quatro viewports verificados;
 > [evidências e limites dos gates](../specs/done/m10-05-primitivo-gaveta/m10-05-verificacao.md).
 > Corpus do montador com quatro ponteiros antigos após realocação (P-106).
@@ -58,14 +61,12 @@
 > [checagens documentais](../specs/done/p-102-referencias-documentos-vigentes/p-102-verificacao.md), versionadas em commit próprio
 > após autorização do autor. P-095/P-096/P-098/P-100
 > já versionadas separadamente; P-097 e livros/leitor em grupos próprios.
-> Dados sintéticos/resíduos limpos. M10 (Regras): `m10-01`, `m10-02` e `m10-03` concluídas,
-> núcleo/casos explícitos do normalizador e ícones de identidade entregues; `m10-04` em `active/`,
-> [prancha SCP v1](../specs/active/m10-04-svg-scp-definitivo/m10-04-scp-aprovacao.html) aguardando aprovação dos
-> desenhos, paleta/fundos e crédito antes da incorporação. Autor revisou o uso:
+> Dados sintéticos/resíduos limpos. M10 (Regras): `m10-01`…`m10-05` concluídas,
+> normalizador, ícones/marcas e gaveta entregues. Desenhos, paleta/fundos e crédito
+> aprovados; marca própria atual preservada, com detalhes condensados em 16–24px.
 > SCP oficial somente na identidade de Criatura; marca própria SCP + D20 em Regras,
-> níveis e usos gerais. Refino da marca própria permanece aberto.
-> [Evidências e gates pendentes](../specs/active/m10-04-svg-scp-definitivo/m10-04-proposta-v1.md).
-> `m10-05`…`m10-11` no backlog.
+> níveis e usos gerais. [Contrato de marcas](../design/MARCAS.md).
+> Próxima task: `m10-06`, página/topbar/rodapé. `m10-06`…`m10-11` no backlog.
 > [Gates, contagens e avisos dos casos explícitos](../specs/done/m10-02-normalizador-casos-explicitos/m10-02-verificacao.md).
 > **Última decisão registrada:** Sistema do Jogador v4.1.3
 > incorporado em `p-097-01`: crítico soma +2 uma vez no teste; dano/cura continuam
@@ -2133,12 +2134,12 @@ incluindo todos os ajustes avulsos de pós-milestone.
 |---|---|---|
 | `civil-guia-criacao` | ficha | mapeia o escopo de `PROBLEMS.md` `P-018` (o guia de criação trata a classe Civil como um agente comum em vários passos) — spec de levantamento, ainda não implementa |
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
-| `m10-04`, `m10-06`…`m10-11` | regras | M10 — normalizador com núcleo/casos explícitos, ícones de identidade e `app-gaveta` entregues; faltam SVG SCP, página/painel/celular, renderização rica, pesquisa, exportar PDF (impressão nativa) e remoção do PDF; guarda-chuva `m10-regras` |
+| `m10-06`…`m10-11` | regras | M10 — normalizador, ícones/marcas e `app-gaveta` entregues; faltam página/painel/celular, renderização rica, pesquisa, exportar PDF (impressão nativa) e remoção do PDF; guarda-chuva `m10-regras` |
 | `icones-recursos-sistema` | frontend/ícones | trio Vida/Energia/Defesa no `app-icone` (pré-requisito da `m10-07`), adoção no site todo com `appTooltip` por extenso e levantamento de outros ícones/glifos |
 | `regras-glossario` | regras | esboço independente do M10: termos marcados com cartão; pontos a fechar com o autor |
 
-Milestones ainda não abertos: `m5-guia-missao`. M10 `m10-regras` em execução: `m10-01`/`m10-02`/`m10-03`/`m10-05`
-concluídas; `m10-04` ativa, com aprovação visual pendente; `m10-06` depende dela. O M8 `m8-espectadores-campanha` está **concluído**
+Milestones ainda não abertos: `m5-guia-missao`. M10 `m10-regras` em execução: `m10-01`…`m10-05`
+concluídas; próxima task `m10-06`, com pré-requisitos entregues. O M8 `m8-espectadores-campanha` está **concluído**
 (`m8-01`…`m8-06`).
 
 ---
@@ -2178,7 +2179,7 @@ reproduzem isoladas (arquivo único), não na suíte completa.
 | M6 | Gestão de Usuários e Papéis | **concluído** — `m6-01`…`m6-08` (`m6-08`: impersonação administrativa auditável) |
 | M7 | Encontro de Combate | **concluído** — 8 tasks originais (`m7-01` contrato, `m7-02` motor puro, `m7-03` backend de montagem, `m7-04` backend de condução/tempo real, `m7-05` painel do mestre, `m7-06` visão do jogador, `m7-07` log da rodada, `m7-08` refinamento mobile) + 9 ajustes de pós-milestone (`m7-09`…`m7-17`, ver seção 4 "Encontro de Combate"). Numeração M7 é sugestão, não decisão de roadmap |
 | M8 | Espectadores e Prévias de Campanha | **concluído** — `m8-01`…`m8-06` (banco + contratos do papel ESPECTADOR; backend de permissões e as duas projeções de leitura; frontend de entrada/gestão de convites-membros/Painel do espectador ao vivo/Prévia de jogador fidedigna/visão read-only de Iniciativa; `m8-06` fechou com gate de validação integrada entre 4 contas reais). Numeração M8 é sugestão, não decisão de roadmap — ver `docs/context/IDEAS.md` |
-| M10 | Regras (documentos do sistema no site) | **em execução, 4/11** — `m10-01`/`m10-02`/`m10-03`/`m10-05` concluídas; `m10-04` ativa; `m10-06`…`m10-11` no backlog; fonte visual `docs/specs/backlog/m10-regras/m10-regras-exemplao.html` |
+| M10 | Regras (documentos do sistema no site) | **em execução, 5/11** — `m10-01`…`m10-05` concluídas; `m10-06`…`m10-11` no backlog; fonte visual `docs/specs/backlog/m10-regras/m10-regras-exemplao.html` |
 
 ---
 
@@ -2206,7 +2207,7 @@ PDFs e leitor atuais continuam ativos; renderização dos blocos ricos é M10-07
 `app-icone` (`frontend/src/app/shared/icone/`) oferece 17 desenhos aprovados no
 exemplão de Regras (`ICO`, `dec`): classes, nove arquétipos, três subclasses, Civil e NPC.
 Catálogo e SVGs preservam o contrato atual; nenhum consumidor do site foi trocado.
-`criatura` depende da M10-04 e o leitor rico da M10-07. Família documentada em
+`criatura` disponível pela M10-04; leitor rico na M10-07. Família documentada em
 `DESIGN.md`; [capturas e gates](../specs/done/m10-03-icones-identidade/m10-03-verificacao.md). Build Angular e
 suítes de aplicação aprovados; a cadeia npm de assets/normalizador permanece com
 falhas externas à task após a troca do livro (P-105), sem validação de preparo limpo.

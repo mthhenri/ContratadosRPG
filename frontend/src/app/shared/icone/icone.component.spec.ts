@@ -233,4 +233,24 @@ describe('Icone', () => {
         expect(formas.every((forma) => forma !== "")).toBe(true);
         expect(new Set(formas).size).toBe(nomes.length);
     });
+
+    it.each(["scp", "criatura", "contratados"] as const)(
+        "renderiza %s como formas preenchidas com cor herdada",
+        (nome) => {
+            const svg = montar(nome).querySelector("svg")!;
+            expect(svg.getAttribute("viewBox")).toBe("0 0 24 24");
+            expect(svg.getAttribute("fill")).toBe("currentColor");
+            expect(svg.getAttribute("stroke")).toBe("none");
+            expect(svg.getAttribute("aria-hidden")).toBe("true");
+            expect(svg.querySelectorAll("path").length).toBeGreaterThan(0);
+            expect(svg.querySelector("image, filter, script")).toBeNull();
+        },
+    );
+
+    it("reserva o SCP oficial a criatura e mantém nossa marca distinta", () => {
+        expect(assinatura("criatura")).toBe(assinatura("scp"));
+        expect(assinatura("contratados")).not.toBe(assinatura("scp"));
+        expect(montar("scp").querySelectorAll("path")).toHaveLength(5);
+        expect(montar("contratados").querySelectorAll("path")).toHaveLength(20);
+    });
 });

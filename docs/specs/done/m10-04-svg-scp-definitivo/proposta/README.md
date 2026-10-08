@@ -12,7 +12,7 @@ Esta pasta contém desenhos candidatos; nenhum foi incorporado ao produto.
 As capturas da prancha e os oito PNGs extraídos do livro ficam em
 `.artifacts/m10-04/` (locais, não distribuídos no clone). Para reproduzir os
 originais e a prancha a partir do livro versionado, rode
-`node docs/specs/active/m10-04-svg-scp-definitivo/proposta/gerar-prancha.mjs`;
+`node docs/specs/done/m10-04-svg-scp-definitivo/proposta/gerar-prancha.mjs`;
 o script usa `playwright`/`pngjs` do ambiente de verificação. Para verificar
 a prancha, rode o `verificar-prancha.mjs` desta pasta; suas saídas também são locais.
 SVGs candidatos, paleta de referência e fontes da prancha continuam versionados.

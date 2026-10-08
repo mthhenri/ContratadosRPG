@@ -197,9 +197,12 @@ resultado renderizado de cada um.
 **Uso da marca (decisão do autor, M10-04, 08/10/2026):** a marca própria
 ContratadosRPG — SCP misturado com D20, assets `frontend/public/logo-{black,white}.*`
 — é o padrão geral, inclusive na entrada Regras e nos níveis de ameaça.
-O logo SCP oficial fica reservado à identidade de Criatura. Os SVGs oficiais
-preparados na [prancha M10-04](../specs/active/m10-04-svg-scp-definitivo/m10-04-scp-aprovacao.html) são preservados;
-o refino da marca própria e a incorporação ao catálogo seguem na task ativa.
+O logo SCP oficial fica reservado à identidade de Criatura. Os desenhos da
+[prancha M10-04](../specs/done/m10-04-svg-scp-definitivo/m10-04-scp-aprovacao.html),
+paleta/fundos e crédito foram aprovados em 08/10/2026. `app-icone` oferece `scp`/
+`criatura` (oficial) e `contratados` (marca própria). Assets preenchidos e crédito
+distribuído em `frontend/public/marcas/`; geometria própria existente preservada.
+Uso, escalas, tokens de ameaça e licença: [MARCAS.md](MARCAS.md).
 Essa decisão prevalece sobre o uso anterior do logo oficial no exemplão.
 
 O catálogo canônico `app-icone` (`frontend/src/app/shared/icone/`) reúne a família de
@@ -221,8 +224,8 @@ o rótulo acessível quando os usa em um controle.
 
 Destinados aos dossiês de Classe, arquétipos, subclasses e blocos do Guia no leitor de
 Regras (M10-07), e disponíveis a outros consumidores. A M10-03 só acrescenta os 17 nomes:
-não substitui ícones nas telas atuais. `criatura` depende do SVG SCP da M10-04 e ainda
-não faz parte do catálogo. Refinos de Suporte × Paramédico, espadas pequenas e silhueta
+não substitui ícones nas telas atuais. `criatura` entrou no catálogo pela M10-04.
+Refinos de Suporte × Paramédico, espadas pequenas e silhueta
 permanecem em `IDEAS.md` I-050; recursos Vida/Energia/Defesa têm spec própria.
 
 ### Escolha de botão

@@ -7,8 +7,13 @@
 > preparada e inspecionada nos quatro viewports. O autor revisou o uso: logo SCP oficial
 > somente na identidade de Criatura; marca própria SCP + D20 nos níveis e em Regras.
 > A prancha passa a separar os dois usos, preservando os assets oficiais preparados.
-> Paleta/fundos, crédito e gates de incorporação permanecem abertos.
-> [Evidências e etapas abertas](m10-04-svg-scp-definitivo/m10-04-proposta-v1.md).
+> Em 08/10/2026 o autor aprovou desenhos, paleta/fundos e crédito e autorizou
+> a incorporação e os gates. Marca própria atual preservada sem redesenho;
+> escala 16–96px conferida nos componentes reais, com condensação de detalhes em
+> 16–24px registrada. Assets, catálogo, tokens e licença incorporados; gates do
+> recorte aprovados. Crédito preparado para o rodapé da M10-06 (sem criar seu consumidor).
+> [Verificação e limites](m10-04-svg-scp-definitivo/m10-04-verificacao.md);
+> [preparação histórica](m10-04-svg-scp-definitivo/m10-04-proposta-v1.md).
 
 ## Objetivo
 

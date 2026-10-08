@@ -102,6 +102,20 @@
   --dano-geral-border: color-mix(in srgb, var(--dano-geral) 40%, transparent);
   --dano-geral-dim: color-mix(in srgb, var(--dano-geral) 12%, transparent);
 
+
+  /* --- Níveis de ameaça (M10-04): cores do livro, iguais nas duas bases --- */
+  --ameaca-desconhecida: #00fffc;
+  --ameaca-nula: #7fff8e;
+  --ameaca-baixa: #fdff7f;
+  --ameaca-media: #ffc77f;
+  --ameaca-alta: #ff7f7f;
+  --ameaca-extrema: #7800ff;
+  --ameaca-catastrofica: #000000;
+  --ameaca-apocaliptica: #ffffff;
+  /* Fundos de suporte fixos: cores claras sobre escuro; Extrema/Catastrófica sobre claro. */
+  --ameaca-fundo-escuro: #13161b;
+  --ameaca-fundo-claro: var(--contrast);
+
   /* --- Tipografia --- */
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace; /* dados, títulos, rótulos, números */
   --font-sans: 'IBM Plex Sans', system-ui, sans-serif;    /* corpo, textos longos */
