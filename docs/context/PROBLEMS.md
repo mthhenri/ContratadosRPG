@@ -29,6 +29,20 @@
 
 ## Ativos
 
+### P-106 — Testes do montador conservam caminho anterior do corpus · `ABERTO` · testes/organização
+
+- **Sintoma:** a suíte shared falha em dois arquivos com ENOENT; a compilação dos
+  testes Angular falha com TS2307/TS7006 mesmo no teste focado de outro componente.
+- **Causa:** `shared/src/regras/rolagem/rolagem.conta.spec.ts`, `rolagem.pecas.spec.ts`
+  e `frontend/src/app/shared/montador-rolagem-experimental/montador-blocos.spec.ts`,
+  `montador-pecas.spec.ts` ainda leem `docs/design/propostas/montador-rolagem-formulas.json`.
+  O corpus agora está em `docs/specs/active/montador-rolagem-experimento/`.
+- **Contorno:** configuração temporária de testes Angular excluindo os dois arquivos;
+  M10-05 verificou 214 arquivos/3.060 testes, mas não esses dois. Shared permanece parcial.
+- **Correção:** corrigir os quatro ponteiros mecanicamente e executar as suítes completas
+  na tarefa de organização, sem duplicar o corpus nem recriar o depósito antigo.
+- **Desde:** após a organização documental de 2026-10-08; confirmado na M10-05.
+
 ### P-105 — Preparo de assets e testes de Regras ainda apontam para v4.1.3 · `ABERTO` · frontend/documentos
 
 - **Sintoma:** `npm run build --workspace=frontend` para no prebuild com ENOENT do PDF

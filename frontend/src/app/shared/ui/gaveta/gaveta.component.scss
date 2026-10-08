@@ -1,0 +1,108 @@
+:host {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    display: block;
+    overflow: hidden;
+    pointer-events: none;
+    visibility: hidden;
+    transition: visibility 0s 180ms;
+}
+
+.gaveta {
+    &__veu {
+        position: absolute;
+        inset: 0;
+        // Mesmo véu de app-modal, mantendo o texto discernível por trás.
+        background: color-mix(in srgb, var(--bg) 70%, transparent);
+        opacity: 0;
+        transition: opacity 180ms ease;
+    }
+
+    &__painel {
+        position: absolute;
+        inset-block: 0;
+        inset-inline-start: 0;
+        display: flex;
+        flex-direction: column;
+        // Mantém uma faixa do texto exposta mesmo no celular/contêiner estreito.
+        width: min(320px, 85%);
+        min-width: 0;
+        color: var(--text);
+        background: var(--surface);
+        border-inline-end: 1px solid var(--border-strong);
+        // Geometria da sombra do análogo; cor derivada da superfície canônica.
+        box-shadow: 0 20px 50px -18px color-mix(in srgb, var(--bg) 60%, transparent);
+        transform: translateX(-100%);
+        transition: transform 180ms ease;
+        outline: none;
+
+        &:focus-visible {
+            outline: 2px solid var(--accent-border);
+            outline-offset: -2px;
+        }
+    }
+
+    &__cabecalho {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex: 0 0 auto;
+        gap: var(--space-12);
+        min-height: 54px;
+        padding: var(--space-8) var(--space-12) var(--space-8) var(--space-16);
+        background: color-mix(in srgb, var(--surface-2) 52%, var(--surface));
+        border-bottom: 1px solid var(--border);
+    }
+
+    &__titulo {
+        min-width: 0;
+        margin: 0;
+        font: 700 13px/1.4 var(--font-mono);
+        overflow-wrap: anywhere;
+    }
+
+    &__corpo {
+        flex: 1;
+        min-height: 0;
+        min-width: 0;
+        padding: var(--space-16);
+        overflow: auto;
+        overscroll-behavior: contain;
+        overflow-wrap: anywhere;
+    }
+}
+
+:host(.gaveta--fim) .gaveta__painel {
+    inset-inline-start: auto;
+    inset-inline-end: 0;
+    border-inline-start: 1px solid var(--border-strong);
+    border-inline-end: 0;
+    transform: translateX(100%);
+}
+
+:host(.gaveta--aberta) {
+    visibility: visible;
+    transition-delay: 0s;
+
+    .gaveta__veu,
+    .gaveta__painel {
+        pointer-events: auto;
+    }
+
+    .gaveta__veu {
+        opacity: 1;
+    }
+
+    .gaveta__painel {
+        transform: translateX(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :host,
+    .gaveta__veu,
+    .gaveta__painel {
+        transition: none;
+    }
+}

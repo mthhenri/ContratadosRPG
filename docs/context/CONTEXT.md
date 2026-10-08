@@ -32,7 +32,11 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-10-08 · M10-03: 17 ícones de identidade adicionados e
+> **Última revisão:** 2026-10-08 · M10-05: `app-gaveta` concluída, model e contenção
+> local, foco/teclado/toque e quatro viewports verificados;
+> [evidências e limites dos gates](../specs/done/m10-05-primitivo-gaveta/m10-05-verificacao.md).
+> Corpus do montador com quatro ponteiros antigos após realocação (P-106).
+> M10-03: 17 ícones de identidade adicionados e
 > verificados em 14/16/24px, claro/escuro e quatro viewports; [evidências](../specs/done/m10-03-icones-identidade/m10-03-verificacao.md).
 > Preparo dos livros e testes do normalizador pendentes por caminhos v4.1.3 (P-105).
 > M4-21 concluída: ficha de NPC revista para se aproximar
@@ -2129,12 +2133,12 @@ incluindo todos os ajustes avulsos de pós-milestone.
 |---|---|---|
 | `civil-guia-criacao` | ficha | mapeia o escopo de `PROBLEMS.md` `P-018` (o guia de criação trata a classe Civil como um agente comum em vários passos) — spec de levantamento, ainda não implementa |
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
-| `m10-04`…`m10-11` | regras | M10 — normalizador com núcleo/casos explícitos e ícones de identidade entregues; faltam SVG SCP, `app-gaveta`, página/painel/celular, renderização rica, pesquisa, exportar PDF (impressão nativa) e remoção do PDF; guarda-chuva `m10-regras` |
+| `m10-04`, `m10-06`…`m10-11` | regras | M10 — normalizador com núcleo/casos explícitos, ícones de identidade e `app-gaveta` entregues; faltam SVG SCP, página/painel/celular, renderização rica, pesquisa, exportar PDF (impressão nativa) e remoção do PDF; guarda-chuva `m10-regras` |
 | `icones-recursos-sistema` | frontend/ícones | trio Vida/Energia/Defesa no `app-icone` (pré-requisito da `m10-07`), adoção no site todo com `appTooltip` por extenso e levantamento de outros ícones/glifos |
 | `regras-glossario` | regras | esboço independente do M10: termos marcados com cartão; pontos a fechar com o autor |
 
-Milestones ainda não abertos: `m5-guia-missao`. M10 `m10-regras` em execução: `m10-01`/`m10-02`/`m10-03`
-concluídas; `m10-04` e `m10-05` podem seguir independentemente. O M8 `m8-espectadores-campanha` está **concluído**
+Milestones ainda não abertos: `m5-guia-missao`. M10 `m10-regras` em execução: `m10-01`/`m10-02`/`m10-03`/`m10-05`
+concluídas; `m10-04` ativa, com aprovação visual pendente; `m10-06` depende dela. O M8 `m8-espectadores-campanha` está **concluído**
 (`m8-01`…`m8-06`).
 
 ---
@@ -2174,7 +2178,7 @@ reproduzem isoladas (arquivo único), não na suíte completa.
 | M6 | Gestão de Usuários e Papéis | **concluído** — `m6-01`…`m6-08` (`m6-08`: impersonação administrativa auditável) |
 | M7 | Encontro de Combate | **concluído** — 8 tasks originais (`m7-01` contrato, `m7-02` motor puro, `m7-03` backend de montagem, `m7-04` backend de condução/tempo real, `m7-05` painel do mestre, `m7-06` visão do jogador, `m7-07` log da rodada, `m7-08` refinamento mobile) + 9 ajustes de pós-milestone (`m7-09`…`m7-17`, ver seção 4 "Encontro de Combate"). Numeração M7 é sugestão, não decisão de roadmap |
 | M8 | Espectadores e Prévias de Campanha | **concluído** — `m8-01`…`m8-06` (banco + contratos do papel ESPECTADOR; backend de permissões e as duas projeções de leitura; frontend de entrada/gestão de convites-membros/Painel do espectador ao vivo/Prévia de jogador fidedigna/visão read-only de Iniciativa; `m8-06` fechou com gate de validação integrada entre 4 contas reais). Numeração M8 é sugestão, não decisão de roadmap — ver `docs/context/IDEAS.md` |
-| M10 | Regras (documentos do sistema no site) | **em execução, 3/11** — `m10-01`/`m10-02`/`m10-03` concluídas; `m10-04`…`m10-11` no backlog; fonte visual `docs/specs/backlog/m10-regras/m10-regras-exemplao.html` |
+| M10 | Regras (documentos do sistema no site) | **em execução, 4/11** — `m10-01`/`m10-02`/`m10-03`/`m10-05` concluídas; `m10-04` ativa; `m10-06`…`m10-11` no backlog; fonte visual `docs/specs/backlog/m10-regras/m10-regras-exemplao.html` |
 
 ---
 
@@ -2206,6 +2210,16 @@ Catálogo e SVGs preservam o contrato atual; nenhum consumidor do site foi troca
 `DESIGN.md`; [capturas e gates](../specs/done/m10-03-icones-identidade/m10-03-verificacao.md). Build Angular e
 suítes de aplicação aprovados; a cadeia npm de assets/normalizador permanece com
 falhas externas à task após a troca do livro (P-105), sem validação de preparo limpo.
+
+### Gaveta de consulta (M10-05)
+
+`frontend/src/app/shared/ui/gaveta/` oferece `app-gaveta`: `[(aberta)]`, `lado`
+(`inicio`/`fim`), `rotulo` acessível e projeção. Sobrepõe somente o ancestral
+posicionado, mantém uma faixa do texto visível, fecha por Esc/véu/botão e devolve
+foco ao gatilho; Tab circula dentro dela sem acionar o painel flutuante pai.
+Corpo rolável, conteúdo preservado fechada/inert, movimento reduzido respeitado.
+API e contenção em `DESIGN.md`; uso no leitor somente na M10-08.
+[Gates e inspeção real nos quatro viewports](../specs/done/m10-05-primitivo-gaveta/m10-05-verificacao.md).
 
 ### Motor de regras — `shared/regras/` (funções puras, zero dependências)
 

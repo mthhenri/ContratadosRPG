@@ -1,5 +1,37 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-08 — M10-05: gaveta confinada ao contêiner, com foco e teclado
+
+Pedido para iniciar a próxima task da M10. M10-04 continua ativa para aprovação
+visual; a próxima independente era M10-05, com primitivo novo já autorizado.
+`app-gaveta` entregue em `shared/ui/gaveta/`: model `aberta`, bordas `inicio`/`fim`,
+nome acessível e projeção. Véu/cabeçalho da família modal/painel flutuante,
+contenção por ancestral posicionado, sem `fixed` global. Conteúdo mantido montado,
+fechado inerte; Esc/véu/botão, circulação de Tab e retorno ao gatilho. DESIGN
+documenta API/contêiner; integração de Regras continua na M10-08.
+
+Oito testes aprovados. A inspeção real achou foco solicitado antes de a classe e
+`inert` mudarem no DOM: passou em jsdom, falhou no browser. Corrigido com
+`afterRenderEffect` e confirmado nas novas rodadas. Principal inspecionou Angular
+real com painel flutuante análogo, em 1920×1080, 1366×768, 960×1080 e 360×800:
+duas bases/duas bordas, fechada/aberta, viewport, teclado, toque, rolagem e movimento
+reduzido. IBM Plex carregada nos pesos usados; sem overflow ou erros de página.
+Entrada original restaurada e composição temporária removida, sem consumidor novo.
+
+Build Angular de produção e lint dos três workspaces aprovados, avisos anteriores
+preservados. Suíte Angular: 214 arquivos/3.060 testes aprovados, excluindo dois
+specs externos com imports quebrados. Backend: 994 aprovados/um ignorado; shared:
+974 aprovados e dois arquivos não carregam. Quatro testes do montador ainda apontam
+para o corpus realocado de `docs/design/propostas/`: registrado P-106, sem corrigir
+fora do escopo. Normalizador: 34 aprovados/6 falhas do P-105; cadeia npm integral
+e preparo dos livros permanecem pendentes. Sandbox causou EPERM nos testes/Vite
+e falha de busca de fontes no build; execução externa concluiu os gates aplicáveis.
+
+Revisão `convencoes-check`, organização e diff aprovados. Spec/anexos em `done/`,
+M10 em 4/11; M10-06 aguarda M10-04. [Relatório e limites](../specs/done/m10-05-primitivo-gaveta/m10-05-verificacao.md);
+evidências brutas locais em `.artifacts/m10-05/`. Autor autorizou o commit da M10-05
+após o fecho; arquivos da task preparados e gate staged aprovado, sem push.
+
 ## 2026-10-08 — Organização documental: anexos junto das specs, artefatos locais
 
 Antes de retomar a M10, o autor pediu revisar pastas versionadas e impedir a

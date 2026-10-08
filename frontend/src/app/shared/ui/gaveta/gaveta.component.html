@@ -1,0 +1,31 @@
+<!-- O véu é uma superfície de fechamento por ponteiro, como o backdrop de app-modal.
+     Teclado dispõe do botão de fechar e de Escape; o véu não entra na ordem de foco. -->
+<div class="gaveta__veu" aria-hidden="true" (click)="fechar()"></div>
+<section
+    #painel
+    class="gaveta__painel"
+    role="dialog"
+    aria-modal="false"
+    [attr.aria-label]="rotulo()"
+    [attr.aria-hidden]="aberta() ? null : 'true'"
+    [attr.inert]="aberta() ? null : ''"
+    tabindex="-1"
+    (keydown)="tratarTeclado($event)"
+>
+    <header class="gaveta__cabecalho">
+        <h2 class="gaveta__titulo">{{ rotulo() }}</h2>
+        <button
+            app-botao-icone
+            tamanho="compacto"
+            type="button"
+            [attr.aria-label]="'Fechar ' + rotulo()"
+            appTooltip="Fechar"
+            (click)="fechar()"
+        >
+            <span aria-hidden="true">×</span>
+        </button>
+    </header>
+    <div class="gaveta__corpo">
+        <ng-content />
+    </div>
+</section>
