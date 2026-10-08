@@ -1,5 +1,62 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-07 — Orquestração multiagente: subagentes Claude, wrappers Codex/Claude e revisão independente
+
+Pedido do autor: o agente principal decide sozinho quando executar direto, delegar a
+subagentes Claude ou consultar o Codex (e o inverso, Codex usando o Claude), com revisão
+independente, segurança, controle de loops/custo e observabilidade. Tarefa de
+infraestrutura de agentes, fora do fluxo de spec.
+
+**Auditoria.** Existiam `CLAUDE.md`=`AGENTS.md`, oito skills espelhadas em `.claude/skills`
+e `.agents/skills`, nenhum `.claude/agents`, `.claude/settings.json`, hook ou MCP de
+projeto; hooks globais só do ambiente cloud. Codex não instalado (pacote
+`@openai/codex` 0.161 alcançável pelo npm), sem login e com `api.openai.com`/`chatgpt.com`
+bloqueados pela política de rede do ambiente cloud. Claude Code 2.1.293 confirma
+`model`/`effort` no frontmatter de agentes e `claude -p` aninhado funcional. Conflito
+leve: `CLAUDE.md` restringia subagentes a "paralelismo realmente útil"; a frase passou a
+aceitar também preservação de contexto e revisão independente, apontando para a nova
+seção.
+
+**Implementado.** Seção "Orquestração multiagente" em `CLAUDE.md`/`AGENTS.md`; skill
+`orquestracao` (política, protocolo de revisão independente, limites, observabilidade;
+`references/` com modelos de tarefa e configuração); subagentes `implementador` (sonnet,
+medium), `revisor` (opus, high, só leitura) e `testador` (haiku, low), sem a ferramenta
+`Agent`; `scripts/agentes/codex-delegar.sh` (`codex exec`, sandbox `read-only` ou
+`workspace-write` sem rede, `.git` e `/tmp` protegidos, ambiente `core`, sem modelo fixo),
+`claude-delegar.sh` (direção inversa via `claude -p`, ferramentas restritas,
+`--setting-sources project,local`, orçamento), guardas comuns (desligar por
+`AGENTES_CODEX=off`/`AGENTES_CLAUDE=off`, profundidade 1, deduplicação 24 h, 2 simultâneas,
+autenticação, vigia de rede, tempo-limite, morte do filho ao matar o wrapper, relatório de
+arquivos alterados com alerta para configuração de agentes) e hook `PreToolUse`
+`hook-profundidade.sh` que impede subagente de chamar os wrappers. `.agentes/` ignorado.
+
+**Verificado.** Sandbox do Codex no container: `read-only` bloqueia tudo; `workspace-write`
+escreve só no repo, `.git` e rede bloqueados, `/tmp` bloqueado com `exclude_*`. Codex real
+0.161 aceitou todas as flags/`-c` (abriu thread e turno) e falhou só no 403 do proxy; sem
+login sai com `7` imediato, sem rede com `8` em ~50 s. Bateria com `codex` falso: modos,
+esforço, modelo, duplicata, `--forcar`, desligado (inclusive `OFF`), profundidade, diretório
+fora do projeto, modo inválido, concorrência, vaga órfã, CLI ausente, resposta vazia,
+validação de argumentos, morte do agente ao matar o wrapper e relatório de alterações.
+`claude -p --agent` carregou `testador`→claude-haiku-5-5, `implementador`→claude-sonnet-5-5,
+`revisor`→claude-opus-5-5. `claude-delegar.sh` real em consulta respondeu no formato do
+cabeçalho; escrita (Write e Bash) e `git diff --output` negados. Hook bloqueou ao vivo um
+subagente `testador` tentando chamar o Codex. Skills e `CLAUDE.md`/`AGENTS.md` idênticos.
+
+**Revisão independente.** Codex indisponível (saída `127`, depois `7`), então o fallback foi
+o `revisor` (opus) por `claude-delegar.sh`, recebendo problema, requisitos e arquivos sem a
+conclusão do orquestrador. Procederam: agente órfão ao matar o wrapper (`timeout` em grupo
+próprio), subagente→Codex só barrado por prompt, escrita em `/tmp`, resposta vazia virando
+falsa duplicata, argumentos sem validação, regras `allow` do usuário somando no
+`claude -p`, `git diff --output` e `OFF` maiúsculo — todos corrigidos e retestados. Não
+procedeu: MEMORY/CONTEXT não atualizados (editados em paralelo à revisão). Só a análise do
+orquestrador apontou o Codex alterando a própria configuração de agentes (virou alerta).
+
+**Limites registrados.** Codex não executa neste ambiente cloud sem liberar `api.openai.com`
+na rede do ambiente e cadastrar `CODEX_API_KEY`; o modo implementação do `claude-delegar`
+não tem sandbox de sistema; em consulta, `.env` local continua legível; o
+`.claude/settings.json` só vale com o workspace marcado como confiável; agentes novos em
+`.claude/agents/` demoraram a aparecer na ferramenta Agent da sessão em curso.
+
 ## 2026-10-06 — M10 Regras: decisões fechadas e quebra em tasks
 
 Conversa de 05–06/10 com o autor e os testers sobre trocar os PDFs de regras da topbar por um leitor
