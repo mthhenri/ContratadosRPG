@@ -6,7 +6,7 @@ import { normalizarDocumento } from './normalizar-regras.mjs';
 const diretorio = new URL('./fixtures/regras-explicitos/guia/', import.meta.url);
 const fixture = (nome) => readFileSync(new URL(`${nome}.md`, diretorio), 'utf8');
 const fonteGuia = readFileSync(new URL('../../docs/core/guia_de_mestre-v4.2.0.md', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
-const fonteSistema = readFileSync(new URL('../../docs/core/sistema-v4.1.3.md', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
+const fonteSistema = readFileSync(new URL('../../docs/core/sistema-v4.1.4.md', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
 const prefixo = '# **⬢ Guia de Criação de Ameaças**\n\n';
 const normalizar = (texto) => normalizarDocumento(prefixo + texto, 'guia', '4.2.0');
 function percorrer(filhos) {

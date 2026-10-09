@@ -235,6 +235,17 @@
 
 ## Abertas
 
+### I-058 — Documentos PDF na Biblioteca · frontend/biblioteca
+
+- **Ideia:** reconsiderar suporte a documentos PDF de campanha se o autor quiser
+  esse formato na Biblioteca; a M9 previa reutilizar o leitor de regras antigo.
+- **Origem:** retirada dessa infraestrutura na M10-11;
+  [atualização da M9](../specs/done/m9-documentos-campanha/atualizacao-m10-11.md).
+- **Por quê:** a Biblioteca atual atende texto/imagens; anexos nesse formato
+  exigiriam uma decisão nova, sem depender do leitor removido.
+- **Custo aparente:** definir armazenamento, permissões e experiência de leitura
+  específica antes de especificar a implementação.
+
 ### I-057 — Assistente de NPC no mesmo arranjo da ficha · frontend/ficha
 
 - **Ideia:** levar à criação de NPC as decisões da `m4-21`: Patente Equivalente na etapa
@@ -257,7 +268,7 @@
 ### I-055 — Ingestão de .docx no normalizador das Regras · frontend/regras
 
 - **Ideia:** o normalizador ler a exportação `.docx` do Docs em vez do `.md`.
-- **Origem:** revisão do exemplão do M10 (`docs/specs/backlog/m10-regras/m10-regras-exemplao.html`) com o autor e os testers, 2026-10-06; anotada em `m10-regras.spec.md`. O autor topou a troca, para depois.
+- **Origem:** revisão do exemplão do M10 (`docs/specs/done/m10-regras/m10-regras-exemplao.html`) com o autor e os testers, 2026-10-06; anotada em `m10-regras.spec.md`. O autor topou a troca, para depois.
 - **Por quê:** o `.docx` preserva estrutura (tabelas, estilos) que o `.md` achata, reduzindo os
   casos explícitos de tabela de layout.
 - **Custo aparente:** muda só a entrada do normalizador; a árvore canônica continua a mesma.
@@ -266,7 +277,7 @@
 
 - **Ideia:** "Ver regra" em condição, atributo e habilidade da ficha, abrindo o painel de Regras na
   seção certa.
-- **Origem:** revisão do exemplão do M10 (`docs/specs/backlog/m10-regras/m10-regras-exemplao.html`) com o autor e os testers, 2026-10-06; anotada em `m10-regras.spec.md`.
+- **Origem:** revisão do exemplão do M10 (`docs/specs/done/m10-regras/m10-regras-exemplao.html`) com o autor e os testers, 2026-10-06; anotada em `m10-regras.spec.md`.
 - **Por quê:** quem joga consulta a regra sem sair do contexto da ficha.
 - **Custo aparente:** mapa estável entre conceitos do `shared/` e âncoras do formato canônico (por
   ID, não por nome); depende do leitor da M10.
@@ -275,7 +286,7 @@
 
 - **Ideia:** escrever o Sistema e o Guia dentro do site, gravando direto o formato canônico; inclui ver
   versões antigas só para leitura.
-- **Origem:** revisão do exemplão do M10 (`docs/specs/backlog/m10-regras/m10-regras-exemplao.html`) com o autor e os testers, 2026-10-06; anotada em `m10-regras.spec.md`. Pedido original do autor para depois do leitor.
+- **Origem:** revisão do exemplão do M10 (`docs/specs/done/m10-regras/m10-regras-exemplao.html`) com o autor e os testers, 2026-10-06; anotada em `m10-regras.spec.md`. Pedido original do autor para depois do leitor.
 - **Por quê:** tira o Google Docs do fluxo e permite o texto único.
 - **Custo aparente:** alto — editor por tipo de bloco, persistência/versões, permissão de autor;
   provável mudança do normalizador e dos tipos para `shared/`.
@@ -284,14 +295,14 @@
 
 - **Ideia:** habilidades, itens e demais catálogos do `shared/regras` gerados a partir dos verbetes
   do documento, por ID (não por nome — "6º Sentido" geral ≠ o do Assassino).
-- **Origem:** revisão do exemplão do M10 (`docs/specs/backlog/m10-regras/m10-regras-exemplao.html`) com o autor e os testers, 2026-10-06; anotada em `m10-regras.spec.md`.
+- **Origem:** revisão do exemplão do M10 (`docs/specs/done/m10-regras/m10-regras-exemplao.html`) com o autor e os testers, 2026-10-06; anotada em `m10-regras.spec.md`.
 - **Por quê:** acaba a divergência entre o texto das Regras e o que o motor usa.
 - **Custo aparente:** alto — IDs estáveis no documento, depende do editor (I-053).
 
 ### I-051 — IA sobre trecho das Regras · frontend/regras
 
 - **Ideia:** selecionar um trecho das Regras e perguntar o que significa.
-- **Origem:** revisão do exemplão do M10 (`docs/specs/backlog/m10-regras/m10-regras-exemplao.html`) com o autor e os testers, 2026-10-06; anotada em `m10-regras.spec.md`. Relaciona-se à I-015.
+- **Origem:** revisão do exemplão do M10 (`docs/specs/done/m10-regras/m10-regras-exemplao.html`) com o autor e os testers, 2026-10-06; anotada em `m10-regras.spec.md`. Relaciona-se à I-015.
 - **Por quê:** tira dúvida de regra no ponto em que ela surge.
 - **Custo aparente:** o mesmo da I-015 (provedor, custo, respostas erradas sobre regra), recortado.
 
@@ -300,7 +311,7 @@
 - **Ideia:** revisar o desenho de três ícones já decididos na `m10-03`: Suporte (cruz em círculo) ×
   Paramédico (cruz) aparecem juntos no dossiê do Suporte e se confundem; as espadas do Combatente quase
   viram um "X" em tamanho pequeno; a Silhueta do Civil lembra "perfil de usuário".
-- **Origem:** revisão do exemplão do M10 (`docs/specs/backlog/m10-regras/m10-regras-exemplao.html`) com o autor e os testers, 2026-10-06; anotada em `m10-regras.spec.md`. O autor preferiu seguir com os escolhidos por ora.
+- **Origem:** revisão do exemplão do M10 (`docs/specs/done/m10-regras/m10-regras-exemplao.html`) com o autor e os testers, 2026-10-06; anotada em `m10-regras.spec.md`. O autor preferiu seguir com os escolhidos por ora.
 - **Por quê:** legibilidade em 14–16px e distinção dentro do mesmo dossiê.
 - **Custo aparente:** só desenho + votação curta; troca de SVG no `app-icone`.
 

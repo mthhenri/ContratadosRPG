@@ -2,7 +2,7 @@
 
 Fontes: Sistema v4.1.3 e Guia de Mestre v4.2.0 em `docs/core/`; contrato da
 [spec](../m10-02-normalizador-casos-explicitos.spec.md) e formatos da aba
-Protótipo do `docs/specs/backlog/m10-regras/m10-regras-exemplao.html`. Sem alteração de UI.
+Protótipo do `docs/specs/done/m10-regras/m10-regras-exemplao.html`. Sem alteração de UI.
 
 ## Implementação e preservação
 

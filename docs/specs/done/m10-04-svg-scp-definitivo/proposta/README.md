@@ -19,7 +19,7 @@ SVGs candidatos, paleta de referência e fontes da prancha continuam versionados
 A [spec ativa](../../m10-04-svg-scp-definitivo.spec.md) exige
 aprovação de cada versão do SVG e conferência do texto do crédito pelo autor.
 
-Referência visual: [exemplão de Regras](../../../backlog/m10-regras/m10-regras-exemplao.html), aba Ícones
+Referência visual: [exemplão de Regras](../../../done/m10-regras/m10-regras-exemplao.html), aba Ícones
 e níveis de ameaça. Mesma hierarquia mono, superfícies, bordas discretas e
 densidade; prancha estática, sem controles novos ou biblioteca alternativa.
 

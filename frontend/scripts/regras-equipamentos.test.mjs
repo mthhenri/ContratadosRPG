@@ -97,7 +97,7 @@ test('notas excepcionais de custo/peso preservadas; notas desconhecidas rejeitad
 });
 
 test('fonte real confere todas as fixtures e as 100 ocorrências de equipamento/67 modificações', () => {
-    const fonte = readFileSync(new URL('../../docs/core/sistema-v4.1.3.md', import.meta.url), 'utf8');
+    const fonte = readFileSync(new URL('../../docs/core/sistema-v4.1.4.md', import.meta.url), 'utf8');
     const recorte = fonte.slice(fonte.indexOf('| ⬡ Corpo a Corpo |'), fonte.indexOf('# **⬢ Regras**'));
     for (const arquivo of readdirSync(diretorio)) {
         assert.ok(recorte.includes(readFileSync(new URL(arquivo, diretorio), 'utf8').trim()));

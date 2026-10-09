@@ -202,7 +202,7 @@ Tarja sólida segue Documento de contenção. Tabelas têm rolagem local, fade e
 coluna fixa no celular. Habilidades são listas densas com chip de Energia (ícone +
 valor) secundário/contorno e REAÇÃO primário/contorno, com tooltip por extenso.
 
-Controles: `app-segmentado` Sistema/Guia, `app-botao` completo para PDF/retry,
+Controles: `app-segmentado` Sistema/Guia, `app-botao` completo para retry,
 `app-esqueleto` e `app-estado-vazio`; links de sumário seguem a receita dos patchnotes.
 Item ativo acompanha a leitura; link interno foca e pisca o título, respeitando
 movimento reduzido. Desde M10-08, página mobile e painel normal usam `app-gaveta`
@@ -211,7 +211,8 @@ Painel maximizado desktop usa os dois trilhos da página. Topbar e ficha abrem u
 único `app-painel-flutuante` de Regras, carregado no primeiro uso; cabeçalho segue
 a Biblioteca M9-11/M9-12. ↗ abre a página na seção atual; memória separada por livro.
 Rolagem e gaveta locais, IDs isolados entre hospedeiros. Topbar usa Regras e marca
-própria; download provisório dos PDFs anteriores e crédito CC BY-SA no rodapé.
+própria e crédito CC BY-SA no rodapé. Desde M10-11, a publicação usa apenas
+os JSONs derivados do Markdown; o download provisório foi retirado.
 [Gates e limites](../specs/done/m10-06-pagina-regras/m10-06-verificacao.md).
 [Painel, celular e comparação com a Biblioteca](../specs/done/m10-08-painel-flutuante-e-celular/m10-08-verificacao.md).
 
@@ -272,7 +273,7 @@ aberta na [spec avulsa](../specs/active/icones-recursos-sistema.spec.md).
 ### Ícones de identidade (`m10-03`)
 
 O catálogo canônico `app-icone` (`frontend/src/app/shared/icone/`) reúne a família de
-identidade decidida no [exemplão de Regras](../specs/backlog/m10-regras/m10-regras-exemplao.html), objeto
+identidade decidida no [exemplão de Regras](../specs/done/m10-regras/m10-regras-exemplao.html), objeto
 `ICO`, opção `dec`. SVGs de contorno em `viewBox="0 0 24 24"`, traço `1.75`, pontas e
 junções arredondadas; herdam `currentColor`, sem cor própria, nas bases clara e escura.
 A mira de Mercenário conserva o ponto central preenchido; Assassino conserva a rotação
@@ -364,7 +365,7 @@ copiados por página, `<p class="…__vazio">`/`…__estado` com texto solto) qu
 mobile da ficha, o bloco de vitalidade desktop da mesma ficha e o cartão de combatente, que não
 tinha trilho algum (Vida/Energia eram texto puro). O primitivo é dono do rótulo, do valor
 atual/máximo e do trilho; steppers e o botão "Receber dano" continuam do consumidor, projetados
-ao redor dele ou no slot `[barraRecursoAcao]`. Sanidade fica de fora: `sistema-v4.1.3.md`
+ao redor dele ou no slot `[barraRecursoAcao]`. Sanidade fica de fora: `sistema-v4.1.4.md`
 §Sanidade diz que ela "não é uma barra de valor convencional" — o sistema a modela como listas de
 Sequelas/Traumas/Lesões (`ficha-sanidade`), sem par atual/máximo.
 
@@ -429,10 +430,12 @@ que cada um quer resolver é diferente — a calculadora tem um mínimo de 190×
 leitor têm o próprio mínimo e um estado de tela cheia); o primitivo só precisa saber a caixa
 renderizada (`obterElemento()`) para o consumidor medir o próprio redimensionamento, e expõe
 `moverPara()`/`obterPosicaoAtual()` para quem maximiza também precisar mover a janela. A janela
-some com `[hidden]`, não `@if`, ao minimizar — o iframe do leitor de documentos preserva página,
-zoom e rolagem do PDF em vez de recarregar ao restaurar, e a mesma escolha beneficia de graça
-qualquer conteúdo futuro que se importe com o próprio estado interno. A Biblioteca flutuante
-(`BibliotecaFlutuante`, `m9-11`) é o quarto consumidor — ver "Biblioteca de documentos".
+some com `[hidden]`, não `@if`, ao minimizar, preservando o estado interno
+dos consumidores. O antigo leitor foi removido na M10-11; Regras usa memória
+de leitura própria. A Biblioteca flutuante
+(`BibliotecaFlutuante`, `m9-11`) usa o mesmo primitivo — ver "Biblioteca de documentos".
+A premissa de reuso do leitor antigo foi retirada na
+[atualização da M9](../specs/done/m9-documentos-campanha/atualizacao-m10-11.md).
 
 `app-coluna-acoes` (`shared/ui/coluna-acoes/`, `campanha-detalhe-mestre-coluna-acoes.spec.md`) é uma
 quarta forma, mais próxima do painel lateral de 500px que do painel flutuante: participa do fluxo
@@ -762,7 +765,7 @@ e `aria-disabled="true"` para o leitor de tela anunciar o estado.
 
 **Uma única opacidade de desabilitado.** O primitivo sempre teve `0.55`
 (`:host(:disabled) { opacity: 0.55; }`); seis cópias declaravam `--botao-opacidade-desabilitado`
-para sobrescrever esse valor com `0.4` ou `0.6` (`receber-dano-dialog`, `leitor-pdf-mobile`,
+para sobrescrever esse valor com `0.4` ou `0.6` (`receber-dano-dialog`,
 `historico-rolagens-sidebar` "Carregar mais", `login`/`registro` "Entrar", `perfil` "Salvar"/
 ações). A fresta de customização foi removida junto com as seis declarações — não sobrou jeito
 de um consumidor novo divergir do canônico sem editar o próprio primitivo.

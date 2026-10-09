@@ -1,7 +1,7 @@
 # icones-recursos-sistema.spec.md
 
 > **Spec avulsa, fora da numeração do M10** (pedido do autor, 2026-10-06). Nasce da revisão do
-> exemplão do M10 (`docs/specs/backlog/m10-regras/m10-regras-exemplao.html`, aba *Ícones*), onde o trio
+> exemplão do M10 (`docs/specs/done/m10-regras/m10-regras-exemplao.html`, aba *Ícones*), onde o trio
 > Vida/Energia/Defesa foi decidido. A **entrega 1** é pré-requisito da `m10-07`; as demais correm
 > no seu próprio ritmo. Pode ser quebrada em tasks numeradas se o levantamento (entrega 3) crescer.
 

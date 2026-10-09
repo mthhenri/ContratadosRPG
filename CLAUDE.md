@@ -63,10 +63,12 @@ tela sobre um tema PrimeNG vazio ou padrão.
 
 ## Fontes da verdade
 
-As regras do jogo estão em `docs/core/sistema-v4.1.3.md` e
+As regras do jogo estão em `docs/core/sistema-v4.1.4.md` e
 `docs/core/guia_de_mestre-v4.2.0.md`. Antes de alterar fórmulas, progressão ou
 regras de domínio, consulte esses documentos; em caso de conflito, o documento
-vence o código.
+vence o código. A leitura no site consome `frontend/public/regras/sistema.json` e
+`guia.json`, gerados desses Markdown por `frontend/scripts/normalizar-regras.mjs`;
+os JSONs são derivados de apresentação, nunca substituem a fonte da regra.
 
 As decisões visuais estão em `docs/design/`. Os tokens de
 `docs/design/tema/_tokens.scss` são a fonte de verdade em runtime. Componentes

@@ -5,7 +5,7 @@
 > `m10-01`…`m10-11`, cada uma com a sua spec em `docs/specs/backlog/` (quebra feita em 2026-10-06).
 > A numeração M10 deixa de ser a sugerida pela `I-015` (assistência por IA), que segue como ideia.
 >
-> **Fonte visual:** `docs/specs/backlog/m10-regras/m10-regras-exemplao.html` — exemplão standalone revisado
+> **Fonte visual:** `docs/specs/done/m10-regras/m10-regras-exemplao.html` — exemplão standalone revisado
 > com o autor e os testers. Abas *Protótipo* (página, painel, celular, PDF), *Decisões* e *Ícones*.
 > Mockup é fonte visual, **nunca de mecânica nem de texto**: o texto exibido vem sempre do `.md`
 > canônico; divergência entre exemplão e `docs/core/` → o documento vence.

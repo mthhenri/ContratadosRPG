@@ -6,7 +6,7 @@ Data: 2026-10-08. [Spec](../m10-03-icones-identidade.spec.md).
 
 17 nomes em `IconeNome` e seus desenhos no template de `app-icone`: Combatente,
 Especialista, Suporte; nove arquétipos; Bestial, Artificial e Híbrido; Civil e NPC.
-Fonte conferida: `docs/specs/backlog/m10-regras/m10-regras-exemplao.html`, `ICO[nome].op[dec]`,
+Fonte conferida: `docs/specs/done/m10-regras/m10-regras-exemplao.html`, `ICO[nome].op[dec]`,
 sem consultar escolhas locais em `localStorage`. A lista da spec tem 18 identidades,
 mas exclui expressamente `criatura` até o SVG SCP da M10-04: nenhuma forma provisória
 foi acrescentada. Recursos Vida/Energia/Defesa e refino I-050 permanecem fora do recorte.

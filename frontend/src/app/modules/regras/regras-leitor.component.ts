@@ -80,8 +80,6 @@ export class RegrasLeitor {
         const indice = ancoras.indexOf(this.ativo() ?? "");
         return ancoras.slice(0, indice + 1).reverse().find((ancora) => visiveis.has(ancora));
     });
-    protected readonly pdf = computed(() => this.livro() === "sistema"
-        ? "/documentos/sistema-v4.1.3.pdf" : "/documentos/guia_de_mestre-v4.2.0.pdf");
 
     constructor() {
         effect(() => {

@@ -24,7 +24,7 @@ const entrada = (valor) => canonico(marked.parseInline(valor).replace(/<[^>]+>/g
     .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&'));
 
 test('as oito fixtures são recortes literais da fonte e conservam todas as células', () => {
-    const livro = readFileSync(fileURLToPath(new URL('../../docs/core/sistema-v4.1.3.md', import.meta.url)), 'utf8');
+    const livro = readFileSync(fileURLToPath(new URL('../../docs/core/sistema-v4.1.4.md', import.meta.url)), 'utf8');
     for (const arquivo of readdirSync(diretorio)) {
         const original = fixture(arquivo.replace('.md', ''));
         assert.ok(livro.includes(original), `${arquivo}: recorte literal`);

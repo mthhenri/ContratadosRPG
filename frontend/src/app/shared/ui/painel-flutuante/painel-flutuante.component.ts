@@ -34,7 +34,7 @@ interface EstadoPersistido {
 /**
  * Primitivo de janela flutuante arrastável (`ui-17`). Um único caminho de código para arraste,
  * posição (persistida em `localStorage` por `[id]`), empilhamento de z-index, minimizar e fechar —
- * os cinco comportamentos que `CalculadoraFlutuante`, `CadernoFlutuante` e `LeitorDocumentos`
+ * os cinco comportamentos que `CalculadoraFlutuante`, `CadernoFlutuante` e `RegrasFlutuante`
  * reimplementavam cada um à sua maneira. Redimensionar por arraste e maximizar continuam do
  * consumidor (fora de escopo desta task): ele controla `[largura]`/`[altura]` e pode reposicionar
  * via `moverPara()` (usado por um maximizar próprio, por exemplo).

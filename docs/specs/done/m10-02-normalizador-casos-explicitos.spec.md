@@ -1,7 +1,7 @@
 # m10-02-normalizador-casos-explicitos.spec.md
 
 > Task do milestone `m10-regras.spec.md`, depois de `m10-01`. Sem UI. Fonte visual de cada bloco:
-> aba *Protótipo* do exemplão (`docs/specs/backlog/m10-regras/m10-regras-exemplao.html`).
+> aba *Protótipo* do exemplão (`docs/specs/done/m10-regras/m10-regras-exemplao.html`).
 
 ## Objetivo
 

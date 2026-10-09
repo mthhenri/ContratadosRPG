@@ -68,24 +68,6 @@
   na tarefa de organização, sem duplicar o corpus nem recriar o depósito antigo.
 - **Desde:** após a organização documental de 2026-10-08; confirmado na M10-05.
 
-### P-105 — Preparo de assets e testes de Regras ainda apontam para v4.1.3 · `ABERTO` · frontend/documentos
-
-- **Sintoma:** `npm run build --workspace=frontend` para no prebuild com ENOENT do PDF
-  `docs/core/sistema-v4.1.3.pdf`. `npm run test --workspaces --if-present` passa shared e
-  backend, mas para nos testes do normalizador (34 passam, 6 falham), impedindo a etapa
-  Angular na cadeia npm.
-- **Causa:** a troca do Sistema para v4.1.4 (`e3da359d`) removeu os arquivos v4.1.3;
-  `frontend/scripts/preparar-documentos.mjs` e testes de `normalizar-regras`/
-  `regras-personagens`/`regras-equipamentos`/`regras-guia` conservam caminhos antigos.
-  A asserção da publicação também exige aviso `sistema-v4.1.3.md:313`.
-- **Contorno:** `npx ng test --watch=false` verifica Angular diretamente; `CI=true`
-  com `npx ng build` verifica o build Angular usando os assets já preparados. Isso
-  não comprova preparo/publicação dos livros a partir de um checkout limpo.
-- **Correção:** alinhar preparo, publicação, referências do leitor e testes à fonte
-  vigente em tarefa própria; não restaurar o livro antigo nem misturar com M10-03.
-- **Desde:** observado no gate M10-03 em 2026-10-08, após a troca de livro já presente
-  no começo da sessão. [Resultados separados](../specs/done/m10-03-icones-identidade/m10-03-verificacao.md).
-
 ### P-104 — Build Angular encerra com falha nativa usando cache local · `CONTORNADO` · ferramentas/local
 
 - **Sintoma:** `npm run build --workspace=frontend` encerra no Windows com código

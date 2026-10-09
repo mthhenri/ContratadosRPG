@@ -1,7 +1,7 @@
 # m10-03-icones-identidade.spec.md
 
 > Task do milestone `m10-regras.spec.md`. Independente; pode correr em paralelo com `m10-01`.
-> Fonte: aba *Ícones* do exemplão (`docs/specs/backlog/m10-regras/m10-regras-exemplao.html`), objeto `ICO`,
+> Fonte: aba *Ícones* do exemplão (`docs/specs/done/m10-regras/m10-regras-exemplao.html`), objeto `ICO`,
 > opção marcada em `dec` (decisão conjunta com os testers, 2026-10-06).
 
 ## Objetivo

@@ -115,7 +115,7 @@ test('hierarquia e tradução de links do Docs', () => {
 });
 
 test('fixtures são recortes literais do Sistema vigente', () => {
-    const sistema = readFileSync(join(diretorioRaiz, 'docs/core/sistema-v4.1.3.md'), 'utf8')
+    const sistema = readFileSync(join(diretorioRaiz, 'docs/core/sistema-v4.1.4.md'), 'utf8')
         .replace(/\r\n/g, '\n');
     for (const arquivo of readdirSync(diretorioFixtures)) {
         assert.ok(sistema.includes(readFileSync(join(diretorioFixtures, arquivo), 'utf8')), arquivo);
@@ -251,7 +251,7 @@ test('versão vem do nome; seleção numérica ignora PDFs e fontes antigas', ()
 });
 
 for (const [id, arquivo, versao] of [
-    ['sistema', 'sistema-v4.1.3.md', '4.1.3'], ['guia', 'guia_de_mestre-v4.2.0.md', '4.2.0'],
+    ['sistema', 'sistema-v4.1.4.md', '4.1.4'], ['guia', 'guia_de_mestre-v4.2.0.md', '4.2.0'],
 ]) {
     test(`livro inteiro ${id}: cobertura de texto, âncoras únicas e todos os links rastreados`, () => {
         const entrada = readFileSync(join(diretorioRaiz, 'docs/core', arquivo), 'utf8');
@@ -320,6 +320,6 @@ test('publicação escreve dois JSONs determinísticos e avisos legíveis', asyn
         assert.deepEqual(readdirSync(destino).map((arquivo) => readFileSync(join(destino, arquivo), 'utf8')),
             primeira);
         assert.ok(mensagens.some((mensagem) => /^\[regras\] \d+ aviso\(s\); conteúdo preservado para revisão\.$/.test(mensagem)));
-        assert.ok(mensagens.some((mensagem) => mensagem.startsWith('[regras] sistema-v4.1.3.md:313')));
+        assert.ok(mensagens.some((mensagem) => mensagem.startsWith('[regras] sistema-v4.1.4.md:313')));
     } finally { rmSync(destino, { recursive: true, force: true }); }
 });

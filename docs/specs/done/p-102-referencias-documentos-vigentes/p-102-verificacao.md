@@ -90,7 +90,7 @@ P-102 retirada de PROBLEMS e movida para `done/`; CONTEXT, MEMORY e fila consoli
 atualizados. Não há pendência técnica desta task. Revisões de NPC/crítico e editorial
 autoral conservam suas tasks/decisões próprias. Arquivos temporários de inventário,
 comparação e scripts de conferência removidos após guardar estas evidências.
-Proposta `docs/specs/backlog/m10-regras/m10-regras-exemplao.html` preservada para a conversa M10.
+Proposta `docs/specs/done/m10-regras/m10-regras-exemplao.html` preservada para a conversa M10.
 
 
 > Organização em 2026-10-08: capturas e saídas brutas citadas neste registro

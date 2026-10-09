@@ -1,5 +1,40 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-08 — M10-11: retirada do leitor e da publicação antigos
+
+Depois da autorização de commit da M10-10, gravada em `af475bec` com coautoria
+Codex, executada a M10-11. Autor autorizou avançar mesmo com Sistema suspenso
+por P-108. Removidos `shared/leitor-documentos/`, visualizador mobile,
+`pdfjs-dist` e dependências exclusivas, worker, scripts de cópia/checagem
+antigos, entradas de assets e os dois PDFs de `docs/core/`; histórico no Git.
+Limpos os assets locais ignorados para não publicar resíduos. O leitor atual
+perdeu apenas o download provisório; exportação nativa continua independente.
+
+Prestart/prebuild geram JSON a partir dos Markdown atuais. O pós-build compara
+integralmente ambos os livros com a fonte e rejeita arquivos residuais.
+P-105 corrigido: testes apontam para Sistema v4.1.4/Guia v4.2.0 e a fixture do
+Especialista foi extraída novamente do texto vigente. A mudança do crítico já
+estava no documento; nenhuma fórmula ou motor de jogo foi alterado aqui.
+AGENTS/CLAUDE, skill regras-do-jogo (duas cópias), SYSTEM, MEMORY e CONTEXT
+alinhados à fonte vigente e ao JSON derivado. Regras-do-jogo exercitada na
+conferência desse recorte literal; os derivados não substituem a fonte.
+
+A spec histórica da M9 foi preservada; anexo posterior substitui a premissa de
+reuso para documentos de campanha e I-058 registra a reconsideração futura.
+Guarda-chuva M10 e exemplão movidos juntos para done, com ajustes mecânicos de
+ponteiros, sem reescrever decisões. M10 implementada (11/11), com apresentação
+da exportação ainda pendente de revisão/aprovação em P-108. Sistema permanece
+suspenso; Guia disponível. Commit da M10-11 autorizado pelo autor no fecho.
+
+Build completo e publicação passaram (aviso existente de orçamento 450kB:
+588,83kB); 56 testes de normalização e 3096 testes Angular em 228 arquivos
+passaram. Dois arquivos do montador excluídos pelo P-106 preexistente, ainda
+aberto. Lint nos três workspaces sem erros, mantendo avisos históricos.
+Inspeção pessoal da página e topbar/painel em quatro viewports, claro/escuro:
+controles, densidade, hierarquia e gaveta preservados; sem download antigo,
+overflow, solicitação de assets legados ou erro de página. Gates e limites em
+[verificação M10-11](../specs/done/m10-11-remocao-pdf-antigo/verificacao.md).
+
 ## 2026-10-08 — M10-10: avaliação do autor e suspensão do PDF do Sistema
 
 Autor considerou a formatação do PDF “bem estranha” e pediu revisão substancial.
@@ -606,7 +641,7 @@ não tem sandbox de sistema; em consulta, `.env` local continua legível; o
 ## 2026-10-06 — M10 Regras: decisões fechadas e quebra em tasks
 
 Conversa de 05–06/10 com o autor e os testers sobre trocar os PDFs de regras da topbar por um leitor
-próprio. O visual foi decidido sobre um exemplão standalone (`docs/specs/backlog/m10-regras/m10-regras-exemplao.html`,
+próprio. O visual foi decidido sobre um exemplão standalone (`docs/specs/done/m10-regras/m10-regras-exemplao.html`,
 abas Protótipo/Decisões/Ícones), compartilhado com os testers. Decisões finais do autor: página em
 **coluna à esquerda** (~960px, trilho + documento alinhados à esquerda; largura total descartada);
 normalizador em `frontend/scripts/` (só o build do front consome, sem emenda à §6 do SYSTEM.SPEC);
@@ -896,7 +931,7 @@ delete. Nenhum arquivo `.tmp-*` ficou na raiz. Planos, propostas, evidências fi
 imagens de comparação foram preservados; referências históricas a scripts/logs locais
 descrevem a rodada original e não significam retenção permanente desses descartáveis.
 
-Autor escolheu deixar `docs/specs/backlog/m10-regras/m10-regras-exemplao.html` para a conversa
+Autor escolheu deixar `docs/specs/done/m10-regras/m10-regras-exemplao.html` para a conversa
 da M10: arquivo preservado e fora dos commits. Não houve push, publicação ou mudança
 de versão. P-099 continua descartada e M4-19/P-101/P-102 mantêm seus estados próprios.
 

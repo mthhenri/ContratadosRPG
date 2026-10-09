@@ -9,7 +9,7 @@ import { RegrasService } from "./regras.service";
 
 describe("RegrasPage", () => {
     const sistema: RegrasDocumento = {
-        tipo: "documento", id: "sistema", titulo: "Sistema", versao: "4.1.3",
+        tipo: "documento", id: "sistema", titulo: "Sistema", versao: "4.1.4",
         filhos: [{ tipo: "secao", ancora: "vida", titulo: "Vida", nivel: 2,
             glifo: "⬡", filhos: [{ tipo: "paragrafo", trechos: [
                 { tipo: "texto", texto: "Conteúdo do livro" },
@@ -38,16 +38,17 @@ describe("RegrasPage", () => {
 
     afterEach(() => vi.restoreAllMocks());
 
-    it("anuncia carga e exibe versão, conteúdo, download e atribuição do documento recebido",
+    it("anuncia carga e exibe versão, conteúdo, exportação suspensa e atribuição do documento recebido",
         async () => {
             const { fixture, respostas, raiz } = await montar();
             expect(raiz.querySelector('[aria-label="Carregando documento"]')).not.toBeNull();
             respostas.sistema.next(sistema);
             fixture.detectChanges();
-            expect(raiz.querySelector("h1")?.textContent).toContain("Sistema · v4.1.3");
+            expect(raiz.querySelector("h1")?.textContent).toContain("Sistema · v4.1.4");
             expect(raiz.textContent).toContain("Conteúdo do livro");
-            expect(raiz.querySelector("a[download]")?.getAttribute("href"))
-                .toBe("/documentos/sistema-v4.1.3.pdf");
+            expect(raiz.querySelector("a[download]")).toBeNull();
+            expect(raiz.querySelector<HTMLButtonElement>('[aria-label="Exportar PDF"]')?.disabled)
+                .toBe(true);
             expect(raiz.querySelector("footer")?.textContent).toContain("CC BY-SA 3.0");
         });
 
@@ -69,7 +70,8 @@ describe("RegrasPage", () => {
         respostas.guia.next({ ...sistema, id: "guia", titulo: "Guia", versao: "4.2.0" });
         fixture.detectChanges();
         expect(raiz.querySelector("h1")?.textContent).toContain("Guia · v4.2.0");
-        expect(raiz.querySelector("a[download]")?.getAttribute("href"))
-            .toBe("/documentos/guia_de_mestre-v4.2.0.pdf");
+        expect(raiz.querySelector("a[download]")).toBeNull();
+        expect(raiz.querySelector<HTMLButtonElement>('[aria-label="Exportar PDF"]')?.disabled)
+            .toBe(false);
     });
 });

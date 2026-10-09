@@ -37,7 +37,10 @@
 > [backlog](../specs/backlog/revisao-formatacao-pdf-regras.spec.md), sem aprovação
 > editorial da apresentação entregue.
 >
-> **Última revisão:** 2026-10-08 · M10-10: exportação nativa dos dois livros,
+> **Última revisão:** 2026-10-08 · M10-11: leitor e arquivos antigos removidos;
+> publicação verificada contra os Markdown vigentes. M10-10 commitada em
+> `af475bec`. [Verificação da remoção](../specs/done/m10-11-remocao-pdf-antigo/verificacao.md).
+> M10-10: exportação nativa dos dois livros,
 > capa/sumário/margens e papel claro entregues; PDFs de 109/41 páginas conferidos
 > integralmente em Chromium/Edge, quatro viewports e claro/escuro. M10-09 commitada
 > em `251455ad`. [Verificação da exportação](../specs/done/m10-10-exportar-pdf/verificacao.md).
@@ -53,7 +56,7 @@
 > quatro viewports, claro/escuro, nove arquétipos, tabelas e tooltips conferidos.
 > [Verificação e limites](../specs/done/m10-07-blocos-ricos/m10-07-verificacao.md).
 > M10-06 commitada em `5faec0f6`: página pública de Regras, blocos básicos,
-> sumário/URL, troca de livro e download provisório entregues; quatro viewports,
+> sumário/URL e troca de livro entregues; quatro viewports,
 > duas bases e estados de navegação/carga/erro conferidos.
 > [Verificação e limites](../specs/done/m10-06-pagina-regras/m10-06-verificacao.md).
 > M10-04: marcas aprovadas incorporadas,
@@ -65,7 +68,7 @@
 > Corpus do montador com quatro ponteiros antigos após realocação (P-106).
 > M10-03: 17 ícones de identidade adicionados e
 > verificados em 14/16/24px, claro/escuro e quatro viewports; [evidências](../specs/done/m10-03-icones-identidade/m10-03-verificacao.md).
-> Preparo dos livros e testes do normalizador pendentes por caminhos v4.1.3 (P-105).
+> Preparo/publicação e testes alinhados ao Sistema v4.1.4 na M10-11 (P-105 corrigido).
 > M4-21 concluída: ficha de NPC revista para se aproximar
 > do Jogador — Patente e Categoria só na Identidade, cor pelo retrato, Competência no ladrilho,
 > equipamento no layout do inventário, Biblioteca de Referência nas habilidades, abas Conduta ·
@@ -90,10 +93,10 @@
 > aprovados; marca própria atual preservada, com detalhes condensados em 16–24px.
 > SCP oficial somente na identidade de Criatura; marca própria SCP + D20 em Regras,
 > níveis e usos gerais. [Contrato de marcas](../design/MARCAS.md).
-> Próxima task: `m10-11`, remover o PDF/leitor antigo; permanece no backlog.
+> M10 implementada, 11/11; revisão editorial da exportação segue aberta em P-108.
 > `icones-recursos-sistema` ativa: entrega 1 concluída; adoção ampla/levantamento abertos.
 > [Gates, contagens e avisos dos casos explícitos](../specs/done/m10-02-normalizador-casos-explicitos/m10-02-verificacao.md).
-> **Última decisão registrada:** Sistema do Jogador v4.1.3
+> **Fonte vigente:** Sistema do Jogador v4.1.4
 > incorporado em `p-097-01`: crítico soma +2 uma vez no teste; dano/cura continuam
 > dobrando dados e valores. Motor, média do montador e leitor de documentos corrigidos.
 > Guia de Mestre v4.2.0 incorporado na m4-19 para Nível + Competências,
@@ -479,7 +482,7 @@
 > reload, em `1920×1080` e `360×800`. Detalhe completo em `HISTORY.md`.
 > Antes: Brainstorming aprovado (2026-09-21): o M7 "Encontro de Combate" amplia para um módulo de
 > **Cenas** — pedido do autor para tipar a cena na criação (Combate/Investigação/Furtiva/
-> Perseguição/Resistência, `docs/core/sistema-v4.1.3.md` "⬡ Cenas") e abrir caminho para uma cena de
+> Perseguição/Resistência, `docs/core/sistema-v4.1.4.md` "⬡ Cenas") e abrir caminho para uma cena de
 > Investigação que organiza documentos e fichas dos jogadores numa mesma tela. `cena` nasce como
 > raiz nova (tipo, status `PLANEJADA→ATIVA→ENCERRADA`, ordem); `encontro` continua intocado em
 > nome/código, passando a pendurar numa `cena_id` — é a estrutura que só Combate/Furtiva/
@@ -1442,7 +1445,7 @@ simultaneamente (estrutura `@if`/`@else` com uma condição solta fora do par), 
 adotar o primitivo. `ficha-flutuante` (`modules/encontro/`) migrou pra hospedar seu conteúdo dentro
 de `app-painel-flutuante` (ui-17) — arraste, posição, empilhamento de z-index, minimizar e focus-
 trap vieram de graça; só redimensionar por arraste e maximizar continuam do consumidor, mesmo
-padrão de `leitor-documentos`/`caderno-flutuante`. Posição da ficha agora persiste em
+padrão de `painel-flutuante`/`caderno-flutuante`. Posição da ficha agora persiste em
 `localStorage` entre reloads (decisão do autor — antes não persistia); pro mestre isso é invisível
 na prática, porque `abrir()` sempre reposiciona pra geometria ampla (`GEOMETRIA_INICIAL_FICHA_
 FLUTUANTE_MESTRE`) quando a janela estava fechada, como já fazia antes da migração. Efeito
@@ -1608,23 +1611,9 @@ frontend completa (1510/1510) e inspeção real no tamanho compacto do relato, `
 `360×800` passaram; build de produção também passou e lint terminou sem erros (mantém os avisos
 históricos do repositório).
 
-**`fix-leitor-documentos-altura-pdf` concluída** (spec em `docs/specs/done/`, ainda sem commit):
-o leitor agora envolve barra e visualizador em um corpo flexível, para o PDF preencher toda a
-altura disponível abaixo dos controles em vez de nascer com os `150px` padrão do `iframe`. A
-estrutura também preserva o leitor PDF próprio no mobile. Teste focado, suíte frontend completa
-(1508/1508) e build passaram; lint sem erros (somente os avisos históricos). Na aplicação real,
-o visualizador mediu `638×371` no cartão compacto de `640×480` que expunha o defeito e `342×633`
-no mobile `360×800`, sem área vazia indevida ou overflow horizontal.
-
-**`fix-leitor-documentos-abertura-visivel` concluída** (spec em `docs/specs/done/`, ainda sem
-commit): `app-painel-flutuante` agora limita ao viewport uma posição restaurada de
-`localStorage`, depois que a janela renderiza e também ao sair de minimizado. Assim o leitor de
-documentos não fica parcialmente fora da tela ao reabrir em outro monitor ou tamanho de janela;
-arraste, maximização, tamanho e a folha mobile foram preservados. Teste de regressão, suíte
-frontend completa (1507/1507) e build passaram; lint sem erros (mantém os avisos históricos). Na
-aplicação real, uma posição propositalmente fora da tela (`1800×900`) foi corrigida para
-`1280×600` em `1920×1080`; no mobile `360×800`, o painel ocupou `344×784` com margem de `8px`,
-sem overflow.
+**Leitor legado removido na M10-11.** As correções históricas de altura e
+abertura continuam registradas nas respectivas specs em `done/`; o leitor
+atual é `modules/regras/`, publicado a partir de Markdown/JSON.
 
 **`fix-coluna-vitalidade-energia` concluída** (commit `306a971`, spec em `docs/specs/done/`): a
 grade do bloco Vida/Energia da ficha passou a se ajustar pela largura disponível da própria coluna,
@@ -1741,8 +1730,7 @@ cada um à sua maneira, inclusive um defeito real só visível ao unificar (o z-
 calculadora, 66, nunca vencia a faixa dinâmica dos outros dois, 1200+). Redimensionar e maximizar
 continuam do consumidor (fora de escopo da spec); o primitivo expõe `obterElemento()`/
 `moverPara()`/`obterPosicaoAtual()` pra quem precisa. A janela some com `[hidden]`, não `@if`, ao
-minimizar — o iframe do leitor de documentos preserva página/zoom/rolagem do PDF em vez de
-recarregar. Prende o foco (`Tab`/`Shift+Tab` só circulam dentro da janela) e fecha por `Escape` —
+minimizar, preservando o estado dos consumidores; o leitor legado foi removido na M10-11. Prende o foco (`Tab`/`Shift+Tab` só circulam dentro da janela) e fecha por `Escape` —
 nenhum dos três fazia os dois juntos antes. `CadernoFlutuanteEstado` perdeu `minimizado` e `x`/`y`
 de `geometria` (renomeada `tamanho`); `LeitorDocumentosEstado` perdeu `recolhido` e `x`/`y` de
 `geometria` (idem, `tamanho`) — os dois não sabem mais que o próprio utilitário pode estar
@@ -2159,14 +2147,14 @@ incluindo todos os ajustes avulsos de pós-milestone.
 |---|---|---|
 | `civil-guia-criacao` | ficha | mapeia o escopo de `PROBLEMS.md` `P-018` (o guia de criação trata a classe Civil como um agente comum em vários passos) — spec de levantamento, ainda não implementa |
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
-| `m10-11` | regras | M10 — leitor rico, painel/celular, pesquisa e exportação nativa entregues; falta remover leitor/PDF antigo; guarda-chuva `m10-regras` |
+| `revisao-formatacao-pdf-regras` | regras | revisão substancial da apresentação e aprovação visual do autor; Sistema suspenso (P-108) |
 | `regras-glossario` | regras | esboço independente do M10: termos marcados com cartão; pontos a fechar com o autor |
 
 Spec avulsa ativa: `icones-recursos-sistema`, entrega 1 concluída; faltam adoção ampla
 com tooltip por extenso e levantamento de outros ícones/glifos.
 
-Milestones ainda não abertos: `m5-guia-missao`. M10 `m10-regras` em execução: `m10-01`…`m10-10`
-concluídas; próxima task `m10-11`, remover leitor/PDF antigo. O M8 `m8-espectadores-campanha` está **concluído**
+Milestones ainda não abertos: `m5-guia-missao`. M10 `m10-regras` implementada: `m10-01`…`m10-11`
+concluídas; revisão de formatação da exportação permanece aberta em P-108. O M8 `m8-espectadores-campanha` está **concluído**
 (`m8-01`…`m8-06`).
 
 ---
@@ -2206,7 +2194,7 @@ reproduzem isoladas (arquivo único), não na suíte completa.
 | M6 | Gestão de Usuários e Papéis | **concluído** — `m6-01`…`m6-08` (`m6-08`: impersonação administrativa auditável) |
 | M7 | Encontro de Combate | **concluído** — 8 tasks originais (`m7-01` contrato, `m7-02` motor puro, `m7-03` backend de montagem, `m7-04` backend de condução/tempo real, `m7-05` painel do mestre, `m7-06` visão do jogador, `m7-07` log da rodada, `m7-08` refinamento mobile) + 9 ajustes de pós-milestone (`m7-09`…`m7-17`, ver seção 4 "Encontro de Combate"). Numeração M7 é sugestão, não decisão de roadmap |
 | M8 | Espectadores e Prévias de Campanha | **concluído** — `m8-01`…`m8-06` (banco + contratos do papel ESPECTADOR; backend de permissões e as duas projeções de leitura; frontend de entrada/gestão de convites-membros/Painel do espectador ao vivo/Prévia de jogador fidedigna/visão read-only de Iniciativa; `m8-06` fechou com gate de validação integrada entre 4 contas reais). Numeração M8 é sugestão, não decisão de roadmap — ver `docs/context/IDEAS.md` |
-| M10 | Regras (documentos do sistema no site) | **em execução, 10/11** — `m10-01`…`m10-10` concluídas; `m10-11` no backlog; fonte visual `docs/specs/backlog/m10-regras/m10-regras-exemplao.html` |
+| M10 | Regras (documentos do sistema no site) | **implementada, 11/11** — revisão editorial da exportação pendente (P-108); fonte visual `docs/specs/done/m10-regras/m10-regras-exemplao.html` |
 
 ---
 
@@ -2227,7 +2215,8 @@ e `regras-guia.mjs`: 3 classes, 9 arquétipos, 2 origens, 5 módulos, 100 equipa
 sem cálculo; assinatura incompleta cai como genérico com linha de origem.
 Os 41 avisos remanescentes estão justificados na [verificação M10-02](../specs/done/m10-02-normalizador-casos-explicitos/m10-02-verificacao.md).
 Build de produção aprovado em modo CI; falha nativa com cache local contornada em P-104.
-PDFs antigos seguem como download provisório na página; blocos ricos entregues na M10-07.
+Leitura publicada em JSON derivado do Markdown; download provisório retirado na M10-11.
+Blocos ricos entregues na M10-07.
 
 ### Ícones de identidade (M10-03)
 
@@ -2236,8 +2225,8 @@ exemplão de Regras (`ICO`, `dec`): classes, nove arquétipos, três subclasses,
 Catálogo e SVGs preservam o contrato atual; o leitor rico M10-07 consome os ícones.
 `criatura` disponível pela M10-04. Família documentada em
 `DESIGN.md`; [capturas e gates](../specs/done/m10-03-icones-identidade/m10-03-verificacao.md). Build Angular e
-suítes de aplicação aprovados; a cadeia npm de assets/normalizador permanece com
-falhas externas à task após a troca do livro (P-105), sem validação de preparo limpo.
+suítes de aplicação aprovados; preparo/publicação e normalização agora também
+passam no comando npm com os livros vigentes (P-105 corrigido na M10-11).
 
 ### Gaveta de consulta (M10-05)
 
@@ -2255,7 +2244,7 @@ Dez domínios implementados e testados: `agente/` (15 fórmulas — vida, energi
 defesa/esquiva/bloqueio, proficiência, deslocamento, dano de corpo/furtivo, inventário),
 `compras/` (catálogo, limites por patente, modificações, amplificadores, fragmentos, venda),
 `dados/`, `descanso/`, `dt/`, `identidade/`, `novo-agente/`, `patente/`, `rolagem/` — todos
-contra `docs/core/sistema-v4.1.3.md` — e `criatura/` (`m4-02`, 10 módulos de fórmula do "Guia
+contra `docs/core/sistema-v4.1.4.md` — e `criatura/` (`m4-02`, 10 módulos de fórmula do "Guia
 de Criação de Ameaças" — atributos, modificadores, saúde, defesa, resistências/fraquezas,
 regeneração, deslocamento, cadência/iniciativa (Frenética declara `turnosPorRodada` >= 4, inclusive
 para combatentes avulsos; após o cálculo, a Iniciativa desenha um cartão por slot intercalado de
@@ -3278,8 +3267,8 @@ navegar, tarjas não casam. Termo e ocorrência por livro são memória da sess�
 página/painel. Projeção oculta do outro livro tem IDs próprios e não participa do
 observador de seção; painel aberto não muda URL/rolagem da página de fundo.
 [Verificação da pesquisa](../specs/done/m10-09-pesquisa-regras/m10-09-verificacao.md).
-PDFs anteriores são download provisório em `/documentos/`; arquivos do antigo leitor
-permanecem até M10-11, mas o layout não o monta. Blocos ricos entregues na M10-07:
+M10-11 retirou o antigo leitor e seus assets/dependência. O site lê
+`frontend/public/regras/{sistema,guia}.json`, derivados do Markdown canônico. Blocos ricos entregues na M10-07:
 dossiês/arquétipos/origens, equipamentos/modificações/módulos, Guia e ficha completa;
 componentes separados em `blocos/`, sem duplicar fórmulas. NAs usam marca própria.
 Trio preenchido `vida`/`energia`/`defesa` disponível no catálogo; no leitor, valores
@@ -3607,7 +3596,7 @@ Armadilhas que já custaram retrabalho neste repositório. Cada uma tem um epis�
 - **Amplificadores e Modificações escalam por COMPRA, não por stack bruto** — a 1ª compra em ■■
   (Flexível/Resistente/Potente/Conservador/Veloz) **não** dobra o bônus; a penalidade continua no
   bruto.
-- Se código e `docs/core/sistema-v4.1.3.md` divergirem, **o documento vence** (proibição #27).
+- Se código e `docs/core/sistema-v4.1.4.md` divergirem, **o documento vence** (proibição #27).
 - **`docs/core/guia_de_mestre-v4.2.0.md` — "Guia de Criação de Ameaças" mantém divergências
   entre regra e exemplo "A Estátua"**: Fraco em VD 30 (fórmula dá +5, exemplo mostra "+6") e
   narrativa de Social base2→zero (“três pontos”, retirada efetiva de dois). Fraqueza agora

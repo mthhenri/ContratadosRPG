@@ -10,14 +10,14 @@ description: >
 # Regras do Jogo — Documento, Motor e Consumidores
 
 > A regra canônica vive em [`docs/core/`](../../../docs/core/): jogador em
-> `sistema-v4.1.3.md`, ameaça/criatura/NPC em `guia_de_mestre-v4.2.0.md`. A arquitetura vive em
+> `sistema-v4.1.4.md`, ameaça/criatura/NPC em `guia_de_mestre-v4.2.0.md`. A arquitetura vive em
 > `SYSTEM.SPEC.md` §6.6 e a convenção curta em `CONVENTIONS.md` (“Motor de Regras”); o mapa de
 > localização está em `MEMORY.md` §1/§2. Em conflito, o documento vence — a skill executa o
 > caminho, não reescreve regra nem fórmula.
 
 ## 1. Localizar a fonte e o motor
 
-1. Classifique a regra: jogador → `docs/core/sistema-v4.1.3.md`; ameaça, criatura ou NPC →
+1. Classifique a regra: jogador → `docs/core/sistema-v4.1.4.md`; ameaça, criatura ou NPC →
    `docs/core/guia_de_mestre-v4.2.0.md`. Cite arquivo e seção no teste e no fecho.
 2. Leia a seção canônica antes do código. Se divergir do código, altere o código e o teste; não
    adapte o documento sem decisão expressa do autor.
@@ -39,6 +39,10 @@ description: >
 | Entrada de novo agente | `shared/src/regras/novo-agente/` |
 | Consulta de patente por Prestígio | `shared/src/regras/patente/` |
 | Fórmula, validação e rolagem de dados | `shared/src/regras/rolagem/` |
+
+A leitura de Regras no site usa `frontend/public/regras/sistema.json` e `guia.json`,
+gerados por `frontend/scripts/normalizar-regras.mjs`. São derivados de apresentação:
+para conferir uma regra, volte ao Markdown acima e ao motor puro, não ao JSON.
 
 ## 2. Limites do motor
 

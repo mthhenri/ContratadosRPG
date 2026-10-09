@@ -115,7 +115,7 @@ describe('Layout — leitor global de documentos', () => {
       expect(link!.textContent).toContain('Regras');
       expect(link!.getAttribute('aria-label')).toBe('Abrir Regras');
       expect(link!.querySelector('app-icone')?.getAttribute('nome')).toBe('contratados');
-      expect(raiz.querySelector('app-leitor-documentos')).toBeNull();
+      expect(raiz.querySelector('iframe[src$=".pdf"]')).toBeNull();
       expect(raiz.querySelectorAll('app-regras-flutuante')).toHaveLength(0);
       const abrir = vi.spyOn(TestBed.inject(RegrasConsultaService), 'abrir')
         .mockImplementation(() => undefined);

@@ -40,9 +40,8 @@ const LARGURA_MINIMA = 380;
 const ALTURA_MINIMA = 420;
 
 /**
- * Trava a janela dentro da viewport — mesma receita de
- * `frontend/src/app/shared/leitor-documentos/leitor-documentos.util.ts`, com o mínimo ajustado ao
- * conteúdo de uma ficha (mais estreito que os 640×480 do leitor de PDF).
+ * Trava a janela dentro da viewport, respeitando o mínimo de conteúdo da ficha
+ * e reduzindo esse mínimo quando a tela for menor.
  */
 export function limitarGeometriaFichaFlutuante(
   geometria: FichaFlutuanteGeometria,

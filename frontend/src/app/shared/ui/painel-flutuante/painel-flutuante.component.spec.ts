@@ -14,7 +14,7 @@ interface DefinicaoComponenteComEstilos {
 /**
  * Prova o primitivo de painel flutuante (ui-17): foco preso e devolvido ao gatilho, Escape
  * fechando, minimizar/posição persistindo em `localStorage` por `[id]` — o contrato que os três
- * consumidores (`CalculadoraFlutuante`, `CadernoFlutuante`, `LeitorDocumentos`) delegam inteiro a
+ * consumidores (`CalculadoraFlutuante`, `CadernoFlutuante`, `RegrasFlutuante`) delegam inteiro a
  * este componente em vez de reimplementar cada um.
  */
 @Component({

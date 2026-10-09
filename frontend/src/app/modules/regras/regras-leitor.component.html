@@ -187,18 +187,6 @@
                 >
                     <app-icone nome="documentos" />
                 </button>
-                <a
-                    app-botao
-                    class="regras__acao"
-                    variante="secundario"
-                    estilo="link"
-                    tamanho="pequeno"
-                    posicaoIcone="esquerda"
-                    [href]="pdf()"
-                    download
-                >
-                    <app-icone nome="documentos" />PDF antigo
-                </a>
             </div>
             @if (pesquisa.termo().trim().length < 2) {
                 <nav class="regras__sumario" aria-label="Sumário do documento">

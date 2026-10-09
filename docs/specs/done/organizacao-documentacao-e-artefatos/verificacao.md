@@ -206,6 +206,6 @@ Os gates/aprovações das tarefas abertas acima permanecem pendentes.
 | `docs/design/propostas/m10-04/scp-icone-v1.svg` | [`done/m10-04-svg-scp-definitivo/proposta/scp-icone-v1.svg`](../../done/m10-04-svg-scp-definitivo/proposta/scp-icone-v1.svg) |
 | `docs/design/propostas/m10-04/scp-silhueta-v1.svg` | [`done/m10-04-svg-scp-definitivo/proposta/scp-silhueta-v1.svg`](../../done/m10-04-svg-scp-definitivo/proposta/scp-silhueta-v1.svg) |
 | `docs/design/propostas/m10-04/verificar-prancha.mjs` | [`done/m10-04-svg-scp-definitivo/proposta/verificar-prancha.mjs`](../../done/m10-04-svg-scp-definitivo/proposta/verificar-prancha.mjs) |
-| `docs/design/propostas/m10-regras-exemplao.html` | [`backlog/m10-regras/m10-regras-exemplao.html`](../../backlog/m10-regras/m10-regras-exemplao.html) |
+| `docs/design/propostas/m10-regras-exemplao.html` | [`done/m10-regras/m10-regras-exemplao.html`](../../done/m10-regras/m10-regras-exemplao.html) |
 | `docs/design/propostas/montador-rolagem-formulas.json` | [`active/montador-rolagem-experimento/montador-rolagem-formulas.json`](../../active/montador-rolagem-experimento/montador-rolagem-formulas.json) |
 | `docs/design/propostas/montador-rolagem-simplificado.html` | [`active/montador-rolagem-experimento/montador-rolagem-simplificado.html`](../../active/montador-rolagem-experimento/montador-rolagem-simplificado.html) |
