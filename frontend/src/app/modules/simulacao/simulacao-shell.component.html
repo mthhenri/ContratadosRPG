@@ -9,6 +9,8 @@
             <a
                 class="simulacao__aba abas__item"
                 [routerLink]="aba.caminho"
+                [attr.aria-label]="aba.rotulo"
+                [appTooltip]="aba.rotulo"
                 routerLinkActive="simulacao__aba--ativa abas__item--ativo"
             >
                 <app-icone [nome]="aba.icone" />

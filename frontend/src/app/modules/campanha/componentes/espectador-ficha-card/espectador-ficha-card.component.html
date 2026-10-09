@@ -3,7 +3,6 @@
         <span
             class="espectador-ficha__avatar"
             [class.espectador-ficha__avatar--com-preview]="mostrarAcoes() && ficha().imagemUrl"
-            aria-hidden="true"
             [style.--cor-ficha]="ficha().cor"
             (mouseenter)="avatarEntrou.emit($event)"
             (mouseleave)="avatarSaiu.emit()"

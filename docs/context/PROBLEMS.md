@@ -29,31 +29,15 @@
 
 ## Ativos
 
-### P-113 — Cor de Geral quase invisível no tema claro · `ABERTO` · frontend/tema
-
-- **Sintoma:** no tema claro, o "0" da caixa de resistência de Geral (ficha e ficha resumida do encontro) e o rótulo "Geral" do dialog "Receber dano" aparecem em branco/cinza claro sobre o fundo claro.
-- **Causa:** não investigada; o valor usa a cor de Geral (`--dano-geral`), pensada para o tema escuro. Observado ao verificar `icones-dano-habilidade-fragmento-reacao`, que não alterou essa cor.
-- **Contorno:** nenhum.
-- **Correção:** conferir o contraste de `--dano-geral` no tema claro, no chip de resultado e na caixa de resistência.
-- **Desde:** 09/10/2026.
-
-### P-112 — Links inativos da Simulação sem nome acessível no celular · `ABERTO` · frontend/usabilidade
-
-- **Sintoma:** em 360×800, seis destinos inativos da barra inferior são links sem nome
-  na árvore de acessibilidade; só a aba atual tem rótulo visível.
-- **Causa:** `simulacao-shell.component.scss` esconde os rótulos inativos com `display:none`;
-  os links no template não têm nome acessível alternativo. Ícones não fornecem o nome.
-- **Contorno:** desktop mantém os rótulos; não há orientação equivalente observada no celular.
-- **Correção:** fornecer nome acessível a cada destino e conferir a descoberta visual no mobile
-  usando os padrões de navegação existentes. Não corrigido no diff de tooltips.
-- **Desde:** confirmado na [inspeção de 09/10/2026](../specs/active/usabilidade-classes-condicoes-2026-10-09/RELATORIO.md#u-03--destinos-móveis-sem-nome-acessível--prioridade-alta).
-
 ### P-111 — Recorrência de falha nativa no build com cache local · `CONTORNADO` · frontend/ambiente
 
 - **Sintoma:** build habitual fora do sandbox voltou a terminar com código `3221225477`,
   após a recuperação P-104 documentada em 09/10/2026.
 - **Causa:** não diagnosticada nesta tarefa; não atribuir ao código do sumário ou a
   corrupção/concorrência sem investigação específica.
+- **Nova tentativa (09/10/2026):** três builds de produção com o cache `.angular/cache-local` (dois
+  simultâneos, com o `ng serve` do autor aberto) terminaram com código 0. Sem reprodução, não há causa a
+  corrigir; mantido como contornado até a próxima ocorrência, que deve registrar o que rodava em paralelo.
 - **Contorno:** `CI=true npm run build --workspace=frontend` passou, desabilitando o cache
   só nessa execução. Não muda `frontend/angular.json` nem remove o cache existente.
 - **Correção:** investigar recorrência a partir do diagnóstico de P-104 e dos limites
@@ -81,34 +65,6 @@
 - **Correção:** [revisão da formatação](../specs/backlog/revisao-formatacao-pdf-regras.spec.md),
   com corte visual aprovado e conferência completa antes de reativar o Sistema.
 - **Desde:** avaliação do autor em 08/10/2026 após a entrega da M10-10.
-
-### P-107 — Ação de abrir ficha está sob ancestral `aria-hidden` · `ABERTO` · frontend/acessibilidade
-
-- **Sintoma:** botão "Abrir ficha de …" do cartão da campanha existe e funciona
-  visualmente, mas não aparece como botão na árvore acessível.
-- **Causa:** `espectador-ficha-card.component.html` projeta esse botão dentro de
-  `.espectador-ficha__avatar`, cujo `aria-hidden="true"` oculta toda a subárvore.
-- **Contorno:** no cenário de verificação, localizar pelo atributo `aria-label`;
-  isso não corrige o acesso por leitor de tela.
-- **Correção:** limitar a ocultação à imagem decorativa, preservando a ação na
-  árvore acessível; verificar campanha nos viewports/estados correspondentes.
-- **Desde:** comportamento preexistente, confirmado na verificação real da
-  M10-08 em 08/10/2026; fora do escopo do leitor de Regras.
-
-### P-103 — `app-modal` encolhe o corpo em vez de rolar o diálogo · `CONTORNADO` · frontend/ui
-
-- **Sintoma:** com conteúdo mais alto que a tela (ex.: Biblioteca de Referência do NPC em
-  `360×800`), o texto do corpo transborda **por cima** do rodapé `[modalAcoes]`, que fica
-  inclicável. Achado ao vivo no gate da `m4-21`.
-- **Causa:** o `<dialog>` é `display: flex; flex-direction: column` com `overflow-y: auto`, mas
-  `.modal__corpo` tem `min-height: 0` e o `flex-shrink: 1` padrão — o corpo encolhe abaixo do
-  conteúdo (que vaza, `overflow: visible`) e o diálogo nunca chega a rolar, contrariando o
-  próprio comentário do primitivo ("um modal genuinamente alto rola o `<dialog>` inteiro").
-- **Contorno:** o consumidor limita a altura do próprio bloco extenso (`max-height` +
-  `overflow-y: auto` + `appOverflowFade`), como `ficha-inv__grade` e `npc-biblioteca__grade`.
-- **Correção:** `flex: 0 0 auto` (ou `flex-shrink: 0`) em `.modal__corpo`, verificando ao vivo
-  os consumidores atuais de `app-modal` — mudança de primitivo, decisão do autor.
-- **Desde:** `ui-02` (introdução do `app-modal`); exposto na `m4-21`.
 
 ### P-099 — Rastreamento de rolagem resultante: proposta descartada · `ACEITO` · rolagem/contrato
 

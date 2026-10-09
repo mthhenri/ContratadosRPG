@@ -1,5 +1,30 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-09 — P-107: botão "Abrir ficha" visível na árvore acessível
+
+O `aria-hidden="true"` estava no avatar do `espectador-ficha-card`, escondendo o botão "Abrir ficha de …"
+projetado dentro dele. Foi removido do avatar; a imagem já é decorativa por `alt=""`. Ao vivo como mestre,
+1920×1080 e 360×800: o botão passou a aparecer como botão na árvore (1 ocorrência, antes 0) e o visual do
+cartão não mudou. Como espectador a página da campanha devolve 403 (rota do mestre), então a variante sem
+ações não foi observada; ela não renderiza o botão. Dados sintéticos removidos.
+
+## 2026-10-09 — P-113, P-112, P-103 corrigidos; P-111 sem reprodução
+
+Pedido do autor para resolver as quatro. **P-113:** `--dano-geral` (quase branco) valia o mesmo nas duas
+bases; `TOKENS_CLARO` em `tema.service.ts` ganhou `--dano-geral: #4a4f57` (`-border`/`-dim` derivam por
+`color-mix`). **P-112:** cada aba da Simulação ganhou `aria-label` e `appTooltip` com o rótulo; a árvore de
+acessibilidade em 360×800 lista os sete destinos nomeados, e o visual (só ícones + rótulo da aba ativa) não
+mudou. **P-103:** `flex: 0 0 auto` em `.modal__corpo` (decisão do autor ao pedir a correção); com um corpo de
+2000px injetado no "Receber dano" o corpo passou de 768px (encolhido, conteúdo vazando) para 2439px com o
+`<dialog>` rolando (`scrollHeight` 2437 > `clientHeight` 766). **P-111:** três builds com cache local (dois
+em paralelo, `ng serve` aberto) deram código 0; sem reprodução não há causa a corrigir, entrada mantida
+como contornada com a nova evidência.
+
+Testes focados (tema, modal) passaram; build de produção sem erros (aviso do bundle inicial preexistente).
+Ao vivo em 1920×1080 e 360×800: ficha e "Receber dano" no tema claro com Geral legível (e escuro inalterado),
+abas da Simulação. Dados sintéticos removidos por soft delete. Limite: só o "Receber dano" foi observado
+como consumidor do `app-modal` com conteúdo normal; o ganho em modais altos foi medido por injeção.
+
 ## 2026-10-09 — Ícones de dano, categoria, fragmento e reação: catálogo e adoção
 
 A votação da prancha da entrega 3 de `icones-recursos-sistema` fechou em 7 rodadas (21 itens; o autor trocou Físico por Punho, Explosão por Estouro duplo, Construtor por Prisma e Contra-ataque por espada larga atrás do escudo). A implementação virou a spec `icones-dano-habilidade-fragmento-reacao`: 19 nomes novos no `app-icone`, os dois fragmentos redesenhados, a ponte `shared/icone/icones-dominio.ts` e o ícone ao lado do texto em resultado de rolagem, "Receber dano", resistências (ficha, encontro, criatura), chips de categoria, tiles de reação, NPC e simulação do agente.

@@ -63,6 +63,9 @@ const TOKENS_CLARO: Readonly<Record<string, string>> = {
   '--text-dim': '#4a4f57',
   '--text-mute': '#767c85',
   '--grid-line': 'rgba(0, 0, 0, 0.02)',
+  // Geral é "quase branco" no escuro (`--dano-geral`); no claro precisa de cinza escuro legível
+  // sobre `--surface` (P-113). `-border`/`-dim` derivam dele por `color-mix`.
+  '--dano-geral': '#4a4f57',
 };
 
 /** Superfície de conteúdo (`--surface`) de cada base — referência da trava de contraste. */

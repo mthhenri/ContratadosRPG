@@ -86,6 +86,9 @@
 
     &__corpo {
         min-height: 0;
+        // Não encolhe abaixo do conteúdo: um corpo alto faz o `<dialog>` rolar em vez de vazar por
+        // cima do rodapé (P-103).
+        flex: 0 0 auto;
     }
 
     // Vazio (nenhum consumidor projeta `[modalAcoes]`) some por completo — `:empty` evita que a
