@@ -3,6 +3,9 @@
         <span aria-hidden="true">{{ bloco().glifo }}</span> {{ bloco().nome }}
     </div>
     <div class="regras-habilidade__selos">
+        @if (bloco().reacao) {
+            <app-chip severidade="ajuda" tom="contorno">REAÇÃO</app-chip>
+        }
         <app-chip
             severidade="energia"
             tom="sutil"
@@ -12,9 +15,6 @@
         >
             <app-icone nome="energia" /> {{ bloco().custo }}
         </app-chip>
-        @if (bloco().reacao) {
-            <app-chip severidade="ajuda" tom="contorno">REAÇÃO</app-chip>
-        }
     </div>
     <p>
         <app-regras-inline

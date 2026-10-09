@@ -21,7 +21,7 @@
 table {
     border-collapse: collapse;
     width: 100%;
-    min-width: calc(var(--regras-tabela-colunas, 1) * var(--space-20) * 8);
+    min-width: calc(var(--regras-tabela-colunas, 1) * var(--space-20) * 5);
     font-size: 13px;
     line-height: 1.55;
 }
@@ -30,7 +30,7 @@ td {
     padding: var(--space-8) var(--space-12);
     text-align: left;
     border-bottom: 1px solid var(--border);
-    min-width: 100px;
+    min-width: 64px;
 }
 .regras-tabela:focus-visible {
     outline: 2px solid var(--accent-border);
