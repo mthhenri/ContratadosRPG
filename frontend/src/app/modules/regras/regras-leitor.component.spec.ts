@@ -19,7 +19,35 @@ describe("Leitor compartilhado de Regras", () => {
         ] });
         vi.spyOn(window, "scrollTo").mockImplementation(() => undefined);
     });
-    afterEach(() => vi.restoreAllMocks());
+    afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+
+    it("devolve o painel ao topo sem rolar a página e conserva o termo pesquisado", () => {
+        const leitor = TestBed.createComponent(RegrasLeitor);
+        leitor.componentRef.setInput("livro", "sistema");
+        leitor.componentRef.setInput("emPainel", true);
+        leitor.detectChanges();
+        const raiz = leitor.nativeElement as HTMLElement;
+        const area = raiz.querySelector<HTMLElement>(".regras__rolagem")!;
+        const rolar = vi.fn(); area.scrollTo = rolar;
+        const pesquisa = leitor.debugElement.injector.get(RegrasPesquisaController);
+        pesquisa.confirmarTermo("vida");
+        const termo = pesquisa.termo();
+        raiz.querySelector<HTMLButtonElement>('[aria-label="Voltar ao topo"]')!.click();
+        expect(rolar).toHaveBeenCalledWith({ top: 0, behavior: "smooth" });
+        expect(window.scrollTo).not.toHaveBeenCalled();
+        expect(pesquisa.termo()).toBe(termo);
+        leitor.destroy();
+    });
+
+    it("respeita movimento reduzido ao voltar a página ao topo", () => {
+        vi.stubGlobal("matchMedia", vi.fn(() => ({ matches: true } as MediaQueryList)));
+        const leitor = TestBed.createComponent(RegrasLeitor);
+        leitor.componentRef.setInput("livro", "sistema"); leitor.detectChanges();
+        leitor.nativeElement.querySelector('[aria-label="Voltar ao topo"]').click();
+        expect(window.scrollTo).toHaveBeenCalledWith({ top: 0, behavior: "auto" });
+        expect(leitor.componentInstance["ativo"]()).toBeNull();
+        leitor.destroy();
+    });
 
     it("isola os IDs do mesmo capítulo na página e no painel, mantendo a âncora canônica", () => {
         const leitores = [TestBed.createComponent(RegrasLeitor),

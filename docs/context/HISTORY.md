@@ -1,5 +1,66 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-09 — Regras: segunda revisão completa, topo e pesquisa
+
+Pedido do autor para conferir integralmente Sistema/Guia, menu e consistência visual;
+adicionar topo, separação dos resultados, highlight do tema, × no campo e debounce.
+A leitura completa encontrou nove categorias/sete subtítulos de equipamentos que os
+renderers não mostravam, três notas de custo/peso invisíveis e os dois roteiros do Guia
+duplicados. Títulos agora são seções/destinos na hierarquia da fonte, notas usam RegrasNota,
+roteiros apresentam introdução, 13/15 etapas uma vez e conclusão. No mobile, tabelas
+ganharam largura mínima legível com sua rolagem horizontal/coluna fixa existentes.
+
+Topo usa o botão/chevron canônicos de Patchnotes, rola no hospedeiro certo, conserva termo,
+limpa seleção/fragmento e devolve foco; movimento reduzido respeitado. Busca espera 300 ms,
+cancela ao limpar/destruir e processa Enter pendente; × padrao no fim do input e Esc limpam
+imediatamente. Resultados têm divisores/respiro, marcas acompanham o tema e a ocorrência
+atual é preenchida com texto contrastante. Nenhuma regra/Markdown autoral alterado;
+preparação do editor registrada com identidade persistente/schema/proveniência/conteúdo
+editável único como próximos contratos. Codex/explorer fez consulta estrutural somente
+leitura; inspeção pessoal e fecho pelo agente principal.
+
+68 testes do normalizador e 3.136 Angular aprovados; após o ajuste final do ×, 11 testes
+focados aprovados. Lint zero erros, avisos legados; build final com CI aprovado e assets
+fiéis, aviso de orçamento preexistente. Formatação, diff e organização/espelhos conferidos.
+Aplicação real: leitura integral escura em 1920×1080 e 360×800, nove arquétipos completos,
+estados nos quatro viewports (também 960×1080/1366×768), painel/gaveta, busca vazia/múltipla,
+limpeza pendente/teclado, topo/recarga e troca de livro. 117/61 entradas, todos os destinos
+existentes; zero overflow horizontal da página e zero erros de runtime. Azul claro/escuro
+recolore os mesmos marks sem nova busca; todos os tipos ricos representativos observados
+em base clara. Capturas de transição foram refeitas após estabilização.
+
+P-109 removida: o autor já tinha corrigido a nota para 4.1.4, confirmada na leitura/build.
+P-110 (asterisco da fonte), P-108 (PDF) e P-111 (cache contornado) permanecem. Sem commit,
+push/publicação. [Auditoria, gates e limites](../specs/done/regras-segunda-revisao-visual/verificacao.md).
+[Preparação do editor](../specs/done/regras-segunda-revisao-visual/editor-proprio.md).
+
+Após o fecho, o autor autorizou o commit desta etapa, incluindo a correção anterior de
+classes/subclasses e sua correção já existente da nota de versão para 4.1.4. O commit
+reúne implementação, testes, specs e registros de verificação; sem push/publicação.
+
+## 2026-10-09 — Regras: classes e subclasses no sumário
+
+Pedido do autor após observar Classes e Arquétipos/Subclasse sem seus filhos no menu.
+Os nomes vinham de tabelas reconhecidas como blocos ricos, sem âncora, enquanto o sumário
+só incluía seções. O normalizador passou a gerar destinos únicos dos nomes; sumário,
+observador e cartões agora compartilham esses destinos, com IDs isolados por leitor.
+Combatente, Especialista, Suporte e os três Experimentos aparecem sob suas seções na
+página e no painel/gaveta. Conteúdo e estilos preservados, inclusive a alteração
+preexistente do autor no Sistema. Análogo: o próprio sumário aprovado do leitor.
+
+67 testes do normalizador e 3.128 Angular aprovados; lint sem erros, formatação dos
+templates e organização/espelhos aprovados. Build com `CI=true` aprovado e publicação
+fiel aos livros. O build habitual voltou a apresentar a falha nativa do cache, registrada
+separadamente em P-111; nenhuma configuração de cache alterada. Restrições iniciais de
+rede/cache temporário do sandbox foram superadas na verificação autorizada.
+
+Aplicação real inspecionada em 1920×1080 e 360×800: seis destinos por teclado, URL,
+seleção ativa, recarga e rolagem manual; painel com rolagem local, IDs distintos, página
+de fundo preservada e gaveta mobile com alvos de 44 px. Sem overflow ou erros de runtime;
+densidade/hierarquia, foco e controles coerentes com o análogo. Capturas durante a
+transição da gaveta foram refeitas após a animação. Nenhum commit/push.
+[Fecho, métodos e limites](../specs/done/regras-sumario-classes-subclasses/verificacao.md).
+
 ## 2026-10-09 — P-104: build recuperado com cache local habilitado
 
 Pedido do autor para resolver a P-104. Build com rede reproduziu a violação

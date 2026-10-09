@@ -40,6 +40,12 @@ test('roteiros numerados por ordem da fonte: 13 etapas de ameaça e 15 de NPC', 
         }
         assert.equal(roteiro.etapas[0].titulo[0].texto,
             capitulo.endsWith('NPCs') ? 'Identidade Narrativa' : 'Ficha de Identidade');
+        assert.ok(!JSON.stringify(roteiro.introducao).includes(texto(roteiro.etapas[0].titulo)));
+        assert.ok(!JSON.stringify(roteiro.conclusao).includes(texto(roteiro.etapas.at(-1).titulo)));
+        if (nome === 'roteiro-ameacas') {
+            assert.match(texto(roteiro.introducao[0].trechos), /Um registro da ordem de decisão/);
+            assert.match(texto(roteiro.conclusao[0].trechos), /Ao final, revise/);
+        }
     }
 });
 

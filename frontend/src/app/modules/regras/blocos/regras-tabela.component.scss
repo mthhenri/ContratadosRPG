@@ -21,6 +21,7 @@
 table {
     border-collapse: collapse;
     width: 100%;
+    min-width: calc(var(--regras-tabela-colunas, 1) * var(--space-20) * 8);
     font-size: 13px;
     line-height: 1.55;
 }

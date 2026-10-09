@@ -29,6 +29,18 @@
 
 ## Ativos
 
+### P-111 — Recorrência de falha nativa no build com cache local · `CONTORNADO` · frontend/ambiente
+
+- **Sintoma:** build habitual fora do sandbox voltou a terminar com código `3221225477`,
+  após a recuperação P-104 documentada em 09/10/2026.
+- **Causa:** não diagnosticada nesta tarefa; não atribuir ao código do sumário ou a
+  corrupção/concorrência sem investigação específica.
+- **Contorno:** `CI=true npm run build --workspace=frontend` passou, desabilitando o cache
+  só nessa execução. Não muda `frontend/angular.json` nem remove o cache existente.
+- **Correção:** investigar recorrência a partir do diagnóstico de P-104 e dos limites
+  da [verificação do sumário](../specs/done/regras-sumario-classes-subclasses/verificacao.md).
+- **Desde:** gate de `regras-sumario-classes-subclasses`, 09/10/2026.
+
 ### P-110 — Asterisco literal na abertura do Sistema · `ABERTO` · docs/core
 
 - **Sintoma:** a abertura publicada mostra "*dissolvido esquadrão ███-████,*" com os
@@ -38,15 +50,6 @@
 - **Contorno:** nenhum no leitor; o texto continua legível.
 - **Correção:** ajustar a ênfase no Docs/Markdown do Sistema na próxima revisão do livro.
 - **Desde:** observado na `revisao-visual-regras`, 2026-10-08 (já existia antes).
-
-### P-109 — Nota "VERSÃO 4.1.1" desatualizada no Sistema v4.1.4 · `ABERTO` · docs/core
-
-- **Sintoma:** a página de Regras mostra a nota "VERSÃO 4.1.1" logo após a abertura do
-  Sistema v4.1.4. A exportação já a omite.
-- **Causa:** texto fixo no Markdown do livro, não atualizado com a versão.
-- **Contorno:** o trilho e a capa exportada mostram a versão real (`v4.1.4`).
-- **Correção:** atualizar ou retirar a nota na fonte do Sistema; o leitor não reescreve conteúdo.
-- **Desde:** observado na `revisao-visual-regras`, 2026-10-08.
 
 ### P-108 — Formatação do PDF de Regras precisa de revisão · `CONTORNADO` · frontend/impressão
 

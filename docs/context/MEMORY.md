@@ -15,6 +15,9 @@ Mapa de consumidores REST/WS de ficha oculta, achados e retomada:
 
 ## 1. Onde estão as regras
 
+Preparação do editor próprio dos livros: [levantamento da segunda revisão visual](../specs/done/regras-segunda-revisao-visual/editor-proprio.md);
+contrato vigente na [M10](../specs/done/m10-regras.spec.md).
+
 Estas são as fontes da verdade. Em conflito entre código e documento, **o documento vence**.
 
 | Assunto | Fonte | Ler antes de |

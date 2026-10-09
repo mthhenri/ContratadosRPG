@@ -28,6 +28,7 @@ export class RegrasPesquisaController {
     private marcas?: RegrasMarcasPesquisa;
     private assinatura?: Subscription;
     private geracao = 0;
+    private esperaPesquisa?: ReturnType<typeof setTimeout>;
     private aoSelecionar?: (marca: HTMLElement, ancora: string | null) => void;
 
     constructor() {
@@ -74,7 +75,10 @@ export class RegrasPesquisaController {
                 }
             });
         });
-        this.destroyRef.onDestroy(() => { this.limparMarcas(); this.assinatura?.unsubscribe(); });
+        this.destroyRef.onDestroy(() => {
+            clearTimeout(this.esperaPesquisa);
+            this.limparMarcas(); this.assinatura?.unsubscribe();
+        });
     }
 
     conectarDocumento(documento: RegrasDocumento, raiz: HTMLElement,
@@ -89,9 +93,22 @@ export class RegrasPesquisaController {
         this.outroDocumento.set(null); this.falhaOutro.set(false);
     }
 
-    alterarTermo(termo: string): void { this.memoria.alterarTermoPesquisa(termo); }
+    alterarTermo(termo: string): void {
+        clearTimeout(this.esperaPesquisa);
+        if (termo.trim().length < 2) {
+            this.confirmarTermo(termo);
+            return;
+        }
+        this.esperaPesquisa = setTimeout(() => this.confirmarTermo(termo), 300);
+    }
 
-    limpar(): void { this.alterarTermo(""); }
+    confirmarTermo(termo: string): void {
+        clearTimeout(this.esperaPesquisa);
+        this.esperaPesquisa = undefined;
+        this.memoria.alterarTermoPesquisa(termo);
+    }
+
+    limpar(): void { this.confirmarTermo(""); }
 
     carregarOutro(): void {
         const livro = this.documento()?.id;

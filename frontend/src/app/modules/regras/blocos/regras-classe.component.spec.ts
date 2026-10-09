@@ -2,6 +2,7 @@ import { TestBed } from "@angular/core/testing";
 import { RegrasClasse as BlocoClasse, RegrasTrecho } from "../regras.model";
 import { RegrasClasse } from "./regras-classe.component";
 import { recuperarIconeIdentidade } from "./regras-identidade-icone";
+import { RegrasLeitorContexto } from "../regras-leitor-contexto";
 
 const texto = (valor: string): RegrasTrecho[] => [{ tipo: "texto", texto: valor }];
 const bloco: BlocoClasse = { tipo: "classe", nome: "Combatente", citacao: texto("Citação da classe"),
@@ -15,6 +16,17 @@ const bloco: BlocoClasse = { tipo: "classe", nome: "Combatente", citacao: texto(
 };
 
 describe("RegrasClasse", () => {
+    it("renderiza o destino de navegação com ID isolado por leitor", () => {
+        TestBed.configureTestingModule({ providers: [RegrasLeitorContexto] });
+        const fixture = TestBed.createComponent(RegrasClasse);
+        fixture.componentRef.setInput("bloco", { ...bloco, ancora: "combatente" });
+        fixture.detectChanges();
+        const contexto = TestBed.inject(RegrasLeitorContexto);
+        const alvo = fixture.nativeElement.querySelector('[data-ancora-regras="combatente"]');
+        expect(alvo.id).toBe(contexto.identificar("combatente"));
+        expect(alvo.id).not.toBe(new RegrasLeitorContexto().identificar("combatente"));
+    });
+
     it("preserva fórmulas e progressão com stats canônicos e habilidade inicial nas abas", () => {
         const fixture = TestBed.createComponent(RegrasClasse);
         fixture.componentRef.setInput("bloco", bloco);

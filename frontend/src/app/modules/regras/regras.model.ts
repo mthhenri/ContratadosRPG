@@ -15,6 +15,8 @@ export interface RegrasSecao {
     readonly glifo: "⬢" | "⬡" | "⬥" | "⬦" | null;
     readonly titulo: string;
     readonly ancora: string;
+    /** Título extraído do cabeçalho de uma tabela; a fonte integral permanece no bloco. */
+    readonly origemTabela?: boolean;
     readonly filhos: readonly RegrasConteudo[];
 }
 
@@ -54,6 +56,7 @@ export interface RegrasFonteTabela {
 export interface RegrasClasse extends RegrasFonteTabela {
     readonly tipo: "classe";
     readonly nome: string;
+    readonly ancora?: string;
     readonly citacao: readonly RegrasTrecho[];
     readonly saude: { readonly vida: readonly RegrasTrecho[];
         readonly energia: readonly RegrasTrecho[] };
@@ -69,6 +72,7 @@ export interface RegrasClasse extends RegrasFonteTabela {
 export interface RegrasSubclasse extends RegrasFonteTabela {
     readonly tipo: "subclasse";
     readonly nome: string;
+    readonly ancora?: string;
     readonly classe: string;
     readonly citacao: readonly RegrasTrecho[];
     readonly custos: readonly (readonly RegrasTrecho[])[];
@@ -160,6 +164,7 @@ export interface RegrasModificacao {
 
 export interface RegrasModificacoes extends RegrasFonteTabela {
     readonly tipo: "modificacoes";
+    readonly nota?: readonly RegrasTrecho[];
     readonly itens: readonly RegrasModificacao[];
 }
 
@@ -187,6 +192,9 @@ export interface RegrasRoteiro {
         readonly titulo: readonly RegrasTrecho[];
         readonly descricao: readonly RegrasTrecho[] }[];
     readonly filhos: readonly RegrasConteudo[];
+    /** Conteúdo suplementar, sem repetir as etapas já apresentadas na lista numerada. */
+    readonly introducao?: readonly RegrasConteudo[];
+    readonly conclusao?: readonly RegrasConteudo[];
 }
 
 export interface RegrasHabilidadeCriatura {

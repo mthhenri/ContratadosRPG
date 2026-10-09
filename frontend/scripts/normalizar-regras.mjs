@@ -3,7 +3,7 @@ import { readFile, readdir, mkdir, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { Lexer } from 'marked';
-import { reconhecerEquipamentos } from './regras-equipamentos.mjs';
+import { reconhecerEquipamentos, integrarSecoesEquipamentos } from './regras-equipamentos.mjs';
 import { reconhecerPersonagens } from './regras-personagens.mjs';
 import { marcarNiveis, reconhecerTabelaGuia, reconhecerHabilidadeCriatura,
     reconhecerSecaoGuia, reconhecerNiveisAmeaca, marcarNivelNome } from './regras-guia.mjs';
@@ -300,11 +300,25 @@ export function normalizarDocumento(texto, id, versao) {
     }
     const restante = linhas.slice(inicio).map((linha) => linha.texto).join('\n');
     pilha.at(-1).filhos.push(...normalizarBlocos(Lexer.lex(restante), inicio + 1));
+    /** @param {string} titulo */
+    function criarAncora(titulo) {
+        const base = derivarAncora(titulo);
+        let ancora = base;
+        let sufixo = 2;
+        while (utilizadas.has(ancora) || reservadas.has(ancora)) ancora = `${base}-${sufixo++}`;
+        utilizadas.add(ancora);
+        return ancora;
+    }
+    if (id === 'sistema') integrarSecoesEquipamentos(filhos, criarAncora);
     /** Integra o dossiê e os casos que atravessam várias tabelas/seções do Guia.
      * @param {RegrasConteudo[]} conteudo @param {string[]} ancestrais */
     function agruparCasos(conteudo, ancestrais) {
         for (let indice = 0; indice < conteudo.length; indice++) {
-            const item = conteudo[indice];
+            let item = conteudo[indice];
+            if (item.tipo === 'classe' || item.tipo === 'subclasse') {
+                item = { ...item, ancora: criarAncora(item.nome) };
+                conteudo[indice] = item;
+            }
             if (item.tipo === 'classe') {
                 const seguinte = conteudo[indice + 1];
                 if (seguinte?.tipo === 'arquetipos' && seguinte.classe === item.nome) {

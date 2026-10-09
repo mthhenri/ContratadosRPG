@@ -5,7 +5,8 @@
     dica="A partir de 2 caracteres. Enter / Shift+Enter navegam; Esc limpa."
 >
     <input
-        class="campo__controle"
+        #campoPesquisa
+        class="campo__controle regras-pesquisa__campo"
         type="text"
         inputmode="search"
         enterkeyhint="search"
@@ -14,6 +15,19 @@
         [formControl]="termo"
         maxlength="160"
     />
+    @if (termo.value) {
+        <button
+            app-botao-icone
+            class="regras-pesquisa__limpar"
+            tamanho="padrao"
+            type="button"
+            aria-label="Limpar campo de pesquisa"
+            appTooltip="Limpar pesquisa (Esc)"
+            (click)="limpar()"
+        >
+            <span aria-hidden="true">×</span>
+        </button>
+    }
 </app-campo>
 @if (pesquisa.termo().trim().length >= 2) {
     <div class="regras-pesquisa__resultados">

@@ -1,3 +1,10 @@
+@if (bloco().nota; as nota) {
+    <app-regras-nota
+        [bloco]="{ tipo: 'nota', trechos: nota }"
+        [documento]="documento()"
+        (navegarAncora)="navegarAncora.emit($event)"
+    />
+}
 <div class="regras-modificacoes">
     @for (item of bloco().itens; track $index) {
         <article class="regras-modificacoes__item">

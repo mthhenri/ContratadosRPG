@@ -7,12 +7,16 @@ export interface RegrasSumarioItem {
     readonly filhos: readonly RegrasSumarioItem[];
 }
 
-/** Mantém a ordem e a hierarquia da fonte, exibindo capítulos, títulos e subtítulos até ⬥. */
+/** Seções até ⬥ e dossiês de classe/subclasse, na ordem e hierarquia da fonte. */
 export function construirSumarioRegras(
     filhos: readonly RegrasConteudo[],
 ): RegrasSumarioItem[] {
     return filhos.flatMap((conteudo) => {
         const descendentes = construirSumarioRegras(listarFilhosRegras(conteudo));
+        if ((conteudo.tipo === "classe" || conteudo.tipo === "subclasse") && conteudo.ancora) {
+            return [{ ancora: conteudo.ancora, titulo: conteudo.nome,
+                nivel: 3, filhos: descendentes }];
+        }
         if (conteudo.tipo !== "secao" || conteudo.nivel > 3) {
             return descendentes;
         }
@@ -28,7 +32,8 @@ export function construirSumarioRegras(
 /** Inclui também os verbetes ⬦, que participam da navegação e da leitura ativa. */
 export function listarAncorasRegras(filhos: readonly RegrasConteudo[]): string[] {
     return filhos.flatMap((conteudo) => [
-        ...(conteudo.tipo === "secao" ? [conteudo.ancora] : []),
+        ...((conteudo.tipo === "secao" || conteudo.tipo === "classe"
+            || conteudo.tipo === "subclasse") && conteudo.ancora ? [conteudo.ancora] : []),
         ...listarAncorasRegras(listarFilhosRegras(conteudo)),
     ]);
 }

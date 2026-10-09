@@ -1,4 +1,9 @@
-<app-cartao [titulo]="bloco().nome" [cabecalhoQuebravel]="true">
+<app-cartao
+    [titulo]="bloco().nome"
+    [cabecalhoQuebravel]="true"
+    [attr.id]="identificador()"
+    [attr.data-ancora-regras]="bloco().ancora"
+>
     @if (icone(); as nomeIcone) {
         <app-icone cartaoIndice [nome]="nomeIcone" />
     }

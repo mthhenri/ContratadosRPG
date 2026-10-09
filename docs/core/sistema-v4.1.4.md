@@ -28,7 +28,7 @@
 
  *Você é nossa prioridade.*
 
-| VERSÃO 4.1.1 |
+| VERSÃO 4.1.4 |
 | :---: |
 
 **Contratados**  

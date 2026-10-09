@@ -73,7 +73,8 @@ export function reconhecerEquipamentos(tokenTabela, contexto) {
             efeito: contexto.inline(linha[2].text, contexto.linha + indiceRotulos + indice + 3),
             bloqueia: contexto.inline(linha[3].text, contexto.linha + indiceRotulos + indice + 3),
         }));
-        return { tipo: 'modificacoes', itens, ...fonte };
+        return { tipo: 'modificacoes', itens, ...fonte,
+            ...(indiceRotulos === 1 ? { nota: fonte.linhas[0][0] } : {}) };
     }
 
     /** @type {RegrasEquipamento[]} */
@@ -105,4 +106,42 @@ export function reconhecerEquipamentos(tokenTabela, contexto) {
         } else itens.push(item);
     }
     return { tipo: 'equipamentos', categoria: categoria ?? '', itens, ...fonte };
+}
+
+/** Recupera os títulos dentro das tabelas, mantendo a ordem e a hierarquia dos glifos.
+ * @param {import('../src/app/modules/regras/regras.model.js').RegrasConteudo[]} conteudo
+ * @param {(titulo:string)=>string} criarAncora */
+export function integrarSecoesEquipamentos(conteudo, criarAncora) {
+    /** @type {import('../src/app/modules/regras/regras.model.js').RegrasConteudo[]} */
+    const linear = [];
+    let categoria = '';
+    function percorrer(filhos) {
+        for (const item of filhos) {
+            if (item.tipo === 'secao') {
+                linear.push({ ...item, filhos: [] });
+                percorrer(item.filhos);
+                continue;
+            }
+            if (item.tipo === 'equipamentos' || item.tipo === 'modificacoes') {
+                const equipamentos = item.tipo === 'equipamentos';
+                if (equipamentos) categoria = item.categoria;
+                const titulo = equipamentos ? categoria : 'Modificações';
+                linear.push({ tipo: 'secao', nivel: equipamentos ? 2 : 3,
+                    glifo: equipamentos ? '⬡' : '⬥', titulo, origemTabela: true,
+                    ancora: criarAncora(equipamentos ? titulo : `${categoria} Modificações`),
+                    filhos: [] });
+            }
+            linear.push(item);
+        }
+    }
+    percorrer(conteudo);
+    conteudo.splice(0);
+    const pilha = [{ nivel: 0, filhos: conteudo }];
+    for (const item of linear) {
+        if (item.tipo === 'secao') {
+            while (pilha.at(-1).nivel >= item.nivel) pilha.pop();
+            pilha.at(-1).filhos.push(item);
+            pilha.push({ nivel: item.nivel, filhos: /** @type {typeof conteudo} */ (item.filhos) });
+        } else pilha.at(-1).filhos.push(item);
+    }
 }

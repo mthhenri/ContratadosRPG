@@ -34,6 +34,20 @@ describe("Blocos ricos do Guia", () => {
         expect(raiz.textContent).toContain("Revise o conceito");
     });
 
+    it("apresenta introdução e conclusão sem repetir o roteiro preservado para auditoria", () => {
+        const etapa = { ordem: 1, titulo: [{ tipo: "texto", texto: "Identidade" } as const],
+            descricao: [{ tipo: "texto", texto: "Primeiro o conceito." } as const] };
+        const raiz = renderizar([{ tipo: "roteiro", etapas: [etapa],
+            filhos: [{ tipo: "paragrafo", trechos: [...etapa.titulo, ...etapa.descricao] }],
+            introducao: [{ tipo: "paragrafo", trechos: [{ tipo: "texto", texto: "Antes." }] }],
+            conclusao: [{ tipo: "paragrafo", trechos: [{ tipo: "texto", texto: "Revise." }] }],
+        }]);
+        expect(raiz.textContent?.match(/Identidade/g)).toHaveLength(1);
+        expect(raiz.textContent?.match(/Primeiro o conceito\./g)).toHaveLength(1);
+        expect(raiz.textContent).toContain("Antes.");
+        expect(raiz.textContent).toContain("Revise.");
+    });
+
     it("usa a marca própria nos oito NAs e não confunde o índice de Médio", () => {
         const raiz = renderizar([{ tipo: "niveis-ameaca", cabecalho: [], linhas: [],
             niveis: Array.from({ length: 8 }, (_, nivel) => ({ nivel,

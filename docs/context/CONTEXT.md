@@ -37,9 +37,10 @@
 > [backlog](../specs/backlog/revisao-formatacao-pdf-regras.spec.md), sem aprovação
 > editorial da apresentação entregue.
 >
-> **Última revisão:** 2026-10-08 · `revisao-visual-regras`: subclasses, Atributos,
-> Maestrias, Penalidades e Sequelas legíveis; base64 e NA falso fora; cor de Vida/Energia;
-> topbar com livro aberto. [Verificação](../specs/done/revisao-visual-regras/verificacao.md).
+> **Última revisão:** 2026-10-09 · `regras-segunda-revisao-visual`: categorias/notas de
+> equipamentos, roteiros sem duplicação, tabelas legíveis no mobile, topo, busca com ×,
+> debounce de 300 ms, separadores e highlight do tema.
+> [Auditoria visual e limites](../specs/done/regras-segunda-revisao-visual/verificacao.md).
 > M10-11: leitor e arquivos antigos removidos;
 > publicação verificada contra os Markdown vigentes. M10-10 commitada em
 > `af475bec`. [Verificação da remoção](../specs/done/m10-11-remocao-pdf-antigo/verificacao.md).
@@ -2211,7 +2212,7 @@ reproduzem isoladas (arquivo único), não na suíte completa.
 
 `frontend/scripts/normalizar-regras.mjs` gera `public/regras/sistema.json` e `guia.json`
 em `prestart`/`prebuild`, a partir da versão mais recente dos Markdown em `docs/core/`.
-Contrato em `modules/regras/regras.model.ts`; 66 testes do normalizador integram o `test`
+Contrato em `modules/regras/regras.model.ts`; 68 testes do normalizador integram o `test`
 do frontend. Casos explícitos em `scripts/regras-personagens.mjs`, `regras-equipamentos.mjs`,
 `regras-termos.mjs` e `regras-guia.mjs`: abertura dos dois livros, 3 classes, 3 subclasses,
 9 arquétipos, 2 origens, termos (Atributos, Maestrias, Penalidades de Energia, Sequelas), 5 módulos, 100 equipamentos,
@@ -2220,7 +2221,8 @@ do frontend. Casos explícitos em `scripts/regras-personagens.mjs`, `regras-equi
 sem cálculo; tabela de layout sem assinatura vira `grade` (uma célula por caixa) com aviso e
 linha de origem; definições de imagem do Docs não são publicadas. Restam 27 avisos (11 grades
 e 16 âncoras repetidas), justificados na [verificação da revisão visual](../specs/done/revisao-visual-regras/verificacao.md).
-Build de produção aprovado com cache local habilitado, sem `CI=true` (P-104 recuperada).
+Build de produção atual aprovado com `CI=true`, contorno da recorrência P-111.
+P-104 recuperou o cache local, mas a falha nativa reapareceu no gate seguinte.
 `frontend/angular.json` usa `.angular/cache-local/`; a base antiga que derrubava a abertura
 LMDB foi preservada. Primeiro build e reutilização com outro processo mantendo o banco aberto
 passaram; [diagnóstico e limites](../specs/done/p-104-build-cache/verificacao.md).
@@ -3262,15 +3264,23 @@ Topbar Regras e ação da ficha abrem painel global; ↗ abre `/regras/sistema` 
 da URL e `RegrasFlutuante` da janela; memória por livro em `RegrasLeituraStore`
 durante a sessão. IDs locais isolam página e painel simultâneos. Rotas públicas
 lazy, JSON com cache por livro, versão do asset, sumário até nível 3 e títulos até nível 4
-navegáveis. URL acompanha a seção sem acumular histórico por scroll; links internos
+navegáveis. O sumário inclui também as três classes e três subclasses sob suas seções;
+os cartões têm âncoras próprias, seleção por leitura e IDs isolados por leitor.
+Categorias de equipamentos e seus subtítulos de modificações, originados de tabelas,
+também aparecem no corpo e no menu: 117 entradas no Sistema, 61 no Guia.
+[Verificação](../specs/done/regras-sumario-classes-subclasses/verificacao.md).
+URL acompanha a seção sem acumular histórico por scroll; links internos
 focam e piscam o título, com movimento reduzido respeitado. Âncora inexistente abre no
 topo com aviso. Blocos básicos separados por tipo, cartões nos dois trilhos, documento
 máximo 960px à esquerda e tabelas com rolagem própria/coluna fixa no celular.
 Painel normal e página mobile usam gaveta; painel maximizado desktop usa dois
 trilhos. Rolagem local no painel, cache compartilhado e carga somente ao abrir.
-Skeleton e erro/retry próprios; crédito CC BY-SA no rodapé.
+Skeleton e erro/retry próprios; crédito CC BY-SA no rodapé. Botão de topo local a cada
+hospedeiro conserva pesquisa, limpa seleção/fragmento e respeita movimento reduzido.
 Pesquisa literal a partir de dois caracteres, sem caixa/acento, sobre a projeção
-canônica; caminho/trecho substituem sumário. Destaques, contador e Enter/Shift+Enter,
+canônica, com debounce de 300 ms; × ao final do campo limpa imediatamente e devolve foco.
+Caminho/trecho substituem sumário, com separadores entre resultados. Destaques seguem
+o accent do usuário; ocorrência atual preenchida com texto contrastante. Contador e Enter/Shift+Enter,
 setas e Esc; outro livro abre com o mesmo termo. Abas ocultas são reveladas ao
 navegar, tarjas não casam. Termo e ocorrência por livro são memória da sessão entre
 página/painel. Projeção oculta do outro livro tem IDs próprios e não participa do
@@ -3279,7 +3289,10 @@ observador de seção; painel aberto não muda URL/rolagem da página de fundo.
 M10-11 retirou o antigo leitor e seus assets/dependência. O site lê
 `frontend/public/regras/{sistema,guia}.json`, derivados do Markdown canônico. Blocos ricos entregues na M10-07:
 dossiês/arquétipos/origens, equipamentos/modificações/módulos, Guia e ficha completa;
-componentes separados em `blocos/`, sem duplicar fórmulas. NAs usam marca própria.
+componentes separados em `blocos/`, sem duplicar fórmulas. Notas excepcionais de custo/peso
+apresentadas; roteiros distinguem introdução/etapas/conclusão sem repetir conteúdo.
+Tabelas mantêm largura mínima legível e rolagem local no mobile. NAs usam marca própria.
+[Segunda revisão completa e preparação do editor](../specs/done/regras-segunda-revisao-visual/verificacao.md).
 Trio preenchido `vida`/`energia`/`defesa` disponível no catálogo; no leitor, valores
 com tooltip por extenso. Vida A, coração cheio sem pulso, confirmada pelo autor.
 [Verificação dos blocos ricos](../specs/done/m10-07-blocos-ricos/m10-07-verificacao.md).

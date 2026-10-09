@@ -1,4 +1,4 @@
-import type { RegrasConteudo, RegrasSecao } from "./regras.model";
+import type { RegrasClasse, RegrasConteudo, RegrasSecao, RegrasSubclasse } from "./regras.model";
 import { construirSumarioRegras, listarAncorasRegras } from "./regras-sumario";
 
 function secao(
@@ -12,6 +12,35 @@ function secao(
 }
 
 describe("sumário das Regras", () => {
+    it("inclui dossiês sob sua seção, com destinos na ordem da leitura", () => {
+        const classe: RegrasClasse = { tipo: "classe", nome: "Combatente", ancora: "combatente",
+            citacao: [], cabecalho: [], linhas: [], habilidades: [], arquetipos: [],
+            saude: { vida: [], energia: [] }, progressao: { vida: [], energia: [] },
+            filhos: [{ tipo: "arquetipos", classe: "Combatente", arquetipos: [],
+                cabecalho: [], linhas: [] }] };
+        const subclasse: RegrasSubclasse = { tipo: "subclasse", nome: "Experimento Híbrido",
+            ancora: "experimento-hibrido", classe: "Suporte", citacao: [], custos: [],
+            cabecalho: [], linhas: [], saude: { vida: [], energia: [] },
+            progressao: { vida: [], energia: [] }, atributosBonus: [], habilidades: [],
+            habilidadeInicial: { tipo: "paragrafo", trechos: [] } };
+        const conteudo = [secao(2, "classes", "Classes e Arquétipos", [classe]),
+            secao(2, "subclasse", "Subclasse", [subclasse])];
+        expect(construirSumarioRegras(conteudo)).toEqual([
+            { ancora: "classes", titulo: "Classes e Arquétipos", nivel: 2, filhos: [
+                { ancora: "combatente", titulo: "Combatente", nivel: 3, filhos: [] },
+            ] },
+            { ancora: "subclasse", titulo: "Subclasse", nivel: 2, filhos: [
+                { ancora: "experimento-hibrido", titulo: "Experimento Híbrido",
+                    nivel: 3, filhos: [] },
+            ] },
+        ]);
+        expect(listarAncorasRegras(conteudo)).toEqual([
+            "classes", "combatente", "subclasse", "experimento-hibrido",
+        ]);
+        expect(construirSumarioRegras([{ ...classe, ancora: undefined }])).toEqual([]);
+        expect(listarAncorasRegras([{ ...subclasse, ancora: undefined }])).toEqual([]);
+    });
+
     it("mantém ordem, títulos completos e árvore até ⬥, sem os verbetes ⬦", () => {
         const conteudo = [
             secao(1, "agentes", "AGENTES", [

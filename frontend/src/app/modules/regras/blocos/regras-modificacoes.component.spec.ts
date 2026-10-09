@@ -2,6 +2,16 @@ import { TestBed } from "@angular/core/testing";
 import { RegrasModificacoesRender } from "./regras-modificacoes.component";
 
 describe("RegrasModificacoesRender", () => {
+    it("mostra a nota excepcional de custo/peso antes dos itens", () => {
+        const fixture = TestBed.createComponent(RegrasModificacoesRender);
+        fixture.componentRef.setInput("bloco", {
+            tipo: "modificacoes", cabecalho: [], linhas: [], itens: [],
+            nota: [{ tipo: "texto", texto: "Modificações de Explosivos custam 250 $." }],
+        });
+        fixture.detectChanges();
+        expect(fixture.nativeElement.querySelector("app-regras-nota")?.textContent)
+            .toContain("Modificações de Explosivos custam 250 $.");
+    });
     it("preserva compras múltiplas no empilhamento e torna Bloqueia legível", () => {
         const fixture = TestBed.createComponent(RegrasModificacoesRender);
         fixture.componentRef.setInput("bloco", {

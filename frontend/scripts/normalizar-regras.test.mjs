@@ -14,12 +14,54 @@ const diretorioFixtures = fileURLToPath(new URL('./fixtures/regras/', import.met
 const fixture = (nome) => readFileSync(join(diretorioFixtures, `${nome}.md`), 'utf8');
 const normalizar = (texto) => normalizarDocumento(texto, 'sistema', '4.1.3');
 
+test('classes e subclasses recebem destinos únicos sem alterar âncoras de seções', () => {
+    const fonte = readFileSync(join(diretorioRaiz, 'docs/core/sistema-v4.1.4.md'), 'utf8');
+    const blocos = percorrer(normalizar(fonte).documento.filhos);
+    const identidades = blocos.filter(item => ['classe', 'subclasse'].includes(item.tipo));
+    assert.deepEqual(identidades.map(item => [item.nome, item.ancora]), [
+        ['Combatente', 'combatente'], ['Especialista', 'especialista'], ['Suporte', 'suporte'],
+        ['Experimento Bestial', 'experimento-bestial'],
+        ['Experimento Artificial', 'experimento-artificial'],
+        ['Experimento Híbrido', 'experimento-hibrido'],
+    ]);
+    const repetidos = percorrer(normalizar('# ⬢ Combatente\n' + fonte + '\n' + fonte)
+        .documento.filhos).filter(item => item.ancora).map(item => item.ancora);
+    assert.equal(new Set(repetidos).size, repetidos.length);
+    assert.ok(repetidos.includes('combatente-2'));
+    assert.ok(repetidos.includes('combatente-3'));
+});
+
 function percorrer(conteudo) {
     return conteudo.flatMap((item) => [item,
         ...('filhos' in item ? percorrer(item.filhos) : []),
         ...(item.tipo === 'lista' ? item.itens.flatMap(percorrer) : []),
     ]);
 }
+
+test('categorias e modificações de equipamentos recuperam títulos e hierarquia da fonte', () => {
+    const fonte = readFileSync(join(diretorioRaiz, 'docs/core/sistema-v4.1.4.md'), 'utf8');
+    const documento = normalizar(fonte).documento;
+    const equipamentos = percorrer(documento.filhos).find(item => item.tipo === 'secao'
+        && item.titulo === 'Equipamentos');
+    const categorias = equipamentos.filhos.filter(item => item.origemTabela);
+    assert.deepEqual(categorias.map(item => [item.titulo, item.nivel]), [
+        ['Corpo a Corpo', 2], ['Explosivos', 2], ['Armas de Fogo', 2], ['Munições', 2],
+        ['Proteções e Escudos', 2], ['Exóticos', 2], ['Armazenamento', 2],
+        ['Itens Operacionais', 2], ['Itens Medicinais', 2],
+    ]);
+    for (const [indice, categoria] of categorias.entries()) {
+        assert.equal(categoria.filhos[0].tipo, 'equipamentos');
+        const modificacoes = categoria.filhos.filter(item => item.tipo === 'secao');
+        assert.equal(modificacoes.length, indice < 7 ? 1 : 0);
+        if (modificacoes.length) {
+            assert.equal(modificacoes[0].nivel, 3);
+            assert.equal(modificacoes[0].titulo, 'Modificações');
+            assert.equal(modificacoes[0].filhos[0].tipo, 'modificacoes');
+        }
+    }
+    const ancoras = percorrer(documento.filhos).filter(item => item.ancora).map(item => item.ancora);
+    assert.equal(ancoras.length, new Set(ancoras).size);
+});
 
 function textoTrechos(trechos) {
     return trechos.map((trecho) => {
@@ -31,7 +73,8 @@ function textoTrechos(trechos) {
 
 function textoDocumento(conteudo) {
     return conteudo.map((item) => {
-        if (item.tipo === 'secao') return item.titulo + ' ' + textoDocumento(item.filhos);
+        if (item.tipo === 'secao') return (item.origemTabela ? '' : item.titulo + ' ')
+            + textoDocumento(item.filhos);
         if (item.tipo === 'lista') return item.itens.map(textoDocumento).join(' ');
         if ('cabecalho' in item) return [item.cabecalho, ...item.linhas]
             .flatMap((linha) => linha.map(textoTrechos)).join(' ')
@@ -54,6 +97,7 @@ const textoPlanoComparavel = (texto) => texto
     .replace(/(\[(?:\d+|X)E\])-/g, '$1');
 
 function textoEntrada(texto, secoes) {
+    secoes = secoes.filter(secao => !secao.origemTabela);
     const destinos = new Map();
     let sumario = false;
     const linhas = texto.split(/\r?\n/).filter((linha) => {

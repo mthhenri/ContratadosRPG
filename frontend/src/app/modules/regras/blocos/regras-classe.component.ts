@@ -1,4 +1,5 @@
-import { Component, computed, forwardRef, input, output } from "@angular/core";
+import { Component, computed, forwardRef, inject, input, output } from "@angular/core";
+import { RegrasLeitorContexto } from "../regras-leitor-contexto";
 import { RegrasArquetipos as BlocoArquetipos, RegrasClasse as BlocoClasse, RegrasDocumento } from "../regras.model";
 import { Cartao } from "../../../shared/ui/cartao/cartao.component";
 import { Icone } from "../../../shared/icone/icone.component";
@@ -21,6 +22,11 @@ export class RegrasClasse {
     readonly bloco = input.required<BlocoClasse>();
     readonly documento = input<RegrasDocumento["id"]>("sistema");
     readonly navegarAncora = output<string>();
+    private readonly contexto = inject(RegrasLeitorContexto, { optional: true });
+    protected readonly identificador = computed(() => {
+        const ancora = this.bloco().ancora;
+        return ancora ? this.contexto?.identificar(ancora) ?? ancora : null;
+    });
     protected readonly icone = computed(() => recuperarIconeIdentidade(this.bloco().nome));
     protected readonly arquetipos = computed<readonly BlocoArquetipos[]>(() => {
         const bloco = this.bloco();

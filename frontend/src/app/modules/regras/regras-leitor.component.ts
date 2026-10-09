@@ -143,6 +143,25 @@ export class RegrasLeitor {
         this.navegarAncora(ancora);
     }
 
+    protected voltarAoTopo(): void {
+        this.gavetaAberta.set(false);
+        const comportamento = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+            ? "auto" : "smooth";
+        this.silenciadoAte = performance.now() + (comportamento === "smooth" ? 1000 : 0);
+        if (this.emPainel()) {
+            this.areaRolagem()?.scrollTo({ top: 0, behavior: comportamento });
+        } else {
+            window.scrollTo({ top: 0, behavior: comportamento });
+        }
+        this.ativo.set(null);
+        this.alterarUrl(null);
+        const corpo = this.elemento.nativeElement.querySelector<HTMLElement>(".regras__documento");
+        if (corpo) {
+            corpo.tabIndex = -1;
+            corpo.focus({ preventScroll: true });
+        }
+    }
+
     private carregarDocumento(livro: RegrasDocumento["id"]): void {
         this.pesquisa.desconectarDocumento();
         this.geracao++;

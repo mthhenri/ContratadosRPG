@@ -1,6 +1,7 @@
 <div
     appOverflowFade
     class="regras-tabela"
+    [style.--regras-tabela-colunas]="bloco().cabecalho.length || bloco().linhas[0]?.length || 1"
     tabindex="0"
     role="region"
     aria-label="Tabela de regras, role horizontalmente para ver todas as colunas"

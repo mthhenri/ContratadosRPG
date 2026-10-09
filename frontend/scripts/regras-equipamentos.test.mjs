@@ -92,6 +92,7 @@ test('notas excepcionais de custo/peso preservadas; notas desconhecidas rejeitad
     const original = lerFixture('armazenamento');
     const bloco = reconhecer(tabelas(original)[1]);
     assert.match(texto(bloco.linhas[0][0]), /300 \$ ao invés do valor padrão/);
+    assert.deepEqual(bloco.nota, bloco.linhas[0][0]);
     assert.match(texto(bloco.linhas[0][0]), /não agregam nenhum peso/);
     assert.equal(reconhecer(tabelas(original.replace('300 \\$', '350 \\$'))[1]), null);
 });

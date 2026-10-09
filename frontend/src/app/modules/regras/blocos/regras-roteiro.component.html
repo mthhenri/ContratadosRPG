@@ -1,3 +1,8 @@
+<app-regras-conteudo
+    [filhos]="bloco().introducao ?? []"
+    [documento]="documento()"
+    (navegarAncora)="navegarAncora.emit($event)"
+/>
 <ol class="regras-guia__roteiro">
     @for (etapa of bloco().etapas; track $index) {
         <li [value]="etapa.ordem">
@@ -18,7 +23,7 @@
     }
 </ol>
 <app-regras-conteudo
-    [filhos]="bloco().filhos"
+    [filhos]="bloco().conclusao ?? bloco().filhos"
     [documento]="documento()"
     (navegarAncora)="navegarAncora.emit($event)"
 />

@@ -1,10 +1,11 @@
 import { Component, input, output } from "@angular/core";
 import { RegrasDocumento, RegrasModificacoes } from "../regras.model";
 import { RegrasInline } from "./regras-inline.component";
+import { RegrasNota } from "./regras-nota.component";
 
 @Component({
     selector: "app-regras-modificacoes",
-    imports: [RegrasInline],
+    imports: [RegrasInline, RegrasNota],
     templateUrl: "./regras-modificacoes.component.html",
     styleUrl: "./regras-modificacoes.component.scss",
 })

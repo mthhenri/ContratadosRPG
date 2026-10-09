@@ -171,8 +171,14 @@ export function reconhecerSecaoGuia(secao, origemMarkdown, contexto) {
         });
         if (etapas.some((etapa, indice) => lerTexto(etapa.titulo) !== rotulos[indice])) return null;
         if (etapas.length !== rotulos.length) return null;
+        const inicio = secao.filhos.findIndex((filho) => filho.tipo === 'paragrafo'
+            && lerTexto(filho.trechos).startsWith(rotulos[0]));
+        const fim = secao.filhos.reduce((ultimo, filho, indice) => filho.tipo === 'paragrafo'
+            && lerTexto(filho.trechos).includes(rotulos.at(-1)) ? indice : ultimo, -1);
+        if (inicio < 0 || fim < inicio) return null;
         return { bloco: { tipo: 'roteiro', etapas: etapas.map((etapa, indice) =>
-            ({ ...etapa, ordem: indice + 1 })), filhos: secao.filhos } };
+            ({ ...etapa, ordem: indice + 1 })), filhos: secao.filhos,
+            introducao: secao.filhos.slice(0, inicio), conclusao: secao.filhos.slice(fim + 1) } };
     }
     if (secao.titulo !== 'Exemplo de Ficha Completa'
         || !contexto.caminho.includes('Guia de Criação de Ameaças')) return null;

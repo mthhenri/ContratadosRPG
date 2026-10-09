@@ -46,6 +46,7 @@ describe("Revisão visual das Regras", () => {
 
     it("subclasse mostra tipo, custos, Vida/Energia com faixa, bônus e habilidades", () => {
         const raiz = renderizar([{ tipo: "subclasse", nome: "Experimento Bestial", classe: "Combatente",
+            ancora: "experimento-bestial",
             citacao: texto("“Carne reforçada.”"), cabecalho: [], linhas: [],
             custos: [texto("AGENTES DESTA CLASSE RECEBEM O DOBRO"), texto("SEU LIMITE"), texto("EM NÍVEL 0")],
             saude: { vida: texto("30 + VIG × 5"), energia: texto("22 + DES × 2") },
@@ -61,6 +62,8 @@ describe("Revisão visual das Regras", () => {
             .map(chip => chip.textContent?.trim())).toEqual(["+1 em Força", "+1 em Vigor"]);
         expect(raiz.querySelector(".regras-destaque--inicial")?.textContent).toContain("Musculatura de Impacto");
         expect(raiz.querySelector("app-cartao app-icone[cartaoIndice]")).not.toBeNull();
+        expect(raiz.querySelector('[data-ancora-regras="experimento-bestial"]')?.id)
+            .toBe("experimento-bestial");
         expect(raiz.querySelectorAll(".regras-subclasse__habilidades app-regras-habilidade")).toHaveLength(2);
     });
 

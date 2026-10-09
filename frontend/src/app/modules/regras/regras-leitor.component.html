@@ -136,6 +136,18 @@
             </app-gaveta>
         </div>
     }
+    <button
+        app-botao-icone
+        class="regras__topo"
+        tamanho="padrao"
+        variante="primario"
+        type="button"
+        aria-label="Voltar ao topo"
+        appTooltip="Voltar ao topo"
+        (click)="voltarAoTopo()"
+    >
+        <app-icone nome="chevron" class="regras__icone-topo" />
+    </button>
 </div>
 @if (pesquisa.outroDocumento(); as outro) {
     <div class="regras__outro-livro" hidden inert aria-hidden="true">
