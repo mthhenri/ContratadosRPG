@@ -1,7 +1,7 @@
-@use "tema/breakpoints" as bp;
 :host {
     display: block;
     min-width: 0;
+    container-type: inline-size;
 }
 .regras-arquetipos {
     &__impressao {
@@ -11,15 +11,39 @@
         margin: var(--space-20) 0 var(--space-12);
         font: 600 13px var(--font-mono);
     }
+    // Painel do exemplão M10 (`.tp`): identidade e habilidade inicial à esquerda, listas à direita.
     &__painel {
-        padding-top: var(--space-16);
+        min-width: 0;
+        padding: var(--space-16) var(--space-20);
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-top: 0;
+        border-radius: 0 0 var(--radius-card) var(--radius-card);
+        &:not([hidden]) {
+            display: grid;
+            grid-template-columns: 270px minmax(0, 1fr);
+            gap: var(--space-20) 28px;
+        }
+    }
+    &__lado,
+    &__habilidades {
         min-width: 0;
     }
+    &__nome {
+        display: flex;
+        align-items: center;
+        gap: var(--space-8);
+        font: 600 16px var(--font-mono);
+        app-icone {
+            color: var(--accent);
+        }
+    }
     &__citacao {
-        margin: 0 0 var(--space-16);
+        margin: var(--space-4) 0 0;
         color: var(--text-dim);
-        font-size: 14px;
-        line-height: 1.65;
+        font-size: 13px;
+        font-style: italic;
+        line-height: 1.5;
     }
     &__rotulo {
         display: block;
@@ -29,18 +53,17 @@
         text-transform: uppercase;
         letter-spacing: var(--tracking-label);
     }
+    &__habilidades > &__rotulo:first-child {
+        margin-top: 0;
+    }
     &__bonus {
         display: flex;
         flex-wrap: wrap;
-        align-items: center;
-        gap: var(--space-8) var(--space-12);
-    }
-    &__bonus &__rotulo {
-        margin: 0;
+        gap: var(--space-8);
     }
 }
-@include bp.mobile {
-    button[app-aba] {
-        min-height: bp.$alvo-toque;
+@container (max-width: 720px) {
+    .regras-arquetipos__painel:not([hidden]) {
+        grid-template-columns: minmax(0, 1fr);
     }
 }

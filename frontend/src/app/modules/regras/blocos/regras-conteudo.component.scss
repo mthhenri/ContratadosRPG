@@ -1,7 +1,8 @@
-@use "tema/breakpoints" as bp;
 :host {
     display: block;
     min-width: 0;
+    // Habilidades em duas colunas só quando o próprio espaço comporta (painel, coluna, celular).
+    container-type: inline-size;
 }
 .regras-conteudo__bloco {
     display: contents;
@@ -13,7 +14,7 @@
     margin: var(--space-12) 0;
     align-items: start;
 }
-@include bp.mobile {
+@container (max-width: 640px) {
     .regras-conteudo__habilidades {
         grid-template-columns: minmax(0, 1fr);
     }

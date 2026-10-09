@@ -1,0 +1,60 @@
+<app-cartao [titulo]="bloco().nome" [cabecalhoQuebravel]="true">
+    @if (icone(); as nomeIcone) {
+        <app-icone cartaoIndice [nome]="nomeIcone" />
+    }
+    <div class="regras-subclasse">
+        <span class="regras-subclasse__tipo">Subclasse · {{ bloco().classe }}</span>
+        <p class="regras-subclasse__citacao">
+            <app-regras-inline
+                [trechos]="bloco().citacao"
+                [documento]="documento()"
+                (navegarAncora)="navegarAncora.emit($event)"
+            />
+        </p>
+        <app-regras-destaque rotulo="// Custo do experimento" variante="custo">
+            <ul class="regras-subclasse__custos">
+                @for (custo of bloco().custos; track $index) {
+                    <li>
+                        <app-regras-inline
+                            [trechos]="custo"
+                            [documento]="documento()"
+                            (navegarAncora)="navegarAncora.emit($event)"
+                        />
+                    </li>
+                }
+            </ul>
+        </app-regras-destaque>
+        <app-regras-saude
+            class="regras-subclasse__saude"
+            [saude]="bloco().saude"
+            [progressao]="bloco().progressao"
+            [documento]="documento()"
+            (navegarAncora)="navegarAncora.emit($event)"
+        />
+        <div class="regras-subclasse__painel">
+            <div class="regras-subclasse__lado">
+                <span class="regras-subclasse__rotulo">Atributos bônus</span>
+                <div class="regras-subclasse__bonus">
+                    @for (item of bonus(); track $index) {
+                        <app-chip variante="sutil">{{ item }}</app-chip>
+                    }
+                </div>
+                <app-regras-destaque rotulo="Habilidade inicial">
+                    <app-regras-conteudo
+                        [filhos]="[bloco().habilidadeInicial]"
+                        [documento]="documento()"
+                        (navegarAncora)="navegarAncora.emit($event)"
+                    />
+                </app-regras-destaque>
+            </div>
+            <div class="regras-subclasse__habilidades">
+                <span class="regras-subclasse__rotulo">Habilidades de subclasse</span>
+                <app-regras-conteudo
+                    [filhos]="bloco().habilidades"
+                    [documento]="documento()"
+                    (navegarAncora)="navegarAncora.emit($event)"
+                />
+            </div>
+        </div>
+    </div>
+</app-cartao>

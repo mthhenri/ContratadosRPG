@@ -4,8 +4,8 @@
     </div>
     <div class="regras-habilidade__selos">
         <app-chip
-            severidade="secundario"
-            tom="contorno"
+            severidade="energia"
+            tom="sutil"
             [appTooltip]="bloco().custo + ' de Energia'"
             tabindex="0"
             [attr.aria-label]="bloco().custo + ' de Energia'"
@@ -13,7 +13,7 @@
             <app-icone nome="energia" /> {{ bloco().custo }}
         </app-chip>
         @if (bloco().reacao) {
-            <app-chip severidade="primario" tom="contorno">REAÇÃO</app-chip>
+            <app-chip severidade="ajuda" tom="contorno">REAÇÃO</app-chip>
         }
     </div>
     <p>

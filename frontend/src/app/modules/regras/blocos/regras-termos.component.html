@@ -1,0 +1,22 @@
+<dl [class]="'regras-termos regras-termos--' + bloco().variante">
+    @for (item of bloco().itens; track $index) {
+        <div class="regras-termos__item">
+            <dt class="regras-termos__nome">
+                @if (item.numero !== undefined) {
+                    <span class="regras-termos__numero">{{ item.numero }}</span>
+                }
+                {{ item.nome }}
+                @if (item.rotulo) {
+                    <span class="regras-termos__rotulo">{{ item.rotulo }}</span>
+                }
+            </dt>
+            <dd class="regras-termos__descricao">
+                <app-regras-inline
+                    [trechos]="item.descricao"
+                    [documento]="documento()"
+                    (navegarAncora)="navegarAncora.emit($event)"
+                />
+            </dd>
+        </div>
+    }
+</dl>

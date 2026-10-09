@@ -7,6 +7,7 @@ import { reconhecerEquipamentos } from './regras-equipamentos.mjs';
 import { reconhecerPersonagens } from './regras-personagens.mjs';
 import { marcarNiveis, reconhecerTabelaGuia, reconhecerHabilidadeCriatura,
     reconhecerSecaoGuia, reconhecerNiveisAmeaca, marcarNivelNome } from './regras-guia.mjs';
+import { reconhecerTermos, agruparVerbetes } from './regras-termos.mjs';
 
 /** @typedef {import('../src/app/modules/regras/regras.model.js').RegrasDocumento} RegrasDocumento */
 /** @typedef {import('../src/app/modules/regras/regras.model.js').RegrasConteudo} RegrasConteudo */
@@ -17,6 +18,8 @@ import { marcarNiveis, reconhecerTabelaGuia, reconhecerHabilidadeCriatura,
 
 const diretorioFrontend = fileURLToPath(new URL('../', import.meta.url));
 const niveis = /** @type {const} */ ({ '⬢': 1, '⬡': 2, '⬥': 3, '⬦': 4 });
+/** Tabelas de dados cuja primeira linha a exportação do Docs promoveu a cabeçalho. */
+const tabelasSemCabecalho = ['Irrelevante'];
 
 /** Remove apenas escapes de pontuação do Markdown exportado. */
 export function limparEscapes(texto) {
@@ -124,8 +127,9 @@ export function normalizarDocumento(texto, id, versao) {
                 }
                 if (token.type === 'br') return [{ tipo: 'texto', texto: '\n' }];
                 // Não executar HTML nem perder sintaxes que o núcleo ainda não modela.
+                // Quebra mole é espaço, como no Markdown; só `br` vira quebra visível.
                 const textoToken = token.type === 'escape' || token.type === 'codespan'
-                    ? token.text : token.type === 'text' ? token.text : token.raw;
+                    ? token.text : token.type === 'text' ? token.text.replace(/\n/g, ' ') : token.raw;
                 return textoToken.split(/(█+)/).filter(Boolean).map((trecho) =>
                     trecho.startsWith('█') ? { tipo: 'tarja', comprimento: trecho.length }
                         : { tipo: 'texto', texto: trecho });
@@ -203,7 +207,7 @@ export function normalizarDocumento(texto, id, versao) {
                     inline: normalizarInline, paragrafo: normalizarParagrafo };
                 const explicito = id === 'sistema'
                     ? reconhecerEquipamentos(tabela, contexto) ?? reconhecerPersonagens(tabela, contexto)
-                        ?? reconhecerNiveisAmeaca(tabela, contexto)
+                        ?? reconhecerNiveisAmeaca(tabela, contexto) ?? reconhecerTermos(tabela, contexto)
                     : reconhecerTabelaGuia(tabela, contexto);
                 if (explicito) {
                     blocos.push(explicito);
@@ -229,15 +233,16 @@ export function normalizarDocumento(texto, id, versao) {
                         ) || celula.text.length > 100)
                         || token.header.every((celula) => !celula.text || /\s/.test(celula.text)));
                     if (layout) {
-                        const motivo = 'Tabela de layout sem assinatura explícita completa; preservada como genérico.';
+                        const motivo = 'Tabela de layout sem assinatura explícita completa; preservada como grade.';
                         avisar(linha, motivo);
-                        blocos.push({ tipo: 'generico', motivo, origemMarkdown: token.raw,
-                            trechos: celulas.flatMap((celulasLinha, indiceLinha) =>
-                                celulasLinha.flatMap((celula) => [
-                                    ...normalizarInline(celula.text, linha + indiceLinha
-                                        + (indiceLinha > 0 ? 1 : 0)),
-                                    { tipo: 'texto', texto: '\n' },
-                                ])) });
+                        const fonte = celulasNormalizadas(celulas, linha);
+                        blocos.push({ tipo: 'grade', colunas: token.header.length,
+                            cabecalho: fonte[0], linhas: fonte.slice(1) });
+                    } else if (id === 'sistema' && tabelasSemCabecalho.includes(rotulos[0])) {
+                        // A exportação do Docs promoveu a primeira linha de dados a cabeçalho.
+                        blocos.push({ tipo: 'tabela', cabecalho: [],
+                            linhas: celulasNormalizadas(celulas, linha).filter((celulasLinha) =>
+                                celulasLinha.some((celula) => celula.length)) });
                     } else blocos.push({ tipo: 'tabela',
                         cabecalho: token.header.map((celula) => normalizarInline(celula.text, linha)),
                         linhas: token.rows.map((celulasLinha, indiceLinha) => celulasLinha.map(
@@ -257,6 +262,8 @@ export function normalizarDocumento(texto, id, versao) {
                 });
                 blocos.push({ tipo: 'lista', ordenada: token.ordered,
                     inicio: token.ordered ? Number(token.start) : 1, itens });
+            } else if (token.type === 'def') {
+                // Definição de referência (imagens embutidas do Docs): metadado, não conteúdo.
             } else if (token.type !== 'space') {
                 const motivo = `Bloco Markdown "${token.type}" preservado como genérico.`;
                 avisar(linha, motivo);
@@ -265,7 +272,14 @@ export function normalizarDocumento(texto, id, versao) {
             }
             linha += (token.raw.match(/\n/g) ?? []).length;
         }
-        return blocos;
+        return agruparVerbetes(blocos);
+    }
+
+    /** Células de uma tabela na ordem da fonte, com a linha original de cada uma.
+     * @param {import('marked').Tokens.TableCell[][]} celulas @param {number} linha */
+    function celulasNormalizadas(celulas, linha) {
+        return celulas.map((celulasLinha, indiceLinha) => celulasLinha.map((celula) =>
+            normalizarInline(celula.text, linha + indiceLinha + (indiceLinha > 0 ? 1 : 0))));
     }
 
     /** @type {RegrasConteudo[]} */
@@ -317,9 +331,46 @@ export function normalizarDocumento(texto, id, versao) {
         }
     }
     agruparCasos(filhos, []);
+    extrairAbertura(filhos);
     avisos.sort((primeiro, segundo) => primeiro.linha - segundo.linha);
     return { documento: { tipo: 'documento', id,
         titulo: id === 'sistema' ? 'Sistema' : 'Guia de Mestre', versao, filhos }, avisos };
+}
+
+/** @param {readonly RegrasTrecho[]} trechos @returns {string} */
+function textoPlano(trechos) {
+    return trechos.map((trecho) => 'filhos' in trecho ? textoPlano(trecho.filhos)
+        : trecho.tipo === 'tarja' ? '█'.repeat(trecho.comprimento) : trecho.texto).join('');
+}
+
+/**
+ * Reúne o registro oficial que abre cada livro num bloco `abertura`: o parágrafo que começa
+ * em ">>>> Registro de documentação oficial" e os parágrafos seguintes inteiramente em
+ * itálico. A primeira linha vira o título; o resto mantém as quebras e a formatação da fonte.
+ * @param {RegrasConteudo[]} filhos
+ */
+function extrairAbertura(filhos) {
+    const primeiro = filhos[0];
+    if (primeiro?.tipo !== 'paragrafo'
+        || !/^>>>> Registro de documentação oficial/.test(textoPlano(primeiro.trechos).trim())) return;
+    const quebra = primeiro.trechos.findIndex((trecho) =>
+        trecho.tipo === 'texto' && trecho.texto.includes('\n'));
+    if (quebra < 0) return;
+    const separador = /** @type {{ tipo: 'texto', texto: string }} */ (primeiro.trechos[quebra]);
+    const posicao = separador.texto.indexOf('\n');
+    const titulo = (textoPlano(primeiro.trechos.slice(0, quebra))
+        + separador.texto.slice(0, posicao)).trim();
+    /** @type {RegrasTrecho[]} */
+    const trechos = [{ tipo: 'texto', texto: separador.texto.slice(posicao + 1) },
+        ...primeiro.trechos.slice(quebra + 1)];
+    let fim = 1;
+    for (; fim < filhos.length; fim++) {
+        const bloco = filhos[fim];
+        if (bloco.tipo !== 'paragrafo' || !bloco.trechos.every((trecho) => trecho.tipo === 'italico'
+            || (trecho.tipo === 'texto' && !trecho.texto.trim()))) break;
+        trechos.push({ tipo: 'texto', texto: '\n\n' }, ...bloco.trechos);
+    }
+    filhos.splice(0, fim, { tipo: 'abertura', titulo, trechos });
 }
 
 /** Seleciona a maior versão semântica disponível, sem repetir os nomes dos livros no script. */

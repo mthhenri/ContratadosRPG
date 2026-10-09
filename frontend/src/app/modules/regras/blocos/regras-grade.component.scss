@@ -1,0 +1,29 @@
+:host {
+    display: block;
+    min-width: 0;
+    margin: var(--space-12) 0 var(--space-16);
+    container-type: inline-size;
+}
+.regras-grade {
+    display: grid;
+    grid-template-columns: repeat(var(--regras-grade-colunas, 2), minmax(0, 1fr));
+    // Filetes por contorno da célula: a última linha incompleta não vira um bloco cinza.
+    gap: 1px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+    &__celula {
+        min-width: 0;
+        padding: var(--space-8) var(--space-12);
+        background: var(--bg);
+        outline: 1px solid var(--border);
+        font-size: 13.5px;
+        line-height: 1.55;
+        overflow-wrap: anywhere;
+    }
+}
+@container (max-width: 640px) {
+    .regras-grade {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

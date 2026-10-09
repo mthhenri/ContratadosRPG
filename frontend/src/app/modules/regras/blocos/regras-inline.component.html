@@ -1,12 +1,15 @@
 @for (trecho of trechos(); track $index) {
     @switch (trecho.tipo) {
         @case ("texto") {
-            @if (iconeSubclasse(trecho.texto); as icone) {
-                <span class="regras-inline__subclasse"
-                    ><app-icone [nome]="icone" /> <span [textContent]="trecho.texto"></span
-                ></span>
-            } @else {
-                <span [textContent]="trecho.texto"></span>
+            @for (parte of partes(trecho.texto); track $index) {
+                @if (parte.recurso) {
+                    <span
+                        [class]="'regras-inline__recurso regras-inline__recurso--' + parte.recurso"
+                        [textContent]="parte.texto"
+                    ></span>
+                } @else {
+                    <span [textContent]="parte.texto"></span>
+                }
             }
         }
         @case ("negrito") {

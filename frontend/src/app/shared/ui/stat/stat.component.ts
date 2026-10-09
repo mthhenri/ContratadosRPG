@@ -63,6 +63,13 @@ export class Stat {
   readonly tamanho = input<StatTamanho>('padrao');
 
   /**
+   * Cartão de recurso do exemplão M10 (`revisao-visual-regras`): faixa lateral e rótulo na cor
+   * da variante, ícone em quadro tingido (`[statIcone]`) e nota mono sob filete tracejado.
+   * Desligada, a caixa continua idêntica.
+   */
+  readonly faixa = input(false);
+
+  /**
    * Contador que o consumidor incrementa para disparar um pulso de destaque (escala) no valor —
    * usado por resultados de rolagem (`Descanso`, `P-054`). A primeira emissão (montagem do
    * componente) nunca pulsa; só incrementos depois disso.
@@ -81,7 +88,8 @@ export class Stat {
     const variante = this.variante();
     const tamanho = this.tamanho();
     const classeTamanho = tamanho !== 'padrao' ? ` stat--${tamanho}` : '';
-    return `${variante ? `stat stat--${variante}` : 'stat'}${classeTamanho}`;
+    const classeFaixa = this.faixa() ? ' stat--faixa' : '';
+    return `${variante ? `stat stat--${variante}` : 'stat'}${classeTamanho}${classeFaixa}`;
   });
 
   private readonly valorElemento = viewChild.required<ElementRef<HTMLElement>>('nodoValor');

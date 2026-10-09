@@ -134,6 +134,34 @@
                         (navegarAncora)="navegarAncora.emit($event)"
                     />
                 }
+                @case ("subclasse") {
+                    <app-regras-subclasse
+                        [bloco]="bloco"
+                        [documento]="documento()"
+                        (navegarAncora)="navegarAncora.emit($event)"
+                    />
+                }
+                @case ("termos") {
+                    <app-regras-termos
+                        [bloco]="bloco"
+                        [documento]="documento()"
+                        (navegarAncora)="navegarAncora.emit($event)"
+                    />
+                }
+                @case ("grade") {
+                    <app-regras-grade
+                        [bloco]="bloco"
+                        [documento]="documento()"
+                        (navegarAncora)="navegarAncora.emit($event)"
+                    />
+                }
+                @case ("abertura") {
+                    <app-regras-abertura
+                        [bloco]="bloco"
+                        [documento]="documento()"
+                        (navegarAncora)="navegarAncora.emit($event)"
+                    />
+                }
                 @case ("niveis-ameaca") {
                     <app-regras-niveis-ameaca
                         [bloco]="bloco"

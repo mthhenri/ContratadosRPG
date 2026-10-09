@@ -1,0 +1,61 @@
+:host {
+    display: block;
+    min-width: 0;
+    margin: var(--space-12) 0 var(--space-16);
+    container-type: inline-size;
+}
+.regras-termos {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1px;
+    margin: 0;
+    overflow: hidden;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+    &--penalidades {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    &__item {
+        min-width: 0;
+        padding: var(--space-8) var(--space-12);
+        background: var(--bg);
+    }
+    &__nome {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: var(--space-4) var(--space-8);
+        font: 600 13px var(--font-mono);
+        color: var(--text);
+    }
+    &__numero {
+        color: var(--warning);
+    }
+    &__rotulo {
+        font: 400 10px var(--font-mono);
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        color: var(--text-mute);
+    }
+    &__descricao {
+        margin: var(--space-4) 0 0;
+        font-size: 13px;
+        line-height: 1.5;
+        color: var(--text-dim);
+        overflow-wrap: anywhere;
+    }
+}
+@container (max-width: 640px) {
+    .regras-termos {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    .regras-termos--penalidades {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+@container (max-width: 380px) {
+    .regras-termos--penalidades {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

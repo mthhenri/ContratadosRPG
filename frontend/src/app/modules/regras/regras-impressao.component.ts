@@ -1,6 +1,6 @@
 import { Component, computed, inject, input, ViewEncapsulation } from "@angular/core";
 import { NgTemplateOutlet } from "@angular/common";
-import { RegrasConteudo, RegrasDocumento } from "./regras.model";
+import { RegrasDocumento } from "./regras.model";
 import { RegrasLeitorContexto } from "./regras-leitor-contexto";
 import { construirSumarioRegras } from "./regras-sumario";
 import { RegrasConteudoRender } from "./blocos/regras-conteudo.component";
@@ -26,15 +26,6 @@ export class RegrasImpressao {
     protected readonly abertura = computed(() => this.documento().filhos.slice(0, this.inicio())
         .filter(bloco => !(bloco.tipo === "nota" && bloco.trechos.every(trecho =>
             trecho.tipo === "texto" && /^VERSÃO\s+[\d.]+$/i.test(trecho.texto.trim())))));
-    protected readonly conteudo = computed(() =>
-        this.prepararConteudo(this.documento().filhos.slice(this.inicio())));
-
-    /** Definições de imagens do Markdown são metadados, não conteúdo legível do livro. */
-    private prepararConteudo(blocos: readonly RegrasConteudo[]): readonly RegrasConteudo[] {
-        return blocos.filter(bloco => !(bloco.tipo === "generico" &&
-            /^\[[^\]]+\]:\s*<?data:image\//i.test(bloco.origemMarkdown.trim())))
-            .map(bloco => bloco.tipo === "secao" ||
-                (bloco.tipo === "generico" && bloco.filhos)
-                ? { ...bloco, filhos: this.prepararConteudo(bloco.filhos!) } : bloco);
-    }
+    // Definições de imagem do Markdown já saem do JSON no normalizador (revisao-visual-regras).
+    protected readonly conteudo = computed(() => this.documento().filhos.slice(this.inicio()));
 }

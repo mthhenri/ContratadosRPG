@@ -26,6 +26,16 @@ $severidades: (
         fundo: color-mix(in srgb, var(--erro) 12%, transparent),
         borda: color-mix(in srgb, var(--erro) 40%, transparent),
     ),
+    "energia": (
+        cor: var(--energy),
+        fundo: color-mix(in srgb, var(--energy) 12%, transparent),
+        borda: color-mix(in srgb, var(--energy) 40%, transparent),
+    ),
+    "ajuda": (
+        cor: var(--help),
+        fundo: var(--help-dim),
+        borda: var(--help-border),
+    ),
 );
 
 :host {

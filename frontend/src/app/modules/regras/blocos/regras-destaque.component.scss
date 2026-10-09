@@ -1,0 +1,22 @@
+:host {
+    display: block;
+    margin: var(--space-16) 0 0;
+}
+.regras-destaque {
+    --destaque-cor: var(--warning);
+    padding: var(--space-12) var(--space-16);
+    border: 1px solid color-mix(in srgb, var(--destaque-cor) 40%, transparent);
+    border-radius: var(--radius-control);
+    background: color-mix(in srgb, var(--destaque-cor) 8%, transparent);
+    &--custo {
+        --destaque-cor: var(--help);
+    }
+    &__rotulo {
+        display: block;
+        margin-bottom: var(--space-4);
+        color: var(--destaque-cor);
+        font: 600 11px var(--font-mono);
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+    }
+}

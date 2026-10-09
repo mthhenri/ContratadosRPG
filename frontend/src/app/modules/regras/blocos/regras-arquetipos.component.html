@@ -27,49 +27,58 @@
             [attr.aria-labelledby]="identificador(arquetipo.nome) + '-aba'"
         >
             <h4 class="regras-arquetipos__impressao">{{ arquetipo.nome }}</h4>
-            @if (arquetipo.citacao.length) {
-                <p class="regras-arquetipos__citacao">
-                    <app-regras-inline
-                        [trechos]="arquetipo.citacao"
-                        [documento]="documento()"
-                        (navegarAncora)="navegarAncora.emit($event)"
-                    />
-                </p>
-            }
-            @if (arquetipo.atributosBonus.length) {
-                <div class="regras-arquetipos__bonus">
-                    <span class="regras-arquetipos__rotulo">Atributos bônus</span>
-                    <app-regras-inline
-                        [trechos]="arquetipo.atributosBonus"
-                        [documento]="documento()"
-                        (navegarAncora)="navegarAncora.emit($event)"
-                    />
+            <div class="regras-arquetipos__lado">
+                <div class="regras-arquetipos__nome">
+                    @if (icone(arquetipo.nome); as nomeIcone) {
+                        <app-icone [nome]="nomeIcone" />
+                    }
+                    {{ arquetipo.nome }}
                 </div>
-            }
-            @if (habilidadeInicial(arquetipo.nome); as inicial) {
-                <h4 class="regras-arquetipos__rotulo">Habilidade inicial do arquétipo</h4>
-                <app-regras-conteudo
-                    [filhos]="[inicial]"
-                    [documento]="documento()"
-                    (navegarAncora)="navegarAncora.emit($event)"
-                />
-            }
-            @if (arquetipo.habilidades.length) {
-                <h4 class="regras-arquetipos__rotulo">Habilidades de arquétipo</h4>
-                <app-regras-conteudo
-                    [filhos]="arquetipo.habilidades"
-                    [documento]="documento()"
-                    (navegarAncora)="navegarAncora.emit($event)"
-                />
-            }
-            @if (arquetipo.habilidadesGeraisMelhoradas.length) {
-                <h4 class="regras-arquetipos__rotulo">Habilidades gerais melhoradas</h4>
-                <app-regras-conteudo
-                    [filhos]="arquetipo.habilidadesGeraisMelhoradas"
-                    [documento]="documento()"
-                    (navegarAncora)="navegarAncora.emit($event)"
-                />
-            }
+                @if (arquetipo.citacao.length) {
+                    <p class="regras-arquetipos__citacao">
+                        <app-regras-inline
+                            [trechos]="arquetipo.citacao"
+                            [documento]="documento()"
+                            (navegarAncora)="navegarAncora.emit($event)"
+                        />
+                    </p>
+                }
+                @if (bonus(arquetipo.atributosBonus); as itens) {
+                    <span class="regras-arquetipos__rotulo">Atributos bônus</span>
+                    <div class="regras-arquetipos__bonus">
+                        @for (item of itens; track $index) {
+                            <app-chip variante="sutil">{{ item }}</app-chip>
+                        }
+                    </div>
+                }
+                @if (habilidadeInicial(arquetipo.nome); as inicial) {
+                    <app-regras-destaque rotulo="Habilidade inicial do arquétipo">
+                        <app-regras-conteudo
+                            [filhos]="[inicial]"
+                            [documento]="documento()"
+                            (navegarAncora)="navegarAncora.emit($event)"
+                        />
+                    </app-regras-destaque>
+                }
+            </div>
+            <div class="regras-arquetipos__habilidades">
+                @if (arquetipo.habilidades.length) {
+                    <span class="regras-arquetipos__rotulo">Habilidades de arquétipo</span>
+                    <app-regras-conteudo
+                        [filhos]="arquetipo.habilidades"
+                        [documento]="documento()"
+                        (navegarAncora)="navegarAncora.emit($event)"
+                    />
+                }
+                @if (arquetipo.habilidadesGeraisMelhoradas.length) {
+                    <span class="regras-arquetipos__rotulo">Habilidades gerais melhoradas</span>
+                    <app-regras-conteudo
+                        [filhos]="arquetipo.habilidadesGeraisMelhoradas"
+                        [documento]="documento()"
+                        (navegarAncora)="navegarAncora.emit($event)"
+                    />
+                }
+            </div>
         </div>
     }
 </div>

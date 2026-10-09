@@ -37,7 +37,10 @@
 > [backlog](../specs/backlog/revisao-formatacao-pdf-regras.spec.md), sem aprovação
 > editorial da apresentação entregue.
 >
-> **Última revisão:** 2026-10-08 · M10-11: leitor e arquivos antigos removidos;
+> **Última revisão:** 2026-10-08 · `revisao-visual-regras`: subclasses, Atributos,
+> Maestrias, Penalidades e Sequelas legíveis; base64 e NA falso fora; cor de Vida/Energia;
+> topbar com livro aberto. [Verificação](../specs/done/revisao-visual-regras/verificacao.md).
+> M10-11: leitor e arquivos antigos removidos;
 > publicação verificada contra os Markdown vigentes. M10-10 commitada em
 > `af475bec`. [Verificação da remoção](../specs/done/m10-11-remocao-pdf-antigo/verificacao.md).
 > M10-10: exportação nativa dos dois livros,
@@ -90,8 +93,10 @@
 > Dados sintéticos/resíduos limpos. M10 (Regras): `m10-01`…`m10-10` concluídas,
 > normalizador, ícones/marcas e gaveta entregues. Desenhos, paleta/fundos e crédito
 > aprovados; marca própria atual preservada, com detalhes condensados em 16–24px.
-> SCP oficial somente na identidade de Criatura; marca própria SCP + D20 em Regras,
-> níveis e usos gerais. [Contrato de marcas](../design/MARCAS.md).
+> SCP oficial somente na identidade de Criatura; marca própria SCP + D20 nos níveis e
+> usos gerais; botão Regras da topbar com o livro aberto (`documentos`). [Contrato de marcas](../design/MARCAS.md).
+> Revisão visual das Regras concluída: subclasses, termos, abertura e grades no leitor, cor
+> de Vida/Energia; [verificação](../specs/done/revisao-visual-regras/verificacao.md).
 > M10 implementada, 11/11; revisão editorial da exportação segue aberta em P-108.
 > `icones-recursos-sistema` ativa: entrega 1 concluída; adoção ampla/levantamento abertos.
 > [Gates, contagens e avisos dos casos explícitos](../specs/done/m10-02-normalizador-casos-explicitos/m10-02-verificacao.md).
@@ -2206,13 +2211,15 @@ reproduzem isoladas (arquivo único), não na suíte completa.
 
 `frontend/scripts/normalizar-regras.mjs` gera `public/regras/sistema.json` e `guia.json`
 em `prestart`/`prebuild`, a partir da versão mais recente dos Markdown em `docs/core/`.
-Contrato em `modules/regras/regras.model.ts`; 56 testes do normalizador integram o `test`
-do frontend. Casos explícitos em `scripts/regras-personagens.mjs`, `regras-equipamentos.mjs`
-e `regras-guia.mjs`: 3 classes, 9 arquétipos, 2 origens, 5 módulos, 100 equipamentos,
+Contrato em `modules/regras/regras.model.ts`; 66 testes do normalizador integram o `test`
+do frontend. Casos explícitos em `scripts/regras-personagens.mjs`, `regras-equipamentos.mjs`,
+`regras-termos.mjs` e `regras-guia.mjs`: abertura dos dois livros, 3 classes, 3 subclasses,
+9 arquétipos, 2 origens, termos (Atributos, Maestrias, Penalidades de Energia, Sequelas), 5 módulos, 100 equipamentos,
 67 modificações, 8 níveis de ameaça; Guia com 2 roteiros, identidade, atributos,
 3 habilidades de criatura e ficha completa da Estátua. Fonte e campos ricos preservados,
-sem cálculo; assinatura incompleta cai como genérico com linha de origem.
-Os 41 avisos remanescentes estão justificados na [verificação M10-02](../specs/done/m10-02-normalizador-casos-explicitos/m10-02-verificacao.md).
+sem cálculo; tabela de layout sem assinatura vira `grade` (uma célula por caixa) com aviso e
+linha de origem; definições de imagem do Docs não são publicadas. Restam 27 avisos (11 grades
+e 16 âncoras repetidas), justificados na [verificação da revisão visual](../specs/done/revisao-visual-regras/verificacao.md).
 Build de produção aprovado em modo CI; falha nativa com cache local contornada em P-104.
 Leitura publicada em JSON derivado do Markdown; download provisório retirado na M10-11.
 Blocos ricos entregues na M10-07.

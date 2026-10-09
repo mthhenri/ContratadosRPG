@@ -1,18 +1,17 @@
 import { Component, computed, forwardRef, input, output } from "@angular/core";
-import { RegrasArquetipos as BlocoArquetipos, RegrasClasse as BlocoClasse, RegrasDocumento, RegrasTrecho } from "../regras.model";
+import { RegrasArquetipos as BlocoArquetipos, RegrasClasse as BlocoClasse, RegrasDocumento } from "../regras.model";
 import { Cartao } from "../../../shared/ui/cartao/cartao.component";
-import { Stat, StatValor } from "../../../shared/ui/stat/stat.component";
 import { Icone } from "../../../shared/icone/icone.component";
-import { Tooltip } from "../../../shared/tooltip/tooltip.directive";
 import { RegrasInline } from "./regras-inline.component";
 import { RegrasArquetipos } from "./regras-arquetipos.component";
 import { RegrasConteudoRender } from "./regras-conteudo.component";
 import { recuperarIconeIdentidade } from "./regras-identidade-icone";
+import { RegrasSaude } from "./regras-saude.component";
 
 @Component({
     selector: "app-regras-classe",
     imports: [
-        Cartao, Stat, StatValor, Icone, Tooltip, RegrasInline, RegrasArquetipos,
+        Cartao, Icone, RegrasInline, RegrasArquetipos, RegrasSaude,
         forwardRef(() => RegrasConteudoRender),
     ],
     templateUrl: "./regras-classe.component.html",
@@ -31,8 +30,4 @@ export class RegrasClasse {
             arquetipos: bloco.arquetipos.map(arquetipo => ({ nome: arquetipo.nome, citacao: [],
                 atributosBonus: [], habilidades: [], habilidadesGeraisMelhoradas: [] })) }];
     });
-    protected texto(trechos: readonly RegrasTrecho[]): string {
-        return trechos.map(trecho => "filhos" in trecho ? this.texto(trecho.filhos)
-            : "texto" in trecho ? trecho.texto : "Trecho censurado").join("");
-    }
 }

@@ -235,6 +235,17 @@
 
 ## Abertas
 
+### I-059 — Ajustes finos de Regras deixados fora da revisão visual · frontend/regras
+
+- **Ideia:** (1) chip de NA menor quando aparece no meio do texto corrido, para não abrir a
+  entrelinha; (2) os `▢` dentro da nota "Amaldiçoado pelo Passado" como lista de verbetes;
+  (3) Vida/Energia em minúscula no texto corrido também coloridas, se o autor quiser.
+- **Origem:** [revisão visual das Regras](../specs/done/revisao-visual-regras/verificacao.md).
+- **Por quê:** foram notados na auditoria, mas a spec deixou fora do escopo para não mexer
+  no tamanho dos chips aprovados na M10-04 nem colorir "vida" em sentido narrativo.
+- **Custo aparente:** pequeno; cada item é local em `regras-ameaca`, no normalizador ou em
+  `regras-inline`.
+
 ### I-058 — Documentos PDF na Biblioteca · frontend/biblioteca
 
 - **Ideia:** reconsiderar suporte a documentos PDF de campanha se o autor quiser

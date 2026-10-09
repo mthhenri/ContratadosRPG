@@ -159,3 +159,39 @@ describe('Stat', () => {
     expect(animar).toHaveBeenCalledTimes(2);
   });
 });
+
+/** Cartão de recurso (`revisao-visual-regras`): faixa lateral e ícone em quadro. */
+@Component({
+  imports: [Stat],
+  template: `<app-stat rotulo="Energia inicial" [valor]="valor" variante="energia" [faixa]="faixa">
+    <span statIcone>⚡</span>
+  </app-stat>`,
+})
+class HospedeiroComFaixa {
+  valor = '22 + DES × 2';
+  faixa = true;
+}
+
+describe('Stat — faixa', () => {
+  it('liga a faixa e projeta o ícone em quadro sem mexer no rótulo e no valor', () => {
+    TestBed.configureTestingModule({ imports: [HospedeiroComFaixa] });
+    const fixture = TestBed.createComponent(HospedeiroComFaixa);
+    fixture.detectChanges();
+    const elemento = fixture.nativeElement as HTMLElement;
+
+    expect(elemento.querySelector('.stat')?.className).toBe('stat stat--energia stat--faixa');
+    expect(elemento.querySelector('.stat__icone')?.textContent?.trim()).toBe('⚡');
+    expect(elemento.querySelector('.stat__rotulo')?.textContent?.trim()).toBe('Energia inicial');
+    expect(elemento.querySelector('.stat__valor')?.textContent?.trim()).toBe('22 + DES × 2');
+  });
+
+  it('sem a faixa, o quadro do ícone fica vazio e a caixa mantém as classes de antes', () => {
+    TestBed.configureTestingModule({ imports: [Hospedeiro] });
+    const fixture = TestBed.createComponent(Hospedeiro);
+    fixture.detectChanges();
+    const elemento = fixture.nativeElement as HTMLElement;
+
+    expect(elemento.querySelector('.stat')?.className).toBe('stat');
+    expect(elemento.querySelector('.stat__icone')?.childElementCount).toBe(0);
+  });
+});

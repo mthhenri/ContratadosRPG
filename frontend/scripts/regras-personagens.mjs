@@ -69,6 +69,31 @@ export function reconhecerPersonagens(token, contexto) {
         if (vaziosCorretos && modulos.every(Boolean)) return { tipo: 'modulos', modulos, ...fonte() };
     }
 
+    // Subclasse: identidade e custo no cabeçalho, habilidades ao lado; saúde e inicial abaixo.
+    if (cabecalho.length === 2 && linhas.length === 2 && linhas.every((linha) =>
+        linha.length === 2 && !linha[1])) {
+        const identidade = cabecalho[0].match(
+            /^⬥ (Experimento (?:Bestial|Artificial|Híbrido))\s+\*⬡ CLASSE \\?- (COMBATENTE|ESPECIALISTA|SUPORTE)\s+(“.+?”)\s+(AGENTES DESTA CLASSE .+)\*$/u);
+        // O Docs junta as três penalidades numa frase só; os inícios fixos as separam.
+        const custos = identidade?.[4].split(/\s+(?=SEU LIMITE |EM NÍVEL )/u) ?? [];
+        const lista = cabecalho[1].match(/^⬦ Habilidades de Subclasse\s+(◈.+)$/u);
+        const habilidades = lista && lerHabilidades(lista[1], contexto, contexto.linha);
+        const saude = retirarRotulos(linhas[0][0]).match(
+            /^⬦ Saúde\s+Vida \\?=\s+(.+?)\s+Energia \\?=\s+(.+?)\s+⬦ Progressão por Nível\s+\\?\[Vida\\?\] a cada Nível recebe:\s+(.+?)\s+\\?\[Energia\\?\] a cada Nível recebe:\s+(.+?)\s+⬦ Atributos Bônus\s+(.+)$/u);
+        const inicial = retirarRotulos(linhas[1][0]).match(/^⬦ Habilidade Inicial\s+(.+)$/u);
+        const habilidadeInicial = inicial && contexto.paragrafo('◈ ' + inicial[1], contexto.linha + 3);
+        if (identidade && custos.length === 3 && habilidades && saude
+            && habilidadeInicial?.tipo === 'habilidade') {
+            const classe = identidade[2][0] + identidade[2].slice(1).toLowerCase();
+            return { tipo: 'subclasse', nome: identidade[1], classe,
+                citacao: trechos(identidade[3]),
+                custos: custos.map((custo) => trechos(custo)),
+                saude: { vida: trechos(saude[1], 1), energia: trechos(saude[2], 1) },
+                progressao: { vida: trechos(saude[3], 1), energia: trechos(saude[4], 1) },
+                atributosBonus: trechos(saude[5], 1), habilidadeInicial, habilidades, ...fonte() };
+        }
+    }
+
     if (cabecalho.length !== 3 || linhas.some((linha) => linha.length !== 3)) return null;
 
     // Dossiê: título/citação, duas colunas de habilidades, Saúde, Progressão e trio inicial.

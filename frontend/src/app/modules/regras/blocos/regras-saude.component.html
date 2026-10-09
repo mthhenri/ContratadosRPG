@@ -1,0 +1,38 @@
+<div class="regras-saude">
+    <app-stat
+        rotulo="Vida inicial"
+        variante="vida"
+        [faixa]="true"
+        [nota]="'Por nível: +' + texto(progressao().vida)"
+    >
+        <app-icone statIcone nome="vida" />
+        <span
+            appStatValor
+            class="regras-saude__valor"
+            tabindex="0"
+            [appTooltip]="texto(saude().vida) + ' de Vida inicial'"
+            ><app-regras-inline
+                [trechos]="saude().vida"
+                [documento]="documento()"
+                (navegarAncora)="navegarAncora.emit($event)"
+        /></span>
+    </app-stat>
+    <app-stat
+        rotulo="Energia inicial"
+        variante="energia"
+        [faixa]="true"
+        [nota]="'Por nível: +' + texto(progressao().energia)"
+    >
+        <app-icone statIcone nome="energia" />
+        <span
+            appStatValor
+            class="regras-saude__valor"
+            tabindex="0"
+            [appTooltip]="texto(saude().energia) + ' de Energia inicial'"
+            ><app-regras-inline
+                [trechos]="saude().energia"
+                [documento]="documento()"
+                (navegarAncora)="navegarAncora.emit($event)"
+        /></span>
+    </app-stat>
+</div>

@@ -37,6 +37,8 @@ export function marcarNiveis(texto, textoCompleto = texto) {
         const nome = resultado[1][0].toUpperCase() + resultado[1].slice(1).toLowerCase();
         const nivel = lerNivel(nome);
         const numero = resultado[2];
+        // A sigla é sempre maiúscula; "na média" é preposição, não Nível de Ameaça.
+        if (/^na\s/i.test(resultado[0]) && !resultado[0].startsWith('NA')) continue;
         // Uma referência contraditória não é corrigida silenciosamente.
         if (nivel === undefined || (numero !== undefined && Number(numero) !== nivel)
             || contraditorias.has(resultado[0].replace(/\s+\[\d+\]$/, '').toLowerCase())) continue;

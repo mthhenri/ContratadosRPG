@@ -12,7 +12,7 @@
     &__titulo,
     &__subtitulo,
     &__verbete {
-        scroll-margin-top: calc(var(--altura-topbar) + var(--space-20));
+        scroll-margin-top: var(--regras-recuo-ancora, calc(var(--altura-topbar) + var(--space-20)));
         color: var(--text);
     }
     &__capitulo {

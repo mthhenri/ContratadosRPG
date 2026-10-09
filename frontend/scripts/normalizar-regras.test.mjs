@@ -37,6 +37,7 @@ function textoDocumento(conteudo) {
             .flatMap((linha) => linha.map(textoTrechos)).join(' ')
             + ('filhos' in item ? ' ' + textoDocumento(item.filhos) : '');
         if (item.tipo === 'roteiro' || item.tipo === 'ficha-criatura') return textoDocumento(item.filhos);
+        if (item.tipo === 'abertura') return item.titulo + ' ' + textoTrechos(item.trechos);
         if (item.tipo === 'habilidade-criatura') return item.rotulo + ' ' + textoTrechos(item.trechos);
         if (item.tipo === 'habilidade') return `${item.nome} [${item.custo} E] `
             + (item.reacao ? '(Reação) ' : '') + textoTrechos(item.trechos);
@@ -46,10 +47,10 @@ function textoDocumento(conteudo) {
 
 // Oráculo independente: leitura Markdown da entrada, sem usar os conversores do normalizador.
 // Confere letras/números/tarjas e, depois, texto plano com pontuação; só normaliza sintaxe,
-// espaços, glifos de seção/habilidade (que viram dados) e o separador do custo de habilidade.
+// espaços, glifos de seção/habilidade/verbete (que viram dados) e o separador do custo de habilidade.
 const conteudoComparavel = (texto) => texto.match(/[\p{L}\p{N}█]/gu)?.join('') ?? '';
 const textoPlanoComparavel = (texto) => texto
-    .replace(/[\s⬢⬡⬥⬦◈◻]/gu, '')
+    .replace(/[\s⬢⬡⬥⬦◈◻▢]/gu, '')
     .replace(/(\[(?:\d+|X)E\])-/g, '$1');
 
 function textoEntrada(texto, secoes) {
@@ -86,7 +87,8 @@ function textoEntrada(texto, secoes) {
     }
     function textoBlocos(tokens) {
         return tokens.map((token) => {
-            if (token.type === 'space') return '';
+            // Definições de referência (imagens embutidas) são metadados, não texto do livro.
+            if (token.type === 'space' || token.type === 'def') return '';
             if (token.type === 'table') return token.raw.trim().split('\n')
                 .filter((linha, indice) => indice !== 1)
                 .flatMap((linha) => linha.trim().replace(/^\||\|$/g, '')
@@ -204,11 +206,11 @@ test('nota de uma célula e tabela de dados reais', () => {
     assert.equal(tabela.linhas.length, 3);
 });
 
-test('layout com assinatura desconhecida fica genérico e avisa; nenhuma célula some', () => {
+test('layout com assinatura desconhecida vira grade e avisa; nenhuma célula some', () => {
     const entrada = fixture('generico').replace('⬥ Combatente', '⬥ Classe desconhecida');
     const resultado = normalizar(entrada);
     assert.ok(resultado.avisos.length > 0);
-    assert.ok(resultado.documento.filhos.every((item) => item.tipo === 'generico'));
+    assert.ok(resultado.documento.filhos.every((item) => item.tipo === 'grade'));
     assert.equal(conteudoComparavel(textoDocumento(resultado.documento.filhos)),
         conteudoComparavel(textoEntrada(entrada, [])));
 });
@@ -320,6 +322,6 @@ test('publicação escreve dois JSONs determinísticos e avisos legíveis', asyn
         assert.deepEqual(readdirSync(destino).map((arquivo) => readFileSync(join(destino, arquivo), 'utf8')),
             primeira);
         assert.ok(mensagens.some((mensagem) => /^\[regras\] \d+ aviso\(s\); conteúdo preservado para revisão\.$/.test(mensagem)));
-        assert.ok(mensagens.some((mensagem) => mensagem.startsWith('[regras] sistema-v4.1.4.md:313')));
+        assert.ok(mensagens.some((mensagem) => mensagem.startsWith('[regras] sistema-v4.1.4.md:764')));
     } finally { rmSync(destino, { recursive: true, force: true }); }
 });

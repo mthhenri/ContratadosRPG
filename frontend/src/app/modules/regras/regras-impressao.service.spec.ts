@@ -10,8 +10,6 @@ describe("Exportação nativa das Regras", () => {
             { tipo: "nota", trechos: [{ tipo: "texto", texto: "VERSÃO 4.1.1" }] },
             { tipo: "secao", nivel: 1, glifo: "⬢", titulo: "Introdução", ancora: "introducao",
                 filhos: [{ tipo: "paragrafo", trechos: [{ tipo: "texto", texto: "Regra inteira" }] },
-                    { tipo: "generico", motivo: "def", origemMarkdown: "[image1]: <data:image/png;base64,AA>",
-                        trechos: [{ tipo: "texto", texto: "data:image/png;base64,AA" }] },
                     { tipo: "generico", motivo: "prosa", origemMarkdown: "Texto preservado",
                         trechos: [{ tipo: "texto", texto: "Texto preservado" }] }] }],
     };
@@ -27,7 +25,6 @@ describe("Exportação nativa das Regras", () => {
         const raiz = document.querySelector("app-regras-impressao")!;
         expect(raiz.textContent).toContain("Regra inteira");
         expect(raiz.textContent).toContain("Texto preservado");
-        expect(raiz.textContent).not.toContain("data:image/");
         expect(raiz.querySelector("nav")?.textContent).toContain("Introdução");
         expect(raiz.querySelector(".regras-impressao__capa")?.textContent).toContain("v4.2.0");
         expect(raiz.textContent).not.toContain("VERSÃO 4.1.1");

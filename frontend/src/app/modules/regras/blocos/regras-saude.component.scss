@@ -1,0 +1,21 @@
+@use "tema/breakpoints" as bp;
+:host {
+    display: block;
+}
+.regras-saude {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-12);
+    &__valor {
+        overflow-wrap: anywhere;
+        &:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+    }
+}
+@include bp.mobile {
+    .regras-saude {
+        grid-template-columns: 1fr;
+    }
+}

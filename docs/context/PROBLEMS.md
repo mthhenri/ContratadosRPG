@@ -29,6 +29,25 @@
 
 ## Ativos
 
+### P-110 — Asterisco literal na abertura do Sistema · `ABERTO` · docs/core
+
+- **Sintoma:** a abertura publicada mostra "*dissolvido esquadrão ███-████,*" com os
+  asteriscos visíveis, na página e na exportação.
+- **Causa:** a fonte tem `*dissolvido esquadrão **███-████**,*`; o itálico externo com
+  negrito e tarja dentro não fecha na leitura do Markdown. Conteúdo da fonte, não do leitor.
+- **Contorno:** nenhum no leitor; o texto continua legível.
+- **Correção:** ajustar a ênfase no Docs/Markdown do Sistema na próxima revisão do livro.
+- **Desde:** observado na `revisao-visual-regras`, 2026-10-08 (já existia antes).
+
+### P-109 — Nota "VERSÃO 4.1.1" desatualizada no Sistema v4.1.4 · `ABERTO` · docs/core
+
+- **Sintoma:** a página de Regras mostra a nota "VERSÃO 4.1.1" logo após a abertura do
+  Sistema v4.1.4. A exportação já a omite.
+- **Causa:** texto fixo no Markdown do livro, não atualizado com a versão.
+- **Contorno:** o trilho e a capa exportada mostram a versão real (`v4.1.4`).
+- **Correção:** atualizar ou retirar a nota na fonte do Sistema; o leitor não reescreve conteúdo.
+- **Desde:** observado na `revisao-visual-regras`, 2026-10-08.
+
 ### P-108 — Formatação do PDF de Regras precisa de revisão · `CONTORNADO` · frontend/impressão
 
 - **Sintoma:** autor avaliou o PDF da M10-10 como “bem estranho” e pediu revisão

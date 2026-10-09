@@ -1,0 +1,30 @@
+:host {
+    display: block;
+}
+.regras-abertura {
+    max-width: 620px;
+    margin: 0 auto calc(var(--space-20) * 2);
+    padding: calc(var(--space-20) + var(--space-8));
+    text-align: center;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    &__titulo {
+        margin: 0 0 var(--space-12);
+        padding: var(--space-4) var(--space-8);
+        border: 1px solid var(--accent-border);
+        border-radius: var(--radius-tight);
+        font: 500 11px var(--font-mono);
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        color: var(--accent);
+    }
+    &__texto {
+        margin: 0;
+        font-size: 14.5px;
+        font-style: italic;
+        line-height: 1.9;
+        color: var(--text-dim);
+        overflow-wrap: anywhere;
+    }
+}

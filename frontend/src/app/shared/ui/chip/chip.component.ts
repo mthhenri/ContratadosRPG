@@ -10,8 +10,19 @@ import { Component, computed, input } from '@angular/core';
  */
 export type ChipVariante = 'padrao' | 'sutil';
 
-/** Cores semânticas que já possuem consumidores de selo no produto. */
-export type ChipSeveridade = 'primario' | 'secundario' | 'sucesso' | 'aviso' | 'perigo';
+/**
+ * Cores semânticas que já possuem consumidores de selo no produto. `energia` (`--energy`) marca
+ * custo de Energia e `ajuda` (`--help`) marca Reação, pedidas pelo autor para as Regras
+ * (`revisao-visual-regras`) conforme o exemplão M10.
+ */
+export type ChipSeveridade =
+  | 'primario'
+  | 'secundario'
+  | 'sucesso'
+  | 'aviso'
+  | 'perigo'
+  | 'energia'
+  | 'ajuda';
 
 /**
  * Tratamento visual da severidade. `sutil` aplica a receita canônica (fundo a 12% e borda a

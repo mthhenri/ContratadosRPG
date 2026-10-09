@@ -1,4 +1,3 @@
-@use "tema/breakpoints" as bp;
 :host {
     display: block;
     min-width: 0;
@@ -7,21 +6,12 @@
 .regras-classe {
     &__citacao {
         margin: 0 0 var(--space-20);
+        padding-left: var(--space-12);
+        border-left: 2px solid var(--accent-border);
         color: var(--text-dim);
         font-size: 15px;
-        line-height: 1.65;
-    }
-    &__saude {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: var(--space-12);
-    }
-    &__valor {
-        display: flex;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: var(--space-8);
-        font-size: 18px;
+        font-style: italic;
+        line-height: 1.6;
     }
     &__rotulo {
         margin: var(--space-20) 0 var(--space-8);
@@ -29,10 +19,5 @@
         text-transform: uppercase;
         letter-spacing: var(--tracking-label);
         color: var(--text-dim);
-    }
-}
-@include bp.mobile {
-    .regras-classe__saude {
-        grid-template-columns: 1fr;
     }
 }

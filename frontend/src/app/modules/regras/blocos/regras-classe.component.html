@@ -10,38 +10,12 @@
                 (navegarAncora)="navegarAncora.emit($event)"
             />
         </p>
-        <div class="regras-classe__saude">
-            <app-stat
-                rotulo="Vida inicial"
-                variante="vida"
-                tamanho="padrao"
-                [nota]="'Por nível: +' + texto(bloco().progressao.vida)"
-                [appTooltip]="texto(bloco().saude.vida) + ' de Vida inicial'"
-            >
-                <span appStatValor class="regras-classe__valor" tabindex="0"
-                    ><app-icone nome="vida" />
-                    <app-regras-inline
-                        [trechos]="bloco().saude.vida"
-                        [documento]="documento()"
-                        (navegarAncora)="navegarAncora.emit($event)"
-                /></span>
-            </app-stat>
-            <app-stat
-                rotulo="Energia inicial"
-                variante="energia"
-                tamanho="padrao"
-                [nota]="'Por nível: +' + texto(bloco().progressao.energia)"
-                [appTooltip]="texto(bloco().saude.energia) + ' de Energia inicial'"
-            >
-                <span appStatValor class="regras-classe__valor" tabindex="0"
-                    ><app-icone nome="energia" />
-                    <app-regras-inline
-                        [trechos]="bloco().saude.energia"
-                        [documento]="documento()"
-                        (navegarAncora)="navegarAncora.emit($event)"
-                /></span>
-            </app-stat>
-        </div>
+        <app-regras-saude
+            [saude]="bloco().saude"
+            [progressao]="bloco().progressao"
+            [documento]="documento()"
+            (navegarAncora)="navegarAncora.emit($event)"
+        />
         <h3 class="regras-classe__rotulo">Habilidades de classe</h3>
         <app-regras-conteudo
             [filhos]="bloco().habilidades"

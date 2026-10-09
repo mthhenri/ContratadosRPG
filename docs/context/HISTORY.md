@@ -1,5 +1,36 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-08 — revisao-visual-regras: Sistema legível e próximo do exemplão
+
+O autor pediu uma revisão visual da página de Regras: ícone novo, Energia azul e Vida
+vermelha, fidelidade ao exemplão e as tabelas de Atributos e Maestrias, difíceis de ler.
+A auditoria (página inteira contra o exemplão, 1920 e 360) achou defeitos de conteúdo
+além do estilo: as três subclasses de Experimento e as tabelas de Atributos, Maestrias e
+Penalidades de Energia caíam em `generico` e saíam como texto corrido (penalidades na
+ordem 1, 5, 9, 2…); as definições `[imageN]: <data:…>` publicavam ~4 telas de base64 no fim
+do Sistema; "na média" virava chip de NA porque `marcarNiveis` aceitava "na" minúsculo; a
+quebra dura do Markdown era descartada (Sequelas grudadas, abertura corrida); a tabela da
+Morte tinha a 1ª linha promovida a cabeçalho.
+
+Decisões do autor: livro aberto (`documentos`) na topbar; cor de recurso também no texto
+corrido; `app-chip` ampliado com `energia`/`ajuda` e `app-stat` com `[faixa]`; abas de
+arquétipo continuam canônicas, só o painel vai a 2 colunas. Normalizador: blocos
+`abertura`, `termos`, `subclasse` e `grade` (novo destino das tabelas de layout sem
+assinatura, no lugar do texto achatado), `def` descartado, quebra mole vira espaço, tabela
+sem cabeçalho falso. Frontend: componentes correspondentes, `regras-saude` e
+`regras-destaque` compartilhados por classe/subclasse/arquétipo, container queries no lugar
+do breakpoint para as grades de habilidade, âncoras abaixo da barra mobile. A heurística
+`iconeSubclasse` e o filtro de imagem da impressão saíram (código morto).
+
+Testes: 66 do normalizador (cobertura integral de texto e pontuação dos dois livros;
+oráculo passou a ignorar `def` e normalizar `▢`), 231 arquivos/3126 testes Angular, lint
+sem erros, build de produção com `CI=true` (P-104). Ao vivo em 1920/1366/960/360, claro e
+escuro, painel flutuante, pesquisa e exportação do Guia. A inspeção pegou duas coisas que os
+testes não pegavam: marcadores da lista de custos removidos pelo reset global e uma linha
+vazia no fim da tabela da Morte. Conteúdo da fonte não alterado: P-109 (nota "VERSÃO 4.1.1")
+e P-110 (asterisco literal na abertura) registrados; ajustes finos em I-059.
+[Verificação](../specs/done/revisao-visual-regras/verificacao.md).
+
 ## 2026-10-08 — P-106: ponteiros do corpus do montador corrigidos
 
 Quatro specs (`rolagem.conta`, `rolagem.pecas` em shared; `montador-blocos`,

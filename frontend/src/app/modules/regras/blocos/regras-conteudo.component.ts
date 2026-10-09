@@ -21,6 +21,10 @@ import { RegrasAtributos } from "./regras-atributos.component";
 import { RegrasHabilidadeCriatura } from "./regras-habilidade-criatura.component";
 import { RegrasFichaCriatura } from "./regras-ficha-criatura.component";
 import { RegrasNiveisAmeaca } from "./regras-niveis-ameaca.component";
+import { RegrasSubclasse } from "./regras-subclasse.component";
+import { RegrasTermos } from "./regras-termos.component";
+import { RegrasGrade } from "./regras-grade.component";
+import { RegrasAbertura } from "./regras-abertura.component";
 
 @Component({
     selector: "app-regras-conteudo",
@@ -33,7 +37,8 @@ import { RegrasNiveisAmeaca } from "./regras-niveis-ameaca.component";
             RegrasModificacoesRender, RegrasModulosRender, forwardRef(() => RegrasRoteiro),
             RegrasIdentidade,
             RegrasAtributos, RegrasHabilidadeCriatura, forwardRef(() => RegrasFichaCriatura),
-            RegrasNiveisAmeaca,
+            RegrasNiveisAmeaca, forwardRef(() => RegrasSubclasse), RegrasTermos, RegrasGrade,
+            RegrasAbertura,
     ],
     templateUrl: "./regras-conteudo.component.html",
     styleUrl: "./regras-conteudo.component.scss",

@@ -67,3 +67,16 @@ describe('Chip — severidade sucesso', () => {
     expect((fixture.nativeElement as HTMLElement).querySelector('.chip--severidade-sucesso')).not.toBeNull();
   });
 });
+
+describe('Chip — severidades de recurso (revisao-visual-regras)', () => {
+  it.each(['energia', 'ajuda'] as const)('aplica a classe da severidade %s', (severidade) => {
+    TestBed.configureTestingModule({ imports: [Hospedeiro] });
+    const fixture = TestBed.createComponent(Hospedeiro);
+    fixture.componentInstance.severidade.set(severidade);
+    fixture.detectChanges();
+
+    const chip = (fixture.nativeElement as HTMLElement).querySelector('.chip');
+    expect(chip?.classList).toContain(`chip--severidade-${severidade}`);
+    expect(chip?.querySelector('app-icone')).not.toBeNull();
+  });
+});

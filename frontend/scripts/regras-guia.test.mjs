@@ -129,7 +129,7 @@ test('níveis 0…7 em bloco próprio mantêm imagens e textos, sem dedução de
     assert.equal(resultado.avisos.length, 0);
     const desconhecido = normalizarDocumento(entrada.replace('\\[0\\]', '\\[7\\]'), 'sistema', '4.1.3');
     assert.equal(blocos(desconhecido, 'niveis-ameaca').length, 0);
-    assert.equal(blocos(desconhecido, 'generico').length, 1);
+    assert.equal(blocos(desconhecido, 'grade').length, 1);
 });
 
 test('NA vira dado somente em referência explícita ou coluna NA; palavra comum continua texto', () => {
@@ -145,7 +145,8 @@ test('NA vira dado somente em referência explícita ou coluna NA; palavra comum
 });
 
 test('prefixo de palavra e referência contraditória, inclusive escapes/formatação, permanecem texto', () => {
-    for (const entrada of ['Uma ameaça altamente perigosa.', 'NA Médio [7].',
+    for (const entrada of ['Uma ameaça altamente perigosa.',
+        'Calculado com base na média dos membros, ou Na média.', 'NA Médio [7].',
         'NA Médio \\[7\\].', '**NA Médio** \\[7\\].', 'NA **Médio \\[7\\]**.',
         'NA Médio \\[8\\].']) {
         const resultado = normalizar(entrada);
@@ -176,7 +177,14 @@ test('livros inteiros: contagens de casos ricos conferidas contra as fontes', ()
     assert.equal(blocos(guia, 'atributos').length, 1);
     assert.equal(blocos(guia, 'habilidade-criatura').length, 3);
     assert.equal(blocos(guia, 'ficha-criatura').length, 1);
-    assert.equal(sistema.avisos.length, 32);
+    assert.equal(blocos(sistema, 'subclasse').length, 3);
+    assert.deepEqual(blocos(sistema, 'termos').map((bloco) => [bloco.variante, bloco.itens.length]),
+        [['atributos', 10], ['maestrias', 10], ['penalidades', 12], ['verbetes', 8]]);
+    assert.equal(blocos(sistema, 'abertura').length, 1);
+    assert.equal(blocos(guia, 'abertura').length, 1);
+    assert.equal(blocos(sistema, 'grade').length, 11);
+    assert.equal(blocos(sistema, 'generico').length, 0);
+    assert.equal(sistema.avisos.length, 18);
     assert.equal(guia.avisos.length, 9);
     assert.ok(guia.avisos.every((aviso) => aviso.motivo.startsWith('Âncora repetida')));
 });

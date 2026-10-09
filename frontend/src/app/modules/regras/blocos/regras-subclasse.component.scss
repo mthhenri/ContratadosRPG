@@ -1,0 +1,68 @@
+:host {
+    display: block;
+    min-width: 0;
+    margin: var(--space-16) 0;
+    container-type: inline-size;
+}
+.regras-subclasse {
+    &__tipo {
+        display: block;
+        margin-bottom: var(--space-8);
+        font: 500 11px var(--font-mono);
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        color: var(--text-mute);
+    }
+    &__citacao {
+        margin: 0;
+        padding-left: var(--space-12);
+        border-left: 2px solid var(--accent-border);
+        color: var(--text-dim);
+        font-size: 15px;
+        font-style: italic;
+        line-height: 1.6;
+    }
+    &__custos {
+        margin: 0;
+        padding-left: var(--space-20);
+        list-style: disc;
+        font: 500 11.5px/1.7 var(--font-mono);
+        letter-spacing: 0.02em;
+        color: var(--text);
+    }
+    &__saude {
+        margin-top: var(--space-16);
+    }
+    &__painel {
+        display: grid;
+        grid-template-columns: 270px minmax(0, 1fr);
+        gap: var(--space-20) 28px;
+        margin-top: var(--space-16);
+        padding: var(--space-16) var(--space-20);
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-card);
+    }
+    &__lado,
+    &__habilidades {
+        min-width: 0;
+    }
+    &__rotulo {
+        display: block;
+        margin-bottom: var(--space-8);
+        color: var(--text-dim);
+        font: 600 11px var(--font-mono);
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+    }
+    &__bonus {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-8);
+    }
+}
+@container (max-width: 720px) {
+    .regras-subclasse__painel {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

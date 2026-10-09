@@ -1,18 +1,21 @@
 import { Component, computed, forwardRef, inject, input, output, signal } from "@angular/core";
 import { RegrasLeitorContexto } from "../regras-leitor-contexto";
-import { RegrasArquetipos as BlocoArquetipos, RegrasClasse, RegrasDocumento } from "../regras.model";
+import { RegrasArquetipos as BlocoArquetipos, RegrasClasse, RegrasDocumento, RegrasTrecho } from "../regras.model";
 import { Abas } from "../../../shared/ui/abas/abas.component";
 import { Aba } from "../../../shared/ui/abas/aba.component";
 import { AbaPainel } from "../../../shared/ui/abas/aba-painel.directive";
 import { Icone } from "../../../shared/icone/icone.component";
+import { Chip } from "../../../shared/ui/chip/chip.component";
 import { RegrasInline } from "./regras-inline.component";
 import { RegrasConteudoRender } from "./regras-conteudo.component";
 import { recuperarIconeIdentidade } from "./regras-identidade-icone";
+import { lerTextoRegras } from "./regras-texto";
+import { RegrasDestaque } from "./regras-destaque.component";
 
 @Component({
     selector: "app-regras-arquetipos",
     imports: [
-        Abas, Aba, AbaPainel, Icone, RegrasInline,
+        Abas, Aba, AbaPainel, Icone, Chip, RegrasInline, RegrasDestaque,
         forwardRef(() => RegrasConteudoRender),
     ],
     templateUrl: "./regras-arquetipos.component.html",
@@ -32,6 +35,11 @@ export class RegrasArquetipos {
     protected readonly icone = recuperarIconeIdentidade;
     private readonly contexto = inject(RegrasLeitorContexto, { optional: true });
     protected selecionar(nome: string): void { this.selecionado.set(nome); }
+    /** Um selo por bônus ("+1 em Luta"), sem reescrever o texto da fonte. */
+    protected bonus(trechos: readonly RegrasTrecho[]): readonly string[] | null {
+        const itens = lerTextoRegras(trechos).trim().split(/\s+(?=\+\d)/).filter(Boolean);
+        return itens.length ? itens : null;
+    }
     protected habilidadeInicial(nome: string) {
         return this.iniciais().find(arquetipo => arquetipo.nome === nome)?.habilidadeInicial;
     }
