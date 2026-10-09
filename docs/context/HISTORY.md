@@ -1,5 +1,12 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-09 — Versão 1.7.1
+
+Patch logo após a 1.7.0: nota `docs/patchnotes/1.7.1.md` (ícones de dano/habilidade/reação, tabelas e rodapé do
+leitor no celular, P-113/P-112/P-107/P-103) e versão sincronizada nos pacotes. Conferido: build e testes de
+`shared` (1157 passam), dry-run de `patchnotes:publicar` e de `publicar-versao.mjs` (publicaria v1.7.1 e criaria a
+tag no commit do push). Sem push nem PR; a tag e o R2 saem do workflow no merge em `master`.
+
 ## 2026-10-09 — P-107: botão "Abrir ficha" visível na árvore acessível
 
 O `aria-hidden="true"` estava no avatar do `espectador-ficha-card`, escondendo o botão "Abrir ficha de …"
