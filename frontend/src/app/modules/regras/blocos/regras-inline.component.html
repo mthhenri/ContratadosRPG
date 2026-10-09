@@ -24,6 +24,7 @@
                 ><app-regras-inline
                     [trechos]="trecho.filhos"
                     [documento]="documento()"
+                    [semCorRecurso]="semCorRecurso()"
                     (navegarAncora)="navegarAncora.emit($event)"
             /></strong>
         }
@@ -32,6 +33,7 @@
                 ><app-regras-inline
                     [trechos]="trecho.filhos"
                     [documento]="documento()"
+                    [semCorRecurso]="semCorRecurso()"
                     (navegarAncora)="navegarAncora.emit($event)"
             /></em>
         }
@@ -57,11 +59,19 @@
                 ><app-regras-inline
                     [trechos]="trecho.filhos"
                     [documento]="documento()"
+                    [semCorRecurso]="semCorRecurso()"
                     (navegarAncora)="navegarAncora.emit($event)"
             /></a>
         }
         @case ("nivel-ameaca") {
-            <app-regras-ameaca [nivel]="trecho.nivel" [rotulo]="trecho.texto" />
+            @if (trecho.compacto) {
+                <span
+                    [class]="'regras-inline__ameaca regras-inline__ameaca--' + corAmeaca(trecho.nivel)"
+                    [textContent]="trecho.texto"
+                ></span>
+            } @else {
+                <app-regras-ameaca [nivel]="trecho.nivel" [rotulo]="trecho.texto" />
+            }
         }
     }
 }

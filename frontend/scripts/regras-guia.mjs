@@ -43,7 +43,10 @@ export function marcarNiveis(texto, textoCompleto = texto) {
         if (nivel === undefined || (numero !== undefined && Number(numero) !== nivel)
             || contraditorias.has(resultado[0].replace(/\s+\[\d+\]$/, '').toLowerCase())) continue;
         if (resultado.index > inicio) trechos.push({ tipo: 'texto', texto: texto.slice(inicio, resultado.index) });
-        trechos.push({ tipo: 'nivel-ameaca', nivel, texto: resultado[0] });
+        // Só a sigla `NA` vira selo; "ameaças Nulas" em prosa é menção genérica, apenas colorida.
+        trechos.push(resultado[0].startsWith('NA')
+            ? { tipo: 'nivel-ameaca', nivel, texto: resultado[0] }
+            : { tipo: 'nivel-ameaca', nivel, texto: resultado[0], compacto: true });
         inicio = resultado.index + resultado[0].length;
     }
     if (inicio < texto.length) trechos.push({ tipo: 'texto', texto: texto.slice(inicio) });

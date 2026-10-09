@@ -30,6 +30,7 @@
                         <td>
                             <app-regras-inline
                                 [trechos]="celula"
+                                [semCorRecurso]="amplificadores() && $first"
                                 [documento]="documento()"
                                 (navegarAncora)="navegarAncora.emit($event)"
                             />

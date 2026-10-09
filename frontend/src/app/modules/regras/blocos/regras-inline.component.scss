@@ -27,3 +27,36 @@ strong {
 .regras-inline__recurso--energia {
     color: var(--energy);
 }
+.regras-inline__ameaca {
+    padding: 0 var(--space-4);
+    border-radius: var(--radius-compact);
+    background: var(--ameaca-fundo-escuro);
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+}
+.regras-inline__ameaca--desconhecida {
+    color: var(--ameaca-desconhecida);
+}
+.regras-inline__ameaca--nula {
+    color: var(--ameaca-nula);
+}
+.regras-inline__ameaca--baixa {
+    color: var(--ameaca-baixa);
+}
+.regras-inline__ameaca--media {
+    color: var(--ameaca-media);
+}
+.regras-inline__ameaca--alta {
+    color: var(--ameaca-alta);
+}
+.regras-inline__ameaca--extrema {
+    color: var(--ameaca-extrema);
+    background: var(--ameaca-fundo-claro);
+}
+.regras-inline__ameaca--catastrofica {
+    color: var(--ameaca-catastrofica);
+    background: var(--ameaca-fundo-claro);
+}
+.regras-inline__ameaca--apocaliptica {
+    color: var(--ameaca-apocaliptica);
+}

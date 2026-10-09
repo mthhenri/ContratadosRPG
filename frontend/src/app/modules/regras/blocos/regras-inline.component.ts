@@ -1,6 +1,6 @@
 import { Component, forwardRef, input, output } from "@angular/core";
 import { RegrasDocumento, RegrasTrecho } from "../regras.model";
-import { RegrasAmeaca } from "./regras-ameaca.component";
+import { NIVEIS_AMEACA, RegrasAmeaca } from "./regras-ameaca.component";
 import { Tooltip } from "../../../shared/tooltip/tooltip.directive";
 import { descreverCondicao, separarCondicoesTexto } from "../../../shared/condicoes/condicoes";
 
@@ -20,6 +20,8 @@ interface RegrasParteTexto {
 export class RegrasInline {
     readonly trechos = input.required<readonly RegrasTrecho[]>();
     readonly documento = input<RegrasDocumento["id"]>("sistema");
+    /** Nome de item (ex.: amplificador "Vida"): palavra de recurso fica sem a cor do recurso. */
+    readonly semCorRecurso = input(false);
     readonly navegarAncora = output<string>();
     protected readonly descreverCondicao = descreverCondicao;
 
@@ -31,11 +33,16 @@ export class RegrasInline {
         return separarCondicoesTexto(texto).flatMap((parte) => {
             const descricao = descreverCondicao(parte);
             if (descricao) return [{ texto: parte, condicao: descricao }];
+            if (this.semCorRecurso()) return [{ texto: parte }];
             return parte.split(/\b(Vida|Energia)\b/).filter(Boolean).map((recurso) =>
                 recurso === "Vida" ? { texto: recurso, recurso: "vida" as const }
                     : recurso === "Energia" ? { texto: recurso, recurso: "energia" as const }
                         : { texto: recurso });
         });
+    }
+
+    protected corAmeaca(nivel: number): string {
+        return NIVEIS_AMEACA[nivel] ?? "desconhecida";
     }
 
     protected navegar(evento: MouseEvent, ancora: string): void {

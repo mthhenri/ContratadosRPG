@@ -25,7 +25,9 @@ export type RegrasTrecho =
     | { readonly tipo: "negrito" | "italico"; readonly filhos: readonly RegrasTrecho[] }
     | { readonly tipo: "tarja"; readonly comprimento: number }
     | { readonly tipo: "link-interno"; readonly ancora: string; readonly texto: string }
-    | { readonly tipo: "nivel-ameaca"; readonly nivel: number; readonly texto: string }
+    | { readonly tipo: "nivel-ameaca"; readonly nivel: number; readonly texto: string;
+        /** Menção em prosa ("ameaças Nulas"): só colorida, sem o selo da sigla `NA`. */
+        readonly compacto?: boolean }
     | { readonly tipo: "link-externo"; readonly destino: string;
         readonly filhos: readonly RegrasTrecho[] };
 
