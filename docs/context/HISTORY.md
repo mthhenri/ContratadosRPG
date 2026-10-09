@@ -1,5 +1,21 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-09 — Recursos: ícones de Vida/Energia/Defesa nas telas e prancha de ícones · parcial
+
+Entrega 2 de `icones-recursos-sistema`. Autor decidiu que o ícone entra **ao lado do texto** (a spec
+dizia "no lugar de") e só onde há valor numérico; ampliou `app-stat` (input `icone`) e
+`app-barra-recurso` (ícone antes do rótulo), e `app-icone` ganhou a classe `icone--texto`.
+Consumidores: Defesa nos stats de NPC/criatura/criação/simulação, acervo, equipe, campanhas, cena,
+criatura, custos de Energia e tile Defesa de `ficha-reacoes`.
+
+Achado só ao vivo: a primeira versão estava grande demais (13,8px com rótulo de 10px; 17,5px na
+barra; 12,6px no acervo) e o coração de Vida da criatura herdava o cinza do rótulo. Corrigidos e
+remedidos (7,8–10,9px). 234 arquivos de teste e lint sem erros; 1920×1080 e 360×800 em simulação,
+campanha, acervo, ficha, NPC e criatura. Telas não observadas ao vivo e o tooltip "N de Vida" por
+extenso seguem abertos; spec ativa. Entrega 3 começou: prancha de votação (tipos de dano,
+categorias de habilidade, fragmentos, reações) para o autor escolher; nada implementado dela.
+[Relato e limites](../specs/active/icones-recursos-sistema/entrega-2-verificacao.md).
+
 ## 2026-10-09 — Indicativo de descrição das condições nas Regras
 
 Autor identificou que a descrição de Morrendo não era descobrível e escolheu

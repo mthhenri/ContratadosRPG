@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prancha de ícones — recursos do sistema</title>
+<style>
+:root{--bg:#0b0d12;--surface:#12151c;--surface-2:#181c25;--border:#252a36;--border-strong:#343b4b;--text:#e8eaf0;--text-dim:#a3a9b8;--text-mute:#6f7688;--accent:#d63031;--accent-dim:rgba(214,48,49,.14);--accent-border:rgba(214,48,49,.55);--mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;--sans:"IBM Plex Sans",system-ui,sans-serif}
+:root[data-tema="claro"]{--bg:#f3f4f7;--surface:#fff;--surface-2:#eceef3;--border:#d6d9e1;--border-strong:#b9bec9;--text:#14171f;--text-dim:#444a5a;--text-mute:#737a8c;--accent:#c62828;--accent-dim:rgba(198,40,40,.1);--accent-border:rgba(198,40,40,.6)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 var(--sans)}
+main{max-width:1240px;margin:0 auto;padding:24px 16px 80px}
+h1{font:600 20px var(--mono);letter-spacing:.06em;text-transform:uppercase;margin:0 0 6px}
+h2{font:600 12px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--text-dim);margin:34px 0 4px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.lead{color:var(--text-dim);margin:4px 0 10px;max-width:78ch}
+.barra{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 0}
+button{font:inherit;color:inherit;cursor:pointer}
+.btn{font:600 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;padding:8px 12px;border:1px solid var(--border-strong);border-radius:4px;background:var(--surface)}
+.btn:hover{border-color:var(--accent)}
+.grupo{display:grid;grid-template-columns:repeat(auto-fill,minmax(520px,1fr));gap:10px;margin-top:12px}
+.item{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:12px 14px;display:grid;gap:10px}
+.item header b{font:600 13.5px var(--mono)}
+.item header small{margin-left:8px;color:var(--text-mute);font:11px var(--mono);letter-spacing:.06em;text-transform:uppercase}
+.ops{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.op{position:relative;text-align:left;display:grid;gap:8px;padding:10px;border:1px solid var(--border);border-radius:6px;background:var(--bg)}
+.op:hover{border-color:var(--border-strong)}
+.op.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);background:var(--accent-dim)}
+.op .l{position:absolute;top:8px;right:10px;font:11px var(--mono);color:var(--text-mute)}
+.op.on .l{color:var(--accent)}
+.tam{display:flex;align-items:flex-end;gap:12px}
+.tam svg{fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.g{width:40px;height:40px}.m{width:24px;height:24px}.p{width:16px;height:16px}
+.op small{color:var(--text-mute);font-size:11.5px;line-height:1.35}
+.nota{border:1px dashed var(--border-strong);border-radius:6px;padding:10px 14px;color:var(--text-dim);margin-top:14px;font-size:13px}
+.nota b{color:var(--text)}
+pre{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:12px 14px;font:12px/1.7 var(--mono);color:var(--text-dim);white-space:pre-wrap}
+.ctx{display:flex;gap:14px;align-items:center;flex-wrap:wrap;font:11px var(--mono);color:var(--text-dim);margin-top:6px}
+.ctx span{display:inline-flex;gap:5px;align-items:center}
+@media (max-width:620px){.grupo{grid-template-columns:1fr}.ops{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main>
+<h1>Prancha de ícones</h1>
+<p class="lead">Spec <code>icones-recursos-sistema</code>, entrega 3. Três opções por item, no mesmo traço do <code>app-icone</code> (linha de 1,75, cantos arredondados, <code>currentColor</code>). Cada opção aparece em 40, 24 e 16px — o 16px é o que vale em tabela e chip. Clique para votar; o voto fica guardado no seu navegador e o resumo no fim pode ser copiado.</p>
+<div class="barra">
+  <button class="btn" id="tema">Tema: escuro</button>
+  <button class="btn" id="limpar">Limpar votos</button>
+  <button class="btn" id="copiar">Copiar resumo</button>
+</div>
+<div class="nota"><b>Fora desta prancha, por decisão do autor:</b> Vida/Energia/Defesa (já decididos), ícones de itens no inventário (já existem; entram antes do nome em task própria), Descanso, conceitos que se repetem como rótulo e glifos de texto. Os desenhos abaixo são propostas: o refino do traço vem depois da escolha.</div>
+
+<div id="raiz"></div>
+
+<h2>Resumo dos votos</h2>
+<pre id="resumo"></pre>
+</main>
+
+<script>
+const $ = (s, r = document) => r.querySelector(s);
+const circ = (x, y, r, extra = '') => `<circle cx="${x}" cy="${y}" r="${r}" ${extra}/>`;
+
+// Cada item: [chave, nome, rótulo curto do tipo, [[título, nota, svg interno] x3]]
+const GRUPOS = [
+ ['Tipos de dano', 'Aparecem hoje só como texto: compras, receber dano, resultado de rolagem e inventário. Geral é irredutível; Composto junta dois tipos bloqueáveis.', [
+  ['fisico','Físico','tipo de dano',[
+   ['Impacto','Explosão de impacto em estrela de 8 pontas.','<path d="M12 3l1.6 4.2L18 6l-1.2 4.4L21 12l-4.2 1.6L18 18l-4.4-1.2L12 21l-1.6-4.2L6 18l1.2-4.4L3 12l4.2-1.6L6 6l4.4 1.2z"/>'],
+   ['Punho','Punho fechado: nós dos dedos e polegar.','<path d="M6 11V8.5a1.5 1.5 0 0 1 3 0V8a1.5 1.5 0 0 1 3 0 1.5 1.5 0 0 1 3 0 1.5 1.5 0 0 1 3 0V15a5 5 0 0 1-5 5h-2a5 5 0 0 1-5-5z"/><path d="M6 11l-1.5 3.5A3 3 0 0 0 7 18M9 11v3M12 10v4M15 10v4"/>'],
+   ['Onda de choque','Ponto de contato com arcos que se afastam.','<circle cx="12" cy="12" r="2"/><path d="M7.5 7.5a6.4 6.4 0 0 0 0 9M16.5 7.5a6.4 6.4 0 0 1 0 9M4.7 4.7a10.4 10.4 0 0 0 0 14.6M19.3 4.7a10.4 10.4 0 0 1 0 14.6"/>']]],
+  ['balistico','Balístico','tipo de dano',[
+   ['Projétil','Bala em pé, ponta ogival.','<path d="M9 21v-9c0-3 1.5-5.5 3-7.5 1.5 2 3 4.5 3 7.5v9z"/><path d="M9 17h6"/>'],
+   ['Mira','Retículo de mira com marcas nos quatro lados.','<circle cx="12" cy="12" r="6"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/><path d="M12 12h.01"/>'],
+   ['Rastro','Três riscos de trajetória terminando num ponto.','<path d="M5 19L19 5M3 14L12 5M10 21l9-9"/><circle cx="19" cy="5" r="1.5"/>']]],
+  ['explosao','Explosão','tipo de dano',[
+   ['Bomba','Esfera com pavio e faíscas.','<circle cx="11" cy="14" r="6"/><path d="M15 9.5l2.5-2.5M18 3v2M21 6h-2M19.5 4.5l1-1"/>'],
+   ['Estouro','Nuvem recortada de 12 pontas.','<path d="M12 2l2 5 5-2-2 5 5 2-5 2 2 5-5-2-2 5-2-5-5 2 2-5-5-2 5-2-2-5 5 2z"/>'],
+   ['Irradiação','Núcleo com oito raios.','<circle cx="12" cy="12" r="2.5"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M5.6 18.4l2.8-2.8M15.6 8.4l2.8-2.8"/>']]],
+  ['quimico','Químico','tipo de dano',[
+   ['Frasco','Erlenmeyer com nível de líquido.','<path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.8 3h10.4a2 2 0 0 0 1.8-3l-5-9V3"/><path d="M7.5 15h9"/>'],
+   ['Gota','Gota com reflexo interno.','<path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/><path d="M9.5 14.5a2.5 2.5 0 0 0 2.5 2.5"/>'],
+   ['Béquer','Béquer graduado com bolhas.','<path d="M7 4h10M8 4v14a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V4M8 11h8"/><path d="M11 15h.01M13.5 14h.01"/>']]],
+  ['geral','Geral','tipo de dano · irredutível',[
+   ['Asterisco','Seis pontas: dano que vem de todos os lados.','<path d="M12 3v18M4.2 7.5l15.6 9M4.2 16.5l15.6-9"/>'],
+   ['Escudo rachado','Resistência que não segura.','<path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M12 3v6l-2 3 3 3-1 6"/>'],
+   ['Losango','Losango com cruz: dano puro.','<path d="M12 3l9 9-9 9-9-9z"/><path d="M12 8v8M8 12h8"/>']]],
+  ['composto','Composto','junção de dois tipos',[
+   ['Círculos','Dois círculos que se sobrepõem.','<circle cx="9" cy="12" r="5"/><circle cx="15" cy="12" r="5"/>'],
+   ['Metade a metade','Círculo dividido ao meio (50/50).','<circle cx="12" cy="12" r="8"/><path d="M12 4v16M12 8h4M12 12h4M12 16h4"/>'],
+   ['Soma','Dois círculos unidos por um mais.','<circle cx="6.5" cy="12" r="3.5"/><circle cx="17.5" cy="12" r="3.5"/><path d="M12 10v4M10 12h4"/>']]]
+ ]],
+ ['Categorias de habilidade', 'Para o chip da categoria nos cartões de habilidade. Classe, Arquétipo, Subclasse e Civil têm ícone de identidade próprio (m10-03); aqui a ideia é o ícone da <i>categoria</i>, não da classe em si.', [
+  ['hab-geral','Geral','habilidade',[
+   ['Estrela','Estrela de cinco pontas.','<path d="M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6-5.4-3-5.4 3 1.2-6L3.3 9.3l6.1-.7z"/>'],
+   ['Globo','Disponível a todos.','<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>'],
+   ['Grade','Quatro blocos iguais.','<path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/>']]],
+  ['hab-geral-melhorada','Geral Melhorada','habilidade',[
+   ['Estrela com mais','Estrela com sinal de acréscimo.','<path d="M10 4l2 4.3 4.7.6-3.4 3.2.9 4.6L10 14.4 5.8 16.7l.9-4.6L3.3 8.9 8 8.3z"/><path d="M18 14v6M15 17h6"/>'],
+   ['Dupla seta','Dois chevrons para cima.','<path d="M6 13l6-6 6 6M6 19l6-6 6 6"/>'],
+   ['Estrela sobre base','Estrela apoiada numa barra.','<path d="M12 3l2.2 4.8 5.2.6-3.9 3.6 1 5.1L12 14.4l-4.5 2.7 1-5.1-3.9-3.6 5.2-.6z"/><path d="M5 21h14"/>']]],
+  ['hab-classe','Classe','habilidade',[
+   ['Brasão','Escudo dividido ao meio.','<path d="M12 3l7 3v6c0 4-3 7.5-7 9-4-1.5-7-5-7-9V6z"/><path d="M12 3v18"/>'],
+   ['Bandeira','Estandarte da classe.','<path d="M6 21V4M6 4h12l-3 4 3 4H6"/>'],
+   ['Divisas','Três divisas empilhadas.','<path d="M5 8l7-4 7 4M5 13l7-4 7 4M5 18l7-4 7 4"/>']]],
+  ['hab-arquetipo','Arquétipo','habilidade',[
+   ['Bifurcação','Caminho que se divide em dois.','<path d="M12 21V9M12 9L6 4M12 9l6-5"/>'],
+   ['Triângulo','Vértice único com base larga.','<path d="M12 3l9 17H3z"/>'],
+   ['Árvore','Tronco com dois ramos e nós.','<path d="M12 21v-8M12 13L7 8M12 13l5-5"/><circle cx="7" cy="6" r="2"/><circle cx="17" cy="6" r="2"/>']]],
+  ['hab-subclasse','Subclasse','habilidade',[
+   ['Ramo fundo','Bifurcação num segundo nível.','<path d="M12 21v-6M12 15l-5-5V4M12 15l5-5V4"/>'],
+   ['Quadrados','Um quadrado dentro do outro.','<path d="M4 4h16v16H4zM8 8h8v8H8z"/>'],
+   ['Camadas','Pilha de camadas.','<path d="M12 3l9 5-9 5-9-5zM3 13l9 5 9-5"/>']]],
+  ['hab-outra-classe','Outra classe','habilidade',[
+   ['Troca','Setas em sentidos opostos.','<path d="M4 8h14l-3-3M20 16H6l3 3"/>'],
+   ['Porta','Porta entreaberta.','<path d="M5 21V4h9v17M5 21h14M14 4l5 2v15"/><path d="M11 12h.01"/>'],
+   ['Elo','Dois elos de corrente.','<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3A4 4 0 0 0 10 18.7l1-1"/>']]],
+  ['hab-personalidade','Personalidade','habilidade',[
+   ['Rosto','Rosto com sorriso.','<circle cx="12" cy="12" r="9"/><path d="M8.5 10h.01M15.5 10h.01M8 15a5 5 0 0 0 8 0"/>'],
+   ['Balão','Balão de fala.','<path d="M4 5h16v11H9l-5 4z"/>'],
+   ['Silhueta','Cabeça e ombros.','<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>']]],
+  ['hab-especialidade','Especialidade','habilidade',[
+   ['Alvo','Círculos concêntricos.','<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>'],
+   ['Medalha','Medalha com fitas.','<circle cx="12" cy="9" r="5"/><path d="M8.5 13.5L7 21l5-3 5 3-1.5-7.5"/>'],
+   ['Livro','Treinamento: livro aberto.','<path d="M12 6c-2-1.5-5-2-8-2v13c3 0 6 .5 8 2 2-1.5 5-2 8-2V4c-3 0-6 .5-8 2z"/><path d="M12 6v13"/>']]],
+  ['hab-civil','Civil','habilidade',[
+   ['Casa','Vida fora da Contenção.','<path d="M4 11l8-7 8 7v9H4z"/><path d="M10 20v-6h4v6"/>'],
+   ['Maleta','Ofício e profissão.','<path d="M4 8h16v11H4z"/><path d="M9 8V5h6v3M4 13h16"/>'],
+   ['Crachá','Documento de identidade.','<path d="M3 6h18v12H3z"/><circle cx="8" cy="11" r="1.6"/><path d="M5 16c.5-2 3.5-2 6 0M13 10h5M13 14h4"/>']]],
+  ['hab-unica','Única','habilidade',[
+   ['Gema','Pedra lapidada.','<path d="M6 4h12l4 6-10 11L2 10z"/><path d="M2 10h20M9 4l3 6 3-6"/>'],
+   ['Chave','Chave exclusiva.','<circle cx="7" cy="14" r="4"/><path d="M10.5 11.5L20 4M17 7l3 3M14 10l2 2"/>'],
+   ['Número um','Um dentro de um círculo.','<circle cx="12" cy="12" r="9"/><path d="M10 9l2-1v8M10 16h4"/>']]]
+ ]],
+ ['Fragmentos', 'Hoje é um diamante de texto (⬦/⬡). Construtor e Potencializador precisam de ícones que se distingam um do outro a 16px.', [
+  ['frag-construtor','Construtor','fragmento',[
+   ['Cubo','Cubo isométrico: peça de construção.','<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/>'],
+   ['Martelo','Ferramenta de montagem.','<path d="M14 3l7 7-3 3-7-7z"/><path d="M12 9L4 17l3 3 8-8"/>'],
+   ['Tijolos','Parede em amarração.','<path d="M3 5h18v14H3z"/><path d="M3 10h18M3 14.5h18M9 5v5M15 10v4.5M9 14.5V19"/>']]],
+  ['frag-potencializador','Potencializador','fragmento',[
+   ['Cristal radiante','Gema com brilho nas pontas.','<path d="M12 5l6 6-6 9-6-9z"/><path d="M6 11h12M3 4l1.5 1.5M21 4l-1.5 1.5M12 1v1.5"/>'],
+   ['Losango com raio','Energia contida num losango.','<path d="M12 2l8 10-8 10-8-10z"/><path d="M12.5 8L10 12h4l-2.5 4"/>'],
+   ['Seta de ganho','Círculo com seta para cima.','<circle cx="12" cy="12" r="9"/><path d="M12 16V8M8.5 11.5L12 8l3.5 3.5"/>']]]
+ ]],
+ ['Reações', 'Esquiva, Bloqueio e Contra-ataque. Defesa já tem o escudo preenchido; estes devem ser de contorno e não se confundir com ele.', [
+  ['esquiva','Esquiva','reação',[
+   ['Desvio','Seta que contorna e segue.','<path d="M4 20c0-8 6-12 14-12M14 4l4 4-4 4"/>'],
+   ['Vento','Rajadas: velocidade de quem sai da frente.','<path d="M3 8h10a3 3 0 1 0-3-3M3 12h15a3 3 0 1 1-3 3M3 16h6"/>'],
+   ['Fantasma','Silhueta tracejada deixada para trás.','<circle cx="10" cy="7" r="3" stroke-dasharray="2 2"/><path d="M4 21a6 6 0 0 1 12 0" stroke-dasharray="2 2"/><path d="M17 9l4 3-4 3"/>']]],
+  ['bloqueio','Bloqueio','reação',[
+   ['Mão espalmada','Gesto de parar.','<path d="M8 13V6a1.5 1.5 0 0 1 3 0v5M11 11V4.5a1.5 1.5 0 0 1 3 0V11M14 11V6a1.5 1.5 0 0 1 3 0v8a6 6 0 0 1-6 6h-1a6 6 0 0 1-4.5-2L4 14a1.5 1.5 0 0 1 2.4-1.8L8 14"/>'],
+   ['Escudo e impacto','Escudo de contorno com marcas de golpe.','<path d="M13 3l7 2.5v5c0 4-2.8 7.2-7 9-4.2-1.8-7-5-7-9v-5z"/><path d="M3 9h3M2 13h4"/>'],
+   ['Barricada','Três estacas com travessas.','<path d="M4 20V7M12 20V7M20 20V7M2 9h20M2 15h20"/>']]],
+  ['contra-ataque','Contra-ataque','reação',[
+   ['Retorno','Seta que volta pelo mesmo caminho.','<path d="M4 12h11a4 4 0 0 1 0 8H9M8 8l-4 4 4 4"/>'],
+   ['Choque','Duas lâminas se encontrando.','<path d="M4 4l8 8M20 4l-8 8M12 12l-6 6M12 12l6 6M3 17l4 4M21 17l-4 4"/>'],
+   ['Setas opostas','Dois golpes que se encontram.','<path d="M3 12h7M7 9l3 3-3 3M21 12h-7M17 9l-3 3 3 3"/>']]]
+ ]]
+];
+
+const LETRAS = 'ABC';
+let votos = {};
+try { votos = JSON.parse(localStorage.getItem('icones-recursos-sistema-v1') || '{}'); } catch (e) {}
+const salvar = () => { try { localStorage.setItem('icones-recursos-sistema-v1', JSON.stringify(votos)); } catch (e) {} };
+
+function render() {
+  $('#raiz').innerHTML = GRUPOS.map(([titulo, lead, itens]) => `
+    <h2>${titulo}</h2><p class="lead">${lead}</p>
+    <div class="grupo">${itens.map(([k, nome, tipo, ops]) => `
+      <div class="item"><header><b>${nome}</b><small>${tipo}</small></header>
+      <div class="ops">${ops.map(([t, nota, svg], i) => `
+        <button class="op ${votos[k] === i ? 'on' : ''}" data-k="${k}" data-i="${i}" aria-pressed="${votos[k] === i}">
+          <span class="l">${LETRAS[i]}</span>
+          <span class="tam">
+            <svg class="g" viewBox="0 0 24 24" style="stroke-width:1.5">${svg}</svg>
+            <svg class="m" viewBox="0 0 24 24">${svg}</svg>
+            <svg class="p" viewBox="0 0 24 24" style="stroke-width:2">${svg}</svg>
+          </span>
+          <b style="font:600 12px var(--mono)">${t}</b><small>${nota}</small>
+        </button>`).join('')}</div></div>`).join('')}</div>`).join('');
+  document.querySelectorAll('.op').forEach(b => b.onclick = () => {
+    const k = b.dataset.k, i = +b.dataset.i;
+    if (votos[k] === i) delete votos[k]; else votos[k] = i;
+    salvar(); render();
+  });
+  $('#resumo').textContent = GRUPOS.map(([g, , itens]) => g + '\n' + itens.map(([k, nome, , ops]) =>
+    `  ${nome}: ${votos[k] === undefined ? '— (sem voto)' : LETRAS[votos[k]] + ' — ' + ops[votos[k]][0]}`).join('\n')).join('\n\n');
+}
+$('#tema').onclick = () => {
+  const claro = document.documentElement.dataset.tema !== 'claro';
+  document.documentElement.dataset.tema = claro ? 'claro' : 'escuro';
+  $('#tema').textContent = 'Tema: ' + (claro ? 'claro' : 'escuro');
+};
+$('#limpar').onclick = () => { votos = {}; salvar(); render(); };
+$('#copiar').onclick = async () => {
+  try { await navigator.clipboard.writeText($('#resumo').textContent); $('#copiar').textContent = 'Copiado'; }
+  catch (e) { $('#copiar').textContent = 'Selecione e copie'; }
+  setTimeout(() => $('#copiar').textContent = 'Copiar resumo', 1600);
+};
+render();
+</script>
+</body>
+</html>

@@ -28,7 +28,8 @@ escritos, e levantar com o autor que outros ícones fariam falta ao sistema.
    preenchida documentada em `DESIGN.md`. Teste do componente. *(pré-requisito da `m10-07`)*
 2. **Adoção no site:** levantar todos os pontos onde aparecem valores de Vida, Energia e Defesa
    (ficha de jogador, criatura e NPC, encontro de combate, simulação, compras/habilidades com custo
-   em Energia, calculadoras) e trocar o rótulo textual pelo ícone + `appTooltip` por extenso.
+   em Energia, calculadoras) e acrescentar o ícone + `appTooltip` ao lado do texto (decisão do autor em 09/10/2026, no
+   lugar de substituí-lo; só onde há valor numérico). Relato em `icones-recursos-sistema/entrega-2-verificacao.md`.
    Lista dos pontos no fecho, tela por tela. Sem mudar cálculo nem dado.
 3. **Levantamento de outros ícones** — com o autor, antes de desenhar:
    - **Glifos de texto usados como ícone** no frontend (⬢ ⬡ ⬥ ⬦ ◈ ◻ ■ □ e afins em templates/SCSS):
