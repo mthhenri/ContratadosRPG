@@ -1,16 +1,19 @@
 import { Component, forwardRef, input, output } from "@angular/core";
 import { RegrasDocumento, RegrasTrecho } from "../regras.model";
 import { RegrasAmeaca } from "./regras-ameaca.component";
+import { Tooltip } from "../../../shared/tooltip/tooltip.directive";
+import { descreverCondicao, separarCondicoesTexto } from "../../../shared/condicoes/condicoes";
 
 /** Parte de um texto corrido; `recurso` pinta Vida/Energia na cor do recurso. */
 interface RegrasParteTexto {
     readonly texto: string;
     readonly recurso?: "vida" | "energia";
+    readonly condicao?: string;
 }
 
 @Component({
     selector: "app-regras-inline",
-    imports: [forwardRef(() => RegrasInline), RegrasAmeaca],
+    imports: [forwardRef(() => RegrasInline), RegrasAmeaca, Tooltip],
     templateUrl: "./regras-inline.component.html",
     styleUrl: "./regras-inline.component.scss",
 })
@@ -18,15 +21,21 @@ export class RegrasInline {
     readonly trechos = input.required<readonly RegrasTrecho[]>();
     readonly documento = input<RegrasDocumento["id"]>("sistema");
     readonly navegarAncora = output<string>();
+    protected readonly descreverCondicao = descreverCondicao;
 
     /**
-     * Vida e Energia, palavra inteira com maiúscula (termo de regra), na cor do recurso. A
-     * marcação é só de apresentação: o JSON e o texto pesquisável continuam iguais.
+     * Condições recebem o tooltip canônico; Vida e Energia usam a cor do recurso.
+     * A marcação é só de apresentação: o JSON e o texto pesquisável continuam iguais.
      */
     protected partes(texto: string): readonly RegrasParteTexto[] {
-        return texto.split(/\b(Vida|Energia)\b/).filter(Boolean).map((parte) =>
-            parte === "Vida" ? { texto: parte, recurso: "vida" }
-                : parte === "Energia" ? { texto: parte, recurso: "energia" } : { texto: parte });
+        return separarCondicoesTexto(texto).flatMap((parte) => {
+            const descricao = descreverCondicao(parte);
+            if (descricao) return [{ texto: parte, condicao: descricao }];
+            return parte.split(/\b(Vida|Energia)\b/).filter(Boolean).map((recurso) =>
+                recurso === "Vida" ? { texto: recurso, recurso: "vida" as const }
+                    : recurso === "Energia" ? { texto: recurso, recurso: "energia" as const }
+                        : { texto: recurso });
+        });
     }
 
     protected navegar(evento: MouseEvent, ancora: string): void {

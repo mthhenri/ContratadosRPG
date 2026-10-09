@@ -808,6 +808,8 @@
                                                 <span
                                                     class="detalhe__equipe-selo"
                                                     [attr.data-selo-condicao]="condicao.chave"
+                                                    tabindex="0"
+                                                    [appTooltip]="condicao.descricao"
                                                     >{{ condicao.rotulo }}</span
                                                 >
                                                 }
@@ -820,8 +822,10 @@
                             </li>
                             }
                         </ul>
-                        <app-campanha-fichas-especiais [fichas]="dados.fichas()"
-                            [campanhaId]="campanhaAtual.id" />
+                        <app-campanha-fichas-especiais
+                            [fichas]="dados.fichas()"
+                            [campanhaId]="campanhaAtual.id"
+                        />
                     </div>
 
                     <div

@@ -8,6 +8,7 @@ import { reconhecerPersonagens } from './regras-personagens.mjs';
 import { marcarNiveis, reconhecerTabelaGuia, reconhecerHabilidadeCriatura,
     reconhecerSecaoGuia, reconhecerNiveisAmeaca, marcarNivelNome } from './regras-guia.mjs';
 import { reconhecerTermos, agruparVerbetes } from './regras-termos.mjs';
+import { extrairDescricoesCondicoes } from './regras-condicoes.mjs';
 
 /** @typedef {import('../src/app/modules/regras/regras.model.js').RegrasDocumento} RegrasDocumento */
 /** @typedef {import('../src/app/modules/regras/regras.model.js').RegrasConteudo} RegrasConteudo */
@@ -410,6 +411,7 @@ export function selecionarFonte(arquivos, prefixo) {
 export async function prepararRegras(
     diretorioOrigem = join(diretorioFrontend, '..', 'docs', 'core'),
     diretorioDestino = join(diretorioFrontend, 'public', 'regras'),
+    diretorioCodigoCondicoes = null,
 ) {
     const arquivos = await readdir(diretorioOrigem);
     /** @type {RegrasAviso[]} */
@@ -421,6 +423,15 @@ export async function prepararRegras(
         const resultado = normalizarDocumento(texto, id, fonte.versao);
         await writeFile(join(diretorioDestino, `${id}.json`),
             `${JSON.stringify(resultado.documento, null, 2)}\n`, 'utf8');
+        if (id === 'sistema' && diretorioCodigoCondicoes) {
+            const condicoes = extrairDescricoesCondicoes(resultado.documento);
+            await mkdir(diretorioCodigoCondicoes, { recursive: true });
+            await writeFile(join(diretorioCodigoCondicoes, 'condicoes.dados.ts'),
+                '// Gerado por frontend/scripts/normalizar-regras.mjs. Não editar manualmente.\n'
+                + `// Fonte: docs/core/${fonte.arquivo} — Condições.\n`
+                + `export const DESCRICOES_CONDICOES = ${JSON.stringify(condicoes, null, 4)} as const;\n`,
+                'utf8');
+        }
         avisos.push(...resultado.avisos);
         console.log(`[regras] ${fonte.arquivo} → ${id}.json`);
         for (const aviso of resultado.avisos) {
@@ -432,5 +443,6 @@ export async function prepararRegras(
 }
 
 if (process.argv[1] && pathToFileURL(resolve(process.argv[1])).href === import.meta.url) {
-    await prepararRegras();
+    await prepararRegras(undefined, undefined,
+        join(diretorioFrontend, 'src', 'app', 'shared', 'condicoes'));
 }

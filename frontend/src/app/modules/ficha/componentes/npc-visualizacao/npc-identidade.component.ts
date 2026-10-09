@@ -13,6 +13,7 @@ import { Icone } from "../../../../shared/icone/icone.component";
 import { AutoFocus } from "../../../../shared/auto-focus/auto-focus.directive";
 import { FocoImagem } from "../../../../shared/foco-imagem.directive";
 import { Tooltip } from "../../../../shared/tooltip/tooltip.directive";
+import { descreverCondicao } from "../../../../shared/condicoes/condicoes";
 import { Botao } from "../../../../shared/ui/botao/botao.component";
 import { BotaoIcone } from "../../../../shared/ui/botao-icone/botao-icone.component";
 import { Cartao } from "../../../../shared/ui/cartao/cartao.component";
@@ -55,6 +56,7 @@ const LIMITES_COOPERACAO = [1, 2, 4, 7, 10] as const;
     templateUrl: "./npc-identidade.component.html", styleUrl: "./npc-identidade.component.scss",
 })
 export class NpcIdentidade {
+    protected readonly descreverCondicao = descreverCondicao;
     private readonly tema = inject(TemaService);
     readonly formulario = inject(NpcEdicaoFormulario);
     readonly edicao = this.formulario.edicao;

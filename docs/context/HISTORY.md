@@ -1,5 +1,36 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-09 — Usabilidade de classes/dados e tooltips de condições · parcial
+
+Pedido do autor: avaliar compreensão das classes e dos dados e explicar condições ao passar
+o mouse. Inspeção pessoal nas jornadas públicas de Simulação e Regras nos quatro viewports.
+Seis achados registrados: decisão de classe sem contexto junto do seletor, arquétipos após
+catálogo longo, links móveis sem nome acessível (P-112), explicação de dados distante do valor,
+nome ambíguo da calculadora de entrada e condições sem descrição no ponto de uso. Ajuda,
+decomposição da entrada de agente e hierarquia de recursos são pontos positivos observados.
+Não houve teste com jogadores nem inspeção autenticada; recomendações de redesign não foram
+implementadas nem promovidas automaticamente para specs.
+
+28 descrições completas extraídas do capítulo Condições do Sistema 4.1.4 no normalizador,
+gerando módulo de apresentação. Mesma diretiva Tooltip usada em ficha/card, colegas, cena,
+NPC, encontro, sobrecarga e Regras (termos em texto e títulos). Nenhuma regra, fórmula ou dado
+de jogo alterado. Botões conservam ação/desabilitado; wrappers permitem focar descrições em
+somente leitura. Texto narrativo foi preservado após teste detectar espaço duplicado.
+
+Shared 1.157 testes, backend 994/1 ignorado, normalizador 70, Angular final 3.140 aprovados.
+Lint zero erros, com avisos existentes e novos; build final com CI/dois workers aprovado e
+livros fiéis, aviso de orçamento inicial. Build habitual repetiu P-111; contorno sem mudar
+configuração/cache. HTML formatado e organização/espelhos conferidos. Nas Regras, descrição
+completa de Morrendo cabe no celular, foco/Escape observados; captura inválida descartada.
+
+Task permanece aberta: revisão automática de aprovação rejeitou login de desenvolvimento
+sem autorização explícita; autor consultado. Ampliação do EditorMarkdown também aguarda
+decisão exigida pelo AGENTS.md. Gestos de mouse/toque têm testes sintéticos, mas observação
+real e telas autenticadas ainda pendentes. Sem delegação, push ou publicação; commit do avanço
+parcial posteriormente autorizado pelo autor em 09/10/2026.
+[Relatório](../specs/active/usabilidade-classes-condicoes-2026-10-09/RELATORIO.md) e
+[gates/retomada](../specs/active/usabilidade-classes-condicoes-2026-10-09/verificacao.md).
+
 ## 2026-10-09 — Regras: segunda revisão completa, topo e pesquisa
 
 Pedido do autor para conferir integralmente Sistema/Guia, menu e consistência visual;

@@ -1017,7 +1017,7 @@ describe('FichaInventario', () => {
       expect(raiz.querySelector('.ficha-inv__carga-alerta')).toBeNull();
     });
 
-    it('com sobrecarga: mostra o ícone de alerta com dica "Sobrecarregado!"', () => {
+    it('com sobrecarga: explica as penalidades da condição no alerta', () => {
       const alvo = montar({ itens: [itemLeve], amplificadores: [] });
       alvo.fixture.componentRef.setInput('inventarioMaximo', 0);
       alvo.fixture.detectChanges();
@@ -1026,7 +1026,11 @@ describe('FichaInventario', () => {
       const dica = alvo.fixture.debugElement
         .query(By.css('.ficha-inv__carga-alerta'))
         .injector.get(Tooltip).appTooltip();
-      expect(dica).toBe('Sobrecarregado!');
+      expect(dica).toContain('Sobrecarregado');
+      expect(dica).toContain('4 metros');
+      expect(dica).toContain('-2 dados');
+      expect(dica).toContain('-5 em Defesa');
+      expect(alerta?.getAttribute('tabindex')).toBe('0');
     });
   });
 

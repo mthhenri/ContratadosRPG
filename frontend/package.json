@@ -9,7 +9,7 @@
     "build": "ng build && node -e \"require('fs').copyFileSync('dist/frontend/browser/index.html','dist/frontend/browser/404.html')\" && node scripts/verificar-regras-publicadas.mjs",
     "watch": "ng build --watch --configuration development",
     "test": "npm run test:regras && ng test",
-    "test:regras": "node --test scripts/normalizar-regras.test.mjs scripts/regras-personagens.test.mjs scripts/regras-equipamentos.test.mjs scripts/regras-guia.test.mjs scripts/regras-termos.test.mjs",
+    "test:regras": "node --test scripts/normalizar-regras.test.mjs scripts/regras-personagens.test.mjs scripts/regras-equipamentos.test.mjs scripts/regras-guia.test.mjs scripts/regras-termos.test.mjs scripts/regras-condicoes.test.mjs",
     "test:estilos": "vitest run scripts/bandeja-dados-privada.style.test.mjs scripts/inventario-esquadrao.style.test.mjs scripts/ui-11-tokens-acabamento.style.test.mjs",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

@@ -35,6 +35,8 @@
         @case (4) {
             <h5
                 class="regras-secao__verbete"
+                [attr.tabindex]="descreverCondicao(bloco().titulo) ? 0 : null"
+                [appTooltip]="descreverCondicao(bloco().titulo)"
                 [id]="identificador()"
                 [attr.data-ancora-regras]="bloco().ancora"
             >

@@ -10,11 +10,12 @@ import { Chip } from '../../../../shared/ui/chip/chip.component';
 import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { PreviewAvatar } from '../../../../shared/preview-avatar/preview-avatar.directive';
+import { Tooltip } from "../../../../shared/tooltip/tooltip.directive";
 
 /** Esquadrão já redigido pelo backend para quem observa a Investigação. */
 @Component({
   selector: 'app-esquadrao-cena-jogador',
-  imports: [Botao, Cartao, Chip, EstadoVazio, Icone, PreviewAvatar],
+  imports: [Botao, Cartao, Chip, EstadoVazio, Icone, PreviewAvatar, Tooltip],
   templateUrl: './esquadrao-cena-jogador.component.html',
   styleUrl: './esquadrao-cena-jogador.component.scss',
 })

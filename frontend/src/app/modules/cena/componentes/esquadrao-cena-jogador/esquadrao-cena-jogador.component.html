@@ -45,9 +45,12 @@
                                             aria-label="Condições"
                                         >
                                             @for (condicao of condicoes; track condicao.chave) {
-                                                <app-chip variante="sutil">{{
-                                                    condicao.rotulo
-                                                }}</app-chip>
+                                                <app-chip
+                                                    variante="sutil"
+                                                    tabindex="0"
+                                                    [appTooltip]="condicao.descricao"
+                                                    >{{ condicao.rotulo }}</app-chip
+                                                >
                                             }
                                         </span>
                                     }

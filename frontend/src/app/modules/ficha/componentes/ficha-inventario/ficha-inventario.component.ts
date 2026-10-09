@@ -79,6 +79,7 @@ import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-da
 import { Icone, IconeNome } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
+import { descreverCondicao } from "../../../../shared/condicoes/condicoes";
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
@@ -498,6 +499,7 @@ interface AmpInventarioVM {
   styleUrl: './ficha-inventario.component.scss',
 })
 export class FichaInventario {
+  protected readonly descreverCondicao = descreverCondicao;
   readonly rolagemOculta = input(false);
   /** Inventário atual (itens + amplificadores) — a fonte da verdade é a página (componente controlado). */
   readonly inventario = input.required<FichaInventarioDto>();

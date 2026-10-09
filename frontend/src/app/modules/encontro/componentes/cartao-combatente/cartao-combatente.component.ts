@@ -8,6 +8,7 @@ import { Icone } from '../../../../shared/icone/icone.component';
 import { FocoImagem } from '../../../../shared/foco-imagem.directive';
 import { ReceberDanoDialog } from '../../../../shared/receber-dano/receber-dano-dialog.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
+import { descreverCondicao, separarCondicoesTexto } from "../../../../shared/condicoes/condicoes";
 import { BarraRecurso } from '../../../../shared/ui/barra-recurso/barra-recurso.component';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
@@ -56,6 +57,8 @@ const ABREVIACAO_RESISTENCIA: Record<TipoDanoEnum, string> = {
   styleUrl: './cartao-combatente.component.scss',
 })
 export class CartaoCombatente {
+  protected readonly descreverCondicao = descreverCondicao;
+  protected readonly separarCondicoesTexto = separarCondicoesTexto;
   protected readonly tiposImagemAceitos = IMAGEM_MIMES_ACCEPT;
   readonly combatente = input.required<EncontroCombatenteResumoDto>();
 

@@ -90,6 +90,8 @@
                 <span
                     class="combatente__etiqueta"
                     [class]="'combatente__etiqueta--' + marca.variante"
+                    [attr.tabindex]="marca.variante === 'perigo' ? 0 : null"
+                    [appTooltip]="marca.variante === 'perigo' ? descreverCondicao('Morrendo') : ''"
                 >
                     @if (marca.variante === "perigo") {
                         <app-icone nome="morrendo" />
@@ -117,13 +119,18 @@
             @if (combatente().machucado) {
                 <span
                     class="combatente__marca combatente__marca--machucado"
-                    [appTooltip]="'Machucado'"
+                    tabindex="0"
+                    [appTooltip]="descreverCondicao('Machucado')"
                 >
                     <app-icone nome="machucado" />
                 </span>
             }
             @if (combatente().inconsciente) {
-                <span class="combatente__marca" [appTooltip]="'Inconsciente · perde o turno'">
+                <span
+                    class="combatente__marca"
+                    tabindex="0"
+                    [appTooltip]="descreverCondicao('Inconsciente')"
+                >
                     <app-icone nome="inconsciente" />
                 </span>
             }
@@ -307,7 +314,14 @@
         }
 
         @for (condicao of combatente().condicoes; track condicao.nome) {
-            <app-chip [severidade]="condicao.perdeTurno ? 'primario' : 'aviso'">
+            <app-chip
+                [severidade]="condicao.perdeTurno ? 'primario' : 'aviso'"
+                tabindex="0"
+                [appTooltip]="
+                    descreverCondicao(condicao.nome) ||
+                    'Condição personalizada: consulte os efeitos com o Mestre.'
+                "
+            >
                 {{ condicao.nome }}
                 @if (condicao.rodadasRestantes !== null) {
                     · {{ condicao.rodadasRestantes }}
@@ -317,7 +331,15 @@
         }
 
         @if (estadoNarrativo(); as narrativo) {
-            <span class="combatente__narrativo">{{ narrativo }}</span>
+            <span class="combatente__narrativo">
+                @for (parte of separarCondicoesTexto(narrativo); track $index) {
+                    <span
+                        [attr.tabindex]="descreverCondicao(parte) ? 0 : null"
+                        [appTooltip]="descreverCondicao(parte)"
+                        [textContent]="parte"
+                    ></span>
+                }
+            </span>
         }
     </div>
 </article>

@@ -27,6 +27,11 @@
 > Oito propostas de melhoria aguardam revisão; specs no backlog somente após aprovação do autor.
 > A retomada das jornadas autenticadas depende de restabelecer Docker/Postgres local, indisponível
 > na verificação de 15/09. Pendências e dados de teste mantidos estão discriminados no relatório.
+> **Recorte atual — classes, dados e condições:** [inspeção de 09/10](../specs/active/usabilidade-classes-condicoes-2026-10-09/RELATORIO.md).
+> Jornadas públicas observadas nos quatro viewports; escolha de classe/arquétipo e explicação
+> dos dados precisam de revisão. Tooltips canônicos implementados em labels e Regras; task aberta
+> por login local aguardando autorização, cobertura do EditorMarkdown aguardando decisão e gates
+> reais de mouse/toque. [Verificação e retomada](../specs/active/usabilidade-classes-condicoes-2026-10-09/verificacao.md).
 
 > **Formatação do frontend:** `frontend/.prettierrc.json` governa exclusivamente HTML/SCSS
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte

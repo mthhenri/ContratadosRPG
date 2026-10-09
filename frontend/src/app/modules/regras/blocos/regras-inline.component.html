@@ -2,7 +2,13 @@
     @switch (trecho.tipo) {
         @case ("texto") {
             @for (parte of partes(trecho.texto); track $index) {
-                @if (parte.recurso) {
+                @if (parte.condicao) {
+                    <span
+                        tabindex="0"
+                        [appTooltip]="parte.condicao"
+                        [textContent]="parte.texto"
+                    ></span>
+                } @else if (parte.recurso) {
                     <span
                         [class]="'regras-inline__recurso regras-inline__recurso--' + parte.recurso"
                         [textContent]="parte.texto"
@@ -39,6 +45,7 @@
         @case ("link-interno") {
             <a
                 [href]="'/regras/' + documento() + '#' + trecho.ancora"
+                [appTooltip]="descreverCondicao(trecho.texto)"
                 (click)="navegar($event, trecho.ancora)"
                 >{{ trecho.texto }}</a
             >

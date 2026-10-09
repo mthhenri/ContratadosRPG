@@ -29,6 +29,17 @@
 
 ## Ativos
 
+### P-112 — Links inativos da Simulação sem nome acessível no celular · `ABERTO` · frontend/usabilidade
+
+- **Sintoma:** em 360×800, seis destinos inativos da barra inferior são links sem nome
+  na árvore de acessibilidade; só a aba atual tem rótulo visível.
+- **Causa:** `simulacao-shell.component.scss` esconde os rótulos inativos com `display:none`;
+  os links no template não têm nome acessível alternativo. Ícones não fornecem o nome.
+- **Contorno:** desktop mantém os rótulos; não há orientação equivalente observada no celular.
+- **Correção:** fornecer nome acessível a cada destino e conferir a descoberta visual no mobile
+  usando os padrões de navegação existentes. Não corrigido no diff de tooltips.
+- **Desde:** confirmado na [inspeção de 09/10/2026](../specs/active/usabilidade-classes-condicoes-2026-10-09/RELATORIO.md#u-03--destinos-móveis-sem-nome-acessível--prioridade-alta).
+
 ### P-111 — Recorrência de falha nativa no build com cache local · `CONTORNADO` · frontend/ambiente
 
 - **Sintoma:** build habitual fora do sandbox voltou a terminar com código `3221225477`,

@@ -429,7 +429,13 @@
                     />
                     @if (dados().condicoes?.morrendo) {
                         <div class="npc-identidade__linha">
-                            <app-chip severidade="perigo" variante="sutil">Morrendo</app-chip>
+                            <app-chip
+                                severidade="perigo"
+                                variante="sutil"
+                                tabindex="0"
+                                [appTooltip]="descreverCondicao('Morrendo')"
+                                >Morrendo</app-chip
+                            >
                             @if (gerenciavel()) {
                                 <button
                                     app-botao

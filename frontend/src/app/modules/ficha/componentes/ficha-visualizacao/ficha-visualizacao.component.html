@@ -49,9 +49,13 @@
             @if (condicoesAtivas().length) {
                 <div class="ficha-hud__condicoes">
                     @for (condicao of condicoesAtivas(); track condicao.chave) {
-                        <span class="ficha-hud__selo" [attr.data-selo-condicao]="condicao.chave">{{
-                            condicao.rotulo
-                        }}</span>
+                        <span
+                            class="ficha-hud__selo"
+                            [attr.data-selo-condicao]="condicao.chave"
+                            tabindex="0"
+                            [appTooltip]="condicao.descricao"
+                            >{{ condicao.rotulo }}</span
+                        >
                     }
                 </div>
             }
@@ -913,26 +917,34 @@
              regra derivada de Vida/Energia (mesma filosofia de m3-10). -->
                                 <div class="ficha-condicoes" role="group" aria-label="Condições">
                                     @for (condicao of condicoesFicha; track condicao.chave) {
-                                        <button
-                                            app-botao
-                                            class="ficha-condicoes__item"
-                                            [class.ficha-condicoes__item--ativa]="
-                                                condicoes()[condicao.chave]
-                                            "
-                                            [class.ficha-condicoes__item--somente-leitura]="
-                                                !ajustavel()
-                                            "
-                                            [attr.data-condicao]="condicao.chave"
-                                            type="button"
-                                            [disabled]="!ajustavel()"
-                                            [attr.aria-pressed]="condicoes()[condicao.chave]"
-                                            [attr.aria-label]="condicao.rotulo"
-                                            [appTooltip]="condicao.rotulo"
-                                            (click)="alternarCondicao(condicao.chave)"
+                                        <span
+                                            [attr.tabindex]="!ajustavel() ? 0 : null"
+                                            [appTooltip]="!ajustavel() ? condicao.descricao : null"
+                                            [appTooltipAcionavel]="ajustavel()"
                                         >
-                                            <app-icone [nome]="condicao.icone" />
-                                            <span>{{ condicao.rotulo }}</span>
-                                        </button>
+                                            <button
+                                                app-botao
+                                                class="ficha-condicoes__item"
+                                                [class.ficha-condicoes__item--ativa]="
+                                                    condicoes()[condicao.chave]
+                                                "
+                                                [class.ficha-condicoes__item--somente-leitura]="
+                                                    !ajustavel()
+                                                "
+                                                [attr.data-condicao]="condicao.chave"
+                                                type="button"
+                                                [disabled]="!ajustavel()"
+                                                [attr.aria-pressed]="condicoes()[condicao.chave]"
+                                                [attr.aria-label]="condicao.rotulo"
+                                                [appTooltip]="
+                                                    ajustavel() ? condicao.descricao : null
+                                                "
+                                                (click)="alternarCondicao(condicao.chave)"
+                                            >
+                                                <app-icone [nome]="condicao.icone" />
+                                                <span>{{ condicao.rotulo }}</span>
+                                            </button>
+                                        </span>
                                     }
                                 </div>
 
