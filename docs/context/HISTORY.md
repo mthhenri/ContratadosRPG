@@ -1,5 +1,29 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-09 — Auditoria visual integral do leitor de Regras
+
+Por pedido do autor, foi executada uma bateria visual na aplicação real sem alterar código,
+regras autorais ou JSONs. Sistema/Guia receberam varredura contínua em 1920×1080 e 360×800,
+nove arquétipos, 43 tabelas, colunas finais/intermediárias e linhas inferiores de tabelas altas.
+Página/painel normal/maximizado receberam recortes nos quatro viewports; sumário, gaveta,
+busca vazia/com resultados/outro livro, teclado, links, tooltip, minimizar/reabrir e ↗ foram
+exercitados. Base clara conferida em recortes; tema escuro e viewport original restaurados.
+
+Depois das verificações, dez grupos confirmados foram documentados e divididos nas specs
+`regras-visual-01`…`10` em backlog, com `P-114`…`P-123` abertos. Prioridade principal:
+coluna fixa mostra a chave de um par com o valor de outro em Formação/Níveis/Corpo/Treinamentos.
+Demais achados: bônus longos e NA sobrepostos, grades sem relação rótulo/valor, abas apertadas,
+notas/formações contínuas, tachado literal, passivas sem hierarquia, baixo contraste na base
+clara e microcopy/seta da busca. A hipótese de perda de espaços junto a itálicos foi descartada:
+DOM/fonte preservam o espaço e o Range conferido tem largura; não gerou spec.
+
+[Relatório, mapa das specs, reprodução, evidências e limites](../specs/done/regras-auditoria-visual-completa/auditoria.md).
+Capturas em `.artifacts/regras-auditoria-visual-completa/`, ignoradas. Inspeção em Chromium,
+com emulação de viewport; painéis/base clara por recortes, sem PDF, erro de rede forçado,
+hardware de toque ou certificação de um commit único (houve publicações de outra sessão).
+Fecho exclusivamente documental; gates e resultados no relatório. Sem commit/push; defeitos
+continuam abertos para execução das specs.
+
 ## 2026-10-09 — Versão 1.7.2
 
 Patch de acabamento do leitor de Regras: nota `docs/patchnotes/1.7.2.md` e versão sincronizada nos pacotes.

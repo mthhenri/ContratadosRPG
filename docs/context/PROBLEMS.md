@@ -29,6 +29,86 @@
 
 ## Ativos
 
+### P-114 — Preservar associações nas tabelas com dois pares · `ABERTO` · frontend/regras
+
+- **Sintoma:** Em 360×800, consultar Formação, Níveis e Melhorias de Agente, Corpo e Pontuação Corporal e Treinamentos. Rolar cada tabela até a direita. A primeira coluna continua fixa, mas o valor exibido pertence ao segundo par: “Nenhum” acompanha o bônus de “Profissional”, e “00” acompanha o bônus de “11”.
+- **Causa:** Primeira coluna fixa aplicada a tabelas com duas metades independentes; dados completos permanecem no DOM.
+- **Contorno:** Consultar os pares simultâneos em desktop.
+- **Correção:** [regras-visual-01-pares-tabelas](../specs/backlog/regras-visual-01-pares-tabelas.spec.md).
+- **Desde:** observado em 09/10/2026; [RV-01, cobertura e evidências](../specs/done/regras-auditoria-visual-completa/auditoria.md). Nenhuma correção aplicada nesta auditoria.
+
+### P-115 — Conter os bônus longos dos cartões · `ABERTO` · frontend/regras
+
+- **Sintoma:** Em 360×800, abrir Experimento Híbrido e localizar Atributos bônus. Cada chip tem aproximadamente 295px para uma região de 225px: seu limite direito chega a x≈360, além do cartão. Em duas colunas desktop, o mesmo chip ultrapassa a coluna de 270px e consome quase todo o intervalo antes das habilidades.
+- **Causa:** Chip de ≈295px em área mobile de ≈225px/coluna desktop de 270px; solução no contrato do primitivo ainda não decidida.
+- **Contorno:** Consultar o texto integral em largura maior; não ocultar a restrição LUT/PON.
+- **Correção:** [regras-visual-02-bonus-longos](../specs/backlog/regras-visual-02-bonus-longos.spec.md).
+- **Desde:** observado em 09/10/2026; [RV-02, cobertura e evidências](../specs/done/regras-auditoria-visual-completa/auditoria.md). Nenhuma correção aplicada nesta auditoria.
+
+### P-116 — Conter rótulos de ameaça nas tabelas mobile · `ABERTO` · frontend/regras
+
+- **Sintoma:** Em 360×800, Guia → Definindo o Nível de Ameaça (NA), Tabela de Referência de NA, e tabela VD Típico por NA. Rolar horizontalmente. “Catastrófica” e “Apocalíptica” saem da primeira coluna fixa e se sobrepõem aos dados vizinhos.
+- **Causa:** Rótulo sem quebra é maior que a área útil da primeira coluna fixa de 120px.
+- **Contorno:** Consultar a tabela em desktop.
+- **Correção:** [regras-visual-03-rotulos-ameaca-tabelas](../specs/backlog/regras-visual-03-rotulos-ameaca-tabelas.spec.md).
+- **Desde:** observado em 09/10/2026; [RV-03, cobertura e evidências](../specs/done/regras-auditoria-visual-completa/auditoria.md). Nenhuma correção aplicada nesta auditoria.
+
+### P-117 — Preservar a hierarquia das grades de referência · `ABERTO` · frontend/regras
+
+- **Sintoma:** Sistema → Jogando como um Civil → Saúde em 360×800: a ordem visual é VIDA, ENERGIA, fórmula de Vida, fórmula de Energia. Em Afinidade com Fragmentos, “Nível de Criatura” vira uma célula comum na grade desktop; em Deslocamento, faixa de Destreza e metros têm o mesmo tratamento sem separação.
+- **Causa:** Fallback concatena cabeçalho/linhas e remove células vazias, perdendo relações por coluna nesses recortes.
+- **Contorno:** Conferir estrutura e pares na fonte canônica.
+- **Correção:** [regras-visual-04-grades-semanticas](../specs/backlog/regras-visual-04-grades-semanticas.spec.md).
+- **Desde:** observado em 09/10/2026; [RV-04, cobertura e evidências](../specs/done/regras-auditoria-visual-completa/auditoria.md). Nenhuma correção aplicada nesta auditoria.
+
+### P-118 — Dar espaço aos nomes e ícones das abas mobile · `ABERTO` · frontend/regras
+
+- **Sintoma:** Sistema → Combatente em 360×800: três abas com aproximadamente 83px cada e fonte de 10px. Nome de Mercenário e ícones encostam nas fronteiras entre abas; o problema também aparece em Especialista e Suporte. Seleção por teclado funciona, mas o texto/ícone ficam excessivamente comprimidos.
+- **Causa:** Nome e ícone comprimidos em abas de ≈83×44px e fonte de 10px; solução responsiva ainda não definida.
+- **Contorno:** Nome completo permanece no painel selecionado; seleção por teclado funciona.
+- **Correção:** [regras-visual-05-abas-arquetipos-mobile](../specs/backlog/regras-visual-05-abas-arquetipos-mobile.spec.md).
+- **Desde:** observado em 09/10/2026; [RV-05, cobertura e evidências](../specs/done/regras-auditoria-visual-completa/auditoria.md). Nenhuma correção aplicada nesta auditoria.
+
+### P-119 — Estruturar notas e bônus apresentados como texto contínuo · `ABERTO` · frontend/regras
+
+- **Sintoma:** Sistema → Origem → Bombeiro/Alpinista: os dois bônus da Formação aparecem na mesma frase sem delimitador. A nota Amaldiçoado pelo Passado apresenta título, descrição, três itens ▢ e ressalva em um parágrafo contínuo. A nota de Armazenamento junta a ausência de peso e o custo de 300$.
+- **Causa:** Fonte já reúne afirmações/lista em células contínuas; segmentação de apresentação precisa preservar o texto autoral.
+- **Contorno:** Conferir rótulos/glyphs da fonte e distinguir cada efeito.
+- **Correção:** [regras-visual-06-notas-e-formacoes](../specs/backlog/regras-visual-06-notas-e-formacoes.spec.md).
+- **Desde:** observado em 09/10/2026; [RV-06, cobertura e evidências](../specs/done/regras-auditoria-visual-completa/auditoria.md). Nenhuma correção aplicada nesta auditoria.
+
+### P-120 — Renderizar o tachado do Markdown no leitor · `ABERTO` · frontend/regras
+
+- **Sintoma:** Guia → Introdução: `~~torturar psicologicamente~~` aparece com os delimitadores literais, nas páginas desktop e mobile. O Markdown canônico marca esse trecho como tachado.
+- **Causa:** Token de tachado não é modelado/renderizado; fallback conserva a sintaxe literal.
+- **Contorno:** Ler a frase como tachado conforme o Markdown.
+- **Correção:** [regras-visual-07-tachado-inline](../specs/backlog/regras-visual-07-tachado-inline.spec.md).
+- **Desde:** observado em 09/10/2026; [RV-07, cobertura e evidências](../specs/done/regras-auditoria-visual-completa/auditoria.md). Nenhuma correção aplicada nesta auditoria.
+
+### P-121 — Uniformizar a apresentação das habilidades passivas de NPCs · `ABERTO` · frontend/regras
+
+- **Sintoma:** Guia → Biblioteca de Referência → Operativo/Veterano/Elite/Lendário: passivas como Treinamento de Campo aparecem como prosa cinza contínua. As ativas imediatamente abaixo usam título mono, separador e bloco de habilidade; as passivas não têm a mesma hierarquia de catálogo.
+- **Causa:** Passivas do catálogo não recebem a hierarquia das ativas; investigação completa do reconhecimento fica na spec.
+- **Contorno:** Conferir nome/tipo/efeito no parágrafo ou na fonte.
+- **Correção:** [regras-visual-08-habilidades-passivas-npcs](../specs/backlog/regras-visual-08-habilidades-passivas-npcs.spec.md).
+- **Desde:** observado em 09/10/2026; [RV-08, cobertura e evidências](../specs/done/regras-auditoria-visual-completa/auditoria.md). Nenhuma correção aplicada nesta auditoria.
+
+### P-122 — Dar contraste aos rótulos semânticos na base clara · `ABERTO` · frontend/regras
+
+- **Sintoma:** Ativar base Clara e abrir Experimento Híbrido. Os rótulos de 11px “Habilidade inicial”, “Custo do experimento” e “Energia inicial” ficam pálidos. Cores observadas e composição dos fundos produzem razões aproximadas de 1,87:1, 3,22:1 e 3,05:1 respectivamente.
+- **Causa:** Cores calculadas dão razões aproximadas de 1,87:1, 3,22:1 e 3,05:1 nos fundos observados; consumidores dos tokens precisam ser delimitados.
+- **Contorno:** Usar a base escura.
+- **Correção:** [regras-visual-09-contraste-base-clara](../specs/backlog/regras-visual-09-contraste-base-clara.spec.md).
+- **Desde:** observado em 09/10/2026; [RV-09, cobertura e evidências](../specs/done/regras-auditoria-visual-completa/auditoria.md). Nenhuma correção aplicada nesta auditoria.
+
+### P-123 — Evitar texto incorreto e seta órfã na busca · `ABERTO` · frontend/regras
+
+- **Sintoma:** Em 360×800, Guia → Sumário → pesquisar Mercenário. O estado vazio exibe “1 RESULTADOS NO OUTRO DOCUMENTO” e a seta sozinha na linha seguinte. A busca no Sistema também mostra “1 resultados”. A ação encontra o livro correto.
+- **Causa:** Resumo não flexiona singular e legenda textual longa quebra antes da seta; navegação funciona.
+- **Contorno:** A ação segue utilizável; resultado/destino corretos.
+- **Correção:** [regras-visual-10-busca-microcopy-mobile](../specs/backlog/regras-visual-10-busca-microcopy-mobile.spec.md).
+- **Desde:** observado em 09/10/2026; [RV-10, cobertura e evidências](../specs/done/regras-auditoria-visual-completa/auditoria.md). Nenhuma correção aplicada nesta auditoria.
+
 ### P-111 — Recorrência de falha nativa no build com cache local · `CONTORNADO` · frontend/ambiente
 
 - **Sintoma:** build habitual fora do sandbox voltou a terminar com código `3221225477`,

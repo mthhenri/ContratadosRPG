@@ -2171,6 +2171,7 @@ incluindo todos os ajustes avulsos de pós-milestone.
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
 | `revisao-formatacao-pdf-regras` | regras | revisão substancial da apresentação e aprovação visual do autor; Sistema suspenso (P-108) |
 | `regras-glossario` | regras | esboço independente do M10: termos marcados com cartão; pontos a fechar com o autor |
+| `regras-visual-01`…`10` | regras | dez correções após bateria visual; associações, overflow, hierarquia, textos e contraste; [mapa e prioridades](../specs/done/regras-auditoria-visual-completa/auditoria.md) |
 
 Spec avulsa ativa: `icones-recursos-sistema`, entrega 1 concluída; faltam adoção ampla
 com tooltip por extenso e levantamento de outros ícones/glifos.
@@ -3275,6 +3276,14 @@ o nome antigo colidia com a calculadora aritmética real da ficha
 (`shared/calculadora-flutuante/`, botão "Abrir calculadora"), que não muda de nome nem de escopo.
 
 ### Leitor, painel e pesquisa de Regras (M10-06/07/08/09) — `frontend/modules/regras`
+
+**Auditoria visual de 09/10:** [relatório e mapa das dez specs](../specs/done/regras-auditoria-visual-completa/auditoria.md).
+Correções `regras-visual-01`…`10` em backlog, `P-114`…`P-123` abertos, sem implementação.
+Principal risco: quatro tabelas com dois pares de colunas combinam chave/valor incorretos
+pela primeira coluna fixa mobile. Há também overflow de bônus/NA, grades sem hierarquia,
+abas/notas/passivas degradadas, tachado literal, contraste na base clara e acabamento de busca.
+Páginas percorridas nos viewports extremos; painel e bases por recortes nos quatro viewports.
+Esta auditoria encerra a investigação documental, não certifica o leitor como corrigido.
 
 Topbar Regras e ação da ficha abrem painel global; ↗ abre `/regras/sistema` ou
 `/regras/guia` na seção atual. `RegrasLeitor` é o corpo comum, `RegrasPage` cuida
