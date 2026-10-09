@@ -32,6 +32,8 @@
 > dos dados precisam de revisão. Tooltips canônicos implementados em labels e Regras; task aberta
 > por login local aguardando autorização, cobertura do EditorMarkdown aguardando decisão e gates
 > reais de mouse/toque. [Verificação e retomada](../specs/active/usabilidade-classes-condicoes-2026-10-09/verificacao.md).
+> Pontilhado de descoberta das condições nas Regras autorizado e implementado por
+> opção do Tooltip; quatro viewports observados. [Recorte e limites](../specs/active/usabilidade-classes-condicoes-2026-10-09/indicador-condicoes.md).
 > Por solicitação do autor, recomendações públicas divididas em seis tasks `usabilidade-01`…`06`
 > no backlog, sem execução iniciada: escolha, arquétipos, navegação móvel, estatísticas,
 > progressão e entrada de agente. [Mapa das specs](../specs/active/usabilidade-classes-condicoes-2026-10-09/RELATORIO.md#ordem-sugerida-de-trabalho).

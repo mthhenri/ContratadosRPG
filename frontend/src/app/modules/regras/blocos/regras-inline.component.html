@@ -6,6 +6,7 @@
                     <span
                         tabindex="0"
                         [appTooltip]="parte.condicao"
+                        [appTooltipIndicador]="true"
                         [textContent]="parte.texto"
                     ></span>
                 } @else if (parte.recurso) {
@@ -46,6 +47,7 @@
             <a
                 [href]="'/regras/' + documento() + '#' + trecho.ancora"
                 [appTooltip]="descreverCondicao(trecho.texto)"
+                [appTooltipIndicador]="true"
                 (click)="navegar($event, trecho.ancora)"
                 >{{ trecho.texto }}</a
             >

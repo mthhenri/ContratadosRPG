@@ -1,5 +1,23 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-09 — Indicativo de descrição das condições nas Regras
+
+Autor identificou que a descrição de Morrendo não era descobrível e escolheu
+o pontilhado dos rótulos Vida/Energia da ficha do agente. Após autorização da
+ampliação do primitivo, Tooltip ganhou opção `appTooltipIndicador`, desligada
+por padrão e ativa somente com descrição não vazia. RegrasInline e RegrasSecao
+consomem a opção; regra, texto, formatação e navegação permanecem preservados.
+
+Quatro viewports inspecionados pessoalmente, descrição aberta/fechada por foco,
+condição composta e busca. Receita comparada ao código de BarraRecurso; ficha
+autenticada não observada. 21 testes focados, lint sem erros e build aprovados;
+permissão de temporários/rede impediram as primeiras execuções no sandbox,
+reexecuções fora dele passaram. Bundle continua acima do orçamento. Alterações
+concorrentes de ícones presentes na árvore foram preservadas e não fazem parte
+deste recorte. Hover/toque reais, ergonomia e inspeção visual de link permanecem
+abertos; spec geral ativa. Sem commit novo nesta etapa.
+[Evidências e limites](../specs/active/usabilidade-classes-condicoes-2026-10-09/indicador-condicoes.md).
+
 ## 2026-10-09 — Quebra da revisão pública de usabilidade em specs
 
 Autor autorizou commitar a revisão parcial e pediu a quebra das recomendações de UI.

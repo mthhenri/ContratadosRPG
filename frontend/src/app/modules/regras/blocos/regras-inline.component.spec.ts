@@ -23,6 +23,7 @@ describe("condições no texto das Regras", () => {
         expect(dicas[0].injector.get(Tooltip).appTooltip()).toContain("Medicina");
         expect(dicas[1].injector.get(Tooltip).appTooltip()).toContain("Vulnerável");
         expect(dicas.every((dica) => dica.nativeElement.tabIndex === 0)).toBe(true);
+        expect(dicas.every((dica) => dica.nativeElement.style.textDecoration.includes('dotted'))).toBe(true);
     });
 
     it("explica o link de condição sem retirar a navegação normal ou com modificador", () => {
@@ -35,6 +36,7 @@ describe("condições no texto das Regras", () => {
         const destinos: string[] = [];
         fixture.componentInstance.navegarAncora.subscribe((ancora) => destinos.push(ancora));
         const link = fixture.nativeElement.querySelector("a") as HTMLAnchorElement;
+        expect(link.style.textDecoration).toContain("dotted");
         const clique = new MouseEvent("click", { bubbles: true, cancelable: true });
         link.dispatchEvent(clique);
         expect(destinos).toEqual(["morrendo"]);

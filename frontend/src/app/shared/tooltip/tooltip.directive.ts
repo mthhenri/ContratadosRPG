@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { DestroyRef, Directive, ElementRef, Renderer2, inject, input } from '@angular/core';
+import { DestroyRef, Directive, ElementRef, Renderer2, computed, inject, input } from '@angular/core';
 
 /** Margem mínima entre o balão e a borda da janela / o elemento âncora (px). */
 const MARGEM = 8;
@@ -81,6 +81,9 @@ let sequenciaBalao = 0;
   // direto evita que uma tela que também importe `Tooltip` a instancie duas vezes no mesmo host.
   selector: '[appTooltip]:not([app-botao-icone]):not([app-coluna-acoes-item])',
   host: {
+    '[style.text-decoration]': 'mostrarIndicador() ? "underline dotted var(--text-mute)" : null',
+    '[style.text-underline-offset]': 'mostrarIndicador() ? "3px" : null',
+    '[style.cursor]': 'mostrarIndicador() ? "help" : null',
     '(pointerenter)': 'aoEntrarPonteiro($event)',
     '(pointerleave)': 'aoSairPonteiro($event)',
     '(pointerdown)': 'aoPressionar($event)',
@@ -98,6 +101,11 @@ export class Tooltip {
   readonly appTooltip = input<string | null | undefined>('');
   /** Atraso do hover antes de abrir (ms). */
   readonly appTooltipDelay = input(300);
+  /** Sublinhado pontilhado dos rótulos com dica da ficha; optativo e somente com texto. */
+  readonly appTooltipIndicador = input(false);
+  protected readonly mostrarIndicador = computed(
+    () => this.appTooltipIndicador() && !!this.appTooltip()?.trim(),
+  );
   /**
    * Força a classificação de toque do host: `true` = acionável (toque curto executa a ação, balão
    * só no pressionar-e-segurar), `false` = informativo (toque curto abre o balão e cancela o

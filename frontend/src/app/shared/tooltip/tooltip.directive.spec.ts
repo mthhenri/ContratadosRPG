@@ -19,6 +19,7 @@ import { Tooltip } from './tooltip.directive';
   imports: [Tooltip],
   template: `
     <button data-teste="hover" [appTooltip]="texto()" [appTooltipDelay]="300">Habilidade</button>
+    <span data-teste="indicador" [appTooltip]="texto()" [appTooltipIndicador]="true">Morrendo</span>
     <!-- Espelha o host informativo real da ficha (a abreviação do atributo): span focável, sem
          ação nenhuma. O (click)/(keydown) existem só para flagrar clique vazado. -->
     <span
@@ -60,6 +61,21 @@ class Hospedeiro {
 class HospedeiroComDialog {}
 
 describe('Tooltip', () => {
+  it('indica a dica somente quando solicitado e há descrição, retirando o indicativo ao esvaziar', () => {
+    TestBed.configureTestingModule({ imports: [Hospedeiro] });
+    const fixture = TestBed.createComponent(Hospedeiro);
+    fixture.detectChanges();
+    const termo = fixture.nativeElement.querySelector('[data-teste="indicador"]') as HTMLElement;
+    const botao = fixture.nativeElement.querySelector('[data-teste="hover"]') as HTMLElement;
+    expect(termo.style.textDecoration).toContain('dotted');
+    expect(termo.style.cursor).toBe('help');
+    expect(botao.style.textDecoration).toBe('');
+    fixture.componentInstance.texto.set('   ');
+    fixture.detectChanges();
+    expect(termo.style.textDecoration).toBe('');
+    expect(termo.style.cursor).toBe('');
+  });
+
   function montar() {
     TestBed.configureTestingModule({ imports: [Hospedeiro] });
     const fixture = TestBed.createComponent(Hospedeiro);
