@@ -14,6 +14,12 @@
     vertical-align: -0.12em;
 }
 
+// O escudo de Defesa pesa menos que o coração e o raio na mesma caixa; ganha ~20% para equilibrar o trio.
+:host(.icone--defesa) svg {
+    width: 1.4em;
+    height: 1.4em;
+}
+
 svg {
     width: 1.15em;
     height: 1.15em;

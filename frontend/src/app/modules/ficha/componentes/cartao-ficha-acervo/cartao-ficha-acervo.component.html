@@ -36,8 +36,12 @@
                         {{ item().vidaAtual }}/{{ item().vidaMaxima ?? "—" }}</span
                     >
                     <span
-                        ><app-icone class="icone--texto" nome="defesa" appTooltip="Defesa" /> Defesa
-                        {{ item().defesa ?? "—" }}</span
+                        ><app-icone
+                            class="icone--texto icone--defesa"
+                            nome="defesa"
+                            appTooltip="Defesa"
+                        />
+                        Defesa {{ item().defesa ?? "—" }}</span
                     >
                 </span>
             } @else if (item().tipo === TipoFichaEnum.NPC) {

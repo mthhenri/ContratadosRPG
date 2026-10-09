@@ -9,7 +9,11 @@
         >
             <span class="ficha-mini__rotulo">
                 @if (linha.chave === "defesa") {
-                    <app-icone class="icone--texto" nome="defesa" appTooltip="Defesa" />
+                    <app-icone
+                        class="icone--texto icone--defesa"
+                        nome="defesa"
+                        appTooltip="Defesa"
+                    />
                 }
                 {{ linha.rotulo }}</span
             >
