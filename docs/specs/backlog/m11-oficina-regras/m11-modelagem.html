@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="pt-BR">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Modelo da Oficina das Regras</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: coluna única de leitura (~960px), seções numeradas porque são uma sequência de explicação; diagrama com rolagem própria. Tema do projeto: Terminal de Contenção, dark-first. */
+:root {
+  --bg: #0a0c0f; --surface: #13161b; --surface-2: #1a1e24;
+  --border: rgba(255,255,255,.08); --border-strong: rgba(255,255,255,.16);
+  --text: #e6e8eb; --text-dim: #969ba3; --text-mute: #6c717a;
+  --accent: #d53030; --accent-dim: rgba(213,48,48,.14);
+  --add: #4fae6a; --add-dim: rgba(79,174,106,.16);
+  --del: #e0645c; --del-dim: rgba(224,100,92,.16);
+  --warn: #d9a441;
+  --mono: 'IBM Plex Mono', ui-monospace, Consolas, monospace;
+  --sans: 'IBM Plex Sans', system-ui, sans-serif;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) {
+  --bg: #f3f4f6; --surface: #ffffff; --surface-2: #eceef1;
+  --border: rgba(0,0,0,.09); --border-strong: rgba(0,0,0,.18);
+  --text: #16181c; --text-dim: #4f545c; --text-mute: #7a7f87;
+  --accent: #b82424; --accent-dim: rgba(184,36,36,.10);
+  --add: #2b7f45; --add-dim: rgba(43,127,69,.12);
+  --del: #b8352d; --del-dim: rgba(184,53,45,.10);
+  --warn: #9a6d12; color-scheme: light; } }
+:root[data-theme="light"] {
+  --bg: #f3f4f6; --surface: #ffffff; --surface-2: #eceef1;
+  --border: rgba(0,0,0,.09); --border-strong: rgba(0,0,0,.18);
+  --text: #16181c; --text-dim: #4f545c; --text-mute: #7a7f87;
+  --accent: #b82424; --accent-dim: rgba(184,36,36,.10);
+  --add: #2b7f45; --add-dim: rgba(43,127,69,.12);
+  --del: #b8352d; --del-dim: rgba(184,53,45,.10);
+  --warn: #9a6d12; color-scheme: light; }
+
+body { background: var(--bg); color: var(--text); font: 15px/1.6 var(--sans); }
+.pagina { max-width: 960px; margin: 0 auto; padding-inline: 20px; padding-block: 40px 80px; display: grid; gap: 56px; }
+h1, h2, h3 { font-family: var(--mono); text-wrap: balance; margin: 0; }
+h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; }
+h2 { font-size: 19px; font-weight: 600; display: flex; gap: 12px; align-items: baseline; }
+h2 .n { color: var(--accent); font-size: 13px; letter-spacing: .08em; }
+h3 { font-size: 14px; font-weight: 600; }
+p { margin: 0; max-width: 68ch; color: var(--text-dim); }
+p strong, li strong { color: var(--text); font-weight: 600; }
+code { font-family: var(--mono); font-size: .88em; background: var(--surface-2); padding: 1px 5px; border-radius: 3px; color: var(--text); }
+.rotulo { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-mute); }
+section { display: grid; gap: 18px; min-width: 0; }
+header { display: grid; gap: 10px; border-bottom: 1px solid var(--border); padding-bottom: 28px; }
+
+/* Analogia */
+.analogia { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.camada { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 16px; display: grid; gap: 6px; align-content: start; }
+.camada .hoje { font-size: 13px; color: var(--text-mute); }
+.camada .tabela-nome { font-family: var(--mono); font-weight: 600; color: var(--accent); }
+.camada p { font-size: 14px; }
+
+/* Diagrama */
+.rolagem { overflow-x: auto; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; }
+.rolagem svg { display: block; min-width: 900px; width: 100%; height: auto; }
+svg text { font-family: var(--mono); }
+.t-box { fill: var(--surface-2); stroke: var(--border-strong); }
+.t-box.nucleo { stroke: var(--accent); }
+.t-head { fill: var(--text); font-size: 13px; font-weight: 600; }
+.t-head.nucleo { fill: var(--accent); }
+.t-campo { fill: var(--text-dim); font-size: 11.5px; }
+.t-campo.fk { fill: var(--text); }
+.t-nota { fill: var(--text-mute); font-size: 10.5px; }
+.t-sep { stroke: var(--border-strong); }
+.liga { fill: none; stroke: var(--text-mute); stroke-width: 1.4; }
+.liga.trac { stroke-dasharray: 4 4; }
+.ponta { fill: var(--text-mute); }
+.legenda { display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 13px; color: var(--text-dim); }
+.legenda span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; border: 1px solid var(--border-strong); background: var(--surface-2); }
+.legenda .l-nucleo::before { border-color: var(--accent); }
+
+/* Exemplo árvore + linhas */
+.exemplo { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 760px) { .exemplo { grid-template-columns: 1fr; } }
+pre.arvore { margin: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 14px 16px; font: 12.5px/1.75 var(--mono); color: var(--text-dim); overflow-x: auto; }
+pre.arvore b { color: var(--text); font-weight: 500; }
+pre.arvore i { color: var(--text-mute); font-style: normal; }
+.tabela { overflow-x: auto; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--border); vertical-align: top; white-space: nowrap; }
+th { font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-mute); font-weight: 500; background: var(--surface-2); }
+td { font-family: var(--mono); color: var(--text-dim); font-variant-numeric: tabular-nums; }
+td.dados { white-space: normal; min-width: 260px; color: var(--text-mute); }
+tr:last-child td { border-bottom: 0; }
+.tipo { color: var(--accent); }
+
+/* Fluxo de estados */
+.fluxo { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; }
+@media (max-width: 680px) { .fluxo { grid-template-columns: 1fr; } }
+.estado { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 16px; display: grid; gap: 8px; align-content: start; }
+.estado h3 { display: flex; justify-content: space-between; gap: 8px; }
+.estado .acao { font-family: var(--mono); font-size: 11px; color: var(--accent); letter-spacing: .06em; text-transform: uppercase; }
+.estado p { font-size: 13.5px; }
+.quem { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font-family: var(--mono); font-size: 11px; padding: 2px 8px; border-radius: 3px; border: 1px solid var(--border-strong); color: var(--text-dim); }
+.chip.forte { border-color: var(--accent); color: var(--text); }
+
+/* Permissões */
+.perm { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.perm .estado ul { margin: 0; padding-left: 18px; color: var(--text-dim); font-size: 13.5px; display: grid; gap: 4px; }
+
+/* Diff */
+.diff { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+.diff-topo { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--surface-2); font-family: var(--mono); font-size: 12.5px; }
+.diff-topo .contagem { display: flex; gap: 14px; color: var(--text-dim); }
+.c-add { color: var(--add); } .c-del { color: var(--del); } .c-mud { color: var(--warn); }
+.diff-item { padding: 14px 16px; border-bottom: 1px solid var(--border); display: grid; gap: 8px; }
+.diff-item:last-child { border-bottom: 0; }
+.caminho { font-family: var(--mono); font-size: 11.5px; color: var(--text-mute); }
+.diff-cab { display: flex; flex-wrap: wrap; gap: 10px; align-items: baseline; }
+.diff-cab strong { font-family: var(--mono); font-size: 14px; }
+.marca { font-family: var(--mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; padding: 1px 7px; border-radius: 3px; }
+.marca.mud { color: var(--warn); border: 1px solid var(--warn); }
+.marca.add { color: var(--add); border: 1px solid var(--add); }
+.marca.mov { color: var(--text-dim); border: 1px solid var(--border-strong); }
+.campo-diff { display: grid; grid-template-columns: 110px minmax(0,1fr); gap: 4px 12px; font-size: 13.5px; }
+@media (max-width: 520px) { .campo-diff { grid-template-columns: 1fr; } }
+.campo-diff dt { font-family: var(--mono); font-size: 11.5px; color: var(--text-mute); padding-top: 2px; }
+.campo-diff dd { margin: 0; color: var(--text-dim); }
+del { background: var(--del-dim); color: var(--del); text-decoration: line-through; padding: 0 2px; border-radius: 2px; }
+ins { background: var(--add-dim); color: var(--add); text-decoration: none; padding: 0 2px; border-radius: 2px; }
+.aviso-exemplo { font-size: 12.5px; color: var(--text-mute); }
+
+/* Decisões */
+.decisoes { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; counter-reset: d; }
+.decisoes li { background: var(--surface); border: 1px solid var(--border); border-left: 2px solid var(--accent); border-radius: 4px; padding: 12px 16px; color: var(--text-dim); font-size: 14px; }
+</style>
+
+<main class="pagina">
+
+<header>
+  <span class="rotulo">ContratadosRPG · M11 · proposta de modelagem</span>
+  <h1>Modelo da Oficina das Regras</h1>
+  <p>Como o Sistema, o Guia do Mestre e as expansões futuras ficam guardados no banco: o livro em edição, as publicações congeladas, quem pode mexer e como comparar duas versões.</p>
+</header>
+
+<section>
+  <h2><span class="n">01</span>A ideia em três camadas</h2>
+  <p>A modelagem reproduz o fluxo que você já tem com o Google Docs, só que dentro do site.</p>
+  <div class="analogia">
+    <div class="camada">
+      <span class="hoje">Hoje: a pasta com Sistema e Guia</span>
+      <span class="tabela-nome">livro</span>
+      <p>Quais livros existem. Sistema, Guia do Mestre e, um dia, Contratados Medieval.</p>
+    </div>
+    <div class="camada">
+      <span class="hoje">Hoje: o Google Docs que você edita</span>
+      <span class="tabela-nome">regra_peca</span>
+      <p>O livro <strong>em edição</strong>, guardado peça por peça: cada seção, classe, arquétipo, habilidade ou item é uma linha.</p>
+    </div>
+    <div class="camada">
+      <span class="hoje">Hoje: cada PDF exportado</span>
+      <span class="tabela-nome">livro_versao</span>
+      <p>Cada publicação vira uma <strong>fotografia congelada</strong> do livro inteiro. Nunca é alterada, só acrescentada.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2><span class="n">02</span>O diagrama</h2>
+  <p>Cada caixa é uma tabela. A linha liga a coluna que aponta (o círculo) à tabela apontada. As tabelas com borda vermelha são o núcleo; as outras são listas fixas de opções ou apoio.</p>
+  <div class="rolagem">
+    <svg viewBox="0 0 960 545" role="img" aria-label="Diagrama das tabelas da Oficina das Regras">
+      <!-- ligações (desenhadas antes das caixas) -->
+      <path class="liga" d="M150 150 V100"/><circle class="ponta" cx="150" cy="150" r="3.5"/>
+      <path class="liga" d="M150 230 V280"/><circle class="ponta" cx="150" cy="230" r="3.5"/>
+      <path class="liga" d="M480 190 V140"/><circle class="ponta" cx="480" cy="190" r="3.5"/>
+      <path class="liga" d="M610 250 H634 V206 H610"/><circle class="ponta" cx="610" cy="250" r="3.5"/>
+      <path class="liga" d="M610 270 H654 V410 H680"/><circle class="ponta" cx="610" cy="270" r="3.5"/>
+      <path class="liga" d="M480 440 V390"/><circle class="ponta" cx="480" cy="440" r="3.5"/>
+      <path class="liga" d="M680 60 H610"/><circle class="ponta" cx="680" cy="60" r="3.5"/>
+      <path class="liga" d="M810 220 V270"/><circle class="ponta" cx="810" cy="220" r="3.5"/>
+      <path class="liga trac" d="M680 180 H664 V8 H150 V20"/><circle class="ponta" cx="680" cy="180" r="3.5"/>
+      <text class="t-nota" x="300" y="4" dy="0">quem publicou</text>
+      <text class="t-nota" x="640" y="232">pai</text>
+
+      <!-- coluna 1: usuário e permissões -->
+      <rect class="t-box" x="20" y="20" width="260" height="80" rx="4"/>
+      <text class="t-head" x="34" y="41">usuario</text>
+      <line class="t-sep" x1="20" y1="50" x2="280" y2="50"/>
+      <text class="t-campo" x="34" y="66">id</text>
+      <text class="t-campo" x="34" y="86">tipo_usuario_id</text><text class="t-nota" x="150" y="86">ADMIN · TESTER · NORMAL</text>
+
+      <rect class="t-box" x="20" y="150" width="260" height="80" rx="4"/>
+      <text class="t-head" x="34" y="171">usuario_permissao</text>
+      <line class="t-sep" x1="20" y1="180" x2="280" y2="180"/>
+      <text class="t-campo fk" x="34" y="196">usuario_id</text>
+      <text class="t-campo fk" x="34" y="216">tipo_permissao_id</text>
+
+      <rect class="t-box" x="20" y="280" width="260" height="60" rx="4"/>
+      <text class="t-head" x="34" y="301">tipo_permissao</text>
+      <line class="t-sep" x1="20" y1="310" x2="280" y2="310"/>
+      <text class="t-campo" x="34" y="326">codigo</text><text class="t-nota" x="100" y="326">EDITAR_REGRAS, …</text>
+
+      <text class="t-nota" x="20" y="372">Permissões extras, além do tipo.</text>
+      <text class="t-nota" x="20" y="388">ADMIN já tem todas por ser ADMIN.</text>
+      <text class="t-nota" x="20" y="404">Publicar não é concedível: só ADMIN.</text>
+
+      <!-- coluna 2: livro e peças -->
+      <rect class="t-box nucleo" x="350" y="20" width="260" height="120" rx="4"/>
+      <text class="t-head nucleo" x="364" y="41">livro</text>
+      <line class="t-sep" x1="350" y1="50" x2="610" y2="50"/>
+      <text class="t-campo" x="364" y="66">id</text>
+      <text class="t-campo" x="364" y="86">codigo</text><text class="t-nota" x="440" y="86">sistema · guia · medieval</text>
+      <text class="t-campo" x="364" y="106">titulo</text>
+      <text class="t-campo" x="364" y="126">ordem</text>
+
+      <rect class="t-box nucleo" x="350" y="190" width="260" height="200" rx="4"/>
+      <text class="t-head nucleo" x="364" y="211">regra_peca</text>
+      <text class="t-nota" x="470" y="211">o livro em edição</text>
+      <line class="t-sep" x1="350" y1="220" x2="610" y2="220"/>
+      <text class="t-campo fk" x="364" y="236">livro_id</text>
+      <text class="t-campo fk" x="364" y="256">peca_pai_id</text><text class="t-nota" x="470" y="256">quem me contém</text>
+      <text class="t-campo fk" x="364" y="276">tipo_regra_peca_id</text>
+      <text class="t-campo" x="364" y="296">identificador</text><text class="t-nota" x="470" y="296">UUID, nunca muda</text>
+      <text class="t-campo" x="364" y="316">ancora</text><text class="t-nota" x="470" y="316">#combatente</text>
+      <text class="t-campo" x="364" y="336">ordem</text><text class="t-nota" x="470" y="336">posição</text>
+      <text class="t-campo" x="364" y="356">dados</text><text class="t-nota" x="470" y="356">JSONB do tipo</text>
+      <text class="t-campo" x="364" y="376">revisao</text><text class="t-nota" x="470" y="376">trava de edição</text>
+
+      <rect class="t-box" x="350" y="440" width="260" height="80" rx="4"/>
+      <text class="t-head" x="364" y="461">regra_peca_ancora_antiga</text>
+      <line class="t-sep" x1="350" y1="470" x2="610" y2="470"/>
+      <text class="t-campo fk" x="364" y="486">regra_peca_id</text>
+      <text class="t-campo" x="364" y="506">ancora</text><text class="t-nota" x="440" y="506">link velho ainda funciona</text>
+
+      <!-- coluna 3: versões e tipos -->
+      <rect class="t-box nucleo" x="680" y="20" width="260" height="200" rx="4"/>
+      <text class="t-head nucleo" x="694" y="41">livro_versao</text>
+      <text class="t-nota" x="806" y="41">fotografias</text>
+      <line class="t-sep" x1="680" y1="50" x2="940" y2="50"/>
+      <text class="t-campo fk" x="694" y="66">livro_id</text>
+      <text class="t-campo fk" x="694" y="86">situacao_id</text>
+      <text class="t-campo" x="694" y="106">numero</text><text class="t-nota" x="800" y="106">4.1.5</text>
+      <text class="t-campo" x="694" y="126">formato</text><text class="t-nota" x="800" y="126">versão do contrato</text>
+      <text class="t-campo" x="694" y="146">conteudo</text><text class="t-nota" x="800" y="146">JSONB: livro inteiro</text>
+      <text class="t-campo" x="694" y="166">publicacao_data</text>
+      <text class="t-campo fk" x="694" y="186">usuario_id</text>
+      <text class="t-campo" x="694" y="206">nota</text><text class="t-nota" x="800" y="206">"o que mudou"</text>
+
+      <rect class="t-box" x="680" y="270" width="260" height="60" rx="4"/>
+      <text class="t-head" x="694" y="291">tipo_livro_versao_situacao</text>
+      <line class="t-sep" x1="680" y1="300" x2="940" y2="300"/>
+      <text class="t-campo" x="694" y="316">codigo</text><text class="t-nota" x="760" y="316">RASCUNHO · PUBLICADA</text>
+
+      <rect class="t-box" x="680" y="380" width="260" height="60" rx="4"/>
+      <text class="t-head" x="694" y="401">tipo_regra_peca</text>
+      <line class="t-sep" x1="680" y1="410" x2="940" y2="410"/>
+      <text class="t-campo" x="694" y="426">codigo</text><text class="t-nota" x="760" y="426">SECAO · CLASSE · HABILIDADE…</text>
+
+      <text class="t-nota" x="680" y="472">Toda tabela também tem id, created_date,</text>
+      <text class="t-nota" x="680" y="488">updated_date, is_deleted e deleted_date,</text>
+      <text class="t-nota" x="680" y="504">como no resto do banco.</text>
+    </svg>
+  </div>
+  <div class="legenda"><span class="l-nucleo">núcleo da Oficina</span><span>lista fixa ou apoio</span><span style="--x:0">● = coluna que aponta · tracejado = só registro de autoria</span></div>
+</section>
+
+<section>
+  <h2><span class="n">03</span>Um pedaço real do livro, dentro do banco</h2>
+  <p>À esquerda, o trecho do Combatente como você o vê no livro. À direita, as mesmas peças como linhas de <code>regra_peca</code>. A coluna <code>pai</code> é o que monta a árvore.</p>
+  <div class="exemplo">
+<pre class="arvore"><i>Livro: Sistema</i>
+└─ <b>⬢ Criação de Personagem</b>  <i>10</i>
+   └─ <b>⬡ Classes e Arquétipos</b>  <i>11</i>
+      ├─ "As classes determinam…"  <i>12</i>
+      └─ <b>⬥ Combatente</b>  <i>13</i>
+         ├─ <b>◻ Lutador</b>  <i>14</i>
+         │  ├─ Força Bruta [4 E]  <i>15</i>
+         │  └─ ◈ Golpe Devastador  <i>16</i>
+         └─ <b>◻ Mercenário</b>  <i>17</i></pre>
+    <div class="tabela">
+      <table>
+        <thead><tr><th>id</th><th>pai</th><th>tipo</th><th>ancora</th><th>ordem</th><th>dados (resumido)</th></tr></thead>
+        <tbody>
+          <tr><td>10</td><td>—</td><td class="tipo">SECAO</td><td>criacao-de-personagem</td><td>3</td><td class="dados">título "Criação de Personagem", nível 1</td></tr>
+          <tr><td>11</td><td>10</td><td class="tipo">SECAO</td><td>classes-e-arquetipos</td><td>4</td><td class="dados">título "Classes e Arquétipos", nível 2</td></tr>
+          <tr><td>12</td><td>11</td><td class="tipo">PARAGRAFO</td><td>—</td><td>1</td><td class="dados">"As classes determinam o foco…"</td></tr>
+          <tr><td>13</td><td>11</td><td class="tipo">CLASSE</td><td>combatente</td><td>2</td><td class="dados">nome, citação, Vida 30 + VIG × 4, Energia 15 + DES × 2, progressão</td></tr>
+          <tr><td>14</td><td>13</td><td class="tipo">ARQUETIPO</td><td>lutador</td><td>1</td><td class="dados">nome, "Foco em armas corpo-a-corpo", +1 Luta, +1 Força</td></tr>
+          <tr><td>15</td><td>14</td><td class="tipo">HABILIDADE</td><td>forca-bruta</td><td>1</td><td class="dados">nome, custo 4, texto "Soma sua Força × 3…"</td></tr>
+          <tr><td>16</td><td>14</td><td class="tipo">HABILIDADE</td><td>golpe-devastador</td><td>2</td><td class="dados">nome, custo 3, texto</td></tr>
+          <tr><td>17</td><td>13</td><td class="tipo">ARQUETIPO</td><td>mercenario</td><td>2</td><td class="dados">nome, "Foco em armas de fogo", bônus</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <p><strong>O que vira peça própria:</strong> tudo que tem identidade, ou seja, pode ser linkado, aparecer na ficha ou ser comparado entre versões (classe, arquétipo, habilidade, item, condição, origem). <strong>O que fica dentro de <code>dados</code>:</strong> o que é só conteúdo daquela peça (citação, Vida inicial, o texto com negrito e NA).</p>
+</section>
+
+<section>
+  <h2><span class="n">04</span>Os três estados de um livro</h2>
+  <div class="fluxo">
+    <div class="estado">
+      <h3>Em edição</h3>
+      <span class="acao">salvar</span>
+      <p>Mora em <code>regra_peca</code>. Cada alteração muda só a peça mexida. Ninguém de fora vê.</p>
+      <div class="quem"><span class="chip forte">ADMIN</span><span class="chip forte">EDITAR_REGRAS</span></div>
+    </div>
+    <div class="estado">
+      <h3>Rascunho</h3>
+      <span class="acao">publicar rascunho</span>
+      <p>O site monta o livro inteiro e grava uma <code>livro_versao</code> RASCUNHO. Os testers veem a mais recente.</p>
+      <div class="quem"><span class="chip">publica: só ADMIN</span><span class="chip forte">vê: TESTER</span></div>
+    </div>
+    <div class="estado">
+      <h3>Publicada</h3>
+      <span class="acao">publicar versão</span>
+      <p>Grava uma <code>livro_versao</code> PUBLICADA com número (4.1.5). É o que todo mundo lê em /regras.</p>
+      <div class="quem"><span class="chip">publica: só ADMIN</span><span class="chip forte">vê: todos</span></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2><span class="n">05</span>Permissões além do tipo de usuário</h2>
+  <p>Como você disse, isso é mais amplo que o livro. Em vez de uma tabela "editor do livro", o usuário passa a ter <strong>permissões extras</strong> por cima do tipo. O tipo continua dizendo quem a pessoa é; a permissão diz o que mais ela pode fazer.</p>
+  <div class="perm">
+    <div class="estado">
+      <h3>Como funciona</h3>
+      <ul>
+        <li><code>tipo_permissao</code> lista o que pode ser concedido. Começa só com <code>EDITAR_REGRAS</code>.</li>
+        <li><code>usuario_permissao</code> diz quem recebeu o quê. Uma linha por concessão; remover é soft delete.</li>
+        <li>ADMIN passa em qualquer checagem sem precisar de linha.</li>
+        <li>Publicar fica fora da lista de propósito: o código exige ADMIN.</li>
+      </ul>
+    </div>
+    <div class="estado">
+      <h3>Seu jogador de confiança</h3>
+      <ul>
+        <li>Continua NORMAL ou TESTER.</li>
+        <li>Ganha <code>EDITAR_REGRAS</code> numa tela de admin.</li>
+        <li>Entra na Oficina, edita e salva. A edição fica esperando.</li>
+        <li>Você revisa (com o diff) e publica.</li>
+      </ul>
+    </div>
+  </div>
+  <p>Se um dia precisar limitar a um livro só (ele edita a expansão, mas não o Sistema), a <code>usuario_permissao</code> ganha uma coluna opcional <code>livro_id</code>. Não precisa nascer com ela.</p>
+</section>
+
+<section>
+  <h2><span class="n">06</span>Comparar versões</h2>
+  <p>Toda fotografia guarda o <code>identificador</code> de cada peça. Para comparar 4.1.4 com 4.1.5, o site casa as peças pelo identificador, e não pelo título. Assim sabe que "Força Bruta" nas duas é a mesma habilidade, mesmo que tenha mudado de nome. Daí saem quatro tipos de mudança: <span class="c-add">nova</span>, <span class="c-del">removida</span>, <span class="c-mud">alterada</span> (campo a campo, com o texto palavra a palavra) e movida.</p>
+  <div class="diff">
+    <div class="diff-topo">
+      <span>Sistema · 4.1.4 → 4.1.5</span>
+      <span class="contagem"><span class="c-mud">2 alteradas</span><span class="c-add">1 nova</span><span>1 movida</span></span>
+    </div>
+    <div class="diff-item">
+      <span class="caminho">Classes e Arquétipos › Combatente › Lutador</span>
+      <div class="diff-cab"><strong>Força Bruta</strong><span class="marca mud">alterada</span></div>
+      <dl class="campo-diff">
+        <dt>custo</dt><dd><del>4 E</del> <ins>3 E</ins></dd>
+        <dt>texto</dt><dd>Soma sua Força × <del>3</del><ins>2</ins> no dano de ataques físicos.</dd>
+      </dl>
+    </div>
+    <div class="diff-item">
+      <span class="caminho">Classes e Arquétipos › Combatente</span>
+      <div class="diff-cab"><strong>Combatente</strong><span class="marca mud">alterada</span></div>
+      <dl class="campo-diff">
+        <dt>progressão</dt><dd>[Vida] a cada Nível recebe: <del>7</del><ins>6</ins> + VIG × 2</dd>
+      </dl>
+    </div>
+    <div class="diff-item">
+      <span class="caminho">Equipamentos › Definições</span>
+      <div class="diff-cab"><strong>Lanterna Tática</strong><span class="marca add">nova</span></div>
+    </div>
+    <div class="diff-item">
+      <span class="caminho">Regras › Gerais</span>
+      <div class="diff-cab"><strong>Descanso</strong><span class="marca mov">movida</span></div>
+      <dl class="campo-diff"><dt>posição</dt><dd>de depois de "Ações" para depois de "Cálculos"</dd></dl>
+    </div>
+  </div>
+  <p class="aviso-exemplo">Exemplo ilustrativo: os valores alterados e a Lanterna Tática não são mudanças reais das regras.</p>
+  <p>O mesmo comparador serve para três coisas: <strong>revisar a edição do seu jogador</strong> (cópia de trabalho × última publicada), <strong>conferir antes de publicar</strong> e <strong>ver o histórico</strong> entre duas versões antigas. Um limite: as versões anteriores à importação (4.1.3 e antes) não têm identificador, então só a partir da primeira versão importada a comparação fica peça a peça.</p>
+</section>
+
+<section>
+  <h2><span class="n">07</span>O que fica para você decidir</h2>
+  <ol class="decisoes">
+    <li>Permissões extras como sistema geral (<code>usuario_permissao</code> + <code>tipo_permissao</code>), começando só com <code>EDITAR_REGRAS</code>, entram na própria M11 ou viram uma task anterior?</li>
+    <li>Quem edita com <code>EDITAR_REGRAS</code> também pode ver o rascunho e as versões antigas, ou só a Oficina?</li>
+    <li>O comparador entra junto da publicação (já útil para revisar o que seu jogador mudou) ou fica para a fase de histórico?</li>
+  </ol>
+</section>
+
+</main>

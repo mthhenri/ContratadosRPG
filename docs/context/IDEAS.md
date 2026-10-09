@@ -27,6 +27,13 @@
 
 ## Promovidas
 
+### I-053 — Editor do sistema no site · regras/documentação
+
+- **Promovida em 2026-10-09** a `docs/specs/backlog/m11-oficina-regras.spec.md` (M11 — Oficina das
+  Regras): conversa de modelagem e usabilidade com o autor, exemplão interativo aprovado e
+  diagrama da modelagem anexados à spec. Banco como fonte da verdade, três estados de publicação,
+  comparador (edição × publicada e histórico) no escopo; edição por não-admins ficou na `I-060`.
+
 ### I-047 — Ladrilho de atributo do NPC igual ao da Criatura · frontend/ficha
 
 - **Promovida em 2026-10-05** a `docs/specs/done/m4-18-ficha-npc-atributos-como-jogador.spec.md`: o autor pediu que os
@@ -235,6 +242,23 @@
 
 ## Abertas
 
+### I-060 — Permissões extras de usuário, começando por editar as Regras · backend/usuario
+
+- **Ideia:** conceder a um usuário permissões além do seu tipo (`NORMAL`/`TESTER`/`ADMIN`).
+  `tipo_permissao` lista o que é concedível (começa só com `EDITAR_REGRAS`) e `usuario_permissao`
+  liga usuário a permissão (soft delete revoga). `ADMIN` passa em qualquer checagem sem linha.
+  Publicar rascunho ou versão das Regras **não** é concedível: continua só `ADMIN`. Se um dia for
+  preciso restringir a um livro, `usuario_permissao` ganha `livro_id` opcional.
+- **Origem:** conversa de modelagem da Oficina das Regras com o autor, 2026-10-09
+  ([diagrama](https://claude.ai/artifact/56C6KGre8n4EkuXPxBhK8C)). O autor tem um jogador de
+  confiança que hoje edita o Google Docs; quer que ele edite pela Oficina e o autor revise
+  (com o comparador) e publique. Adiado para depois da M11 (`docs/specs/backlog/m11-oficina-regras.spec.md`) para não crescer o escopo.
+- **Por quê:** permissão é assunto amplo do usuário, não do livro; evita uma tabela
+  `livro_editor` específica e serve para futuras concessões.
+- **Custo aparente:** duas tabelas, guarda de permissão no backend, tela de admin para conceder.
+  A Oficina já nasce com `regra_peca.revisao` (trava otimista), então editar a dois não exige
+  mudar a modelagem. Pendente: quem tem `EDITAR_REGRAS` vê rascunho/versões antigas ou só a Oficina?
+
 ### I-059 — Ajustes finos de Regras deixados fora da revisão visual · frontend/regras
 
 - **Ideia:** (1) chip de NA menor quando aparece no meio do texto corrido, para não abrir a
@@ -292,15 +316,6 @@
 - **Por quê:** quem joga consulta a regra sem sair do contexto da ficha.
 - **Custo aparente:** mapa estável entre conceitos do `shared/` e âncoras do formato canônico (por
   ID, não por nome); depende do leitor da M10.
-
-### I-053 — Editor do sistema no site · regras/documentação
-
-- **Ideia:** escrever o Sistema e o Guia dentro do site, gravando direto o formato canônico; inclui ver
-  versões antigas só para leitura.
-- **Origem:** revisão do exemplão do M10 (`docs/specs/done/m10-regras/m10-regras-exemplao.html`) com o autor e os testers, 2026-10-06; anotada em `m10-regras.spec.md`. Pedido original do autor para depois do leitor.
-- **Por quê:** tira o Google Docs do fluxo e permite o texto único.
-- **Custo aparente:** alto — editor por tipo de bloco, persistência/versões, permissão de autor;
-  provável mudança do normalizador e dos tipos para `shared/`.
 
 ### I-052 — Texto único: catálogos do shared vindos do documento · regras/shared
 
