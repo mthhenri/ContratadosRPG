@@ -1,5 +1,15 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-09 — Versão 1.7.2
+
+Patch de acabamento do leitor de Regras: nota `docs/patchnotes/1.7.2.md` e versão sincronizada nos pacotes.
+Entra a limpeza dos livros em `docs/core/` (Saúde do Civil, Ordem de Bônus sem tabela de layout e sem "Página 00",
+dano do item Corpo, asteriscos soltos; P-110 removido), NA em prosa só colorido (`compacto` em `nivel-ameaca`),
+amplificador sem cor de recurso no nome, REAÇÃO antes do custo, tabelas de regras mais estreitas e botão Regras da
+topbar sem estado ativo. Conferido: `test:regras` (70), build e testes de `shared` (1157), verificação ao vivo em
+1920×1080, 1366×768 e 360×800, dry-run de `patchnotes:publicar` e de `publicar-versao.mjs` (criaria a tag
+v1.7.2). Observação: a tag v1.7.1 nunca foi criada (nota sem `commit:`), o dry-run a ignora.
+
 ## 2026-10-09 — Versão 1.7.1
 
 Patch logo após a 1.7.0: nota `docs/patchnotes/1.7.1.md` (ícones de dano/habilidade/reação, tabelas e rodapé do
