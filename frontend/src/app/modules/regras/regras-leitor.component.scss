@@ -59,6 +59,26 @@
         font: 600 11px var(--font-mono);
     }
 
+    &__abrir-sumario {
+        min-height: 42px;
+        @include bp.mobile {
+            min-height: 50px;
+        }
+    }
+
+    &__marca {
+        display: flex;
+        margin-bottom: var(--space-16);
+        text-align: left;
+        text-transform: none;
+        letter-spacing: normal;
+        min-height: bp.$alvo-toque;
+        app-marca {
+            flex-shrink: 0;
+            font-size: 24px;
+        }
+    }
+
     &__cabecalho {
         display: flex;
         flex-wrap: wrap;

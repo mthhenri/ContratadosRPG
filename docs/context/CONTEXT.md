@@ -47,7 +47,11 @@
 > [backlog](../specs/backlog/revisao-formatacao-pdf-regras.spec.md), sem aprovação
 > editorial da apresentação entregue.
 >
-> **Última revisão:** 2026-10-09 · `regras-segunda-revisao-visual`: categorias/notas de
+> **Última revisão:** 2026-10-09 · `regras-mobile-tabelas-e-rodape`: amplificadores sem
+> quebra no nome, módulos associados aos efeitos, rolagem local sem sobreposição da última
+> coluna, Sumário alinhado ao seletor, ícone da topbar e marca funcional no rodapé.
+> Página e painel observados nos quatro viewports; [evidências e limites](../specs/done/regras-mobile-tabelas-e-rodape/verificacao.md).
+> Revisão anterior `regras-segunda-revisao-visual`: categorias/notas de
 > equipamentos, roteiros sem duplicação, tabelas legíveis no mobile, topo, busca com ×,
 > debounce de 300 ms, separadores e highlight do tema.
 > [Auditoria visual e limites](../specs/done/regras-segunda-revisao-visual/verificacao.md).

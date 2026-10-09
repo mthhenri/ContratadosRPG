@@ -202,6 +202,16 @@ Tarja sólida segue Documento de contenção. Tabelas têm rolagem local, fade e
 coluna fixa no celular. Habilidades são listas densas com chip de Energia (ícone +
 valor) secundário/contorno e REAÇÃO primário/contorno, com tooltip por extenso.
 
+Revisão mobile de 09/10/2026: tabelas comuns distribuem as colunas com largura fixa
+no celular para a primeira coluna não ocultar o começo da última no fim da rolagem.
+Amplificadores seguem a densidade de `RegrasModificacoes`: nome e empilhamento
+na primeira linha, efeito abaixo na largura inteira; nomes não quebram. Grades de
+módulos usam `app-cartao`, cada título junto dos efeitos da sua coluna, dois cartões
+por linha quando o container comporta e um no celular. Sumário acompanha a altura
+do seletor Sistema/Guia. Rodapé usa `app-marca` e botão canônico para voltar ao topo,
+com “Você é nossa prioridade — 2026” e crédito CC BY-SA abaixo.
+[Verificação](../specs/done/regras-mobile-tabelas-e-rodape/verificacao.md).
+
 Controles: `app-segmentado` Sistema/Guia, `app-botao` completo para retry,
 `app-esqueleto` e `app-estado-vazio`; links de sumário seguem a receita dos patchnotes.
 Item ativo acompanha a leitura; link interno foca e pisca o título, respeitando

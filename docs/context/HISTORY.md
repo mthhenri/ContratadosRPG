@@ -1,5 +1,32 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-09 — Regras: tabelas mobile, Sumário e rodapé
+
+Autor apontou cinco defeitos em capturas do Edge. Amplificadores tinham cabeçalho
+de duas células para três colunas e nomes quebrando entre glifo e texto; apresentação
+agora explicita Empilhamento e usa nome/empilhamento na mesma linha no celular,
+efeito abaixo. Grades de módulos achatavam títulos antes de todos os efeitos:
+`app-cartao` associa cada módulo à sua coluna original, com dois cartões no desktop
+e um em container estreito. Fonte Markdown e JSONs derivados permanecem intactos.
+
+Sumário usa ícone canônico e acompanha a altura do seletor. Regras na topbar segue
+a mesma receita dos demais destinos, corrigindo a cor de repouso. Rodapé usa a
+marca própria com “Você é nossa prioridade — 2026”; acioná-la volta ao topo do
+hospedeiro correto, preservando crédito e licença abaixo. Leitor reutiliza a ação
+existente, sem receber responsabilidade nova. Pasta dos anexos recebidos pelo chat
+incluída no `.gitignore`, preservando as imagens e evitando versionar evidências locais.
+
+Inspeção pessoal da aplicação pública em 360×800, 960×1080, 1366×768 e 1920×1080,
+com navegação, busca, troca de livro, página e painel. Ao rolar a tabela Porte pelo
+teclado, a primeira coluna fixa cobria o início de Referência; corrigida distribuição
+mobile e confirmado o fim da rolagem legível. Não equivale a teste em aparelho físico.
+
+Frontend: 3.147 testes, 70 do normalizador; shared: 1.157; backend: 994 e um pulado.
+Build passou e confirmou fidelidade dos dois livros ao Markdown; lint sem erros,
+com avisos existentes. Teste do topo passou a aguardar renderização inicial antes
+de medir a ação e também cobre o novo rodapé. Spec e relato em `done/`.
+[Verificação auditável](../specs/done/regras-mobile-tabelas-e-rodape/verificacao.md).
+
 ## 2026-10-09 — Recursos: ícones de Vida/Energia/Defesa nas telas e prancha de ícones · parcial
 
 Entrega 2 de `icones-recursos-sistema`. Autor decidiu que o ícone entra **ao lado do texto** (a spec

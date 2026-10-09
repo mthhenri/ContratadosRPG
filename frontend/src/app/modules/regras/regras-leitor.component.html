@@ -3,6 +3,7 @@
         <div class="regras__barra">
             <button
                 app-botao
+                class="regras__abrir-sumario"
                 variante="secundario"
                 estilo="contorno"
                 tamanho="pequeno"
@@ -12,7 +13,7 @@
                 [attr.aria-expanded]="gavetaAberta()"
                 (click)="gavetaAberta.set(true)"
             >
-                <span aria-hidden="true">☰</span> Sumário
+                <app-icone nome="campanhas" /> Sumário
             </button>
             <app-segmentado rotulo="Documento de Regras">
                 <button
@@ -86,6 +87,20 @@
                     (navegarAncora)="navegarAncora($event)"
                 />
                 <footer class="regras__credito">
+                    <button
+                        app-botao
+                        class="regras__marca"
+                        variante="secundario"
+                        estilo="texto"
+                        tamanho="pequeno"
+                        posicaoIcone="esquerda"
+                        type="button"
+                        aria-label="Você é nossa prioridade — 2026. Voltar ao topo"
+                        (click)="voltarAoTopo()"
+                    >
+                        <app-marca />
+                        <span>Você é nossa prioridade — 2026</span>
+                    </button>
                     <a
                         href="https://commons.wikimedia.org/wiki/File:SCP_Foundation_(emblem).svg"
                         target="_blank"

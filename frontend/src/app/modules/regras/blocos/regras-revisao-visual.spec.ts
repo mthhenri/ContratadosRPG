@@ -44,6 +44,37 @@ describe("Revisão visual das Regras", () => {
         expect(raiz.querySelector(".regras-abertura__texto")?.textContent).toContain("Linha um\nLinha dois");
     });
 
+    it("mantém cada módulo junto de seu efeito em vez de empilhar títulos antes dos dados", () => {
+        const raiz = renderizar([{ tipo: "grade", colunas: 2,
+            cabecalho: [texto("Módulo V"), texto("Módulo IV")],
+            linhas: [[texto("Efeito V"), texto("Efeito IV")]] }]);
+        const cartoes = Array.from(raiz.querySelectorAll("app-cartao"));
+        expect(cartoes).toHaveLength(2);
+        expect(cartoes[0].textContent).toContain("Módulo V");
+        expect(cartoes[0].textContent).toContain("Efeito V");
+        expect(cartoes[0].textContent).not.toContain("Efeito IV");
+        expect(cartoes[1].textContent).toContain("Módulo IV");
+        expect(cartoes[1].textContent).toContain("Efeito IV");
+    });
+
+    it("dimensiona a tabela pelo maior número de células, mesmo com cabeçalho incompleto", () => {
+        const raiz = renderizar([{ tipo: "tabela", cabecalho: [texto("Nome"), texto("Efeitos")],
+            linhas: [[texto("◎ Conservador"), texto("■■"), texto("Efeito")]] }]);
+        expect((raiz.querySelector(".regras-tabela") as HTMLElement).style
+            .getPropertyValue("--regras-tabela-colunas")).toBe("3");
+        expect(raiz.querySelector(".regras-tabela--amplificadores")).not.toBeNull();
+        expect(Array.from(raiz.querySelectorAll("th")).map(celula => celula.textContent))
+            .toEqual(["Nome", "Empilhamento", "Efeitos"]);
+    });
+
+    it("reconhece cabeçalho de amplificadores preenchido com célula vazia pelo normalizador", () => {
+        const raiz = renderizar([{ tipo: "tabela",
+            cabecalho: [texto("Nome"), texto("Efeitos"), []],
+            linhas: [[texto("◎ Conservador"), texto("■■"), texto("Efeito")]] }]);
+        expect(raiz.querySelector(".regras-tabela--amplificadores")).not.toBeNull();
+        expect(raiz.querySelectorAll("th")).toHaveLength(3);
+    });
+
     it("subclasse mostra tipo, custos, Vida/Energia com faixa, bônus e habilidades", () => {
         const raiz = renderizar([{ tipo: "subclasse", nome: "Experimento Bestial", classe: "Combatente",
             ancora: "experimento-bestial",

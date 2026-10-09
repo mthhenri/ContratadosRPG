@@ -1,7 +1,8 @@
 <div
     appOverflowFade
     class="regras-tabela"
-    [style.--regras-tabela-colunas]="bloco().cabecalho.length || bloco().linhas[0]?.length || 1"
+    [class.regras-tabela--amplificadores]="amplificadores()"
+    [style.--regras-tabela-colunas]="colunas()"
     tabindex="0"
     role="region"
     aria-label="Tabela de regras, role horizontalmente para ver todas as colunas"
@@ -10,7 +11,7 @@
         @if (bloco().cabecalho.length) {
             <thead>
                 <tr>
-                    @for (celula of bloco().cabecalho; track $index) {
+                    @for (celula of cabecalho(); track $index) {
                         <th scope="col">
                             <app-regras-inline
                                 [trechos]="celula"

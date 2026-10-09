@@ -16,6 +16,7 @@ import { RegrasPesquisaProjecao } from "./regras-pesquisa-projecao.component";
 import { BotaoIcone } from "../../shared/ui/botao-icone/botao-icone.component";
 import { Tooltip } from "../../shared/tooltip/tooltip.directive";
 import { Icone } from "../../shared/icone/icone.component";
+import { Marca } from "../../shared/marca/marca.component";
 import { Botao } from "../../shared/ui/botao/botao.component";
 import { Cartao } from "../../shared/ui/cartao/cartao.component";
 import { Esqueleto } from "../../shared/ui/esqueleto/esqueleto.component";
@@ -32,7 +33,7 @@ import { construirSumarioRegras, listarAncorasRegras } from "./regras-sumario";
 @Component({
     selector: "app-regras-leitor",
     providers: [RegrasLeitorContexto, RegrasPesquisaController],
-    imports: [NgTemplateOutlet, Icone, Botao, Cartao, Esqueleto, EstadoVazio,
+    imports: [NgTemplateOutlet, Icone, Marca, Botao, Cartao, Esqueleto, EstadoVazio,
         Segmentado, SegmentadoItem, Gaveta, RegrasPesquisa, RegrasPesquisaProjecao,
         BotaoIcone, Tooltip,
         RegrasConteudoRender],

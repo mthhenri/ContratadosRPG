@@ -38,6 +38,8 @@ Thumbs.db
 
 # Evidências locais de tarefas — capturas, logs, dumps e cenários nunca versionados
 .artifacts/
+# Anexos recebidos pelo chat — entrada local, nunca versionada
+.codex-remote-attachments/
 /cenario.json
 
 # Destinos antigos; documentação de execução vive junto da spec proprietária

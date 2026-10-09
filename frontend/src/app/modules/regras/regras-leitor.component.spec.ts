@@ -21,7 +21,7 @@ describe("Leitor compartilhado de Regras", () => {
     });
     afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
-    it("devolve o painel ao topo sem rolar a página e conserva o termo pesquisado", () => {
+    it("devolve o painel ao topo sem rolar a página e conserva o termo pesquisado", async () => {
         const leitor = TestBed.createComponent(RegrasLeitor);
         leitor.componentRef.setInput("livro", "sistema");
         leitor.componentRef.setInput("emPainel", true);
@@ -32,7 +32,15 @@ describe("Leitor compartilhado de Regras", () => {
         const pesquisa = leitor.debugElement.injector.get(RegrasPesquisaController);
         pesquisa.confirmarTermo("vida");
         const termo = pesquisa.termo();
+        await leitor.whenStable();
+        rolar.mockClear();
+        vi.mocked(window.scrollTo).mockClear();
         raiz.querySelector<HTMLButtonElement>('[aria-label="Voltar ao topo"]')!.click();
+        expect(rolar).toHaveBeenCalledWith({ top: 0, behavior: "smooth" });
+        expect(window.scrollTo).not.toHaveBeenCalled();
+        expect(pesquisa.termo()).toBe(termo);
+        rolar.mockClear();
+        raiz.querySelector<HTMLButtonElement>(".regras__marca")!.click();
         expect(rolar).toHaveBeenCalledWith({ top: 0, behavior: "smooth" });
         expect(window.scrollTo).not.toHaveBeenCalled();
         expect(pesquisa.termo()).toBe(termo);

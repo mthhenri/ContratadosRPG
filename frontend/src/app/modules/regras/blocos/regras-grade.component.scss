@@ -27,3 +27,23 @@
         grid-template-columns: minmax(0, 1fr);
     }
 }
+.regras-grade-modulos {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-12);
+    app-cartao {
+        min-width: 0;
+        --pad-card: var(--space-12);
+    }
+    &__texto {
+        margin: 0;
+        font-size: 13.5px;
+        line-height: 1.55;
+        overflow-wrap: anywhere;
+    }
+}
+@container (max-width: 640px) {
+    .regras-grade-modulos {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
