@@ -132,7 +132,23 @@ Portanto ainda não se pode afirmar cobertura de toda menção de condição no 
 4. Revisar explicações dos dados e progressão com a jornada autenticada observada (U-04).
 5. Ajustar orientação da calculadora de entrada do agente (U-05).
 
-Não foram criadas specs de redesign nem implementadas essas recomendações por suposição.
+Após a inspeção, o autor solicitou em 09/10/2026 a quebra das recomendações em specs de UI
+e o commit dos artefatos. As seis tasks abaixo estão no backlog, sem implementação iniciada:
+
+| Task | Achado | Recorte |
+|---|---|---|
+| [01 — Escolha de classes](../../backlog/usabilidade-01-escolha-classes.spec.md) | U-01 | Orientação, resumo da opção e comparação no ponto de escolha |
+| [02 — Consulta de arquétipos](../../backlog/usabilidade-02-consulta-arquetipos.spec.md) | U-02 | Descoberta antes do catálogo e navegação direta |
+| [03 — Navegação móvel](../../backlog/usabilidade-03-navegacao-mobile.spec.md) | U-03/P-112 | Nome acessível e descoberta dos destinos inativos |
+| [04 — Compreensão das estatísticas](../../backlog/usabilidade-04-compreensao-estatisticas.spec.md) | U-04 | Valores, abreviações e campos não aplicáveis a Civil |
+| [05 — Leitura da progressão](../../backlog/usabilidade-05-leitura-progressao.spec.md) | U-04 | Ganhos, escolhas e distinção entre atual/acumulado |
+| [06 — Entrada de agente](../../backlog/usabilidade-06-orientacao-entrada-agente.spec.md) | U-05 | Propósito da calculadora e nomenclatura consistente |
+
+U-04 foi dividido em dois recortes para não misturar explicação de estatísticas com evolução.
+U-06 (condições) continua na [spec ativa desta revisão](../usabilidade-classes-condicoes-2026-10-09.spec.md),
+com seus gates e decisões pendentes, sem duplicar o trabalho em uma nova task de backlog.
+Criar as specs não certifica as hipóteses de impacto nem autoriza ampliar primitivos sem a
+decisão exigida pelo AGENTS.md. As futuras implementações devem observar o estado atual novamente.
 A auditoria legada de setembro continua com seus próprios limites e pendências.
 
 ## Evidências e limites

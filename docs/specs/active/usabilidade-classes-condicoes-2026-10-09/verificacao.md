@@ -80,3 +80,15 @@ DTOs novos, enums ou SCSS. Buscas mecânicas do patch preparado para commit conf
 `alterar`, formulário standalone/reativo, ausência de `title` nativo e estilos inline novos.
 Primitivos existentes continuam sendo consumidos. Os gates visuais abertos acima impedem
 declarar a tarefa concluída, mas não impedem o commit parcial explicitamente autorizado.
+
+## Quebra em specs autorizada pelo autor
+
+Seis tasks `usabilidade-01`…`06` criadas no backlog, com vínculo ao relatório, entregáveis,
+critérios de aceite, fora de escopo, fontes, análogo inicial e quatro viewports. U-04 dividido
+entre estatísticas e progressão; condições continuam nesta spec ativa. Não houve implementação
+das recomendações nem fecho dos gates originais. Mapa no relatório e ponteiro no contexto.
+
+Seções obrigatórias, viewports e links locais das seis specs conferidos; `repo:verificar` e
+`git diff --check` aprovados. `npm run repo:test`: sete aprovados fora do sandbox, após a primeira
+execução restrita falhar ao criar a configuração Git de um repositório temporário.
+O commit documental também passa por `repo:verificar -- --staged` antes de ser gravado.

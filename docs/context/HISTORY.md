@@ -1,5 +1,23 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-09 — Quebra da revisão pública de usabilidade em specs
+
+Autor autorizou commitar a revisão parcial e pediu a quebra das recomendações de UI.
+Avanço de condições/auditoria registrado em `24633f7e`, com coautoria Codex; tarefa ativa
+preservada porque os gates autenticados e de interação continuam abertos.
+
+Seis specs numeradas em backlog: contexto para escolher classes (U-01), descoberta/comparação
+de arquétipos (U-02), navegação móvel (U-03/P-112), explicação das estatísticas e leitura de
+progressão (dois cortes de U-04), orientação da calculadora de entrada de agente (U-05).
+Cada task delimita entregáveis, critérios, análogo inicial, quatro viewports e fora de escopo.
+Condições (U-06) continuam na spec ativa existente, sem task duplicada. Não houve implementação
+das recomendações nem autorização inferida para login/ampliação de primitivos.
+
+Relatório e contexto apontam para as specs. Seções obrigatórias, quatro viewports e links das
+seis tasks conferidos; organização/espelhos e diff aprovados. Sete testes de organização passaram
+fora do sandbox após a execução restrita impedir o Git do repositório temporário. Sem push/publicação.
+[Mapa das tasks](../specs/active/usabilidade-classes-condicoes-2026-10-09/RELATORIO.md#ordem-sugerida-de-trabalho).
+
 ## 2026-10-09 — Usabilidade de classes/dados e tooltips de condições · parcial
 
 Pedido do autor: avaliar compreensão das classes e dos dados e explicar condições ao passar
