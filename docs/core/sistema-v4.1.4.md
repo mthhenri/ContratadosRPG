@@ -22,7 +22,7 @@
  ***█████████ ████████** Artoria,*   
  ***███████ ███████** Fernandes,*  
  *e outros membros do*   
- *dissolvido esquadrão **███-████**,*  
+ *dissolvido esquadrão ***███-████***,*  
  *Nossas políticas foram alteradas*  
  *Uma longa vida a todos os funcionários da **Fundação SCP***
 
@@ -854,9 +854,11 @@ Durante a montagem da ficha, você não pode ultrapassar o **limite de 2 pontos*
 **⬥ Saúde**  
 A sua saúde, diferente de um agente convencional, é ainda mais frágil. Você tem muito menos vida e muito menos energia do que um agente comum. Sendo:
 
-| VIDA  *Vida Inicial \= 10 \+ VIGOR Progressão: VIG* | ENERGIA  *Inicial \= 5 \+ ( DESTREZA × 2 ) Progressão: DES* |
+| VIDA | ENERGIA |
 | :---: | :---: |
-| *Aumentos de atributos que afetam cálculos de saúde são aplicados retroativamente, conforme as regras gerais do sistema.* |  |
+| *Inicial \= 10 \+ VIGOR · Progressão: VIG* | *Inicial \= 5 \+ ( DESTREZA × 2 ) · Progressão: DES* |
+
+*Aumentos de atributos que afetam cálculos de saúde são aplicados retroativamente, conforme as regras gerais do sistema.*
 
 **⬥ Defesa e Reações**  
 Diferente de um agente, você não possui defesa, ataques furtivos são acerto garantido em você.  
@@ -974,7 +976,7 @@ Caso venha à **falhar** neste teste, você ainda aplica a modificação ao seu 
 | ⬡ Corpo a Corpo |  |  |  |  |  |
 | ----- | :---- | :---- | :---: | :---- | :---- |
 | **Item** | **Dano** | **Descrição** | **Porte** | **Peso** | **Custo** |
-| **Corpo** | [*Página 2*](#⬥-corpo-e-pontuação-corporal)*8* | *Um ataque desarmado* | Corpo | 0 | \- |
+| **Corpo** | [*Corpo e Pontuação Corporal*](#⬥-corpo-e-pontuação-corporal) | *Um ataque desarmado* | Corpo | 0 | \- |
 | **Acessório de Combate** | 1D3 \+ **Corpo** \[Físico\] 1D6 \+ **Corpo** \[Físico\] | *Um adereço de combate que amplia sua efetividade com golpes, podendo ser colocado em suas mãos, sapatos, etc.* | Uma Mão ou Duas Mãos | 0,5 | \$ 250 |
 | **Leve** | 1D6 \+ **Destreza** \[Físico\] | *Armas pequenas e ágeis, como facas ou martelos pequenos* | Uma Mão | 1 | \$ 500 |
 | **Mediana** | 3D4 \+  **Força** \[Físico\]  | *Armas de tamanho médio, como espadas, sabres e martelos* | Uma Mão | 2 | \$ 1000 |
@@ -1362,8 +1364,16 @@ No caso de inventário, os valores são divididos em incrementos de 0,1 ou valor
 **⬦ Ordem de Bônus**  
 Em *Contratados \- RPG* a ordem de bônus é dividida em 2 aspectos: **Itens** e **Testes**. Cada ordem é específica para estes aspectos. Assim como dito acima, quaisquer valores que não sejam inteiros, serão arredondados para cima (exceto em casos de inventário que há a divisão em uma casa decimal, sendo ela “,1”).
 
-| Itens No aspecto de itens, a sequência é: Item base, Modificações, Condições, Habilidades Passivas, Habilidades Ativas e finaliza com Críticos. O item base nada mais é que as especificações daquele item, como por exemplo, o item base de uma arma mediana é sua descrição contida em Equipamentos (Página 00). A base do item pode ser alterada, caso ele seja um fragmento Construtor. Seguindo o exemplo, o dano da base do item de uma arma corpo a corpo mediana é de 3D6 \+ Força. 	Usando-se da base do item agora, deve-se aplicar as modificações de seu item, sendo todas elas baseadas na base do item, então, mesmo que haja modificações que modifiquem os dados,  todas são considerando a base do item. Seguindo o exemplo, no caso de você aplicar a modificação Reforçada e Pesada, elas deixariam a arma com 4D8 \+ Força com as modificações aplicadas. | Testes Para o aspecto de testes, a sequência é: Atributo, Lesões Permanentes, Lesões, Especialidade, Condições, Habilidades Passivas, Habilidades Ativas e por fim, Críticos. Usando de um exemplo prático, no caso de um personagem que possui 5 de Vigor e, por ventura do destino, acabou recebendo uma lesão permanente de 1 ponto neste atributo, e também, a cena aplica uma condição em todos onde, um gás nocivo reduz testes de Vigor em 1 dado, mas, o personagem usa uma habilidade que lhe concede \+1 dado em Vigor. Sendo assim, a ordem de bônus estaria como:De: 5 dados em testes de Vigor. Para: 4 dados em testes de Vigor (redução da lesão). Indo para: 3 dados em testes de Vigor (por causa da condição da cena). E finalizando em: 4 dados em testes de Vigor (por causa da habilidade). |
-| :---- | :---- |
+**Itens**  
+No aspecto de itens, a sequência é: Item base, Modificações, Condições, Habilidades Passivas, Habilidades Ativas e finaliza com Críticos. O item base nada mais é que as especificações daquele item, como por exemplo, o item base de uma arma mediana é sua descrição contida em Equipamentos. A base do item pode ser alterada, caso ele seja um fragmento Construtor. Seguindo o exemplo, o dano da base do item de uma arma corpo a corpo mediana é de 3D6 \+ Força. Usando-se da base do item agora, deve-se aplicar as modificações de seu item, sendo todas elas baseadas na base do item, então, mesmo que haja modificações que modifiquem os dados, todas são considerando a base do item. Seguindo o exemplo, no caso de você aplicar a modificação Reforçada e Pesada, elas deixariam a arma com 4D8 \+ Força com as modificações aplicadas.
+
+**Testes**  
+Para o aspecto de testes, a sequência é: Atributo, Lesões Permanentes, Lesões, Especialidade, Condições, Habilidades Passivas, Habilidades Ativas e por fim, Críticos. Usando de um exemplo prático, no caso de um personagem que possui 5 de Vigor e, por ventura do destino, acabou recebendo uma lesão permanente de 1 ponto neste atributo, e também, a cena aplica uma condição em todos onde, um gás nocivo reduz testes de Vigor em 1 dado, mas, o personagem usa uma habilidade que lhe concede \+1 dado em Vigor. Sendo assim, a ordem de bônus estaria como:
+
+De: 5 dados em testes de Vigor.  
+Para: 4 dados em testes de Vigor (redução da lesão).  
+Indo para: 3 dados em testes de Vigor (por causa da condição da cena).  
+E finalizando em: 4 dados em testes de Vigor (por causa da habilidade).
 
 ## **⬡ Base da Fundação** {#⬡-base-da-fundação}
 

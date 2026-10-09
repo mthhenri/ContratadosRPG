@@ -44,16 +44,6 @@
   da [verificação do sumário](../specs/done/regras-sumario-classes-subclasses/verificacao.md).
 - **Desde:** gate de `regras-sumario-classes-subclasses`, 09/10/2026.
 
-### P-110 — Asterisco literal na abertura do Sistema · `ABERTO` · docs/core
-
-- **Sintoma:** a abertura publicada mostra "*dissolvido esquadrão ███-████,*" com os
-  asteriscos visíveis, na página e na exportação.
-- **Causa:** a fonte tem `*dissolvido esquadrão **███-████**,*`; o itálico externo com
-  negrito e tarja dentro não fecha na leitura do Markdown. Conteúdo da fonte, não do leitor.
-- **Contorno:** nenhum no leitor; o texto continua legível.
-- **Correção:** ajustar a ênfase no Docs/Markdown do Sistema na próxima revisão do livro.
-- **Desde:** observado na `revisao-visual-regras`, 2026-10-08 (já existia antes).
-
 ### P-108 — Formatação do PDF de Regras precisa de revisão · `CONTORNADO` · frontend/impressão
 
 - **Sintoma:** autor avaliou o PDF da M10-10 como “bem estranho” e pediu revisão

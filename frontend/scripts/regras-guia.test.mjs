@@ -188,9 +188,9 @@ test('livros inteiros: contagens de casos ricos conferidas contra as fontes', ()
         [['atributos', 10], ['maestrias', 10], ['penalidades', 12], ['verbetes', 8]]);
     assert.equal(blocos(sistema, 'abertura').length, 1);
     assert.equal(blocos(guia, 'abertura').length, 1);
-    assert.equal(blocos(sistema, 'grade').length, 11);
+    assert.equal(blocos(sistema, 'grade').length, 10);
     assert.equal(blocos(sistema, 'generico').length, 0);
-    assert.equal(sistema.avisos.length, 18);
+    assert.equal(sistema.avisos.length, 17);
     assert.equal(guia.avisos.length, 9);
     assert.ok(guia.avisos.every((aviso) => aviso.motivo.startsWith('Âncora repetida')));
 });

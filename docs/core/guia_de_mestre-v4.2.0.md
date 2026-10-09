@@ -1024,7 +1024,7 @@ NPCs possuem um esquema de sanidade extremamente similar aos agentes, mas seus e
 
 *DT \= 10 \+ Nível \+ (Atributo × 2\)*
 
-O atributo usado é sempre o relevante para a situação: **Social** para manipulação**, Força** para imposição física, **Intelecto** para intervenção intelectual ou técnica, e assim por diante.
+O atributo usado é sempre o relevante para a situação: **Social** para manipulação, **Força** para imposição física, **Intelecto** para intervenção intelectual ou técnica, e assim por diante.
 
 **Competências e Modificadores de Categoria não alteram DTs.**
 

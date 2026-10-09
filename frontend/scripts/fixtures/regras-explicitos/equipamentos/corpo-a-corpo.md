@@ -1,7 +1,7 @@
 | ⬡ Corpo a Corpo |  |  |  |  |  |
 | ----- | :---- | :---- | :---: | :---- | :---- |
 | **Item** | **Dano** | **Descrição** | **Porte** | **Peso** | **Custo** |
-| **Corpo** | [*Página 2*](#⬥-corpo-e-pontuação-corporal)*8* | *Um ataque desarmado* | Corpo | 0 | \- |
+| **Corpo** | [*Corpo e Pontuação Corporal*](#⬥-corpo-e-pontuação-corporal) | *Um ataque desarmado* | Corpo | 0 | \- |
 | **Acessório de Combate** | 1D3 \+ **Corpo** \[Físico\] 1D6 \+ **Corpo** \[Físico\] | *Um adereço de combate que amplia sua efetividade com golpes, podendo ser colocado em suas mãos, sapatos, etc.* | Uma Mão ou Duas Mãos | 0,5 | \$ 250 |
 | **Leve** | 1D6 \+ **Destreza** \[Físico\] | *Armas pequenas e ágeis, como facas ou martelos pequenos* | Uma Mão | 1 | \$ 500 |
 | **Mediana** | 3D4 \+  **Força** \[Físico\]  | *Armas de tamanho médio, como espadas, sabres e martelos* | Uma Mão | 2 | \$ 1000 |
