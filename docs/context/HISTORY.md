@@ -1,5 +1,14 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-08 — P-106: ponteiros do corpus do montador corrigidos
+
+Quatro specs (`rolagem.conta`, `rolagem.pecas` em shared; `montador-blocos`,
+`montador-pecas` no frontend) liam o corpus em `docs/design/propostas/`, movido
+na organização documental para `docs/specs/active/montador-rolagem-experimento/`.
+Ponteiros trocados, sem duplicar o corpus nem recriar o depósito antigo. Shared:
+69 arquivos/1.157 testes; Angular: 230 arquivos/3.115 testes, sem exclusões e
+sem TS2307/TS7006. Lint não executado nesta correção mecânica de caminho.
+
 ## 2026-10-08 — M10-11: retirada do leitor e da publicação antigos
 
 Depois da autorização de commit da M10-10, gravada em `af475bec` com coautoria

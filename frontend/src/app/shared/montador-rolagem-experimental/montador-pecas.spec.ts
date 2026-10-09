@@ -8,7 +8,7 @@ import {
   tokenizarFormula,
 } from '@contratados-rpg/shared/regras/rolagem';
 
-import corpus from '../../../../../docs/design/propostas/montador-rolagem-formulas.json';
+import corpus from '../../../../../docs/specs/active/montador-rolagem-experimento/montador-rolagem-formulas.json';
 import { adicionarPeca, alterarRepeticoes, FORMULA_VAZIA, substituirPeca } from './montador-modelo';
 import {
   adicionarDadoMontador,
@@ -28,7 +28,7 @@ import {
 } from './montador-pecas';
 
 /**
- * Completo/Essencial (montador-exp-03) sobre o corpus de aceite (`docs/design/propostas/montador-rolagem-formulas.json`):
+ * Completo/Essencial (montador-exp-03) sobre o corpus de aceite (`docs/specs/active/montador-rolagem-experimento/montador-rolagem-formulas.json`):
  * toda fórmula que os controles dizem montar é **remontada só com as operações dos controles** (dado por dado, sinal,
  * tipo, opções, campo de expressão, atalhos, repetição, editor de teste) e o motor tem de ler o resultado igual ao
  * original — **nenhuma diverge**. O que não montam fica "avançada".

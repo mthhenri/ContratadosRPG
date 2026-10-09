@@ -6,7 +6,7 @@ import {
   tokenizarFormula,
 } from '@contratados-rpg/shared/regras/rolagem';
 
-import corpus from '../../../../../docs/design/propostas/montador-rolagem-formulas.json';
+import corpus from '../../../../../docs/specs/active/montador-rolagem-experimento/montador-rolagem-formulas.json';
 import {
   BLOCO_VAZIO,
   cabeNoDano,

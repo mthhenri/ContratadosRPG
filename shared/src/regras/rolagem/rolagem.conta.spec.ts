@@ -443,7 +443,7 @@ describe('corpus do montador — gramática preservada, resultados conforme Sist
     readFileSync(resolve(__dirname, 'fixtures', 'rolagem-corpus.snapshot.json'), 'utf8'),
   ) as Snapshot;
   const corpus = JSON.parse(
-    readFileSync(resolve(raiz, 'docs', 'design', 'propostas', 'montador-rolagem-formulas.json'), 'utf8'),
+    readFileSync(resolve(raiz, 'docs', 'specs', 'active', 'montador-rolagem-experimento', 'montador-rolagem-formulas.json'), 'utf8'),
   ) as { jogadores: string[]; bateria: string[]; esperada_apos_expressao: string[] };
 
   /** Dado determinístico do snapshot: sequência por contador, reiniciada a cada rolagem. */

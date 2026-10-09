@@ -65,7 +65,6 @@
 > M10-05: `app-gaveta` concluída, model e contenção
 > local, foco/teclado/toque e quatro viewports verificados;
 > [evidências e limites dos gates](../specs/done/m10-05-primitivo-gaveta/m10-05-verificacao.md).
-> Corpus do montador com quatro ponteiros antigos após realocação (P-106).
 > M10-03: 17 ícones de identidade adicionados e
 > verificados em 14/16/24px, claro/escuro e quatro viewports; [evidências](../specs/done/m10-03-icones-identidade/m10-03-verificacao.md).
 > Preparo/publicação e testes alinhados ao Sistema v4.1.4 na M10-11 (P-105 corrigido).

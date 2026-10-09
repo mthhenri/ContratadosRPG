@@ -9,12 +9,12 @@ import { montarFormula, tokenizarFormula } from './rolagem.pecas';
 /**
  * Fórmula em peças (montador-exp-01, I-041): `montarFormula(tokenizarFormula(texto))` precisa ser lida pelo motor
  * **igual** ao texto original; o que não tem representação volta `null` (o montador mostra "avançada"). O corpus de
- * aceite é o de `docs/design/propostas/montador-rolagem-formulas.json` (fórmulas dos jogadores + bateria + formas
+ * aceite é o de `docs/specs/active/montador-rolagem-experimento/montador-rolagem-formulas.json` (fórmulas dos jogadores + bateria + formas
  * de conta da `rolagem-expressao-quantidade-dados`).
  */
 
 const corpus = JSON.parse(
-  readFileSync(resolve(__dirname, '../../../../docs/design/propostas/montador-rolagem-formulas.json'), 'utf8'),
+  readFileSync(resolve(__dirname, '../../../../docs/specs/active/montador-rolagem-experimento/montador-rolagem-formulas.json'), 'utf8'),
 ) as { jogadores: string[]; bateria: string[]; esperada_apos_expressao: string[] };
 
 const todas = [...corpus.jogadores, ...corpus.bateria, ...corpus.esperada_apos_expressao];
