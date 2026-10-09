@@ -1,6 +1,7 @@
 <div [class]="classes()">
     <div class="barra-recurso__topo">
         <span class="barra-recurso__rotulo-linha">
+            <app-icone class="barra-recurso__icone" [nome]="recurso()" [appTooltip]="rotulo()" />
             <span
                 class="barra-recurso__rotulo"
                 [class.barra-recurso__rotulo--dica]="dica()"

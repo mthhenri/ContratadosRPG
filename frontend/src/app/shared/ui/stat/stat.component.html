@@ -1,7 +1,12 @@
 <div [class]="classes()">
     <div class="stat__icone"><ng-content select="[statIcone]" /></div>
     <div class="stat__rotulo-linha">
-        <div class="stat__rotulo">{{ rotulo() }}</div>
+        <div class="stat__rotulo">
+            @if (iconeEfetivo(); as nomeIcone) {
+                <app-icone class="stat__rotulo-icone" [nome]="nomeIcone" [appTooltip]="rotulo()" />
+            }
+            {{ rotulo() }}
+        </div>
         <ng-content select="[statInfo]" />
     </div>
     <div class="stat__valor" #nodoValor>

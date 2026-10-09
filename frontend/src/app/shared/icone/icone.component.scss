@@ -7,6 +7,13 @@
     line-height: 0;
 }
 
+// Ícone no meio de texto corrido (`icones-recursos-sistema`): ~1em e alinhado à linha de base, para
+// não crescer mais que a palavra ao lado.
+:host(.icone--texto) {
+    font-size: 0.85em;
+    vertical-align: -0.12em;
+}
+
 svg {
     width: 1.15em;
     height: 1.15em;

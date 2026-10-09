@@ -28,6 +28,16 @@
         min-width: 0;
     }
 
+    // Ícone do recurso antes do rótulo (`icones-recursos-sistema`); cor fixa por recurso.
+    &__icone {
+        font-size: 10px;
+        color: var(--vida);
+    }
+
+    &--energia &__icone {
+        color: var(--energy);
+    }
+
     &__rotulo {
         font-family: var(--font-mono);
         font-size: 10px;
@@ -131,6 +141,10 @@
         }
 
         .barra-recurso__rotulo {
+            font-size: 9px;
+        }
+
+        .barra-recurso__icone {
             font-size: 9px;
         }
 

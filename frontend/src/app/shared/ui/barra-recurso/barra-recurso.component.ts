@@ -1,6 +1,7 @@
 import { Component, computed, input, output, signal } from '@angular/core';
 
 import { AutoFocus } from '../../auto-focus/auto-focus.directive';
+import { Icone } from '../../icone/icone.component';
 import { Tooltip } from '../../tooltip/tooltip.directive';
 import { ValorEditavel } from '../valor-editavel/valor-editavel.component';
 import type { BotaoVariante } from '../botao/botao.component';
@@ -25,7 +26,7 @@ export type BarraRecursoTamanho = 'padrao' | 'compacto';
  */
 @Component({
   selector: 'app-barra-recurso',
-  imports: [Tooltip, AutoFocus, ValorEditavel],
+  imports: [Icone, Tooltip, AutoFocus, ValorEditavel],
   templateUrl: './barra-recurso.component.html',
   styleUrl: './barra-recurso.component.scss',
 })

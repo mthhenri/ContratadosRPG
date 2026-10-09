@@ -1,3 +1,5 @@
+import { Icone, type IconeNome } from '../../icone/icone.component';
+import { Tooltip } from '../../tooltip/tooltip.directive';
 import { Component, Directive, ElementRef, computed, contentChild, effect, input, viewChild } from '@angular/core';
 
 /**
@@ -40,6 +42,7 @@ export class StatValor {}
  */
 @Component({
   selector: 'app-stat',
+  imports: [Icone, Tooltip],
   templateUrl: './stat.component.html',
   styleUrl: './stat.component.scss',
 })
@@ -68,6 +71,20 @@ export class Stat {
    * Desligada, a caixa continua idêntica.
    */
   readonly faixa = input(false);
+
+  /**
+   * Ícone do recurso ao lado do rótulo (`icones-recursos-sistema`, entrega 2). `vida` e `energia`
+   * derivam da `variante`; Defesa não tem variante, então o consumidor passa `icone="defesa"`. O
+   * rótulo continua escrito e o ícone leva `appTooltip` com ele. Sem efeito em `faixa`, que já
+   * tem o quadro `[statIcone]`.
+   */
+  readonly icone = input<IconeNome>();
+
+  protected readonly iconeEfetivo = computed<IconeNome | undefined>(() => {
+    if (this.faixa()) return undefined;
+    const variante = this.variante();
+    return this.icone() ?? (variante === 'vida' || variante === 'energia' ? variante : undefined);
+  });
 
   /**
    * Contador que o consumidor incrementa para disparar um pulso de destaque (escala) no valor —

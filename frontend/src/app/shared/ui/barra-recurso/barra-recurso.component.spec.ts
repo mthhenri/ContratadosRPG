@@ -151,4 +151,14 @@ describe('BarraRecurso', () => {
 
     expect(fixture.componentInstance.maximoEmitido()).toBe(22);
   });
+
+  it('desenha o ícone do recurso antes do rótulo', () => {
+    const fixture = montar();
+    const icone = () => raiz(fixture).querySelector('.barra-recurso__rotulo-linha app-icone');
+    expect(icone()).not.toBeNull();
+
+    fixture.componentInstance.recurso.set('energia');
+    fixture.detectChanges();
+    expect(icone()).not.toBeNull();
+  });
 });

@@ -1,6 +1,7 @@
 import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 
+import type { IconeNome } from '../../icone/icone.component';
 import { Stat, StatTamanho, StatValor, StatVariante } from './stat.component';
 
 /** Prova rótulo/valor e as três variantes de cor auditadas na `ui-03` (nenhuma por padrão). */
@@ -10,6 +11,7 @@ import { Stat, StatTamanho, StatValor, StatVariante } from './stat.component';
     [rotulo]="rotulo()"
     [valor]="valor()"
     [variante]="variante()"
+    [icone]="icone()"
     [tamanho]="tamanho()"
     [pulso]="pulso()"
   >
@@ -22,6 +24,7 @@ class Hospedeiro {
   readonly rotulo = signal('Vida');
   readonly valor = signal<string | number | undefined>(18);
   readonly variante = signal<StatVariante | undefined>(undefined);
+  readonly icone = signal<IconeNome | undefined>(undefined);
   readonly tamanho = signal<StatTamanho>('padrao');
   readonly pulso = signal(0);
   readonly comInfo = signal(false);
@@ -157,6 +160,25 @@ describe('Stat', () => {
     fixture.componentInstance.pulso.set(2);
     fixture.detectChanges();
     expect(animar).toHaveBeenCalledTimes(2);
+  });
+
+  it('desenha o ícone do recurso ao lado do rótulo, derivado da variante', () => {
+    const fixture = montar();
+    fixture.componentInstance.variante.set('energia');
+    fixture.detectChanges();
+
+    const rotulo = raiz(fixture).querySelector('.stat__rotulo');
+    expect(rotulo?.querySelector('app-icone')).not.toBeNull();
+    expect(rotulo?.textContent?.trim()).toBe('Vida');
+  });
+
+  it('aceita ícone explícito sem variante (Defesa) e não desenha nada sem nenhum dos dois', () => {
+    const fixture = montar();
+    expect(raiz(fixture).querySelector('.stat__rotulo app-icone')).toBeNull();
+
+    fixture.componentInstance.icone.set('defesa');
+    fixture.detectChanges();
+    expect(raiz(fixture).querySelector('.stat__rotulo app-icone')).not.toBeNull();
   });
 });
 

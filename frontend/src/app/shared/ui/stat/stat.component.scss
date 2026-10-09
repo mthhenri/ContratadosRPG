@@ -25,6 +25,22 @@
         text-transform: uppercase;
         letter-spacing: 0.1em;
         color: var(--text-mute);
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-4);
+    }
+
+    // Ícone do recurso na cor da variante (vida/energia); Defesa herda o tom do rótulo.
+    &__rotulo-icone {
+        font-size: 0.95em;
+    }
+
+    &--vida .stat__rotulo-icone {
+        color: var(--vida);
+    }
+
+    &--energia .stat__rotulo-icone {
+        color: var(--energy);
     }
 
     &__valor {
