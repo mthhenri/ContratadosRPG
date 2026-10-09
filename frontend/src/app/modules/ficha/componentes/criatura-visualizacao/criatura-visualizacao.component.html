@@ -246,7 +246,14 @@
                             </div>
 
                             <div class="criatura__stat">
-                                <span class="criatura__stat-rotulo">Defesa</span>
+                                <span class="criatura__stat-rotulo"
+                                    ><app-icone
+                                        class="icone--texto"
+                                        nome="defesa"
+                                        appTooltip="Defesa"
+                                    />
+                                    Defesa</span
+                                >
                                 <app-valor-editavel
                                     class="criatura__stat-valor criatura__stat-botao"
                                     [valor]="dados().defesa"
@@ -321,7 +328,14 @@
 
                         <div class="criatura__vida">
                             <span class="criatura__vida-rotulo-linha">
-                                <span class="criatura__vida-rotulo">Vida</span>
+                                <span class="criatura__vida-rotulo"
+                                    ><app-icone
+                                        class="icone--texto"
+                                        nome="vida"
+                                        appTooltip="Vida"
+                                    />
+                                    Vida</span
+                                >
                                 @if (ajustavel()) {
                                     <button
                                         app-botao-icone

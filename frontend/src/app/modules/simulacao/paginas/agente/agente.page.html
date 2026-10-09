@@ -70,7 +70,12 @@
         <div class="agente-hero">
             <app-stat tamanho="hero" rotulo="Vida" [valor]="vida()" variante="vida" />
             <app-stat tamanho="hero" rotulo="Energia" [valor]="energia()" variante="energia" />
-            <app-stat tamanho="hero" rotulo="Defesa Base" [valor]="defesaBaseTexto()" />
+            <app-stat
+                tamanho="hero"
+                rotulo="Defesa Base"
+                icone="defesa"
+                [valor]="defesaBaseTexto()"
+            />
             <app-stat tamanho="hero" rotulo="Proficiência" [valor]="proficienciaTexto()" />
         </div>
 

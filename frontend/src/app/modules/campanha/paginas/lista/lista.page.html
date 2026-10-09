@@ -98,8 +98,10 @@
                             </span>
                             } @else if (campanha.minhaFichaResumo; as minhaFicha) {
                             <span class="campanhas__linha-minha-ficha">
-                                {{ minhaFicha.nome }} · Vida {{ minhaFicha.vidaAtual }}{{
-                                minhaFicha.vidaMaxima !== null ? '/' + minhaFicha.vidaMaxima : '' }}
+                                {{ minhaFicha.nome }} ·
+                                <app-icone class="icone--texto" nome="vida" appTooltip="Vida" />
+                                Vida {{ minhaFicha.vidaAtual }}{{ minhaFicha.vidaMaxima !== null ?
+                                '/' + minhaFicha.vidaMaxima : '' }}
                             </span>
                             }
                         </div>

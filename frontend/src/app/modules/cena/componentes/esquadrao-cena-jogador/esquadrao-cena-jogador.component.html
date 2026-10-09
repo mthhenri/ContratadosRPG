@@ -32,7 +32,17 @@
                                 <span class="esquadrao-cena__classe">{{ ficha.classeTexto }}</span>
                                 @if (ficha.tipo === "completa") {
                                     <span class="esquadrao-cena__vitais">
+                                        <app-icone
+                                            class="icone--texto"
+                                            nome="vida"
+                                            appTooltip="Vida"
+                                        />
                                         Vida {{ ficha.vidaAtual }}/{{ ficha.vidaMaxima ?? "—" }} ·
+                                        <app-icone
+                                            class="icone--texto"
+                                            nome="energia"
+                                            appTooltip="Energia"
+                                        />
                                         Energia {{ ficha.energiaAtual }}/{{
                                             ficha.energiaMaxima ?? "—"
                                         }}

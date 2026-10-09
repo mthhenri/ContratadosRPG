@@ -566,6 +566,11 @@
         color: var(--text-dim);
         border-bottom: 1px dotted var(--border-strong);
         padding-bottom: 2px;
+
+        // Ícone do recurso na cor fixa da Vida, como na barra da ficha.
+        app-icone {
+            color: var(--vida);
+        }
     }
     // Botão "Receber dano" (m7-17), ao lado do rótulo "Vida".
     &__receber-dano {

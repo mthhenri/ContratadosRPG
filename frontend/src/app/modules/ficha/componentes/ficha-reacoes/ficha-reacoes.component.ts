@@ -1,5 +1,6 @@
 import { Component, input, output, signal } from '@angular/core';
 
+import { Icone } from '../../../../shared/icone/icone.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { ValorEditavel } from '../../../../shared/ui/valor-editavel/valor-editavel.component';
 import { ChaveInfoExtra, InfoExtra } from '../../status-derivado';
@@ -19,7 +20,7 @@ export interface AjusteDerivado {
  */
 @Component({
   selector: 'app-ficha-reacoes',
-  imports: [Tooltip, ValorEditavel],
+  imports: [Icone, Tooltip, ValorEditavel],
   templateUrl: './ficha-reacoes.component.html',
   styleUrl: './ficha-reacoes.component.scss',
 })

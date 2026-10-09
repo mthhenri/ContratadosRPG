@@ -145,7 +145,15 @@
                         <app-chip variante="sutil">
                             {{ habilidade.tipo === tipos.PASSIVA ? "Passiva" : "Ativa" }}
                             @if (habilidade.tipo === tipos.ATIVA) {
-                                · {{ habilidade.custoEnergia ?? 0 }} Energia
+                                <span>
+                                    · {{ habilidade.custoEnergia ?? 0 }}
+                                    <app-icone
+                                        class="icone--texto"
+                                        nome="energia"
+                                        appTooltip="Energia"
+                                    />
+                                    Energia
+                                </span>
                             }
                         </app-chip>
                     </div>
@@ -237,7 +245,15 @@
                                                 : "Ativa"
                                         }}
                                         @if (modelo.habilidade.tipo === tipos.ATIVA) {
-                                            · {{ modelo.habilidade.custoEnergia }} Energia
+                                            <span>
+                                                · {{ modelo.habilidade.custoEnergia }}
+                                                <app-icone
+                                                    class="icone--texto"
+                                                    nome="energia"
+                                                    appTooltip="Energia"
+                                                />
+                                                Energia
+                                            </span>
                                         }
                                     </app-chip>
                                     @if (modelo.habilidade.restricao) {

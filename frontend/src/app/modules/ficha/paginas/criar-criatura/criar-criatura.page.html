@@ -505,7 +505,12 @@
                     </p>
                 </div>
                 <div class="guia__stats">
-                    <app-stat tamanho="compacto" rotulo="Defesa" [valor]="defesaBase()" />
+                    <app-stat
+                        tamanho="compacto"
+                        rotulo="Defesa"
+                        icone="defesa"
+                        [valor]="defesaBase()"
+                    />
                     <app-stat
                         tamanho="compacto"
                         rotulo="Contra-Ataque"
@@ -1200,7 +1205,12 @@
             } @if (estado().tenacidade) {
             <div class="guia__stats">
                 <app-stat tamanho="compacto" rotulo="Vida" [valor]="vidaMaxima()" variante="vida" />
-                <app-stat tamanho="compacto" rotulo="Defesa" [valor]="defesaBase()" />
+                <app-stat
+                    tamanho="compacto"
+                    rotulo="Defesa"
+                    icone="defesa"
+                    [valor]="defesaBase()"
+                />
             </div>
             } @if (estado().resistencias.length || estado().fraquezas.length) {
             <div class="guia__resumo-linha">

@@ -31,17 +31,29 @@
                     NA {{ item().naTexto ?? "—" }} · VD {{ item().vd ?? "—" }}
                 </span>
                 <span class="acervo__cartao-vitais">
-                    <span>Vida {{ item().vidaAtual }}/{{ item().vidaMaxima ?? "—" }}</span>
-                    <span>Defesa {{ item().defesa ?? "—" }}</span>
+                    <span
+                        ><app-icone class="icone--texto" nome="vida" appTooltip="Vida" /> Vida
+                        {{ item().vidaAtual }}/{{ item().vidaMaxima ?? "—" }}</span
+                    >
+                    <span
+                        ><app-icone class="icone--texto" nome="defesa" appTooltip="Defesa" /> Defesa
+                        {{ item().defesa ?? "—" }}</span
+                    >
                 </span>
             } @else if (item().tipo === TipoFichaEnum.NPC) {
                 <span class="acervo__cartao-meta">
                     {{ item().categoriaTexto ?? "NPC" }} · Nível {{ item().nivel }}
                 </span>
                 <span class="acervo__cartao-vitais">
-                    <span>Vida {{ item().vidaAtual }}/{{ item().vidaMaxima ?? "—" }}</span>
+                    <span
+                        ><app-icone class="icone--texto" nome="vida" appTooltip="Vida" /> Vida
+                        {{ item().vidaAtual }}/{{ item().vidaMaxima ?? "—" }}</span
+                    >
                     @if (item().categoriaTexto !== "Civil") {
-                        <span>Energia {{ item().energiaAtual }}/{{ item().energiaMaxima }}</span>
+                        <span
+                            ><app-icone class="icone--texto" nome="energia" appTooltip="Energia" />
+                            Energia {{ item().energiaAtual }}/{{ item().energiaMaxima }}</span
+                        >
                     }
                 </span>
             } @else {
@@ -49,9 +61,13 @@
                     {{ item().classeTexto }} · Nível {{ item().nivel }} · {{ item().patenteTexto }}
                 </span>
                 <span class="acervo__cartao-vitais">
-                    <span>Vida {{ item().vidaAtual }}/{{ item().vidaMaxima ?? "—" }}</span>
                     <span
-                        >Energia {{ item().energiaAtual ?? "—" }}/{{
+                        ><app-icone class="icone--texto" nome="vida" appTooltip="Vida" /> Vida
+                        {{ item().vidaAtual }}/{{ item().vidaMaxima ?? "—" }}</span
+                    >
+                    <span
+                        ><app-icone class="icone--texto" nome="energia" appTooltip="Energia" />
+                        Energia {{ item().energiaAtual ?? "—" }}/{{
                             item().energiaMaxima ?? "—"
                         }}</span
                     >

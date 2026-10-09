@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { TipoFichaEnum } from '@contratados-rpg/shared/enums';
 
 import { Icone } from '../../../../shared/icone/icone.component';
+import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { Chip } from '../../../../shared/ui/chip/chip.component';
 import { rotuloTipoFicha } from '../../rotulos-ficha';
@@ -54,7 +55,7 @@ export interface ItemAcervo {
  */
 @Component({
   selector: 'app-cartao-ficha-acervo',
-  imports: [RouterLink, Icone, BotaoIcone, Chip],
+  imports: [RouterLink, Icone, Tooltip, BotaoIcone, Chip],
   templateUrl: './cartao-ficha-acervo.component.html',
   styleUrl: './cartao-ficha-acervo.component.scss',
 })

@@ -7,7 +7,12 @@
             class="ficha-mini ficha-mini--fino ficha-mini--centralizado"
             [class.ficha-mini--somente-leitura]="!ajustavelAmplo()"
         >
-            <span class="ficha-mini__rotulo">{{ linha.rotulo }}</span>
+            <span class="ficha-mini__rotulo">
+                @if (linha.chave === "defesa") {
+                    <app-icone class="icone--texto" nome="defesa" appTooltip="Defesa" />
+                }
+                {{ linha.rotulo }}</span
+            >
             @if (ajustavelAmplo()) {
                 <app-valor-editavel
                     class="ficha-mini__valor"
