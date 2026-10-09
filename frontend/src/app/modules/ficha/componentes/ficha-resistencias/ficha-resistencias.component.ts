@@ -1,6 +1,9 @@
 import { Component, input, output, signal } from '@angular/core';
 
 import { TipoDanoEnum } from '@contratados-rpg/shared/enums';
+
+import { Icone } from '../../../../shared/icone/icone.component';
+import { ICONE_TIPO_DANO } from '../../../../shared/icone/icones-dominio';
 import type { ResistenciaLinhaDto } from '@contratados-rpg/shared/regras/agente';
 
 import { ValorEditavel } from '../../../../shared/ui/valor-editavel/valor-editavel.component';
@@ -19,7 +22,7 @@ export interface AjusteResistencia {
  */
 @Component({
   selector: 'app-ficha-resistencias',
-  imports: [ValorEditavel],
+  imports: [Icone, ValorEditavel],
   templateUrl: './ficha-resistencias.component.html',
   styleUrl: './ficha-resistencias.component.scss',
 })
@@ -35,6 +38,7 @@ export class FichaResistencias {
 
   readonly ajusteResistencia = output<AjusteResistencia>();
 
+  protected readonly ICONE_TIPO_DANO = ICONE_TIPO_DANO;
   protected readonly abreviacaoResistencia: Record<TipoDanoEnum, string> = {
     [TipoDanoEnum.FISICO]: 'Físico',
     [TipoDanoEnum.BALISTICO]: 'Balíst.',

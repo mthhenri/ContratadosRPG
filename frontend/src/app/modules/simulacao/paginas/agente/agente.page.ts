@@ -24,6 +24,7 @@ import {
 } from '@contratados-rpg/shared/regras/agente';
 
 import { AjudaSimulacao } from '../../componentes/ajuda-simulacao/ajuda-simulacao.component';
+import type { IconeNome } from '../../../../shared/icone/icone.component';
 import { Cartao } from '../../../../shared/ui/cartao/cartao.component';
 import { Stat } from '../../../../shared/ui/stat/stat.component';
 import { StepInput } from '../../../../shared/ui/stepper/step-input.component';
@@ -61,6 +62,7 @@ interface StatSecundaria {
   readonly valor: string | number;
   readonly detalhe: string;
   readonly tom?: 'energia' | 'furtivo';
+  readonly icone?: IconeNome;
 }
 
 /** Ganho acumulado de progressão (só entra no grid quando maior que zero). */
@@ -190,8 +192,8 @@ export class AgentePage {
     const ehCivil = this.ehCivil();
 
     return [
-      { rotulo: 'Esquiva', valor: defesa === null ? INDISPONIVEL : defesa.esquiva, detalhe: 'DEF + DES' },
-      { rotulo: 'Bloqueio', valor: defesa === null ? INDISPONIVEL : defesa.bloqueio, detalhe: 'DEF + VIG' },
+      { rotulo: 'Esquiva', icone: 'reacao-esquiva', valor: defesa === null ? INDISPONIVEL : defesa.esquiva, detalhe: 'DEF + DES' },
+      { rotulo: 'Bloqueio', icone: 'reacao-bloqueio', valor: defesa === null ? INDISPONIVEL : defesa.bloqueio, detalhe: 'DEF + VIG' },
       { rotulo: 'Deslocamento', valor: `${calcularDeslocamento(this.entrada())} m`, detalhe: 'por turno' },
       { rotulo: 'Inventário', valor: calcularInventario(this.entrada()), detalhe: 'peso máx' },
       { rotulo: 'Dano Corpo', valor: calcularDanoCorpo(this.entrada()), detalhe: 'FOR + VIG' },

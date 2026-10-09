@@ -48,6 +48,10 @@ import { Component, computed, input } from "@angular/core";
  * Família de identidade (m10-03): classes, arquétipos, subclasses de experimento, Civil e NPC,
  * para os dossiês do leitor de Regras (M10) e futuros consumidores. Desenhos aprovados em
  * `docs/specs/backlog/m10-regras/m10-regras-exemplao.html`, objeto ICO, opção `dec`.
+ * Tipos de dano, categorias de habilidade e reações (icones-dano-habilidade-fragmento-reacao):
+ * `dano-*`, `habilidade-*` e `reacao-*`, de contorno, sempre ao lado do texto do conceito —
+ * desenhos votados na prancha de `docs/specs/active/icones-recursos-sistema/`. As variantes
+ * `fragmento-construtor`/`fragmento-potencializador` trocaram de desenho (Prisma e Cristal radiante).
  * Marcas preenchidas (m10-04): `scp`/`criatura` são o logo oficial, `contratados` é a marca
  * SCP + D20. Geometria e crédito aprovados em `docs/design/MARCAS.md`.
  */
@@ -172,7 +176,26 @@ export type IconeNome =
     | "contratados"
     | "vida"
     | "energia"
-    | "defesa";
+    | "defesa"
+    | "dano-fisico"
+    | "dano-balistico"
+    | "dano-explosao"
+    | "dano-quimico"
+    | "dano-geral"
+    | "dano-composto"
+    | "habilidade-geral"
+    | "habilidade-geral-melhorada"
+    | "habilidade-classe"
+    | "habilidade-arquetipo"
+    | "habilidade-subclasse"
+    | "habilidade-outra-classe"
+    | "habilidade-personalidade"
+    | "habilidade-especialidade"
+    | "habilidade-civil"
+    | "habilidade-unica"
+    | "reacao-esquiva"
+    | "reacao-bloqueio"
+    | "reacao-contra-ataque";
 
 /**
  * Ícone monocromático de linha (SVG inline, `stroke: currentColor`) — reutilizado nos menus de

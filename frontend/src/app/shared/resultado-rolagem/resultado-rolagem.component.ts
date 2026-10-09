@@ -3,6 +3,7 @@ import { Component, computed, input } from '@angular/core';
 import { TipoDanoEnum } from '@contratados-rpg/shared/enums';
 import type { DadosRoladosDto, ResultadoRolagemDto } from '@contratados-rpg/shared/regras/rolagem';
 import { Icone, type IconeNome } from '../icone/icone.component';
+import { ICONE_TIPO_DANO } from '../icone/icones-dominio';
 
 /**
  * Faces com SVG de dado dedicado (`d3`..`d20` em `icone.component`) — as únicas que trocam o
@@ -79,6 +80,8 @@ export class ResultadoRolagem {
   }
 
   /** Classe do chip de um grupo de dano — combina o modificador base com o sufixo do tipo. */
+  protected readonly ICONE_TIPO_DANO = ICONE_TIPO_DANO;
+
   protected classeGrupo(tipoDano: TipoDanoEnum): string {
     return `resultado-rolagem__grupo resultado-rolagem__grupo--${SUFIXO_TIPO_DANO[tipoDano]}`;
   }

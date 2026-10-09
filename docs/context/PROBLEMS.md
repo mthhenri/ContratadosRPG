@@ -29,6 +29,14 @@
 
 ## Ativos
 
+### P-113 — Cor de Geral quase invisível no tema claro · `ABERTO` · frontend/tema
+
+- **Sintoma:** no tema claro, o "0" da caixa de resistência de Geral (ficha e ficha resumida do encontro) e o rótulo "Geral" do dialog "Receber dano" aparecem em branco/cinza claro sobre o fundo claro.
+- **Causa:** não investigada; o valor usa a cor de Geral (`--dano-geral`), pensada para o tema escuro. Observado ao verificar `icones-dano-habilidade-fragmento-reacao`, que não alterou essa cor.
+- **Contorno:** nenhum.
+- **Correção:** conferir o contraste de `--dano-geral` no tema claro, no chip de resultado e na caixa de resistência.
+- **Desde:** 09/10/2026.
+
 ### P-112 — Links inativos da Simulação sem nome acessível no celular · `ABERTO` · frontend/usabilidade
 
 - **Sintoma:** em 360×800, seis destinos inativos da barra inferior são links sem nome

@@ -16,9 +16,10 @@
 
             @for (tipo of TIPOS_DANO_BLOQUEAVEIS; track tipo) {
                 <div class="receber-dano__linha" [formGroupName]="tipo">
-                    <span [class]="classeTipo(tipo)" [appTooltip]="DESCRICAO_TIPO[tipo]">{{
-                        ABREVIACAO_TIPO[tipo]
-                    }}</span>
+                    <span [class]="classeTipo(tipo)" [appTooltip]="DESCRICAO_TIPO[tipo]"
+                        ><app-icone class="icone--texto" [nome]="ICONE_TIPO_DANO[tipo]" />
+                        {{ ABREVIACAO_TIPO[tipo] }}</span
+                    >
 
                     <input
                         class="receber-dano__entrada"
@@ -55,6 +56,7 @@
                     class="receber-dano__tipo receber-dano__tipo--geral"
                     [appTooltip]="DESCRICAO_TIPO[TipoDanoEnum.GERAL]"
                 >
+                    <app-icone class="icone--texto" [nome]="ICONE_TIPO_DANO[TipoDanoEnum.GERAL]" />
                     Geral
                 </span>
 
@@ -97,12 +99,14 @@
                 <p class="receber-dano__resumo-linhas">
                     @for (linha of linhasResumo(); track linha.tipo) {
                         <span [class]="classeTipo(linha.tipo)"
-                            >{{ linha.tipo }} {{ linha.efetivo }}</span
+                            ><app-icone class="icone--texto" [nome]="ICONE_TIPO_DANO[linha.tipo]" />
+                            {{ linha.tipo }} {{ linha.efetivo }}</span
                         >
                     }
                     @if (danoGeralInformado()) {
                         <span class="receber-dano__tipo receber-dano__tipo--geral"
-                            >Geral {{ resultado().danoGeral }}</span
+                            ><app-icone class="icone--texto" [nome]="ICONE_TIPO_DANO[TipoDanoEnum.GERAL]" />
+                            Geral {{ resultado().danoGeral }}</span
                         >
                     }
                 </p>

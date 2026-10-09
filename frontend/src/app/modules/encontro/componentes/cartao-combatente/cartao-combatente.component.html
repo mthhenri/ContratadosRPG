@@ -295,6 +295,9 @@
             <span class="combatente__defesas">
                 @for (defesa of defesas(); track defesa.rotulo) {
                     <span class="combatente__defesa">
+                        @if (iconeDefesa(defesa.rotulo); as icone) {
+                            <app-icone class="icone--texto" [nome]="icone" />
+                        }
                         <span class="combatente__rotulo-longo">{{ defesa.rotulo }}</span>
                         <span class="combatente__rotulo-curto">{{ defesa.rotuloCurto }}</span>
                         {{ defesa.valor }}
@@ -307,7 +310,8 @@
             <span class="combatente__resistencias" [appTooltip]="'Resistência a dano'">
                 @for (resistencia of resistenciasExibidas(); track resistencia.rotulo) {
                     <span class="combatente__resistencia"
-                        >{{ resistencia.rotulo }} {{ resistencia.valor }}</span
+                        ><app-icone class="icone--texto" [nome]="ICONE_TIPO_DANO[resistencia.tipo]" />
+                        {{ resistencia.rotulo }} {{ resistencia.valor }}</span
                     >
                 }
             </span>

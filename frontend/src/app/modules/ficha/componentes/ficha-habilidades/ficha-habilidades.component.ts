@@ -22,6 +22,8 @@ import { AutoFocus } from '../../../../shared/auto-focus/auto-focus.directive';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
+import { Icone } from '../../../../shared/icone/icone.component';
+import { ICONE_CATEGORIA_HABILIDADE } from '../../../../shared/icone/icones-dominio';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { EditorMarkdown } from '../../../../shared/ui/editor-markdown/editor-markdown.component';
 import { HabilidadeDescricao } from '../habilidade-descricao/habilidade-descricao.component';
@@ -109,6 +111,7 @@ function juntarComOu(rotulos: readonly string[]): string {
     FichaHabilidadeSeletor,
     EstadoVazio,
     StepInput,
+    Icone,
   ],
   templateUrl: './ficha-habilidades.component.html',
   styleUrl: './ficha-habilidades.component.scss',
@@ -142,6 +145,7 @@ export class FichaHabilidades {
   protected readonly categorias = CATEGORIAS;
   /** Enum exposto ao template (cores do chip por categoria). */
   protected readonly Categoria = HabilidadeCategoriaEnum;
+  protected readonly ICONE_CATEGORIA_HABILIDADE = ICONE_CATEGORIA_HABILIDADE;
 
   /** Índice em edição: `null` = fechado, `-1` = adicionando um novo item, `≥0` = editando. */
   protected readonly indiceEmEdicao = signal<number | null>(null);

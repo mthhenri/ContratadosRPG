@@ -64,13 +64,21 @@
                 >
                     @for (reacao of reacoes(); track reacao.rotulo) {
                         <div class="ficha-mini">
-                            <span class="ficha-mini__rotulo">{{ reacao.rotuloExtenso }}</span>
+                            <span class="ficha-mini__rotulo"
+                                >@if (iconeDefesa(reacao.rotulo); as icone) {
+                                    <app-icone class="icone--texto" [nome]="icone" />
+                                }
+                                {{ reacao.rotuloExtenso }}</span
+                            >
                             <span class="ficha-mini__valor">{{ reacao.valor }}</span>
                         </div>
                     }
                     @if (mostrarContraAusente()) {
                         <div class="ficha-mini ficha-mini--ausente">
-                            <span class="ficha-mini__rotulo">Contra-ataque</span>
+                            <span class="ficha-mini__rotulo"
+                                ><app-icone class="icone--texto" [nome]="ICONE_REACAO.contraAtaque" />
+                                Contra-ataque</span
+                            >
                             <span class="ficha-mini__valor">—</span>
                         </div>
                     }
@@ -84,7 +92,10 @@
                 <div class="resumo__resistencias">
                     @for (resistencia of caixas; track resistencia.tipo) {
                         <div [class]="'ficha-resistencia ficha-resistencia--' + resistencia.sufixo">
-                            <span class="ficha-resistencia__abrev">{{ resistencia.rotulo }}</span>
+                            <span class="ficha-resistencia__abrev"
+                                ><app-icone class="icone--texto" [nome]="ICONE_TIPO_DANO[resistencia.tipo]" />
+                                {{ resistencia.rotulo }}</span
+                            >
                             <span class="ficha-resistencia__valor">{{ resistencia.valor }}</span>
                         </div>
                     }

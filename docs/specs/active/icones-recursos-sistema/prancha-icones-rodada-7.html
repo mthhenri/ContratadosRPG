@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prancha de ícones — rodada 7</title>
+<style>
+:root{--bg:#0b0d12;--surface:#12151c;--surface-2:#181c25;--border:#252a36;--border-strong:#343b4b;--text:#e8eaf0;--text-dim:#a3a9b8;--text-mute:#6f7688;--accent:#d63031;--accent-dim:rgba(214,48,49,.14);--accent-border:rgba(214,48,49,.55);--mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;--sans:"IBM Plex Sans",system-ui,sans-serif}
+:root[data-tema="claro"]{--bg:#f3f4f7;--surface:#fff;--surface-2:#eceef3;--border:#d6d9e1;--border-strong:#b9bec9;--text:#14171f;--text-dim:#444a5a;--text-mute:#737a8c;--accent:#c62828;--accent-dim:rgba(198,40,40,.1);--accent-border:rgba(198,40,40,.6)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 var(--sans)}
+main{max-width:1240px;margin:0 auto;padding:24px 16px 80px}
+h1{font:600 20px var(--mono);letter-spacing:.06em;text-transform:uppercase;margin:0 0 6px}
+h2{font:600 12px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--text-dim);margin:34px 0 4px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.lead{color:var(--text-dim);margin:4px 0 10px;max-width:78ch}
+.barra{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 0}
+button{font:inherit;color:inherit;cursor:pointer}
+.btn{font:600 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;padding:8px 12px;border:1px solid var(--border-strong);border-radius:4px;background:var(--surface)}
+.btn:hover{border-color:var(--accent)}
+.grupo{display:grid;grid-template-columns:1fr;gap:10px;margin-top:12px}
+.item{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:12px 14px;display:grid;gap:10px}
+.item header b{font:600 13.5px var(--mono)}
+.item header small{margin-left:8px;color:var(--text-mute);font:11px var(--mono);letter-spacing:.06em;text-transform:uppercase}
+.ops{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.op{position:relative;text-align:left;display:grid;gap:8px;padding:10px;border:1px solid var(--border);border-radius:6px;background:var(--bg)}
+.op:hover{border-color:var(--border-strong)}
+.op.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);background:var(--accent-dim)}
+.op .l{position:absolute;top:8px;right:10px;font:11px var(--mono);color:var(--text-mute)}
+.op.on .l{color:var(--accent)}
+.tam{display:flex;align-items:flex-end;gap:12px}
+.tam svg{fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.g{width:40px;height:40px}.m{width:24px;height:24px}.p{width:16px;height:16px}
+.op b,.op small{overflow-wrap:anywhere}.op small{color:var(--text-mute);font-size:11.5px;line-height:1.35}
+.nota{border:1px dashed var(--border-strong);border-radius:6px;padding:10px 14px;color:var(--text-dim);margin-top:14px;font-size:13px}
+.nota b{color:var(--text)}
+pre{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:12px 14px;font:12px/1.7 var(--mono);color:var(--text-dim);white-space:pre-wrap}
+.ctx{display:flex;gap:14px;align-items:center;flex-wrap:wrap;font:11px var(--mono);color:var(--text-dim);margin-top:6px}
+.ctx span{display:inline-flex;gap:5px;align-items:center}
+@media (max-width:620px){.grupo{grid-template-columns:1fr}.ops{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main>
+<h1>Prancha de ícones — rodada 7</h1>
+<p class="lead">Spec <code>icones-recursos-sistema</code>, entrega 3, rodada 7: só o Físico: dez novas, as dez anteriores e as três da rodada 1. Mesmo traço do <code>app-icone</code>; cada opção em 40, 24 e 16px. Clique para votar; o resumo no fim pode ser copiado.</p>
+<div class="barra">
+  <button class="btn" id="tema">Tema: escuro</button>
+  <button class="btn" id="limpar">Limpar votos</button>
+  <button class="btn" id="copiar">Copiar resumo</button>
+</div>
+<div class="nota"><b>Decidido:</b> Explosão = Estouro duplo (rodada 5). Os outros itens estão em <code>votacao-prancha.md</code>.</div>
+
+<div id="raiz"></div>
+
+<h2>Resumo dos votos</h2>
+<pre id="resumo"></pre>
+</main>
+
+<script>
+const $ = (s, r = document) => r.querySelector(s);
+const circ = (x, y, r, extra = '') => `<circle cx="${x}" cy="${y}" r="${r}" ${extra}/>`;
+
+// Cada item: [chave, nome, rótulo curto do tipo, [[título, nota, svg interno] x3]]
+const GRUPOS = [
+ ["Tipos de dano — Físico","Voto da rodada 6: sem escolha; o autor pediu mais dez opções, desenhos mais caprichados e as anteriores de volta. A–J são novas; K–T são as dez da rodada anterior; U–W são as três da rodada 1 (o Impacto foi descartado por se parecer com o Estouro).", [
+  ["fisico","Físico","tipo de dano",[
+   ["Haltere","Barra com dois discos de cada lado: força bruta.","<path d=\"M8 12h8M6 7.5v9M3.5 9.5v5M18 7.5v9M20.5 9.5v5\"/>"],
+   ["Clava","Taco reforçado com cintas e rebites.","<g transform=\"rotate(35 12 12)\"><path d=\"M9.5 2.5h5c1 0 1.7.8 1.7 1.8v3.5c0 2-1.2 3-1.7 5.5l-.5 7.7h-4l-.5-7.7C8.5 10.8 7.8 9.8 7.8 7.8V4.3c0-1 .7-1.8 1.7-1.8z\"/><path d=\"M7.8 6.5h8.4M10 4.5h.01M14 4.5h.01\"/></g>"],
+   ["Lança","Ponta em folha, amarração e haste longa.","<g transform=\"rotate(40 12 12)\"><path d=\"M12 1.5c2.3 2.5 2.3 5 0 8-2.3-3-2.3-5.5 0-8z\"/><path d=\"M12 9.5v13M10.2 12h3.6\"/></g>"],
+   ["Presas","Duas presas curvas saindo da gengiva.","<path d=\"M3.5 5h17\"/><path d=\"M5.5 5c0 5 1 10 2.5 14 1-5 1.5-9 1.5-14M18.5 5c0 5-1 10-2.5 14-1-5-1.5-9-1.5-14\"/>"],
+   ["Mangual","Bola de espinhos presa por corrente a um cabo.","<path d=\"M3 21l4.2-4.2\"/><circle cx=\"9\" cy=\"15\" r=\"1.6\"/><circle cx=\"12.5\" cy=\"11.5\" r=\"1.6\"/><circle cx=\"17\" cy=\"7\" r=\"3.3\"/><path d=\"M17 1.5v2.2M22.5 7h-2.2M12 7h2.2M20.9 3.1l-1.6 1.6M13.1 3.1l1.6 1.6M20.9 10.9l-1.6-1.6\"/>"],
+   ["Chute","Bota de lado com a sola reta.","<path d=\"M7 3h6v8l6.5 3a2 2 0 0 1 1.5 2V20H7z\"/><path d=\"M7 16h14M7 8h6\"/>"],
+   ["Rachadura","Fissuras que partem do ponto de impacto.","<path d=\"M12 12l-1.2-5.5L12 2.5M12 12l5.5-3 4 .5M12 12l4.5 5.5 1 4M12 12l-4.2 5.5-3.3 2.5M12 12l-6.5-2.5-3.5-.5\"/><circle cx=\"12\" cy=\"12\" r=\"1.3\"/>"],
+   ["Pé de cabra","Haste com gancho curvo na ponta.","<path d=\"M5 21l11-13.5a3 3 0 1 1 3.5 3.5\"/><path d=\"M5 21l-2-1.5\"/>"],
+   ["Cassetete","Bastão arredondado com empunhadura.","<g transform=\"rotate(40 12 12)\"><rect x=\"9.5\" y=\"1.5\" width=\"5\" height=\"21\" rx=\"2.5\"/><path d=\"M10.2 17h3.6M10.2 14h3.6\"/></g>"],
+   ["Corrente","Dois elos entrelaçados.","<g transform=\"rotate(-35 12 12)\"><rect x=\"2\" y=\"8.5\" width=\"12\" height=\"7\" rx=\"3.5\"/><rect x=\"10\" y=\"8.5\" width=\"12\" height=\"7\" rx=\"3.5\"/></g>"],
+   ["Espada pingando (rodada 5/6)","Da rodada 5: espada de ponta para baixo com gota caindo.","<path d=\"M12.9 1.8a.9.9 0 1 1-1.8 0 .9.9 0 0 1 1.8 0\"/><path d=\"M12 2.7V5M8.5 5h7M10.6 5v9.5l1.4 2 1.4-2V5zM12 7v6\"/><path d=\"M12 18s2 2.2 2 3.7a2 2 0 0 1-4 0c0-1.5 2-3.7 2-3.7z\"/>"],
+   ["Garras (rodada 5/6)","Da rodada 5: três cortes paralelos.","<path d=\"M5 4c1 6 2 11 4 16M11 3c1 6 2 12 4 17M17 4c1 5 2 10 3 14\"/>"],
+   ["Punho (rodada 5/6)","Punho fechado de frente, quatro dedos.","<path d=\"M6 11V9a1.5 1.5 0 0 1 3 0 1.5 1.5 0 0 1 3 0 1.5 1.5 0 0 1 3 0 1.5 1.5 0 0 1 3 0v6a5 5 0 0 1-5 5h-2a5 5 0 0 1-5-5z\"/><path d=\"M9 9v3M12 9v3M15 9v3\"/>"],
+   ["Soco (rodada 5/6)","Punho de lado com riscos de velocidade.","<path d=\"M10 7h8a2.5 2.5 0 0 1 2.5 2.5v5A2.5 2.5 0 0 1 18 17h-8z\"/><path d=\"M10 10.5h6M10 13.5h6\"/><path d=\"M2 9h5M3 12h4M2 15h5\"/>"],
+   ["Martelo (rodada 5/6)","Martelo de guerra de cabeça reta.","<path d=\"M5 3.5h14v6H5z\"/><path d=\"M12 9.5V21M10 21h4\"/>"],
+   ["Machado (rodada 5/6)","Cabo reto e lâmina curva.","<path d=\"M9 3v18\"/><path d=\"M9 4c5-1 9 1 11 5-2 4-6 6-11 5\"/>"],
+   ["Maça (rodada 5/6)","Cabeça redonda com espinhos.","<circle cx=\"12\" cy=\"8\" r=\"4\"/><path d=\"M12 12v9M12 1.5V4M5.5 8H8M16 8h2.5M7.4 3.4l1.8 1.8M16.6 3.4l-1.8 1.8M7.4 12.6l1.8-1.8M16.6 12.6l-1.8-1.8\"/>"],
+   ["Soqueira (rodada 5/6)","Quatro argolas e a barra de empunhar.","<circle cx=\"5\" cy=\"9\" r=\"2\"/><circle cx=\"9.7\" cy=\"9\" r=\"2\"/><circle cx=\"14.3\" cy=\"9\" r=\"2\"/><circle cx=\"19\" cy=\"9\" r=\"2\"/><path d=\"M3 12.5h18M5 12.5v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6\"/>"],
+   ["Adaga (rodada 5/6)","Lâmina curta de dois fios e cabo.","<path d=\"M12 2l2.2 8.5h-4.4z\"/><path d=\"M8 10.5h8M12 10.5V19M10.5 19h3v2h-3z\"/>"],
+   ["Espadas cruzadas (rodada 5/6)","Duas lâminas em X com guardas.","<path d=\"M4 4l12 12M20 4L8 16\"/><path d=\"M13 17l4-4M7 13l4 4M16 16l3 3M8 16l-3 3\"/>"],
+   ["Impacto (rodada 1)","Explosão de impacto em estrela de 8 pontas.","<path d=\"M12 3l1.6 4.2L18 6l-1.2 4.4L21 12l-4.2 1.6L18 18l-4.4-1.2L12 21l-1.6-4.2L6 18l1.2-4.4L3 12l4.2-1.6L6 6l4.4 1.2z\"/>"],
+   ["Punho (rodada 1)","Punho fechado: nós dos dedos e polegar.","<path d=\"M6 11V8.5a1.5 1.5 0 0 1 3 0V8a1.5 1.5 0 0 1 3 0 1.5 1.5 0 0 1 3 0 1.5 1.5 0 0 1 3 0V15a5 5 0 0 1-5 5h-2a5 5 0 0 1-5-5z\"/><path d=\"M6 11l-1.5 3.5A3 3 0 0 0 7 18M9 11v3M12 10v4M15 10v4\"/>"],
+   ["Onda de choque (rodada 1)","Ponto de contato com arcos que se afastam.","<circle cx=\"12\" cy=\"12\" r=\"2\"/><path d=\"M7.5 7.5a6.4 6.4 0 0 0 0 9M16.5 7.5a6.4 6.4 0 0 1 0 9M4.7 4.7a10.4 10.4 0 0 0 0 14.6M19.3 4.7a10.4 10.4 0 0 1 0 14.6\"/>"]]]
+ ]]
+];
+
+const LETRAS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+let votos = {};
+try { votos = JSON.parse(localStorage.getItem('icones-recursos-sistema-rodada7-v1') || '{}'); } catch (e) {}
+const salvar = () => { try { localStorage.setItem('icones-recursos-sistema-rodada6-v1', JSON.stringify(votos)); } catch (e) {} };
+
+function render() {
+  $('#raiz').innerHTML = GRUPOS.map(([titulo, lead, itens]) => `
+    <h2>${titulo}</h2><p class="lead">${lead}</p>
+    <div class="grupo">${itens.map(([k, nome, tipo, ops]) => `
+      <div class="item"><header><b>${nome}</b><small>${tipo}</small></header>
+      <div class="ops">${ops.map(([t, nota, svg], i) => `
+        <button class="op ${votos[k] === i ? 'on' : ''}" data-k="${k}" data-i="${i}" aria-pressed="${votos[k] === i}">
+          <span class="l">${LETRAS[i]}</span>
+          <span class="tam">
+            <svg class="g" viewBox="0 0 24 24" style="stroke-width:1.5">${svg}</svg>
+            <svg class="m" viewBox="0 0 24 24">${svg}</svg>
+            <svg class="p" viewBox="0 0 24 24" style="stroke-width:2">${svg}</svg>
+          </span>
+          <b style="font:600 12px var(--mono)">${t}</b><small>${nota}</small>
+        </button>`).join('')}</div></div>`).join('')}</div>`).join('');
+  document.querySelectorAll('.op').forEach(b => b.onclick = () => {
+    const k = b.dataset.k, i = +b.dataset.i;
+    if (votos[k] === i) delete votos[k]; else votos[k] = i;
+    salvar(); render();
+  });
+  $('#resumo').textContent = GRUPOS.map(([g, , itens]) => g + '\n' + itens.map(([k, nome, , ops]) =>
+    `  ${nome}: ${votos[k] === undefined ? '— (sem voto)' : LETRAS[votos[k]] + ' — ' + ops[votos[k]][0]}`).join('\n')).join('\n\n');
+}
+$('#tema').onclick = () => {
+  const claro = document.documentElement.dataset.tema !== 'claro';
+  document.documentElement.dataset.tema = claro ? 'claro' : 'escuro';
+  $('#tema').textContent = 'Tema: ' + (claro ? 'claro' : 'escuro');
+};
+$('#limpar').onclick = () => { votos = {}; salvar(); render(); };
+$('#copiar').onclick = async () => {
+  try { await navigator.clipboard.writeText($('#resumo').textContent); $('#copiar').textContent = 'Copiado'; }
+  catch (e) { $('#copiar').textContent = 'Selecione e copie'; }
+  setTimeout(() => $('#copiar').textContent = 'Copiar resumo', 1600);
+};
+render();
+</script>
+</body>
+</html>

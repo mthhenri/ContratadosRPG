@@ -5,6 +5,7 @@ import { NivelAmeacaEnum, TipoDanoEnum, TipoFichaEnum } from '@contratados-rpg/s
 
 import { FocoImagem } from '../../../../shared/foco-imagem.directive';
 import { Icone } from '../../../../shared/icone/icone.component';
+import { ICONE_REACAO, ICONE_TIPO_DANO, iconeDefesa } from '../../../../shared/icone/icones-dominio';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { BarraRecurso } from '../../../../shared/ui/barra-recurso/barra-recurso.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
@@ -63,6 +64,9 @@ export class ResumoCombatente {
   /** Pedido de abrir a ficha completa (janela flutuante — quem hospeda decide). */
   readonly abrirFicha = output<void>();
 
+  protected readonly ICONE_TIPO_DANO = ICONE_TIPO_DANO;
+  protected readonly ICONE_REACAO = ICONE_REACAO;
+  protected readonly iconeDefesa = iconeDefesa;
   protected readonly sigla = computed(() => siglaDoCombatente(this.combatente().nome));
   protected readonly origem = computed(() => linhaOrigemDoCombatente(this.combatente()));
 

@@ -39,6 +39,9 @@ escritos, e levantar com o autor que outros ícones fariam falta ao sistema.
      `docs/core/` e das telas reais — nunca inventar conceito).
    - Entrega: prancha HTML nos anexos desta spec no formato da aba *Ícones* do exemplão (três
      opções por item, votação do autor/testers). Implementar só o que for aprovado, em task própria.
+   **Votação dos 21 itens da prancha concluída em 09/10/2026** (`icones-recursos-sistema/votacao-prancha.md`);
+   a implementação está em `docs/specs/done/icones-dano-habilidade-fragmento-reacao.spec.md`. O levantamento
+   de glifos de texto e de conceitos sem ícone segue aberto aqui.
 
 ## Verificação
 

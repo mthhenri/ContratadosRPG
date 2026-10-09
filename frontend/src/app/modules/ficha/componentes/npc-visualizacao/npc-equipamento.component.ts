@@ -12,6 +12,7 @@ import {
     CATEGORIAS_VETADAS_NPC_CIVIL, contarEmpilhamentosModificacoes, obterLimiteModificacoesNpc,
 } from "@contratados-rpg/shared/regras/npc";
 import { Icone, type IconeNome } from "../../../../shared/icone/icone.component";
+import { ICONE_TIPO_DANO } from "../../../../shared/icone/icones-dominio";
 import { OverflowFade } from "../../../../shared/overflow-fade/overflow-fade.directive";
 import { Tooltip } from "../../../../shared/tooltip/tooltip.directive";
 import { Botao } from "../../../../shared/ui/botao/botao.component";
@@ -124,6 +125,7 @@ export class NpcEquipamento {
     readonly confirmandoRemocao = signal<number | null>(null);
     /** Falha de equipar/guardar fora do bloco — não há campo aberto para segurar o erro. */
     readonly erroEquipar = signal<string | null>(null);
+    protected readonly ICONE_TIPO_DANO = ICONE_TIPO_DANO;
     readonly resistencias = computed(() => montarResistencias({
         itens: this.dados().inventario ?? [], amplificadores: [],
     }));

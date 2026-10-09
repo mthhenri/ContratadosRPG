@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prancha de ícones — rodada 3</title>
+<style>
+:root{--bg:#0b0d12;--surface:#12151c;--surface-2:#181c25;--border:#252a36;--border-strong:#343b4b;--text:#e8eaf0;--text-dim:#a3a9b8;--text-mute:#6f7688;--accent:#d63031;--accent-dim:rgba(214,48,49,.14);--accent-border:rgba(214,48,49,.55);--mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;--sans:"IBM Plex Sans",system-ui,sans-serif}
+:root[data-tema="claro"]{--bg:#f3f4f7;--surface:#fff;--surface-2:#eceef3;--border:#d6d9e1;--border-strong:#b9bec9;--text:#14171f;--text-dim:#444a5a;--text-mute:#737a8c;--accent:#c62828;--accent-dim:rgba(198,40,40,.1);--accent-border:rgba(198,40,40,.6)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 var(--sans)}
+main{max-width:1240px;margin:0 auto;padding:24px 16px 80px}
+h1{font:600 20px var(--mono);letter-spacing:.06em;text-transform:uppercase;margin:0 0 6px}
+h2{font:600 12px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--text-dim);margin:34px 0 4px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.lead{color:var(--text-dim);margin:4px 0 10px;max-width:78ch}
+.barra{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 0}
+button{font:inherit;color:inherit;cursor:pointer}
+.btn{font:600 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;padding:8px 12px;border:1px solid var(--border-strong);border-radius:4px;background:var(--surface)}
+.btn:hover{border-color:var(--accent)}
+.grupo{display:grid;grid-template-columns:repeat(auto-fill,minmax(520px,1fr));gap:10px;margin-top:12px}
+.item{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:12px 14px;display:grid;gap:10px}
+.item header b{font:600 13.5px var(--mono)}
+.item header small{margin-left:8px;color:var(--text-mute);font:11px var(--mono);letter-spacing:.06em;text-transform:uppercase}
+.ops{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.op{position:relative;text-align:left;display:grid;gap:8px;padding:10px;border:1px solid var(--border);border-radius:6px;background:var(--bg)}
+.op:hover{border-color:var(--border-strong)}
+.op.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);background:var(--accent-dim)}
+.op .l{position:absolute;top:8px;right:10px;font:11px var(--mono);color:var(--text-mute)}
+.op.on .l{color:var(--accent)}
+.tam{display:flex;align-items:flex-end;gap:12px}
+.tam svg{fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.g{width:40px;height:40px}.m{width:24px;height:24px}.p{width:16px;height:16px}
+.op small{color:var(--text-mute);font-size:11.5px;line-height:1.35}
+.nota{border:1px dashed var(--border-strong);border-radius:6px;padding:10px 14px;color:var(--text-dim);margin-top:14px;font-size:13px}
+.nota b{color:var(--text)}
+pre{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:12px 14px;font:12px/1.7 var(--mono);color:var(--text-dim);white-space:pre-wrap}
+.ctx{display:flex;gap:14px;align-items:center;flex-wrap:wrap;font:11px var(--mono);color:var(--text-dim);margin-top:6px}
+.ctx span{display:inline-flex;gap:5px;align-items:center}
+@media (max-width:620px){.grupo{grid-template-columns:1fr}.ops{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main>
+<h1>Prancha de ícones — rodada 3</h1>
+<p class="lead">Spec <code>icones-recursos-sistema</code>, entrega 3, rodada 3: só o Contra-ataque, em variações de espada e escudo. Mesmo traço do <code>app-icone</code>; cada opção em 40, 24 e 16px. Clique para votar; o resumo no fim pode ser copiado.</p>
+<div class="barra">
+  <button class="btn" id="tema">Tema: escuro</button>
+  <button class="btn" id="limpar">Limpar votos</button>
+  <button class="btn" id="copiar">Copiar resumo</button>
+</div>
+<div class="nota"><b>Decidido na rodada 2:</b> Construtor = A, Prisma.</div>
+
+<div id="raiz"></div>
+
+<h2>Resumo dos votos</h2>
+<pre id="resumo"></pre>
+</main>
+
+<script>
+const $ = (s, r = document) => r.querySelector(s);
+const circ = (x, y, r, extra = '') => `<circle cx="${x}" cy="${y}" r="${r}" ${extra}/>`;
+
+// Cada item: [chave, nome, rótulo curto do tipo, [[título, nota, svg interno] x3]]
+const GRUPOS = [
+ ['Reações — Contra-ataque (espada e escudo)', 'Voto da rodada 3: C, Espada e escudo, com pedido de outras variações do mesmo tema. A primeira opção abaixo é a escolhida, para comparar. Esquiva (Vento) e Bloqueio (Escudo e impacto) já estão decididos; o Contra-ataque precisa se distinguir do Bloqueio a 16px.', [
+  ['contra-ataque','Contra-ataque','reação',[
+   ['Escolhida na rodada 3','Lâmina batendo num escudo.','<path d="M3 10l4-1.5L11 10v3.5c0 2.5-1.6 4.2-4 5.2-2.4-1-4-2.7-4-5.2z"/><path d="M21 3l-9 9M10.5 10.5l3 3M12 12l-2 2"/>'],
+   ['Faísca no escudo','Espada de cima acerta o escudo e solta faíscas.','<path d="M3 9l5-2 5 2v5c0 3-2.2 5-5 6.5C5.2 19 3 17 3 14z"/><path d="M22 2l-8 8M16 4l4 4M9 2.5l1 2M13.5 1.5l-.5 2"/>'],
+   ['Espada atrás do escudo','Escudo à frente, lâmina cruzando por trás.','<path d="M12 7l4 1.5V12c0 2.5-1.7 4-4 5-2.3-1-4-2.5-4-5V8.5z"/><path d="M16 8l5-5M17 3l4 4M8 16l-4 4"/>'],
+   ['Espada cravada','Escudo com a espada fincada no topo.','<path d="M5 10h14v3c0 4-3 6.5-7 8-4-1.5-7-4-7-8z"/><path d="M12 2v2M9.5 4h5M12 4v11"/>'],
+   ['Lado a lado','Escudo à esquerda e espada em guarda à direita.','<path d="M2 9l4.5-1.5L11 9v4c0 3-1.8 4.8-4.5 6C3.8 17.8 2 16 2 13z"/><path d="M18 3v12M15 15h6M18 15v6"/>'],
+   ['Espada sobre o escudo','Escudo grande com a lâmina na diagonal à frente.','<path d="M12 3l8 3v6c0 4.5-3.2 7.7-8 9.5-4.8-1.8-8-5-8-9.5V6z"/><path d="M18 6l-8 8M8 12l4 4M10 14l-3 3"/>']]]
+ ]]
+];
+const LETRAS = 'ABCDEF';
+let votos = {};
+try { votos = JSON.parse(localStorage.getItem('icones-recursos-sistema-rodada3-v1') || '{}'); } catch (e) {}
+const salvar = () => { try { localStorage.setItem('icones-recursos-sistema-rodada3-v1', JSON.stringify(votos)); } catch (e) {} };
+
+function render() {
+  $('#raiz').innerHTML = GRUPOS.map(([titulo, lead, itens]) => `
+    <h2>${titulo}</h2><p class="lead">${lead}</p>
+    <div class="grupo">${itens.map(([k, nome, tipo, ops]) => `
+      <div class="item"><header><b>${nome}</b><small>${tipo}</small></header>
+      <div class="ops">${ops.map(([t, nota, svg], i) => `
+        <button class="op ${votos[k] === i ? 'on' : ''}" data-k="${k}" data-i="${i}" aria-pressed="${votos[k] === i}">
+          <span class="l">${LETRAS[i]}</span>
+          <span class="tam">
+            <svg class="g" viewBox="0 0 24 24" style="stroke-width:1.5">${svg}</svg>
+            <svg class="m" viewBox="0 0 24 24">${svg}</svg>
+            <svg class="p" viewBox="0 0 24 24" style="stroke-width:2">${svg}</svg>
+          </span>
+          <b style="font:600 12px var(--mono)">${t}</b><small>${nota}</small>
+        </button>`).join('')}</div></div>`).join('')}</div>`).join('');
+  document.querySelectorAll('.op').forEach(b => b.onclick = () => {
+    const k = b.dataset.k, i = +b.dataset.i;
+    if (votos[k] === i) delete votos[k]; else votos[k] = i;
+    salvar(); render();
+  });
+  $('#resumo').textContent = GRUPOS.map(([g, , itens]) => g + '\n' + itens.map(([k, nome, , ops]) =>
+    `  ${nome}: ${votos[k] === undefined ? '— (sem voto)' : LETRAS[votos[k]] + ' — ' + ops[votos[k]][0]}`).join('\n')).join('\n\n');
+}
+$('#tema').onclick = () => {
+  const claro = document.documentElement.dataset.tema !== 'claro';
+  document.documentElement.dataset.tema = claro ? 'claro' : 'escuro';
+  $('#tema').textContent = 'Tema: ' + (claro ? 'claro' : 'escuro');
+};
+$('#limpar').onclick = () => { votos = {}; salvar(); render(); };
+$('#copiar').onclick = async () => {
+  try { await navigator.clipboard.writeText($('#resumo').textContent); $('#copiar').textContent = 'Copiado'; }
+  catch (e) { $('#copiar').textContent = 'Selecione e copie'; }
+  setTimeout(() => $('#copiar').textContent = 'Copiar resumo', 1600);
+};
+render();
+</script>
+</body>
+</html>

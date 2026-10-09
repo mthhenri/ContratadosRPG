@@ -1,6 +1,7 @@
 import { Component, input, output, signal } from '@angular/core';
 
 import { Icone } from '../../../../shared/icone/icone.component';
+import { ICONE_REACAO } from '../../../../shared/icone/icones-dominio';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { ValorEditavel } from '../../../../shared/ui/valor-editavel/valor-editavel.component';
 import { ChaveInfoExtra, InfoExtra } from '../../status-derivado';
@@ -25,6 +26,8 @@ export interface AjusteDerivado {
   styleUrl: './ficha-reacoes.component.scss',
 })
 export class FichaReacoes {
+  protected readonly ICONE_REACAO = ICONE_REACAO;
+
   /** Defesa/Esquiva/Bloqueio — as três primeiras linhas de `combateLinhas()` da página-mãe. */
   readonly linhas = input.required<readonly InfoExtra[]>();
   /** Contra-ataque — só existe quando o agente tem a habilidade "Contra-Ataque". */

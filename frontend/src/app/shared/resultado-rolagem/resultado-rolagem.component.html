@@ -70,7 +70,8 @@
                     <div class="resultado-rolagem__grupos">
                         @for (grupo of grupos; track grupo.tipoDano) {
                             <span [class]="classeGrupo(grupo.tipoDano)"
-                                >{{ grupo.tipoDano }} {{ grupo.total }}</span
+                                ><app-icone class="icone--texto" [nome]="ICONE_TIPO_DANO[grupo.tipoDano]" />
+                                {{ grupo.tipoDano }} {{ grupo.total }}</span
                             >
                         }
                     </div>

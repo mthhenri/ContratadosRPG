@@ -5,6 +5,7 @@ import type { EncontroCombatenteResumoDto } from '@contratados-rpg/shared/dtos/e
 import { CombatenteOrigemEnum, NivelAmeacaEnum, TipoDanoEnum, TipoFichaEnum } from '@contratados-rpg/shared/enums';
 
 import { Icone } from '../../../../shared/icone/icone.component';
+import { ICONE_TIPO_DANO, iconeDefesa } from '../../../../shared/icone/icones-dominio';
 import { FocoImagem } from '../../../../shared/foco-imagem.directive';
 import { ReceberDanoDialog } from '../../../../shared/receber-dano/receber-dano-dialog.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
@@ -57,6 +58,8 @@ const ABREVIACAO_RESISTENCIA: Record<TipoDanoEnum, string> = {
   styleUrl: './cartao-combatente.component.scss',
 })
 export class CartaoCombatente {
+  protected readonly ICONE_TIPO_DANO = ICONE_TIPO_DANO;
+  protected readonly iconeDefesa = iconeDefesa;
   protected readonly descreverCondicao = descreverCondicao;
   protected readonly separarCondicoesTexto = separarCondicoesTexto;
   protected readonly tiposImagemAceitos = IMAGEM_MIMES_ACCEPT;
@@ -231,7 +234,7 @@ export class CartaoCombatente {
    * completo da ficha, e cinco zeros não ajudam ninguém a decidir uma jogada.
    */
   protected readonly resistenciasExibidas = computed<
-    readonly { readonly rotulo: string; readonly valor: number }[]
+    readonly { readonly tipo: TipoDanoEnum; readonly rotulo: string; readonly valor: number }[]
   >(() => {
     const resistencias = this.combatente().resistencias;
     if (!resistencias) {
@@ -239,7 +242,7 @@ export class CartaoCombatente {
     }
     return Object.entries(resistencias)
       .filter((entrada): entrada is [TipoDanoEnum, number] => (entrada[1] ?? 0) !== 0)
-      .map(([tipo, valor]) => ({ rotulo: ABREVIACAO_RESISTENCIA[tipo], valor: valor! }));
+      .map(([tipo, valor]) => ({ tipo, rotulo: ABREVIACAO_RESISTENCIA[tipo], valor: valor! }));
   });
 
   /** `true` quando o combatente tem Energia — agente e NPC têm; criatura e avulso, não. */

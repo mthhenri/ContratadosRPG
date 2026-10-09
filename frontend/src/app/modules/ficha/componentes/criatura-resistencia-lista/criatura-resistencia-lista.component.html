@@ -52,6 +52,7 @@
                                 item.tipo + (item.subtipo ? ' · ' + item.subtipo : '')
                             "
                         >
+                            <app-icone class="icone--texto" [nome]="ICONE_TIPO_DANO[item.tipo]" />
                             {{ abreviacao[item.tipo] }}
                         </span>
                         <span class="resistencia-lista__grade-valor">{{ item.valor }}</span>
@@ -88,13 +89,18 @@
                     @if (editando($index)) {
                         <ng-container *ngTemplateOutlet="formulario" />
                     } @else {
-                        <span class="resistencia-lista__item-texto">
-                            @if (item.subtipo) {
-                                <span class="resistencia-lista__tipo">{{ item.tipo }}</span>
-                                <span class="resistencia-lista__subtipo">{{ item.subtipo }}</span>
-                            } @else {
-                                <span class="resistencia-lista__subtipo">{{ item.tipo }}</span>
-                            }
+                        <span class="resistencia-lista__item-corpo">
+                            <app-icone class="icone--texto" [nome]="ICONE_TIPO_DANO[item.tipo]" />
+                            <span class="resistencia-lista__item-texto">
+                                @if (item.subtipo) {
+                                    <span class="resistencia-lista__tipo">{{ item.tipo }}</span>
+                                    <span class="resistencia-lista__subtipo">{{
+                                        item.subtipo
+                                    }}</span>
+                                } @else {
+                                    <span class="resistencia-lista__subtipo">{{ item.tipo }}</span>
+                                }
+                            </span>
                         </span>
                         <span class="resistencia-lista__valor">+{{ item.valor }}</span>
                         @if (editavel() && modoEdicao()) {

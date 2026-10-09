@@ -114,7 +114,9 @@
 > de Vida/Energia; [verificação](../specs/done/revisao-visual-regras/verificacao.md).
 > M10 implementada, 11/11; revisão editorial da exportação segue aberta em P-108.
 > `icones-recursos-sistema` ativa: entregas 1 concluída e 2 parcial (ícone ao lado do texto);
-> prancha de ícones da entrega 3 aguarda a votação do autor.
+> votação da prancha da entrega 3 concluída (21 itens). `icones-dano-habilidade-fragmento-reacao` concluída:
+> 19 ícones novos + 2 fragmentos redesenhados no `app-icone`, ponte `shared/icone/icones-dominio.ts`,
+> adoção nas telas ([verificação](../specs/done/icones-dano-habilidade-fragmento-reacao/verificacao.md)).
 > [Gates, contagens e avisos dos casos explícitos](../specs/done/m10-02-normalizador-casos-explicitos/m10-02-verificacao.md).
 > **Fonte vigente:** Sistema do Jogador v4.1.4
 > incorporado em `p-097-01`: crítico soma +2 uma vez no teste; dano/cura continuam

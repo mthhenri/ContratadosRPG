@@ -17,7 +17,8 @@
     &__cabecalho,
     &__linha {
         display: grid;
-        grid-template-columns: 60px 1fr 40px 1fr;
+        // 76px: o ícone do tipo de dano divide a coluna com a abreviação (icones-dano-habilidade-fragmento-reacao).
+        grid-template-columns: 76px 1fr 40px 1fr;
         align-items: center;
         gap: 8px;
     }
@@ -177,7 +178,7 @@
     @include bp.mobile {
         &__cabecalho,
         &__linha {
-            grid-template-columns: 46px 1fr 32px 1fr;
+            grid-template-columns: 62px 1fr 32px 1fr;
             gap: 5px;
         }
 

@@ -6,6 +6,8 @@ import { calcularDanoRecebido, type DanoRecebidoResultadoDto } from '@contratado
 
 import { Modal } from '../ui/modal/modal.component';
 import { Botao } from '../ui/botao/botao.component';
+import { Icone } from '../icone/icone.component';
+import { ICONE_TIPO_DANO } from '../icone/icones-dominio';
 import { Tooltip } from '../tooltip/tooltip.directive';
 
 /** Descrição de cada tipo bloqueável — texto do documento, para o `appTooltip` do rótulo. */
@@ -60,7 +62,7 @@ function grupoTipo(): FormGroup<{ bruto: FormControl<number>; custom: FormContro
  */
 @Component({
   selector: 'app-receber-dano-dialog',
-  imports: [ReactiveFormsModule, Modal, Botao, Tooltip],
+  imports: [ReactiveFormsModule, Modal, Botao, Icone, Tooltip],
   templateUrl: './receber-dano-dialog.component.html',
   styleUrl: './receber-dano-dialog.component.scss',
 })
@@ -77,6 +79,7 @@ export class ReceberDanoDialog {
   protected readonly TIPOS_DANO_BLOQUEAVEIS = TIPOS_DANO_BLOQUEAVEIS;
   protected readonly DESCRICAO_TIPO = DESCRICAO_TIPO;
   protected readonly ABREVIACAO_TIPO = ABREVIACAO_TIPO;
+  protected readonly ICONE_TIPO_DANO = ICONE_TIPO_DANO;
   protected readonly TipoDanoEnum = TipoDanoEnum;
 
   protected readonly formulario = new FormGroup({

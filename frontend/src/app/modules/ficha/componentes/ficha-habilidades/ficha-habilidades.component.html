@@ -166,6 +166,10 @@
                             "
                             [class.habilidades__chip--inicial]="ehInicial(habilidade)"
                         >
+                            <app-icone
+                                class="icone--texto"
+                                [nome]="ICONE_CATEGORIA_HABILIDADE[habilidade.categoria]"
+                            />
                             {{ rotuloChip(habilidade) }}
                         </span>
                         <span class="habilidades__nome">{{ habilidade.nome }}</span>

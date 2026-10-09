@@ -415,7 +415,12 @@
         <h4 class="npc-lista__titulo">Resistências do equipamento em uso</h4>
         <div class="npc-equip__resistencias">
             @for (resistencia of resistencias(); track resistencia.tipo) {
-                <app-stat [rotulo]="resistencia.tipo" [valor]="resistencia.total" tamanho="fino" />
+                <app-stat
+                    [rotulo]="resistencia.tipo"
+                    [icone]="ICONE_TIPO_DANO[resistencia.tipo]"
+                    [valor]="resistencia.total"
+                    tamanho="fino"
+                />
             }
         </div>
     }

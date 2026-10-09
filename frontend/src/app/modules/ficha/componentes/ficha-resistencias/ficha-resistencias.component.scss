@@ -3,6 +3,8 @@
 // ou só leitura. `--compacto` (carteirinha) troca a fileira flex por uma grade de 5 colunas iguais
 // e reduz fonte/adiciona o respiro que substituía `.ficha-cartao__divisor` — única divergência
 // visual real entre os dois hosts.
+@use "tema/breakpoints" as bp;
+
 .ficha-resistencias {
     display: flex;
     gap: 6px;
@@ -59,6 +61,14 @@
     border-radius: var(--radius-control);
 
     &__abrev {
+        // Ícone do tipo de dano antes da abreviação; no celular as caixas são estreitas, então o
+        // ícone vai sobre o rótulo em todas (e não só nas que não cabem — ficaria irregular).
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 1px 3px;
+        text-align: center;
         font-family: var(--font-mono);
         font-size: 8px;
         text-transform: uppercase;
@@ -67,6 +77,11 @@
 
         .ficha-resistencias--compacto & {
             font-size: 9px;
+        }
+
+        @include bp.mobile {
+            flex-direction: column;
+            flex-wrap: nowrap;
         }
     }
 

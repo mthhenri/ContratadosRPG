@@ -290,6 +290,23 @@ Herdam `currentColor`, sem stroke; valores têm rótulo acessível e `appTooltip
 extenso. Conferidos em 14/16/24px, claro/escuro. A adoção no restante do site permanece
 aberta na [spec avulsa](../specs/active/icones-recursos-sistema.spec.md).
 
+### Dano, categoria de habilidade, fragmento e reação (`icones-dano-habilidade-fragmento-reacao`)
+
+Família de contorno (mesmo traço `1.75`, `currentColor`, decorativa com `aria-hidden`) votada na
+prancha da entrega 3 de `icones-recursos-sistema`. O ícone **acompanha** o texto do conceito, nunca
+o substitui; onde ele é a única pista, o consumidor fornece `appTooltip`. Desenhos e votação em
+`docs/specs/done/icones-dano-habilidade-fragmento-reacao/`.
+
+| Família | Nomes em `IconeNome` | Desenhos |
+|---|---|---|
+| Tipo de dano | `dano-fisico`, `dano-balistico`, `dano-explosao`, `dano-quimico`, `dano-geral`, `dano-composto` | Punho, projétil, estouro duplo, béquer, escudo rachado, círculo meio a meio |
+| Categoria de habilidade | `habilidade-geral`, `-geral-melhorada`, `-classe`, `-arquetipo`, `-subclasse`, `-outra-classe`, `-personalidade`, `-especialidade`, `-civil`, `-unica` | Estrela, estrela sobre base, bandeira, árvore, ramo fundo, troca, silhueta, medalha, crachá, gema |
+| Fragmento | `fragmento-construtor`, `fragmento-potencializador` | Prisma, cristal radiante (substituem o diamante com selo; `link`/`chama` mantêm o selo) |
+| Reação | `reacao-esquiva`, `reacao-bloqueio`, `reacao-contra-ataque` | Vento, escudo e impacto, espada atrás do escudo |
+
+`habilidade-personalidade` (silhueta) é parente próximo de `civil` (identidade); os dois só
+convivem em telas diferentes, e o texto ao lado desfaz a dúvida.
+
 ### Ícones de identidade (`m10-03`)
 
 O catálogo canônico `app-icone` (`frontend/src/app/shared/icone/`) reúne a família de

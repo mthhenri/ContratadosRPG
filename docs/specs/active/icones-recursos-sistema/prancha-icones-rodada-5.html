@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prancha de ícones — rodada 5</title>
+<style>
+:root{--bg:#0b0d12;--surface:#12151c;--surface-2:#181c25;--border:#252a36;--border-strong:#343b4b;--text:#e8eaf0;--text-dim:#a3a9b8;--text-mute:#6f7688;--accent:#d63031;--accent-dim:rgba(214,48,49,.14);--accent-border:rgba(214,48,49,.55);--mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;--sans:"IBM Plex Sans",system-ui,sans-serif}
+:root[data-tema="claro"]{--bg:#f3f4f7;--surface:#fff;--surface-2:#eceef3;--border:#d6d9e1;--border-strong:#b9bec9;--text:#14171f;--text-dim:#444a5a;--text-mute:#737a8c;--accent:#c62828;--accent-dim:rgba(198,40,40,.1);--accent-border:rgba(198,40,40,.6)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 var(--sans)}
+main{max-width:1240px;margin:0 auto;padding:24px 16px 80px}
+h1{font:600 20px var(--mono);letter-spacing:.06em;text-transform:uppercase;margin:0 0 6px}
+h2{font:600 12px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--text-dim);margin:34px 0 4px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.lead{color:var(--text-dim);margin:4px 0 10px;max-width:78ch}
+.barra{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 0}
+button{font:inherit;color:inherit;cursor:pointer}
+.btn{font:600 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;padding:8px 12px;border:1px solid var(--border-strong);border-radius:4px;background:var(--surface)}
+.btn:hover{border-color:var(--accent)}
+.grupo{display:grid;grid-template-columns:repeat(auto-fill,minmax(520px,1fr));gap:10px;margin-top:12px}
+.item{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:12px 14px;display:grid;gap:10px}
+.item header b{font:600 13.5px var(--mono)}
+.item header small{margin-left:8px;color:var(--text-mute);font:11px var(--mono);letter-spacing:.06em;text-transform:uppercase}
+.ops{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.op{position:relative;text-align:left;display:grid;gap:8px;padding:10px;border:1px solid var(--border);border-radius:6px;background:var(--bg)}
+.op:hover{border-color:var(--border-strong)}
+.op.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);background:var(--accent-dim)}
+.op .l{position:absolute;top:8px;right:10px;font:11px var(--mono);color:var(--text-mute)}
+.op.on .l{color:var(--accent)}
+.tam{display:flex;align-items:flex-end;gap:12px}
+.tam svg{fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.g{width:40px;height:40px}.m{width:24px;height:24px}.p{width:16px;height:16px}
+.op small{color:var(--text-mute);font-size:11.5px;line-height:1.35}
+.nota{border:1px dashed var(--border-strong);border-radius:6px;padding:10px 14px;color:var(--text-dim);margin-top:14px;font-size:13px}
+.nota b{color:var(--text)}
+pre{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:12px 14px;font:12px/1.7 var(--mono);color:var(--text-dim);white-space:pre-wrap}
+.ctx{display:flex;gap:14px;align-items:center;flex-wrap:wrap;font:11px var(--mono);color:var(--text-dim);margin-top:6px}
+.ctx span{display:inline-flex;gap:5px;align-items:center}
+@media (max-width:620px){.grupo{grid-template-columns:1fr}.ops{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main>
+<h1>Prancha de ícones — rodada 5</h1>
+<p class="lead">Spec <code>icones-recursos-sistema</code>, entrega 3, rodada 5: só Físico (espada com gota de sangue) e Explosão (mais uma camada). Mesmo traço do <code>app-icone</code>; cada opção em 40, 24 e 16px. Clique para votar; o resumo no fim pode ser copiado.</p>
+<div class="barra">
+  <button class="btn" id="tema">Tema: escuro</button>
+  <button class="btn" id="limpar">Limpar votos</button>
+  <button class="btn" id="copiar">Copiar resumo</button>
+</div>
+<div class="nota"><b>Decidido:</b> os outros 19 itens estão em <code>votacao-prancha.md</code>. Aqui só os dois que o autor reabriu.</div>
+
+<div id="raiz"></div>
+
+<h2>Resumo dos votos</h2>
+<pre id="resumo"></pre>
+</main>
+
+<script>
+const $ = (s, r = document) => r.querySelector(s);
+const circ = (x, y, r, extra = '') => `<circle cx="${x}" cy="${y}" r="${r}" ${extra}/>`;
+
+// Cada item: [chave, nome, rótulo curto do tipo, [[título, nota, svg interno] x3]]
+const O = 'M12 2l2 5 5-2-2 5 5 2-5 2 2 5-5-2-2 5-2-5-5 2 2-5-5-2 5-2-2-5 5 2z';
+const cam = (s, sw, rot = 0) => `<g transform="translate(12 12)${rot ? ` rotate(${rot})` : ''} scale(${s}) translate(-12 -12)"><path stroke-width="${sw}" d="${O}"/></g>`;
+const GRUPOS = [
+ ['Tipos de dano — Físico', 'Pedido do autor: espada com uma gota de sangue escorrendo, ou outras variações. O Impacto da rodada 1 ficou parecido com o Estouro da Explosão, então o Físico precisa de um desenho que não seja uma estrela.', [
+  ['fisico','Físico','tipo de dano',[
+   ['Espada pingando','Espada de ponta para baixo com uma gota caindo da lâmina.','<path d="M12.9 1.8a.9.9 0 1 1-1.8 0 .9.9 0 0 1 1.8 0"/><path d="M12 2.7V5M8.5 5h7M10.6 5v9.5l1.4 2 1.4-2V5zM12 7v6"/><path d="M12 18s2 2.2 2 3.7a2 2 0 0 1-4 0c0-1.5 2-3.7 2-3.7z"/>'],
+   ['Espada em diagonal','Espada inclinada, gota caindo da ponta.','<g transform="translate(0 -1.5) rotate(45 12 12)"><path d="M12.9 1.8a.9.9 0 1 1-1.8 0 .9.9 0 0 1 1.8 0"/><path d="M12 2.7V5M8.5 5h7M10.6 5v11l1.4 3 1.4-3V5zM12 7v8"/></g><path d="M6.3 17.8s1.8 2 1.8 3.3a1.8 1.8 0 0 1-3.6 0c0-1.3 1.8-3.3 1.8-3.3z"/>'],
+   ['Garras','Três cortes paralelos.','<path d="M5 4c1 6 2 11 4 16M11 3c1 6 2 12 4 17M17 4c1 5 2 10 3 14"/>'],
+   ['Corte e gota','Dois cortes na diagonal e uma gota de sangue.','<path d="M3 8c5 1 11 6 14 14M7 5c4 1 9 5 12 12"/><path d="M18 3s2 2.2 2 3.7a2 2 0 0 1-4 0c0-1.5 2-3.7 2-3.7z"/>']]]
+ ]],
+ ['Tipos de dano — Explosão', 'Pedido do autor: mais uma camada de explosão no ícone. A base é o Estouro escolhido na rodada 1, com um estouro menor por dentro.', [
+  ['explosao','Explosão','tipo de dano',[
+   ['Estouro duplo','Estouro com outro menor no centro.','<path d="'+O+'"/>'+cam(.42, 4.2)],
+   ['Estouro defasado','O estouro de dentro girado, para as pontas se alternarem.','<path d="'+O+'"/>'+cam(.45, 3.9, 15)],
+   ['Estouro com núcleo','Dois estouros e um ponto no centro.','<path d="'+O+'"/>'+cam(.42, 4.2)+'<path d="M12 12h.01"/>']]]
+ ]]
+];
+const LETRAS = 'ABCDEF';
+let votos = {};
+try { votos = JSON.parse(localStorage.getItem('icones-recursos-sistema-rodada5-v1') || '{}'); } catch (e) {}
+const salvar = () => { try { localStorage.setItem('icones-recursos-sistema-rodada5-v1', JSON.stringify(votos)); } catch (e) {} };
+
+function render() {
+  $('#raiz').innerHTML = GRUPOS.map(([titulo, lead, itens]) => `
+    <h2>${titulo}</h2><p class="lead">${lead}</p>
+    <div class="grupo">${itens.map(([k, nome, tipo, ops]) => `
+      <div class="item"><header><b>${nome}</b><small>${tipo}</small></header>
+      <div class="ops">${ops.map(([t, nota, svg], i) => `
+        <button class="op ${votos[k] === i ? 'on' : ''}" data-k="${k}" data-i="${i}" aria-pressed="${votos[k] === i}">
+          <span class="l">${LETRAS[i]}</span>
+          <span class="tam">
+            <svg class="g" viewBox="0 0 24 24" style="stroke-width:1.5">${svg}</svg>
+            <svg class="m" viewBox="0 0 24 24">${svg}</svg>
+            <svg class="p" viewBox="0 0 24 24" style="stroke-width:2">${svg}</svg>
+          </span>
+          <b style="font:600 12px var(--mono)">${t}</b><small>${nota}</small>
+        </button>`).join('')}</div></div>`).join('')}</div>`).join('');
+  document.querySelectorAll('.op').forEach(b => b.onclick = () => {
+    const k = b.dataset.k, i = +b.dataset.i;
+    if (votos[k] === i) delete votos[k]; else votos[k] = i;
+    salvar(); render();
+  });
+  $('#resumo').textContent = GRUPOS.map(([g, , itens]) => g + '\n' + itens.map(([k, nome, , ops]) =>
+    `  ${nome}: ${votos[k] === undefined ? '— (sem voto)' : LETRAS[votos[k]] + ' — ' + ops[votos[k]][0]}`).join('\n')).join('\n\n');
+}
+$('#tema').onclick = () => {
+  const claro = document.documentElement.dataset.tema !== 'claro';
+  document.documentElement.dataset.tema = claro ? 'claro' : 'escuro';
+  $('#tema').textContent = 'Tema: ' + (claro ? 'claro' : 'escuro');
+};
+$('#limpar').onclick = () => { votos = {}; salvar(); render(); };
+$('#copiar').onclick = async () => {
+  try { await navigator.clipboard.writeText($('#resumo').textContent); $('#copiar').textContent = 'Copiado'; }
+  catch (e) { $('#copiar').textContent = 'Selecione e copie'; }
+  setTimeout(() => $('#copiar').textContent = 'Copiar resumo', 1600);
+};
+render();
+</script>
+</body>
+</html>

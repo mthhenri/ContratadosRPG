@@ -62,22 +62,22 @@
                 <div class="espectador-ficha__reacoes">
                     @if (ficha().defesa != null) {
                         <span
-                            >Def <strong>{{ ficha().defesa }}</strong></span
+                            ><app-icone class="icone--texto icone--defesa" nome="defesa" appTooltip="Defesa" /> Def <strong>{{ ficha().defesa }}</strong></span
                         >
                     }
                     @if (ficha().esquiva != null) {
                         <span
-                            >Esq <strong>{{ ficha().esquiva }}</strong></span
+                            ><app-icone class="icone--texto" nome="reacao-esquiva" appTooltip="Esquiva" /> Esq <strong>{{ ficha().esquiva }}</strong></span
                         >
                     }
                     @if (ficha().bloqueio != null) {
                         <span
-                            >Blo <strong>{{ ficha().bloqueio }}</strong></span
+                            ><app-icone class="icone--texto" nome="reacao-bloqueio" appTooltip="Bloqueio" /> Blo <strong>{{ ficha().bloqueio }}</strong></span
                         >
                     }
                     @if (ficha().contraAtaque != null) {
                         <span
-                            >Con <strong>{{ ficha().contraAtaque }}</strong></span
+                            ><app-icone class="icone--texto" nome="reacao-contra-ataque" appTooltip="Contra-ataque" /> Con <strong>{{ ficha().contraAtaque }}</strong></span
                         >
                     }
                 </div>

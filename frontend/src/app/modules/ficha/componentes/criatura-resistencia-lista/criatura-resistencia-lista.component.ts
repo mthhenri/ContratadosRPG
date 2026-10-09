@@ -6,6 +6,7 @@ import { TipoDanoEnum } from '@contratados-rpg/shared/enums';
 import type { FichaCriaturaResistenciaDto } from '@contratados-rpg/shared/dtos/ficha';
 
 import { Icone } from '../../../../shared/icone/icone.component';
+import { ICONE_TIPO_DANO } from '../../../../shared/icone/icones-dominio';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
@@ -66,6 +67,7 @@ export class CriaturaResistenciaLista {
 
   protected readonly tipos = TIPOS;
   protected readonly abreviacao = ABREVIACAO;
+  protected readonly ICONE_TIPO_DANO = ICONE_TIPO_DANO;
 
   protected readonly indiceEmEdicao = signal<number | null>(null);
   /** Editar/remover por item só aparece dentro deste modo — evita os ícones ficarem sempre

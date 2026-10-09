@@ -14,6 +14,10 @@
                         nome="defesa"
                         appTooltip="Defesa"
                     />
+                } @else if (linha.chave === "esquiva") {
+                    <app-icone class="icone--texto" [nome]="ICONE_REACAO.esquiva" />
+                } @else if (linha.chave === "bloqueio") {
+                    <app-icone class="icone--texto" [nome]="ICONE_REACAO.bloqueio" />
                 }
                 {{ linha.rotulo }}</span
             >
@@ -57,6 +61,7 @@
         "
     >
         <span class="ficha-mini__rotulo" [class.ficha-mini__rotulo--duas-linhas]="!compacto()">
+            <app-icone class="icone--texto" [nome]="ICONE_REACAO.contraAtaque" />
             Contra-ataque
         </span>
         @if (temContraAtaque()) {

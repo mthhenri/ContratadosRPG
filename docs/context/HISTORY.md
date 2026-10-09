@@ -1,5 +1,12 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-09 — Ícones de dano, categoria, fragmento e reação: catálogo e adoção
+
+A votação da prancha da entrega 3 de `icones-recursos-sistema` fechou em 7 rodadas (21 itens; o autor trocou Físico por Punho, Explosão por Estouro duplo, Construtor por Prisma e Contra-ataque por espada larga atrás do escudo). A implementação virou a spec `icones-dano-habilidade-fragmento-reacao`: 19 nomes novos no `app-icone`, os dois fragmentos redesenhados, a ponte `shared/icone/icones-dominio.ts` e o ícone ao lado do texto em resultado de rolagem, "Receber dano", resistências (ficha, encontro, criatura), chips de categoria, tiles de reação, NPC e simulação do agente.
+
+Verificação ao vivo em 1920×1080 e 360×800 achou três defeitos que testes não pegam: coluna do "Receber dano" cortando "Balíst."/"Explos."/"Químico", ícone da fraqueza da criatura quebrando para cima do nome, e resistências da ficha irregulares no celular. Corrigidos. Frontend: 3.175 testes; build e lint sem erros. Segunda passada fechou o que faltava observar (espectador, revisão da criação de NPC, equipamento do NPC, selo do seletor, fragmentos na lista de categorias do item custom, tema claro); o card do espectador ganhou também o ícone de Defesa. Spec em `done/`. P-113 registra a cor de Geral ilegível no tema claro, sem relação com a task.
+[Verificação auditável](../specs/done/icones-dano-habilidade-fragmento-reacao/verificacao.md).
+
 ## 2026-10-09 — Regras: tabelas mobile, Sumário e rodapé
 
 Autor apontou cinco defeitos em capturas do Edge. Amplificadores tinham cabeçalho

@@ -263,4 +263,49 @@ describe('Icone', () => {
         expect(montar("scp").querySelectorAll("path")).toHaveLength(5);
         expect(montar("contratados").querySelectorAll("path")).toHaveLength(20);
     });
+
+    // icones-dano-habilidade-fragmento-reacao: 19 nomes novos + 2 fragmentos redesenhados.
+    const dano: IconeNome[] = [
+        "dano-fisico", "dano-balistico", "dano-explosao", "dano-quimico", "dano-geral", "dano-composto",
+    ];
+    const categorias: IconeNome[] = [
+        "habilidade-geral", "habilidade-geral-melhorada", "habilidade-classe", "habilidade-arquetipo",
+        "habilidade-subclasse", "habilidade-outra-classe", "habilidade-personalidade",
+        "habilidade-especialidade", "habilidade-civil", "habilidade-unica",
+    ];
+    const reacoes: IconeNome[] = ["reacao-esquiva", "reacao-bloqueio", "reacao-contra-ataque"];
+    const fragmentos: IconeNome[] = ["fragmento-construtor", "fragmento-potencializador"];
+
+    it.each([...dano, ...categorias, ...reacoes, ...fragmentos])(
+        "%s é um glifo de contorno decorativo com cor herdada",
+        (nome) => {
+            const svg = montar(nome).querySelector("svg")!;
+            expect(svg.getAttribute("viewBox")).toBe("0 0 24 24");
+            expect(svg.getAttribute("fill")).toBe("none");
+            expect(svg.getAttribute("stroke")).toBe("currentColor");
+            expect(svg.getAttribute("aria-hidden")).toBe("true");
+            expect(svg.querySelectorAll("circle, path, rect").length).toBeGreaterThan(0);
+        },
+    );
+
+    it("distingue os 21 ícones entre si e dos vizinhos que podem se confundir", () => {
+        const nomes: IconeNome[] = [
+            ...dano, ...categorias, ...reacoes, ...fragmentos,
+            "fragmento", "link", "chama", "civil", "defesa", "explosivos", "corpo-a-corpo", "armas-de-fogo",
+        ];
+        const formas = nomes.map(assinatura);
+        expect(formas.every((forma) => forma !== "")).toBe(true);
+        expect(new Set(formas).size).toBe(nomes.length);
+    });
+
+    it("desenha o Estouro duplo com um estouro menor dentro do maior", () => {
+        const caminhos = montar("dano-explosao").querySelectorAll("svg > path");
+        expect(caminhos).toHaveLength(2);
+    });
+
+    it("não depende de mask/clipPath com id (várias instâncias na mesma tela)", () => {
+        for (const nome of [...dano, ...categorias, ...reacoes, ...fragmentos]) {
+            expect(montar(nome).querySelector("mask, clipPath, [id]")).toBeNull();
+        }
+    });
 });

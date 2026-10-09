@@ -193,6 +193,13 @@
             }
         }
     }
+    // Ícone do tipo de dano à esquerda do bloco tipo/subtipo (icones-dano-habilidade-fragmento-reacao).
+    &__item-corpo {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        min-width: 0;
+    }
     &__item-texto {
         display: flex;
         flex-direction: column;
