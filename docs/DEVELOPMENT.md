@@ -8,6 +8,19 @@ e o [mapa de specs](specs/README.md). Capturas e saídas brutas vão para
 `npm run repo:test` e `npm run repo:verificar`; depois de preparar um commit,
 execute `npm run repo:verificar -- --staged`. O CI verifica o índice e os espelhos.
 
+## Cache local do Angular
+
+O cache persistente fica em `frontend/.angular/cache-local/`, configurado por
+`cli.cache.path` em `frontend/angular.json`. Continua habilitado no ambiente local;
+o build habitual é `npm run build --workspace=frontend`, sem definir `CI=true`.
+Confira o estado com `npm run ng --workspace=frontend -- cache info`.
+
+Na P-104, abrir o banco LMDB do caminho anterior `.angular/cache/` encerrava o
+processo nativo no Windows. A recuperação criou uma base nova pelo mecanismo
+oficial de configuração do Angular, preservando a base anterior e processos em uso.
+Não apague caches de sessões concorrentes. Em outra ocorrência, investigue antes
+de repetir a recuperação; não há diagnóstico do defeito interno do módulo nativo.
+
 ## Banco local reproduzível
 
 O comando abaixo **apaga sem backup** o volume PostgreSQL local deste repositório, recria o schema

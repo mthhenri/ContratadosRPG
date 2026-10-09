@@ -2220,7 +2220,10 @@ do frontend. Casos explícitos em `scripts/regras-personagens.mjs`, `regras-equi
 sem cálculo; tabela de layout sem assinatura vira `grade` (uma célula por caixa) com aviso e
 linha de origem; definições de imagem do Docs não são publicadas. Restam 27 avisos (11 grades
 e 16 âncoras repetidas), justificados na [verificação da revisão visual](../specs/done/revisao-visual-regras/verificacao.md).
-Build de produção aprovado em modo CI; falha nativa com cache local contornada em P-104.
+Build de produção aprovado com cache local habilitado, sem `CI=true` (P-104 recuperada).
+`frontend/angular.json` usa `.angular/cache-local/`; a base antiga que derrubava a abertura
+LMDB foi preservada. Primeiro build e reutilização com outro processo mantendo o banco aberto
+passaram; [diagnóstico e limites](../specs/done/p-104-build-cache/verificacao.md).
 Leitura publicada em JSON derivado do Markdown; download provisório retirado na M10-11.
 Blocos ricos entregues na M10-07.
 

@@ -3,7 +3,10 @@
   "version": 1,
   "cli": {
     "packageManager": "npm",
-    "analytics": false
+    "analytics": false,
+    "cache": {
+      "path": ".angular/cache-local"
+    }
   },
   "newProjectRoot": "projects",
   "projects": {

@@ -1,5 +1,31 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-09 — P-104: build recuperado com cache local habilitado
+
+Pedido do autor para resolver a P-104. Build com rede reproduziu a violação
+de acesso `3221225477`; processo mínimo LMDB também caiu ao abrir a base
+original. Cópia isolada leu os 2.997 registros e cópia com lock também abriu:
+não há evidência suficiente para atribuir corrupção dos dados/lock nem causa
+exclusiva de concorrência. A falha foi isolada na abertura da base original
+em uso, sem depender do código Angular da aplicação.
+
+`frontend/angular.json` passou a usar `.angular/cache-local/` pela configuração
+oficial `cli.cache.path`, mantendo defaults de habilitação e ambiente local.
+Base anterior e processos de outras sessões preservados. Build habitual passou
+sem `CI=true` ou limite de workers: 23,578 s no primeiro e 11,393 s reutilizando
+o cache, inclusive com outro processo mantendo a nova base aberta. `ng cache info`
+confirmou cache efetivamente habilitado. Recuperação do estado local comprovada;
+defeito interno nativo não diagnosticado, sem promessa de corrigir o LMDB em geral.
+
+Lint dos três workspaces passou com avisos existentes. Shared: 1.157 testes;
+backend: 994 e um ignorado; frontend: 66 do normalizador e 3.126 Angular;
+organização: sete testes. Tentativas iniciais dentro do sandbox falharam por
+restrições de acesso, repetidas fora dele com sucesso. Budget permanece no aviso
+existente, sem mudança de limites. Nenhuma UI alterada. Alteração concorrente no
+Sistema preservada. P-104 retirada dos ativos; runbook e contexto atualizados.
+[Diagnóstico, resultados e limites](../specs/done/p-104-build-cache/verificacao.md).
+Autor autorizou o commit da recuperação e documentação após o fecho. Sem push.
+
 ## 2026-10-08 — revisao-visual-regras: Sistema legível e próximo do exemplão
 
 O autor pediu uma revisão visual da página de Regras: ícone novo, Energia azul e Vida
