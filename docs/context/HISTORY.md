@@ -1,5 +1,19 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-09 — Fecho documental do legado Superpowers
+
+Após autorizar o commit da identidade do Caderno (`394cacba`), o autor autorizou finalizar
+o registro `legado-superpowers-conferir-fecho`. A spec e seus seis anexos foram movidos
+juntos para `done/`, com os ponteiros corrigidos e um relatório de conferência. Bônus de
+atributo, ações da ficha e avatar maior tinham implementação histórica; Markdown foi
+tratado em tasks posteriores e a cor da ficha mais recente foi concluída e verificada
+em task própria. O fecho preserva a ressalva de que as três primeiras frentes não
+receberam nova certificação visual integral. Não houve reimplementação dessas frentes.
+
+Gates documentais: testes do verificador de organização, árvore local, índice preparado
+e conferência do diff/ponteiros; os resultados e limites ficam no
+[relatório](../specs/done/legado-superpowers-conferir-fecho/verificacao.md).
+
 ## 2026-10-09 — Cor da ficha mais recente na identidade do Caderno
 
 Na conferência do legado Superpowers, bônus de atributo, ações da ficha e avatar maior

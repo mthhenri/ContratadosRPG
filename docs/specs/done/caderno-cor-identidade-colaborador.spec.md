@@ -1,7 +1,7 @@
 # caderno-cor-identidade-colaborador.spec.md
 
 > Task avulsa autorizada pelo autor em 2026-10-09. Recorte de identidade do
-> [desenho legado](../backlog/legado-superpowers-conferir-fecho/2026-09-02-caderno-markdown-identidade-design.md).
+> [desenho legado](../done/legado-superpowers-conferir-fecho/2026-09-02-caderno-markdown-identidade-design.md).
 
 ## Objetivo
 
@@ -40,4 +40,4 @@ reimplementação das outras três frentes legadas.
 ## Dependências
 
 `docs/SYSTEM.SPEC.md` §§3.1, 9 e 14; `docs/CONVENTIONS.md`; `docs/design/DESIGN.md`;
-`docs/specs/backlog/legado-superpowers-conferir-fecho.spec.md`.
+`docs/specs/done/legado-superpowers-conferir-fecho.spec.md`.

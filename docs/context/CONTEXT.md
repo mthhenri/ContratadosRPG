@@ -4,9 +4,10 @@
 > juntos em `docs/specs/<estado>/`, conforme [política §3.1](../SYSTEM.SPEC.md#31-documentação-de-tarefa-e-artefatos-de-execução)
 > e [mapa](../specs/README.md). Capturas/saídas brutas ficam em `.artifacts/`, local
 > e ignorada; `repo:verificar` e CI conferem destinos e espelhos. A usabilidade
-> segue em `active/`; [conferência dos quatro recortes legados](../specs/backlog/legado-superpowers-conferir-fecho.spec.md)
-> e [retomada da cobertura de ficha oculta](../specs/backlog/auditoria-ficha-oculta-retomada-cobertura.spec.md)
-> estão no backlog, sem implementação executada por esta organização. Estado da M10 preservado.
+> segue em `active/`; a [conferência dos quatro recortes legados](../specs/done/legado-superpowers-conferir-fecho.spec.md)
+> está encerrada documentalmente, com os anexos preservados e a identidade do Caderno concluída.
+> A [retomada da cobertura de ficha oculta](../specs/backlog/auditoria-ficha-oculta-retomada-cobertura.spec.md)
+> permanece no backlog. Estado da M10 preservado.
 > [Inventário, destinos e gates desta organização](../specs/done/organizacao-documentacao-e-artefatos/verificacao.md).
 
 > **Caderno — identidade concluída em 2026-10-09:** a inicial, o cursor e a seleção de cada

@@ -41,3 +41,11 @@ Política de organização: `docs/SYSTEM.SPEC.md` §3.1.
 
 Os anexos permanecem como registro histórico. A conferência de código/história das três
 primeiras frentes não equivale a uma nova certificação visual integral desses produtos.
+
+## Fecho documental — 2026-10-09
+
+Encerramento autorizado pelo autor após a conferência e o commit `394cacba` do Caderno.
+Os seis anexos estão preservados, as quatro frentes foram discriminadas e a diferença
+funcional encontrada foi concluída em task própria. Este registro sai do backlog como
+conferência documental concluída, mantendo os limites de aceite descritos acima.
+[Relatório de fecho](legado-superpowers-conferir-fecho/verificacao.md).

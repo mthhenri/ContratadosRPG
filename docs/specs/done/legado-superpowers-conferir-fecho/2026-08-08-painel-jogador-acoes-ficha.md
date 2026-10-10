@@ -4,7 +4,7 @@
 
 **Goal:** Trazer "Remover da campanha", "Excluir ficha" e "Acesso de visualização" — hoje só acessíveis pelo kebab por-mini-card do mestre ou pela ficha completa — para o menu "⋯" do jogador em `/painel/:id`, agindo sobre a ficha exibida na coluna principal.
 
-**Architecture:** Tudo em `frontend/src/app/modules/campanha/paginas/detalhe/` (`detalhe.page.ts`/`.html`/`.scss`). Sem componente novo, sem endpoint novo — reusa `FichaService` (`atribuirCampanha`, `excluirFicha`, `listarAcessos`, `concederAcesso`, `revogarAcesso`) e os métodos que já existem no kebab por-mini-card (`removerDaCampanha`, `pedirExcluirFicha`, `confirmarExcluirFicha`). A dialog de "Acesso de visualização" duplica o padrão já usado em `visualizar.page.ts` (mesma API), sem extração de componente — o design (`docs/specs/backlog/legado-superpowers-conferir-fecho/2026-08-08-painel-jogador-acoes-ficha-design.md`) documenta essa escolha.
+**Architecture:** Tudo em `frontend/src/app/modules/campanha/paginas/detalhe/` (`detalhe.page.ts`/`.html`/`.scss`). Sem componente novo, sem endpoint novo — reusa `FichaService` (`atribuirCampanha`, `excluirFicha`, `listarAcessos`, `concederAcesso`, `revogarAcesso`) e os métodos que já existem no kebab por-mini-card (`removerDaCampanha`, `pedirExcluirFicha`, `confirmarExcluirFicha`). A dialog de "Acesso de visualização" duplica o padrão já usado em `visualizar.page.ts` (mesma API), sem extração de componente — o design (`docs/specs/done/legado-superpowers-conferir-fecho/2026-08-08-painel-jogador-acoes-ficha-design.md`) documenta essa escolha.
 
 **Tech Stack:** Angular 21 (signals, `@if`/`@for` control flow, Reactive Forms), Vitest (`ng test --runner vitest`), SCSS com tokens do tema "Terminal de Contenção".
 
@@ -924,7 +924,7 @@ Em `docs/context/IDEAS.md`, no final da seção `## Abertas` (depois da entrada 
 - **Origem:** pedido do autor ao revisar o menu "⋯" do painel de campanha (2026-08-08) — junto do
   pedido de trazer as ações de ficha (remover/excluir) e o "Acesso de visualização" para fora da
   ficha completa, para o painel do jogador (ver
-  `docs/specs/backlog/legado-superpowers-conferir-fecho/2026-08-08-painel-jogador-acoes-ficha-design.md`).
+  `docs/specs/done/legado-superpowers-conferir-fecho/2026-08-08-painel-jogador-acoes-ficha-design.md`).
 - **Por quê:** a granularidade atual força tudo-ou-nada; um dono que quer compartilhar só parte da
   ficha (ex.: vitalidade para o grupo, mas não o histórico pessoal) não tem opção hoje.
 - **Custo aparente:** médio-alto — schema (uma concessão precisaria guardar quais seções/campos
