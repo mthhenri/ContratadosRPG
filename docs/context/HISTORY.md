@@ -13,6 +13,10 @@ Informações Adicionais em 1920 e 360, sem overflow. Não inspecionados: Identi
 separado, Guia, impressão e tema claro; linhas coladas dentro de um mesmo parágrafo (quebras
 da fonte, ex.: Origem) não foram alteradas.
 
+Depois, o título de seção (h3) ganhou margem de topo de 40px (era 8px, o que deixava só ~16px
+acima de "Iniciando um Novo Agente"); hierarquia: capítulo 44px, seção 40px, subtítulo 28px.
+Conferido só nessa seção em 1920.
+
 ## 2026-10-10 — Regras: capítulo maior, texto justificado e capa do livro
 
 Ajustes pedidos pelo autor após a revisão visual das Regras. O rótulo de capítulo (h2) passou de
