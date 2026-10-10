@@ -45,3 +45,5 @@ export * from './tipo-documento.enum';
 export * from './documento-alteracao.enum';
 export * from "./categoria-npc.enum";
 export * from "./habilidade-tipo-npc.enum";
+export * from './tipo-regra-peca.enum';
+export * from './livro-pendencia-codigo.enum';

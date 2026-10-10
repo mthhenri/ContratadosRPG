@@ -1,3 +1,5 @@
+import type { LivroTrechoDto } from "@contratados-rpg/shared/dtos/livro";
+
 /** Formato canônico dos livros públicos, produzido no build a partir de docs/core/. */
 export interface RegrasDocumento {
     readonly tipo: "documento";
@@ -20,16 +22,8 @@ export interface RegrasSecao {
     readonly filhos: readonly RegrasConteudo[];
 }
 
-export type RegrasTrecho =
-    | { readonly tipo: "texto"; readonly texto: string }
-    | { readonly tipo: "negrito" | "italico"; readonly filhos: readonly RegrasTrecho[] }
-    | { readonly tipo: "tarja"; readonly comprimento: number }
-    | { readonly tipo: "link-interno"; readonly ancora: string; readonly texto: string }
-    | { readonly tipo: "nivel-ameaca"; readonly nivel: number; readonly texto: string;
-        /** Menção em prosa ("ameaças Nulas"): só colorida, sem o selo da sigla `NA`. */
-        readonly compacto?: boolean }
-    | { readonly tipo: "link-externo"; readonly destino: string;
-        readonly filhos: readonly RegrasTrecho[] };
+/** Texto rico: o contrato vive no `shared/` (livro de regras), usado também pela Oficina. */
+export type RegrasTrecho = LivroTrechoDto;
 
 export type RegrasBloco =
     | RegrasClasse | RegrasArquetipos | RegrasOrigens | RegrasModulos

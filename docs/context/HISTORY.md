@@ -1,5 +1,38 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-10 — M11-01: contrato da árvore do livro no `shared/`
+
+Primeira task da Oficina das Regras. Abertura: as dez specs de task (`m11-01`…`m11-10`) foram
+escritas e a `m11-01` aberta com um anexo de mapeamento (bloco do leitor → peça), aprovado pelo
+autor (D1–D6). A releitura das Regras antes de começar (commits RV-01…RV-04) achou o que mudou o
+contrato: parte da estrutura que o leitor usa **não está no `.md`**, é deduzida pelo normalizador
+por assinatura de texto (`regras-grades.mjs`, `tabela.pares`, faixas do Deslocamento). Com o banco
+como fonte, isso precisa ser dado da peça; decisão D8, aprovada pelo autor com a condição de não
+perder o visual atual: `GRADE.apresentacao` (`generica`/`saude`/`cartoes`), `TABELA.emPares`,
+`FAIXAS.itens` são campos explícitos, gravados pelo importador (`m11-03`) uma única vez.
+
+Entregue: `TipoRegraPecaEnum` (30 tipos) e `LivroPendenciaCodigoEnum`/`GravidadeEnum`;
+`shared/src/dtos/livro/` com o texto rico (`LivroTrechoDto`), o `dados` de cada tipo, a peça
+(`LivroPecaDto`), o envelope da fotografia (`LivroVersaoConteudoDto`, `LIVRO_FORMATO_ATUAL = 1`) e
+as pendências; `shared/src/livro/` com a tabela de aninhamento e `validarArvoreLivro` (puro, devolve
+pendências `ESTRUTURAL`/`CONTEUDO`, modos `trabalho` e `fotografia`). Exports `./dtos/livro` e
+`./livro` no `package.json`. No leitor, só o texto rico passou a vir do `shared/`
+(`RegrasTrecho = LivroTrechoDto`); o modelo de renderização (`RegrasBloco` etc.) fica até a `m11-04`
+— desvio explícito do item 6 original da spec, registrado nela.
+
+Verificação: 15 testes novos (trecho real de classe com arquétipo e habilidades válido nos dois
+modos; identificador/âncora duplicados; filho não permitido; `dados` incoerente; nível de seção e
+grade fora da forma; habilidade vazia; link inexistente, sem identificador e para peça posterior;
+tabela de aninhamento cobre os 30 tipos). `shared`: 1172 testes; `test:regras`: 88; testes do
+módulo de Regras do frontend: 90; `tsc` do app e dos specs do frontend limpos; `build` do `shared`;
+lint dos três workspaces sem erros (avisos preexistentes). Sem UI, sem gate visual. Achado: a
+primeira versão do validador conferia links antes de conhecer as peças seguintes (falso
+"inexistente" para link adiante); corrigido deixando a conferência para depois do percurso, com
+teste. Não validei ainda as árvores reais do Sistema e do Guia (ida e volta é a `m11-03`).
+Divergência anotada para a `m11-03`: a umbrella cita 11 grades, os JSONs têm 9 grades + 4 tabelas
+em pares. [Spec](../specs/done/m11-01-contrato-arvore-livro.spec.md) e
+[mapeamento](../specs/done/m11-01-contrato-arvore-livro/mapeamento.md).
+
 ## 2026-10-10 — RV-04: pares e hierarquia das grades de referência
 
 Saúde do Civil agora mantém cada recurso com sua fórmula inicial e progressão,
