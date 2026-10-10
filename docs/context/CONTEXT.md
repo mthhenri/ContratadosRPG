@@ -3291,6 +3291,12 @@ o nome antigo colidia com a calculadora aritmética real da ficha
 
 ### Leitor, painel e pesquisa de Regras (M10-06/07/08/09) — `frontend/modules/regras`
 
+As aberturas do Sistema e Guia mantêm o centro e agora usam parágrafos por assunto
+(oito/sete), corpo sem itálico generalizado e fechamento isolado em itálico. Lista de nomes,
+pausas do Guia, palavras e tarjas preservadas; ajustes na fonte Markdown, sem narrativa
+duplicada no frontend. Página/painel nos quatro viewports e duas bases verificados;
+[evidências e limites](../specs/done/regras-aberturas-leitura/verificacao.md).
+
 **Auditoria visual de 09/10:** [relatório e mapa das dez specs](../specs/done/regras-auditoria-visual-completa/auditoria.md).
 `regras-visual-01` concluída em 10/10: Formação, Níveis, Pontuação Corporal e
 Treinamentos projetam 57 pares em duas colunas, metade esquerda seguida da direita,

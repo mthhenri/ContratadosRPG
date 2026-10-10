@@ -1,5 +1,28 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-10 — regras-aberturas-leitura: parágrafos centralizados nas duas aberturas
+
+A pedido do autor, as aberturas do Sistema e Guia foram reorganizadas em oito/sete
+parágrafos por assunto, com quebras naturais nas frases, mantendo centralização, selo,
+negritos, tarjas, lista compacta de nomes e pausas dramáticas do Guia. Palavras, comprimentos
+das tarjas e restante dos dois livros conferidos contra HEAD; pontuação entre autorização e
+advertência ganhou um ponto. A fonte permanece em `docs/core/`; o renderer apenas separa
+parágrafos e retira o itálico externo da abertura, com fechamento isolado em itálico.
+
+Análogos: a abertura aprovada e a capa dos livros. Skill `verify`: 32 combinações de
+livro/página-painel/viewport/base capturadas no app real (Edge), com inspeção pessoal dos
+recortes desktop, mobile e intermediários. Sem overflow das aberturas; fechamento alcançável
+por rolagem local. Na primeira inspeção apareceu um par de asteriscos literais no Sistema:
+marcação externa corrigida para underscore e teste de regressão nas fontes reais. A fixture
+literal de tarjas foi ajustada ao novo recorte, conservando os cinco comprimentos.
+
+Gates: 86 testes do normalizador, 1157 de shared, 995 de backend (um ignorado), 3215 de
+frontend; build final e publicação fiel dos dois JSONs; lint raiz sem erros (4479 avisos
+existentes); lint focado sem avisos; `repo:verificar` aprovado. Isolamento impediu a consulta
+de fontes no build e rename temporário dos testes; execução fora do isolamento passou.
+P-108 permanece fora do escopo: isso não aprova a formatação do PDF. Alterações concorrentes
+das tabelas preservadas. [Relatório](../specs/done/regras-aberturas-leitura/verificacao.md).
+
 ## 2026-10-10 — RV-01: associações das tabelas de pares preservadas
 
 `regras-visual-01-pares-tabelas` concluída; P-114 retirado dos ativos. A primeira

@@ -1,16 +1,15 @@
 
 
   *\>\>\>\> Registro de documentação oficial*  
- *Este documento é liberado apenas para*  
- *detentores da função ████████ ██ ███████*  
- *Se você não ocupa essa função,*  
- *feche este arquivo e reporte a posse para ██████████████.*  
- *Bem-vindo, **SUPERVISOR.***  
+ *Este documento é liberado apenas para detentores da função ████████ ██ ███████. Se você não ocupa essa função, feche este arquivo e reporte a posse para ██████████████.*
+
+ *Bem-vindo, **SUPERVISOR.***
+
  *Você não erra as decisões de campo.*  
  *Você as escreve.*  
- *Cada ██████████ liberada nestas páginas,*  
- *cada agente perdido em uma missão redigida por você,*  
- *é uma variável sob sua ██████████████████.*  
+
+ *Cada ██████████ liberada nestas páginas, cada agente perdido em uma missão redigida por você, é uma variável sob sua ██████████████████.*
+
  *Um esquadrão mal calibrado não é falha da Fundação.*  
  *É uma falha do **SUPERVISOR**.*
 

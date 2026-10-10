@@ -73,6 +73,8 @@ test('abertura: título separado e quebras da fonte nos dois livros', () => {
         assert.equal(abertura.tipo, 'abertura');
         assert.equal(abertura.titulo, '>>>> Registro de documentação oficial');
         assert.ok(texto(abertura.trechos).includes('\n'));
+        assert.ok(texto(abertura.trechos).includes('\n\n'));
+        assert.ok(!texto(abertura.trechos).includes('*'), 'sem marcadores de itálico literais');
     }
     assert.match(texto(sistema.filhos[0].trechos), /Você é nossa prioridade\.$/);
     assert.deepEqual(sistema.filhos[1], { tipo: 'capa', versao: 'VERSÃO 4.1.4',

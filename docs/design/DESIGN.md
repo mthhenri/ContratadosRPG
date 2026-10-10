@@ -286,6 +286,12 @@ habilidade em `app-chip severidade="energia"`, Reação em `severidade="ajuda"`.
 corrido, as palavras Vida/Energia (maiúscula, palavra inteira) ficam em `--vida`/`--energy`.
 Tabelas de layout sem assinatura viram `grade`, uma célula por caixa.
 
+**Aberturas (`regras-aberturas-leitura`, 10/10/2026):** centro preservado, oito parágrafos
+no Sistema e sete no Guia, organizados nas fontes Markdown. O renderer retira somente o
+itálico externo usado como marca de abertura, preserva negritos/tarjas e quebras dramáticas
+internas e isola o fechamento em itálico. Corpo de 14,5px/1,7, intervalo de `--space-20`;
+fechamento com respiro adicional de `--space-8`. Nenhum texto duplicado no frontend.
+[Verificação](../specs/done/regras-aberturas-leitura/verificacao.md).
 Comparação pessoal com exemplão e app real, quatro tamanhos e duas bases:
 [verificação](../specs/done/m10-07-blocos-ricos/m10-07-verificacao.md).
 

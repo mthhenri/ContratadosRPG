@@ -1,28 +1,24 @@
 
 
  \>\>\>\> *Registro de documentação oficial*  
- *Este documento é liberado para*   
- *as Classes: **█████ ██████ ████████ ██ ████████***  
- *Se você possui uma Classe inferior,*   
- *você deve **████ █████ █████████** imediatamente.*  
- *Bem-vindo, **████████***  
- *A documentação a seguir se refere à **contratação***   
- *e **recrutamento** de novos agentes para a*   
- *Classe E da Fundação SCP*  
- *Devido à mudança de protocolos e conduta,*   
- *não é mais necessário apenas “Assegurar, Proteger e Conter”.*   
- *Em caso de quebra de contenção, a ordem é: “**Exterminar**”*  
- *Os agentes da Classe E são a ofensiva*  
- *e as armas da Fundação SCP*  
- *Devido aos eventos anteriores envolvendo*   
- *antigos agentes da Classe E, como:*  
+ _Este documento é liberado para as Classes: **█████ ██████ ████████ ██ ████████**. Se você possui uma Classe inferior, você deve **████ █████ █████████** imediatamente._
+
+ *Bem-vindo, **████████***
+
+ *A documentação a seguir se refere à **contratação** e **recrutamento** de novos agentes para a Classe E da Fundação SCP*
+
+ *Devido à mudança de protocolos e conduta, não é mais necessário apenas “Assegurar, Proteger e Conter”. Em caso de quebra de contenção, a ordem é: “**Exterminar**”*
+
+ *Os agentes da Classe E são a ofensiva e as armas da Fundação SCP*
+
+ *Devido aos eventos anteriores envolvendo antigos agentes da Classe E, como:*  
  ***██████ ██████** Williams,*  
  ***████** Bertonelli,*   
  ***████** Oliveira,*   
  ***█████████ ████████** Artoria,*   
  ***███████ ███████** Fernandes,*  
- *e outros membros do*   
- *dissolvido esquadrão ***███-████***,*  
+ *e outros membros do dissolvido esquadrão ***███-████***,*
+
  *Nossas políticas foram alteradas*  
  *Uma longa vida a todos os funcionários da **Fundação SCP***
 

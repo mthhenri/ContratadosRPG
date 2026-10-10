@@ -10,7 +10,7 @@
     border: 1px solid var(--border);
     border-radius: var(--radius-card);
     &__titulo {
-        margin: 0 0 var(--space-12);
+        margin: 0 0 var(--space-20);
         padding: var(--space-4) var(--space-8);
         border: 1px solid var(--accent-border);
         border-radius: var(--radius-tight);
@@ -22,9 +22,18 @@
     &__texto {
         margin: 0;
         font-size: 14.5px;
-        font-style: italic;
-        line-height: 1.9;
+        line-height: 1.7;
         color: var(--text-dim);
         overflow-wrap: anywhere;
+        & + & {
+            margin-top: var(--space-20);
+        }
+        &--fechamento {
+            font-style: italic;
+            color: var(--text);
+        }
+        & + &--fechamento {
+            margin-top: calc(var(--space-20) + var(--space-8));
+        }
     }
 }
