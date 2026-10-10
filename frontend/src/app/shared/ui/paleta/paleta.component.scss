@@ -1,0 +1,47 @@
+// Análogo: `.regras-pesquisa__resultados` (lista de ocorrências do leitor) e `app-modal`.
+.paleta {
+  &__lista {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    max-height: min(50dvh, 360px);
+    margin: var(--space-12) 0 0;
+    padding: 0;
+    overflow-y: auto;
+    list-style: none;
+  }
+
+  &__item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: var(--space-8) var(--space-12);
+    border: 1px solid transparent;
+    border-radius: var(--radius-control);
+    cursor: pointer;
+
+    &--ativo {
+      background: var(--accent-dim);
+      border-color: var(--accent-border);
+    }
+  }
+
+  &__rotulo {
+    font: 600 14px / 1.3 var(--font-mono);
+    color: var(--text);
+    overflow-wrap: anywhere;
+  }
+
+  &__contexto {
+    font: 400 12px / 1.3 var(--font-mono);
+    color: var(--text-mute);
+    overflow-wrap: anywhere;
+  }
+
+  &__vazio {
+    padding: var(--space-12);
+    font: 400 13px var(--font-mono);
+    color: var(--text-mute);
+    text-align: center;
+  }
+}

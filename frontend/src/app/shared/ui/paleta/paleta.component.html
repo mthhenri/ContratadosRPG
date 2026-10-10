@@ -1,0 +1,48 @@
+<app-modal
+  [aberto]="aberto()"
+  [titulo]="titulo()"
+  posicao="inferior"
+  largura="min(92vw, 560px)"
+  (fechou)="fechou.emit()"
+>
+  <app-campo rotulo="Buscar" icone="busca" tamanho="compacto">
+    <input
+      #campo
+      class="campo__controle"
+      type="text"
+      role="combobox"
+      autocomplete="off"
+      enterkeyhint="go"
+      aria-autocomplete="list"
+      aria-expanded="true"
+      [attr.aria-controls]="listaId"
+      [attr.aria-activedescendant]="visiveis().length ? id(indiceAtivo()) : null"
+      [placeholder]="placeholder()"
+      [value]="consulta()"
+      (input)="digitar($event)"
+      (keydown)="tratarTecla($event)"
+    />
+  </app-campo>
+  <ul #lista class="paleta__lista" role="listbox" [id]="listaId" [attr.aria-label]="titulo()">
+    @for (item of visiveis(); track item.id; let i = $index) {
+      <li
+        class="paleta__item"
+        role="option"
+        [id]="id(i)"
+        [class.paleta__item--ativo]="i === indiceAtivo()"
+        [attr.aria-selected]="i === indiceAtivo()"
+        tabindex="-1"
+        (click)="escolher(item)"
+        (keydown.enter)="escolher(item)"
+        (mousemove)="indiceAtivo.set(i)"
+      >
+        <span class="paleta__rotulo">{{ item.rotulo }}</span>
+        @if (item.contexto) {
+          <span class="paleta__contexto">{{ item.contexto }}</span>
+        }
+      </li>
+    } @empty {
+      <li class="paleta__vazio" role="presentation">{{ vazio() }}</li>
+    }
+  </ul>
+</app-modal>

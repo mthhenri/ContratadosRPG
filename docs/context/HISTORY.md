@@ -1,5 +1,24 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-10 — Regras: "Ir para…" (Ctrl+K) e rodapé centralizado
+
+Task avulsa a pedido do autor (`regras-ir-para-secao`). Novo primitivo `app-paleta` em
+`shared/ui/paleta/` (autorizado pelo autor; sobre `app-modal` e `app-campo`; genérico, recebe
+`[itens]` e emite `(escolheu)`), pensado para a "Ir para peça" da Oficina (M11). No leitor de
+Regras, Ctrl/⌘+K abre a paleta com todas as seções do sumário (caminho pelos ancestrais; busca
+sem acento, ordenada por início do título, início de palavra, trecho, caminho); a escolha usa o
+mesmo caminho do clique no sumário. Gatilhos visíveis: botão "Ir para… Ctrl K" no trilho
+(desktop) e lupa na barra do leitor (celular). Na página o atalho só vale com o painel de
+consulta fechado; no painel, só com o foco dentro dele. O rodapé do leitor ficou centralizado,
+com a marca maior (36px) e o crédito CC BY-SA em 11px, mais apagado (o autor aceitou manter o
+texto no rodapé; o crédito aprovado segue em `MARCAS.md`).
+
+Verificação: testes do primitivo (filtro, ordem, teclado, eventos) e do leitor (atalho na
+página e no painel); 85 testes de `modules/regras`; lint sem erros; conferido ao vivo em 1920
+(Ctrl+K, "habilidades", Enter leva a `#habilidades-gerais`) e em 360 (lupa, sem overflow).
+Limites: painel flutuante, tema claro e teclado virtual real não foram inspecionados. O atalho
+é um listener em `document`; outro Ctrl+K futuro na página disputaria com ele.
+
 ## 2026-10-10 — Regras: fórmulas em destaque, Deslocamento em faixas e mais espaço entre parágrafos
 
 Pedido do autor sobre "Informações Adicionais" (Inventário Máximo, Defesa, Deslocamento), que

@@ -6,6 +6,8 @@ import {
 import { Subscription } from "rxjs";
 
 import { Gaveta } from "../../shared/ui/gaveta/gaveta.component";
+import { Paleta } from "../../shared/ui/paleta/paleta.component";
+import type { PaletaItem } from "../../shared/ui/paleta/paleta";
 import { RegrasLeituraStore } from "./regras-leitura.store";
 import { RegrasLeitorContexto } from "./regras-leitor-contexto";
 import { RegrasConsultaService } from "./regras-consulta.service";
@@ -34,14 +36,15 @@ import { construirSumarioRegras, listarAncorasRegras } from "./regras-sumario";
     selector: "app-regras-leitor",
     providers: [RegrasLeitorContexto, RegrasPesquisaController],
     imports: [NgTemplateOutlet, Icone, Marca, Botao, Cartao, Esqueleto, EstadoVazio,
-        Segmentado, SegmentadoItem, Gaveta, RegrasPesquisa, RegrasPesquisaProjecao,
+        Segmentado, SegmentadoItem, Gaveta, Paleta, RegrasPesquisa, RegrasPesquisaProjecao,
         BotaoIcone, Tooltip,
         RegrasConteudoRender],
     templateUrl: "./regras-leitor.component.html",
     styleUrl: "./regras-leitor.component.scss",
     changeDetection: ChangeDetectionStrategy.OnPush,
     host: { "(window:resize)": "redimensionarViewport()",
-        "(keydown)": "pesquisa.tratarTecla($event)" },
+        "(keydown)": "pesquisa.tratarTecla($event)",
+        "(document:keydown)": "tratarAtalhoIrPara($event)" },
 })
 export class RegrasLeitor {
     readonly livro = input.required<RegrasDocumento["id"]>();
@@ -56,6 +59,7 @@ export class RegrasLeitor {
     protected readonly pesquisa = inject(RegrasPesquisaController);
     protected readonly impressao = inject(RegrasImpressaoService);
     protected readonly gavetaAberta = signal(false);
+    protected readonly paletaAberta = signal(false);
     protected readonly mobile = signal(window.innerWidth <= 560);
     protected readonly usarGaveta = computed(() =>
         this.mobile() || (this.emPainel() && !this.maximizada()));
@@ -73,6 +77,16 @@ export class RegrasLeitor {
     protected readonly ativo = signal<string | null>(null);
     protected readonly sumario = computed(() =>
         construirSumarioRegras(this.documento()?.filhos ?? []));
+    /** Todas as seções do sumário, com os ancestrais como caminho, para a paleta Ctrl+K. */
+    protected readonly itensPaleta = computed<PaletaItem[]>(() => {
+        const achatar = (itens: ReturnType<typeof construirSumarioRegras>,
+            caminho: readonly string[]): PaletaItem[] => itens.flatMap((item) => [
+            { id: item.ancora, rotulo: item.titulo,
+                ...(caminho.length ? { contexto: caminho.join(" › ") } : {}) },
+            ...achatar([...item.filhos], [...caminho, item.titulo]),
+        ]);
+        return achatar(this.sumario(), []);
+    });
     protected readonly ativoSumario = computed(() => {
         const coletar = (itens: ReturnType<typeof construirSumarioRegras>): string[] =>
             itens.flatMap((item) => [item.ancora, ...coletar([...item.filhos])]);
@@ -128,6 +142,31 @@ export class RegrasLeitor {
 
     protected tentarNovamente(): void {
         this.carregarDocumento(this.livro());
+    }
+
+    protected abrirPaleta(): void {
+        if (!this.documento()) return;
+        this.gavetaAberta.set(false);
+        this.paletaAberta.set(true);
+    }
+
+    protected escolherNaPaleta(ancora: string): void {
+        this.paletaAberta.set(false);
+        this.navegarAncora(ancora);
+    }
+
+    /**
+     * Ctrl/⌘+K abre a paleta "Ir para…". Na página só vale com o painel de consulta fechado; no
+     * painel flutuante, só com o foco dentro dele — assim os dois leitores não disputam o atalho.
+     */
+    protected tratarAtalhoIrPara(evento: KeyboardEvent): void {
+        if (evento.key.toLowerCase() !== "k" || !(evento.ctrlKey || evento.metaKey)
+            || evento.shiftKey || evento.altKey || evento.defaultPrevented) return;
+        const dentro = this.elemento.nativeElement.contains(document.activeElement);
+        if (this.emPainel() ? !dentro : this.consulta.aberto()) return;
+        if (!this.documento()) return;
+        evento.preventDefault();
+        this.abrirPaleta();
     }
 
     protected navegarAncora(ancora: string): void {

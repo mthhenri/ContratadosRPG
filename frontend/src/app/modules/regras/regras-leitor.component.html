@@ -15,6 +15,17 @@
             >
                 <app-icone nome="campanhas" /> Sumário
             </button>
+            <button
+                app-botao-icone
+                class="regras__ir-para"
+                tamanho="padrao"
+                type="button"
+                aria-label="Ir para uma seção"
+                [disabled]="!documento()"
+                (click)="abrirPaleta()"
+            >
+                <app-icone nome="busca" />
+            </button>
             <app-segmentado rotulo="Documento de Regras">
                 <button
                     app-segmentado-item
@@ -101,19 +112,21 @@
                         <app-marca />
                         <span>Você é nossa prioridade — 2026</span>
                     </button>
-                    <a
-                        href="https://commons.wikimedia.org/wiki/File:SCP_Foundation_(emblem).svg"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        >Logo SCP</a
-                    >: far2; versão de alta resolução por Aelanna; vetor de Vizorsols e BmboB.
-                    Adaptado para ContratadosRPG. Licença
-                    <a
-                        href="https://creativecommons.org/licenses/by-sa/3.0/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        >CC BY-SA 3.0</a
-                    >.
+                    <p class="regras__credito-texto">
+                        <a
+                            href="https://commons.wikimedia.org/wiki/File:SCP_Foundation_(emblem).svg"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            >Logo SCP</a
+                        >: far2; versão de alta resolução por Aelanna; vetor de Vizorsols e BmboB.
+                        Adaptado para ContratadosRPG. Licença
+                        <a
+                            href="https://creativecommons.org/licenses/by-sa/3.0/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            >CC BY-SA 3.0</a
+                        >.
+                    </p>
                 </footer>
             } @else if (estado() === "carregando") {
                 <div class="regras__esqueletos" role="status" aria-label="Carregando documento">
@@ -191,6 +204,20 @@
                 Guia
             </button>
         </app-segmentado>
+        @if (documento() && !usarGaveta()) {
+            <button
+                app-botao
+                class="regras__ir-para-trilho"
+                variante="secundario"
+                estilo="contorno"
+                tamanho="pequeno"
+                posicaoIcone="esquerda"
+                type="button"
+                (click)="abrirPaleta()"
+            >
+                <app-icone nome="busca" /> Ir para… <kbd class="regras__atalho">Ctrl K</kbd>
+            </button>
+        }
         @if (documento()) {
             <app-regras-pesquisa
                 (selecionar)="selecionarResultado($event)"
@@ -255,3 +282,12 @@
         }
     </ol>
 </ng-template>
+<app-paleta
+    [aberto]="paletaAberta()"
+    titulo="Ir para uma seção"
+    placeholder="Ex.: habilidades"
+    vazio="Nenhuma seção encontrada."
+    [itens]="itensPaleta()"
+    (escolheu)="escolherNaPaleta($event)"
+    (fechou)="paletaAberta.set(false)"
+/>

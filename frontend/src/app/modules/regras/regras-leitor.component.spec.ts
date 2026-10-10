@@ -71,6 +71,37 @@ describe("Leitor compartilhado de Regras", () => {
         leitores.forEach(leitor => leitor.destroy());
     });
 
+    it("Ctrl+K abre a paleta Ir para… e a escolha leva à âncora do sumário", () => {
+        const leitor = TestBed.createComponent(RegrasLeitor);
+        leitor.componentRef.setInput("livro", "sistema");
+        leitor.detectChanges();
+        const raiz = leitor.nativeElement as HTMLElement;
+        const atalho = new KeyboardEvent("keydown", { key: "k", ctrlKey: true, bubbles: true,
+            cancelable: true });
+        document.dispatchEvent(atalho);
+        leitor.detectChanges();
+        expect(atalho.defaultPrevented).toBe(true);
+        expect(leitor.componentInstance["paletaAberta"]()).toBe(true);
+        expect(Array.from(raiz.querySelectorAll(".paleta__rotulo")).map(e => e.textContent!.trim()))
+            .toEqual(["Vida"]);
+        raiz.querySelector<HTMLElement>(".paleta__item")!.click();
+        leitor.detectChanges();
+        expect(leitor.componentInstance["paletaAberta"]()).toBe(false);
+        expect(leitor.componentInstance["ativo"]()).toBe("vida");
+        leitor.destroy();
+    });
+
+    it("Ctrl+K no painel só vale com o foco dentro dele", () => {
+        const leitor = TestBed.createComponent(RegrasLeitor);
+        leitor.componentRef.setInput("livro", "sistema");
+        leitor.componentRef.setInput("emPainel", true);
+        leitor.detectChanges();
+        document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", ctrlKey: true,
+            bubbles: true, cancelable: true }));
+        expect(leitor.componentInstance["paletaAberta"]()).toBe(false);
+        leitor.destroy();
+    });
+
     it("troca o livro por evento do hospedeiro, sem navegar a rota da tela de fundo", () => {
         const leitor = TestBed.createComponent(RegrasLeitor);
         leitor.componentRef.setInput("livro", "sistema");
