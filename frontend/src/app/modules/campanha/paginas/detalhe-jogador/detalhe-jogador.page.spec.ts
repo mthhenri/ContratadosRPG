@@ -414,6 +414,7 @@ describe('CampanhaDetalheJogador', () => {
           {
             id: 3,
             nome: 'Kane',
+            updatedDate: '2026-10-09T10:00:00Z',
             classe: ClasseEnum.COMBATENTE,
             arquetipo: ArquetipoEnum.LUTADOR,
             imagemUrl: null,

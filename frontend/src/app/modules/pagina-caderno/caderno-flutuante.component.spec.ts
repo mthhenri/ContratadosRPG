@@ -17,6 +17,7 @@ import { EDITOR_MARKDOWN_FACTORY } from '../../shared/ui/editor-markdown/editor-
 import { PaginaCadernoService } from './pagina-caderno.service';
 import { SessaoService } from '../../core/services/sessao.service';
 import { TempoRealService } from '../../core/services/tempo-real.service';
+import { CampanhaService } from '../campanha/campanha.service';
 
 const pagina: PaginaCadernoDto = {
   id: 11,
@@ -56,6 +57,10 @@ describe('CadernoFlutuante', () => {
   };
   let aoAlterarEditor: (markdown: string) => void;
   let tempoReal: {
+    reconexao$: Subject<void>;
+    fichaAlterada$: Subject<unknown>;
+    entrarSalaFicha: ReturnType<typeof vi.fn>;
+    sairSalaFicha: ReturnType<typeof vi.fn>;
     paginaEsquadraoCriada$: Subject<unknown>;
     paginaEsquadraoAlterada$: Subject<{
       paginaId: number;
@@ -98,6 +103,10 @@ describe('CadernoFlutuante', () => {
       ),
     };
     tempoReal = {
+      reconexao$: new Subject(),
+      fichaAlterada$: new Subject(),
+      entrarSalaFicha: vi.fn(),
+      sairSalaFicha: vi.fn(),
       paginaEsquadraoCriada$: new Subject(),
       paginaEsquadraoAlterada$: new Subject(),
       paginaEsquadraoExcluida$: new Subject(),
@@ -121,6 +130,7 @@ describe('CadernoFlutuante', () => {
         { provide: CadernoJanelaService, useValue: janela },
         { provide: PaginaCadernoService, useValue: api },
         { provide: TempoRealService, useValue: tempoReal },
+        { provide: CampanhaService, useValue: { listarMembros: vi.fn(() => of([])) } },
         { provide: SessaoService, useValue: { usuario: () => ({ id: 7, nome: 'QA' }) } },
         {
           provide: EDITOR_MARKDOWN_FACTORY,

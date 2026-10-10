@@ -1,5 +1,26 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-09 — Cor da ficha mais recente na identidade do Caderno
+
+Na conferência do legado Superpowers, bônus de atributo, ações da ficha e avatar maior
+tinham implementação histórica e código atual. A formatação Markdown havia sido tratada
+por tasks posteriores; restava a identidade pela ficha mais recentemente alterada. Com
+autorização do autor, esse recorte recebeu spec própria, implementação e verificação real.
+
+`CampanhaMembroFichaResumoDto` ganhou `updatedDate` da coluna existente, preservando o SQL
+de permissões. Inicial, cursor e seleção do Esquadrão usam a cor da ficha própria mais
+recente na campanha; empate por maior id e reserva estável sem ficha válida/cor. Painel
+e janela externa acompanham releituras, edição e reconexão sem recriar o documento.
+As salas de ficha usam as referências existentes e são liberadas ao fechar o Caderno.
+
+Conferido com dois usuários na aplicação real: painel/janela em 1920×1080, 1366×768,
+960×1080 e 360×800, troca entre fichas e reconexão com o mesmo documento. Builds aprovados;
+1157 testes shared, 995 backend (1 ignorado), 3189 frontend; lint sem erros, com avisos
+globais, e aviso de orçamento inicial no build frontend. As capturas foram inspecionadas
+pelo agente principal. [Relatório e limites](../specs/done/caderno-cor-identidade-colaborador/verificacao.md).
+Spec em `done/`; anexos legados preservados com nota de conferência. Commit autorizado
+pelo autor após o fecho; publicação permanece fora deste recorte.
+
 ## 2026-10-09 — Auditoria visual integral do leitor de Regras
 
 Por pedido do autor, foi executada uma bateria visual na aplicação real sem alterar código,

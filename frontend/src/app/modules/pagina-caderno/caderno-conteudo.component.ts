@@ -162,6 +162,10 @@ export class CadernoConteudo {
 
   constructor() {
     effect(() => {
+      const membros = this.membros();
+      untracked(() => this.colaboracaoEsquadrao.definirMembros(membros));
+    });
+    effect(() => {
       const rascunho = this.store.rascunho();
       untracked(() => this.formulario.setValue(rascunho, { emitEvent: false }));
     });

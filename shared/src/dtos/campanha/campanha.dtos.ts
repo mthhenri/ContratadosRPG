@@ -317,6 +317,8 @@ export interface CampanhaMembrosListarDto {
  */
 export interface CampanhaMembroFichaResumoDto {
   readonly id: number;
+  /** Data da última alteração; define a ficha de identidade da presença no Caderno. */
+  readonly updatedDate: string;
   readonly nome: string;
   readonly classe: ClasseEnum;
   readonly arquetipo: ArquetipoEnum | null;

@@ -429,6 +429,7 @@ export class CampanhaRepository extends BaseRepository {
          SELECT json_agg(
                   json_build_object(
                     'id', ficha.id,
+                    'updatedDate', ficha.updated_date,
                     'nome', ficha.nome,
                     'classe', ficha.dados->>'classe',
                     'arquetipo', ficha.dados->>'arquetipo',

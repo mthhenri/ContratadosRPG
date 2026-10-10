@@ -4,10 +4,14 @@
 > juntos em `docs/specs/<estado>/`, conforme [política §3.1](../SYSTEM.SPEC.md#31-documentação-de-tarefa-e-artefatos-de-execução)
 > e [mapa](../specs/README.md). Capturas/saídas brutas ficam em `.artifacts/`, local
 > e ignorada; `repo:verificar` e CI conferem destinos e espelhos. A usabilidade
-> segue em `active/`; [quatro recortes legados sem fecho comprovado](../specs/backlog/legado-superpowers-conferir-fecho.spec.md)
+> segue em `active/`; [conferência dos quatro recortes legados](../specs/backlog/legado-superpowers-conferir-fecho.spec.md)
 > e [retomada da cobertura de ficha oculta](../specs/backlog/auditoria-ficha-oculta-retomada-cobertura.spec.md)
 > estão no backlog, sem implementação executada por esta organização. Estado da M10 preservado.
 > [Inventário, destinos e gates desta organização](../specs/done/organizacao-documentacao-e-artefatos/verificacao.md).
+
+> **Caderno — identidade concluída em 2026-10-09:** a inicial, o cursor e a seleção de cada
+> colaborador usam a cor da sua ficha alterada mais recentemente na campanha, com atualização
+> durante a edição e após reconexão. [Spec e evidências](../specs/done/caderno-cor-identidade-colaborador.spec.md).
 
 > **Auditoria de ficha oculta — cobertura ainda parcial:** [matriz e evidências](../specs/done/auditoria-ficha-oculta-todos-consumidores/ficha-oculta-todos-consumidores.md).
 > [Spec investigativa arquivada em `done/`](../specs/done/auditoria-ficha-oculta-todos-consumidores.spec.md);
@@ -2505,7 +2509,11 @@ expor conteúdo a quem não é membro da campanha. Presença e cursores remotos 
 foram implementados na `P-039`: o `Awareness` roda sobre o mesmo `Y.Doc`, o gateway retransmite o
 payload bruto (`caderno-esquadrao:presenca`) sem persistir nem decodificar, e o editor mostra o
 cursor/seleção de cada colaborador (nome e cor) via `yCursorPlugin`, mais um indicador de
-participantes no cabeçalho. No mobile, a `P-041` corrigiu a navegação: abrir uma página existente ou
+participantes no cabeçalho. A identidade usa a cor da ficha própria mais recentemente alterada
+na campanha (`updatedDate` no resumo de membros; empate por maior id), com reserva estável se
+não houver ficha válida ou a escolhida não tiver cor. Painel e janela externa renovam a cor
+sem recriar o documento ao abrir, editar fichas próprias, reler membros e reconectar
+(`caderno-cor-identidade-colaborador`, concluída). No mobile, a `P-041` corrigiu a navegação: abrir uma página existente ou
 criar uma nova no modo Esquadrão agora troca a vista de lista para o editor, como já acontecia no
 caderno privado. A spec fechou (`docs/specs/done/`).
 

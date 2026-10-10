@@ -60,6 +60,14 @@ describe('CadernoJanela', () => {
       buscarCampanha: vi.fn(() => of({ itens: [], totalItens: 0, paginaAtual: 1, totalPaginas: 0 })),
     };
     const tempoReal = {
+      fichaAlterada$: new Subject(),
+      fichaRecortesAlterados$: new Subject(),
+      fichaCriada$: new Subject(),
+      fichaRemovidaDaCampanha$: new Subject(),
+      fichaVisibilidadeAlterada$: new Subject(),
+      reconexao$: new Subject<void>(),
+      entrarSalaFicha: vi.fn(),
+      sairSalaFicha: vi.fn(),
       conectar: vi.fn(),
       entrarSalaCampanha: vi.fn(),
       sairSalaCampanha: vi.fn(),
@@ -115,6 +123,19 @@ describe('CadernoJanela', () => {
     expect(raiz.querySelector('[aria-label="Selecionar cadernos dos jogadores"]')).toBeNull();
     expect(tempoReal.conectar).toHaveBeenCalled();
     expect(tempoReal.entrarSalaCampanha).toHaveBeenCalledWith(8);
+  });
+
+  it('relê membros na reconexão e nas invalidações da própria campanha', () => {
+    const { fixture, tempoReal, campanhaService } = montar();
+    campanhaService.listarMembros.mockClear();
+    tempoReal.fichaRecortesAlterados$.next({ campanhaId: 99, membros: true });
+    tempoReal.fichaRecortesAlterados$.next({ campanhaId: 8, membros: false });
+    expect(campanhaService.listarMembros).not.toHaveBeenCalled();
+    tempoReal.fichaRecortesAlterados$.next({ campanhaId: 8, membros: true });
+    tempoReal.reconexao$.next();
+    fixture.detectChanges();
+    expect(campanhaService.listarMembros).toHaveBeenCalledTimes(2);
+    expect(campanhaService.listarMembros).toHaveBeenLastCalledWith(8);
   });
 
   it('mestre vê também os cadernos dos jogadores', () => {

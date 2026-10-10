@@ -79,6 +79,7 @@ Estas são as fontes da verdade. Em conflito entre código e documento, **o docu
 | Conta aritmética das fórmulas de rolagem (quantidade de dados e bônus fixo; I-041) | `shared/src/regras/rolagem/rolagem.conta.ts` (`analisarConta`/`avaliarConta`, frações exatas, piso no fim); a gramática e o crítico por parcela em `rolagem.ts` (`interpretarSegmento`, `rolarTermo`, `rolarInterpretada`); regressão em `rolagem.conta.spec.ts` + `rolagem/fixtures/rolagem-corpus.snapshot.json` (gerado com o motor anterior); regra de uso no `guia-formula` do frontend |
 | DTOs (contratos entre camadas) | `shared/src/dtos/` |
 | Contratos, fontes e limites de cadernos/busca | `shared/src/dtos/pagina-caderno/`, `shared/src/enums/busca-campanha-*.enum.ts`, `shared/src/validators/pagina-caderno.validators.ts` |
+| Identidade e presença colaborativa do Caderno | `frontend/src/app/modules/pagina-caderno/caderno-presenca.ts`, `caderno-esquadrao-colaborativo.service.ts`; `CampanhaMembroFichaResumoDto` em `shared/src/dtos/campanha/`; contrato e evidências em `docs/specs/done/caderno-cor-identidade-colaborador.spec.md` |
 | Enums (string, valor = nome, SCREAMING_SNAKE_CASE) | `shared/src/enums/` |
 | `StandardResponse`, `PaginatedResult` | `shared/src/interfaces/` |
 | Validadores (constantes puras) | `shared/src/validators/` |

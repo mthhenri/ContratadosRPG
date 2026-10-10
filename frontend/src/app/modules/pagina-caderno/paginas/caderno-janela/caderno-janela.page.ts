@@ -1,7 +1,7 @@
 import { Component, DestroyRef, OnDestroy, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { catchError, filter, forkJoin, merge, of, switchMap } from 'rxjs';
 
 import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
@@ -99,6 +99,31 @@ export class CadernoJanela implements OnDestroy {
     this.tempoRealService.conectar();
     this.tempoRealService.entrarSalaCampanha(this.campanhaId);
     this.destroyRef.onDestroy(() => this.tempoRealService.sairSalaCampanha(this.campanhaId));
+    // A janela externa não herda as releituras da campanha hospedeira do painel.
+    merge(
+      this.tempoRealService.reconexao$,
+      this.tempoRealService.fichaRecortesAlterados$.pipe(
+        filter((evento) => evento.campanhaId === this.campanhaId && evento.membros),
+      ),
+      this.tempoRealService.fichaCriada$.pipe(
+        filter((ficha) => ficha.campanhaId === this.campanhaId),
+      ),
+      this.tempoRealService.fichaRemovidaDaCampanha$.pipe(
+        filter((evento) => evento.campanhaId === this.campanhaId),
+      ),
+      this.tempoRealService.fichaVisibilidadeAlterada$.pipe(
+        filter((evento) => evento.campanhaId === this.campanhaId),
+      ),
+    ).pipe(
+      switchMap(() => this.campanhaService.listarMembros(this.campanhaId).pipe(
+        catchError(() => of(null)),
+      )),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe({
+      next: (membrosAtuais) => {
+        if (membrosAtuais) this.membros.set(membrosAtuais);
+      },
+    });
     this.store.abrir(this.campanhaId);
     this.estado.set('pronto');
   }

@@ -104,6 +104,7 @@ describe('CampanhaPreviaJogador', () => {
 
   const membroFicha = (id: number, nome: string, acessoCompleto = true) => ({
     id,
+    updatedDate: '2026-10-09T10:00:00Z',
     nome,
     classe: ClasseEnum.COMBATENTE,
     arquetipo: null,

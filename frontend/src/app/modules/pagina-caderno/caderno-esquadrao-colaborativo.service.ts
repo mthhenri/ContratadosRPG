@@ -1,16 +1,22 @@
 import { DestroyRef, Injectable, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import type {
+  CampanhaMembroFichaResumoDto,
+  CampanhaMembroResumoDto,
+} from '@contratados-rpg/shared/dtos/campanha';
+import type {
   PaginaCadernoDto,
   PaginaCadernoEsquadraoEstadoDto,
 } from '@contratados-rpg/shared/dtos/pagina-caderno';
-import { finalize } from 'rxjs';
+import { Subject, catchError, filter, finalize, map, merge, of, switchMap } from 'rxjs';
 import { Awareness, applyAwarenessUpdate, encodeAwarenessUpdate } from 'y-protocols/awareness';
 import * as Y from 'yjs';
 
 import { SessaoService } from '../../core/services/sessao.service';
 import { TempoRealService } from '../../core/services/tempo-real.service';
 import { PaginaCadernoService } from './pagina-caderno.service';
+import { resolverCorParticipante } from './caderno-presenca';
+import { CampanhaService } from '../campanha/campanha.service';
 
 type EstadoSincronizacao = 'INATIVO' | 'SINCRONIZANDO' | 'SINCRONIZADO' | 'FALHA';
 
@@ -28,31 +34,13 @@ const ORIGEM_PRESENCA_REMOTA = Symbol('presenca-remota');
 const ATRASO_SINCRONIZACAO = 180;
 
 /**
- * Paleta fixa de cores de identidade por participante — mesmo espírito de `ficha.cor`: valor
- * arbitrário associado a uma pessoa, fora do sistema de tokens do tema (não é cor de interface).
- */
-const PALETA_PRESENCA: readonly string[] = [
-  '#f97316',
-  '#22c55e',
-  '#38bdf8',
-  '#a855f7',
-  '#eab308',
-  '#ec4899',
-  '#14b8a6',
-  '#f43f5e',
-];
-
-function corDoParticipante(usuarioId: number): string {
-  return PALETA_PRESENCA[Math.abs(usuarioId) % PALETA_PRESENCA.length];
-}
-
-/**
  * Sessão efêmera do editor compartilhado. O Y.Doc é a fonte de verdade enquanto uma página está
  * aberta; a API só recebe deltas CRDT, nunca uma substituição concorrente do documento inteiro.
  */
 @Injectable()
 export class CadernoEsquadraoColaborativoService {
   private readonly api = inject(PaginaCadernoService);
+  private readonly campanhaService = inject(CampanhaService);
   private readonly tempoReal = inject(TempoRealService);
   private readonly sessaoService = inject(SessaoService);
   private readonly destroyRef = inject(DestroyRef);
@@ -63,6 +51,9 @@ export class CadernoEsquadraoColaborativoService {
   private documentoAtual: Y.Doc | null = null;
   private awarenessAtual: Awareness | null = null;
   private conteudoMarkdownAtual = '';
+  private fichasIdentidade: readonly CampanhaMembroFichaResumoDto[] = [];
+  private readonly salasFichaIdentidade = new Set<number>();
+  private readonly identidadeSolicitada = new Subject<number>();
 
   readonly documento = signal<Y.Doc | null>(null);
   readonly awareness = signal<Awareness | null>(null);
@@ -72,6 +63,38 @@ export class CadernoEsquadraoColaborativoService {
   readonly estado = signal<EstadoSincronizacao>('INATIVO');
 
   constructor() {
+    this.destroyRef.onDestroy(() => this.fechar());
+    merge(
+      this.identidadeSolicitada,
+      this.tempoReal.fichaAlterada$.pipe(
+        filter((ficha) => ficha.campanhaId === this.campanhaAtualId &&
+          this.salasFichaIdentidade.has(ficha.id)),
+        map((ficha) => ficha.campanhaId!),
+      ),
+      this.tempoReal.reconexao$.pipe(
+        filter(() => this.awarenessAtual !== null),
+        map(() => {
+          const awareness = this.awarenessAtual!;
+          // O servidor esqueceu a presença; renova mesmo se nome/cor não mudaram.
+          awareness.setLocalState(awareness.getLocalState());
+          return this.campanhaAtualId!;
+        }),
+      ),
+    )
+      .pipe(
+        // O evento de ficha não carrega a data. Releitura só enquanto o Caderno colaborativo
+        // está ativo, sem ampliar o broadcast geral ou invalidar listas de outras telas.
+        switchMap((campanhaId) => this.campanhaService.listarMembros(campanhaId).pipe(
+          map((membros) => ({ campanhaId, membros })),
+          catchError(() => of(null)),
+        )),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((resultado) => {
+        if (resultado?.campanhaId === this.campanhaAtualId && this.awarenessAtual) {
+          this.definirMembros(resultado.membros);
+        }
+      });
     this.tempoReal.paginaEsquadraoAlterada$
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((evento) => {
@@ -103,6 +126,20 @@ export class CadernoEsquadraoColaborativoService {
           // colaborativa por isso — a próxima renovação do awareness local se corrige sozinha.
         }
       });
+  }
+
+  /** Recebe o recorte autorizado; só as fichas do próprio usuário definem sua presença. */
+  definirMembros(membros: readonly CampanhaMembroResumoDto[]): void {
+    const usuarioId = this.sessaoService.usuario()?.id;
+    const fichas = membros.find((membro) => membro.usuarioId === usuarioId)?.fichas ?? [];
+    // Uma releitura iniciada antes de `ficha:alterada` não restaura uma cor/data antiga.
+    this.fichasIdentidade = fichas.map((ficha) => {
+      const anterior = this.fichasIdentidade.find((item) => item.id === ficha.id);
+      return anterior && Date.parse(anterior.updatedDate) > Date.parse(ficha.updatedDate)
+        ? anterior : ficha;
+    });
+    this.sincronizarSalasIdentidade();
+    this.publicarIdentidade();
   }
 
   abrir(id: number): void {
@@ -144,6 +181,8 @@ export class CadernoEsquadraoColaborativoService {
   }
 
   fechar(): void {
+    for (const fichaId of this.salasFichaIdentidade) this.tempoReal.sairSalaFicha(fichaId);
+    this.salasFichaIdentidade.clear();
     if (this.temporizador !== null) clearTimeout(this.temporizador);
     this.temporizador = null;
     this.atualizacoesPendentes = [];
@@ -210,10 +249,14 @@ export class CadernoEsquadraoColaborativoService {
     // português, é o formato de rede da biblioteca de terceiros.
     awareness.setLocalStateField('user', {
       name: usuario?.nome ?? 'Colaborador',
-      color: corDoParticipante(usuario?.id ?? 0),
+      color: resolverCorParticipante(usuario?.id ?? 0, this.fichasIdentidade),
     });
     this.awarenessAtual = awareness;
     this.awareness.set(awareness);
+    this.sincronizarSalasIdentidade();
+    // A ficha pode ter mudado enquanto o Caderno estava fechado; o recorte do hospedeiro
+    // não é garantia de atualidade da data, que não invalida a lista por si só.
+    this.identidadeSolicitada.next(campanhaId);
 
     this.tempoReal.conectar();
     this.tempoReal.entrarSalaCampanha(campanhaId);
@@ -230,10 +273,38 @@ export class CadernoEsquadraoColaborativoService {
       participantes.push({
         clienteId,
         nome: usuario.name ?? 'Colaborador',
-        cor: usuario.color ?? corDoParticipante(clienteId),
+        cor: usuario.color ?? resolverCorParticipante(clienteId, []),
       });
     });
     return participantes;
+  }
+
+  private publicarIdentidade(): void {
+    const awareness = this.awarenessAtual;
+    if (!awareness) return;
+    const usuario = this.sessaoService.usuario();
+    const identidade = {
+      name: usuario?.nome ?? 'Colaborador',
+      color: resolverCorParticipante(usuario?.id ?? 0, this.fichasIdentidade),
+    };
+    const anterior = awareness.getLocalState()?.['user'] as typeof identidade | undefined;
+    if (anterior?.name === identidade.name && anterior.color === identidade.color) return;
+    awareness.setLocalStateField('user', identidade);
+  }
+
+  private sincronizarSalasIdentidade(): void {
+    if (!this.awarenessAtual) return;
+    const ids = new Set(this.fichasIdentidade.map((ficha) => ficha.id));
+    for (const fichaId of ids) {
+      if (this.salasFichaIdentidade.has(fichaId)) continue;
+      this.tempoReal.entrarSalaFicha(fichaId);
+      this.salasFichaIdentidade.add(fichaId);
+    }
+    for (const fichaId of this.salasFichaIdentidade) {
+      if (ids.has(fichaId)) continue;
+      this.tempoReal.sairSalaFicha(fichaId);
+      this.salasFichaIdentidade.delete(fichaId);
+    }
   }
 
   private agendarSincronizacao(): void {

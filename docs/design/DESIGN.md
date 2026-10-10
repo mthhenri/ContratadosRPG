@@ -842,6 +842,15 @@ janelas arrastáveis (1200+). **Campo curto (`[compacto]`):** sem barra fora de 
 uso, a barra aparece numa linha **embaixo** do texto (em cima empurrava o texto ao aparecer) e só a
 área de texto rola, para a barra continuar visível com o campo redimensionado.
 
+### Identidade colaborativa do Caderno
+
+No Caderno do Esquadrão, a inicial de presença, o cursor e a seleção remotos usam a mesma
+cor: a da ficha própria alterada mais recentemente na campanha. Datas empatadas usam a ficha
+de maior id; sem ficha válida ou sem cor na ficha escolhida, vale a reserva estável por usuário
+da presença original. A identidade acompanha alterações e reconexão no painel e na janela
+externa, preservando o documento, os controles e a densidade do Caderno aprovado.
+[Contrato e verificação](../specs/done/caderno-cor-identidade-colaborador.spec.md).
+
 ### Fila de notificações — ícone, ação e duração (`ui-20`)
 
 `app-notificacoes` (`NotificacaoService`) ganhou três acabamentos, sem mexer no posicionamento

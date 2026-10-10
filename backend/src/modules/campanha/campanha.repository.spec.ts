@@ -4,6 +4,23 @@ import { TipoCampanhaMembroPapelEnum, TipoFichaEnum } from '@contratados-rpg/sha
 import { CampanhaRepository } from './campanha.repository';
 
 describe('CampanhaRepository', () => {
+  it('listarMembros inclui a data da ficha sem ampliar o recorte de permissões', async () => {
+    const raw = vi.fn().mockResolvedValue({ rows: [] });
+    const repositorio = new CampanhaRepository({ raw } as unknown as Knex);
+
+    await repositorio.listarMembros({
+      campanhaId: 3, usuarioAtivoId: 42, usuarioAtivoEhMestre: false,
+    });
+
+    const [sql, parametros] = raw.mock.calls[0] as [string, Record<string, unknown>];
+    expect(sql).toContain("'updatedDate', ficha.updated_date");
+    expect(sql).toContain('ficha.is_deleted = false');
+    expect(sql).toContain('ficha.usuario_id = :usuarioAtivoId');
+    expect(sql).toContain('COALESCE(ficha.oculta, false) = false');
+    expect(parametros).toEqual({
+      campanhaId: 3, usuarioAtivoId: 42, usuarioAtivoEhMestre: false,
+    });
+  });
   it('conta campanhas ativas em que o usuario e mestre ativo', async () => {
     const raw = vi.fn().mockResolvedValue({ rows: [{ total: '1' }] });
     const repositorio = new CampanhaRepository({ raw } as unknown as Knex);
