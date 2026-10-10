@@ -1,5 +1,16 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-10 — Versão 1.8.0
+
+Nota `docs/patchnotes/1.8.0.md` (9 e 10 de outubro): empilhamentos em quadradinhos (ficha,
+Simulação, Regras, esquadrão e NPC), custo/peso das modificações e Amplificadores nas Regras,
+capa/fórmulas/Deslocamento/espaçamento/rodapé das Regras, Ctrl+K "Ir para…", cor da ficha no
+Caderno e correções de cartões do Esquadrão. Versão alinhada em `package.json` (raiz, `shared`,
+`backend`, `frontend`), lock e `shared/src/versao.ts`. Conferido: build e 1157 testes de `shared`,
+`patchnotes:publicar --dry-run` (publicaria v1.8.0) e dry-run do workflow (versão vigente 1.8.0,
+tag v1.8.0 a criar). Texto aprovado pelo autor. Sem tag local, PR nem push: a tag e a publicação
+no R2 nascem no workflow, quando o commit chegar ao `master`.
+
 ## 2026-10-10 — Regras: "Ir para…" (Ctrl+K) e rodapé centralizado
 
 Task avulsa a pedido do autor (`regras-ir-para-secao`). Novo primitivo `app-paleta` em
