@@ -1,6 +1,6 @@
 # Usabilidade 02 — Descoberta e comparação de arquétipos
 
-> Task 2/6 da revisão pública de 09/10/2026; achado U-02 do [relatório](../active/usabilidade-classes-condicoes-2026-10-09/RELATORIO.md). Quebra em specs solicitada pelo autor. Prioridade alta.
+> Task 2/6 da revisão pública de 09/10/2026; achado U-02 do [relatório](../backlog/usabilidade-classes-condicoes-2026-10-09/RELATORIO.md). Quebra em specs solicitada pelo autor. Prioridade alta.
 
 ## Objetivo
 

@@ -1,5 +1,12 @@
 # icones-recursos-sistema.spec.md
 
+> **Rodada arquivada por decisão do autor em 09/10/2026:** ícones e adoção entregues,
+> votação implementada em task própria. Glifos, conceitos sem ícone e divergências
+> remanescentes continuam abertos em
+> [icones-recursos-glifos-e-pendencias](../backlog/icones-recursos-glifos-e-pendencias.spec.md).
+> O arquivo abaixo preserva o contrato e os limites da rodada; o arquivamento não
+> certifica os critérios ainda sem cobertura. [Fecho](icones-recursos-sistema/fecho-documental.md).
+
 > **Spec avulsa, fora da numeração do M10** (pedido do autor, 2026-10-06). Nasce da revisão do
 > exemplão do M10 (`docs/specs/done/m10-regras/m10-regras-exemplao.html`, aba *Ícones*), onde o trio
 > Vida/Energia/Defesa foi decidido. A **entrega 1** é pré-requisito da `m10-07`; as demais correm
@@ -30,6 +37,8 @@ escritos, e levantar com o autor que outros ícones fariam falta ao sistema.
    (ficha de jogador, criatura e NPC, encontro de combate, simulação, compras/habilidades com custo
    em Energia, calculadoras) e acrescentar o ícone + `appTooltip` ao lado do texto (decisão do autor em 09/10/2026, no
    lugar de substituí-lo; só onde há valor numérico). Relato em `icones-recursos-sistema/entrega-2-verificacao.md`.
+   **Verificação ao vivo fechada em 09/10/2026** (segunda rodada no mesmo relato); o tooltip por extenso
+   ficou como divergência para decisão do autor.
    Lista dos pontos no fecho, tela por tela. Sem mudar cálculo nem dado.
 3. **Levantamento de outros ícones** — com o autor, antes de desenhar:
    - **Glifos de texto usados como ícone** no frontend (⬢ ⬡ ⬥ ⬦ ◈ ◻ ■ □ e afins em templates/SCSS):

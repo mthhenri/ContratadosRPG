@@ -1,6 +1,6 @@
 # Usabilidade 04 — Explicação das estatísticas calculadas
 
-> Task 4/6 da revisão pública de 09/10/2026; recorte de estatísticas do achado U-04 no [relatório](../active/usabilidade-classes-condicoes-2026-10-09/RELATORIO.md). Quebra solicitada pelo autor. Prioridade média.
+> Task 4/6 da revisão pública de 09/10/2026; recorte de estatísticas do achado U-04 no [relatório](../backlog/usabilidade-classes-condicoes-2026-10-09/RELATORIO.md). Quebra solicitada pelo autor. Prioridade média.
 
 ## Objetivo
 

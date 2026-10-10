@@ -1,5 +1,39 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-09 — Conferência do conjunto para commit
+
+O autor autorizou commitar a reorganização de specs, o fecho da M4 e as três correções
+locais de Esquadrão/Fragmentos. A conferência final encontrou custo com 193px em 186px
+úteis no catálogo: permitir quebra da linha inteira e manter o custo à direita resolveu
+o corte, usando os tokens de espaçamento e a receita de carga do próprio Inventário.
+O conjunto também inclui a nova spec de empilhamento visual unificado, registrada no
+backlog em paralelo; seus requisitos foram preservados, sem iniciar implementação.
+
+Diff e formatação aprovados; build frontend aprovado após o ajuste, 3.189 testes frontend
+aprovados e lint dos três workspaces sem erros. Permanecem os avisos globais de lint e
+orçamento inicial. Aplicação real inspecionada pelo agente principal em 1920×1080,
+1366×768, 960×1080 e 360×800, com Esquadrão, foco pelo teclado, catálogo e tooltip.
+O cenário temporário foi removido. Glifos, tooltip por extenso, tema claro e toque real
+continuam abertos no backlog; montador permanece em experimentação no Active.
+[Evidências, limites e gates](../specs/done/icones-recursos-sistema/fecho-documental.md).
+
+## 2026-10-09 — Repriorização das specs em Active
+
+Na conferência do código, das specs e do histórico, o autor decidiu manter o montador
+em experimentação no `active/`. Autorizou arquivar a rodada `icones-recursos-sistema`
+em `done/`, preservando glifos e pendências numa spec de continuação no backlog.
+O arquivamento mantém os limites da rodada, inclusive a divergência do tooltip por
+extenso e a cobertura remanescente; não certifica requisitos ainda sem verificação.
+
+O autor confirmou que ambas as avaliações de usabilidade, setembro e classes/condições,
+devem voltar ao backlog. Specs e anexos foram movidos juntos, com os ponteiros corrigidos.
+Tooltips e demais código já implementado permanecem no produto; cobertura e decisões
+pendentes continuam abertas, aguardando prioridade. M4 já está em `done/`.
+
+Reorganização documental, sem mudanças de código. Conferidos os destinos, preservação
+dos anexos, ausência de referências antigas e os gates de organização/whitespace.
+[Recorte, pendências e limites](../specs/done/icones-recursos-sistema/fecho-documental.md).
+
 ## 2026-10-09 — Fecho documental do legado Superpowers
 
 Após autorizar o commit da identidade do Caderno (`394cacba`), o autor autorizou finalizar
@@ -34,6 +68,26 @@ globais, e aviso de orçamento inicial no build frontend. As capturas foram insp
 pelo agente principal. [Relatório e limites](../specs/done/caderno-cor-identidade-colaborador/verificacao.md).
 Spec em `done/`; anexos legados preservados com nota de conferência. Commit autorizado
 pelo autor após o fecho; publicação permanece fora deste recorte.
+
+## 2026-10-09 — Ícones de recursos: fecho da verificação ao vivo da entrega 2
+
+A pedido do autor, os pontos da entrega 2 de `icones-recursos-sistema` cobertos só por build e
+teste foram percorridos na aplicação real (1920×1080 e 360×800, cenário sintético removido por
+soft delete): lista de campanhas, detalhe do jogador (Esquadrão), esquadrão da cena, catálogo de
+Fragmentos, chips de habilidade do NPC, os três assistentes de criação e a simulação de descanso.
+Três defeitos apareceram só ao vivo e foram corrigidos: a regra de tamanho do olho no Esquadrão
+inflava Vida/Energia a 13,8px (passou a `> app-icone`); no celular, o mesmo cartão cortava
+"Energia 7…" (cada vital virou um trecho que não se parte); e o custo do Fragmento quebrava ou
+vazava 3px (custo rígido, rótulo quebra). Tooltip "N de Vida" por extenso não existe: os pontos
+usam o rótulo com o valor visível ao lado. Ficou como divergência para o autor. A spec segue ativa
+só pelo levantamento de glifos, que o autor manteve aberto.
+[Relato](../specs/done/icones-recursos-sistema/entrega-2-verificacao.md).
+
+## 2026-10-09 — Fecho do guarda-chuva da M4
+
+Na conferência das specs em `active/`, a `m4-ficha-criatura-npc` não tinha mais tasks abertas
+(`m4-01`…`m4-21` todas em `done/`); a frase "quatro tasks restantes" estava desatualizada. Com
+aval do autor, o guarda-chuva foi movido para `done/` com nota de fecho, sem mudança de código.
 
 ## 2026-10-09 — Auditoria visual integral do leitor de Regras
 
@@ -149,7 +203,7 @@ remedidos (7,8–10,9px). 234 arquivos de teste e lint sem erros; 1920×1080 e 3
 campanha, acervo, ficha, NPC e criatura. Telas não observadas ao vivo e o tooltip "N de Vida" por
 extenso seguem abertos; spec ativa. Entrega 3 começou: prancha de votação (tipos de dano,
 categorias de habilidade, fragmentos, reações) para o autor escolher; nada implementado dela.
-[Relato e limites](../specs/active/icones-recursos-sistema/entrega-2-verificacao.md).
+[Relato e limites](../specs/done/icones-recursos-sistema/entrega-2-verificacao.md).
 
 ## 2026-10-09 — Indicativo de descrição das condições nas Regras
 
@@ -167,7 +221,7 @@ reexecuções fora dele passaram. Bundle continua acima do orçamento. Alteraç�
 concorrentes de ícones presentes na árvore foram preservadas e não fazem parte
 deste recorte. Hover/toque reais, ergonomia e inspeção visual de link permanecem
 abertos; spec geral ativa. Sem commit novo nesta etapa.
-[Evidências e limites](../specs/active/usabilidade-classes-condicoes-2026-10-09/indicador-condicoes.md).
+[Evidências e limites](../specs/backlog/usabilidade-classes-condicoes-2026-10-09/indicador-condicoes.md).
 
 ## 2026-10-09 — Quebra da revisão pública de usabilidade em specs
 
@@ -185,7 +239,7 @@ das recomendações nem autorização inferida para login/ampliação de primiti
 Relatório e contexto apontam para as specs. Seções obrigatórias, quatro viewports e links das
 seis tasks conferidos; organização/espelhos e diff aprovados. Sete testes de organização passaram
 fora do sandbox após a execução restrita impedir o Git do repositório temporário. Sem push/publicação.
-[Mapa das tasks](../specs/active/usabilidade-classes-condicoes-2026-10-09/RELATORIO.md#ordem-sugerida-de-trabalho).
+[Mapa das tasks](../specs/backlog/usabilidade-classes-condicoes-2026-10-09/RELATORIO.md#ordem-sugerida-de-trabalho).
 
 ## 2026-10-09 — Usabilidade de classes/dados e tooltips de condições · parcial
 
@@ -215,8 +269,8 @@ sem autorização explícita; autor consultado. Ampliação do EditorMarkdown ta
 decisão exigida pelo AGENTS.md. Gestos de mouse/toque têm testes sintéticos, mas observação
 real e telas autenticadas ainda pendentes. Sem delegação, push ou publicação; commit do avanço
 parcial posteriormente autorizado pelo autor em 09/10/2026.
-[Relatório](../specs/active/usabilidade-classes-condicoes-2026-10-09/RELATORIO.md) e
-[gates/retomada](../specs/active/usabilidade-classes-condicoes-2026-10-09/verificacao.md).
+[Relatório](../specs/backlog/usabilidade-classes-condicoes-2026-10-09/RELATORIO.md) e
+[gates/retomada](../specs/backlog/usabilidade-classes-condicoes-2026-10-09/verificacao.md).
 
 ## 2026-10-09 — Regras: segunda revisão completa, topo e pesquisa
 
@@ -8344,7 +8398,7 @@ Spec: `docs/specs/done/ui-35-montador-rolagem.spec.md`.
 Inspeção especializada solicitada pelo autor, com desktop 1920×1080, tela dividida
 960×1080 (corrigindo o pedido inicial de vertical), notebook 1366×768 e mobile 360×800.
 Resultados, matriz de cobertura, evidências, dados criados e pendências estão em
-[`RELATORIO.md`](../specs/active/usabilidade-2026-09-13/RELATORIO.md). Foram exercitados guia
+[`RELATORIO.md`](../specs/backlog/usabilidade-2026-09-13/RELATORIO.md). Foram exercitados guia
 de agente até criação, ficha e persistência de recurso, caderno com salvamento e retomada,
 iniciativa até encerramento, rolagem e calculadoras. O relatório prioriza oito recortes,
 com destaque para legibilidade do esquadrão, nomes acessíveis da navegação compacta e

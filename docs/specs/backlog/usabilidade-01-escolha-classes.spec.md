@@ -1,6 +1,6 @@
 # Usabilidade 01 — Contexto para escolher classes
 
-> Task 1/6 da revisão pública de 09/10/2026; achado U-01 do [relatório](../active/usabilidade-classes-condicoes-2026-10-09/RELATORIO.md). Quebra em specs solicitada pelo autor. Prioridade alta.
+> Task 1/6 da revisão pública de 09/10/2026; achado U-01 do [relatório](../backlog/usabilidade-classes-condicoes-2026-10-09/RELATORIO.md). Quebra em specs solicitada pelo autor. Prioridade alta.
 
 ## Objetivo
 

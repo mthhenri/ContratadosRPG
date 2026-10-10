@@ -1,6 +1,6 @@
 # Usabilidade 06 — Orientação da calculadora de entrada de agente
 
-> Task 6/6 da revisão pública de 09/10/2026; achado U-05 do [relatório](../active/usabilidade-classes-condicoes-2026-10-09/RELATORIO.md). Quebra solicitada pelo autor. Prioridade média.
+> Task 6/6 da revisão pública de 09/10/2026; achado U-05 do [relatório](../backlog/usabilidade-classes-condicoes-2026-10-09/RELATORIO.md). Quebra solicitada pelo autor. Prioridade média.
 
 ## Objetivo
 

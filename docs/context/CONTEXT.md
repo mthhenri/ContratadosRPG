@@ -3,8 +3,8 @@
 > **Organização documental:** tarefas, planos, propostas e relatórios agora ficam
 > juntos em `docs/specs/<estado>/`, conforme [política §3.1](../SYSTEM.SPEC.md#31-documentação-de-tarefa-e-artefatos-de-execução)
 > e [mapa](../specs/README.md). Capturas/saídas brutas ficam em `.artifacts/`, local
-> e ignorada; `repo:verificar` e CI conferem destinos e espelhos. A usabilidade
-> segue em `active/`; a [conferência dos quatro recortes legados](../specs/done/legado-superpowers-conferir-fecho.spec.md)
+> e ignorada; `repo:verificar` e CI conferem destinos e espelhos. As duas avaliações de usabilidade
+> voltaram ao backlog por decisão do autor; a [conferência dos quatro recortes legados](../specs/done/legado-superpowers-conferir-fecho.spec.md)
 > está encerrada documentalmente, com os anexos preservados e a identidade do Caderno concluída.
 > A [retomada da cobertura de ficha oculta](../specs/backlog/auditoria-ficha-oculta-retomada-cobertura.spec.md)
 > permanece no backlog. Estado da M10 preservado.
@@ -28,20 +28,20 @@
 > `requests-inventario-sob-demanda`) estão concluídas, specs em `done/`; `P-082`…`P-086` fechados
 > em `PROBLEMS.md`. [Evidências e limites da revisão original](../specs/done/requests-correcoes/requests-2026-09-26.md).
 
-> **Avaliação de usabilidade aberta:** [relatório e cobertura dos quatro viewports](../specs/active/usabilidade-2026-09-13/RELATORIO.md).
+> **Avaliação de usabilidade no backlog:** [relatório e cobertura dos quatro viewports](../specs/backlog/usabilidade-2026-09-13/RELATORIO.md).
 > Oito propostas de melhoria aguardam revisão; specs no backlog somente após aprovação do autor.
-> A retomada das jornadas autenticadas depende de restabelecer Docker/Postgres local, indisponível
-> na verificação de 15/09. Pendências e dados de teste mantidos estão discriminados no relatório.
-> **Recorte atual — classes, dados e condições:** [inspeção de 09/10](../specs/active/usabilidade-classes-condicoes-2026-10-09/RELATORIO.md).
+> Retomada adiada pelo autor em 09/10. O bloqueio de Docker/Postgres de setembro foi superado;
+> a cobertura restante e os dados de teste mantidos continuam discriminados no relatório.
+> **Classes, dados e condições — retomada no backlog:** [inspeção de 09/10](../specs/backlog/usabilidade-classes-condicoes-2026-10-09/RELATORIO.md).
 > Jornadas públicas observadas nos quatro viewports; escolha de classe/arquétipo e explicação
-> dos dados precisam de revisão. Tooltips canônicos implementados em labels e Regras; task aberta
+> dos dados precisam de revisão. Tooltips canônicos implementados em labels e Regras; retomada aberta
 > por login local aguardando autorização, cobertura do EditorMarkdown aguardando decisão e gates
-> reais de mouse/toque. [Verificação e retomada](../specs/active/usabilidade-classes-condicoes-2026-10-09/verificacao.md).
+> reais de mouse/toque. [Verificação e retomada](../specs/backlog/usabilidade-classes-condicoes-2026-10-09/verificacao.md).
 > Pontilhado de descoberta das condições nas Regras autorizado e implementado por
-> opção do Tooltip; quatro viewports observados. [Recorte e limites](../specs/active/usabilidade-classes-condicoes-2026-10-09/indicador-condicoes.md).
+> opção do Tooltip; quatro viewports observados. [Recorte e limites](../specs/backlog/usabilidade-classes-condicoes-2026-10-09/indicador-condicoes.md).
 > Por solicitação do autor, recomendações públicas divididas em seis tasks `usabilidade-01`…`06`
 > no backlog, sem execução iniciada: escolha, arquétipos, navegação móvel, estatísticas,
-> progressão e entrada de agente. [Mapa das specs](../specs/active/usabilidade-classes-condicoes-2026-10-09/RELATORIO.md#ordem-sugerida-de-trabalho).
+> progressão e entrada de agente. [Mapa das specs](../specs/backlog/usabilidade-classes-condicoes-2026-10-09/RELATORIO.md#ordem-sugerida-de-trabalho).
 
 > **Formatação do frontend:** `frontend/.prettierrc.json` governa exclusivamente HTML/SCSS
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
@@ -91,6 +91,7 @@
 > M10-03: 17 ícones de identidade adicionados e
 > verificados em 14/16/24px, claro/escuro e quatro viewports; [evidências](../specs/done/m10-03-icones-identidade/m10-03-verificacao.md).
 > Preparo/publicação e testes alinhados ao Sistema v4.1.4 na M10-11 (P-105 corrigido).
+> **M4 fechada:** guarda-chuva [`m4-ficha-criatura-npc`](../specs/done/m4-ficha-criatura-npc.spec.md) em `done/`, sem tasks restantes.
 > M4-21 concluída: ficha de NPC revista para se aproximar
 > do Jogador — Patente e Categoria só na Identidade, cor pelo retrato, Competência no ladrilho,
 > equipamento no layout do inventário, Biblioteca de Referência nas habilidades, abas Conduta ·
@@ -118,7 +119,10 @@
 > Revisão visual das Regras concluída: subclasses, termos, abertura e grades no leitor, cor
 > de Vida/Energia; [verificação](../specs/done/revisao-visual-regras/verificacao.md).
 > M10 implementada, 11/11; revisão editorial da exportação segue aberta em P-108.
-> `icones-recursos-sistema` ativa: entregas 1 concluída e 2 parcial (ícone ao lado do texto);
+> `icones-recursos-sistema` arquivada em `done/` por decisão do autor: entrega 1 concluída;
+> entrega 2 (ícone ao lado do texto) com verificação ao vivo registrada em 09/10 e três defeitos corrigidos
+> ([relato](../specs/done/icones-recursos-sistema/entrega-2-verificacao.md)). Glifos, tooltip por extenso e limites
+> restantes ficam no [backlog de continuação](../specs/backlog/icones-recursos-glifos-e-pendencias.spec.md);
 > votação da prancha da entrega 3 concluída (21 itens). `icones-dano-habilidade-fragmento-reacao` concluída:
 > 19 ícones novos + 2 fragmentos redesenhados no `app-icone`, ponte `shared/icone/icones-dominio.ts`,
 > adoção nas telas ([verificação](../specs/done/icones-dano-habilidade-fragmento-reacao/verificacao.md)).
@@ -2178,8 +2182,9 @@ incluindo todos os ajustes avulsos de pós-milestone.
 | `regras-glossario` | regras | esboço independente do M10: termos marcados com cartão; pontos a fechar com o autor |
 | `regras-visual-01`…`10` | regras | dez correções após bateria visual; associações, overflow, hierarquia, textos e contraste; [mapa e prioridades](../specs/done/regras-auditoria-visual-completa/auditoria.md) |
 
-Spec avulsa ativa: `icones-recursos-sistema`, entrega 1 concluída; faltam adoção ampla
-com tooltip por extenso e levantamento de outros ícones/glifos.
+Spec avulsa ativa: `montador-rolagem-experimento`, mantida em experimentação pelo autor.
+`icones-recursos-sistema` arquivada em `done/`; sua continuação
+`icones-recursos-glifos-e-pendencias` e as duas avaliações de usabilidade estão no backlog.
 
 Milestones ainda não abertos: `m5-guia-missao`. M10 `m10-regras` implementada: `m10-01`…`m10-11`
 concluídas; revisão de formatação da exportação permanece aberta em P-108. O M8 `m8-espectadores-campanha` está **concluído**

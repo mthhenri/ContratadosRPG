@@ -1,5 +1,9 @@
 # Usabilidade de classes, dados e condições
 
+> **Retomada no backlog por decisão do autor em 09/10/2026.** Tooltips e pontilhado
+> implementados permanecem no produto; relatórios e gates pendentes estão preservados.
+> O recorte aguarda priorização, sem execução em andamento ou aceite integral.
+
 > Pedido do autor em 09/10/2026: análise de usabilidade do sistema, com foco na compreensão das classes e dos dados, e tooltips descritivos das condições.
 
 ## Objetivo
@@ -22,4 +26,4 @@ Redesenhar classes ou implementar outras recomendações sem decisão do autor; 
 
 ## Dependências
 
-`docs/SYSTEM.SPEC.md`, `docs/CONVENTIONS.md`, `docs/design/DESIGN.md`, handoff de tema e `docs/core/sistema-v4.1.4.md` (Condições). Avaliação legada em `docs/specs/active/usabilidade-2026-09-13/` somente como contexto, não evidência atual.
+`docs/SYSTEM.SPEC.md`, `docs/CONVENTIONS.md`, `docs/design/DESIGN.md`, handoff de tema e `docs/core/sistema-v4.1.4.md` (Condições). Avaliação legada em `docs/specs/backlog/usabilidade-2026-09-13/` somente como contexto, não evidência atual.

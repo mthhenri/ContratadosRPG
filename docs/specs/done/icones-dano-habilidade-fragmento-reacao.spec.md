@@ -1,6 +1,6 @@
 # Ícones de dano, categoria de habilidade, fragmento e reação
 
-> **Spec avulsa, derivada da entrega 3 de [`icones-recursos-sistema`](../active/icones-recursos-sistema.spec.md)** (levantamento com o autor, votação em 09/10/2026). Implementa só o que o autor aprovou; o registro da votação está em `../active/icones-recursos-sistema/votacao-prancha.md` e os desenhos em [`icones-dano-habilidade-fragmento-reacao/desenhos-aprovados.md`](icones-dano-habilidade-fragmento-reacao/desenhos-aprovados.md).
+> **Spec avulsa, derivada da entrega 3 de [`icones-recursos-sistema`](../done/icones-recursos-sistema.spec.md)** (levantamento com o autor, votação em 09/10/2026). Implementa só o que o autor aprovou; o registro da votação está em `../done/icones-recursos-sistema/votacao-prancha.md` e os desenhos em [`icones-dano-habilidade-fragmento-reacao/desenhos-aprovados.md`](icones-dano-habilidade-fragmento-reacao/desenhos-aprovados.md).
 
 > **Estado (09/10/2026): concluída** — as três tarefas implementadas e observadas ao vivo; ver [verificacao.md](icones-dano-habilidade-fragmento-reacao/verificacao.md).
 

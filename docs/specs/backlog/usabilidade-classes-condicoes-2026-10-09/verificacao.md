@@ -1,5 +1,8 @@
 # Verificação e pendências — usabilidade e condições
 
+> **Retomada adiada para o backlog por decisão do autor em 09/10/2026.**
+> As verificações abaixo permanecem parciais; mover a spec não encerra seus gates.
+
 **Estado: aberto.** O relatório público foi produzido e os tooltips estão implementados no
 recorte descrito; a cobertura universal e os gates de interação ainda não estão comprovados.
 

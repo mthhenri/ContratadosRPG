@@ -287,8 +287,10 @@ Comparação pessoal com exemplão e app real, quatro tamanhos e duas bases:
 `vida`, `energia` e `defesa` são a exceção preenchida do `app-icone`: coração cheio
 sem pulso (opção A confirmada pelo autor em 08/10/2026), raio e escudo do exemplão.
 Herdam `currentColor`, sem stroke; valores têm rótulo acessível e `appTooltip` por
-extenso. Conferidos em 14/16/24px, claro/escuro. A adoção no restante do site permanece
-aberta na [spec avulsa](../specs/active/icones-recursos-sistema.spec.md).
+extenso. Conferidos em 14/16/24px, claro/escuro. A adoção nas telas está registrada na
+[rodada arquivada](../specs/done/icones-recursos-sistema.spec.md); glifos e pendências,
+inclusive a divergência do tooltip por extenso, seguem na
+[continuação no backlog](../specs/backlog/icones-recursos-glifos-e-pendencias.spec.md).
 
 ### Dano, categoria de habilidade, fragmento e reação (`icones-dano-habilidade-fragmento-reacao`)
 

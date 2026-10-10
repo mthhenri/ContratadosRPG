@@ -1,6 +1,6 @@
 # Usabilidade 03 — Nomes e descoberta da navegação móvel
 
-> Task 3/6 da revisão pública de 09/10/2026; achado U-03/P-112 do [relatório](../active/usabilidade-classes-condicoes-2026-10-09/RELATORIO.md). Quebra solicitada pelo autor. Prioridade alta.
+> Task 3/6 da revisão pública de 09/10/2026; achado U-03/P-112 do [relatório](../backlog/usabilidade-classes-condicoes-2026-10-09/RELATORIO.md). Quebra solicitada pelo autor. Prioridade alta.
 
 ## Objetivo
 

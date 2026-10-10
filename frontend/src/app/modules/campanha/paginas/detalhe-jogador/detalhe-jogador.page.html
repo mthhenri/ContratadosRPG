@@ -765,20 +765,24 @@
                                                 >{{ ficha.nome }}</span
                                             >
                                             <span class="detalhe__equipe-ficha-vitais">
-                                                <app-icone
-                                                    class="icone--texto"
-                                                    nome="vida"
-                                                    appTooltip="Vida"
-                                                />
-                                                Vida {{ ficha.vidaAtual }}/{{ ficha.vidaMaxima ??
-                                                '—' }} ·
-                                                <app-icone
-                                                    class="icone--texto"
-                                                    nome="energia"
-                                                    appTooltip="Energia"
-                                                />
-                                                Energia {{ ficha.energiaAtual }}/{{
-                                                ficha.energiaMaxima ?? '—' }}
+                                                <span class="detalhe__equipe-ficha-vital"
+                                                    ><app-icone
+                                                        class="icone--texto"
+                                                        nome="vida"
+                                                        appTooltip="Vida"
+                                                    />
+                                                    Vida {{ ficha.vidaAtual }}/{{ ficha.vidaMaxima
+                                                    ?? '—' }} ·</span
+                                                >
+                                                <span class="detalhe__equipe-ficha-vital"
+                                                    ><app-icone
+                                                        class="icone--texto"
+                                                        nome="energia"
+                                                        appTooltip="Energia"
+                                                    />
+                                                    Energia {{ ficha.energiaAtual }}/{{
+                                                    ficha.energiaMaxima ?? '—' }}</span
+                                                >
                                             </span>
                                         </span>
                                     </button>

@@ -1,5 +1,8 @@
 # m4-ficha-criatura-npc.spec.md
 
+> **Fechada em 09/10/2026:** todas as tasks `m4-01`…`m4-21` estão em `done/`; o guarda-chuva
+> foi movido sem novas implementações. O trecho "tasks restantes" abaixo é o registro da época.
+
 > **Milestone M4 — Ficha de Criatura/NPC.** Fonte mecânica corrente:
 > `docs/core/guia_de_mestre-v4.2.0.md` (capítulos "Guia de Criação de Ameaças" e "Guia de Criação
 > de NPCs"); este spec fixa o escopo acordado. Milestone já dividido em tasks numeradas;

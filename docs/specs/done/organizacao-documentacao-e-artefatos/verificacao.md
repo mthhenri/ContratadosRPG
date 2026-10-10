@@ -54,7 +54,7 @@ bônus de atributo no guia, ações da ficha no painel do jogador, aumento de av
 e identidade Markdown do Caderno. Não foi inferido que essas features faltem;
 nenhum plano antigo passa a ser autorização nova de implementação.
 
-A [avaliação de usabilidade](../../active/usabilidade-2026-09-13.spec.md) permanece em
+A [avaliação de usabilidade](../../backlog/usabilidade-2026-09-13.spec.md) permanece em
 `active/`. A auditoria de ficha oculta preserva a rodada histórica em `done/`,
 conforme P-098, e sua cobertura restante tem
 [registro de retomada no backlog](../../backlog/auditoria-ficha-oculta-retomada-cobertura.spec.md).
@@ -194,7 +194,7 @@ Os gates/aprovações das tarefas abertas acima permanecem pendentes.
 | `docs/reviews/p-101-verificacao.md` | [`done/p-101-criaturas-guia-v4.2.0/p-101-verificacao.md`](../../done/p-101-criaturas-guia-v4.2.0/p-101-verificacao.md) |
 | `docs/reviews/p-102-verificacao.md` | [`done/p-102-referencias-documentos-vigentes/p-102-verificacao.md`](../../done/p-102-referencias-documentos-vigentes/p-102-verificacao.md) |
 | `docs/reviews/requests-2026-09-26.md` | [`done/requests-correcoes/requests-2026-09-26.md`](../../done/requests-correcoes/requests-2026-09-26.md) |
-| `docs/reviews/usabilidade-2026-09-13/RELATORIO.md` | [`active/usabilidade-2026-09-13/RELATORIO.md`](../../active/usabilidade-2026-09-13/RELATORIO.md) |
+| `docs/reviews/usabilidade-2026-09-13/RELATORIO.md` | [`backlog/usabilidade-2026-09-13/RELATORIO.md`](../../backlog/usabilidade-2026-09-13/RELATORIO.md) |
 | `docs/auditorias/ficha-oculta-todos-consumidores.md` | [`done/auditoria-ficha-oculta-todos-consumidores/ficha-oculta-todos-consumidores.md`](../../done/auditoria-ficha-oculta-todos-consumidores/ficha-oculta-todos-consumidores.md) |
 | `docs/design/AUDITORIA-BIBLIOTECA-VISUAL.md` | [`done/ui-06-auditoria-conformidade-biblioteca-visual/AUDITORIA-BIBLIOTECA-VISUAL.md`](../../done/ui-06-auditoria-conformidade-biblioteca-visual/AUDITORIA-BIBLIOTECA-VISUAL.md) |
 | `docs/design/AUDITORIA-COMPONENTES-FANTASMA.md` | [`done/ui-27-auditoria-componentes-fantasma/AUDITORIA-COMPONENTES-FANTASMA.md`](../../done/ui-27-auditoria-componentes-fantasma/AUDITORIA-COMPONENTES-FANTASMA.md) |

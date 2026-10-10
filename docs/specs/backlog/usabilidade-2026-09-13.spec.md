@@ -1,5 +1,8 @@
 # usabilidade-2026-09-13.spec.md
 
+> **Retomada no backlog por decisão do autor em 09/10/2026.** Relatório e propostas
+> preservados; avaliação parcial, sem execução em andamento ou aceite integral.
+
 > Registro de organização documental em 2026-10-08, não uma nova autorização de implementação.
 
 ## Objetivo

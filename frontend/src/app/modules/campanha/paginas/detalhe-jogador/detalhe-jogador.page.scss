@@ -553,7 +553,8 @@ app-coluna-acoes {
             border-color 0.15s ease,
             color 0.15s ease;
 
-        app-icone {
+        // Só o olho; os ícones de Vida/Energia em `__equipe-ficha-vitais` seguem o texto (`icone--texto`).
+        > app-icone {
             flex: none;
             font-size: 12px;
         }
@@ -590,12 +591,14 @@ app-coluna-acoes {
         white-space: nowrap;
     }
 
+    // Vida e Energia quebram entre si quando o cartão estreita (360px), nunca cortando o valor.
     &__equipe-ficha-vitais {
         font-family: var(--font-mono);
         font-size: 10px;
         color: var(--text-mute);
-        overflow: hidden;
-        text-overflow: ellipsis;
+    }
+
+    &__equipe-ficha-vital {
         white-space: nowrap;
     }
 

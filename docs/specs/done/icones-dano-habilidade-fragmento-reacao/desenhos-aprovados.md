@@ -1,6 +1,6 @@
 # Desenhos aprovados — ícones de dano, habilidade, fragmento e reação
 
-Fonte dos desenhos: pranchas em `docs/specs/active/icones-recursos-sistema/` (a votação completa está em `votacao-prancha.md` na mesma pasta). Cada bloco abaixo é o **miolo do SVG** (viewBox 24×24, `fill:none; stroke:currentColor; stroke-linecap/linejoin: round`) exatamente como aprovado na prancha. São desenhos de prancha: o refino do traço faz parte da implementação.
+Fonte dos desenhos: pranchas em `docs/specs/done/icones-recursos-sistema/` (a votação completa está em `votacao-prancha.md` na mesma pasta). Cada bloco abaixo é o **miolo do SVG** (viewBox 24×24, `fill:none; stroke:currentColor; stroke-linecap/linejoin: round`) exatamente como aprovado na prancha. São desenhos de prancha: o refino do traço faz parte da implementação.
 
 O nome do ícone é o valor proposto para `IconeNome`.
 

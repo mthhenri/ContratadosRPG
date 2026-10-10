@@ -1152,8 +1152,17 @@
     &__cartao-fragmento-custo {
         display: flex;
         justify-content: space-between;
+        // Mesmo padrão da carga: a linha quebra quando rótulo e valor não cabem juntos.
+        flex-wrap: wrap;
+        gap: var(--space-4) var(--space-8);
         font-size: 12px;
         color: var(--text-dim);
+
+        // O custo desce inteiro e continua alinhado à direita no cartão estreito.
+        > span:last-child {
+            flex: none;
+            margin-inline-start: auto;
+        }
     }
     // Botões Potencializador/Construtor empilhados (não lado a lado — em cartões estreitos os dois
     // rótulos lado a lado cortavam/vazavam pra fora do cartão; empilhado sempre cabe).
@@ -1165,6 +1174,8 @@
     &__custo {
         color: var(--warning);
         font-weight: 700;
+        // Ícone, número e "Energia" nunca se separam no cartão estreito do celular.
+        white-space: nowrap;
     }
     // Custo bruto quando a Afinidade já reduz o que será cobrado (m3-66) — secundário e riscado,
     // ao lado do reduzido (o que de fato será debitado) em destaque.
