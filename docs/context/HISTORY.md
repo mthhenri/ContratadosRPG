@@ -1,5 +1,35 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-10 — RV-04: pares e hierarquia das grades de referência
+
+Saúde do Civil agora mantém cada recurso com sua fórmula inicial e progressão,
+inclusive em uma coluna. Afinidade organiza seis pares faixa/ameaça sob o título
+“Nível de Criatura”, sem contar cabeçalho como sétimo item. Alcances e
+Deslocamento usam cartões canônicos para distinguir tipo/condição do conteúdo.
+Reconhecimento restrito às três grades conhecidas conserva cabeçalhos, linhas,
+vazios e fallback; renderer extraído evita ampliar a responsabilidade da grade
+genérica. Nenhuma fórmula, limite, texto autoral ou documento do jogo alterado.
+Primitivos Stat/Cartao usados pela API existente, sem ampliação.
+
+Skill verify na aplicação real: 22 configurações de página/painel normal e
+maximizado disponível, bases clara/escura e 1920×1080, 1366×768, 960×1080,
+360×800. Todos os itens dos quatro recortes inspecionados pessoalmente em
+88 capturas, sem overflow do bloco ou dos itens. Comparação com Saúde do
+Combatente e cartões de módulos: densidade, hierarquia, ícones e estados
+canônicos. Deslocamento inicialmente em Stat tinha condição discreta demais;
+Cartao resolveu antes da matriz final. Corrigida também projeção ausente de
+índices dos cartões. Busca da progressão, faixa final de Afinidade e metragem
+navega ao conteúdo; próxima/anterior e limpeza conferidas. P-124 permanece
+aberto, fora deste ajuste estrutural.
+
+27 testes focados; gates finais: 88 testes de normalização e 3.219 Angular
+passaram, build e publicação fiel dos JSONs passaram, lint dos três workspaces
+sem erros. Avisos legados de lint/orçamento e jsdom discriminados no relatório.
+Shared/backend preservados, com evidência da sequência reutilizada. Diff,
+convenções, fontes e primitivos revisados; repo:verificar local/staged passaram.
+P-117 removido; spec/anexo em done e fila passa à RV-05. Evidências e limites:
+[verificação RV-04](../specs/done/regras-visual-04-grades-semanticas/verificacao.md).
+
 ## 2026-10-10 — RV-03: rótulos de ameaça contidos nas tabelas
 
 Reproduzida a invasão de Catastrófica/Apocalíptica na primeira coluna de 120px.

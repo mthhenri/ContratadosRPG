@@ -2180,7 +2180,7 @@ incluindo todos os ajustes avulsos de pós-milestone.
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
 | `revisao-formatacao-pdf-regras` | regras | revisão substancial da apresentação e aprovação visual do autor; Sistema suspenso (P-108) |
 | `regras-glossario` | regras | esboço independente do M10: termos marcados com cartão; pontos a fechar com o autor |
-| `regras-visual-04`…`10` | regras | sete correções restantes após bateria visual; hierarquia, textos e contraste; [mapa e prioridades](../specs/done/regras-auditoria-visual-completa/auditoria.md) |
+| `regras-visual-05`…`10` | regras | seis correções restantes após bateria visual; abas, textos e contraste; [mapa e prioridades](../specs/done/regras-auditoria-visual-completa/auditoria.md) |
 
 Spec avulsa ativa: `montador-rolagem-experimento`, mantida em experimentação pelo autor.
 `icones-recursos-sistema` arquivada em `done/`; sua continuação
@@ -3313,11 +3313,17 @@ garantem mínimo de 160px para indicador completo. No mobile a coluna fica fixa 
 as colunas seguintes cabem no espaço restante, inclusive no fim da rolagem.
 Sete níveis, duas bases, página/painel normal/maximizado nos quatro viewports e
 busca conferidos; [evidências e limites](../specs/done/regras-visual-03-rotulos-ameaca-tabelas/verificacao.md).
-Correções `regras-visual-04`…`10` em backlog, `P-117`…`P-123` abertos.
+`regras-visual-04` concluída em 10/10: Saúde do Civil associa recurso, fórmula e
+progressão; Afinidade preserva seis pares sob “Nível de Criatura”; Deslocamento e
+Alcances usam cartões com condição/tipo e conteúdo associados. Fonte, limites,
+vazios e fallback preservados; duas bases, página/painel normal/maximizado nos
+quatro viewports e busca conferidos;
+[evidências e limites](../specs/done/regras-visual-04-grades-semanticas/verificacao.md).
+Correções `regras-visual-05`…`10` em backlog, `P-118`…`P-123` abertos.
 P-124 registra contraste preexistente das marcas não selecionadas de pesquisa
 sobre os fundos semânticos de ameaça; permanece aberto.
-Há ainda grades sem hierarquia,
-abas/notas/passivas degradadas, tachado literal, contraste na base clara e acabamento de busca.
+Há ainda abas/notas/passivas degradadas, tachado literal, contraste na base clara
+e acabamento de busca.
 Páginas percorridas nos viewports extremos; painel e bases por recortes nos quatro viewports.
 Esta auditoria encerra a investigação documental, não certifica o leitor como corrigido.
 

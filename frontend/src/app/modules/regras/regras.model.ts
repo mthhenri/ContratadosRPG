@@ -108,6 +108,17 @@ export interface RegrasTermos extends RegrasFonteTabela {
 export interface RegrasGrade extends RegrasFonteTabela {
     readonly tipo: "grade";
     readonly colunas: number;
+    /** Projeção explícita; cabeçalho e linhas continuam sendo o registro integral da fonte. */
+    readonly referencia?: {
+        readonly tipo: "saude" | "cartoes";
+        readonly titulo?: string;
+        readonly itens: readonly {
+            readonly rotulo: string;
+            readonly conteudo: readonly RegrasTrecho[];
+            readonly nota?: string;
+            readonly variante?: "vida" | "energia";
+        }[];
+    };
 }
 
 /** Registro oficial em itálico que abre cada livro. */

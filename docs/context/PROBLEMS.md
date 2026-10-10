@@ -37,14 +37,6 @@
 - **Correção:** Preservar contraste do destaque não selecionado nos fundos semânticos sem alterar a identidade de NA; fora do ajuste de largura RV-03.
 - **Desde:** identificado em 10/10/2026 durante RV-03; [evidências e limites](../specs/done/regras-visual-03-rotulos-ameaca-tabelas/verificacao.md).
 
-### P-117 — Preservar a hierarquia das grades de referência · `ABERTO` · frontend/regras
-
-- **Sintoma:** Sistema → Jogando como um Civil → Saúde em 360×800: a ordem visual é VIDA, ENERGIA, fórmula de Vida, fórmula de Energia. Em Afinidade com Fragmentos, “Nível de Criatura” vira uma célula comum na grade desktop; em Deslocamento, faixa de Destreza e metros têm o mesmo tratamento sem separação.
-- **Causa:** Fallback concatena cabeçalho/linhas e remove células vazias, perdendo relações por coluna nesses recortes.
-- **Contorno:** Conferir estrutura e pares na fonte canônica.
-- **Correção:** [regras-visual-04-grades-semanticas](../specs/backlog/regras-visual-04-grades-semanticas.spec.md).
-- **Desde:** observado em 09/10/2026; [RV-04, cobertura e evidências](../specs/done/regras-auditoria-visual-completa/auditoria.md). Nenhuma correção aplicada nesta auditoria.
-
 ### P-118 — Dar espaço aos nomes e ícones das abas mobile · `ABERTO` · frontend/regras
 
 - **Sintoma:** Sistema → Combatente em 360×800: três abas com aproximadamente 83px cada e fonte de 10px. Nome de Mercenário e ícones encostam nas fronteiras entre abas; o problema também aparece em Especialista e Suporte. Seleção por teclado funciona, mas o texto/ícone ficam excessivamente comprimidos.

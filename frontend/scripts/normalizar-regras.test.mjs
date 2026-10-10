@@ -38,6 +38,60 @@ function percorrer(conteudo) {
     ]);
 }
 
+test('RV-04: referências preservam fonte, pares e limites literais dos três recortes', () => {
+    const fonte = readFileSync(join(diretorioRaiz, 'docs/core/sistema-v4.1.4.md'), 'utf8');
+    const referencias = percorrer(normalizar(fonte).documento.filhos).filter(item => item.referencia);
+    assert.equal(referencias.length, 3);
+    const texto = trechos => trechos.map(t => 'filhos' in t ? texto(t.filhos) : t.texto).join('');
+    const [saude, alcances, afinidade] = referencias;
+    assert.deepEqual(saude.referencia.itens.map(item => [item.rotulo, texto(item.conteudo), item.nota]), [
+        ['VIDA', 'Inicial = 10 + VIGOR', 'Progressão: VIG'],
+        ['ENERGIA', 'Inicial = 5 + ( DESTREZA × 2 )', 'Progressão: DES'],
+    ]);
+    assert.deepEqual(alcances.referencia.itens.map(item => [item.rotulo, texto(item.conteudo)]), [
+        ['Corpo a Corpo', 'Oponente adjacente a você.'],
+        ['Curto Alcance', 'De 2 a 8 metros.'], ['Médio Alcance', 'De 9 a 16 metros.'],
+        ['Longo Alcance', 'De 17 a 24 metros.'], ['Longínquo', 'De 25 a 40 metros.'],
+    ]);
+    assert.equal(afinidade.referencia.titulo, 'Nível de Criatura');
+    assert.deepEqual(afinidade.referencia.itens.map(item => [item.rotulo, texto(item.conteudo)]), [
+        ['Afinidade até 9', 'AMEAÇA BAIXA'], ['Afinidade de 10 à 14', 'AMEAÇA MÉDIA'],
+        ['Afinidade de 15 à 19', 'AMEAÇA ALTA'], ['Afinidade de 20 à 24', 'AMEAÇA EXTREMA'],
+        ['Afinidade de 25 à 29', 'AMEAÇA CATASTRÓFICA'],
+        ['Afinidade superior à 30', 'AMEAÇA APOCALÍPTICA'],
+    ]);
+    for (const bloco of referencias) {
+        const itens = bloco.referencia.itens;
+        const original = [bloco.cabecalho, ...bloco.linhas].flat().map(texto)
+            .filter(Boolean).join(' ').replace(/\s+/g, ' ');
+        for (const item of itens) {
+            assert.ok(original.includes(item.rotulo));
+            assert.ok(original.includes(texto(item.conteudo)));
+            if (item.nota) assert.ok(original.includes(item.nota));
+        }
+    }
+    assert.equal(afinidade.cabecalho.length, 6);
+    assert.deepEqual(afinidade.linhas.map(linha => linha.filter(celula => !celula.length).length), [3, 3]);
+    assert.equal(alcances.linhas[0].length, 3);
+    assert.deepEqual(alcances.linhas[0][2], []);
+});
+
+test('RV-04: reconhecimento exige contexto e assinatura completos, sem descartar células desconhecidas', () => {
+    const tabela = '| VIDA | ENERGIA |\n| --- | --- |\n'
+        + '| *Inicial = 10 + VIGOR · Progressão: VIG* | *Inicial = 5 + DES · Progressão: DES* |\n';
+    const reconhecer = texto => percorrer(normalizar(texto).documento.filhos).filter(i => i.referencia);
+    const contexto = '# ⬡ Jogando como um Civil\n\n## ⬥ Saúde\n\n';
+    assert.equal(reconhecer(contexto + tabela).length, 1);
+    assert.equal(reconhecer('# Saúde\n\n' + tabela).length, 0);
+    assert.equal(reconhecer(contexto + tabela.replace('Progressão: DES', 'Complemento: DES')).length, 0);
+    assert.equal(reconhecer(contexto + tabela.replace('*Inicial = 5 + DES · Progressão: DES*', '')).length, 0);
+    const fonte = readFileSync(join(diretorioRaiz, 'docs/core/sistema-v4.1.4.md'), 'utf8');
+    assert.equal(reconhecer(fonte.replace('| Nível de Criatura |  |', '| Nível de Criatura | Observação |')).length, 2);
+    assert.equal(reconhecer(fonte.replace('**Afinidade** até 9 *AMEAÇA BAIXA*', 'Faixa desconhecida')).length, 2);
+    assert.equal(reconhecer(fonte.replace('| **Longo Alcance** De 17 a 24 metros. | **Longínquo** De 25 a 40 metros. |  |',
+        '| **Longo Alcance** De 17 a 24 metros. | **Longínquo** De 25 a 40 metros. | Outra faixa |')).length, 2);
+});
+
 test('RV-01: quatro tabelas projetam pares na ordem lógica sem perder a fonte', () => {
     const fonte = readFileSync(join(diretorioRaiz, 'docs/core/sistema-v4.1.4.md'), 'utf8');
     const tabelas = percorrer(normalizar(fonte).documento.filhos)

@@ -3,13 +3,17 @@ import { RegrasDocumento, RegrasGrade as BlocoGrade } from "../regras.model";
 import { RegrasInline } from "./regras-inline.component";
 import { Cartao } from "../../../shared/ui/cartao/cartao.component";
 import { lerTextoRegras } from "./regras-texto";
+import { RegrasGradeReferencia } from "./regras-grade-referencia.component";
 
 /** Tabela de layout sem assinatura conhecida: uma caixa por célula preenchida, na ordem da fonte */
 @Component({
     selector: "app-regras-grade",
-    imports: [RegrasInline, Cartao],
+    imports: [RegrasInline, Cartao, RegrasGradeReferencia],
     template: `
-        @if (modulos(); as itens) {
+        @if (bloco().referencia; as referencia) {
+            <app-regras-grade-referencia [referencia]="referencia" [documento]="documento()"
+                (navegarAncora)="navegarAncora.emit($event)" />
+        } @else if (modulos(); as itens) {
             <div class="regras-grade-modulos">
                 @for (item of itens; track $index) {
                     <app-cartao [titulo]="item.titulo">

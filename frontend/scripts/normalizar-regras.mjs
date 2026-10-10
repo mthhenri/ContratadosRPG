@@ -6,6 +6,7 @@ import { Lexer } from 'marked';
 import { reconhecerEquipamentos, integrarSecoesEquipamentos } from './regras-equipamentos.mjs';
 import { reconhecerAmplificadores } from './regras-amplificadores.mjs';
 import { reconhecerFaixas } from './regras-faixas.mjs';
+import { reconhecerGrades } from './regras-grades.mjs';
 import { reconhecerPersonagens } from './regras-personagens.mjs';
 import { marcarNiveis, reconhecerTabelaGuia, reconhecerHabilidadeCriatura,
     reconhecerSecaoGuia, reconhecerNiveisAmeaca, marcarNivelNome } from './regras-guia.mjs';
@@ -218,6 +219,7 @@ export function normalizarDocumento(texto, id, versao) {
                 const explicito = id === 'sistema'
                     ? reconhecerEquipamentos(tabela, contexto) ?? reconhecerAmplificadores(tabela, contexto)
                         ?? reconhecerFaixas(tabela, contexto)
+                        ?? reconhecerGrades(tabela, contexto)
                         ?? reconhecerPersonagens(tabela, contexto)
                         ?? reconhecerNiveisAmeaca(tabela, contexto) ?? reconhecerTermos(tabela, contexto)
                     : reconhecerTabelaGuia(tabela, contexto);

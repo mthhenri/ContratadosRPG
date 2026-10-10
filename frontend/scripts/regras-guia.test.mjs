@@ -191,7 +191,7 @@ test('livros inteiros: contagens de casos ricos conferidas contra as fontes', ()
     assert.equal(blocos(sistema, 'grade').length, 9); // o Deslocamento virou `faixas`
     assert.equal(blocos(sistema, 'faixas').length, 1);
     assert.equal(blocos(sistema, 'generico').length, 0);
-    assert.equal(sistema.avisos.length, 16);
+    assert.equal(sistema.avisos.length, 13); // RV-04 reconhece três grades antes do fallback com aviso.
     assert.equal(guia.avisos.length, 9);
     assert.ok(guia.avisos.every((aviso) => aviso.motivo.startsWith('Âncora repetida')));
 });
