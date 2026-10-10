@@ -1,5 +1,30 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-10 — RV-01: associações das tabelas de pares preservadas
+
+`regras-visual-01-pares-tabelas` concluída; P-114 retirado dos ativos. A primeira
+coluna fixa mobile sobrepunha a chave da metade direita e associava seu valor à
+chave esquerda. Normalizador reconhece quatro assinaturas explícitas do Sistema
+e projeta metade esquerda seguida da direita em duas colunas: 21 pares de
+Formação, 21 de Níveis, 9 de Pontuação Corporal e 6 de Treinamentos. Fonte original,
+formatação, links e vazios preservados; tabelas relacionais permanecem inteiras.
+Renderer consome a projeção pronta, sem regra do jogo, CSS ou primitivo novo.
+
+Conferidos todos os 57 pares contra o Markdown, busca nas oito metades, destaque,
+âncoras, foco e tentativa de rolagem horizontal. Inspeção pessoal da página e do
+painel normal/maximizado em 1920×1080, 1366×768, 960×1080 e 360×800 (mobile sem
+maximização separada), comparada à tabela canônica de chave/valor. Agora os dois
+campos cabem juntos no mobile. Dois testes falharam antes da correção; depois,
+86 testes de scripts e 3214 Angular aprovados, além de 1157 shared e 995 backend
+(1 ignorado). Build e lint sem erros, com avisos de orçamento e do repositório.
+
+Alterações simultâneas da task `regras-aberturas-leitura` preservadas; após a suíte
+aprovada, seu novo texto de abertura deixou a fixture literal `tarja.md` divergente
+em uma reexecução (24/25). A tarefa simultânea ajustou a fixture e a reexecução
+final aprovou 25/25, incluindo RV-01 e cobertura dos livros. Gate de organização
+e espelhos aprovado; nenhum commit criado. RV-02…10 continuam em backlog.
+[Evidências, comandos e limites](../specs/done/regras-visual-01-pares-tabelas/verificacao.md).
+
 ## 2026-10-10 — Versão 1.8.0
 
 Nota `docs/patchnotes/1.8.0.md` (9 e 10 de outubro): empilhamentos em quadradinhos (ficha,

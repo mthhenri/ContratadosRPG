@@ -1,6 +1,6 @@
 # Preservar associações nas tabelas com dois pares
 
-> Task de correção RV-01 / P-114; prioridade alta. Criada após a bateria visual de 09/10/2026, por pedido do autor. **Backlog: não implementada.**
+> Task de correção RV-01 / P-114; prioridade alta. Criada após a bateria visual de 09/10/2026, por pedido do autor. **Concluída em 10/10/2026.** [Verificação](regras-visual-01-pares-tabelas/verificacao.md).
 > Evidência, cobertura e limites: [auditoria do leitor](../done/regras-auditoria-visual-completa/auditoria.md).
 
 ## Problema e reprodução

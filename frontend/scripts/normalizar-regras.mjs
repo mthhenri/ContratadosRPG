@@ -23,6 +23,13 @@ const diretorioFrontend = fileURLToPath(new URL('../', import.meta.url));
 const niveis = /** @type {const} */ ({ '⬢': 1, '⬡': 2, '⬥': 3, '⬦': 4 });
 /** Tabelas de dados cuja primeira linha a exportação do Docs promoveu a cabeçalho. */
 const tabelasSemCabecalho = ['Irrelevante'];
+/** Assinaturas explícitas; repetição de cabeçalho sozinha não prova independência. */
+const tabelasPares = [
+    ['Grupo', 'Bônus', 'Grupo', 'Bônus'],
+    ['Nível', 'Bônus', 'Nível', 'Bônus'],
+    ['Pontuação', 'Dano', 'Pontuação', 'Dano'],
+    ['Treinamento', 'Bônus', 'Treinamento', 'Bônus'],
+];
 
 /** Remove apenas escapes de pontuação do Markdown exportado. */
 export function limparEscapes(texto) {
@@ -248,15 +255,30 @@ export function normalizarDocumento(texto, id, versao) {
                         blocos.push({ tipo: 'tabela', cabecalho: [],
                             linhas: celulasNormalizadas(celulas, linha).filter((celulasLinha) =>
                                 celulasLinha.some((celula) => celula.length)) });
-                    } else blocos.push({ tipo: 'tabela',
-                        cabecalho: token.header.map((celula) => normalizarInline(celula.text, linha)),
-                        linhas: token.rows.map((celulasLinha, indiceLinha) => celulasLinha.map(
-                            (celula, indiceColuna) => {
-                                const trechos = normalizarInline(celula.text, linha + indiceLinha + 2);
-                                return ['NA', 'NA mínimo'].includes(rotulos[indiceColuna])
-                                    ? marcarNivelNome(trechos) : trechos;
-                            },
-                        )) });
+                    } else {
+                        const fonte = {
+                            cabecalho: token.header.map(celula => normalizarInline(celula.text, linha)),
+                            linhas: token.rows.map((celulasLinha, indiceLinha) => celulasLinha.map(
+                                (celula, indiceColuna) => {
+                                    const trechos = normalizarInline(celula.text, linha + indiceLinha + 2);
+                                    return ['NA', 'NA mínimo'].includes(rotulos[indiceColuna])
+                                        ? marcarNivelNome(trechos) : trechos;
+                                },
+                            )),
+                        };
+                        const paresIndependentes = id === 'sistema' && tabelasPares.some(
+                            esquema => esquema.length === rotulos.length
+                                && esquema.every((rotulo, indice) => rotulo === rotulos[indice]),
+                        );
+                        blocos.push({ tipo: 'tabela', ...fonte,
+                            ...(paresIndependentes ? { pares: {
+                                cabecalho: fonte.cabecalho.slice(0, 2),
+                                linhas: [0, 2].flatMap(coluna => fonte.linhas
+                                    .map(celulasLinha => celulasLinha.slice(coluna, coluna + 2))
+                                    .filter(par => par.some(celula => celula.length))),
+                            } } : {}),
+                        });
+                    }
                 }
             } else if (token.type === 'list') {
                 let linhaItem = linha;

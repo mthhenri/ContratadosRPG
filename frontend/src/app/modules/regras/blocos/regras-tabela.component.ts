@@ -9,10 +9,11 @@ import { RegrasInline } from "./regras-inline.component";
     styleUrl: "./regras-tabela.component.scss",
 })
 export class RegrasTabela {
-    readonly bloco = input.required<RegrasFonteTabela>();
+    readonly bloco = input.required<RegrasFonteTabela & { readonly pares?: RegrasFonteTabela }>();
     readonly documento = input<RegrasDocumento["id"]>("sistema");
     readonly navegarAncora = output<string>();
+    protected readonly tabela = computed(() => this.bloco().pares ?? this.bloco());
     protected readonly colunas = computed(() => Math.max(1,
-        this.bloco().cabecalho.length, ...this.bloco().linhas.map(linha => linha.length)));
+        this.tabela().cabecalho.length, ...this.tabela().linhas.map(linha => linha.length)));
 }
 

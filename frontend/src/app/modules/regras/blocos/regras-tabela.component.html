@@ -7,10 +7,10 @@
     aria-label="Tabela de regras, role horizontalmente para ver todas as colunas"
 >
     <table>
-        @if (bloco().cabecalho.length) {
+        @if (tabela().cabecalho.length) {
             <thead>
                 <tr>
-                    @for (celula of bloco().cabecalho; track $index) {
+                    @for (celula of tabela().cabecalho; track $index) {
                         <th scope="col">
                             <app-regras-inline
                                 [trechos]="celula"
@@ -23,7 +23,7 @@
             </thead>
         }
         <tbody>
-            @for (linha of bloco().linhas; track $index) {
+            @for (linha of tabela().linhas; track $index) {
                 <tr>
                     @for (celula of linha; track $index) {
                         <td>

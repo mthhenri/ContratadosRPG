@@ -2180,7 +2180,7 @@ incluindo todos os ajustes avulsos de pós-milestone.
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
 | `revisao-formatacao-pdf-regras` | regras | revisão substancial da apresentação e aprovação visual do autor; Sistema suspenso (P-108) |
 | `regras-glossario` | regras | esboço independente do M10: termos marcados com cartão; pontos a fechar com o autor |
-| `regras-visual-01`…`10` | regras | dez correções após bateria visual; associações, overflow, hierarquia, textos e contraste; [mapa e prioridades](../specs/done/regras-auditoria-visual-completa/auditoria.md) |
+| `regras-visual-02`…`10` | regras | nove correções restantes após bateria visual; overflow, hierarquia, textos e contraste; [mapa e prioridades](../specs/done/regras-auditoria-visual-completa/auditoria.md) |
 
 Spec avulsa ativa: `montador-rolagem-experimento`, mantida em experimentação pelo autor.
 `icones-recursos-sistema` arquivada em `done/`; sua continuação
@@ -3292,9 +3292,13 @@ o nome antigo colidia com a calculadora aritmética real da ficha
 ### Leitor, painel e pesquisa de Regras (M10-06/07/08/09) — `frontend/modules/regras`
 
 **Auditoria visual de 09/10:** [relatório e mapa das dez specs](../specs/done/regras-auditoria-visual-completa/auditoria.md).
-Correções `regras-visual-01`…`10` em backlog, `P-114`…`P-123` abertos, sem implementação.
-Principal risco: quatro tabelas com dois pares de colunas combinam chave/valor incorretos
-pela primeira coluna fixa mobile. Há também overflow de bônus/NA, grades sem hierarquia,
+`regras-visual-01` concluída em 10/10: Formação, Níveis, Pontuação Corporal e
+Treinamentos projetam 57 pares em duas colunas, metade esquerda seguida da direita,
+mantendo fonte original, valores, vazios, busca e âncoras. Tabelas relacionais permanecem
+inalteradas. Página e painel normal/maximizado verificados nos quatro viewports;
+[evidências e limites](../specs/done/regras-visual-01-pares-tabelas/verificacao.md).
+Correções `regras-visual-02`…`10` em backlog, `P-115`…`P-123` abertos.
+Há ainda overflow de bônus/NA, grades sem hierarquia,
 abas/notas/passivas degradadas, tachado literal, contraste na base clara e acabamento de busca.
 Páginas percorridas nos viewports extremos; painel e bases por recortes nos quatro viewports.
 Esta auditoria encerra a investigação documental, não certifica o leitor como corrigido.

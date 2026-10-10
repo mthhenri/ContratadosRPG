@@ -212,6 +212,12 @@ do seletor Sistema/Guia. Rodapé usa `app-marca` e botão canônico para voltar 
 com “Você é nossa prioridade — 2026” e crédito CC BY-SA abaixo.
 [Verificação](../specs/done/regras-mobile-tabelas-e-rodape/verificacao.md).
 
+Desde RV-01 (10/10/2026), as quatro tabelas do Sistema com pares independentes
+(Formação, Níveis, Pontuação Corporal e Treinamentos) usam a tabela canônica de
+duas colunas: metade esquerda seguida da direita, cada chave junto de seu valor.
+A projeção é explícita no normalizador; tabelas relacionais continuam inteiras.
+Nenhum estilo ou primitivo novo. [Verificação](../specs/done/regras-visual-01-pares-tabelas/verificacao.md).
+
 Controles: `app-segmentado` Sistema/Guia, `app-botao` completo para retry,
 `app-esqueleto` e `app-estado-vazio`; links de sumário seguem a receita dos patchnotes.
 Item ativo acompanha a leitura; link interno foca e pisca o título, respeitando
@@ -279,6 +285,7 @@ de subclasse em 2 colunas, uma no celular/painel estreito (container query). Cus
 habilidade em `app-chip severidade="energia"`, Reação em `severidade="ajuda"`. No texto
 corrido, as palavras Vida/Energia (maiúscula, palavra inteira) ficam em `--vida`/`--energy`.
 Tabelas de layout sem assinatura viram `grade`, uma célula por caixa.
+
 Comparação pessoal com exemplão e app real, quatro tamanhos e duas bases:
 [verificação](../specs/done/m10-07-blocos-ricos/m10-07-verificacao.md).
 

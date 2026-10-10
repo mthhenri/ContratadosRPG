@@ -29,14 +29,6 @@
 
 ## Ativos
 
-### P-114 — Preservar associações nas tabelas com dois pares · `ABERTO` · frontend/regras
-
-- **Sintoma:** Em 360×800, consultar Formação, Níveis e Melhorias de Agente, Corpo e Pontuação Corporal e Treinamentos. Rolar cada tabela até a direita. A primeira coluna continua fixa, mas o valor exibido pertence ao segundo par: “Nenhum” acompanha o bônus de “Profissional”, e “00” acompanha o bônus de “11”.
-- **Causa:** Primeira coluna fixa aplicada a tabelas com duas metades independentes; dados completos permanecem no DOM.
-- **Contorno:** Consultar os pares simultâneos em desktop.
-- **Correção:** [regras-visual-01-pares-tabelas](../specs/backlog/regras-visual-01-pares-tabelas.spec.md).
-- **Desde:** observado em 09/10/2026; [RV-01, cobertura e evidências](../specs/done/regras-auditoria-visual-completa/auditoria.md). Nenhuma correção aplicada nesta auditoria.
-
 ### P-115 — Conter os bônus longos dos cartões · `ABERTO` · frontend/regras
 
 - **Sintoma:** Em 360×800, abrir Experimento Híbrido e localizar Atributos bônus. Cada chip tem aproximadamente 295px para uma região de 225px: seu limite direito chega a x≈360, além do cartão. Em duas colunas desktop, o mesmo chip ultrapassa a coluna de 270px e consome quase todo o intervalo antes das habilidades.

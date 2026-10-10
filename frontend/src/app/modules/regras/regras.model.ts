@@ -42,7 +42,9 @@ export type RegrasBloco =
         readonly itens: readonly (readonly RegrasBloco[])[] }
     | { readonly tipo: "nota"; readonly trechos: readonly RegrasTrecho[] }
     | { readonly tipo: "tabela"; readonly cabecalho: readonly (readonly RegrasTrecho[])[];
-        readonly linhas: readonly (readonly (readonly RegrasTrecho[])[])[] }
+        readonly linhas: readonly (readonly (readonly RegrasTrecho[])[])[];
+        /** Duas metades independentes em sequência; a fonte acima permanece íntegra. */
+        readonly pares?: RegrasFonteTabela }
     | { readonly tipo: "habilidade"; readonly nome: string; readonly custo: number | "X";
         readonly reacao: boolean; readonly glifo: "⬦" | "◈" | "◻" | null;
         readonly trechos: readonly RegrasTrecho[] }

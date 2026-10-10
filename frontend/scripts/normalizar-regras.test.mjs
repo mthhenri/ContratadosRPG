@@ -38,6 +38,47 @@ function percorrer(conteudo) {
     ]);
 }
 
+test('RV-01: quatro tabelas projetam pares na ordem lógica sem perder a fonte', () => {
+    const fonte = readFileSync(join(diretorioRaiz, 'docs/core/sistema-v4.1.4.md'), 'utf8');
+    const tabelas = percorrer(normalizar(fonte).documento.filhos)
+        .filter(bloco => bloco.tipo === 'tabela');
+    const pares = tabelas.filter(bloco => bloco.pares);
+    assert.equal(pares.length, 4);
+    assert.deepEqual(pares.map(bloco => bloco.pares.linhas.length), [21, 21, 9, 6]);
+    for (const bloco of pares) {
+        assert.equal(bloco.cabecalho.length, 4);
+        assert.deepEqual(bloco.pares.cabecalho, bloco.cabecalho.slice(0, 2));
+        const esperados = [0, 2].flatMap(coluna => bloco.linhas
+            .map(linha => linha.slice(coluna, coluna + 2))
+            .filter(par => par.some(celula => celula.length)));
+        assert.deepEqual(bloco.pares.linhas, esperados);
+    }
+    assert.ok(tabelas.filter(bloco => !bloco.pares).length > 0);
+});
+
+test('RV-01: vazios parciais e links não são completados nem descartados', () => {
+    const fonte = '# ⬢ Formação\n\n| Grupo | Bônus | Grupo | Bônus |\n'
+        + '| --- | --- | --- | --- |\n| Combate | [Regra](#regra) | Equipamento | |\n'
+        + '| | **Só valor** | | |\n\n# ⬢ Regra\n';
+    const [bloco] = percorrer(normalizar(fonte).documento.filhos)
+        .filter(item => item.tipo === 'tabela');
+    assert.deepEqual(bloco.pares?.linhas, [bloco.linhas[0].slice(0, 2),
+        bloco.linhas[1].slice(0, 2), bloco.linhas[0].slice(2, 4)]);
+    assert.equal(bloco.pares.linhas[0][1][0].tipo, 'link-interno');
+    assert.equal(bloco.pares.linhas[0][1][0].ancora, 'regra');
+    const guia = normalizarDocumento(fonte, 'guia', '4.2.0');
+    assert.ok(percorrer(guia.documento.filhos).every(item => !item.pares));
+});
+
+test('RV-01: repetição de colunas desconhecidas não implica pares independentes', () => {
+    const fonte = '| Patente | Prestígio | Patente | Prestígio |\n'
+        + '| --- | --- | --- | --- |\n| A | 1 | B | 2 |\n';
+    const [bloco] = normalizar(fonte).documento.filhos;
+    assert.equal(bloco.tipo, 'tabela');
+    assert.equal(bloco.pares, undefined);
+    assert.equal(bloco.cabecalho.length, 4);
+});
+
 test('categorias e modificações de equipamentos recuperam títulos e hierarquia da fonte', () => {
     const fonte = readFileSync(join(diretorioRaiz, 'docs/core/sistema-v4.1.4.md'), 'utf8');
     const documento = normalizar(fonte).documento;
