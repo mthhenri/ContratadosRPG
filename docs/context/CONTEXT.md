@@ -2180,7 +2180,7 @@ incluindo todos os ajustes avulsos de pós-milestone.
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
 | `revisao-formatacao-pdf-regras` | regras | revisão substancial da apresentação e aprovação visual do autor; Sistema suspenso (P-108) |
 | `regras-glossario` | regras | esboço independente do M10: termos marcados com cartão; pontos a fechar com o autor |
-| `regras-visual-03`…`10` | regras | oito correções restantes após bateria visual; overflow, hierarquia, textos e contraste; [mapa e prioridades](../specs/done/regras-auditoria-visual-completa/auditoria.md) |
+| `regras-visual-04`…`10` | regras | sete correções restantes após bateria visual; hierarquia, textos e contraste; [mapa e prioridades](../specs/done/regras-auditoria-visual-completa/auditoria.md) |
 
 Spec avulsa ativa: `montador-rolagem-experimento`, mantida em experimentação pelo autor.
 `icones-recursos-sistema` arquivada em `done/`; sua continuação
@@ -3308,8 +3308,15 @@ inalteradas. Página e painel normal/maximizado verificados nos quatro viewports
 preservando o texto integral dentro da coluna. Híbrido/Acadêmico, bônus curtos,
 página e painel conferidos nos quatro viewports;
 [evidências e limites](../specs/done/regras-visual-02-bonus-longos/verificacao.md).
-Correções `regras-visual-03`…`10` em backlog, `P-116`…`P-123` abertos.
-Há ainda overflow de NA, grades sem hierarquia,
+`regras-visual-03` concluída em 10/10: tabelas com ameaça na primeira coluna
+garantem mínimo de 160px para indicador completo. No mobile a coluna fica fixa e
+as colunas seguintes cabem no espaço restante, inclusive no fim da rolagem.
+Sete níveis, duas bases, página/painel normal/maximizado nos quatro viewports e
+busca conferidos; [evidências e limites](../specs/done/regras-visual-03-rotulos-ameaca-tabelas/verificacao.md).
+Correções `regras-visual-04`…`10` em backlog, `P-117`…`P-123` abertos.
+P-124 registra contraste preexistente das marcas não selecionadas de pesquisa
+sobre os fundos semânticos de ameaça; permanece aberto.
+Há ainda grades sem hierarquia,
 abas/notas/passivas degradadas, tachado literal, contraste na base clara e acabamento de busca.
 Páginas percorridas nos viewports extremos; painel e bases por recortes nos quatro viewports.
 Esta auditoria encerra a investigação documental, não certifica o leitor como corrigido.

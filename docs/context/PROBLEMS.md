@@ -29,13 +29,13 @@
 
 ## Ativos
 
-### P-116 — Conter rótulos de ameaça nas tabelas mobile · `ABERTO` · frontend/regras
+### P-124 — Destaque não selecionado perde contraste sobre ameaça · `ABERTO` · frontend/regras
 
-- **Sintoma:** Em 360×800, Guia → Definindo o Nível de Ameaça (NA), Tabela de Referência de NA, e tabela VD Típico por NA. Rolar horizontalmente. “Catastrófica” e “Apocalíptica” saem da primeira coluna fixa e se sobrepõem aos dados vizinhos.
-- **Causa:** Rótulo sem quebra é maior que a área útil da primeira coluna fixa de 120px.
-- **Contorno:** Consultar a tabela em desktop.
-- **Correção:** [regras-visual-03-rotulos-ameaca-tabelas](../specs/backlog/regras-visual-03-rotulos-ameaca-tabelas.spec.md).
-- **Desde:** observado em 09/10/2026; [RV-03, cobertura e evidências](../specs/done/regras-auditoria-visual-completa/auditoria.md). Nenhuma correção aplicada nesta auditoria.
+- **Sintoma:** Pesquisar Catastrófica no Guia, base escura: ocorrência não selecionada da tabela VD fica clara sobre o fundo claro do indicador. Na base clara, Apocalíptica não selecionada fica escura sobre fundo escuro. Página e painel, inclusive 360×800.
+- **Causa:** Estilo preexistente `.regras__documento ::ng-deep .regras-pesquisa__marca` em `regras-leitor.component.scss` impõe `var(--text)` sobre fundos de ameaça que têm contraste próprio.
+- **Contorno:** Navegar até a ocorrência para ativar o destaque contrastante, ou limpar a pesquisa.
+- **Correção:** Preservar contraste do destaque não selecionado nos fundos semânticos sem alterar a identidade de NA; fora do ajuste de largura RV-03.
+- **Desde:** identificado em 10/10/2026 durante RV-03; [evidências e limites](../specs/done/regras-visual-03-rotulos-ameaca-tabelas/verificacao.md).
 
 ### P-117 — Preservar a hierarquia das grades de referência · `ABERTO` · frontend/regras
 

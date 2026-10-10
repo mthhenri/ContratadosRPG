@@ -48,11 +48,24 @@ td {
 tr:last-child td {
     border-bottom: 0;
 }
+table:has(td:first-child app-regras-ameaca) {
+    th:first-child,
+    td:first-child {
+        min-width: calc(var(--space-20) * 8);
+    }
+}
 @include bp.mobile {
+    // O indicador completo precisa de espaço próprio na coluna fixa.
+    table:has(td:first-child app-regras-ameaca) {
+        --regras-tabela-primeira-coluna: calc(var(--space-20) * 8);
+        --regras-tabela-outras-colunas: calc(100% - var(--regras-tabela-primeira-coluna));
+    }
     table {
         table-layout: fixed;
         min-width: calc(
-            var(--space-20) * 6 + (var(--regras-tabela-colunas, 1) - 1) * var(--space-20) * 8
+            var(--regras-tabela-primeira-coluna, calc(var(--space-20) * 6)) +
+                (var(--regras-tabela-colunas, 1) - 1) *
+                var(--regras-tabela-outras-colunas, calc(var(--space-20) * 8))
         );
     }
     th,
@@ -64,7 +77,7 @@ tr:last-child td {
         position: sticky;
         left: 0;
         z-index: 1;
-        width: 120px;
+        width: var(--regras-tabela-primeira-coluna, calc(var(--space-20) * 6));
         max-width: 160px;
         overflow-wrap: anywhere;
         box-shadow: 8px 0 10px -10px var(--text-mute);

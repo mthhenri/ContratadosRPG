@@ -1,5 +1,30 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-10 — RV-03: rótulos de ameaça contidos nas tabelas
+
+Reproduzida a invasão de Catastrófica/Apocalíptica na primeira coluna de 120px.
+Layout das tabelas com ameaça na primeira coluna garante mínimo de 160px via
+tokens, preservando API, cores, fundos, ícone e texto integral dos sete níveis.
+No mobile a primeira coluna continua fixa; cada coluna seguinte usa o espaço
+restante da região. A inspeção mostrou que ampliar só a coluna fixa ocultava
+parte da última coluna mesmo no fim da rolagem: composição corrigida antes do
+fecho. Em 960px apareceu também compressão da tabela automática; mínimo aplicado
+nas outras larguras. Demais tabelas e fontes/normalização/domínio preservados.
+
+Skill verify: duas tabelas em 22 configurações (quatro viewports, página/painel
+normal/maximizado disponível, duas bases), comparação pessoal aos níveis curtos
+e A Estátua. Mobile início/meio/fim conferidos; busca de Catastrófica e
+Apocalíptica exercitada em mais 48 estados medidos. Indicadores longos 133,41px
+dentro dos 136px úteis, última coluna acessível por inteiro, foco canônico por
+teclado observado. Encontrado P-124 preexistente: marcas de busca não selecionadas
+usam cor global de texto sobre fundos de ameaça contrastantes. Registrado em
+PROBLEMS, sem ampliar esta task; navegar até a ocorrência/limpar busca contorna.
+
+86 testes de scripts e 3216 Angular aprovados; build final e publicação fiel dos
+JSONs, lint raiz sem erros, Prettier e revisão de convenções aprovados. Avisos
+preexistentes de lint e bundle 594,01kB/450kB mantidos. P-116 removido; RV-04…10
+permanecem em backlog. [Verificação e limites](../specs/done/regras-visual-03-rotulos-ameaca-tabelas/verificacao.md).
+
 ## 2026-10-10 — RV-02: bônus longos dentro dos cartões
 
 Após o commit RV-01 `e848c668` (gate staged e trailer Codex conferidos), iniciada

@@ -1,6 +1,6 @@
 # Conter rótulos de ameaça nas tabelas mobile
 
-> Task de correção RV-03 / P-116; prioridade alta. Criada após a bateria visual de 09/10/2026, por pedido do autor. **Backlog: não implementada.**
+> Task de correção RV-03 / P-116; prioridade alta. Criada após a bateria visual de 09/10/2026, por pedido do autor. **Concluída em 10/10/2026.** [Verificação e limites](regras-visual-03-rotulos-ameaca-tabelas/verificacao.md).
 > Evidência, cobertura e limites: [auditoria do leitor](../done/regras-auditoria-visual-completa/auditoria.md).
 
 ## Problema e reprodução
