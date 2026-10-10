@@ -40,6 +40,11 @@ $severidades: (
 
 :host {
     display: inline-flex;
+
+    &.chip-host--quebravel {
+        min-width: 0;
+        max-width: 100%;
+    }
 }
 
 .chip {
@@ -56,6 +61,19 @@ $severidades: (
     border-radius: var(--radius-selo);
     padding: var(--space-8) var(--space-12);
     white-space: nowrap;
+
+    &--quebravel {
+        min-width: 0;
+        max-width: 100%;
+        box-sizing: border-box;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        text-align: left;
+
+        app-icone {
+            flex-shrink: 0;
+        }
+    }
 
     &--sutil {
         letter-spacing: var(--tracking-label);

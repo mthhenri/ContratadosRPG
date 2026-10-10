@@ -42,6 +42,7 @@ export type ChipTom = 'sutil' | 'contorno';
   selector: 'app-chip',
   templateUrl: './chip.component.html',
   styleUrl: './chip.component.scss',
+  host: { "[class.chip-host--quebravel]": "quebravel()" },
 })
 export class Chip {
   /** Ênfase visual. Sem valor, usa o desenho canônico do catálogo (`--accent`). */
@@ -53,8 +54,12 @@ export class Chip {
   /** Aplicação da cor semântica; só tem efeito quando há `severidade`. */
   readonly tom = input<ChipTom>('sutil');
 
+  /** Permite texto integral em várias linhas, limitado à largura do consumidor. */
+  readonly quebravel = input(false);
+
   protected readonly classes = computed(() => {
     const partes = ['chip'];
+    if (this.quebravel()) partes.push("chip--quebravel");
     const severidade = this.severidade();
 
     if (severidade) {

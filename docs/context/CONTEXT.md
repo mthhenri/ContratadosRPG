@@ -2180,7 +2180,7 @@ incluindo todos os ajustes avulsos de pós-milestone.
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
 | `revisao-formatacao-pdf-regras` | regras | revisão substancial da apresentação e aprovação visual do autor; Sistema suspenso (P-108) |
 | `regras-glossario` | regras | esboço independente do M10: termos marcados com cartão; pontos a fechar com o autor |
-| `regras-visual-02`…`10` | regras | nove correções restantes após bateria visual; overflow, hierarquia, textos e contraste; [mapa e prioridades](../specs/done/regras-auditoria-visual-completa/auditoria.md) |
+| `regras-visual-03`…`10` | regras | oito correções restantes após bateria visual; overflow, hierarquia, textos e contraste; [mapa e prioridades](../specs/done/regras-auditoria-visual-completa/auditoria.md) |
 
 Spec avulsa ativa: `montador-rolagem-experimento`, mantida em experimentação pelo autor.
 `icones-recursos-sistema` arquivada em `done/`; sua continuação
@@ -3303,8 +3303,13 @@ Treinamentos projetam 57 pares em duas colunas, metade esquerda seguida da direi
 mantendo fonte original, valores, vazios, busca e âncoras. Tabelas relacionais permanecem
 inalteradas. Página e painel normal/maximizado verificados nos quatro viewports;
 [evidências e limites](../specs/done/regras-visual-01-pares-tabelas/verificacao.md).
-Correções `regras-visual-02`…`10` em backlog, `P-115`…`P-123` abertos.
-Há ainda overflow de bônus/NA, grades sem hierarquia,
+`regras-visual-02` concluída em 10/10: Chip oferece `[quebravel]` optativo
+(autorizado pelo autor, padrão `false`); bônus de subclasse/arquétipo usam a opção,
+preservando o texto integral dentro da coluna. Híbrido/Acadêmico, bônus curtos,
+página e painel conferidos nos quatro viewports;
+[evidências e limites](../specs/done/regras-visual-02-bonus-longos/verificacao.md).
+Correções `regras-visual-03`…`10` em backlog, `P-116`…`P-123` abertos.
+Há ainda overflow de NA, grades sem hierarquia,
 abas/notas/passivas degradadas, tachado literal, contraste na base clara e acabamento de busca.
 Páginas percorridas nos viewports extremos; painel e bases por recortes nos quatro viewports.
 Esta auditoria encerra a investigação documental, não certifica o leitor como corrigido.

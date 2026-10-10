@@ -218,6 +218,13 @@ duas colunas: metade esquerda seguida da direita, cada chave junto de seu valor.
 A projeção é explícita no normalizador; tabelas relacionais continuam inteiras.
 Nenhum estilo ou primitivo novo. [Verificação](../specs/done/regras-visual-01-pares-tabelas/verificacao.md).
 
+RV-02 (10/10/2026): bônus de subclasses e arquétipos usam
+`app-chip variante="sutil" [quebravel]="true"`. A opção do primitivo limita
+o selo à coluna e permite o texto integral em várias linhas, sem reticências.
+Padrão `false` preserva os demais consumidores. Bônus curtos mantêm a densidade;
+identidade, habilidade inicial e catálogo conservam sua distribuição.
+[Verificação](../specs/done/regras-visual-02-bonus-longos/verificacao.md).
+
 Controles: `app-segmentado` Sistema/Guia, `app-botao` completo para retry,
 `app-esqueleto` e `app-estado-vazio`; links de sumário seguem a receita dos patchnotes.
 Item ativo acompanha a leitura; link interno foca e pisca o título, respeitando

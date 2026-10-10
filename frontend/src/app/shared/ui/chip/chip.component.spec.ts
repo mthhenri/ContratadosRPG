@@ -7,13 +7,16 @@ import { Chip, ChipSeveridade, ChipTom, ChipVariante } from './chip.component';
 /** Prova o selo canônico (`padrao`) e a variante discreta (`sutil`) auditadas na `ui-03`. */
 @Component({
   imports: [Chip, Icone],
-  template: `<app-chip [variante]="variante()" [severidade]="severidade()" [tom]="tom()"><app-icone nome="alerta" />{{ texto() }}</app-chip>`,
+  template: `<app-chip [variante]="variante()" [severidade]="severidade()"
+    [tom]="tom()" [quebravel]="quebravel()"
+    ><app-icone nome="alerta" />{{ texto() }}</app-chip>`,
 })
 class Hospedeiro {
   readonly variante = signal<ChipVariante>('padrao');
   readonly severidade = signal<ChipSeveridade | undefined>(undefined);
   readonly tom = signal<ChipTom>('sutil');
   readonly texto = signal('CLASSE-E // CONFIDENCIAL');
+  readonly quebravel = signal(false);
 }
 
 describe('Chip', () => {
@@ -34,6 +37,7 @@ describe('Chip', () => {
     expect(chip).not.toBeNull();
     expect(chip!.textContent?.trim()).toBe('CLASSE-E // CONFIDENCIAL');
     expect(chip!.classList.contains('chip--sutil')).toBe(false);
+    expect(chip!.classList.contains("chip--quebravel")).toBe(false);
   });
 
   it('aplica o modificador sutil quando pedido', () => {
@@ -42,6 +46,27 @@ describe('Chip', () => {
     fixture.detectChanges();
 
     expect(raiz(fixture).querySelector('.chip.chip--sutil')).not.toBeNull();
+  });
+
+  it("permite optar pela quebra sem perder texto, variante ou ícone e permite desfazê-la", () => {
+    const fixture = montar();
+    fixture.componentInstance.variante.set("sutil");
+    fixture.componentInstance.texto.set("+1 em ESCOLHA ( exceto LUT ou PON )");
+    fixture.componentInstance.quebravel.set(true);
+    fixture.detectChanges();
+
+    const chip = raiz(fixture).querySelector(".chip");
+    const host = raiz(fixture).querySelector("app-chip");
+    expect(chip?.classList).toContain("chip--quebravel");
+    expect(chip?.classList).toContain("chip--sutil");
+    expect(host?.classList).toContain("chip-host--quebravel");
+    expect(chip?.textContent?.trim()).toBe("+1 em ESCOLHA ( exceto LUT ou PON )");
+    expect(chip?.querySelector("app-icone")).not.toBeNull();
+
+    fixture.componentInstance.quebravel.set(false);
+    fixture.detectChanges();
+    expect(chip?.classList).not.toContain("chip--quebravel");
+    expect(host?.classList).not.toContain("chip-host--quebravel");
   });
 
   it('aplica a severidade e o tom sem alterar o slot opcional de ícone', () => {

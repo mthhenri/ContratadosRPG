@@ -29,14 +29,6 @@
 
 ## Ativos
 
-### P-115 — Conter os bônus longos dos cartões · `ABERTO` · frontend/regras
-
-- **Sintoma:** Em 360×800, abrir Experimento Híbrido e localizar Atributos bônus. Cada chip tem aproximadamente 295px para uma região de 225px: seu limite direito chega a x≈360, além do cartão. Em duas colunas desktop, o mesmo chip ultrapassa a coluna de 270px e consome quase todo o intervalo antes das habilidades.
-- **Causa:** Chip de ≈295px em área mobile de ≈225px/coluna desktop de 270px; solução no contrato do primitivo ainda não decidida.
-- **Contorno:** Consultar o texto integral em largura maior; não ocultar a restrição LUT/PON.
-- **Correção:** [regras-visual-02-bonus-longos](../specs/backlog/regras-visual-02-bonus-longos.spec.md).
-- **Desde:** observado em 09/10/2026; [RV-02, cobertura e evidências](../specs/done/regras-auditoria-visual-completa/auditoria.md). Nenhuma correção aplicada nesta auditoria.
-
 ### P-116 — Conter rótulos de ameaça nas tabelas mobile · `ABERTO` · frontend/regras
 
 - **Sintoma:** Em 360×800, Guia → Definindo o Nível de Ameaça (NA), Tabela de Referência de NA, e tabela VD Típico por NA. Rolar horizontalmente. “Catastrófica” e “Apocalíptica” saem da primeira coluna fixa e se sobrepõem aos dados vizinhos.

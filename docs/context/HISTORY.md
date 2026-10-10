@@ -1,5 +1,27 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-10 — RV-02: bônus longos dentro dos cartões
+
+Após o commit RV-01 `e848c668` (gate staged e trailer Codex conferidos), iniciada
+a próxima spec de Regras. Híbrido reproduzido em 360×800 e 1920×1080: cada chip
+de 295,20px excedia os 225px/270px disponíveis. API do Chip não oferecia quebra;
+proposta apresentada e autor autorizou `[quebravel]` opcional, padrão `false`.
+Primitivo limita host/conteúdo e permite texto integral; somente bônus de
+subclasse/arquétipo optam pela quebra. Fontes, normalização, fórmulas e textos
+preservados, incluindo os dois bônus e exclusão LUT/PON do Híbrido e a escolha
+do Acadêmico. Bônus curtos, custos/reação e outros consumidores permanecem iguais.
+
+Skill `verify`: página e painel normal/maximizado nos quatro viewports, 99
+estados das nove abas com medições de todos os bônus das três subclasses e
+arquétipos. Híbrido/Acadêmico pessoalmente inspecionados em todas as combinações,
+comparados a Lutador/Bestial/Artificial; sem overflow ou invasão das habilidades.
+Mobile: selo longo agora 225px × 43px, texto inteiro em duas linhas; foco por
+teclado entre abas conferido. Teste inicialmente falhou por API ausente; 7 testes
+do Chip, 86 de scripts e 3216 Angular aprovados depois. Build/publicação fiel,
+lint sem erros (avisos do repositório e orçamento inicial 594,01kB/450kB),
+formatação e revisão do diff aprovados. P-115 retirado dos ativos; RV-03…10
+continuam em backlog. [Verificação e limites](../specs/done/regras-visual-02-bonus-longos/verificacao.md).
+
 ## 2026-10-10 — regras-aberturas-leitura: parágrafos centralizados nas duas aberturas
 
 A pedido do autor, as aberturas do Sistema e Guia foram reorganizadas em oito/sete

@@ -1,6 +1,6 @@
 # Conter os bônus longos dos cartões
 
-> Task de correção RV-02 / P-115; prioridade alta. Criada após a bateria visual de 09/10/2026, por pedido do autor. **Backlog: não implementada.**
+> Task de correção RV-02 / P-115; prioridade alta. Criada após a bateria visual de 09/10/2026, por pedido do autor. **Concluída em 10/10/2026.** [Decisão](regras-visual-02-bonus-longos/proposta-chip.md) e [verificação](regras-visual-02-bonus-longos/verificacao.md).
 > Evidência, cobertura e limites: [auditoria do leitor](../done/regras-auditoria-visual-completa/auditoria.md).
 
 ## Problema e reprodução

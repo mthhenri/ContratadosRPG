@@ -41,7 +41,7 @@
                 <span class="regras-subclasse__rotulo">Atributos bônus</span>
                 <div class="regras-subclasse__bonus">
                     @for (item of bonus(); track $index) {
-                        <app-chip variante="sutil">{{ item }}</app-chip>
+                        <app-chip variante="sutil" [quebravel]="true">{{ item }}</app-chip>
                     }
                 </div>
                 <app-regras-destaque rotulo="Habilidade inicial">

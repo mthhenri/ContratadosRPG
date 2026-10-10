@@ -47,7 +47,7 @@
                     <span class="regras-arquetipos__rotulo">Atributos bônus</span>
                     <div class="regras-arquetipos__bonus">
                         @for (item of itens; track $index) {
-                            <app-chip variante="sutil">{{ item }}</app-chip>
+                            <app-chip variante="sutil" [quebravel]="true">{{ item }}</app-chip>
                         }
                     </div>
                 }
