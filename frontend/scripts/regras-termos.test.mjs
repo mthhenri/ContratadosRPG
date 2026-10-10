@@ -75,8 +75,9 @@ test('abertura: título separado e quebras da fonte nos dois livros', () => {
         assert.ok(texto(abertura.trechos).includes('\n'));
     }
     assert.match(texto(sistema.filhos[0].trechos), /Você é nossa prioridade\.$/);
-    assert.equal(guia.filhos[1].tipo, 'paragrafo');
-    assert.match(texto(guia.filhos[1].trechos), /^Contratados/);
+    assert.deepEqual(sistema.filhos[1], { tipo: 'capa', versao: 'VERSÃO 4.1.4',
+        titulo: 'Contratados', subtitulo: '- Nova Era -' });
+    assert.deepEqual(guia.filhos[1], { tipo: 'capa', titulo: 'Contratados', subtitulo: '- Nova Era -' });
 });
 
 test('sem definições de imagem, sem genérico; tabela da Morte sem cabeçalho falso', () => {

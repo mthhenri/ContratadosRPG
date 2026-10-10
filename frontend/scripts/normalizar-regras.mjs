@@ -349,6 +349,7 @@ export function normalizarDocumento(texto, id, versao) {
     }
     agruparCasos(filhos, []);
     extrairAbertura(filhos);
+    extrairCapa(filhos);
     avisos.sort((primeiro, segundo) => primeiro.linha - segundo.linha);
     return { documento: { tipo: 'documento', id,
         titulo: id === 'sistema' ? 'Sistema' : 'Guia de Mestre', versao, filhos }, avisos };
@@ -388,6 +389,28 @@ function extrairAbertura(filhos) {
         trechos.push({ tipo: 'texto', texto: '\n\n' }, ...bloco.trechos);
     }
     filhos.splice(0, fim, { tipo: 'abertura', titulo, trechos });
+}
+
+/**
+ * Reúne o que vem logo após a abertura num bloco `capa`: a nota "VERSÃO x.y.z" (quando há) e o
+ * parágrafo "Contratados / - Nova Era -". O texto é o da fonte; só a apresentação muda.
+ * @param {RegrasConteudo[]} filhos
+ */
+function extrairCapa(filhos) {
+    if (filhos[0]?.tipo !== 'abertura') return;
+    let indice = 1;
+    let versao;
+    const nota = filhos[indice];
+    if (nota?.tipo === 'nota' && /^VERSÃO\s+[\d.]+$/i.test(textoPlano(nota.trechos).trim())) {
+        versao = textoPlano(nota.trechos).trim();
+        indice++;
+    }
+    const titulo = filhos[indice];
+    if (titulo?.tipo !== 'paragrafo') return;
+    const linhas = textoPlano(titulo.trechos).split('\n').map((linha) => linha.trim());
+    if (linhas.length !== 2 || linhas[0] !== 'Contratados' || !linhas[1]) return;
+    filhos.splice(1, indice, { tipo: 'capa', ...(versao ? { versao } : {}),
+        titulo: linhas[0], subtitulo: linhas[1] });
 }
 
 /** Seleciona a maior versão semântica disponível, sem repetir os nomes dos livros no script. */

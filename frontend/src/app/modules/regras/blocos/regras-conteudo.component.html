@@ -169,6 +169,9 @@
                         (navegarAncora)="navegarAncora.emit($event)"
                     />
                 }
+                @case ("capa") {
+                    <app-regras-capa [bloco]="bloco" />
+                }
                 @case ("niveis-ameaca") {
                     <app-regras-niveis-ameaca
                         [bloco]="bloco"

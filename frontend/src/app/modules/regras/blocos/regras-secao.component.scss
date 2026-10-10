@@ -16,7 +16,9 @@
         color: var(--text);
     }
     &__capitulo {
-        font: 500 11px var(--font-mono);
+        // Capítulo acima do título da seção (22px): ~30px no desktop, encolhe até 22px no mobile
+        // para "Criação de Personagem" não quebrar.
+        font: 500 clamp(22px, 6vw, 30px) / 1.2 var(--font-mono);
         letter-spacing: var(--tracking-label);
         text-transform: uppercase;
         color: var(--text-mute);

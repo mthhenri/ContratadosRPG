@@ -1,5 +1,19 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-10 — Regras: capítulo maior, texto justificado e capa do livro
+
+Ajustes pedidos pelo autor após a revisão visual das Regras. O rótulo de capítulo (h2) passou de
+11px para `clamp(22px, 6vw, 30px)`, acima do título da seção (22px). Parágrafos, listas e blocos
+de Exemplo/Nota ficam justificados; títulos e tabelas não. O normalizador ganhou o bloco `capa`
+(`extrairCapa`): o selo "VERSÃO x.y.z", "Contratados" e "- Nova Era -" saem centralizados, com o
+título (36px) um pouco acima e o subtítulo (26px) um pouco abaixo do capítulo; o texto é o da
+fonte e a impressão omite o selo. No primitivo `app-empilhamento`, o inicial nas Regras usa o
+accent puro (os 55% de mistura voltaram após teste de 78%). Verificação: 81 testes de
+normalização e 83 de `modules/regras`; captura do Sistema em 1920 e 360, sem overflow. Guia,
+painel flutuante, impressão e tema claro não foram inspecionados. Investigado sem reprodução: o
+retorno a `#amplificadores` (última âncora do Sistema, gravada pela regra de fim de rolagem);
+o autor considerou resolvido.
+
 ## 2026-10-10 — empilhamento-visual-unificado: um só desenho de ■□ nas Regras e nas telas de item
 
 Novo primitivo `app-empilhamento` com três estados (inicial, comprado, vazio); o tom do inicial

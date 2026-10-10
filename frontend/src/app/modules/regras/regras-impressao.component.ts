@@ -24,6 +24,7 @@ export class RegrasImpressao {
         return indice < 0 ? this.documento().filhos.length : indice;
     });
     protected readonly abertura = computed(() => this.documento().filhos.slice(0, this.inicio())
+        .map(bloco => bloco.tipo === "capa" ? { ...bloco, versao: undefined } : bloco)
         .filter(bloco => !(bloco.tipo === "nota" && bloco.trechos.every(trecho =>
             trecho.tipo === "texto" && /^VERSÃO\s+[\d.]+$/i.test(trecho.texto.trim())))));
     // Definições de imagem do Markdown já saem do JSON no normalizador (revisao-visual-regras).

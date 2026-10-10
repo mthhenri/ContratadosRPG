@@ -81,6 +81,7 @@ function textoDocumento(conteudo) {
             + ('filhos' in item ? ' ' + textoDocumento(item.filhos) : '');
         if (item.tipo === 'roteiro' || item.tipo === 'ficha-criatura') return textoDocumento(item.filhos);
         if (item.tipo === 'abertura') return item.titulo + ' ' + textoTrechos(item.trechos);
+        if (item.tipo === 'capa') return [item.versao, item.titulo, item.subtitulo].filter(Boolean).join(' ');
         if (item.tipo === 'habilidade-criatura') return item.rotulo + ' ' + textoTrechos(item.trechos);
         if (item.tipo === 'habilidade') return `${item.nome} [${item.custo} E] `
             + (item.reacao ? '(Reação) ' : '') + textoTrechos(item.trechos);

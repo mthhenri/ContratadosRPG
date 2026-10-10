@@ -35,7 +35,7 @@ export type RegrasBloco =
     | RegrasClasse | RegrasArquetipos | RegrasOrigens | RegrasModulos
     | RegrasEquipamentos | RegrasModificacoes | RegrasAmplificadores | RegrasIdentidade | RegrasAtributos
     | RegrasRoteiro | RegrasFichaCriatura | RegrasHabilidadeCriatura | RegrasNiveisAmeaca
-    | RegrasSubclasse | RegrasTermos | RegrasGrade | RegrasAbertura
+    | RegrasSubclasse | RegrasTermos | RegrasGrade | RegrasAbertura | RegrasCapa
     | { readonly tipo: "paragrafo" | "exemplo"; readonly trechos: readonly RegrasTrecho[] }
     | { readonly tipo: "lista"; readonly ordenada: boolean; readonly inicio: number;
         readonly itens: readonly (readonly RegrasBloco[])[] }
@@ -112,6 +112,14 @@ export interface RegrasAbertura {
     readonly tipo: "abertura";
     readonly titulo: string;
     readonly trechos: readonly RegrasTrecho[];
+}
+
+/** Selo de versão, título e subtítulo logo após a abertura de cada livro. */
+export interface RegrasCapa {
+    readonly tipo: "capa";
+    readonly versao?: string;
+    readonly titulo: string;
+    readonly subtitulo: string;
 }
 
 export interface RegrasArquetipos extends RegrasFonteTabela {
