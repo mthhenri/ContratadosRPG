@@ -35,7 +35,8 @@ export type RegrasBloco =
     | RegrasClasse | RegrasArquetipos | RegrasOrigens | RegrasModulos
     | RegrasEquipamentos | RegrasModificacoes | RegrasAmplificadores | RegrasIdentidade | RegrasAtributos
     | RegrasRoteiro | RegrasFichaCriatura | RegrasHabilidadeCriatura | RegrasNiveisAmeaca
-    | RegrasSubclasse | RegrasTermos | RegrasGrade | RegrasAbertura | RegrasCapa
+    | RegrasSubclasse | RegrasTermos | RegrasGrade | RegrasAbertura | RegrasCapa | RegrasFaixas
+    | { readonly tipo: "formula"; readonly trechos: readonly RegrasTrecho[] }
     | { readonly tipo: "paragrafo" | "exemplo"; readonly trechos: readonly RegrasTrecho[] }
     | { readonly tipo: "lista"; readonly ordenada: boolean; readonly inicio: number;
         readonly itens: readonly (readonly RegrasBloco[])[] }
@@ -112,6 +113,12 @@ export interface RegrasAbertura {
     readonly tipo: "abertura";
     readonly titulo: string;
     readonly trechos: readonly RegrasTrecho[];
+}
+
+/** Tabela de uma linha do Deslocamento: cada faixa traz a condição e o valor em destaque. */
+export interface RegrasFaixas extends RegrasFonteTabela {
+    readonly tipo: "faixas";
+    readonly itens: readonly { readonly rotulo: string; readonly valor: string }[];
 }
 
 /** Selo de versão, título e subtítulo logo após a abertura de cada livro. */

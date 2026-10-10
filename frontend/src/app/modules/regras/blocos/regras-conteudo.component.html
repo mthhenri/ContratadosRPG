@@ -169,6 +169,16 @@
                         (navegarAncora)="navegarAncora.emit($event)"
                     />
                 }
+                @case ("formula") {
+                    <app-regras-formula
+                        [trechos]="bloco.trechos"
+                        [documento]="documento()"
+                        (navegarAncora)="navegarAncora.emit($event)"
+                    />
+                }
+                @case ("faixas") {
+                    <app-regras-faixas [bloco]="bloco" />
+                }
                 @case ("capa") {
                     <app-regras-capa [bloco]="bloco" />
                 }

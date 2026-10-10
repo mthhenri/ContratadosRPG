@@ -1,0 +1,16 @@
+:host {
+    display: block;
+}
+// Análogo: `.regras-exemplo` (caixa sobre --bg, borda e raio do tema); a fórmula troca o rótulo
+// por um bloco centralizado em mono, para ler como "conta" e não como parágrafo.
+.regras-formula {
+    margin: var(--space-16) 0;
+    padding: var(--space-12) var(--space-16);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-left: 2px solid var(--accent);
+    border-radius: var(--radius-control);
+    font: 500 15px / 1.5 var(--font-mono);
+    text-align: center;
+    overflow-wrap: anywhere;
+}

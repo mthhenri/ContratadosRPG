@@ -89,9 +89,9 @@ test('sem definições de imagem, sem genérico; tabela da Morte sem cabeçalho 
     assert.equal(morte.linhas.length, 5);
 });
 
-test('tabela de layout desconhecida vira grade com as células na ordem da fonte', () => {
-    const [deslocamento] = secao(sistema, 'Deslocamento').filhos.filter((item) => item.tipo === 'grade');
-    assert.equal(deslocamento.colunas, 3);
+test('deslocamento: a tabela de uma linha vira faixas e conserva o texto da fonte', () => {
+    const [deslocamento] = secao(sistema, 'Deslocamento').filhos.filter((item) => item.tipo === 'faixas');
+    assert.equal(deslocamento.itens.length, 3);
     assert.equal(texto(deslocamento.cabecalho[0]), 'Destreza 0 ou menos 8 Metros');
 });
 

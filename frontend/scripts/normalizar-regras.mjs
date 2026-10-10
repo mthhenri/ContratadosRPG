@@ -5,6 +5,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { Lexer } from 'marked';
 import { reconhecerEquipamentos, integrarSecoesEquipamentos } from './regras-equipamentos.mjs';
 import { reconhecerAmplificadores } from './regras-amplificadores.mjs';
+import { reconhecerFaixas } from './regras-faixas.mjs';
 import { reconhecerPersonagens } from './regras-personagens.mjs';
 import { marcarNiveis, reconhecerTabelaGuia, reconhecerHabilidadeCriatura,
     reconhecerSecaoGuia, reconhecerNiveisAmeaca, marcarNivelNome } from './regras-guia.mjs';
@@ -209,6 +210,7 @@ export function normalizarDocumento(texto, id, versao) {
                     inline: normalizarInline, paragrafo: normalizarParagrafo };
                 const explicito = id === 'sistema'
                     ? reconhecerEquipamentos(tabela, contexto) ?? reconhecerAmplificadores(tabela, contexto)
+                        ?? reconhecerFaixas(tabela, contexto)
                         ?? reconhecerPersonagens(tabela, contexto)
                         ?? reconhecerNiveisAmeaca(tabela, contexto) ?? reconhecerTermos(tabela, contexto)
                     : reconhecerTabelaGuia(tabela, contexto);
@@ -348,6 +350,7 @@ export function normalizarDocumento(texto, id, versao) {
         }
     }
     agruparCasos(filhos, []);
+    marcarFormulas(filhos);
     extrairAbertura(filhos);
     extrairCapa(filhos);
     avisos.sort((primeiro, segundo) => primeiro.linha - segundo.linha);
@@ -389,6 +392,23 @@ function extrairAbertura(filhos) {
         trechos.push({ tipo: 'texto', texto: '\n\n' }, ...bloco.trechos);
     }
     filhos.splice(0, fim, { tipo: 'abertura', titulo, trechos });
+}
+
+/**
+ * Parágrafo inteiramente em itálico, de uma linha, com " = " vira `formula` (Inventário Máximo =
+ * Força × 5). O itálico da fonte é só a marca da fórmula: o bloco guarda o conteúdo interno.
+ * @param {RegrasConteudo[]} filhos
+ */
+function marcarFormulas(filhos) {
+    filhos.forEach((bloco, indice) => {
+        if ('filhos' in bloco && Array.isArray(bloco.filhos)) marcarFormulas(bloco.filhos);
+        if (bloco.tipo !== 'paragrafo' || !bloco.trechos.length
+            || !bloco.trechos.every((trecho) => trecho.tipo === 'italico')) return;
+        const interno = bloco.trechos.flatMap((trecho) => 'filhos' in trecho ? trecho.filhos : []);
+        const texto = textoPlano(interno);
+        if (texto.includes('\n') || !/\s=\s/.test(texto)) return;
+        filhos[indice] = { tipo: 'formula', trechos: interno };
+    });
 }
 
 /**

@@ -1,5 +1,18 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-10 — Regras: fórmulas em destaque, Deslocamento em faixas e mais espaço entre parágrafos
+
+Pedido do autor sobre "Informações Adicionais" (Inventário Máximo, Defesa, Deslocamento), que
+ficavam sem foco e grudados. O normalizador ganhou dois blocos: `formula` (parágrafo de uma
+linha todo em itálico com " = ", sem o itálico da fonte; 13 casos nos dois livros) e `faixas`
+(`regras-faixas.mjs`, só na seção Deslocamento: cada célula vira condição + valor; o texto da
+fonte segue em `cabecalho`). O espaço entre parágrafos passou de 12px para 16px em todas as
+Regras. O Deslocamento deixou de ser `grade`: 10→9 grades e 17→16 avisos no Sistema, testes
+atualizados. Verificação: 83 testes de normalização e 83 de `modules/regras`; captura de
+Informações Adicionais em 1920 e 360, sem overflow. Não inspecionados: Identidade/Origem em
+separado, Guia, impressão e tema claro; linhas coladas dentro de um mesmo parágrafo (quebras
+da fonte, ex.: Origem) não foram alteradas.
+
 ## 2026-10-10 — Regras: capítulo maior, texto justificado e capa do livro
 
 Ajustes pedidos pelo autor após a revisão visual das Regras. O rótulo de capítulo (h2) passou de

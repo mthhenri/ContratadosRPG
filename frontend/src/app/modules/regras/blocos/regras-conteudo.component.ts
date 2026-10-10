@@ -14,6 +14,8 @@ import { RegrasArquetipos } from "./regras-arquetipos.component";
 import { RegrasOrigens } from "./regras-origens.component";
 import { RegrasEquipamentosRender } from "./regras-equipamentos.component";
 import { RegrasCapa } from "./regras-capa.component";
+import { RegrasFormula } from "./regras-formula.component";
+import { RegrasFaixasRender } from "./regras-faixas.component";
 import { RegrasAmplificadoresRender } from "./regras-amplificadores.component";
 import { RegrasModificacoesRender } from "./regras-modificacoes.component";
 import { RegrasModulosRender } from "./regras-modulos.component";
@@ -36,7 +38,7 @@ import { RegrasAbertura } from "./regras-abertura.component";
             forwardRef(() => RegrasGenerico), forwardRef(() => RegrasRicoFonte),
             forwardRef(() => RegrasClasse), forwardRef(() => RegrasArquetipos),
             RegrasOrigens, RegrasEquipamentosRender,
-            RegrasCapa, RegrasAmplificadoresRender, RegrasModificacoesRender, RegrasModulosRender, forwardRef(() => RegrasRoteiro),
+            RegrasCapa, RegrasFormula, RegrasFaixasRender, RegrasAmplificadoresRender, RegrasModificacoesRender, RegrasModulosRender, forwardRef(() => RegrasRoteiro),
             RegrasIdentidade,
             RegrasAtributos, RegrasHabilidadeCriatura, forwardRef(() => RegrasFichaCriatura),
             RegrasNiveisAmeaca, forwardRef(() => RegrasSubclasse), RegrasTermos, RegrasGrade,

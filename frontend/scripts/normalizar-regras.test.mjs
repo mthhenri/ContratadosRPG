@@ -367,6 +367,6 @@ test('publicação escreve dois JSONs determinísticos e avisos legíveis', asyn
         assert.deepEqual(readdirSync(destino).map((arquivo) => readFileSync(join(destino, arquivo), 'utf8')),
             primeira);
         assert.ok(mensagens.some((mensagem) => /^\[regras\] \d+ aviso\(s\); conteúdo preservado para revisão\.$/.test(mensagem)));
-        assert.ok(mensagens.some((mensagem) => mensagem.startsWith('[regras] sistema-v4.1.4.md:764')));
+        assert.ok(mensagens.some((mensagem) => mensagem.startsWith('[regras] sistema-v4.1.4.md:')));
     } finally { rmSync(destino, { recursive: true, force: true }); }
 });
