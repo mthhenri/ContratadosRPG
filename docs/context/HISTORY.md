@@ -1,5 +1,33 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-10 — M11-02: tabelas do livro e repositórios
+
+Migration `0036` (`livro`, `tipo_regra_peca` com os 30 tipos, `regra_peca`, `regra_peca_ancora_antiga`,
+`tipo_livro_versao_situacao`, `livro_versao`) e o módulo `backend/src/modules/livro` com três
+repositórios (só SQL; nenhuma service/API ainda). Acréscimos à modelagem da umbrella: `livro_id` na
+âncora antiga; FK composta `(livro_id, peca_pai_id)` (pai do mesmo livro); trigger que torna a
+fotografia imutável (só o soft delete passa); `uix` total no `identificador` (um UUID excluído nunca
+é reaproveitado, senão o comparador leria "removida + nova" como "alterada").
+
+Revisão independente (`revisor`) achou, e foram corrigidos antes do commit: `removerPeca` com CTE
+recursiva `UNION ALL` entraria em laço se houvesse ciclo, e `alterarPosicao` aceitava mover uma peça
+para dentro da própria subárvore (agora `UNION` e recusa o destino que é a peça ou descendente);
+criar/mover para pai excluído ou de outro livro deixava filha órfã visível (agora o INSERT/UPDATE
+exige pai ativo do mesmo livro, com `FOR SHARE` contra remoção concorrente, e devolvem `null`);
+`removerPeca` não conferia `revisao` (agora confere); `criarAncoraAntiga` confiava no `livroId` do
+chamador (agora deriva da peça) e estourava em x→y→x→y (agora `ON CONFLICT DO NOTHING`);
+`publicacao_data` passou a `clock_timestamp()`.
+
+Verificação: migration aplicada, `rollback` e reaplicação duas vezes (antes e depois das
+correções); 13 testes unitários novos (SQL) e 7 contra o PostgreSQL local
+(`TESTAR_POSTGRES_LIVRO=1`, cada caso numa transação revertida; árvore ordenada, revisão
+defasada, exclusão em árvore com âncoras, ciclo, pai excluído/de outro livro, âncora igual em livros
+distintos e repetida no mesmo livro, identificador não reaproveitado, imutabilidade da fotografia,
+soft delete permitido). Backend 1008 testes (+8 do Postgres desligados por padrão); `shared` 1172;
+lint dos três workspaces sem erros. Banco de desenvolvimento conferido limpo depois. Não
+verifiquei Cloud Run/Supabase: a migration roda no deploy pelo Cloud Build; confirmar lá quando a
+M11 for ao ar. [Spec](../specs/done/m11-02-migration-livro-peca.spec.md).
+
 ## 2026-10-10 — M11-01: contrato da árvore do livro no `shared/`
 
 Primeira task da Oficina das Regras. Abertura: as dez specs de task (`m11-01`…`m11-10`) foram

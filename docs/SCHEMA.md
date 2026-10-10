@@ -481,6 +481,36 @@ Política única em `backend/src/modules/cena/cena-visibilidade.ts`.
 
 ---
 
+## livro, regra_peca e livro_versao (M11 — m11-02)
+
+Os livros de regras (Sistema, Guia do Mestre, expansões) no banco, para a Oficina das Regras. SQL
+completo na migration `0036 - Tabelas do livro e das pecas de regra.sql`; o contrato do JSON está em
+`shared/src/dtos/livro/` (peça, `dados` por tipo, fotografia) e não é copiado aqui.
+
+| Tabela | Papel | Colunas próprias |
+|---|---|---|
+| `livro` | quais livros existem | `codigo` (URL `/regras/<codigo>`, minúsculas com hífen, único entre ativos), `titulo`, `ordem` |
+| `tipo_regra_peca` | tipos de peça (`TipoRegraPecaEnum`, 30 códigos) | `codigo`, `descricao` |
+| `regra_peca` | **cópia de trabalho**, uma linha por peça, em árvore | `livro_id`, `peca_pai_id` (auto-FK), `tipo_regra_peca_id`, `identificador` (UUID estável, único **inclusive entre excluídas**: nunca reaproveitado), `ancora` (opcional; única por livro entre ativas), `ordem`, `dados` (JSONB), `revisao` (trava otimista, ≥ 1) |
+| `regra_peca_ancora_antiga` | links antigos continuam valendo | `livro_id`, `regra_peca_id`, `ancora` (única por livro entre ativas) |
+| `tipo_livro_versao_situacao` | `RASCUNHO`, `PUBLICADA` | `codigo`, `descricao` |
+| `livro_versao` | **fotografias imutáveis** do livro inteiro | `livro_id`, situação, `numero` (editorial), `formato`, `conteudo` (JSONB), `publicacao_data`, `usuario_id`, `nota` |
+
+- `livro_id` em `regra_peca_ancora_antiga` é um acréscimo à modelagem da umbrella: permite ao banco
+  garantir a unicidade da âncora antiga por livro. Que ela não colida com a âncora **atual** de
+  outra peça é arbitrado pela service (índice não alcança duas tabelas).
+- O pai é do **mesmo livro** (FK composta `(livro_id, peca_pai_id)`); pai ativo e ausência de ciclo são
+  garantidos no SQL do repositório (criar/mover devolvem `null` se o destino não serve). A
+  `regra_peca_ancora_antiga` também é amarrada ao livro da peça por FK composta.
+- `regra_peca.revisao`: a alteração só vale se enviar a revisão do banco e a incrementa.
+- `livro_versao` é imutável: o trigger `trg_livro_versao_imutavel` recusa UPDATE de livro, situação,
+  número, formato, conteúdo, data, autor e nota; só o soft delete passa. O rascunho e a versão atuais
+  de um livro são a fotografia mais recente de cada situação.
+- Alterar, mover e excluir exigem a `revisao` lida. Excluir uma peça exclui suas descendentes e suas âncoras antigas (soft delete, numa instrução);
+  a âncora liberada pode ser reutilizada.
+
+---
+
 ## Forma dos documentos JSONB (`ficha.dados`)
 
 > Fontes correntes: `docs/core/sistema-v4.1.3.md` e `docs/core/guia_de_mestre-v4.2.0.md`.

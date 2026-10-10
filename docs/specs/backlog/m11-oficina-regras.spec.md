@@ -114,7 +114,7 @@ Specs de task escritas em 10/10/2026, ao lado desta: `m11-01-contrato-arvore-liv
 `m11-05-comparador-puro`, `m11-06-oficina-nucleo`, `m11-07-oficina-inserir-e-estruturar`,
 `m11-08-oficina-blocos-ricos`, `m11-09-oficina-mudancas-e-publicar`,
 `m11-10-troca-fonte-da-verdade` (todas `.spec.md` em `docs/specs/backlog/`). **`m11-01` concluída em 10/10/2026** — em
-[`done/`](../done/m11-01-contrato-arvore-livro.spec.md).
+[`done/`](../done/m11-01-contrato-arvore-livro.spec.md). **`m11-02` concluída em 10/10/2026** — [`done/`](../done/m11-02-migration-livro-peca.spec.md).
 
 | Task | Entrega | Depende de |
 |---|---|---|

@@ -19,6 +19,7 @@ import { RolagemModule } from './modules/rolagem/rolagem.module';
 import { PaginaCadernoModule } from './modules/pagina-caderno/pagina-caderno.module';
 import { DocumentoModule } from './modules/documento/documento.module';
 import { PatchnoteModule } from './modules/patchnote/patchnote.module';
+import { LivroModule } from './modules/livro/livro.module';
 
 /**
  * Módulo raiz da aplicação. Registra a infraestrutura genérica (`core/`) global, o
@@ -45,6 +46,7 @@ import { PatchnoteModule } from './modules/patchnote/patchnote.module';
     PaginaCadernoModule,
     DocumentoModule,
     PatchnoteModule,
+    LivroModule,
     GatewayModule,
   ],
   controllers: [HealthController],

@@ -1,5 +1,9 @@
 # m11-02-migration-livro-peca.spec.md
 
+> **Concluída em 2026-10-10.** Revisão independente aplicada: FK composta pai/livro, pai ativo e
+> sem ciclo no SQL, `removerPeca` com `revisao`, identificador único total, âncora antiga amarrada
+> ao livro. Detalhes no `HISTORY.md`.
+
 > Task 2/10 do milestone [`m11-oficina-regras.spec.md`](m11-oficina-regras.spec.md). Banco e
 > repositórios da Oficina; sem API pública nem UI.
 
@@ -31,7 +35,9 @@ modelagem fechada da umbrella.
    (alteração só aplica se a revisão enviada é a do banco e a incrementa); registrar âncora
    antiga; criar fotografia; recuperar a mais recente por livro e situação; listar versões.
 3. **Enum** de coluna da situação (`TipoLivroVersaoSituacaoEnum`) e DTOs internos necessários.
-4. **Testes** do repositório no padrão dos módulos vizinhos (banco real do ambiente de teste).
+4. **Testes** no padrão dos módulos vizinhos: unitários com Knex simulado conferindo o SQL, e um
+   spec contra o PostgreSQL local (`TESTAR_POSTGRES_LIVRO=1`, `describe.runIf`, cada caso em
+   transação revertida).
 5. **`SCHEMA.md`** atualizado com as tabelas novas e a forma de `dados`/`conteudo` (ponteiro para
    o contrato do `shared/`, sem copiá-lo).
 
