@@ -340,9 +340,13 @@
                     <div class="npc-equip__mods">
                         @for (mod of item.modsAtivas; track mod.nome) {
                             <span class="npc-equip__mod-tag">
-                                <span class="npc-equip__mod-nome"
-                                    >{{ mod.nome }} ×{{ mod.empilhamentos }}</span
-                                >
+                                <span class="npc-equip__mod-nome">{{ mod.nome }}</span>
+                                <app-empilhamento
+                                    [iniciais]="mod.empilhamento.iniciais"
+                                    [atuais]="mod.empilhamento.atuais"
+                                    [maximo]="mod.empilhamento.maximo"
+                                    [rotulo]="mod.nome"
+                                />
                                 @if (gerenciavel() && modificandoIndice() === item.indice) {
                                     <app-step-input
                                         tamanho="mini"

@@ -48,12 +48,6 @@ td {
 tr:last-child td {
     border-bottom: 0;
 }
-.regras-tabela--amplificadores td:first-child {
-    white-space: nowrap;
-    app-regras-inline {
-        white-space: nowrap;
-    }
-}
 @include bp.mobile {
     table {
         table-layout: fixed;
@@ -74,50 +68,5 @@ tr:last-child td {
         max-width: 160px;
         overflow-wrap: anywhere;
         box-shadow: 8px 0 10px -10px var(--text-mute);
-    }
-    // Análogo: itens de RegrasModificacoes. Nome + empilhamento juntos, efeito na linha inteira.
-    .regras-tabela--amplificadores {
-        overflow-x: visible;
-        mask-image: none;
-        table {
-            min-width: 0;
-            table-layout: auto;
-        }
-        thead {
-            position: absolute;
-            width: 1px;
-            height: 1px;
-            overflow: hidden;
-            clip-path: inset(50%);
-        }
-        tbody {
-            display: block;
-        }
-        tr {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) auto;
-            border-bottom: 1px solid var(--border);
-            padding: var(--space-12);
-            gap: var(--space-8) var(--space-12);
-        }
-        tr:last-child {
-            border-bottom: 0;
-        }
-        td {
-            min-width: 0;
-            padding: 0;
-            border: 0;
-        }
-        td:first-child {
-            position: static;
-            width: auto;
-            box-shadow: none;
-        }
-        td:nth-child(2) {
-            white-space: nowrap;
-        }
-        td:last-child {
-            grid-column: 1 / -1;
-        }
     }
 }

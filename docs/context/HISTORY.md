@@ -1,5 +1,16 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-10 — empilhamento-visual-unificado: um só desenho de ■□ nas Regras e nas telas de item
+
+Novo primitivo `app-empilhamento` com três estados (inicial, comprado, vazio); o tom do inicial
+vem de `color-mix()` no próprio primitivo, por isso segue preset, base e cor de ficha. Nas Regras o inicial é o accent puro; accent extremo (branco/preto) dobra a luminosidade. Regras
+ganharam custo/peso da categoria (lidos do motor) e bloco tipado de Amplificadores; ficha,
+Simulação, esquadrão e NPC trocaram `Nome ×N`/`N/M stacks` pelas caixas. Teste de paridade
+motor × documento: sem divergências. 81 testes de normalização e 3.201 de frontend verdes;
+inspeção ao vivo nos quatro viewports, claro/escuro. Achado só ao vivo: o limite de patente
+quebrava em três linhas no catálogo de amplificadores; virou `máx. N` sem quebra.
+[Verificação e limites](../specs/done/empilhamento-visual-unificado/verificacao.md).
+
 ## 2026-10-09 — Conferência do conjunto para commit
 
 O autor autorizou commitar a reorganização de specs, o fecho da M4 e as três correções

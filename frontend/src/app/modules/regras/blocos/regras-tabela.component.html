@@ -1,7 +1,6 @@
 <div
     appOverflowFade
     class="regras-tabela"
-    [class.regras-tabela--amplificadores]="amplificadores()"
     [style.--regras-tabela-colunas]="colunas()"
     tabindex="0"
     role="region"
@@ -11,7 +10,7 @@
         @if (bloco().cabecalho.length) {
             <thead>
                 <tr>
-                    @for (celula of cabecalho(); track $index) {
+                    @for (celula of bloco().cabecalho; track $index) {
                         <th scope="col">
                             <app-regras-inline
                                 [trechos]="celula"
@@ -30,7 +29,6 @@
                         <td>
                             <app-regras-inline
                                 [trechos]="celula"
-                                [semCorRecurso]="amplificadores() && $first"
                                 [documento]="documento()"
                                 (navegarAncora)="navegarAncora.emit($event)"
                             />

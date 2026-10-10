@@ -113,7 +113,10 @@ describe('ComprasPage', () => {
 
     // 500 (item) + 750 (mod) = 1.250.
     expect(statResumo(raiz, 'Gasto Total')).toBe('$1.250');
-    expect(raiz.querySelector('.compras-mod-tag__info')?.textContent).toContain('Balanceada ×1');
+    const etiqueta = raiz.querySelector('.compras-mod-tag__info');
+    expect(etiqueta?.textContent).toContain('Balanceada');
+    expect(etiqueta?.querySelector('app-empilhamento')?.getAttribute('aria-label'))
+      .toBe('Balanceada — Empilhamento 1 de 1, 1 inicial');
   });
 
   it('adquire um amplificador ($3.000, 1/3) pelo custo do motor', async () => {

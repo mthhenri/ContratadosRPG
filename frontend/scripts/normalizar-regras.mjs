@@ -4,6 +4,7 @@ import { join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { Lexer } from 'marked';
 import { reconhecerEquipamentos, integrarSecoesEquipamentos } from './regras-equipamentos.mjs';
+import { reconhecerAmplificadores } from './regras-amplificadores.mjs';
 import { reconhecerPersonagens } from './regras-personagens.mjs';
 import { marcarNiveis, reconhecerTabelaGuia, reconhecerHabilidadeCriatura,
     reconhecerSecaoGuia, reconhecerNiveisAmeaca, marcarNivelNome } from './regras-guia.mjs';
@@ -207,7 +208,8 @@ export function normalizarDocumento(texto, id, versao) {
                 const contexto = { secao: caminho.at(-1) ?? '', caminho, linha,
                     inline: normalizarInline, paragrafo: normalizarParagrafo };
                 const explicito = id === 'sistema'
-                    ? reconhecerEquipamentos(tabela, contexto) ?? reconhecerPersonagens(tabela, contexto)
+                    ? reconhecerEquipamentos(tabela, contexto) ?? reconhecerAmplificadores(tabela, contexto)
+                        ?? reconhecerPersonagens(tabela, contexto)
                         ?? reconhecerNiveisAmeaca(tabela, contexto) ?? reconhecerTermos(tabela, contexto)
                     : reconhecerTabelaGuia(tabela, contexto);
                 if (explicito) {

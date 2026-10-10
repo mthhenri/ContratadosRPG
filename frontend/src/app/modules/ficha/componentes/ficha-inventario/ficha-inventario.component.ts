@@ -83,6 +83,11 @@ import { descreverCondicao } from "../../../../shared/condicoes/condicoes";
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
+import { Empilhamento } from '../../../../shared/ui/empilhamento/empilhamento.component';
+import {
+  resolverEmpilhamentoModificacao,
+  type EmpilhamentoModificacao,
+} from '../../../../shared/ui/empilhamento/empilhamento';
 import { Modal } from '../../../../shared/ui/modal/modal.component';
 import { ValorEditavel } from '../../../../shared/ui/valor-editavel/valor-editavel.component';
 import { Segmentado } from '../../../../shared/ui/segmentado/segmentado.component';
@@ -266,12 +271,15 @@ interface CartaoAmpVM {
   readonly maximoEfetivo: number;
   readonly podeAdicionar: boolean;
   readonly custoTexto: string;
+  /** Quadradinhos: iniciais da 1ª compra, atuais (0 = ainda não adquirido) e teto próprio. */
+  readonly empilhamento: EmpilhamentoModificacao;
 }
 
 /** Uma modificação já aplicada, exibida acima do painel (chip com −/+). */
 interface ModAtivaVM {
   readonly nome: string;
   readonly empilhamentos: number;
+  readonly empilhamento: EmpilhamentoModificacao;
   readonly custoTexto: string;
   readonly podeAumentar: boolean;
   /** `true` quando esta mod está além do limite da patente (permitida, mas marcada). */
@@ -456,6 +464,7 @@ interface AmpInventarioVM {
   readonly nome: string;
   readonly efeito: string;
   readonly empilhamentos: number;
+  readonly empilhamento: EmpilhamentoModificacao;
   readonly maximoEfetivo: number;
   readonly custoTexto: string;
   readonly penalidade: number;
@@ -487,6 +496,7 @@ interface AmpInventarioVM {
     Botao,
     BotaoIcone,
     EstadoVazio,
+    Empilhamento,
     Modal,
     Segmentado,
     SegmentadoItem,
@@ -1119,6 +1129,11 @@ export class FichaInventario {
         maximoEfetivo,
         podeAdicionar: totalStacks + incremento <= limite && atuais < maximoEfetivo,
         custoTexto: atuais === 0 ? '$3.000' : '$1.000',
+        empilhamento: {
+          iniciais: amplificador.empilhamentosIniciais,
+          atuais,
+          maximo: amplificador.empilhamentoMaximo,
+        },
       };
     });
   });
@@ -1379,6 +1394,11 @@ export class FichaInventario {
         nome: amplificador.nome,
         efeito: definicao?.efeito ?? '',
         empilhamentos: amplificador.empilhamentos,
+        empilhamento: {
+          iniciais: definicao?.empilhamentosIniciais ?? 1,
+          atuais: amplificador.empilhamentos,
+          maximo: Math.max(definicao?.empilhamentoMaximo ?? 5, amplificador.empilhamentos),
+        },
         maximoEfetivo,
         custoTexto: this.formatarDinheiro(
           calcularCustoAmplificador({ empilhamentos: amplificador.empilhamentos }),
@@ -2876,6 +2896,7 @@ export class FichaInventario {
       return {
         nome: modificacao.nome,
         empilhamentos: modificacao.empilhamentos,
+        empilhamento: resolverEmpilhamentoModificacao(modificacao, definicao),
         custoTexto: this.formatarDinheiro(custo),
         // Sobe até o teto PRÓPRIO (ou livre, se `ignoraProprio`); a patente não trava (excedente é permitido).
         podeAumentar: ignoraProprio || modificacao.empilhamentos < tetoProprio,

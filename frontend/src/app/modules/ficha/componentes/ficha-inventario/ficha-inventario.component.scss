@@ -1134,7 +1134,10 @@
         }
         &-meta {
             display: flex;
+            flex-wrap: wrap;
+            align-items: center;
             justify-content: space-between;
+            gap: 4px 8px;
             font-size: 12px;
             margin-top: 2px;
         }
@@ -1186,6 +1189,7 @@
         margin-right: 4px;
     }
     &__peso {
+        white-space: nowrap;
         color: var(--text-mute);
     }
     // Peso bruto do item-alvo de "Espaço Reservado" antes da isenção — mesmo padrão do custo bruto

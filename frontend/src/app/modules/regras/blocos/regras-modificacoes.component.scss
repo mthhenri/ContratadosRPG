@@ -20,13 +20,18 @@
         font: 600 13px var(--font-mono);
         overflow-wrap: anywhere;
     }
-    &__empilhamento {
-        color: var(--text-mute);
-        font: 400 14px var(--font-mono);
-        white-space: nowrap;
+    &__resumo,
+    &__peso {
+        margin: 0;
+        font: 400 12px var(--font-mono);
     }
-    &__marca--cheia {
-        color: var(--accent);
+    &__resumo {
+        padding-bottom: var(--space-12);
+        color: var(--text-dim);
+    }
+    &__peso {
+        grid-column: 1 / -1;
+        color: var(--text-mute);
     }
     &__efeito,
     &__bloqueia {

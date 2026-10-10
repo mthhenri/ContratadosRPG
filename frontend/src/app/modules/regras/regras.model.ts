@@ -33,7 +33,7 @@ export type RegrasTrecho =
 
 export type RegrasBloco =
     | RegrasClasse | RegrasArquetipos | RegrasOrigens | RegrasModulos
-    | RegrasEquipamentos | RegrasModificacoes | RegrasIdentidade | RegrasAtributos
+    | RegrasEquipamentos | RegrasModificacoes | RegrasAmplificadores | RegrasIdentidade | RegrasAtributos
     | RegrasRoteiro | RegrasFichaCriatura | RegrasHabilidadeCriatura | RegrasNiveisAmeaca
     | RegrasSubclasse | RegrasTermos | RegrasGrade | RegrasAbertura
     | { readonly tipo: "paragrafo" | "exemplo"; readonly trechos: readonly RegrasTrecho[] }
@@ -166,8 +166,21 @@ export interface RegrasModificacao {
 
 export interface RegrasModificacoes extends RegrasFonteTabela {
     readonly tipo: "modificacoes";
+    /** Título da categoria de Equipamentos a que a tabela pertence (ex.: "Corpo a Corpo"). */
+    readonly categoria: string;
     readonly nota?: readonly RegrasTrecho[];
     readonly itens: readonly RegrasModificacao[];
+}
+
+export interface RegrasAmplificador {
+    readonly nome: string;
+    readonly empilhamento: string;
+    readonly efeito: readonly RegrasTrecho[];
+}
+
+export interface RegrasAmplificadores extends RegrasFonteTabela {
+    readonly tipo: "amplificadores";
+    readonly itens: readonly RegrasAmplificador[];
 }
 
 export interface RegrasIdentidade extends RegrasFonteTabela {

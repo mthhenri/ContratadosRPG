@@ -22,6 +22,11 @@ import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { Esqueleto } from '../../../../shared/ui/esqueleto/esqueleto.component';
 import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
+import { Empilhamento } from '../../../../shared/ui/empilhamento/empilhamento.component';
+import {
+  resolverEmpilhamentoModificacao,
+  type EmpilhamentoModificacao,
+} from '../../../../shared/ui/empilhamento/empilhamento';
 import { Modal } from '../../../../shared/ui/modal/modal.component';
 import { CampanhaService } from '../../campanha.service';
 import { FichaService } from '../../../ficha/ficha.service';
@@ -67,7 +72,7 @@ const ICONES_CATEGORIA: Readonly<Record<ItemCategoriaEnum, IconeNome>> = {
 
 @Component({
   selector: 'app-inventario-esquadrao',
-  imports: [ReactiveFormsModule, Icone, Botao, BotaoIcone, Modal, EstadoVazio, Esqueleto],
+  imports: [ReactiveFormsModule, Icone, Botao, BotaoIcone, Modal, EstadoVazio, Esqueleto, Empilhamento],
   templateUrl: './inventario-esquadrao.component.html',
   styleUrl: './inventario-esquadrao.component.scss',
 })
@@ -185,6 +190,34 @@ export class InventarioEsquadrao {
         ? escalarDescricaoCatalogoPorCompras(modificacao.nome, descricaoCatalogo, modificacao.empilhamentos)
         : null)
       || null;
+  }
+
+  /** Quadradinhos de uma modificação já aplicada a um item (do catálogo ou custom). */
+  protected empilhamentoAplicado(modificacao: ModificacaoAplicadaDto, item: DadosItemRascunho): EmpilhamentoModificacao {
+    const definicao = listarModificacoesDisponiveis(this.criarRascunho(item))
+      .find(({ nome }) => nome === modificacao.nome);
+    return resolverEmpilhamentoModificacao(modificacao, definicao);
+  }
+
+  /** Quadradinhos de uma modificação do item custom que está sendo montado no formulário. */
+  protected empilhamentoItemCustom(modificacao: ModificacaoAplicadaDto): EmpilhamentoModificacao {
+    const valores = this.itemCustomForm.controls;
+    return this.empilhamentoAplicado(modificacao, {
+      nome: valores.nome.value,
+      categoria: this.categoriaCustom(),
+      custo: valores.custo.value,
+      peso: valores.peso.value,
+      quantidade: valores.quantidade.value,
+      modificacoes: this.modificacoesItemCustom(),
+    });
+  }
+
+  /** Quadradinhos de uma modificação do seletor: iniciais, quantidade escolhida e teto próprio. */
+  protected empilhamentoDisponivel(modificacao: ModificacaoDados): EmpilhamentoModificacao {
+    return resolverEmpilhamentoModificacao(
+      { empilhamentos: this.quantidadeModificacao(modificacao) },
+      modificacao,
+    );
   }
 
   protected alternarCatalogo(): void {

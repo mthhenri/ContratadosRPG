@@ -96,6 +96,13 @@
                         (navegarAncora)="navegarAncora.emit($event)"
                     />
                 }
+                @case ("amplificadores") {
+                    <app-regras-amplificadores
+                        [bloco]="bloco"
+                        [documento]="documento()"
+                        (navegarAncora)="navegarAncora.emit($event)"
+                    />
+                }
                 @case ("modulos") {
                     <app-regras-modulos
                         [bloco]="bloco"

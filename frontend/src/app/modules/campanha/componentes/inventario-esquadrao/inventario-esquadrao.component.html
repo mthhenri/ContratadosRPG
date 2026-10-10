@@ -254,9 +254,15 @@
                     >
                         @for (modificacao of modificacoesItemCustom(); track modificacao.nome) {
                             <div class="inventario-esquadrao__mod-tag">
-                                <strong
-                                    >{{ modificacao.nome }} ×{{ modificacao.empilhamentos }}</strong
-                                >
+                                <strong>{{ modificacao.nome }}</strong>
+                                @if (empilhamentoItemCustom(modificacao); as pilha) {
+                                    <app-empilhamento
+                                        [iniciais]="pilha.iniciais"
+                                        [atuais]="pilha.atuais"
+                                        [maximo]="pilha.maximo"
+                                        [rotulo]="modificacao.nome"
+                                    />
+                                }
                                 @if (
                                     descricaoModificacao(modificacao, {
                                         nome: itemCustomForm.controls.nome.value,
@@ -430,11 +436,15 @@
                                 <div class="inventario-esquadrao__mods-ativas">
                                     @for (modificacao of item.modificacoes; track $index) {
                                         <div class="inventario-esquadrao__mod-tag">
-                                            <strong
-                                                >{{ modificacao.nome }} ×{{
-                                                    modificacao.empilhamentos
-                                                }}</strong
-                                            >
+                                            <strong>{{ modificacao.nome }}</strong>
+                                            @if (empilhamentoAplicado(modificacao, item); as pilha) {
+                                                <app-empilhamento
+                                                    [iniciais]="pilha.iniciais"
+                                                    [atuais]="pilha.atuais"
+                                                    [maximo]="pilha.maximo"
+                                                    [rotulo]="modificacao.nome"
+                                                />
+                                            }
                                             @if (
                                                 descricaoModificacao(modificacao, item);
                                                 as descricao
@@ -617,7 +627,14 @@
                                 >
                                     −
                                 </button>
-                                <output>{{ quantidadeModificacao(modificacao) }}×</output>
+                                @if (empilhamentoDisponivel(modificacao); as pilha) {
+                                    <app-empilhamento
+                                        [iniciais]="pilha.iniciais"
+                                        [atuais]="pilha.atuais"
+                                        [maximo]="pilha.maximo"
+                                        [rotulo]="modificacao.nome"
+                                    />
+                                }
                             }
                             <button
                                 app-botao

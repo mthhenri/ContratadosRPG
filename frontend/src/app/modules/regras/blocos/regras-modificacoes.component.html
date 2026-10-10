@@ -5,25 +5,24 @@
         (navegarAncora)="navegarAncora.emit($event)"
     />
 }
+@if (resumo(); as texto) {
+    <p class="regras-modificacoes__resumo">{{ texto }}</p>
+}
 <div class="regras-modificacoes">
-    @for (item of bloco().itens; track $index) {
+    @for (linha of itens(); track $index) {
         <article class="regras-modificacoes__item">
-            <h4 class="regras-modificacoes__nome">{{ item.nome }}</h4>
-            <span
-                class="regras-modificacoes__empilhamento"
-                [attr.aria-label]="'Empilhamento: ' + item.empilhamento"
-            >
-                @for (marca of item.empilhamento; track $index) {
-                    <span
-                        [class.regras-modificacoes__marca--cheia]="marca === '■'"
-                        aria-hidden="true"
-                        >{{ marca }}</span
-                    >
-                }
-            </span>
+            <h4 class="regras-modificacoes__nome">{{ linha.item.nome }}</h4>
+            <app-empilhamento
+                [iniciais]="linha.iniciais"
+                [maximo]="linha.maximo"
+                [rotulo]="linha.item.nome"
+            />
+            @if (linha.peso !== undefined) {
+                <p class="regras-modificacoes__peso">{{ formatarPeso(linha.peso) }}</p>
+            }
             <p class="regras-modificacoes__efeito">
                 <app-regras-inline
-                    [trechos]="item.efeito"
+                    [trechos]="linha.item.efeito"
                     [documento]="documento()"
                     (navegarAncora)="navegarAncora.emit($event)"
                 />
@@ -31,7 +30,7 @@
             <p class="regras-modificacoes__bloqueia">
                 <strong>Bloqueia:</strong>&ngsp;
                 <app-regras-inline
-                    [trechos]="item.bloqueia"
+                    [trechos]="linha.item.bloqueia"
                     [documento]="documento()"
                     (navegarAncora)="navegarAncora.emit($event)"
                 />

@@ -216,7 +216,10 @@
     }
     &__meta {
         display: flex;
+        flex-wrap: wrap;
+        align-items: center;
         justify-content: space-between;
+        gap: 4px 8px;
         font-size: 12px;
         margin-top: 2px;
     }
@@ -225,6 +228,7 @@
         font-weight: 700;
     }
     &__peso {
+        white-space: nowrap;
         color: var(--text-mute);
     }
     &__acoes {

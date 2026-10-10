@@ -73,7 +73,8 @@ export function reconhecerEquipamentos(tokenTabela, contexto) {
             efeito: contexto.inline(linha[2].text, contexto.linha + indiceRotulos + indice + 3),
             bloqueia: contexto.inline(linha[3].text, contexto.linha + indiceRotulos + indice + 3),
         }));
-        return { tipo: 'modificacoes', itens, ...fonte,
+        // A categoria vem do bloco `equipamentos` anterior, preenchida em `integrarSecoesEquipamentos`.
+        return { tipo: 'modificacoes', categoria: '', itens, ...fonte,
             ...(indiceRotulos === 1 ? { nota: fonte.linhas[0][0] } : {}) };
     }
 
@@ -131,7 +132,7 @@ export function integrarSecoesEquipamentos(conteudo, criarAncora) {
                     ancora: criarAncora(equipamentos ? titulo : `${categoria} Modificações`),
                     filhos: [] });
             }
-            linear.push(item);
+            linear.push(item.tipo === 'modificacoes' ? { ...item, categoria } : item);
         }
     }
     percorrer(conteudo);

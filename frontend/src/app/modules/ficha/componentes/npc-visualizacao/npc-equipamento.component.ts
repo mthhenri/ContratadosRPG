@@ -22,6 +22,11 @@ import { EstadoVazio } from "../../../../shared/ui/estado-vazio/estado-vazio.com
 import { Campo } from "../../../../shared/ui/campo/campo.component";
 import { StepInput } from "../../../../shared/ui/stepper/step-input.component";
 import { Stat } from "../../../../shared/ui/stat/stat.component";
+import { Empilhamento } from "../../../../shared/ui/empilhamento/empilhamento.component";
+import {
+    resolverEmpilhamentoModificacao,
+    type EmpilhamentoModificacao,
+} from "../../../../shared/ui/empilhamento/empilhamento";
 import { montarResistencias } from "@contratados-rpg/shared/regras/agente";
 import { NpcEdicaoFormulario } from "../../npc-edicao-formulario.service";
 import { NpcRolagemService } from "../../npc-rolagem.service";
@@ -72,7 +77,8 @@ interface ItemEquipamentoVM {
     readonly danoRolavel: boolean;
     readonly descricao: string;
     readonly modsAtivas: readonly { readonly nome: string; readonly empilhamentos: number;
-        readonly minimo: number; readonly maximo: number }[];
+        readonly minimo: number; readonly maximo: number;
+        readonly empilhamento: EmpilhamentoModificacao }[];
     readonly modsDisponiveis: readonly ModificacaoDados[];
 }
 
@@ -92,7 +98,7 @@ interface ItemEquipamentoVM {
 @Component({
     selector: "app-npc-equipamento",
     imports: [ReactiveFormsModule, Icone, OverflowFade, Tooltip, Botao, BotaoIcone, Chip,
-        EstadoVazio, NpcBlocoAcoes, Campo, StepInput, Stat],
+        EstadoVazio, NpcBlocoAcoes, Campo, StepInput, Stat, Empilhamento],
     templateUrl: "./npc-equipamento.component.html",
     styleUrls: ["./npc-visualizacao.scss", "./npc-equipamento.component.scss"],
 })
@@ -211,6 +217,7 @@ export class NpcEquipamento {
                     const definicao = listarModificacoesDisponiveis(item)
                         .find((entrada) => entrada.nome === modificacao.nome);
                     return { ...modificacao, minimo: definicao?.empilhamentosIniciais ?? 1,
+                        empilhamento: resolverEmpilhamentoModificacao(modificacao, definicao),
                         maximo: definicao?.empilhamentoMaximo ?? modificacao.empilhamentoMaximo
                             ?? Number.POSITIVE_INFINITY };
                 }),

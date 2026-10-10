@@ -62,17 +62,16 @@ describe("Revisão visual das Regras", () => {
             linhas: [[texto("◎ Conservador"), texto("■■"), texto("Efeito")]] }]);
         expect((raiz.querySelector(".regras-tabela") as HTMLElement).style
             .getPropertyValue("--regras-tabela-colunas")).toBe("3");
-        expect(raiz.querySelector(".regras-tabela--amplificadores")).not.toBeNull();
         expect(Array.from(raiz.querySelectorAll("th")).map(celula => celula.textContent))
-            .toEqual(["Nome", "Empilhamento", "Efeitos"]);
+            .toEqual(["Nome", "Efeitos"]);
     });
 
-    it("reconhece cabeçalho de amplificadores preenchido com célula vazia pelo normalizador", () => {
+    it("tabela de amplificadores não é detectada pelo renderer da tabela genérica", () => {
         const raiz = renderizar([{ tipo: "tabela",
             cabecalho: [texto("Nome"), texto("Efeitos"), []],
             linhas: [[texto("◎ Conservador"), texto("■■"), texto("Efeito")]] }]);
-        expect(raiz.querySelector(".regras-tabela--amplificadores")).not.toBeNull();
-        expect(raiz.querySelectorAll("th")).toHaveLength(3);
+        expect(raiz.querySelector(".regras-tabela--amplificadores")).toBeNull();
+        expect(raiz.querySelector("app-empilhamento")).toBeNull();
     });
 
     it("subclasse mostra tipo, custos, Vida/Energia com faixa, bônus e habilidades", () => {

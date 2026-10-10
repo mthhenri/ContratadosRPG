@@ -184,8 +184,10 @@ describe('InventarioEsquadrao', () => {
     }]);
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.querySelector('.inventario-esquadrao__mod-tag')?.textContent)
-      .toContain('Placa Extra ×1');
+    const etiqueta = fixture.nativeElement.querySelector('.inventario-esquadrao__mod-tag');
+    expect(etiqueta?.textContent).toContain('Placa Extra');
+    expect(etiqueta?.querySelector('app-empilhamento')?.getAttribute('aria-label'))
+      .toBe('Placa Extra — Empilhamento 1 de 1, 1 inicial');
     expect(fixture.nativeElement.textContent).toContain('+2 de resist. (todas)');
   });
 

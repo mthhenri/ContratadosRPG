@@ -1,0 +1,42 @@
+// O tom do inicial é calculado aqui, sobre o --accent herdado: assim acompanha preset de accent,
+// base clara/escura (--text inverte com a base) e a cor própria de ficha, que sobrescreve
+// --accent abaixo da raiz. Na leitura de regra (sem `atuais`) não há compra para distinguir, então
+// o inicial usa o accent puro. Um token de raiz ficaria preso ao accent da raiz.
+:host {
+  --empilhamento-mistura: color-mix(in srgb, var(--accent) 55%, var(--text));
+  // Accent já extremo (branco no escuro, preto no claro) não tem para onde clarear/escurecer: a
+  // luminosidade dobra de volta, escurecendo o branco na base escura e clareando o preto na clara.
+  --empilhamento-tom-inicial: light-dark(
+    oklch(from var(--empilhamento-mistura) max(l, calc(0.6 - l)) c h),
+    oklch(from var(--empilhamento-mistura) min(l, calc(2.25 - 1.5 * l)) c h)
+  );
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: nowrap;
+  vertical-align: middle;
+}
+
+:host(.empilhamento--regra) {
+  --empilhamento-tom-inicial: var(--accent);
+}
+
+.empilhamento__caixa {
+  box-sizing: border-box;
+  flex: none;
+  width: 0.75rem;
+  height: 0.75rem;
+  border: 1px solid var(--text-mute);
+  border-radius: var(--radius-tight);
+  background: transparent;
+
+  &--inicial {
+    border-color: var(--empilhamento-tom-inicial);
+    background: var(--empilhamento-tom-inicial);
+  }
+
+  &--comprado {
+    border-color: var(--accent);
+    background: var(--accent);
+  }
+}

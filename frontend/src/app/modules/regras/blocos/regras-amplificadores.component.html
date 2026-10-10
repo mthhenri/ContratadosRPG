@@ -1,0 +1,19 @@
+<div class="regras-modificacoes">
+    @for (linha of itens(); track $index) {
+        <article class="regras-modificacoes__item">
+            <h4 class="regras-modificacoes__nome">{{ linha.item.nome }}</h4>
+            <app-empilhamento
+                [iniciais]="linha.iniciais"
+                [maximo]="linha.maximo"
+                [rotulo]="linha.item.nome"
+            />
+            <p class="regras-modificacoes__efeito">
+                <app-regras-inline
+                    [trechos]="linha.item.efeito"
+                    [documento]="documento()"
+                    (navegarAncora)="navegarAncora.emit($event)"
+                />
+            </p>
+        </article>
+    }
+</div>

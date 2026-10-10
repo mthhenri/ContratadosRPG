@@ -43,6 +43,11 @@ import { Cartao } from '../../../../shared/ui/cartao/cartao.component';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { Stat } from '../../../../shared/ui/stat/stat.component';
+import { Empilhamento } from '../../../../shared/ui/empilhamento/empilhamento.component';
+import {
+  resolverEmpilhamentoModificacao,
+  type EmpilhamentoModificacao,
+} from '../../../../shared/ui/empilhamento/empilhamento';
 import { AjudaSimulacao } from '../../componentes/ajuda-simulacao/ajuda-simulacao.component';
 import { StepInput } from '../../../../shared/ui/stepper/step-input.component';
 import { ICONES_CATEGORIA, ROTULOS_PATENTE } from '../../rotulos';
@@ -107,12 +112,15 @@ interface CartaoAmpVM {
   readonly podeAdicionar: boolean;
   readonly custoTexto: string;
   readonly maxEmpilhamentoProprio: number;
+  /** Quadradinhos: iniciais da 1ª compra, atuais (0 = ainda não adquirido) e teto próprio. */
+  readonly empilhamento: EmpilhamentoModificacao;
 }
 
 /** Uma modificação já aplicada, exibida acima do painel (chip com −/+). */
 interface ModAtivaVM {
   readonly nome: string;
   readonly empilhamentos: number;
+  readonly empilhamento: EmpilhamentoModificacao;
   readonly custoTexto: string;
   readonly podeAumentar: boolean;
   /** `true` quando esta mod está além do limite da patente (permitida, mas marcada). */
@@ -176,6 +184,7 @@ interface AmpCarrinhoVM {
   readonly nome: string;
   readonly efeito: string;
   readonly empilhamentos: number;
+  readonly empilhamento: EmpilhamentoModificacao;
   readonly maximoEfetivo: number;
   readonly custoTexto: string;
   readonly penalidade: number;
@@ -327,6 +336,7 @@ function fragmentosZerados(): GradeFragmentos {
     Botao,
     BotaoIcone,
     Stat,
+    Empilhamento,
     Icone,
     OverflowFade,
     Tooltip,
@@ -576,6 +586,11 @@ export class ComprasPage {
         podeAdicionar: totalStacks + incremento <= limite && atuais < maximoEfetivo,
         custoTexto: atuais === 0 ? '$3.000' : '$1.000',
         maxEmpilhamentoProprio: amplificador.empilhamentoMaximo,
+        empilhamento: {
+          iniciais: amplificador.empilhamentosIniciais,
+          atuais,
+          maximo: amplificador.empilhamentoMaximo,
+        },
       };
     });
   });
@@ -605,6 +620,11 @@ export class ComprasPage {
         nome: amplificador.nome,
         efeito: definicao?.efeito ?? '',
         empilhamentos: amplificador.empilhamentos,
+        empilhamento: {
+          iniciais: definicao?.empilhamentosIniciais ?? 1,
+          atuais: amplificador.empilhamentos,
+          maximo: Math.max(definicao?.empilhamentoMaximo ?? 5, amplificador.empilhamentos),
+        },
         maximoEfetivo,
         custoTexto: this.formatarDinheiro(
           calcularCustoAmplificador({ empilhamentos: amplificador.empilhamentos }),
@@ -1424,6 +1444,7 @@ export class ComprasPage {
       return {
         nome: modificacao.nome,
         empilhamentos: modificacao.empilhamentos,
+        empilhamento: resolverEmpilhamentoModificacao(modificacao, definicao),
         custoTexto: this.formatarDinheiro(custo),
         // Sobe até o teto PRÓPRIO (ou livre, se `ignoraProprio`); a patente não trava (excedente é permitido).
         podeAumentar: ignoraProprio || modificacao.empilhamentos < tetoProprio,

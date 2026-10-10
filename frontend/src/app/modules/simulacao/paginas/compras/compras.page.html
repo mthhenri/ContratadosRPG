@@ -332,12 +332,19 @@
                 <div class="compras-item__desc">{{ amp.efeito }}</div>
                 <div class="compras-item__meta">
                     <span class="compras-item__custo">{{ amp.custoTexto }}</span>
-                    <span class="compras-item__peso">máx. {{ amp.maximoEfetivo }} stacks</span>
+                    <app-empilhamento
+                        [iniciais]="amp.empilhamento.iniciais"
+                        [atuais]="amp.empilhamentosAtuais > 0 ? amp.empilhamento.atuais : undefined"
+                        [maximo]="amp.empilhamento.maximo"
+                        [rotulo]="amp.nome"
+                    />
+                    @if (amp.maximoEfetivo < amp.empilhamento.maximo) {
+                    <span class="compras-item__peso">máx. {{ amp.maximoEfetivo }}</span>
+                    }
                 </div>
                 @if (amp.empilhamentosAtuais > 0) {
                 <div class="compras-item__ativo">
-                    Ativo: {{ amp.empilhamentosAtuais }}/{{ amp.maximoEfetivo }} stack{{
-                    amp.empilhamentosAtuais > 1 ? 's' : '' }} @if (amp.empilhamentosAtuais >= 2) {
+                    Ativo @if (amp.empilhamentosAtuais >= 2) {
                     <span class="compras-tag compras-tag--penalidade">−2 Vontade</span>
                     }
                 </div>
@@ -526,7 +533,14 @@
                 <div class="compras-mod-tag" [class.compras-mod-tag--excede]="mod.excedente">
                     <div class="compras-mod-tag__info">
                         <span>
-                            {{ mod.nome }} ×{{ mod.empilhamentos }} @if (mod.excedente) {
+                            {{ mod.nome }}
+                            <app-empilhamento
+                                [iniciais]="mod.empilhamento.iniciais"
+                                [atuais]="mod.empilhamento.atuais"
+                                [maximo]="mod.empilhamento.maximo"
+                                [rotulo]="mod.nome"
+                            />
+                            @if (mod.excedente) {
                             <span
                                 class="compras-excede-tag"
                                 [appTooltip]="'Além do limite da patente'"
@@ -882,9 +896,15 @@
                     </div>
                     <div class="compras-carrinho-item__meta">
                         <span class="compras-item__custo">{{ amp.custoTexto }}</span>
-                        <span class="compras-item__peso"
-                            >{{ amp.empilhamentos }}/{{ amp.maximoEfetivo }} stacks</span
-                        >
+                        <app-empilhamento
+                            [iniciais]="amp.empilhamento.iniciais"
+                            [atuais]="amp.empilhamento.atuais"
+                            [maximo]="amp.empilhamento.maximo"
+                            [rotulo]="amp.nome"
+                        />
+                        @if (amp.maximoEfetivo < amp.empilhamento.maximo) {
+                        <span class="compras-item__peso">máx. {{ amp.maximoEfetivo }}</span>
+                        }
                     </div>
                 </div>
                 <div class="compras-carrinho-item__stat">{{ amp.efeito }}</div>
