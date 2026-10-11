@@ -2,8 +2,8 @@ import { HttpClient, HttpContext } from "@angular/common/http";
 import { Injectable, inject } from "@angular/core";
 import type {
     RegraPecaAlteradaDto, RegraPecaArvoreItemDto, RegraPecaCriadaDto, RegraPecaCriarDto,
-    RegraPecaDuplicadaDto, RegraPecaExcluidaDto, RegraPecaMovidaDto, RegraPecaRecuperadaDto,
-    RegraPecaRestauradaDto,
+    RegraPecaDuplicadaDto, RegraPecaExcluidaDto, RegraPecaMovidaDto, RegraPecaNomeAlteradaDto,
+    RegraPecaRecuperadaDto, RegraPecaRestauradaDto,
 } from "@contratados-rpg/shared/dtos/livro";
 import type { StandardResponse } from "@contratados-rpg/shared/interfaces";
 import { Observable, map } from "rxjs";
@@ -47,6 +47,12 @@ export class OficinaApi {
         return this.httpClient.patch<StandardResponse<RegraPecaMovidaDto>>(
             `${this.base(codigo)}/${id}/posicao`, { pecaPaiId, indice, revisao }, { context: this.contexto })
             .pipe(map((resposta) => resposta.dados as RegraPecaMovidaDto));
+    }
+
+    alterarNome(codigo: string, id: number, nome: string, revisao: number): Observable<RegraPecaNomeAlteradaDto> {
+        return this.httpClient.patch<StandardResponse<RegraPecaNomeAlteradaDto>>(
+            `${this.base(codigo)}/${id}/nome`, { nome, revisao }, { context: this.contexto })
+            .pipe(map((resposta) => resposta.dados as RegraPecaNomeAlteradaDto));
     }
 
     duplicar(codigo: string, id: number): Observable<RegraPecaDuplicadaDto> {

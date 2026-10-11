@@ -27,6 +27,7 @@
         <h3 class="regras-classe__rotulo">Habilidades de classe</h3>
         <app-regras-conteudo
             [filhos]="bloco().habilidades"
+            [pai]="bloco().peca ?? undefined"
             [documento]="documento()"
             (navegarAncora)="navegarAncora.emit($event)"
         />
@@ -36,6 +37,14 @@
                 [iniciais]="bloco().arquetipos"
                 [documento]="documento()"
                 (navegarAncora)="navegarAncora.emit($event)"
+            />
+        }
+        @if (bloco().peca; as pecaClasse) {
+            <app-oficina-insercao
+                [pai]="pecaClasse"
+                [restritoA]="tiposArquetipo"
+                [fim]="true"
+                rotulo="Arquétipo"
             />
         }
     </div>

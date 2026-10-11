@@ -1,0 +1,202 @@
+// Sumário da Oficina (`.sumario` do exemplão): as mesmas linhas do sumário do leitor, com alça de arrastar
+// e a linha de destino. Sem encapsulamento: a prévia do arrasto sai do componente (é colocada no <body>).
+// Análogo: `.regras__sumario-item` do leitor de Regras.
+.oficina-sumario {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
+    min-height: 0;
+
+    &__lista {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    &__item {
+        display: block;
+    }
+
+    &__linha {
+        display: flex;
+        align-items: center;
+        gap: var(--space-4);
+        min-height: 26px;
+        padding-right: var(--space-4);
+        border-left: 2px solid transparent;
+
+        &:hover,
+        &:focus-within,
+        &--ativa {
+            background: var(--surface-2);
+        }
+
+        &--ativa {
+            border-left-color: var(--accent);
+        }
+    }
+
+    &__alca {
+        flex: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 18px;
+        align-self: stretch;
+        color: var(--text-mute);
+        font: 600 12px var(--font-mono);
+        letter-spacing: -2px;
+        cursor: grab;
+        touch-action: none;
+
+        &:hover {
+            color: var(--text);
+        }
+    }
+
+    &__nome {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        align-self: stretch;
+        gap: var(--space-4);
+        padding: 3px var(--space-4);
+        border: 0;
+        background: none;
+        color: var(--text-dim);
+        font: 500 12px / 1.4 var(--font-sans);
+        text-align: left;
+        overflow-wrap: anywhere;
+        cursor: pointer;
+
+        &:hover,
+        &[aria-current="location"] {
+            color: var(--text);
+        }
+    }
+
+    &__glifo {
+        flex: none;
+        width: 12px;
+        color: var(--accent);
+        font: 400 11px var(--font-mono);
+    }
+
+    &__sem-nome {
+        color: var(--text-mute);
+    }
+
+    // O renomear aparece com o mouse ou o foco na linha (e sempre em tela sem mouse).
+    &__renomear {
+        flex: none;
+        opacity: 0;
+    }
+
+    &__linha:hover &__renomear,
+    &__linha:focus-within &__renomear,
+    &__linha--ativa &__renomear {
+        opacity: 1;
+    }
+
+    &__campo {
+        flex: 1;
+        min-width: 0;
+        height: 28px;
+        padding: 0 var(--space-8);
+        color: var(--text);
+        background: var(--bg);
+        border: 1px solid var(--accent-border);
+        border-radius: var(--radius-control);
+        font: 500 12px var(--font-sans);
+
+        &:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 1px;
+        }
+    }
+
+    // Lugar onde a peça vai cair: a barra de acento recuada no nível de destino, ou vermelha se recusado.
+    &__alvo {
+        height: 26px;
+        margin-right: var(--space-4);
+        background: var(--accent-dim);
+        border: 1px dashed var(--accent-border);
+        border-radius: var(--radius-control);
+
+        &--recusado {
+            border-color: var(--erro);
+            background: transparent;
+        }
+    }
+
+    // Prévia que acompanha o ponteiro: o nome da peça e, em baixo, onde ela vai ficar (ou por que não pode).
+    &__previa {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        max-width: 280px;
+        padding: var(--space-8) var(--space-12);
+        color: var(--text);
+        background: var(--surface-2);
+        border: 1px solid var(--accent-border);
+        border-radius: var(--radius-control);
+        box-shadow: 0 8px 24px rgb(0 0 0 / 45%);
+        z-index: 1200;
+
+        &--recusada {
+            border-color: var(--erro);
+        }
+    }
+
+    &__previa-nome {
+        font: 600 12px / 1.3 var(--font-sans);
+        overflow-wrap: anywhere;
+    }
+
+    &__previa-destino {
+        color: var(--text-dim);
+        font: 500 11px / 1.3 var(--font-mono);
+        overflow-wrap: anywhere;
+    }
+
+    &__previa--recusada &__previa-destino {
+        color: var(--erro);
+    }
+
+    &__vazio {
+        padding: var(--space-8);
+        color: var(--text-mute);
+        font: 400 12px var(--font-sans);
+    }
+
+    &__ajuda {
+        margin: 0;
+        color: var(--text-mute);
+        font: 400 11px / 1.4 var(--font-sans);
+    }
+
+    &__anuncio {
+        margin: 0;
+        color: var(--text-dim);
+        font: 400 11px / 1.4 var(--font-mono);
+
+        &:empty {
+            display: none;
+        }
+    }
+}
+
+.oficina-sumario__lista.cdk-drop-list-dragging .oficina-sumario__item:not(.cdk-drag-placeholder) {
+    transition: transform 0.15s;
+}
+
+// Sem mouse: o rename fica sempre à vista e a alça ganha área de toque.
+@media (hover: none) {
+    .oficina-sumario__renomear {
+        opacity: 1;
+    }
+    .oficina-sumario__alca {
+        width: 28px;
+    }
+}

@@ -9,6 +9,7 @@ import {
 } from "../../core/exceptions";
 import type { TransacaoService } from "../../database/transacao.service";
 import type { JwtPayload } from "../autenticacao/jwt-payload.interface";
+import { criarEsqueletoPeca } from "@contratados-rpg/shared/livro";
 import { RegraPecaService } from "./regra-peca.service";
 
 const admin: JwtPayload = { sub: 7, login: "a", tipo: TipoUsuarioEnum.ADMIN, tokenVersao: 1 };
@@ -29,9 +30,10 @@ const paragrafo = (id: number, pai: number | null, ordem: number, revisao = 1): 
 function criar(inicial: RegraPecaArvoreItemDto[]) {
   const linhas = inicial.map((item) => ({ ...item }));
   let proximoId = 100;
+  const antigas: { regraPecaId: number; identificador: string; ancora: string }[] = [];
   const repositorio = {
     listarArvore: vi.fn(() => Promise.resolve(linhas.map((item) => ({ ...item })))),
-    recuperarPeca: vi.fn((dto: { id: number }) => Promise.resolve(linhas.find((item) => item.id === dto.id) ?? null)),
+    recuperarPeca: vi.fn((dto: { id: number }) => Promise.resolve(linhas.find((item) => item.id === dto.id) ? { ...linhas.find((item) => item.id === dto.id)! } : null)),
     alterarDados: vi.fn((dto: { id: number; dados: unknown; revisao: number }) => {
       const peca = linhas.find((item) => item.id === dto.id && item.revisao === dto.revisao);
       if (!peca) return Promise.resolve(null);
@@ -59,14 +61,38 @@ function criar(inicial: RegraPecaArvoreItemDto[]) {
       return Promise.resolve(peca ? 1 : 0);
     }),
     restaurarPeca: vi.fn().mockResolvedValue(2),
+    alterarAncora: vi.fn((dto: { id: number; ancora: string | null; revisao: number }) => {
+      const peca = linhas.find((item) => item.id === dto.id && item.revisao === dto.revisao);
+      if (!peca) return Promise.resolve(null);
+      Object.assign(peca, { ancora: dto.ancora, revisao: peca.revisao + 1 });
+      return Promise.resolve({ ...peca });
+    }),
+    listarAncorasAntigas: vi.fn(() => Promise.resolve(antigas.map((item) => ({ ...item })))),
+    criarAncoraAntiga: vi.fn((dto: { regraPecaId: number; ancora: string }) => {
+      antigas.push({ regraPecaId: dto.regraPecaId, identificador: uuid(dto.regraPecaId), ancora: dto.ancora });
+      return Promise.resolve(true);
+    }),
   };
   const livros = {
     recuperarLivro: vi.fn((dto: { codigo: string }) => Promise.resolve(dto.codigo === "sistema" ? livro : null)),
     bloquearLivro: vi.fn().mockResolvedValue(undefined),
   };
-  const transacao = { executar: <T>(operacao: () => Promise<T>) => operacao() } as unknown as TransacaoService;
+  // Como o banco: falha no meio da transação desfaz tudo o que ela gravou.
+  const transacao = {
+    executar: async <T>(operacao: () => Promise<T>) => {
+      const copia = linhas.map((item) => ({ ...item }));
+      const copiaAntigas = antigas.map((item) => ({ ...item }));
+      try {
+        return await operacao();
+      } catch (erro) {
+        linhas.splice(0, linhas.length, ...copia);
+        antigas.splice(0, antigas.length, ...copiaAntigas);
+        throw erro;
+      }
+    },
+  } as unknown as TransacaoService;
   const servico = new RegraPecaService(livros as never, repositorio as never, transacao);
-  return { servico, repositorio, linhas, livros };
+  return { servico, repositorio, linhas, livros, antigas };
 }
 
 const mensagem = (trecho: string) => ({ response: { mensagem: expect.stringContaining(trecho) as string } });
@@ -207,6 +233,151 @@ describe("RegraPecaService — criar", () => {
     await expect(servico.criar({ ...base, dados: { texto: "x" } as never }, admin)).rejects.toThrow(BusinessException);
     await expect(servico.criar({ ...base, dados: null as never }, admin)).rejects.toThrow(BusinessException);
     await expect(servico.criar(base, normal)).rejects.toThrow(UnauthorizedAccessException);
+  });
+});
+
+describe("RegraPecaService — criar com esqueleto", () => {
+  const esqueletoArquetipo = criarEsqueletoPeca(Tipo.ARQUETIPO);
+  const classe = (id: number): RegraPecaArvoreItemDto => ({
+    id, livroId: 1, pecaPaiId: null, tipo: Tipo.CLASSE, identificador: uuid(id), ancora: null, ordem: 0,
+    dados: criarEsqueletoPeca(Tipo.CLASSE).dados, revisao: 1,
+  });
+  const pedido = {
+    codigo: "sistema",
+    tipo: Tipo.ARQUETIPO,
+    pecaPaiId: 1,
+    indice: 0,
+    dados: esqueletoArquetipo.dados,
+    filhos: esqueletoArquetipo.filhos,
+  };
+
+  it("cria o arquétipo com a habilidade inicial vazia dentro dele", async () => {
+    const { servico, linhas } = criar([classe(1)]);
+    const { peca, filhas } = await servico.criar(pedido, admin);
+    expect(filhas).toHaveLength(1);
+    expect(filhas[0]).toMatchObject({ tipo: Tipo.HABILIDADE, pecaPaiId: peca.id, ordem: 0 });
+    expect(filhas[0].dados).toMatchObject({ inicial: true, nome: "" });
+    expect(linhas).toHaveLength(3);
+  });
+
+  it("é atômico: falha ao criar a filha não deixa o arquétipo pela metade", async () => {
+    const { servico, repositorio, linhas } = criar([classe(1)]);
+    const original = repositorio.criarPeca.getMockImplementation()!;
+    repositorio.criarPeca.mockImplementationOnce(original).mockRejectedValueOnce(new Error("banco caiu"));
+    await expect(servico.criar(pedido, admin)).rejects.toThrow("banco caiu");
+    expect(linhas.map((item) => item.id)).toEqual([1]);
+  });
+
+  it("recusa arquétipo e subclasse sem a habilidade inicial (a projeção do livro quebraria)", async () => {
+    const { servico, linhas } = criar([classe(1)]);
+    await expect(servico.criar({ ...pedido, filhos: [] }, admin)).rejects.toThrow(BusinessException);
+    await expect(servico.criar({ ...pedido, filhos: undefined }, admin)).rejects.toThrow(BusinessException);
+    expect(linhas).toHaveLength(1);
+  });
+
+  it("recusa filho que não cabe no pai, dados malformados e esqueleto grande demais", async () => {
+    const { servico, linhas } = criar([classe(1)]);
+    const habilidade = criarEsqueletoPeca(Tipo.HABILIDADE);
+    const invalidos = [
+      [{ tipo: Tipo.SECAO, dados: criarEsqueletoPeca(Tipo.SECAO).dados, filhos: [] }],
+      [{ tipo: Tipo.HABILIDADE, dados: { nome: 1 } as never, filhos: [] }],
+      [{ ...habilidade, filhos: [habilidade] }],
+      Array.from({ length: 21 }, () => habilidade),
+    ];
+    for (const filhos of invalidos) {
+      await expect(servico.criar({ ...pedido, filhos }, admin)).rejects.toThrow(BusinessException);
+    }
+    expect(linhas).toHaveLength(1);
+  });
+});
+
+describe("RegraPecaService — âncora do primeiro nome", () => {
+  const nova = (tipo: Tipo, dados: unknown, ancora: string | null = null): RegraPecaArvoreItemDto => ({
+    id: 1, livroId: 1, pecaPaiId: null, tipo, identificador: uuid(1), ancora, ordem: 0, dados: dados as never, revisao: 1,
+  });
+
+  it("seção nova ganha a âncora quando recebe o primeiro título", async () => {
+    const { servico } = criar([nova(Tipo.SECAO, { titulo: "", nivel: 2, glifo: null })]);
+    const { peca } = await servico.alterarDados(
+      { codigo: "sistema", id: 1, dados: { titulo: "Armas Longas", nivel: 2, glifo: null }, revisao: 1 }, admin);
+    expect(peca.ancora).toBe("armas-longas");
+  });
+
+  it("não troca a âncora de quem já tem, e peça sem âncora de link (parágrafo) segue sem", async () => {
+    const com = criar([nova(Tipo.SECAO, { titulo: "A", nivel: 2, glifo: null }, "velha")]);
+    const r1 = await com.servico.alterarDados(
+      { codigo: "sistema", id: 1, dados: { titulo: "B", nivel: 2, glifo: null }, revisao: 1 }, admin);
+    expect(r1.peca.ancora).toBe("velha");
+    const sem = criar([nova(Tipo.PARAGRAFO, { trechos: [] })]);
+    const r2 = await sem.servico.alterarDados(
+      { codigo: "sistema", id: 1, dados: { trechos: [{ tipo: "texto", texto: "x" }] }, revisao: 1 }, admin);
+    expect(r2.peca.ancora).toBeNull();
+  });
+
+  it("título ainda vazio não gera âncora", async () => {
+    const { servico } = criar([nova(Tipo.SECAO, { titulo: "", nivel: 2, glifo: null })]);
+    const { peca } = await servico.alterarDados(
+      { codigo: "sistema", id: 1, dados: { titulo: "  ", nivel: 2, glifo: null }, revisao: 1 }, admin);
+    expect(peca.ancora).toBeNull();
+  });
+});
+
+describe("RegraPecaService — renomear", () => {
+  const comAncora = (id: number, ancora: string | null, titulo: string): RegraPecaArvoreItemDto => ({
+    ...secao(id, null, id),
+    ancora,
+    dados: { titulo, nivel: 1, glifo: null },
+  });
+  const renomear = (servico: RegraPecaService, id: number, nome: string, revisao = 1) =>
+    servico.alterarNome({ codigo: "sistema", id, nome, revisao }, admin);
+
+  it("grava o nome, deriva a âncora nova e guarda a antiga", async () => {
+    const { servico, antigas } = criar([comAncora(1, "velho", "Velho")]);
+    const { peca, ancoraAntiga } = await renomear(servico, 1, "Título Novo");
+    expect(peca.dados).toMatchObject({ titulo: "Título Novo" });
+    expect(peca.ancora).toBe("titulo-novo");
+    expect(peca.revisao).toBe(3);
+    expect(ancoraAntiga).toBe("velho");
+    expect(antigas).toEqual([expect.objectContaining({ regraPecaId: 1, ancora: "velho" })]);
+  });
+
+  it("colisão com âncora atual ou antiga de outra peça resolve com sufixo", async () => {
+    const { servico, antigas } = criar([comAncora(1, "a", "A"), comAncora(2, "golpe", "Golpe"), comAncora(3, "x", "X")]);
+    antigas.push({ regraPecaId: 3, identificador: uuid(3), ancora: "golpe-2" });
+    const { peca } = await renomear(servico, 1, "Golpe");
+    expect(peca.ancora).toBe("golpe-3");
+  });
+
+  it("voltar ao nome antigo reaproveita a própria âncora antiga", async () => {
+    const { servico } = criar([comAncora(1, "velho", "Velho")]);
+    const primeira = await renomear(servico, 1, "Novo");
+    const volta = await renomear(servico, 1, "Velho", primeira.peca.revisao);
+    expect(volta.peca.ancora).toBe("velho");
+  });
+
+  it("peça sem âncora ganha uma, sem registrar antiga", async () => {
+    const { servico, repositorio } = criar([comAncora(1, null, "")]);
+    const { ancoraAntiga, peca } = await renomear(servico, 1, "Nova");
+    expect(peca.ancora).toBe("nova");
+    expect(ancoraAntiga).toBeNull();
+    expect(repositorio.criarAncoraAntiga).not.toHaveBeenCalled();
+  });
+
+  it("mesmo nome não registra a âncora atual como antiga", async () => {
+    const { servico, repositorio } = criar([comAncora(1, "velho", "Velho")]);
+    const { ancoraAntiga } = await renomear(servico, 1, "Velho");
+    expect(ancoraAntiga).toBeNull();
+    expect(repositorio.criarAncoraAntiga).not.toHaveBeenCalled();
+  });
+
+  it("recusa revisão defasada, nome vazio, tipo sem nome e não-ADMIN", async () => {
+    const { servico } = criar([comAncora(1, "a", "A"), paragrafo(2, 1, 0)]);
+    await expect(renomear(servico, 1, "B", 9)).rejects.toThrow(ResourceConflictException);
+    await expect(renomear(servico, 1, "   ")).rejects.toThrow(BusinessException);
+    await expect(renomear(servico, 2, "B")).rejects.toThrow(BusinessException);
+    await expect(servico.alterarNome({ codigo: "sistema", id: 1, nome: "B", revisao: 1 }, normal)).rejects.toThrow(
+      UnauthorizedAccessException,
+    );
   });
 });
 

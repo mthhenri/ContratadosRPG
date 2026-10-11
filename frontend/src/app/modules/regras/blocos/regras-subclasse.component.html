@@ -59,6 +59,7 @@
                 <span class="regras-subclasse__rotulo">Habilidades de subclasse</span>
                 <app-regras-conteudo
                     [filhos]="bloco().habilidades"
+                    [pai]="bloco().peca ?? undefined"
                     [documento]="documento()"
                     (navegarAncora)="navegarAncora.emit($event)"
                 />

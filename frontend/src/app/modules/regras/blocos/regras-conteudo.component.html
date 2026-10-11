@@ -1,3 +1,6 @@
+@if (pai() !== undefined && filhos().length === 0) {
+    <app-oficina-insercao [pai]="pai() ?? null" [depoisDe]="null" [fim]="true" />
+}
 @for (grupo of grupos(); track $index) {
     <div
         [class.regras-conteudo__habilidades]="grupo.habilidades && grupo.blocos.length > 1"
@@ -202,4 +205,11 @@
             </app-oficina-peca>
         }
     </div>
+    @if (pai() !== undefined && pecaDe(grupo.blocos[grupo.blocos.length - 1])) {
+        <app-oficina-insercao
+            [pai]="pai() ?? null"
+            [depoisDe]="pecaDe(grupo.blocos[grupo.blocos.length - 1]) ?? null"
+            [fim]="$last"
+        />
+    }
 }

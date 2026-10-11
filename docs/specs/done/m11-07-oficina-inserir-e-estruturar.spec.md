@@ -38,6 +38,9 @@ Permitir criar peças novas (menu "+" e "/" com esqueletos) e reorganizar a estr
   overflow; foco e alvos de toque.
 - Leitor fora da Oficina inalterado. Lint e testes dos três workspaces verdes.
 
+Concluída. Decisões, verificação e limites em
+[`m11-07-oficina-inserir-e-estruturar/verificacao.md`](m11-07-oficina-inserir-e-estruturar/verificacao.md).
+
 ## Fora de Escopo
 
 Edição de blocos ricos adicionais (`m11-08`); marcas de mudança e publicação (`m11-09`); criar

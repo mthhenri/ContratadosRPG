@@ -1,0 +1,55 @@
+@if (aberto()) {
+  <div
+    #painel
+    class="menu-insercao"
+    [style.left.px]="posicao().esquerda"
+    [style.top.px]="posicao().topo"
+    [style.bottom.px]="posicao().base"
+    [style.width.px]="posicao().largura"
+    [style.max-height.px]="posicao().alturaMaxima"
+  >
+    <input
+      #campo
+      class="menu-insercao__campo"
+      type="text"
+      role="combobox"
+      autocomplete="off"
+      enterkeyhint="go"
+      aria-autocomplete="list"
+      aria-expanded="true"
+      [attr.aria-label]="titulo()"
+      [attr.aria-controls]="listaId"
+      [attr.aria-activedescendant]="visiveis().length ? id(indiceAtivo()) : null"
+      [placeholder]="placeholder()"
+      [value]="consulta()"
+      (input)="digitar($event)"
+      (keydown)="tratarTecla($event)"
+    />
+    <ul #lista class="menu-insercao__lista" role="listbox" [id]="listaId" [attr.aria-label]="titulo()">
+      @for (opcao of visiveis(); track opcao.id; let i = $index) {
+        <li
+          class="menu-insercao__opcao"
+          role="option"
+          [id]="id(i)"
+          [class.menu-insercao__opcao--ativa]="i === indiceAtivo()"
+          [attr.aria-selected]="i === indiceAtivo()"
+          tabindex="-1"
+          (mousedown)="$event.preventDefault()"
+          (click)="escolher(opcao)"
+          (keydown.enter)="escolher(opcao)"
+          (mousemove)="indiceAtivo.set(i)"
+        >
+          @if (opcao.marca) {
+            <b class="menu-insercao__marca" aria-hidden="true">{{ opcao.marca }}</b>
+          }
+          <strong class="menu-insercao__rotulo">{{ opcao.rotulo }}</strong>
+          @if (opcao.descricao) {
+            <span class="menu-insercao__descricao">{{ opcao.descricao }}</span>
+          }
+        </li>
+      } @empty {
+        <li class="menu-insercao__vazio" role="presentation">{{ vazio() }}</li>
+      }
+    </ul>
+  </div>
+}

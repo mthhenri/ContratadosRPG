@@ -11,9 +11,12 @@ import type {
   RegraPecaDadosAlterarDto,
   RegraPecaDuplicadaDto,
   RegraPecaDuplicarDto,
+  RegraPecaEsqueletoDto,
   RegraPecaExcluidaDto,
   RegraPecaExcluirDto,
   RegraPecaMovidaDto,
+  RegraPecaNomeAlteradaDto,
+  RegraPecaNomeAlterarDto,
   RegraPecaPosicaoAlterarDto,
   RegraPecaRecuperadaDto,
   RegraPecaRecuperarDto,
@@ -22,6 +25,8 @@ import type {
 } from "@contratados-rpg/shared/dtos/livro";
 import { LivroPendenciaCodigoEnum, TipoRegraPecaEnum, TipoUsuarioEnum } from "@contratados-rpg/shared/enums";
 import {
+  campoNomeDaPeca,
+  derivarAncoraUnica,
   LIVRO_FILHOS_PERMITIDOS,
   LIVRO_RAIZ_PERMITIDA,
   validarArvoreLivro,
@@ -45,6 +50,16 @@ const PENDENCIAS_QUE_RECUSAM_EDICAO: readonly LivroPendenciaCodigoEnum[] = [
 
 /** Maior valor de uma coluna `integer`; acima disso o banco recusaria com erro 500. */
 const INTEIRO_MAXIMO = 2_147_483_647;
+
+/** Teto de peças num esqueleto enviado de uma vez (o maior esqueleto real tem 2). */
+const ESQUELETO_MAXIMO_DE_PECAS = 20;
+
+/** Tipos cuja âncora vira link na leitura: ganham uma sozinhos quando recebem o primeiro nome. */
+const TIPOS_COM_ANCORA_AUTOMATICA: readonly TipoRegraPecaEnum[] = [
+  TipoRegraPecaEnum.SECAO,
+  TipoRegraPecaEnum.CLASSE,
+  TipoRegraPecaEnum.SUBCLASSE,
+];
 
 const CONFLITO_DE_REVISAO =
   "A peça foi alterada por outra pessoa ou em outra aba. Recarregue a peça antes de continuar.";
@@ -93,12 +108,47 @@ export class RegraPecaService {
       revisao: dto.revisao,
     });
     if (!alterada) throw new ResourceConflictException(CONFLITO_DE_REVISAO);
-    return { peca: alterada };
+    return { peca: (await this.atribuirAncoraInicial(livro, alterada)) ?? alterada };
+  }
+
+  /**
+   * Seção, classe e subclasse criadas na Oficina nascem sem âncora (sem nome ainda); no primeiro nome
+   * ganham a âncora derivada dele, senão ficariam sem link no sumário público. Quem já tem âncora não muda:
+   * trocar a âncora é o "Renomear", que guarda a antiga.
+   */
+  private async atribuirAncoraInicial(
+    livro: LivroResumoDto,
+    peca: RegraPecaRecuperadaDto,
+  ): Promise<RegraPecaRecuperadaDto | null> {
+    const campo = campoNomeDaPeca(peca.tipo);
+    if (peca.ancora !== null || campo === null || !TIPOS_COM_ANCORA_AUTOMATICA.includes(peca.tipo)) return null;
+    const valor = (peca.dados as unknown as Record<string, unknown>)[campo];
+    const nome = typeof valor === "string" ? valor.trim() : "";
+    if (!nome) return null;
+    return this.transacaoService.executar(async () => {
+      await this.livroRepository.bloquearLivro({ livroId: livro.id });
+      const atual = await this.regraPecaRepository.recuperarPeca({ id: peca.id });
+      if (!atual || atual.ancora !== null) return null;
+      const ancora = await this.ancoraDisponivel(livro.id, atual.id, nome);
+      return this.regraPecaRepository.alterarAncora({ id: atual.id, ancora, revisao: atual.revisao });
+    });
+  }
+
+  /** Âncora do nome que não colide com a atual nem com as antigas de outra peça do livro. */
+  private async ancoraDisponivel(livroId: number, pecaId: number, nome: string): Promise<string> {
+    const arvore = await this.regraPecaRepository.listarArvore({ livroId });
+    const antigas = await this.regraPecaRepository.listarAncorasAntigas({ livroId });
+    const indisponiveis = new Set<string>();
+    for (const outra of arvore) if (outra.id !== pecaId && outra.ancora) indisponiveis.add(outra.ancora);
+    for (const antiga of antigas) if (antiga.regraPecaId !== pecaId) indisponiveis.add(antiga.ancora);
+    return derivarAncoraUnica(nome, indisponiveis);
   }
 
   /**
    * Cria uma peça (sem âncora) na posição pedida, deslocando as irmãs seguintes. O `dados` precisa ter
    * a forma do tipo, e o tipo precisa caber no pai (mesma tabela da Oficina: `LIVRO_FILHOS_PERMITIDOS`).
+   * Os `filhos` do esqueleto (ex.: a habilidade inicial do arquétipo) nascem na mesma transação: ou a
+   * peça e todas as filhas existem, ou nenhuma.
    */
   async criar(dto: RegraPecaCriarDto, usuarioAtivo: JwtPayload): Promise<RegraPecaCriadaDto> {
     this.exigirAdmin(usuarioAtivo);
@@ -117,6 +167,7 @@ export class RegraPecaService {
       }
       this.exigirPaiSemQuantidades(pai, "criar peças em");
       this.exigirDadosValidos(dto.tipo, dto.dados);
+      this.exigirEsqueletoValido(dto.tipo, dto.filhos ?? []);
 
       const irmas = this.irmasOrdenadas(arvore, dto.pecaPaiId);
       const indice = Math.min(dto.indice, irmas.length);
@@ -138,8 +189,66 @@ export class RegraPecaService {
         dados: dto.dados,
       });
       if (!criada) throw new ResourceConflictException("Não foi possível criar a peça: o pai mudou.");
+      const filhasCriadas = new Set<number>();
+      const criarFilhas = async (pecaPaiId: number, filhos: readonly RegraPecaEsqueletoDto[]): Promise<void> => {
+        for (const [ordem, filho] of filhos.entries()) {
+          const filha = await this.regraPecaRepository.criarPeca({
+            livroId: livro.id,
+            pecaPaiId,
+            tipo: filho.tipo,
+            identificador: randomUUID(),
+            ancora: null,
+            ordem,
+            dados: filho.dados,
+          });
+          if (!filha) throw new ResourceConflictException("Não foi possível criar a peça: o pai mudou.");
+          filhasCriadas.add(filha.id);
+          await criarFilhas(filha.id, filho.filhos ?? []);
+        }
+      };
+      await criarFilhas(criada.id, dto.filhos ?? []);
       const atual = await this.regraPecaRepository.listarArvore({ livroId: livro.id });
-      return { peca: criada, pecas: atual.filter((item) => alteradas.has(item.id)) };
+      return {
+        peca: criada,
+        pecas: atual.filter((item) => alteradas.has(item.id)),
+        filhas: atual.filter((item) => filhasCriadas.has(item.id)),
+      };
+    });
+  }
+
+  /**
+   * Renomeia a peça: grava o nome (ou título) novo e deriva dele a âncora nova, que não pode colidir com
+   * nenhuma âncora atual nem antiga de outra peça do livro. A âncora que ela deixa fica registrada, e os
+   * links e URLs antigos continuam resolvendo (a leitura herdada da `m11-04` usa `ancorasAntigas`).
+   */
+  async alterarNome(dto: RegraPecaNomeAlterarDto, usuarioAtivo: JwtPayload): Promise<RegraPecaNomeAlteradaDto> {
+    this.exigirAdmin(usuarioAtivo);
+    this.exigirRevisao(dto.revisao);
+    const nome = typeof dto.nome === "string" ? dto.nome.trim() : "";
+    if (!nome || nome.length > 200) throw new BusinessException("Informe um nome de até 200 caracteres.");
+    return this.transacaoService.executar(async () => {
+      const livro = await this.recuperarLivroExistente(dto.codigo);
+      await this.livroRepository.bloquearLivro({ livroId: livro.id });
+      const peca = await this.recuperarPecaDoLivro(dto.id, livro);
+      const campo = campoNomeDaPeca(peca.tipo);
+      if (campo === null) throw new BusinessException("Este tipo de peça não tem nome para renomear.");
+      if (peca.revisao !== dto.revisao) throw new ResourceConflictException(CONFLITO_DE_REVISAO);
+
+      const ancoraNova = await this.ancoraDisponivel(livro.id, peca.id, nome);
+
+      const dadosNovos = { ...(peca.dados as object), [campo]: nome } as LivroPecaDto["dados"];
+      const comNome = await this.regraPecaRepository.alterarDados({ id: peca.id, dados: dadosNovos, revisao: peca.revisao });
+      if (!comNome) throw new ResourceConflictException(CONFLITO_DE_REVISAO);
+      if (comNome.ancora === ancoraNova) return { peca: comNome, ancoraAntiga: null };
+
+      const comAncora = await this.regraPecaRepository.alterarAncora({
+        id: peca.id,
+        ancora: ancoraNova,
+        revisao: comNome.revisao,
+      });
+      if (!comAncora) throw new ResourceConflictException(CONFLITO_DE_REVISAO);
+      if (peca.ancora) await this.regraPecaRepository.criarAncoraAntiga({ regraPecaId: peca.id, ancora: peca.ancora });
+      return { peca: comAncora, ancoraAntiga: peca.ancora };
     });
   }
 
@@ -331,6 +440,37 @@ export class RegraPecaService {
         "Os dados enviados não têm a forma de uma peça deste tipo.",
         recusadas.map((pendencia) => pendencia.mensagem),
       );
+    }
+  }
+
+  /** Esqueleto enviado pelo cliente: cada filho cabe no pai, tem a forma do tipo e o total é limitado. */
+  private exigirEsqueletoValido(tipoPai: TipoRegraPecaEnum, filhos: readonly RegraPecaEsqueletoDto[]): void {
+    let total = 0;
+    const percorrer = (pai: TipoRegraPecaEnum, lista: unknown): void => {
+      if (!Array.isArray(lista)) throw new BusinessException("Os filhos do esqueleto precisam ser uma lista.");
+      for (const filho of lista as readonly RegraPecaEsqueletoDto[]) {
+        total += 1;
+        if (total > ESQUELETO_MAXIMO_DE_PECAS) throw new BusinessException("O esqueleto tem peças demais.");
+        if (!LIVRO_FILHOS_PERMITIDOS[pai]?.includes(filho.tipo)) {
+          throw new BusinessException(`${filho.tipo} não pode ficar dentro de ${pai}.`);
+        }
+        this.exigirDadosValidos(filho.tipo, filho.dados);
+        this.exigirHabilidadeInicial(filho.tipo, filho.filhos ?? []);
+        percorrer(filho.tipo, filho.filhos ?? []);
+      }
+    };
+    this.exigirHabilidadeInicial(tipoPai, filhos);
+    percorrer(tipoPai, filhos);
+  }
+
+  /** Arquétipo e subclasse não existem sem a habilidade inicial: sem ela a projeção do livro quebra. */
+  private exigirHabilidadeInicial(tipo: TipoRegraPecaEnum, filhos: readonly RegraPecaEsqueletoDto[]): void {
+    if (tipo !== TipoRegraPecaEnum.ARQUETIPO && tipo !== TipoRegraPecaEnum.SUBCLASSE) return;
+    const iniciais = filhos.filter(
+      (filho) => filho.tipo === TipoRegraPecaEnum.HABILIDADE && (filho.dados as { inicial?: boolean }).inicial === true,
+    );
+    if (iniciais.length !== 1) {
+      throw new BusinessException(`${tipo} precisa nascer com exatamente uma habilidade inicial.`);
     }
   }
 

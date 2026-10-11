@@ -1,0 +1,25 @@
+@if (visivel()) {
+    <button
+        app-botao
+        class="oficina-insercao__botao"
+        variante="secundario"
+        estilo="contorno"
+        tamanho="pequeno"
+        posicaoIcone="esquerda"
+        type="button"
+        aria-haspopup="listbox"
+        [attr.aria-expanded]="aberto()"
+        [attr.aria-label]="rotuloAcessivel()"
+        (click)="alternar()"
+    >
+        <app-icone nome="mais" /> {{ rotulo() }}
+    </button>
+    <app-menu-insercao
+        [aberto]="aberto()"
+        [opcoes]="opcoes()"
+        [ancora]="gatilho"
+        [titulo]="rotuloAcessivel()"
+        (escolheu)="escolher($event)"
+        (fechou)="fechar($event)"
+    />
+}

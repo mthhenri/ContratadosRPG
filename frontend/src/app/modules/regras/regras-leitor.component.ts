@@ -13,6 +13,8 @@ import { SessaoService } from "../../core/services/sessao.service";
 import { RegrasLeituraStore } from "./regras-leitura.store";
 import { OficinaStore } from "./oficina/oficina.store";
 import { OficinaBarra } from "./oficina/oficina-barra.component";
+import { OficinaSumario } from "./oficina/oficina-sumario.component";
+import { MenuInsercao } from "../../shared/ui/menu-insercao/menu-insercao.component";
 import { RegrasLeitorContexto } from "./regras-leitor-contexto";
 import { RegrasConsultaService } from "./regras-consulta.service";
 import { RegrasPesquisaController } from "./regras-pesquisa.controller";
@@ -43,7 +45,7 @@ import { construirSumarioRegras, listarAncorasRegras } from "./regras-sumario";
     imports: [NgTemplateOutlet, Icone, Marca, Botao, Cartao, Esqueleto, EstadoVazio,
         Segmentado, SegmentadoItem, Gaveta, Paleta, RegrasPesquisa, RegrasPesquisaProjecao,
         BotaoIcone, Tooltip, Chip,
-        RegrasConteudoRender, OficinaBarra],
+        RegrasConteudoRender, OficinaBarra, OficinaSumario, MenuInsercao],
     templateUrl: "./regras-leitor.component.html",
     styleUrl: "./regras-leitor.component.scss",
     changeDetection: ChangeDetectionStrategy.OnPush,

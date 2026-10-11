@@ -8,11 +8,13 @@ import { RegrasArquetipos } from "./regras-arquetipos.component";
 import { RegrasConteudoRender } from "./regras-conteudo.component";
 import { recuperarIconeIdentidade } from "./regras-identidade-icone";
 import { RegrasSaude } from "./regras-saude.component";
+import { TipoRegraPecaEnum } from "@contratados-rpg/shared/enums";
+import { OficinaInsercao } from "../oficina/oficina-insercao.component";
 
 @Component({
     selector: "app-regras-classe",
     imports: [
-        Cartao, Icone, RegrasInline, RegrasArquetipos, RegrasSaude,
+        Cartao, Icone, RegrasInline, RegrasArquetipos, RegrasSaude, OficinaInsercao,
         forwardRef(() => RegrasConteudoRender),
     ],
     templateUrl: "./regras-classe.component.html",
@@ -22,6 +24,8 @@ export class RegrasClasse {
     readonly bloco = input.required<BlocoClasse>();
     readonly documento = input<RegrasDocumento["id"]>("sistema");
     readonly navegarAncora = output<string>();
+    /** O "+ Arquétipo" no fim da classe só oferece o que a classe aceita como filho além da habilidade. */
+    protected readonly tiposArquetipo = [TipoRegraPecaEnum.ARQUETIPO];
     private readonly contexto = inject(RegrasLeitorContexto, { optional: true });
     protected readonly identificador = computed(() => {
         const ancora = this.bloco().ancora;

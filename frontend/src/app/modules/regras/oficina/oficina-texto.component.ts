@@ -33,7 +33,7 @@ const ESPERA_ENTREGA_MS = 300;
         "[attr.aria-label]": "rotulo()",
         "[attr.data-peca]": "peca()",
         "[attr.data-campo]": "campo()",
-        "[attr.data-vazio]": "vazio()",
+        "[attr.data-vazio]": "textoVazio()",
         "(keydown)": "aoTeclar($event)",
         "(beforeinput)": "aoAntesDeEntrar($event)",
         "(input)": "aoEntrar($event)",
@@ -56,10 +56,18 @@ export class OficinaTexto {
     private readonly store = inject(OficinaStore);
     private readonly elemento = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
     private entregue = "";
+    /** O campo estava vazio antes da última digitação: só então o "/" abre o menu (não apaga texto selecionado). */
+    private vazioAntes = false;
     private timer: ReturnType<typeof setTimeout> | undefined;
 
     protected simples(): boolean {
         return this.texto() !== null;
+    }
+
+    /** No parágrafo, o espaço vazio lembra do "/" que insere outras peças. */
+    protected textoVazio(): string {
+        return this.vazio() === "Escreva aqui" && this.campo() === "trechos" && this.store.ehParagrafo(this.peca())
+            ? "Escreva aqui, ou digite / para inserir" : this.vazio();
     }
 
     constructor() {
@@ -115,11 +123,23 @@ export class OficinaTexto {
         if (!this.simples() && (evento as InputEvent).inputType === "insertText" && (evento as InputEvent).data === " ") {
             this.converterNivelAmeaca();
         }
+        if (this.abrirMenuBarra()) return;
         clearTimeout(this.timer);
         this.timer = setTimeout(() => this.entregar(), ESPERA_ENTREGA_MS);
     }
 
+    /** Um "/" sozinho num parágrafo abre o menu de inserção (a barra some; o parágrafo fica vazio). */
+    private abrirMenuBarra(): boolean {
+        if (this.simples() || this.campo() !== "trechos" || (this.elemento.textContent ?? "") !== "/"
+            || !this.vazioAntes || !this.store.podeAbrirMenuBarra(this.peca())) return false;
+        this.elemento.textContent = "";
+        this.entregar();
+        this.store.abrirMenuBarra(this.peca(), this.elemento);
+        return this.store.menuBarra() !== null;
+    }
+
     protected aoAntesDeEntrar(evento: InputEvent): void {
+        this.vazioAntes = this.estaVazio();
         // Qualquer quebra de linha vira Enter tratado em `aoTeclar`; o navegador não insere <br>/<div>.
         if (evento.inputType === "insertParagraph" || evento.inputType === "insertLineBreak") evento.preventDefault();
     }

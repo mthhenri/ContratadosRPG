@@ -5,39 +5,39 @@
         [rotulo]="'Arquétipos de ' + bloco().classe"
         (navegou)="selecionar($event)"
     >
-        @for (arquetipo of bloco().arquetipos; track arquetipo.nome) {
+        @for (arquetipo of bloco().arquetipos; track chave(arquetipo); let i = $index) {
             <button
                 app-aba
                 class="regras-arquetipos__aba"
                 type="button"
-                [valor]="arquetipo.nome"
-                [ativa]="ativo() === arquetipo.nome"
-                [id]="identificador(arquetipo.nome) + '-aba'"
-                [attr.aria-controls]="identificador(arquetipo.nome) + '-painel'"
-                (click)="selecionar(arquetipo.nome)"
+                [valor]="chave(arquetipo)"
+                [ativa]="ativo() === chave(arquetipo)"
+                [id]="identificador(arquetipo.nome || chave(arquetipo)) + '-aba'"
+                [attr.aria-controls]="identificador(arquetipo.nome || chave(arquetipo)) + '-painel'"
+                (click)="selecionar(chave(arquetipo))"
             >
                 @if (icone(arquetipo.nome); as nomeIcone) {
                     <app-icone [nome]="nomeIcone" />
                 }
-                {{ arquetipo.nome }}
+                {{ arquetipo.nome || "Arquétipo sem nome" }}
             </button>
         }
     </app-abas>
-    @for (arquetipo of bloco().arquetipos; track arquetipo.nome) {
+    @for (arquetipo of bloco().arquetipos; track chave(arquetipo); let i = $index) {
         <div
             appAbaPainel
             class="regras-arquetipos__painel"
-            [hidden]="ativo() !== arquetipo.nome"
-            [id]="identificador(arquetipo.nome) + '-painel'"
-            [attr.aria-labelledby]="identificador(arquetipo.nome) + '-aba'"
+            [hidden]="ativo() !== chave(arquetipo)"
+            [id]="identificador(arquetipo.nome || chave(arquetipo)) + '-painel'"
+            [attr.aria-labelledby]="identificador(arquetipo.nome || chave(arquetipo)) + '-aba'"
         >
-            <h4 class="regras-arquetipos__impressao">{{ arquetipo.nome }}</h4>
+            <h4 class="regras-arquetipos__impressao">{{ arquetipo.nome || "Arquétipo sem nome" }}</h4>
             <div class="regras-arquetipos__lado">
                 <div class="regras-arquetipos__nome">
                     @if (icone(arquetipo.nome); as nomeIcone) {
                         <app-icone [nome]="nomeIcone" />
                     }
-                    {{ arquetipo.nome }}
+                    {{ arquetipo.nome || "Arquétipo sem nome" }}
                 </div>
                 @if (arquetipo.citacao.length) {
                     <p class="regras-arquetipos__citacao">
@@ -56,7 +56,7 @@
                         }
                     </div>
                 }
-                @if (habilidadeInicial(arquetipo.nome); as inicial) {
+                @if (habilidadeInicial(arquetipo.nome, i); as inicial) {
                     <app-regras-destaque rotulo="Habilidade inicial do arquétipo">
                         <app-regras-conteudo
                             [filhos]="[inicial]"
@@ -71,6 +71,7 @@
                     <span class="regras-arquetipos__rotulo">Habilidades de arquétipo</span>
                     <app-regras-conteudo
                         [filhos]="arquetipo.habilidades"
+                        [pai]="arquetipo.peca ?? undefined"
                         [documento]="documento()"
                         (navegarAncora)="navegarAncora.emit($event)"
                     />

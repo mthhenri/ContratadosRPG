@@ -47,6 +47,7 @@
     }
     <app-regras-conteudo
         [filhos]="bloco().filhos"
+        [pai]="editando() ? (bloco().peca ?? undefined) : undefined"
         [documento]="documento()"
         (navegarAncora)="navegarAncora.emit($event)"
     />

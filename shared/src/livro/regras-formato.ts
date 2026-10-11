@@ -57,6 +57,8 @@ export interface NormalizadoArquetipos extends FonteTabela {
   readonly tipo: "arquetipos";
   readonly classe: string;
   readonly arquetipos: readonly {
+    /** Identificador da peça do arquétipo (só na projeção da Oficina). */
+    readonly peca?: string;
     readonly nome: string;
     readonly citacao: Trechos;
     readonly atributosBonus: Trechos;

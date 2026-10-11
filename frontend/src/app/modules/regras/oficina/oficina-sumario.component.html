@@ -1,0 +1,91 @@
+<div class="oficina-sumario">
+    <p class="oficina-sumario__ajuda">
+        Arraste <span aria-hidden="true">⋮⋮</span> para mover. Pelo teclado: Alt + setas movem, F2 renomeia.
+    </p>
+    <ol
+        class="oficina-sumario__lista"
+        cdkDropList
+        [cdkDropListData]="linhas()"
+        aria-label="Seções, classes e arquétipos do livro"
+        (cdkDropListDropped)="soltar($event)"
+        (cdkDropListSorted)="ordenou($event)"
+    >
+        @for (linha of linhas(); track linha.id) {
+            <li
+                class="oficina-sumario__item"
+                cdkDrag
+                [cdkDragData]="linha"
+                (cdkDragStarted)="iniciar(linha)"
+                (cdkDragMoved)="moveu(linha, $event)"
+                (cdkDragEnded)="terminar()"
+            >
+                <div
+                    class="oficina-sumario__linha"
+                    [class.oficina-sumario__linha--ativa]="store.selecionada() === linha.identificador"
+                    [style.padding-left.px]="8 + linha.profundidade * recuo"
+                >
+                    <span cdkDragHandle class="oficina-sumario__alca" aria-hidden="true">⋮⋮</span>
+                    @if (renomeando() === linha.identificador) {
+                        <input
+                            class="oficina-sumario__campo"
+                            type="text"
+                            maxlength="200"
+                            aria-label="Novo nome da peça"
+                            [value]="nomeBruto(linha)"
+                            (keydown.enter)="confirmarRenomeacao(linha, campo.value)"
+                            (keydown.escape)="cancelarRenomeacao(linha)"
+                            (blur)="cancelarRenomeacao(linha)"
+                            #campo
+                        />
+                    } @else {
+                        <button
+                            class="oficina-sumario__nome"
+                            type="button"
+                            aria-keyshortcuts="Alt+ArrowUp Alt+ArrowDown Alt+ArrowLeft Alt+ArrowRight F2"
+                            [attr.data-sumario-peca]="linha.identificador"
+                            [attr.aria-current]="store.selecionada() === linha.identificador ? 'location' : null"
+                            (click)="irPara.emit(linha.identificador)"
+                            (keydown)="aoTeclar($event, linha)"
+                        >
+                            <span class="oficina-sumario__glifo" aria-hidden="true">{{ glifo(linha) }}</span>
+                            @if (linha.rotulo) {
+                                {{ linha.rotulo }}
+                            } @else {
+                                <em class="oficina-sumario__sem-nome">sem nome</em>
+                            }
+                        </button>
+                        <button
+                            app-botao-icone
+                            class="oficina-sumario__renomear"
+                            tamanho="compacto"
+                            type="button"
+                            aria-label="Renomear peça"
+                            appTooltip="Renomear (F2): gera um link novo e mantém o antigo"
+                            (click)="iniciarRenomeacao(linha)"
+                        >
+                            <app-icone nome="editar" />
+                        </button>
+                    }
+                </div>
+                <div
+                    *cdkDragPlaceholder
+                    class="oficina-sumario__alvo"
+                    [class.oficina-sumario__alvo--recusado]="previa()?.resultado?.ok === false"
+                    [style.margin-left.px]="8 + (previa()?.profundidade ?? linha.profundidade) * recuo"
+                    role="presentation"
+                ></div>
+                <div
+                    *cdkDragPreview
+                    class="oficina-sumario__previa"
+                    [class.oficina-sumario__previa--recusada]="previa()?.resultado?.ok === false"
+                >
+                    <strong class="oficina-sumario__previa-nome">{{ linha.rotulo || "sem nome" }}</strong>
+                    <span class="oficina-sumario__previa-destino">{{ textoDaPrevia() }}</span>
+                </div>
+            </li>
+        } @empty {
+            <li class="oficina-sumario__vazio">O livro ainda não tem seções.</li>
+        }
+    </ol>
+    <p class="oficina-sumario__anuncio" role="status" aria-live="polite">{{ anuncio() }}</p>
+</div>

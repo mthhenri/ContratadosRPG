@@ -180,7 +180,7 @@ function projetarBase(peca: LivroPecaDto): NormalizadoConteudo {
                     habilidade: habilidadeDe(filho),
                   }));
                   const arquetipoDados = dadosDe(arquetipo, Tipo.ARQUETIPO);
-                  return {
+                  return comPeca({
                     nome: arquetipoDados.nome,
                     citacao: arquetipoDados.citacao,
                     atributosBonus: arquetipoDados.atributosBonus,
@@ -190,7 +190,7 @@ function projetarBase(peca: LivroPecaDto): NormalizadoConteudo {
                     habilidadesGeraisMelhoradas: itens
                       .filter(({ marcas }) => marcas.melhorada)
                       .map(({ habilidade }) => habilidade),
-                  };
+                  }, arquetipo);
                 }),
               },
             ]

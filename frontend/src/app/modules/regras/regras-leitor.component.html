@@ -103,6 +103,7 @@
             @if (exibido(); as livroAberto) {
                 <app-regras-conteudo
                     [filhos]="livroAberto.filhos"
+                    [pai]="oficinaAtiva() ? null : undefined"
                     [documento]="livroAberto.id"
                     (navegarAncora)="navegarAncora($event)"
                 />
@@ -273,7 +274,11 @@
                     <app-icone nome="documentos" />
                 </button>
             </div>
-            @if (pesquisa.termo().trim().length < 2) {
+            @if (oficinaAtiva()) {
+                <nav class="regras__sumario" aria-label="Sumário da Oficina">
+                    <app-oficina-sumario (irPara)="irParaPeca($event)" />
+                </nav>
+            } @else if (pesquisa.termo().trim().length < 2) {
                 <nav class="regras__sumario" aria-label="Sumário do documento">
                     <ng-container
                         [ngTemplateOutlet]="arvore"
@@ -313,6 +318,16 @@
         }
     </ol>
 </ng-template>
+@if (oficinaAtiva()) {
+    <app-menu-insercao
+        [aberto]="oficina.menuBarra() !== null"
+        [opcoes]="oficina.opcoesBarra()"
+        [ancora]="oficina.menuBarra()?.ancora ?? null"
+        titulo="Inserir no lugar do parágrafo"
+        (escolheu)="oficina.escolherNoMenuBarra($event)"
+        (fechou)="oficina.fecharMenuBarra($event === 'teclado')"
+    />
+}
 <app-paleta
     [aberto]="paletaAberta()"
     [titulo]="oficinaAtiva() ? 'Ir para peça' : 'Ir para uma seção'"

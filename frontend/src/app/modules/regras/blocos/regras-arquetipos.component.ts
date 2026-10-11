@@ -28,20 +28,26 @@ export class RegrasArquetipos {
     readonly navegarAncora = output<string>();
     protected readonly selecionado = signal<string | null>(null);
     protected readonly ativo = computed(() => {
-        const nome = this.selecionado();
-        return this.bloco().arquetipos.some(arquetipo => arquetipo.nome === nome)
-            ? nome : this.bloco().arquetipos[0]?.nome;
+        const escolhido = this.selecionado();
+        const lista = this.bloco().arquetipos;
+        return lista.some(arquetipo => this.chave(arquetipo) === escolhido)
+            ? escolhido : (lista[0] ? this.chave(lista[0]) : undefined);
     });
     protected readonly icone = recuperarIconeIdentidade;
     private readonly contexto = inject(RegrasLeitorContexto, { optional: true });
-    protected selecionar(nome: string): void { this.selecionado.set(nome); }
+    protected selecionar(chave: string): void { this.selecionado.set(chave); }
+    /** Na Oficina o arquétipo ainda sem nome é identificado pela peça, não pelo nome (que pode repetir vazio). */
+    protected chave(arquetipo: { readonly peca?: string; readonly nome: string }): string {
+        return arquetipo.peca ?? arquetipo.nome;
+    }
     /** Um selo por bônus ("+1 em Luta"), sem reescrever o texto da fonte. */
     protected bonus(trechos: readonly RegrasTrecho[]): readonly string[] | null {
         const itens = lerTextoRegras(trechos).trim().split(/\s+(?=\+\d)/).filter(Boolean);
         return itens.length ? itens : null;
     }
-    protected habilidadeInicial(nome: string) {
-        return this.iniciais().find(arquetipo => arquetipo.nome === nome)?.habilidadeInicial;
+    protected habilidadeInicial(nome: string, indice: number) {
+        return (nome ? this.iniciais().find(arquetipo => arquetipo.nome === nome) : this.iniciais()[indice])
+            ?.habilidadeInicial;
     }
     protected identificador(nome: string): string {
         const identificador = "arquetipo-" + this.documento() + "-" + this.bloco().classe.toLowerCase()

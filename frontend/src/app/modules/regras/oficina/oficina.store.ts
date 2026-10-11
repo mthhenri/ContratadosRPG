@@ -5,12 +5,16 @@ import type {
 } from "@contratados-rpg/shared/dtos/livro";
 import { LIVRO_FORMATO_ATUAL } from "@contratados-rpg/shared/dtos/livro";
 import { TipoRegraPecaEnum } from "@contratados-rpg/shared/enums";
-import { projetarPecasEmRegras, validarArvoreLivro } from "@contratados-rpg/shared/livro";
+import { criarEsqueletoPeca, projetarPecasEmRegras, validarArvoreLivro } from "@contratados-rpg/shared/livro";
 import { firstValueFrom } from "rxjs";
 
 import { NotificacaoService } from "../../../shared/ui/notificacao/notificacao.service";
 import type { RegrasDocumento } from "../regras.model";
 import { OficinaApi } from "./oficina-api.service";
+import {
+    campoInicialDe, construirLinhasSumario, destinoPorTeclado, NOME_DO_TIPO, opcoesDeInsercao, resolverDestino,
+    type LinhaSumario, type ResultadoDoDestino, type TeclaDeEstrutura,
+} from "./oficina-estrutura";
 import { textoDe } from "./oficina-trechos";
 
 type Item = RegraPecaArvoreItemDto;
@@ -108,6 +112,15 @@ export class OficinaStore {
     readonly ativa = computed(() => this.estado() !== "inativo");
     readonly selecionada = signal<string | null>(null);
     readonly pedidoFoco = signal<OficinaPedidoFoco | null>(null);
+    /** Menu do "/": o parágrafo vazio onde ele foi digitado e o elemento onde o menu se ancora. */
+    readonly menuBarra = signal<{ readonly peca: string; readonly ancora: HTMLElement } | null>(null);
+    readonly opcoesBarra = computed(() => {
+        const aberto = this.menuBarra();
+        const item = aberto ? this.item(aberto.peca) : undefined;
+        if (!item) return [];
+        const pai = this.itens().find((candidato) => candidato.id === item.pecaPaiId);
+        return opcoesDeInsercao(pai?.tipo ?? null).filter((opcao) => opcao.id !== TipoRegraPecaEnum.PARAGRAFO);
+    });
 
     private readonly emVoo = signal(0);
     private readonly sujas = signal<ReadonlySet<number>>(new Set());
@@ -126,6 +139,9 @@ export class OficinaStore {
         return "salvo";
     });
     readonly salvou = this.salvouAlgumaVez.asReadonly();
+
+    /** Seções, classes e arquétipos na ordem de leitura: o que o sumário da Oficina mostra e arrasta. */
+    readonly linhasSumario = computed<readonly LinhaSumario[]>(() => construirLinhasSumario(this.itens()));
 
     private readonly porIdentificador = computed(() => new Map(this.itens().map((item) => [item.identificador, item])));
 
@@ -232,6 +248,7 @@ export class OficinaStore {
         this.sujas.set(new Set());
         this.selecionada.set(null);
         this.pedidoFoco.set(null);
+        this.menuBarra.set(null);
         this.falhou.set(false);
         this.codigo.set(null);
     }
@@ -359,8 +376,9 @@ export class OficinaStore {
                 const peca = await firstValueFrom(this.api.alterarDados(codigo, id, enviado, item.revisao));
                 if (geracao !== this.geracao) return;
                 // A resposta só traz a revisão nova: o texto local pode já ter avançado.
+                // A âncora vem junto: a primeira vez que seção/classe ganha nome, o servidor deriva a âncora.
                 this.itens.update((lista) => lista.map((candidato) =>
-                    candidato.id === id ? { ...candidato, revisao: peca.revisao } : candidato));
+                    candidato.id === id ? { ...candidato, revisao: peca.revisao, ancora: peca.ancora } : candidato));
                 this.falhou.set(false);
                 this.salvouAlgumaVez.set(true);
                 if (this.itens().find((candidato) => candidato.id === id)?.dados !== enviado) estado.reenviar = true;
@@ -650,6 +668,214 @@ export class OficinaStore {
         } catch (erro) {
             if (dadosAntes !== undefined && antes !== undefined) this.aplicarDados(base.id, dadosAntes);
             await this.falhaEstrutural(erro, "criar a peça");
+        }
+    }
+
+    // ------------------------------------------- inserir, mover para outro pai, renomear (m11-07)
+
+    /**
+     * Cria uma peça nova com o esqueleto do tipo dentro de `paiIdentificador` (`null` = raiz do livro),
+     * logo depois de `depoisDe` (`null` = no começo). O cursor vai ao primeiro campo. Com `substituir`, a
+     * peça indicada (o parágrafo vazio do "/") sai e a nova fica no lugar dela, num passo só do Desfazer.
+     * Com `aoFinal` (e sem referência), a peça vai para o fim da lista do pai, não para o começo.
+     */
+    async inserir(
+        tipo: TipoRegraPecaEnum, paiIdentificador: string | null, depoisDe: string | null,
+        substituir?: string, aoFinal = false,
+    ): Promise<void> {
+        const codigo = this.codigo();
+        const pai = paiIdentificador === null ? null : this.item(paiIdentificador);
+        if (!codigo || pai === undefined) return;
+        const referencia = depoisDe === null ? undefined : this.item(depoisDe);
+        const vazia = substituir === undefined ? undefined : this.item(substituir);
+        if (referencia) await this.salvarAgora(referencia.id);
+        const irmas = ordenar(this.itens().filter((irma) => irma.pecaPaiId === (pai?.id ?? null)));
+        const posicaoRef = referencia ? irmas.findIndex((irma) => irma.id === referencia.id) : -1;
+        // No lugar de uma peça vazia, a nova ocupa a posição dela; senão vem logo depois da referência.
+        const indice = vazia ? Math.max(0, irmas.findIndex((irma) => irma.id === vazia.id))
+            : aoFinal && !referencia ? irmas.length : posicaoRef + 1;
+        const esqueleto = criarEsqueletoPeca(tipo);
+        try {
+            const resposta = await firstValueFrom(this.api.criar(codigo, {
+                tipo, pecaPaiId: pai?.id ?? null, indice, dados: esqueleto.dados, filhos: esqueleto.filhos,
+            }));
+            this.mesclar([resposta.peca, ...resposta.pecas, ...resposta.filhas]);
+            const criadas = [resposta.peca.id, ...resposta.filhas.map((filha) => filha.id)];
+            let revisaoVazia = vazia?.revisao;
+            if (vazia) {
+                await this.salvarAgora(vazia.id);
+                revisaoVazia = this.item(vazia.identificador)?.revisao ?? vazia.revisao;
+                try {
+                    await firstValueFrom(this.api.excluir(codigo, vazia.id, revisaoVazia));
+                    this.removerLocal(vazia.id);
+                } catch (erro) {
+                    await this.falhaEstrutural(erro, "tirar o parágrafo vazio");
+                }
+            }
+            this.selecionada.set(resposta.peca.identificador);
+            const campo = campoInicialDe(tipo);
+            if (campo) this.pedirFoco({ identificador: resposta.peca.identificador, campo, posicao: "inicio" });
+            this.empilhar({
+                rotulo: `Inserir ${(NOME_DO_TIPO[tipo] ?? "peça").toLowerCase()}`, identificador: resposta.peca.identificador,
+                chave: null, quando: Date.now(),
+                desfazer: async () => {
+                    const criada = this.itens().find((candidato) => candidato.id === resposta.peca.id);
+                    if (criada) {
+                        await firstValueFrom(this.api.excluir(codigo, criada.id, criada.revisao));
+                        this.removerLocal(criada.id);
+                    }
+                    for (const id of criadas) this.estados.delete(id);
+                    if (vazia) {
+                        const volta = await firstValueFrom(this.api.restaurar(codigo, vazia.id));
+                        this.mesclar(volta.pecas);
+                        this.selecionada.set(vazia.identificador);
+                    }
+                },
+            });
+        } catch (erro) {
+            await this.falhaEstrutural(erro, "inserir a peça");
+        }
+    }
+
+    /**
+     * Move a peça para outro pai e posição (o arrastar do sumário e os atalhos de teclado). Devolve se
+     * o movimento valeu; a API tem a palavra final sobre o aninhamento.
+     */
+    async moverPara(identificador: string, pecaPaiId: number | null, indice: number): Promise<boolean> {
+        const codigo = this.codigo();
+        const inicial = this.item(identificador);
+        // Auto-repeat de tecla ou dois arrastos seguidos usariam a mesma revisão: o segundo dá conflito falso.
+        if (!codigo || !inicial || this.movendo) return false;
+        this.movendo = true;
+        try {
+            return await this.moverParaSemTrava(codigo, inicial, identificador, pecaPaiId, indice);
+        } finally {
+            this.movendo = false;
+        }
+    }
+
+    private movendo = false;
+
+    private async moverParaSemTrava(
+        codigo: string, inicial: Item, identificador: string, pecaPaiId: number | null, indice: number,
+    ): Promise<boolean> {
+        const irmasAntes = this.irmas(inicial).filter((irma) => irma.id !== inicial.id);
+        const indiceAntes = irmasAntes.filter((irma) => irma.ordem < inicial.ordem
+            || (irma.ordem === inicial.ordem && irma.id < inicial.id)).length;
+        const paiAntes = inicial.pecaPaiId;
+        await this.salvarAgora(inicial.id);
+        const item = this.item(identificador);
+        if (!item) return false;
+        try {
+            const resposta = await firstValueFrom(this.api.alterarPosicao(codigo, item.id, pecaPaiId, indice, item.revisao));
+            this.mesclar(resposta.pecas);
+            this.empilhar({
+                rotulo: "Mover peça", identificador, chave: null, quando: Date.now(),
+                desfazer: async () => {
+                    const atual = this.item(identificador);
+                    if (!atual) return;
+                    await this.salvarAgora(atual.id);
+                    const voltou = await firstValueFrom(this.api.alterarPosicao(codigo, atual.id, paiAntes, indiceAntes,
+                        this.item(identificador)?.revisao ?? atual.revisao));
+                    this.mesclar(voltou.pecas);
+                },
+            });
+            return true;
+        } catch (erro) {
+            await this.falhaEstrutural(erro, "mover a peça");
+            return false;
+        }
+    }
+
+    /** O "/" só abre o menu num parágrafo cujo pai aceita outros tipos (numa ficha de criatura, não). */
+    podeAbrirMenuBarra(peca: string): boolean {
+        const item = this.item(peca);
+        if (!item || !this.ehParagrafo(peca)) return false;
+        const pai = this.itens().find((candidato) => candidato.id === item.pecaPaiId);
+        return opcoesDeInsercao(pai?.tipo ?? null).some((opcao) => opcao.id !== TipoRegraPecaEnum.PARAGRAFO);
+    }
+
+    abrirMenuBarra(peca: string, ancora: HTMLElement): void {
+        if (this.podeAbrirMenuBarra(peca)) this.menuBarra.set({ peca, ancora });
+    }
+
+    /** Fecha o menu do "/"; sem escolha, o cursor volta ao parágrafo. */
+    fecharMenuBarra(devolverFoco = true): void {
+        const aberto = this.menuBarra();
+        this.menuBarra.set(null);
+        if (aberto && devolverFoco) this.pedirFoco({ identificador: aberto.peca, campo: "trechos", posicao: "fim" });
+    }
+
+    /** O tipo escolhido no "/" toma o lugar do parágrafo vazio. */
+    async escolherNoMenuBarra(tipo: string): Promise<void> {
+        const aberto = this.menuBarra();
+        if (!aberto) return;
+        this.menuBarra.set(null);
+        const vazia = this.item(aberto.peca);
+        if (!vazia) return;
+        const pai = this.itens().find((candidato) => candidato.id === vazia.pecaPaiId);
+        await this.inserir(tipo as TipoRegraPecaEnum, pai?.identificador ?? null, null, vazia.identificador);
+    }
+
+    /** Resolve onde a peça cai quando solta no sumário (posição entre as linhas e profundidade do arrasto). */
+    destinoDoArraste(identificador: string, posicao: number, profundidade: number): ResultadoDoDestino {
+        const item = this.item(identificador);
+        if (!item) return { ok: false, motivo: "A peça não existe mais." };
+        return resolverDestino(this.itens(), this.linhasSumario(), item.id, posicao, profundidade);
+    }
+
+    destinoDeTeclado(identificador: string, tecla: TeclaDeEstrutura): ResultadoDoDestino {
+        const item = this.item(identificador);
+        if (!item) return { ok: false, motivo: "A peça não existe mais." };
+        return destinoPorTeclado(this.itens(), this.linhasSumario(), item.id, tecla);
+    }
+
+    /**
+     * Renomeia a peça: o nome novo gera a âncora nova, e a antiga continua levando à peça. Diferente de
+     * digitar no título da tela, que só troca o texto e deixa os links como estão.
+     */
+    async renomear(identificador: string, nome: string): Promise<boolean> {
+        const codigo = this.codigo();
+        const inicial = this.item(identificador);
+        const limpo = nome.trim();
+        if (!codigo || !inicial || !limpo) return false;
+        await this.salvarAgora(inicial.id);
+        const item = this.item(identificador);
+        if (!item) return false;
+        const dadosAntes = item.dados;
+        const dadosNome = item.dados as unknown as Record<string, unknown>;
+        const nomeAntes = String(dadosNome["titulo"] ?? dadosNome["nome"] ?? "").trim();
+        try {
+            const resposta = await firstValueFrom(this.api.alterarNome(codigo, item.id, limpo, item.revisao));
+            this.itens.update((lista) => lista.map((candidato) => (candidato.id === item.id
+                ? { ...candidato, ...resposta.peca } : candidato)));
+            this.empilhar({
+                rotulo: "Renomear peça", identificador, chave: null, quando: Date.now(),
+                desfazer: async () => {
+                    const atual = this.item(identificador);
+                    if (!atual) return;
+                    await this.salvarAgora(atual.id);
+                    if (nomeAntes) {
+                        const volta = await firstValueFrom(this.api.alterarNome(codigo, atual.id, nomeAntes, atual.revisao));
+                        this.itens.update((lista) => lista.map((candidato) => (candidato.id === atual.id
+                            ? { ...candidato, ...volta.peca } : candidato)));
+                    } else {
+                        this.aplicarDados(atual.id, dadosAntes);
+                        this.agendar(atual.id);
+                        await this.salvarAgora(atual.id);
+                    }
+                },
+            });
+            this.notificacao.notificar({
+                severidade: "sucesso", resumo: "Peça renomeada",
+                detalhe: resposta.ancoraAntiga
+                    ? "O link novo já vale; o antigo continua abrindo esta peça."
+                    : "A peça ganhou um link a partir do nome.",
+            });
+            return true;
+        } catch (erro) {
+            await this.falhaEstrutural(erro, "renomear a peça");
+            return false;
         }
     }
 

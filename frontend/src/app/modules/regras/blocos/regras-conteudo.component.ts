@@ -30,6 +30,7 @@ import { RegrasTermos } from "./regras-termos.component";
 import { RegrasGrade } from "./regras-grade.component";
 import { RegrasAbertura } from "./regras-abertura.component";
 import { OficinaPeca } from "../oficina/oficina-peca.component";
+import { OficinaInsercao } from "../oficina/oficina-insercao.component";
 
 @Component({
     selector: "app-regras-conteudo",
@@ -43,7 +44,7 @@ import { OficinaPeca } from "../oficina/oficina-peca.component";
             RegrasIdentidade,
             RegrasAtributos, RegrasHabilidadeCriatura, forwardRef(() => RegrasFichaCriatura),
             RegrasNiveisAmeaca, forwardRef(() => RegrasSubclasse), RegrasTermos, RegrasGrade,
-            RegrasAbertura, OficinaPeca,
+            RegrasAbertura, OficinaPeca, OficinaInsercao,
     ],
     templateUrl: "./regras-conteudo.component.html",
     styleUrl: "./regras-conteudo.component.scss",
@@ -51,6 +52,11 @@ import { OficinaPeca } from "../oficina/oficina-peca.component";
 export class RegrasConteudoRender {
     readonly filhos = input.required<readonly RegrasConteudo[]>();
     readonly documento = input<RegrasDocumento["id"]>("sistema");
+    /**
+     * Identificador da peça que contém esta lista (`null` = raiz do livro); com ele a Oficina oferece o
+     * "+" entre as peças. `undefined`: lista que a Oficina não estrutura (fica sem pontos de inserção).
+     */
+    readonly pai = input<string | null | undefined>(undefined);
     readonly navegarAncora = output<string>();
     protected pecaDe(bloco: RegrasConteudo): string | undefined {
         return (bloco as { readonly peca?: string }).peca;

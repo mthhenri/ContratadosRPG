@@ -11,6 +11,7 @@ describe("RegraPecaController (m11-06)", () => {
     listarArvore: vi.fn().mockResolvedValue([]),
     recuperarPeca: vi.fn().mockResolvedValue({}),
     alterarDados: vi.fn().mockResolvedValue({}),
+    alterarNome: vi.fn().mockResolvedValue({}),
     alterarPosicao: vi.fn().mockResolvedValue({}),
     duplicar: vi.fn().mockResolvedValue({}),
     excluir: vi.fn().mockResolvedValue({}),
@@ -24,6 +25,8 @@ describe("RegraPecaController (m11-06)", () => {
     expect(servico.alterarDados).toHaveBeenCalledWith({ codigo: "sistema", id: 4, dados: { trechos: [] }, revisao: 2 }, admin);
     await controller.alterarPosicao("sistema", 4, { pecaPaiId: null, indice: 1, revisao: 2 }, admin);
     expect(servico.alterarPosicao).toHaveBeenCalledWith({ codigo: "sistema", id: 4, pecaPaiId: null, indice: 1, revisao: 2 }, admin);
+    await controller.alterarNome("sistema", 4, { nome: "Novo", revisao: 2 }, admin);
+    expect(servico.alterarNome).toHaveBeenCalledWith({ codigo: "sistema", id: 4, nome: "Novo", revisao: 2 }, admin);
     await controller.excluir("sistema", 4, 3, admin);
     expect(servico.excluir).toHaveBeenCalledWith({ codigo: "sistema", id: 4, revisao: 3 }, admin);
     await controller.duplicar("sistema", 4, admin);

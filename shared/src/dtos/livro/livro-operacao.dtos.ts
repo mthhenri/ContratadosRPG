@@ -307,10 +307,36 @@ export interface RegraPecaCriarDto {
   readonly pecaPaiId: number | null;
   readonly indice: number;
   readonly dados: LivroPecaDadosPorTipo[TipoRegraPecaEnum];
+  /** Filhos do esqueleto (ex.: a habilidade inicial do arquétipo), criados junto com a peça. */
+  readonly filhos?: readonly RegraPecaEsqueletoDto[];
 }
 
-/** A peça criada e as irmãs que mudaram de posição para abrir espaço. */
+/** Peça a criar com o que nasce dentro dela; o esqueleto de cada tipo vem de `criarEsqueletoPeca`. */
+export interface RegraPecaEsqueletoDto {
+  readonly tipo: TipoRegraPecaEnum;
+  readonly dados: LivroPecaDadosPorTipo[TipoRegraPecaEnum];
+  readonly filhos: readonly RegraPecaEsqueletoDto[];
+}
+
+/** A peça criada, as filhas do esqueleto e as irmãs que mudaram de posição para abrir espaço. */
 export interface RegraPecaCriadaDto {
   readonly peca: RegraPecaRecuperadaDto;
   readonly pecas: readonly RegraPecaArvoreItemDto[];
+  /** Descendentes criadas junto (vazio quando a peça nasceu sem filhos). */
+  readonly filhas: readonly RegraPecaArvoreItemDto[];
+}
+
+/** Renomeia a peça: troca o nome/título e a âncora, guardando a antiga; `revisao` é a que o cliente leu. */
+export interface RegraPecaNomeAlterarDto {
+  readonly codigo: string;
+  readonly id: number;
+  readonly nome: string;
+  readonly revisao: number;
+}
+
+/** A peça renomeada (já com a âncora nova e a revisão seguinte). */
+export interface RegraPecaNomeAlteradaDto {
+  readonly peca: RegraPecaRecuperadaDto;
+  /** Âncora que a peça deixou de usar e que continua levando a ela; `null` se não tinha ou não mudou. */
+  readonly ancoraAntiga: string | null;
 }

@@ -7869,6 +7869,13 @@ export const schemasContratosPublicos = {
                         "$ref": "#/components/schemas/LivroGenericoDadosDto"
                     }
                 ]
+            },
+            "filhos": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/RegraPecaEsqueletoDto"
+                },
+                "description": "Filhos do esqueleto (ex.: a habilidade inicial do arquétipo), criados junto com a peça."
             }
         },
         "required": [
@@ -7881,6 +7888,150 @@ export const schemasContratosPublicos = {
         "additionalProperties": false,
         "description": "Cria uma peça do livro `codigo` dentro de `pecaPaiId` (`null` = raiz), na posição `indice`."
     },
+    "RegraPecaEsqueletoDto": {
+        "type": "object",
+        "properties": {
+            "tipo": {
+                "type": "string",
+                "enum": [
+                    "SECAO",
+                    "PARAGRAFO",
+                    "EXEMPLO",
+                    "FORMULA",
+                    "NOTA",
+                    "LISTA",
+                    "TABELA",
+                    "HABILIDADE",
+                    "CLASSE",
+                    "ARQUETIPO",
+                    "SUBCLASSE",
+                    "ORIGENS",
+                    "ORIGEM",
+                    "TERMOS",
+                    "TERMO",
+                    "EQUIPAMENTOS",
+                    "EQUIPAMENTO",
+                    "MODIFICACOES",
+                    "MODIFICACAO",
+                    "AMPLIFICADORES",
+                    "AMPLIFICADOR",
+                    "MODULOS",
+                    "NIVEIS_AMEACA",
+                    "FICHA_CRIATURA",
+                    "HABILIDADE_CRIATURA",
+                    "ROTEIRO",
+                    "FAIXAS",
+                    "GRADE",
+                    "ABERTURA",
+                    "GENERICO"
+                ]
+            },
+            "dados": {
+                "oneOf": [
+                    {
+                        "$ref": "#/components/schemas/LivroSecaoDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroTextoDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroListaDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroTabelaDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroHabilidadeDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroClasseDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroArquetipoDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroSubclasseDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroOrigensDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroOrigemDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroTermosDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroTermoDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroEquipamentosDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroEquipamentoDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroModificacoesDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroModificacaoDadosDto"
+                    },
+                    {
+                        "type": "object",
+                        "additionalProperties": true
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroAmplificadorDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroModulosDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroNiveisAmeacaDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroFichaCriaturaDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroHabilidadeCriaturaDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroRoteiroDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroFaixasDadosDto"
+                    },
+                    {
+                        "type": "object",
+                        "additionalProperties": true
+                    },
+                    {
+                        "type": "object",
+                        "additionalProperties": true
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroAberturaDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroGenericoDadosDto"
+                    }
+                ]
+            },
+            "filhos": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/RegraPecaEsqueletoDto"
+                }
+            }
+        },
+        "required": [
+            "tipo",
+            "dados",
+            "filhos"
+        ],
+        "additionalProperties": false,
+        "description": "Peça a criar com o que nasce dentro dela; o esqueleto de cada tipo vem de `criarEsqueletoPeca`."
+    },
     "RegraPecaCriadaDto": {
         "type": "object",
         "properties": {
@@ -7892,14 +8043,65 @@ export const schemasContratosPublicos = {
                 "items": {
                     "$ref": "#/components/schemas/RegraPecaArvoreItemDto"
                 }
+            },
+            "filhas": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/RegraPecaArvoreItemDto"
+                },
+                "description": "Descendentes criadas junto (vazio quando a peça nasceu sem filhos)."
             }
         },
         "required": [
             "peca",
-            "pecas"
+            "pecas",
+            "filhas"
         ],
         "additionalProperties": false,
-        "description": "A peça criada e as irmãs que mudaram de posição para abrir espaço."
+        "description": "A peça criada, as filhas do esqueleto e as irmãs que mudaram de posição para abrir espaço."
+    },
+    "RegraPecaNomeAlterarDto": {
+        "type": "object",
+        "properties": {
+            "codigo": {
+                "type": "string"
+            },
+            "id": {
+                "type": "number"
+            },
+            "nome": {
+                "type": "string"
+            },
+            "revisao": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "codigo",
+            "id",
+            "nome",
+            "revisao"
+        ],
+        "additionalProperties": false,
+        "description": "Renomeia a peça: troca o nome/título e a âncora, guardando a antiga; `revisao` é a que o cliente leu."
+    },
+    "RegraPecaNomeAlteradaDto": {
+        "type": "object",
+        "properties": {
+            "peca": {
+                "$ref": "#/components/schemas/RegraPecaRecuperadaDto"
+            },
+            "ancoraAntiga": {
+                "type": "string",
+                "description": "Âncora que a peça deixou de usar e que continua levando a ela; `null` se não tinha ou não mudou."
+            }
+        },
+        "required": [
+            "peca",
+            "ancoraAntiga"
+        ],
+        "additionalProperties": false,
+        "description": "A peça renomeada (já com a âncora nova e a revisão seguinte)."
     },
     "LivroSecaoDadosDto": {
         "type": "object",
@@ -12091,6 +12293,15 @@ export const operacoesContratosPublicos = {
         "publica": false,
         "requestSchema": "Omit",
         "responseSchema": "RegraPecaAlteradaDto"
+    },
+    "RegraPecaController_alterarNome": {
+        "controller": "RegraPecaController",
+        "metodo": "patch",
+        "caminho": "/livros/:codigo/pecas/:id/nome",
+        "tag": "Livros de regras",
+        "publica": false,
+        "requestSchema": "Omit",
+        "responseSchema": "RegraPecaNomeAlteradaDto"
     },
     "RegraPecaController_alterarPosicao": {
         "controller": "RegraPecaController",

@@ -1,0 +1,61 @@
+// Ponto de inserção (`.insercao` do exemplão): uma linha fina entre as peças; o botão só aparece com o
+// mouse ou o foco por perto, e fica sempre à vista no fim das listas e em telas sem mouse.
+:host {
+    display: contents;
+}
+:host(.oficina-insercao) {
+    display: flex;
+    justify-content: center;
+    position: relative;
+    height: 12px;
+    margin: -4px 0;
+    z-index: 3;
+
+    &::before {
+        content: "";
+        position: absolute;
+        inset: 50% 0 auto;
+        border-top: 1px dashed transparent;
+    }
+}
+:host(.oficina-insercao:hover)::before,
+:host(.oficina-insercao:focus-within)::before {
+    border-top-color: var(--accent-border);
+}
+.oficina-insercao__botao {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--bg);
+    opacity: 0;
+    transition: opacity 0.12s;
+}
+:host(.oficina-insercao:hover) .oficina-insercao__botao,
+.oficina-insercao__botao:focus-visible,
+.oficina-insercao__botao[aria-expanded="true"],
+:host(.oficina-insercao--fim) .oficina-insercao__botao {
+    opacity: 1;
+}
+:host(.oficina-insercao--fim) {
+    height: 40px;
+    margin: var(--space-4) 0 var(--space-8);
+}
+// Sem mouse não há passar-por-cima: o ponto aparece depois da peça selecionada e no fim das listas;
+// os demais ficam recolhidos para os 594 pontos de um livro não poluírem a tela.
+@media (hover: none) {
+    :host(.oficina-insercao:not(.oficina-insercao--fim, .oficina-insercao--selecionada)) {
+        height: 0;
+        margin: 0;
+        overflow: hidden;
+    }
+    :host(.oficina-insercao--selecionada) .oficina-insercao__botao {
+        opacity: 1;
+    }
+    :host(.oficina-insercao--selecionada) {
+        height: 40px;
+        margin: var(--space-4) 0 var(--space-8);
+    }
+    .oficina-insercao__botao {
+        opacity: 1;
+    }
+}

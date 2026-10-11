@@ -8,6 +8,8 @@ import type {
   RegraPecaDuplicadaDto,
   RegraPecaExcluidaDto,
   RegraPecaMovidaDto,
+  RegraPecaNomeAlteradaDto,
+  RegraPecaNomeAlterarDto,
   RegraPecaPosicaoAlterarDto,
   RegraPecaRecuperadaDto,
   RegraPecaRestauradaDto,
@@ -59,6 +61,16 @@ export class RegraPecaController {
     @ActiveUser() usuarioAtivo: JwtPayload,
   ): Promise<RegraPecaAlteradaDto> {
     return this.regraPecaService.alterarDados({ ...dto, codigo, id }, usuarioAtivo);
+  }
+
+  @Patch(":codigo/pecas/:id/nome")
+  alterarNome(
+    @Param("codigo") codigo: string,
+    @Param("id", ParseIntPipe) id: number,
+    @Body() dto: Omit<RegraPecaNomeAlterarDto, "codigo" | "id">,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<RegraPecaNomeAlteradaDto> {
+    return this.regraPecaService.alterarNome({ ...dto, codigo, id }, usuarioAtivo);
   }
 
   @Patch(":codigo/pecas/:id/posicao")

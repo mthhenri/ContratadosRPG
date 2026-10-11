@@ -145,7 +145,7 @@ export interface RegrasCapa {
 export interface RegrasArquetipos extends RegrasFonteTabela {
     readonly tipo: "arquetipos";
     readonly classe: string;
-    readonly arquetipos: readonly { readonly nome: string;
+    readonly arquetipos: readonly { readonly peca?: string; readonly nome: string;
         readonly citacao: readonly RegrasTrecho[];
         readonly atributosBonus: readonly RegrasTrecho[];
         readonly habilidades: readonly RegrasBloco[];

@@ -1,5 +1,26 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-11 — M11-07: inserir e estruturar na Oficina
+
+O "+" entre as peças e no fim das listas e o "/" num parágrafo vazio abrem o novo primitivo `app-menu-insercao`
+com os tipos que a tabela de aninhamento do validador aceita no pai (dentro de classe só habilidade e
+arquétipo). As peças nascem de `criarEsqueletoPeca` (`shared`, os 30 tipos sem pendência estrutural; arquétipo e
+subclasse com a habilidade inicial vazia) e `POST /livros/:codigo/pecas` passou a aceitar `filhos`, criando tudo
+numa transação. O sumário da Oficina (`@angular/cdk/drag-drop`, dependência aprovada pelo autor) reordena e muda
+de pai seções, classes, subclasses e arquétipos pelo arrastar (a distância horizontal escolhe o nível) ou por
+Alt+setas, com prévia do destino e recusa do que a tabela proíbe; F2 renomeia: `PATCH .../nome` troca nome e
+âncora e guarda a antiga (colisão com sufixo estável), e a URL antiga abre a peça renomeada na Leitura. A regra
+de destino vive em `oficina-estrutura.ts` (pura, 20 testes). O menu oferece só os tipos que a tela já edita;
+os blocos ricos entram com a `m11-08`.
+
+Verificado: shared 1234, backend 1093, frontend 3331 testes, lint dos três sem erros; gate visual no app real
+(ng serve 4301 → backend 3101 com banco isolado e os dois livros importados) em 1920×1080 e 360×800 com todos
+os estados da spec, inclusive arrastar válido e recusado, Alt+setas, renomear + rascunho publicado + URL antiga,
+e a Leitura sem regressão. Achados só ao vivo: o "+" de cada uma das ~600 peças poluiria a tela sem mouse (agora
+só o da peça selecionada e os do fim ficam à vista no toque); a prévia do arrasto cobria a mensagem de
+destino (a mensagem foi para a própria prévia); o arquétipo sem nome repetia a chave de aba e de lookup da
+habilidade inicial (agora por peça). [Verificação](../specs/done/m11-07-oficina-inserir-e-estruturar/verificacao.md).
+
 ## 2026-10-11 — M11-06: núcleo da Oficina (API de edição e edição no lugar)
 
 Corte 1 (`9d1e7479`): API de edição da cópia de trabalho, só `ADMIN` — alterar `dados`, mover, duplicar,

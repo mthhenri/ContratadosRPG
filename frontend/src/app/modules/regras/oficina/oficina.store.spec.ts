@@ -36,7 +36,7 @@ describe("OficinaStore", () => {
     let api: {
         listar: ReturnType<typeof vi.fn>; recuperar: ReturnType<typeof vi.fn>; alterarDados: ReturnType<typeof vi.fn>;
         alterarPosicao: ReturnType<typeof vi.fn>; duplicar: ReturnType<typeof vi.fn>; excluir: ReturnType<typeof vi.fn>;
-        restaurar: ReturnType<typeof vi.fn>; criar: ReturnType<typeof vi.fn>;
+        restaurar: ReturnType<typeof vi.fn>; criar: ReturnType<typeof vi.fn>; alterarNome: ReturnType<typeof vi.fn>;
     };
     let notificacoes: { severidade: string; resumo: string }[];
     let servidor: Map<number, RegraPecaArvoreItemDto>;
@@ -65,6 +65,7 @@ describe("OficinaStore", () => {
             excluir: vi.fn(() => of({ removidas: 1 })),
             restaurar: vi.fn(),
             criar: vi.fn(),
+            alterarNome: vi.fn(),
         };
         TestBed.configureTestingModule({
             providers: [
@@ -376,5 +377,129 @@ describe("OficinaStore", () => {
         api.alterarPosicao.mockReturnValueOnce(throwError(() => erroHttp(409)));
         await store.mover(ID(3), -1);
         expect(store.item(ID(2))?.revisao).toBe(2);
+    });
+
+    describe("estrutura (m11-07)", () => {
+        const secao = (id: number, pai: number | null, ordem: number, titulo: string) =>
+            item(id, T.SECAO, pai, ordem, { titulo, nivel: 2, glifo: null });
+
+        it("inserir cria o esqueleto logo depois da referência e põe o cursor no primeiro campo", async () => {
+            const store = await montar();
+            const nova = item(10, T.SECAO, 1, 1, { titulo: "", nivel: 2, glifo: null });
+            api.criar.mockReturnValue(of({
+                peca: nova as unknown as RegraPecaRecuperadaDto,
+                pecas: [{ ...item(3, T.PARAGRAFO, 1, 2, texto("segundo")) }], filhas: [],
+            }));
+            await store.inserir(T.SECAO, ID(1), ID(2));
+            const [codigo, dto] = api.criar.mock.calls[0] as [string, { tipo: string; pecaPaiId: number; indice: number }];
+            expect(codigo).toBe("sistema");
+            expect(dto).toMatchObject({ tipo: T.SECAO, pecaPaiId: 1, indice: 1 });
+            expect(store.selecionada()).toBe(ID(10));
+            expect(store.pedidoFoco()).toEqual({ identificador: ID(10), campo: "titulo", posicao: "inicio" });
+            expect(store.rotuloDesfazer()).toBe("Inserir seção");
+        });
+
+        it("inserir um arquétipo envia a habilidade inicial vazia como filha e a cópia local ganha as duas", async () => {
+            servidor.set(5, item(5, T.CLASSE, null, 1, { nome: "Agente" }));
+            const store = await montar();
+            const arquetipo = item(11, T.ARQUETIPO, 5, 0, { nome: "", citacao: [], atributosBonus: [] });
+            const inicial = item(12, T.HABILIDADE, 11, 0, { nome: "", custo: 0, reacao: false, glifo: null, trechos: [], inicial: true });
+            api.criar.mockReturnValue(of({ peca: arquetipo, pecas: [], filhas: [inicial] }));
+            await store.inserir(T.ARQUETIPO, ID(5), null);
+            const dto = (api.criar.mock.calls[0] as [string, { filhos: { tipo: string; dados: { inicial: boolean } }[] }])[1];
+            expect(dto.filhos).toHaveLength(1);
+            expect(dto.filhos[0]).toMatchObject({ tipo: T.HABILIDADE, dados: { inicial: true, nome: "" } });
+            expect(store.item(ID(11))).toBeDefined();
+            expect(store.item(ID(12))?.pecaPaiId).toBe(11);
+        });
+
+        it("inserir no lugar do parágrafo vazio tira o parágrafo e o Desfazer devolve os dois lados", async () => {
+            servidor.set(5, item(5, T.PARAGRAFO, 1, 3, { trechos: [] }));
+            const store = await montar();
+            const nota = item(13, T.NOTA, 1, 3, { trechos: [] });
+            api.criar.mockReturnValue(of({ peca: nota, pecas: [item(5, T.PARAGRAFO, 1, 4, { trechos: [] })], filhas: [] }));
+            api.restaurar.mockImplementation((_c: string, id: number) => of({ pecas: [servidor.get(id) as RegraPecaArvoreItemDto] }));
+            await store.inserir(T.NOTA, ID(1), ID(4), ID(5));
+            expect((api.criar.mock.calls[0] as [string, { indice: number }])[1].indice).toBe(3);
+            expect(api.excluir).toHaveBeenCalledWith("sistema", 5, expect.any(Number));
+            expect(store.item(ID(5))).toBeUndefined();
+            await store.desfazer();
+            expect(api.excluir).toHaveBeenCalledWith("sistema", 13, 1);
+            expect(api.restaurar).toHaveBeenCalledWith("sistema", 5);
+            expect(store.item(ID(5))).toBeDefined();
+            expect(store.item(ID(13))).toBeUndefined();
+        });
+
+        it("a falha ao criar avisa e não deixa peça na cópia local", async () => {
+            const store = await montar();
+            api.criar.mockReturnValue(throwError(() => erroHttp(400)));
+            await store.inserir(T.PARAGRAFO, ID(1), ID(2));
+            expect(notificacoes.at(-1)?.resumo).toBe("Não foi possível inserir a peça");
+            expect(store.itens()).toHaveLength(4);
+        });
+
+        it("o ponto do fim da lista (sem referência) insere no fim; sem o fim, no começo", async () => {
+            const store = await montar();
+            const nova = item(10, T.NOTA, 1, 3, { trechos: [] });
+            api.criar.mockReturnValue(of({ peca: nova, pecas: [], filhas: [] }));
+            await store.inserir(T.NOTA, ID(1), null, undefined, true);
+            expect((api.criar.mock.calls[0] as [string, { indice: number }])[1].indice).toBe(3);
+            await store.inserir(T.NOTA, ID(1), null);
+            expect((api.criar.mock.calls[1] as [string, { indice: number }])[1].indice).toBe(0);
+        });
+
+        it("moverPara troca de pai e o Desfazer volta ao pai e à posição de antes", async () => {
+            servidor.set(5, secao(5, null, 1, "Outra"));
+            const store = await montar();
+            api.alterarPosicao.mockImplementation((_c: string, id: number, pai: number | null, indice: number) =>
+                of({ pecas: [{ ...(servidor.get(id) as RegraPecaArvoreItemDto), pecaPaiId: pai, ordem: indice, revisao: 2 }] }));
+            expect(await store.moverPara(ID(5), 1, 3)).toBe(true);
+            expect(api.alterarPosicao).toHaveBeenCalledWith("sistema", 5, 1, 3, 1);
+            expect(store.item(ID(5))?.pecaPaiId).toBe(1);
+            await store.desfazer();
+            expect(api.alterarPosicao).toHaveBeenLastCalledWith("sistema", 5, null, 1, 2);
+            expect(store.item(ID(5))?.pecaPaiId).toBeNull();
+        });
+
+        it("moverPara recusado pela API avisa e devolve falso", async () => {
+            servidor.set(5, secao(5, null, 1, "Outra"));
+            const store = await montar();
+            api.alterarPosicao.mockReturnValue(throwError(() => erroHttp(400)));
+            expect(await store.moverPara(ID(5), 2, 0)).toBe(false);
+            expect(notificacoes.at(-1)?.resumo).toBe("Não foi possível mover a peça");
+            expect(store.item(ID(5))?.pecaPaiId).toBeNull();
+        });
+
+        it("o sumário só lista seções, classes e arquétipos, e o destino respeita a tabela de aninhamento", async () => {
+            servidor.set(5, secao(5, null, 1, "Outra"));
+            servidor.set(6, item(6, T.CLASSE, null, 2, { nome: "Agente" }));
+            const store = await montar();
+            expect(store.linhasSumario().map((linha) => linha.rotulo)).toEqual(["Agentes", "Outra", "Agente"]);
+            // "Outra" depois de "Agente" pedindo ser filha: classe não aceita seção, então fica na raiz.
+            expect(store.destinoDoArraste(ID(5), 2, 1)).toMatchObject({ ok: true, destino: { pecaPaiId: null, profundidade: 0 } });
+            expect(store.destinoDoArraste(ID(5), 0, 0)).toMatchObject({ ok: true, destino: { pecaPaiId: null, indice: 0 } });
+        });
+
+        it("renomear grava o nome e a âncora nova que a API devolve, avisa e o Desfazer renomeia de volta", async () => {
+            const store = await montar();
+            api.alterarNome.mockImplementation((_c: string, id: number, nome: string, revisao: number) => of({
+                peca: { ...(servidor.get(id) as RegraPecaArvoreItemDto), dados: { titulo: nome, nivel: 1, glifo: null },
+                    ancora: nome.toLowerCase(), revisao: revisao + 2 },
+                ancoraAntiga: "secao-1",
+            }));
+            expect(await store.renomear(ID(1), "Novo Nome")).toBe(true);
+            expect(api.alterarNome).toHaveBeenCalledWith("sistema", 1, "Novo Nome", 1);
+            expect(store.item(ID(1))?.ancora).toBe("novo nome");
+            expect(store.item(ID(1))?.revisao).toBe(3);
+            expect(notificacoes.at(-1)?.resumo).toBe("Peça renomeada");
+            await store.desfazer();
+            expect(api.alterarNome).toHaveBeenLastCalledWith("sistema", 1, "Agentes", 3);
+        });
+
+        it("renomear com nome vazio não chama a API", async () => {
+            const store = await montar();
+            expect(await store.renomear(ID(1), "   ")).toBe(false);
+            expect(api.alterarNome).not.toHaveBeenCalled();
+        });
     });
 });
