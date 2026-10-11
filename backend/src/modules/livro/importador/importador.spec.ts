@@ -5,7 +5,7 @@ import { beforeAll, describe, expect, it, vi } from "vitest";
 import { converterRegrasEmPecas } from "./converter-regras-em-pecas";
 import { importarLivro, importarLivros, type DependenciasImportacao } from "./importar-livro";
 import { lerFontesDeRegras, type FonteDeRegras } from "./ler-fontes-regras";
-import { projetarPecasEmRegras } from "@contratados-rpg/shared/livro";
+import { compararLivros, projetarPecasEmRegras } from "@contratados-rpg/shared/livro";
 import type { NormalizadoDocumento } from "@contratados-rpg/shared/livro";
 
 /** UUID determinístico por ordem de geração, para o teste ser reprodutível. */
@@ -158,6 +158,36 @@ describe("importador dos livros de regras (m11-03)", () => {
       coletar(fonte.documento);
       expect([...doNormalizador].filter((ancora) => !doConteudo.has(ancora))).toEqual([]);
     }
+  });
+
+  it("compara o Sistema inteiro contra uma cópia com alterações conhecidas, em tempo interativo", () => {
+    const sistema = fontes.find((fonte) => fonte.documento.id === "sistema")!;
+    const antes = converterRegrasEmPecas(sistema.documento, { gerarIdentificador: criarGerador() });
+    expect(compararLivros(antes.pecas, antes.pecas).mudancas).toEqual([]);
+
+    const depois = JSON.parse(JSON.stringify(antes)) as {
+      pecas: { tipo: string; dados: { trechos?: { tipo: string; texto?: string }[] }; filhos: unknown[] }[];
+    };
+    let alterados = 0;
+    const alterar = (pecas: typeof depois.pecas): void => {
+      for (const peca of pecas) {
+        if (alterados < 25 && peca.tipo === "PARAGRAFO" && peca.dados.trechos?.[0]?.tipo === "texto") {
+          peca.dados.trechos[0].texto = `${peca.dados.trechos[0].texto ?? ""} (revisado)`;
+          alterados++;
+        }
+        alterar(peca.filhos as typeof depois.pecas);
+      }
+    };
+    alterar(depois.pecas);
+
+    const inicio = performance.now();
+    const resultado = compararLivros(antes.pecas, depois.pecas as unknown as LivroPecaDto[]);
+    const duracao = performance.now() - inicio;
+    let total = 0;
+    percorrer(antes.pecas, () => total++);
+    expect(total).toBeGreaterThan(1000);
+    expect(resultado.resumo.porSituacao).toEqual({ NOVA: 0, REMOVIDA: 0, ALTERADA: alterados, MOVIDA: 0 });
+    expect(duracao).toBeLessThan(1500);
   });
 
   it("o selo de versão da capa vai para a abertura só do livro que o tem", () => {

@@ -6486,6 +6486,216 @@ export const schemasContratosPublicos = {
         "additionalProperties": false,
         "description": "Documento completo `ficha.dados` de uma ficha de jogador — a forma final do\nJSONB (m3-01, estendido em m3-10). Consumível por backend e frontend sem redefinição."
     },
+    "LivroTextoDiffDto": {
+        "type": "object",
+        "properties": {
+            "operacao": {
+                "type": "string",
+                "enum": [
+                    "IGUAL",
+                    "ADICIONADO",
+                    "REMOVIDO",
+                    "FORMATACAO"
+                ]
+            },
+            "texto": {
+                "type": "string"
+            },
+            "marcasAntes": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                }
+            },
+            "marcasDepois": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                }
+            }
+        },
+        "required": [
+            "operacao",
+            "texto"
+        ],
+        "additionalProperties": false,
+        "description": "Trecho do diff por palavras de um texto rico. As marcações (`negrito`, `italico`, `link-interno`,\n`link-externo`, `nivel-ameaca`) vêm em `marcasAntes`/`marcasDepois` só quando a operação é\n`FORMATACAO` (mesma palavra, marcação diferente)."
+    },
+    "LivroCampoAlteradoDto": {
+        "type": "object",
+        "properties": {
+            "campo": {
+                "type": "string"
+            },
+            "antes": {
+                "type": "object",
+                "additionalProperties": true,
+                "description": "`null` quando o campo não existia antes (ou deixou de existir depois)."
+            },
+            "depois": {
+                "type": "object",
+                "additionalProperties": true
+            },
+            "texto": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/LivroTextoDiffDto"
+                },
+                "description": "Presente quando o campo é um texto rico: o diff por palavras."
+            }
+        },
+        "required": [
+            "campo",
+            "antes",
+            "depois"
+        ],
+        "additionalProperties": false,
+        "description": "Um campo de `dados` que mudou; `campo` é o caminho dentro de `dados` (ex.: `linhas.2.0`)."
+    },
+    "LivroPosicaoMudancaDto": {
+        "type": "object",
+        "properties": {
+            "paiAntes": {
+                "type": "string"
+            },
+            "paiDepois": {
+                "type": "string"
+            },
+            "ordemAntes": {
+                "type": "number"
+            },
+            "ordemDepois": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "paiAntes",
+            "paiDepois",
+            "ordemAntes",
+            "ordemDepois"
+        ],
+        "additionalProperties": false,
+        "description": "Onde a peça estava e onde está (para `MOVIDA`). `paiAntes`/`paiDepois` são identificadores."
+    },
+    "LivroMudancaDto": {
+        "type": "object",
+        "properties": {
+            "identificador": {
+                "type": "string"
+            },
+            "tipo": {
+                "type": "string",
+                "enum": [
+                    "SECAO",
+                    "PARAGRAFO",
+                    "EXEMPLO",
+                    "FORMULA",
+                    "NOTA",
+                    "LISTA",
+                    "TABELA",
+                    "HABILIDADE",
+                    "CLASSE",
+                    "ARQUETIPO",
+                    "SUBCLASSE",
+                    "ORIGENS",
+                    "ORIGEM",
+                    "TERMOS",
+                    "TERMO",
+                    "EQUIPAMENTOS",
+                    "EQUIPAMENTO",
+                    "MODIFICACOES",
+                    "MODIFICACAO",
+                    "AMPLIFICADORES",
+                    "AMPLIFICADOR",
+                    "MODULOS",
+                    "NIVEIS_AMEACA",
+                    "FICHA_CRIATURA",
+                    "HABILIDADE_CRIATURA",
+                    "ROTEIRO",
+                    "FAIXAS",
+                    "GRADE",
+                    "ABERTURA",
+                    "GENERICO"
+                ]
+            },
+            "caminho": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                },
+                "description": "Títulos das peças ancestrais até a peça (a própria incluída); da versão atual, exceto `REMOVIDA`."
+            },
+            "situacao": {
+                "type": "string",
+                "enum": [
+                    "NOVA",
+                    "REMOVIDA",
+                    "ALTERADA",
+                    "MOVIDA"
+                ]
+            },
+            "campos": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/LivroCampoAlteradoDto"
+                }
+            },
+            "posicao": {
+                "$ref": "#/components/schemas/LivroPosicaoMudancaDto"
+            }
+        },
+        "required": [
+            "identificador",
+            "tipo",
+            "caminho",
+            "situacao"
+        ],
+        "additionalProperties": false,
+        "description": "Uma mudança de uma peça. Uma peça alterada e movida ao mesmo tempo gera duas mudanças com o mesmo\n`identificador` (`ALTERADA` e `MOVIDA`). `campos` só existe em `ALTERADA` e `posicao` só em `MOVIDA`."
+    },
+    "LivroComparacaoResumoDto": {
+        "type": "object",
+        "properties": {
+            "total": {
+                "type": "number"
+            },
+            "porSituacao": {
+                "type": "object",
+                "additionalProperties": true
+            },
+            "porTipo": {
+                "type": "object",
+                "additionalProperties": true
+            }
+        },
+        "required": [
+            "total",
+            "porSituacao",
+            "porTipo"
+        ],
+        "additionalProperties": false,
+        "description": "Contagens agregadas, para o diálogo de publicação e o contador da Oficina."
+    },
+    "LivroComparacaoDto": {
+        "type": "object",
+        "properties": {
+            "mudancas": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/LivroMudancaDto"
+                }
+            },
+            "resumo": {
+                "$ref": "#/components/schemas/LivroComparacaoResumoDto"
+            }
+        },
+        "required": [
+            "mudancas",
+            "resumo"
+        ],
+        "additionalProperties": false,
+        "description": "Resultado de `compararLivros`: as mudanças em ordem estável e o resumo."
+    },
     "LivroResumoDto": {
         "type": "object",
         "properties": {

@@ -48,3 +48,4 @@ export * from "./habilidade-tipo-npc.enum";
 export * from './tipo-regra-peca.enum';
 export * from './livro-pendencia-codigo.enum';
 export * from "./tipo-livro-versao-situacao.enum";
+export * from "./livro-comparacao.enum";

@@ -1,5 +1,19 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-10 — M11-05: comparador puro das versões dos livros
+
+`compararLivros` (`shared/src/livro`) casa peças por `identificador` e devolve nova, removida, alterada
+(com os campos e o diff por palavras do texto rico) e movida, mais resumo por situação e tipo. Renomear é
+alteração, nunca removida + nova; inserir ou remover um item não move os seguintes (maior subsequência
+em ordem entre irmãs); alterada + movida geram duas mudanças. "Igual" ignora ordem de chaves e a âncora
+cacheada de link por `identificador`. `LivroValorJsonDto` é `unknown` porque o gerador OpenAPI estoura a
+pilha com tipo recursivo.
+
+Verificado: 34 testes no `shared` (casos por situação, formatação x palavra, cascata, determinismo,
+entrada intocada), ~3000 peças em ~48 ms, Sistema real (1049 peças) comparado contra cópia alterada no
+spec do backend; shared 1191, backend 1056, lint sem erros, contratos OpenAPI regenerados. Sem revisão
+independente (função pura). Sem consumidor ainda: a gaveta e o diálogo de publicação são da `m11-09`.
+
 ## 2026-10-10 — M11-04: publicação e leitura por papel dos livros de regras
 
 `LivroService` + `LivroController` (`/livros`): leitura aberta com login opcional (novo
