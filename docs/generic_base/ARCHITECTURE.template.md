@@ -106,9 +106,37 @@ Consulte-o(s) antes de alterar qualquer fórmula, tabela ou regra de domínio.
       backlog/                    → tasks a implementar
       active/                     → task em andamento na sessão atual
       done/                       → tasks concluídas (histórico)
+  scripts/
+    verificar-organizacao.mjs     → confere destinos de spec/artefato e espelhos de agentes (§3.1)
+    agentes/                      → delegação entre agentes, SE o projeto usar orquestração
+  .claude/ e .agents/             → skills e subagentes dos agentes (cópias idênticas — ver CLAUDE.md)
+  .artifacts/                     → evidência bruta de execução — IGNORADA pelo Git (§3.1)
   package.json                    → workspaces root, se monorepo
   README.md
 ```
+
+### 3.1 Documentação de tarefa e artefatos de execução
+
+Todo trabalho executável tem uma única spec em `docs/specs/{backlog,active,done}/<tarefa>.spec.md`.
+Planos, decisões de design da tarefa, propostas, revisões, auditorias e relatórios de verificação
+são **anexos** em `docs/specs/<estado>/<tarefa>/`, com a spec proprietária ao lado. Mova spec e
+anexos juntos ao mudar de estado; corrija os ponteiros de forma mecânica. Não crie ciclos
+paralelos por ferramenta ou tipo de atividade (`reviews/`, `auditorias/`, `plans/`, `propostas/`
+ou equivalentes) — essa regra prevalece sobre destinos padrão de plugins e skills externas.
+
+A spec define escopo e aceite; o plano só ordena a execução. Auditoria parcial continua em
+`active/`, mesmo com relatório produzido. Spec concluída preserva requisitos e decisões: numa
+realocação só os ponteiros mudam.
+
+Capturas, vídeos, logs, dumps, cenários temporários e JSONs de resultado bruto ficam em
+`.artifacts/<tarefa>/`, **ignorada pelo Git**. Nunca force sua inclusão. O relatório textual
+versionado registra método, comandos/resultados, estados verificados, achados e limites, e avisa
+quando a evidência é local e não vem no clone. Arquivo gerado só vira fonte versionada quando for
+asset do produto, fonte canônica ou fixture reproduzível definida pela spec.
+
+Rode `npm run repo:verificar` antes do fecho e `npm run repo:verificar -- --staged` depois de
+preparar um commit. O CI confere os caminhos versionados e os espelhos; `.gitignore` sozinho não
+protege contra arquivo já rastreado ou inclusão forçada.
 
 ---
 
@@ -397,7 +425,7 @@ implementação.
 
 > Nota do template: esta tabela é o coração operacional do documento — é o que um agente/dev
 > consulta em segundos antes de escrever uma linha. Mantenha curta (uma frase, verificável) e
-> específica ao projeto; a lista abaixo é o esqueleto que o ContratadosRPG preencheu — adapte,
+> específica ao projeto; a lista abaixo é o esqueleto de um projeto anterior — adapte,
 > não copie linhas que não fazem sentido para a stack escolhida.
 
 Inegociáveis independente do contexto:
@@ -418,3 +446,6 @@ Inegociáveis independente do contexto:
 | 12 | **Nunca colocar I/O, estado ou dependências de framework** no motor de regras (se existir) |
 | 13 | **Nunca alterar fórmula/regra de domínio** sem consultar o documento de domínio (§1.1) |
 | 14 | **Nunca duplicar regra de permissão** — a service do módulo dono é o único árbitro |
+| 15 | **Nunca versionar** captura, log ou saída bruta de execução, nem criar pasta de tarefa paralela à spec (§3.1) |
+| 16 | **Nunca declarar tarefa pronta** sem a verificação que a definição de pronto exige — item sem verificação fica aberto |
+| 17 | **Nunca contornar a biblioteca de componentes/tokens** (se houver UI) com HTML/CSS local — pare e pergunte ao autor |

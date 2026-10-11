@@ -20,6 +20,24 @@ no backend, descarte da ficha sem conferir igualdade, teste de Postgres que pula
 validar). Não feito: rodar o comando no banco de dev do autor (precisa de `--usuario`) e executar a
 partir do `dist`.
 
+## 2026-10-10 — generic_base: kit atualizado e instalável para projeto novo
+
+Pedido do autor para levar o processo a outro projeto (relatório de atividade). O `generic_base`
+estava parado desde 2026-09-08 e não tinha o `CLAUDE.md` genérico, a orquestração, a política de
+specs/artefatos (SYSTEM.SPEC §3.1), o `repo:verificar` nem o CI. Acrescentado: `CLAUDE.template.md`;
+`agents/` (implementador, revisor, testador); `scripts/agentes/` (wrappers Claude↔Codex, guardas,
+hook de profundidade, cabeçalho sem referência ao RPG); `verificar-organizacao.template.mjs` com bloco
+CONFIGURAÇÃO e seu teste; `config/` (settings, CI, `.gitignore`); skills genéricas `orquestracao`,
+`verify`, `design-fidelity`; `task-flow` com `.artifacts/`, anexos junto da spec e `repo:verificar`;
+ARCHITECTURE com §3.1 e proibições 15–17; `instalar-kit.sh` (idempotente, não sobrescreve, flags
+`--sem-orquestracao`/`--sem-ui`); README reescrito com TO-DO por etapas e protocolo de manutenção.
+
+Verificado: scripts `bash -n`; instalador rodado duas vezes numa pasta vazia (segunda rodada pula tudo),
+espelhos `.claude`/`.agents` e `CLAUDE`/`AGENTS` idênticos; no projeto instalado, `node --test` 7/7 e
+`repo:verificar --staged` aprovado; `npm run repo:verificar` no RPG aprovado. Não exercitado: Codex
+real (wrappers copiados, só validados por sintaxe) e uso do kit numa tarefa real — pendente na etapa 4
+do TO-DO, quando o projeto novo existir. Fora do kit de propósito: `publicar-versao`, tema, regras.
+
 ## 2026-10-10 — RV-05: espaço para nomes e ícones das abas de arquétipo
 
 Corrigido P-118 com distribuição no consumidor de Abas/Aba: largura mínima
