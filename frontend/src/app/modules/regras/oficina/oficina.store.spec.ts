@@ -183,6 +183,25 @@ describe("OficinaStore", () => {
         expect(api.alterarDados.mock.calls.at(-1)?.[2]).toEqual(texto("primeiro"));
     });
 
+    it("edição discreta de um campo aninhado grava no caminho, salva na hora e o Desfazer volta", async () => {
+        const equipamento = { nome: "Faca", custo: [], descricao: [], peso: [], danos: [{ rotulo: "DANO", trechos: [] }] };
+        servidor.set(5, item(5, T.EQUIPAMENTO, null, 4, equipamento));
+        const store = await montar();
+        store.alterarCampo(ID(5), ["danos", 0, "rotulo"], "UMA MÃO", "Tipo de dano");
+        expect((store.item(ID(5))?.dados as typeof equipamento).danos[0].rotulo).toBe("UMA MÃO");
+        await vi.advanceTimersByTimeAsync(0);
+        expect(api.alterarDados).toHaveBeenCalledTimes(1);
+        await store.desfazer();
+        expect((store.item(ID(5))?.dados as typeof equipamento).danos[0].rotulo).toBe("DANO");
+    });
+
+    it("alterarCampo com valor indefinido retira o campo opcional", async () => {
+        servidor.set(5, item(5, T.EQUIPAMENTO, null, 4, { nome: "Faca", porte: [{ tipo: "texto", texto: "P" }] }));
+        const store = await montar();
+        store.alterarCampo(ID(5), ["porte"], undefined, "Porte");
+        expect("porte" in (store.item(ID(5))?.dados as object)).toBe(false);
+    });
+
     it("edições do mesmo campo longe uma da outra são passos separados", async () => {
         const store = await montar();
         const passo = { rotulo: "Edição de texto", chave: `${ID(2)}:trechos` };

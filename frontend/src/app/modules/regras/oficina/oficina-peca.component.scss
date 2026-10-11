@@ -16,7 +16,8 @@
     top: 6px;
     right: 0;
     transform: translateY(-100%);
-    z-index: 5;
+    // Acima das peças vizinhas, mas abaixo da barra presa do leitor (z-index 2).
+    z-index: 1;
 }
 .oficina-peca__pendencia {
     display: inline-flex;

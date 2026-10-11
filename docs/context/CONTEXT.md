@@ -2315,6 +2315,12 @@ função pura `oficina-estrutura.ts`; só movimentos permitidos pela tabela pass
 pelas `ancorasAntigas` da fotografia. Peça nova nasce sem âncora até ser renomeada.
 [Verificação e decisões](../specs/done/m11-07-oficina-inserir-e-estruturar/verificacao.md).
 
+Blocos ricos (M11-08, fatia 1 de 5): equipamentos, modificações e amplificadores se editam no lugar
+(`regras-equipamentos|modificacoes|amplificadores.component`, `oficina-empilhamento.component`, campo aninhado por
+`oficina-dados.ts`); o "+" do fim da lista cria o item. As demais fatias (classe/arquétipo/subclasse, origem/termos,
+ficha de criatura/roteiro, tabela/grade/faixas/níveis) seguem abertas em
+[`active/`](../specs/active/m11-08-oficina-blocos-ricos.spec.md).
+
 ### Ícones de identidade (M10-03)
 
 `app-icone` (`frontend/src/app/shared/icone/`) oferece 17 desenhos aprovados no

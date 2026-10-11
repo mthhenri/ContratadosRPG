@@ -11,6 +11,7 @@ import { firstValueFrom } from "rxjs";
 import { NotificacaoService } from "../../../shared/ui/notificacao/notificacao.service";
 import type { RegrasDocumento } from "../regras.model";
 import { OficinaApi } from "./oficina-api.service";
+import { definirNoCaminho, nomeDoCaminho, type CaminhoDeDados } from "./oficina-dados";
 import {
     campoInicialDe, construirLinhasSumario, destinoPorTeclado, NOME_DO_TIPO, opcoesDeInsercao, resolverDestino,
     type LinhaSumario, type ResultadoDoDestino, type TeclaDeEstrutura,
@@ -64,6 +65,7 @@ export interface OficinaRotulo {
 const TIPOS_COM_TELA: readonly TipoRegraPecaEnum[] = [
     TipoRegraPecaEnum.SECAO, TipoRegraPecaEnum.PARAGRAFO, TipoRegraPecaEnum.EXEMPLO, TipoRegraPecaEnum.NOTA,
     TipoRegraPecaEnum.FORMULA, TipoRegraPecaEnum.HABILIDADE, TipoRegraPecaEnum.CLASSE, TipoRegraPecaEnum.SUBCLASSE,
+    TipoRegraPecaEnum.EQUIPAMENTOS, TipoRegraPecaEnum.MODIFICACOES, TipoRegraPecaEnum.EQUIPAMENTO, TipoRegraPecaEnum.MODIFICACAO, TipoRegraPecaEnum.AMPLIFICADOR,
 ];
 
 /** Irmãs que aparecem lado a lado na tela: a inicial e as melhoradas de um arquétipo são grupos à parte. */
@@ -306,6 +308,19 @@ export class OficinaStore {
             }
         }
         this.agendar(atual.id);
+    }
+
+    /**
+     * Edição discreta de um campo (botão, contador, lista): grava o valor no caminho do `dados` e salva na hora,
+     * com o próprio passo de Desfazer (`fundir = false`: nunca se junta ao passo anterior). `valor === undefined` retira o campo.
+     */
+    alterarCampo(identificador: string, caminho: CaminhoDeDados, valor: unknown, rotulo: string, fundir = true): void {
+        const item = this.item(identificador);
+        if (!item) return;
+        this.alterarDados(identificador, definirNoCaminho(item.dados, caminho, valor), {
+            rotulo, chave: `${identificador}:${nomeDoCaminho(caminho)}${fundir ? "" : ":" + Date.now()}`,
+        });
+        void this.salvarAgora(item.id);
     }
 
     private aplicarDados(id: number, dados: Dados): void {

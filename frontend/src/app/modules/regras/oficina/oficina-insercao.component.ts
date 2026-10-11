@@ -1,4 +1,4 @@
-import { Component, computed, ElementRef, inject, input, signal } from "@angular/core";
+import { Component, computed, ElementRef, inject, input, signal, viewChild } from "@angular/core";
 import type { TipoRegraPecaEnum } from "@contratados-rpg/shared/enums";
 
 import { Icone } from "../../../shared/icone/icone.component";
@@ -37,6 +37,9 @@ export class OficinaInsercao {
     private readonly store = inject(OficinaStore, { optional: true });
     protected readonly gatilho = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
     protected readonly aberto = signal(false);
+    private readonly botao = viewChild("botao", { read: ElementRef<HTMLElement> });
+    /** O menu abre junto do botão "+" (o ponto de inserção ocupa a linha toda). */
+    protected readonly ancoraDoMenu = computed(() => this.botao()?.nativeElement ?? null);
     /** Tipo do pai (`null` = raiz; `undefined` = peça que sumiu). Só muda de valor quando o tipo muda: digitar não recalcula o menu. */
     private readonly tipoDoPai = computed(() => {
         const pai = this.pai();

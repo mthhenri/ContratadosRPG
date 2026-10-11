@@ -11,6 +11,10 @@ import { RegrasInline } from "./regras-inline.component";
 export class RegrasNota {
     readonly bloco = input.required<Extract<RegrasBloco, { tipo: "nota" }>>();
     readonly documento = input<RegrasDocumento["id"]>("sistema");
+    /** Campo da peça que a nota edita na Oficina (`nota` no bloco de modificações, que a guarda no container). */
+    readonly campo = input("trechos");
+    /** O campo some do `dados` quando esvazia. */
+    readonly opcional = input(false);
     readonly navegarAncora = output<string>();
 }
 

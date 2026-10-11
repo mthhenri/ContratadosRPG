@@ -242,7 +242,7 @@ function projetarBase(peca: LivroPecaDto): NormalizadoConteudo {
         categoria: dadosDe(peca, Tipo.EQUIPAMENTOS).categoria,
         cabecalho: [],
         linhas: [],
-        itens: peca.filhos.map((filho) => ({ ...dadosDe(filho, Tipo.EQUIPAMENTO) })),
+        itens: peca.filhos.map((filho) => comPeca({ ...dadosDe(filho, Tipo.EQUIPAMENTO) }, filho)),
       };
     case Tipo.MODIFICACOES: {
       const { categoria, nota } = dadosDe(peca, Tipo.MODIFICACOES);
@@ -252,7 +252,7 @@ function projetarBase(peca: LivroPecaDto): NormalizadoConteudo {
         ...(nota ? { nota } : {}),
         cabecalho: [],
         linhas: [],
-        itens: peca.filhos.map((filho) => ({ ...dadosDe(filho, Tipo.MODIFICACAO) })),
+        itens: peca.filhos.map((filho) => comPeca({ ...dadosDe(filho, Tipo.MODIFICACAO) }, filho)),
       };
     }
     case Tipo.AMPLIFICADORES:
@@ -260,7 +260,7 @@ function projetarBase(peca: LivroPecaDto): NormalizadoConteudo {
         tipo: "amplificadores",
         cabecalho: [],
         linhas: [],
-        itens: peca.filhos.map((filho) => ({ ...dadosDe(filho, Tipo.AMPLIFICADOR) })),
+        itens: peca.filhos.map((filho) => comPeca({ ...dadosDe(filho, Tipo.AMPLIFICADOR) }, filho)),
       };
     case Tipo.MODULOS:
       return { tipo: "modulos", cabecalho: [], linhas: [], modulos: dadosDe(peca, Tipo.MODULOS).modulos };

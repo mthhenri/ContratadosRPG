@@ -67,11 +67,11 @@ export function criarEsqueletoPeca(tipo: Tipo): RegraPecaEsqueletoDto {
     case Tipo.MODIFICACOES:
       return esqueleto({ categoria: "" });
     case Tipo.MODIFICACAO:
-      return esqueleto({ nome: "", empilhamento: "", efeito: [], bloqueia: [] });
+      return esqueleto({ nome: "", empilhamento: "■", efeito: [], bloqueia: [] });
     case Tipo.AMPLIFICADORES:
       return esqueleto({});
     case Tipo.AMPLIFICADOR:
-      return esqueleto({ nome: "", empilhamento: "", efeito: [] });
+      return esqueleto({ nome: "", empilhamento: "■", efeito: [] });
     case Tipo.MODULOS:
       return esqueleto({ modulos: [] });
     case Tipo.NIVEIS_AMEACA:

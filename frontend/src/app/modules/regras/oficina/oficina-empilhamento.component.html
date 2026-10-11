@@ -1,0 +1,29 @@
+<app-empilhamento [iniciais]="lido().iniciais" [maximo]="lido().maximo" [rotulo]="rotulo()" />
+<span class="oficina-empilhamento__controle">
+    <span class="oficina-empilhamento__rotulo">Início</span>
+    <app-step-input
+        tamanho="micro"
+        [digitavel]="false"
+        [min]="minimo"
+        [max]="lido().maximo"
+        [bloquearDiminuir]="lido().iniciais <= minimo"
+        [bloquearAumentar]="lido().iniciais >= lido().maximo"
+        [ariaRotulo]="'empilhamentos iniciais' + sufixo()"
+        [valorExterno]="lido().iniciais"
+        (valorAlterado)="definir($event, lido().maximo)"
+    />
+</span>
+<span class="oficina-empilhamento__controle">
+    <span class="oficina-empilhamento__rotulo">Máx.</span>
+    <app-step-input
+        tamanho="micro"
+        [digitavel]="false"
+        [min]="minimo"
+        [max]="maximoPermitido"
+        [bloquearDiminuir]="lido().maximo <= minimo"
+        [bloquearAumentar]="lido().maximo >= maximoPermitido"
+        [ariaRotulo]="'teto de empilhamentos' + sufixo()"
+        [valorExterno]="lido().maximo"
+        (valorAlterado)="definir(lido().iniciais, $event)"
+    />
+</span>

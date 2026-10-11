@@ -36,4 +36,25 @@ describe("projetarPecasEmRegras — incluirPecas", () => {
     // E a flag não vaza para a chamada seguinte.
     expect(JSON.stringify(projetarPecasEmRegras(conteudo))).not.toContain("\"peca\"");
   });
+
+  it("os itens de equipamentos, modificações e amplificadores também carregam a peça", () => {
+    const t = (texto: string) => [{ tipo: "texto" as const, texto }];
+    const item = (n: number, tipo: Tipo, dados: unknown): LivroPecaDto =>
+      ({ identificador: id(n), ancora: null, tipo, ordem: 0, filhos: [], dados: dados as never });
+    const container = (n: number, tipo: Tipo, dados: unknown, filho: LivroPecaDto): LivroPecaDto =>
+      ({ identificador: id(n), ancora: null, tipo, ordem: 0, dados: dados as never, filhos: [filho] });
+    const livro: LivroVersaoConteudoDto = { ...conteudo, pecas: [
+      container(10, Tipo.EQUIPAMENTOS, { categoria: "Armas" }, item(11, Tipo.EQUIPAMENTO,
+        { nome: "Faca", custo: t("1"), descricao: t("x"), peso: t("1"), danos: [] })),
+      container(20, Tipo.MODIFICACOES, { categoria: "Armas" }, item(21, Tipo.MODIFICACAO,
+        { nome: "Leve", empilhamento: "■", efeito: t("x"), bloqueia: t("—") })),
+      container(30, Tipo.AMPLIFICADORES, {}, item(31, Tipo.AMPLIFICADOR,
+        { nome: "Vida", empilhamento: "■", efeito: t("x") })),
+    ] };
+    const itens = projetarPecasEmRegras(livro, { incluirPecas: true }).filhos
+      .filter((filho) => filho.tipo === "equipamentos" || filho.tipo === "modificacoes" || filho.tipo === "amplificadores")
+      .map((filho) => (filho as unknown as { itens: readonly { peca?: string }[] }).itens[0].peca);
+    expect(itens).toEqual([id(11), id(21), id(31)]);
+    expect(JSON.stringify(projetarPecasEmRegras(livro))).not.toContain("\"peca\"");
+  });
 });

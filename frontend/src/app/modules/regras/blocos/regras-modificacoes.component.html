@@ -1,6 +1,20 @@
-@if (bloco().nota; as nota) {
+@if (editando()) {
+    <div class="regras-modificacoes__categoria">
+        <span>Categoria</span>
+        <app-oficina-texto
+            campo="categoria"
+            rotulo="Categoria das modificações"
+            vazio="Categoria (ex.: Corpo a Corpo)"
+            [peca]="bloco().peca!"
+            [texto]="bloco().categoria"
+        />
+    </div>
+}
+@if (mostrarNota()) {
     <app-regras-nota
-        [bloco]="{ tipo: 'nota', trechos: nota }"
+        [bloco]="{ tipo: 'nota', peca: bloco().peca, trechos: bloco().nota ?? [] }"
+        campo="nota"
+        [opcional]="true"
         [documento]="documento()"
         (navegarAncora)="navegarAncora.emit($event)"
     />
@@ -9,32 +23,63 @@
     <p class="regras-modificacoes__resumo">{{ texto }}</p>
 }
 <div class="regras-modificacoes">
-    @for (linha of itens(); track $index) {
-        <article class="regras-modificacoes__item">
-            <h4 class="regras-modificacoes__nome">{{ linha.item.nome }}</h4>
-            <app-empilhamento
-                [iniciais]="linha.iniciais"
-                [maximo]="linha.maximo"
-                [rotulo]="linha.item.nome"
-            />
-            @if (linha.peso !== undefined) {
-                <p class="regras-modificacoes__peso">{{ formatarPeso(linha.peso) }}</p>
-            }
-            <p class="regras-modificacoes__efeito">
-                <app-regras-inline
-                    [trechos]="linha.item.efeito"
-                    [documento]="documento()"
-                    (navegarAncora)="navegarAncora.emit($event)"
-                />
-            </p>
-            <p class="regras-modificacoes__bloqueia">
-                <strong>Bloqueia:</strong>&ngsp;
-                <app-regras-inline
-                    [trechos]="linha.item.bloqueia"
-                    [documento]="documento()"
-                    (navegarAncora)="navegarAncora.emit($event)"
-                />
-            </p>
-        </article>
+    @for (linha of itens(); track linha.item.peca ?? $index) {
+        <app-oficina-peca [peca]="linha.item.peca">
+            <article class="regras-modificacoes__item">
+                <h4 class="regras-modificacoes__nome">
+                    @if (editando() && linha.item.peca) {
+                        <app-oficina-texto
+                            campo="nome"
+                            rotulo="Nome da modificação"
+                            vazio="Nome da modificação"
+                            [peca]="linha.item.peca"
+                            [texto]="linha.item.nome"
+                        />
+                    } @else {{{ linha.item.nome }}}
+                </h4>
+                @if (selecionado(linha.item.peca)) {
+                    <app-oficina-empilhamento
+                        [peca]="linha.item.peca!"
+                        [valor]="linha.item.empilhamento"
+                        [rotulo]="linha.item.nome"
+                    />
+                } @else {
+                    <app-empilhamento
+                        [iniciais]="linha.iniciais"
+                        [maximo]="linha.maximo"
+                        [rotulo]="linha.item.nome"
+                    />
+                }
+                @if (linha.peso !== undefined) {
+                    <p class="regras-modificacoes__peso">{{ formatarPeso(linha.peso) }}</p>
+                }
+                <p class="regras-modificacoes__efeito">
+                    <app-regras-inline
+                        [trechos]="linha.item.efeito"
+                        [peca]="linha.item.peca"
+                        campo="efeito"
+                        rotuloEdicao="Efeito"
+                        dica="Efeito"
+                        [documento]="documento()"
+                        (navegarAncora)="navegarAncora.emit($event)"
+                    />
+                </p>
+                <p class="regras-modificacoes__bloqueia">
+                    <strong>Bloqueia:</strong>&ngsp;
+                    <app-regras-inline
+                        [trechos]="linha.item.bloqueia"
+                        [peca]="linha.item.peca"
+                        campo="bloqueia"
+                        rotuloEdicao="O que bloqueia"
+                        dica="O que bloqueia (— se nada)"
+                        [documento]="documento()"
+                        (navegarAncora)="navegarAncora.emit($event)"
+                    />
+                </p>
+            </article>
+        </app-oficina-peca>
     }
 </div>
+@if (bloco().peca; as pecaContainer) {
+    <app-oficina-insercao [pai]="pecaContainer" [restritoA]="tiposItem" [fim]="true" rotulo="Modificação" />
+}

@@ -1,0 +1,19 @@
+// Contadores do empilhamento na Oficina (m11-08): o desenho do `app-empilhamento` fica como na leitura;
+// os contadores vêm depois, no tom dos rótulos mono do restante da edição.
+:host {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-4) var(--space-12);
+}
+.oficina-empilhamento__controle {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-4);
+}
+.oficina-empilhamento__rotulo {
+    font: 400 10px var(--font-mono);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--text-mute);
+}

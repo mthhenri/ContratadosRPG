@@ -1,6 +1,7 @@
-import { Component, ElementRef, effect, inject, input, untracked } from "@angular/core";
+import { Component, DestroyRef, ElementRef, effect, inject, input, untracked } from "@angular/core";
 import type { LivroTrechoDto } from "@contratados-rpg/shared/dtos/livro";
 
+import { definirNoCaminho, lerNoCaminho, type CaminhoDeDados } from "./oficina-dados";
 import { OficinaStore } from "./oficina.store";
 import {
     criarSeloNivel, detectarNivelAmeaca, dividirTrechos, lerTrechos, montarTrechos, trechosIguais,
@@ -48,6 +49,10 @@ export class OficinaTexto {
     readonly peca = input.required<string>();
     /** Nome do campo dentro do `dados` da peça (`trechos`, `citacao`, `nome`, `titulo`). */
     readonly campo = input.required<string>();
+    /** Onde o valor mora no `dados` quando não é um campo plano (`["danos", 0, "trechos"]`); `campo` então só nomeia o campo. */
+    readonly caminho = input<CaminhoDeDados | null>(null);
+    /** Campo que some do `dados` quando fica vazio (porte, especificações, duração), em vez de guardar uma lista vazia. */
+    readonly opcional = input(false);
     readonly rotulo = input.required<string>();
     readonly trechos = input<readonly LivroTrechoDto[] | null>(null);
     readonly texto = input<string | null>(null);
@@ -71,6 +76,7 @@ export class OficinaTexto {
     }
 
     constructor() {
+        inject(DestroyRef).onDestroy(() => clearTimeout(this.timer));
         effect(() => {
             const texto = this.texto();
             const trechos = this.trechos();
@@ -112,9 +118,12 @@ export class OficinaTexto {
         const serial = typeof valor === "string" ? valor : JSON.stringify(valor);
         if (serial === this.entregue) return;
         const item = this.store.item(this.peca());
-        if (!item) return;
+        const caminho = this.caminho() ?? [this.campo()];
+        // Entrega atrasada de um item que já saiu da lista (Desfazer, remoção): não recria o pai.
+        if (!item || lerNoCaminho(item.dados, caminho.slice(0, -1)) === undefined) return;
         this.entregue = serial;
-        this.store.alterarDados(this.peca(), { ...item.dados, [this.campo()]: valor } as typeof item.dados, {
+        const final = this.opcional() && (typeof valor === "string" ? valor === "" : valor.length === 0) ? undefined : valor;
+        this.store.alterarDados(this.peca(), definirNoCaminho(item.dados, caminho, final), {
             rotulo: "Edição de texto", chave: `${this.peca()}:${this.campo()}`,
         });
     }

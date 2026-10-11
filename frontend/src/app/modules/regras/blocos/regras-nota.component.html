@@ -4,6 +4,8 @@
         <app-regras-inline
             [trechos]="bloco().trechos"
             [peca]="bloco().peca"
+            [campo]="campo()"
+            [opcional]="opcional()"
             rotuloEdicao="Nota"
             [documento]="documento()"
             (navegarAncora)="navegarAncora.emit($event)"

@@ -56,3 +56,39 @@
         grid-template-columns: 1fr;
     }
 }
+
+// Edição na Oficina (m11-08): a categoria é uma linha de rótulo + campo acima da lista; o resto do bloco
+// é o mesmo desenho da leitura.
+.regras-modificacoes__categoria {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-8);
+    padding-bottom: var(--space-8);
+    font: 400 10px var(--font-mono);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--text-mute);
+}
+.regras-modificacoes__categoria app-oficina-texto {
+    flex: 1;
+    min-width: 0;
+    font: 600 13px var(--font-mono);
+    letter-spacing: normal;
+    text-transform: none;
+    color: var(--text);
+}
+
+// Contadores do empilhamento do item selecionado: no celular descem para uma linha própria, em vez de
+// espremer o nome do item numa coluna de uma letra.
+@include bp.mobile {
+    .regras-modificacoes app-oficina-empilhamento {
+        grid-column: 1 / -1;
+    }
+}
+
+@include bp.mobile {
+    // O campo de categoria só existe na Oficina: no celular ele deixa o vão em que flutuam as ferramentas do primeiro item.
+    .regras-modificacoes__categoria {
+        padding-bottom: calc(var(--space-20) * 2);
+    }
+}

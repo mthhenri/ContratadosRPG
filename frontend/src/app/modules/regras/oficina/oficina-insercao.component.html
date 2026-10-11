@@ -1,5 +1,6 @@
 @if (visivel()) {
     <button
+        #botao
         app-botao
         class="oficina-insercao__botao"
         variante="secundario"
@@ -17,7 +18,7 @@
     <app-menu-insercao
         [aberto]="aberto()"
         [opcoes]="opcoes()"
-        [ancora]="gatilho"
+        [ancora]="ancoraDoMenu()"
         [titulo]="rotuloAcessivel()"
         (escolheu)="escolher($event)"
         (fechou)="fechar($event)"

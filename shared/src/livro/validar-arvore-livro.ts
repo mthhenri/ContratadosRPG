@@ -102,12 +102,16 @@ const TEXTO_OBRIGATORIO: Readonly<Partial<Record<Tipo, readonly string[]>>> = {
   [Tipo.SUBCLASSE]: ["nome"],
   [Tipo.ORIGEM]: ["nome"],
   [Tipo.TERMO]: ["nome"],
+  [Tipo.EQUIPAMENTOS]: ["categoria"],
   [Tipo.EQUIPAMENTO]: ["nome"],
+  [Tipo.MODIFICACOES]: ["categoria"],
   [Tipo.MODIFICACAO]: ["nome"],
   [Tipo.AMPLIFICADOR]: ["nome"],
   [Tipo.FICHA_CRIATURA]: ["nome"],
   [Tipo.HABILIDADE_CRIATURA]: ["nome"],
 };
+
+const DANOS_VALIDOS: readonly string[] = ["DANO", "UMA MÃO", "DUAS MÃOS"];
 
 function ehObjeto(valor: unknown): valor is Record<string, unknown> {
   return typeof valor === "object" && valor !== null && !Array.isArray(valor);
@@ -256,6 +260,7 @@ export function validarArvoreLivro(dto: LivroArvoreValidarDto): LivroPendenciaDt
           `Falta preencher "${campo}".`);
       }
     }
+    conferirEquipamento(peca, caminho, dados);
     if (peca.tipo === Tipo.HABILIDADE) {
       if (typeof dados["custo"] === "number" && dados["custo"] < 0) {
         registrar(peca, caminho, Codigo.CONTEUDO_INCOMPLETO, Gravidade.CONTEUDO,
@@ -265,6 +270,40 @@ export function validarArvoreLivro(dto: LivroArvoreValidarDto): LivroPendenciaDt
         registrar(peca, caminho, Codigo.CONTEUDO_INCOMPLETO, Gravidade.CONTEUDO,
           "Falta o efeito da habilidade.");
       }
+    }
+  };
+
+  /** Pendências de conteúdo dos itens de equipamento, modificação e amplificador (m11-08). */
+  const conferirEquipamento = (
+    peca: LivroPecaDto,
+    caminho: readonly string[],
+    dados: Record<string, unknown>,
+  ): void => {
+    const faltou = (mensagem: string): void =>
+      registrar(peca, caminho, Codigo.CONTEUDO_INCOMPLETO, Gravidade.CONTEUDO, mensagem);
+    const vazio = (campo: string): boolean => !extrairTexto(dados[campo]).trim();
+    if (peca.tipo === Tipo.EQUIPAMENTO) {
+      if (vazio("custo")) faltou("Falta o custo do equipamento.");
+      if (vazio("peso")) faltou("Falta o peso do equipamento.");
+      if (vazio("descricao")) faltou("Falta a descrição do equipamento.");
+      const danos: unknown[] = Array.isArray(dados["danos"]) ? dados["danos"] : [];
+      if (danos.some((dano) => !ehObjeto(dano) || !DANOS_VALIDOS.includes(dano["rotulo"] as string)
+        || !Array.isArray(dano["trechos"]))) {
+        registrar(peca, caminho, Codigo.DADOS_INVALIDOS, Gravidade.ESTRUTURAL,
+          "Cada dano precisa de um rótulo (DANO, UMA MÃO ou DUAS MÃOS) e de trechos.");
+        return;
+      }
+      const semTexto = danos.some((dano) => !ehObjeto(dano) || !extrairTexto(dano["trechos"]).trim());
+      if (semTexto) faltou("Há um dano sem valor.");
+    }
+    if (peca.tipo === Tipo.MODIFICACAO || peca.tipo === Tipo.AMPLIFICADOR) {
+      if (typeof dados["empilhamento"] === "string" && !/^■+□*$/.test(dados["empilhamento"])) {
+        faltou("Falta o empilhamento (ao menos um ■ inicial).");
+      }
+      if (vazio("efeito")) faltou("Falta o efeito.");
+    }
+    if (peca.tipo === Tipo.MODIFICACAO && vazio("bloqueia")) {
+      faltou("Falta o que a modificação bloqueia (use — se nada).");
     }
   };
 

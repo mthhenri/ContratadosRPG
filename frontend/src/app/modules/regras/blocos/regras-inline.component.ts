@@ -4,6 +4,7 @@ import { NIVEIS_AMEACA, RegrasAmeaca } from "./regras-ameaca.component";
 import { Tooltip } from "../../../shared/tooltip/tooltip.directive";
 import { OficinaStore } from "../oficina/oficina.store";
 import { OficinaTexto } from "../oficina/oficina-texto.component";
+import type { CaminhoDeDados } from "../oficina/oficina-dados";
 import { descreverCondicao, separarCondicoesTexto } from "../../../shared/condicoes/condicoes";
 
 /** Parte de um texto corrido; `recurso` pinta Vida/Energia na cor do recurso. */
@@ -28,6 +29,12 @@ export class RegrasInline {
     readonly peca = input<string | undefined>(undefined);
     readonly campo = input("trechos");
     readonly rotuloEdicao = input("Texto");
+    /** Onde o texto mora no `dados` da peça quando não é um campo plano (ex.: `["danos", 0, "trechos"]`). */
+    readonly caminho = input<CaminhoDeDados | null>(null);
+    /** Campo que some do `dados` quando esvazia (porte, especificações, duração). */
+    readonly opcional = input(false);
+    /** Dica do campo vazio na Oficina. */
+    readonly dica = input("Escreva aqui");
     readonly navegarAncora = output<string>();
     private readonly oficina = inject(OficinaStore, { optional: true });
     protected readonly editavel = computed(() =>

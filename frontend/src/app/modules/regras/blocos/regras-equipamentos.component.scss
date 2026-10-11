@@ -56,3 +56,53 @@
         grid-template-columns: 1fr;
     }
 }
+
+// Edição na Oficina (m11-08): a categoria é uma linha de rótulo + campo acima da lista; o resto do bloco
+// é o mesmo desenho da leitura.
+.regras-equipamentos__categoria {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-8);
+    padding-bottom: var(--space-8);
+    font: 400 10px var(--font-mono);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--text-mute);
+}
+.regras-equipamentos__categoria app-oficina-texto {
+    flex: 1;
+    min-width: 0;
+    font: 600 13px var(--font-mono);
+    letter-spacing: normal;
+    text-transform: none;
+    color: var(--text);
+}
+
+// O tipo de dano é um botão que troca o rótulo; dentro do selo ele herda a tipografia do próprio selo para a
+// edição não mudar o desenho do bloco.
+.regras-equipamentos__rotulo-dano {
+    padding: 0;
+    min-height: 0;
+    font: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+    color: inherit;
+}
+@include bp.mobile {
+    // Alvo de toque de 44px sem engordar o selo: a área sensível do botão passa da caixa (só no item selecionado).
+    .regras-equipamentos__rotulo-dano {
+        position: relative;
+        &::after {
+            content: "";
+            position: absolute;
+            inset: -4px -6px;
+        }
+    }
+}
+
+@include bp.mobile {
+    // O campo de categoria só existe na Oficina: no celular ele deixa o vão em que flutuam as ferramentas do primeiro item.
+    .regras-equipamentos__categoria {
+        padding-bottom: calc(var(--space-20) * 2);
+    }
+}

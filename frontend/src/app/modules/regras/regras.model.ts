@@ -168,6 +168,8 @@ export interface RegrasModulos extends RegrasFonteTabela {
 }
 
 export interface RegrasEquipamento {
+    /** Identificador da peça (só na Oficina). */
+    readonly peca?: string;
     readonly nome: string;
     readonly custo: readonly RegrasTrecho[];
     readonly descricao: readonly RegrasTrecho[];
@@ -181,11 +183,13 @@ export interface RegrasEquipamento {
 
 export interface RegrasEquipamentos extends RegrasFonteTabela {
     readonly tipo: "equipamentos";
+    readonly peca?: string;
     readonly categoria: string;
     readonly itens: readonly RegrasEquipamento[];
 }
 
 export interface RegrasModificacao {
+    readonly peca?: string;
     readonly nome: string;
     readonly empilhamento: string;
     readonly efeito: readonly RegrasTrecho[];
@@ -194,6 +198,7 @@ export interface RegrasModificacao {
 
 export interface RegrasModificacoes extends RegrasFonteTabela {
     readonly tipo: "modificacoes";
+    readonly peca?: string;
     /** Título da categoria de Equipamentos a que a tabela pertence (ex.: "Corpo a Corpo"). */
     readonly categoria: string;
     readonly nota?: readonly RegrasTrecho[];
@@ -201,6 +206,7 @@ export interface RegrasModificacoes extends RegrasFonteTabela {
 }
 
 export interface RegrasAmplificador {
+    readonly peca?: string;
     readonly nome: string;
     readonly empilhamento: string;
     readonly efeito: readonly RegrasTrecho[];
@@ -208,6 +214,7 @@ export interface RegrasAmplificador {
 
 export interface RegrasAmplificadores extends RegrasFonteTabela {
     readonly tipo: "amplificadores";
+    readonly peca?: string;
     readonly itens: readonly RegrasAmplificador[];
 }
 

@@ -36,11 +36,14 @@ export const NOME_DO_TIPO: Readonly<Partial<Record<Tipo, string>>> = {
     [Tipo.SECAO]: "Seção", [Tipo.PARAGRAFO]: "Parágrafo", [Tipo.NOTA]: "Nota", [Tipo.EXEMPLO]: "Exemplo",
     [Tipo.FORMULA]: "Fórmula", [Tipo.HABILIDADE]: "Habilidade", [Tipo.CLASSE]: "Classe",
     [Tipo.SUBCLASSE]: "Subclasse", [Tipo.ARQUETIPO]: "Arquétipo",
+    [Tipo.EQUIPAMENTOS]: "Equipamentos", [Tipo.EQUIPAMENTO]: "Equipamento",
+    [Tipo.MODIFICACOES]: "Modificações", [Tipo.MODIFICACAO]: "Modificação",
+    [Tipo.AMPLIFICADORES]: "Amplificadores", [Tipo.AMPLIFICADOR]: "Amplificador",
 };
 
 /**
  * O que o menu de inserção oferece, por tipo: só as peças que a Oficina já edita na tela. Os blocos
- * ricos (tabelas, equipamentos, fichas…) entram com a edição deles (m11-08). A ordem aqui é a do menu.
+ * ricos (tabelas, fichas…) entram com a edição deles (m11-08). A ordem aqui é a do menu.
  */
 const CATALOGO: readonly (MenuInsercaoOpcao & { readonly tipo: Tipo })[] = [
     { id: Tipo.PARAGRAFO, tipo: Tipo.PARAGRAFO, rotulo: "Parágrafo", marca: "¶", termos: ["texto", "par"],
@@ -61,6 +64,18 @@ const CATALOGO: readonly (MenuInsercaoOpcao & { readonly tipo: Tipo })[] = [
         descricao: "Nasce com a habilidade inicial." },
     { id: Tipo.ARQUETIPO, tipo: Tipo.ARQUETIPO, rotulo: "Arquétipo", marca: "◻", termos: ["arq"],
         descricao: "Nasce com a habilidade inicial." },
+    { id: Tipo.EQUIPAMENTOS, tipo: Tipo.EQUIPAMENTOS, rotulo: "Equipamentos", marca: "▤", termos: ["itens", "armas", "equip"],
+        descricao: "Categoria de equipamentos: custo, peso e dano." },
+    { id: Tipo.EQUIPAMENTO, tipo: Tipo.EQUIPAMENTO, rotulo: "Equipamento", marca: "▪", termos: ["item", "arma"],
+        descricao: "Nome, custo, peso, porte, dano e descrição." },
+    { id: Tipo.MODIFICACOES, tipo: Tipo.MODIFICACOES, rotulo: "Modificações", marca: "▤", termos: ["mod"],
+        descricao: "Modificações de uma categoria de equipamentos." },
+    { id: Tipo.MODIFICACAO, tipo: Tipo.MODIFICACAO, rotulo: "Modificação", marca: "▪", termos: ["mod"],
+        descricao: "Empilhamento, efeito e o que ela bloqueia." },
+    { id: Tipo.AMPLIFICADORES, tipo: Tipo.AMPLIFICADORES, rotulo: "Amplificadores", marca: "▤", termos: ["amp"],
+        descricao: "Lista de amplificadores." },
+    { id: Tipo.AMPLIFICADOR, tipo: Tipo.AMPLIFICADOR, rotulo: "Amplificador", marca: "▪", termos: ["amp"],
+        descricao: "Empilhamento e efeito." },
 ];
 
 /** Tipos que cabem dentro de `paiTipo` (`null` = raiz do livro), pela tabela de aninhamento do validador. */
@@ -83,8 +98,11 @@ export function campoInicialDe(tipo: Tipo): string | null {
     switch (tipo) {
         case Tipo.SECAO: return "titulo";
         case Tipo.HABILIDADE: return "nome";
+        case Tipo.EQUIPAMENTO: case Tipo.MODIFICACAO: case Tipo.AMPLIFICADOR: return "nome";
+        case Tipo.EQUIPAMENTOS: case Tipo.MODIFICACOES: return "categoria";
         // Nome de classe, subclasse e arquétipo ainda não se edita na tela (m11-08): sem campo para o cursor.
-        case Tipo.CLASSE: case Tipo.SUBCLASSE: case Tipo.ARQUETIPO: return null;
+        // O container de amplificadores não tem campo próprio.
+        case Tipo.CLASSE: case Tipo.SUBCLASSE: case Tipo.ARQUETIPO: case Tipo.AMPLIFICADORES: return null;
         default: return "trechos";
     }
 }

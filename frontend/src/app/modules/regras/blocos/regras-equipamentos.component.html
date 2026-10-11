@@ -1,75 +1,187 @@
+@if (editando()) {
+    <div class="regras-equipamentos__categoria">
+        <span>Categoria</span>
+        <app-oficina-texto
+            campo="categoria"
+            rotulo="Categoria dos equipamentos"
+            vazio="Categoria (ex.: Corpo a Corpo)"
+            [peca]="bloco().peca!"
+            [texto]="bloco().categoria"
+        />
+    </div>
+}
 <div class="regras-equipamentos" [attr.aria-label]="bloco().categoria">
-    @for (item of bloco().itens; track $index) {
-        <article class="regras-equipamentos__item">
-            <h4 class="regras-equipamentos__nome">{{ item.nome }}</h4>
-            <span class="regras-equipamentos__custo">
-                <app-regras-inline
-                    [trechos]="item.custo"
-                    [documento]="documento()"
-                    (navegarAncora)="navegarAncora.emit($event)"
-                />
-            </span>
-            <div class="regras-equipamentos__selos">
-                @for (dano of item.danos; track $index) {
+    @for (item of bloco().itens; track item.peca ?? $index) {
+        <app-oficina-peca [peca]="item.peca">
+            <article class="regras-equipamentos__item">
+                <h4 class="regras-equipamentos__nome">
+                    @if (editando() && item.peca) {
+                        <app-oficina-texto
+                            campo="nome"
+                            rotulo="Nome do equipamento"
+                            vazio="Nome do equipamento"
+                            [peca]="item.peca"
+                            [texto]="item.nome"
+                        />
+                    } @else {{{ item.nome }}}
+                </h4>
+                <span class="regras-equipamentos__custo">
+                    <app-regras-inline
+                        [trechos]="item.custo"
+                        [peca]="item.peca"
+                        campo="custo"
+                        rotuloEdicao="Custo"
+                        dica="Custo"
+                        [documento]="documento()"
+                        (navegarAncora)="navegarAncora.emit($event)"
+                    />
+                </span>
+                <div class="regras-equipamentos__selos">
+                    @for (dano of item.danos; track $index; let indice = $index) {
+                        <app-chip severidade="secundario" tom="contorno">
+                            <span class="regras-equipamentos__selo-texto">
+                                @if (editando() && item.peca) {
+                                    @if (selecionado(item)) {
+                                        <button
+                                            app-botao
+                                            class="regras-equipamentos__rotulo-dano"
+                                            variante="secundario"
+                                            estilo="texto"
+                                            type="button"
+                                            [attr.aria-label]="'Tipo de dano: ' + dano.rotulo + ', trocar'"
+                                            appTooltip="Trocar o tipo de dano"
+                                            (click)="alternarRotulo(item, indice)"
+                                        >
+                                            {{ dano.rotulo }}
+                                        </button>
+                                    } @else {
+                                        {{ dano.rotulo }}
+                                    }
+                                    ·
+                                    <app-regras-inline
+                                        [trechos]="dano.trechos"
+                                        [peca]="item.peca"
+                                        [campo]="'danos.' + indice + '.trechos'"
+                                        [caminho]="['danos', indice, 'trechos']"
+                                        rotuloEdicao="Valor do dano"
+                                        dica="valor"
+                                        [documento]="documento()"
+                                        (navegarAncora)="navegarAncora.emit($event)"
+                                    />
+                                    @if (selecionado(item)) {
+                                        <button
+                                            app-botao-icone
+                                            tamanho="compacto"
+                                            variante="perigo"
+                                            type="button"
+                                            [attr.aria-label]="'Remover dano ' + (indice + 1)"
+                                            appTooltip="Remover dano"
+                                            (click)="removerDano(item, indice)"
+                                        >
+                                            <app-icone nome="excluir" />
+                                        </button>
+                                    }
+                                } @else {
+                                    {{ dano.rotulo }} ·
+                                    <app-regras-inline
+                                        [trechos]="dano.trechos"
+                                        [documento]="documento()"
+                                        (navegarAncora)="navegarAncora.emit($event)"
+                                    />
+                                }
+                            </span>
+                        </app-chip>
+                    }
+                    @if (mostrar(item, item.porte)) {
+                        <app-chip severidade="secundario" tom="contorno">
+                            <span class="regras-equipamentos__selo-texto"
+                                >PORTE ·
+                                <app-regras-inline
+                                    [trechos]="item.porte ?? []"
+                                    [peca]="item.peca"
+                                    campo="porte"
+                                    [opcional]="true"
+                                    rotuloEdicao="Porte"
+                                    dica="valor"
+                                    [documento]="documento()"
+                                    (navegarAncora)="navegarAncora.emit($event)"
+                            /></span>
+                        </app-chip>
+                    }
                     <app-chip severidade="secundario" tom="contorno">
                         <span class="regras-equipamentos__selo-texto"
-                            >{{ dano.rotulo }} ·
+                            >PESO ·
                             <app-regras-inline
-                                [trechos]="dano.trechos"
+                                [trechos]="item.peso"
+                                [peca]="item.peca"
+                                campo="peso"
+                                rotuloEdicao="Peso"
+                                dica="valor"
                                 [documento]="documento()"
                                 (navegarAncora)="navegarAncora.emit($event)"
                         /></span>
                     </app-chip>
-                }
-                @if (item.porte) {
-                    <app-chip severidade="secundario" tom="contorno">
-                        <span class="regras-equipamentos__selo-texto"
-                            >PORTE ·
-                            <app-regras-inline
-                                [trechos]="item.porte"
-                                [documento]="documento()"
-                                (navegarAncora)="navegarAncora.emit($event)"
-                        /></span>
-                    </app-chip>
-                }
-                <app-chip severidade="secundario" tom="contorno">
-                    <span class="regras-equipamentos__selo-texto"
-                        >PESO ·
+                    @if (selecionado(item) && item.danos.length < maximoDeDanos) {
+                        <button
+                            app-botao
+                            variante="secundario"
+                            estilo="contorno"
+                            tamanho="pequeno"
+                            posicaoIcone="esquerda"
+                            type="button"
+                            aria-label="Adicionar dano"
+                            (click)="adicionarDano(item)"
+                        >
+                            <app-icone nome="mais" /> Dano
+                        </button>
+                    }
+                </div>
+                @if (item.descricao.length || editando()) {
+                    <p class="regras-equipamentos__descricao">
                         <app-regras-inline
-                            [trechos]="item.peso"
+                            [trechos]="item.descricao"
+                            [peca]="item.peca"
+                            campo="descricao"
+                            rotuloEdicao="Descrição"
+                            dica="Descrição"
                             [documento]="documento()"
                             (navegarAncora)="navegarAncora.emit($event)"
-                    /></span>
-                </app-chip>
-            </div>
-            @if (item.descricao.length) {
-                <p class="regras-equipamentos__descricao">
-                    <app-regras-inline
-                        [trechos]="item.descricao"
-                        [documento]="documento()"
-                        (navegarAncora)="navegarAncora.emit($event)"
-                    />
-                </p>
-            }
-            @if (item.especificacoes?.length) {
-                <p class="regras-equipamentos__descricao">
-                    <app-regras-inline
-                        [trechos]="item.especificacoes!"
-                        [documento]="documento()"
-                        (navegarAncora)="navegarAncora.emit($event)"
-                    />
-                </p>
-            }
-            @if (item.duracao?.length) {
-                <p class="regras-equipamentos__descricao">
-                    <strong>Duração:</strong>&ngsp;
-                    <app-regras-inline
-                        [trechos]="item.duracao!"
-                        [documento]="documento()"
-                        (navegarAncora)="navegarAncora.emit($event)"
-                    />
-                </p>
-            }
-        </article>
+                        />
+                    </p>
+                }
+                @if (mostrar(item, item.especificacoes)) {
+                    <p class="regras-equipamentos__descricao">
+                        <app-regras-inline
+                            [trechos]="item.especificacoes ?? []"
+                            [peca]="item.peca"
+                            campo="especificacoes"
+                            [opcional]="true"
+                            rotuloEdicao="Especificações"
+                            dica="Especificações (opcional)"
+                            [documento]="documento()"
+                            (navegarAncora)="navegarAncora.emit($event)"
+                        />
+                    </p>
+                }
+                @if (mostrar(item, item.duracao)) {
+                    <p class="regras-equipamentos__descricao">
+                        <strong>Duração:</strong>&ngsp;
+                        <app-regras-inline
+                            [trechos]="item.duracao ?? []"
+                            [peca]="item.peca"
+                            campo="duracao"
+                            [opcional]="true"
+                            rotuloEdicao="Duração"
+                            dica="opcional"
+                            [documento]="documento()"
+                            (navegarAncora)="navegarAncora.emit($event)"
+                        />
+                    </p>
+                }
+            </article>
+        </app-oficina-peca>
     }
 </div>
+@if (bloco().peca; as pecaContainer) {
+    <app-oficina-insercao [pai]="pecaContainer" [restritoA]="tiposItem" [fim]="true" rotulo="Equipamento" />
+}

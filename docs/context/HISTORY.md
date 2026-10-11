@@ -1,5 +1,22 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-11 — M11-08 fatia 1: equipamentos, modificações e amplificadores editáveis na Oficina
+
+Primeira fatia da m11-08 (a spec segue em `active/`; fatias 2 a 5 abertas). Os três blocos ficam editáveis no
+lugar com o desenho da Leitura: campos de texto, categoria, danos (tipo alternável, valor, adicionar e remover),
+campos opcionais (porte, especificações, duração, nota das modificações) e empilhamento ■□ por dois contadores
+(`app-step-input`); o "+" do fim da lista cria o item e o menu da seção passou a oferecer os três containers.
+Nasceram `oficina-dados.ts` (caminho no `dados`), `caminho`/`opcional` no `OficinaTexto`, `OficinaStore.alterarCampo` e o
+validador ganhou pendências de conteúdo e a forma do dano (nenhuma pendência nova nos livros importados).
+
+Verificado: shared 1241, backend 1093, frontend 3350, lint sem erros; gate visual em 1920×1080 e 360×800 (toque);
+ida e volta (editar, publicar rascunho de teste, ler) idêntica. Achados só ao vivo: "+" por cima da barra presa no
+celular (z-index da m11-07), nome da modificação espremido pelos contadores, menu fora do botão. A revisão
+independente achou a entrega atrasada que recriava dano removido, a lista de danos lida do template, Desfazer
+fundindo adicionar/remover e categoria vazia sem pendência: corrigidos. Limite: área de toque do botão de tipo de
+dano abaixo de 44 px no celular (decisão do autor sobre o primitivo).
+[Verificação](../specs/active/m11-08-oficina-blocos-ricos/verificacao.md).
+
 ## 2026-10-11 — M11-07: inserir e estruturar na Oficina
 
 O "+" entre as peças e no fim das listas e o "/" num parágrafo vazio abrem o novo primitivo `app-menu-insercao`

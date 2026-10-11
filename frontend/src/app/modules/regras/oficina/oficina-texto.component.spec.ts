@@ -11,11 +11,14 @@ import { OficinaTexto } from "./oficina-texto.component";
     template: `
         <app-oficina-texto peca="P1" campo="nome" rotulo="Nome" [texto]="nome()" />
         <app-oficina-texto peca="P2" campo="trechos" rotulo="Parágrafo" [trechos]="trechos()" />
+        <app-oficina-texto peca="P3" campo="danos.0.trechos" rotulo="Dano" [caminho]="['danos', 0, 'trechos']" [trechos]="[]" />
+        <app-oficina-texto peca="P4" campo="porte" rotulo="Porte" [opcional]="true" [trechos]="porte()" />
     `,
 })
 class Hospedeiro {
     readonly nome = signal("Golpe");
     readonly trechos = signal<LivroTrechoDto[]>([{ tipo: "texto", texto: "um dois" }]);
+    readonly porte = signal<LivroTrechoDto[]>([{ tipo: "texto", texto: "Leve" }]);
 }
 
 describe("OficinaTexto", () => {
@@ -30,8 +33,9 @@ describe("OficinaTexto", () => {
         const raiz = fixture.nativeElement as HTMLElement;
         document.body.append(raiz);
         fixture.detectChanges();
-        const [nome, paragrafo] = Array.from(raiz.querySelectorAll<HTMLElement>(".oficina-texto")) as [HTMLElement, HTMLElement];
-        return { fixture, nome, paragrafo };
+        const [nome, paragrafo, dano, porte] = Array.from(raiz.querySelectorAll<HTMLElement>(".oficina-texto")) as
+            [HTMLElement, HTMLElement, HTMLElement, HTMLElement];
+        return { fixture, nome, paragrafo, dano, porte };
     }
     function teclar(alvo: HTMLElement, key: string, extra: KeyboardEventInit = {}): KeyboardEvent {
         const evento = new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true, ...extra });
@@ -49,7 +53,8 @@ describe("OficinaTexto", () => {
 
     beforeEach(() => {
         store = {
-            item: vi.fn((identificador: string) => ({ identificador, id: 1, tipo: "PARAGRAFO", dados: { trechos: [], nome: "Golpe" } })),
+            item: vi.fn((identificador: string) => ({ identificador, id: 1, tipo: "PARAGRAFO",
+                dados: { trechos: [], nome: "Golpe", danos: [{ rotulo: "DANO", trechos: [] }], porte: [{ tipo: "texto", texto: "Leve" }] } })),
             alterarDados: vi.fn(), salvarAgora: vi.fn(), selecionar: vi.fn(), ehParagrafo: vi.fn(() => true),
             criarDepois: vi.fn(), remover: vi.fn(), pedidoFoco: signal(null), pedirFoco: vi.fn(),
         };
@@ -58,6 +63,28 @@ describe("OficinaTexto", () => {
 
     afterEach(() => {
         document.body.replaceChildren();
+    });
+
+    it("com caminho, grava o texto dentro do campo aninhado e preserva o resto do dados", () => {
+        const { dano } = montar();
+        dano.textContent = "1D6";
+        dano.dispatchEvent(new Event("input"));
+        dano.dispatchEvent(new Event("blur"));
+        const dados = store.alterarDados.mock.calls.at(-1)?.[1] as { nome: string; danos: { rotulo: string; trechos: unknown[] }[] };
+        expect(dados.nome).toBe("Golpe");
+        expect(dados.danos[0].rotulo).toBe("DANO");
+        expect(dados.danos[0].trechos).toEqual([{ tipo: "texto", texto: "1D6" }]);
+        expect(store.alterarDados.mock.calls.at(-1)?.[2]).toMatchObject({ chave: "P3:danos.0.trechos" });
+    });
+
+    it("campo opcional esvaziado some do dados em vez de virar lista vazia", () => {
+        const { porte } = montar();
+        porte.textContent = "";
+        porte.dispatchEvent(new Event("input"));
+        porte.dispatchEvent(new Event("blur"));
+        const dados = store.alterarDados.mock.calls.at(-1)?.[1] as Record<string, unknown>;
+        expect("porte" in dados).toBe(false);
+        expect(dados["nome"]).toBe("Golpe");
     });
 
     it("mostra o texto e é uma caixa de texto rotulada e editável", () => {

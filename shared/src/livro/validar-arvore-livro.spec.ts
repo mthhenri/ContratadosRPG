@@ -187,6 +187,70 @@ describe("validarArvoreLivro", () => {
   });
 });
 
+describe("validarArvoreLivro — equipamentos, modificações e amplificadores (m11-08)", () => {
+  const equipamento = (dados: Record<string, unknown>) =>
+    peca(Tipo.EQUIPAMENTOS, "armas", { categoria: "Corpo a Corpo" }, [
+      peca(Tipo.EQUIPAMENTO, "faca", {
+        nome: "Faca", custo: [texto("$ 10")], descricao: [texto("Curta.")], peso: [texto("1")], danos: [], ...dados,
+      }),
+    ]);
+  const mensagens = (pecas: readonly LivroPecaDto[]) => validar(pecas).map((item) => item.mensagem);
+
+  it("aceita um equipamento completo", () => {
+    expect(validar([equipamento({})])).toEqual([]);
+  });
+
+  it("pede custo, peso e descrição do equipamento", () => {
+    expect(mensagens([equipamento({ custo: [], peso: [texto(" ")], descricao: [] })])).toEqual([
+      "Falta o custo do equipamento.",
+      "Falta o peso do equipamento.",
+      "Falta a descrição do equipamento.",
+    ]);
+  });
+
+  it("acusa dano sem valor", () => {
+    const danos = [{ rotulo: "DANO", trechos: [] }];
+    expect(mensagens([equipamento({ danos })])).toEqual(["Há um dano sem valor."]);
+    const completos = [{ rotulo: "DANO", trechos: [texto("1d6")] }];
+    expect(validar([equipamento({ danos: completos })])).toEqual([]);
+  });
+
+  it("acusa dano sem rótulo como estrutural e categoria vazia como conteúdo", () => {
+    const dano = equipamento({ danos: [{ trechos: [] }] });
+    expect(validar([dano]).map((item) => item.gravidade)).toEqual([Gravidade.ESTRUTURAL]);
+    const vazia = peca(Tipo.EQUIPAMENTOS, "armas", { categoria: " " });
+    expect(mensagens([vazia])).toEqual(["Falta preencher \"categoria\"."]);
+  });
+
+  it("exige empilhamento válido, efeito e bloqueio na modificação", () => {
+    const modificacao = (dados: Record<string, unknown>) =>
+      peca(Tipo.MODIFICACOES, "mods", { categoria: "Corpo a Corpo" }, [
+        peca(Tipo.MODIFICACAO, "leve", {
+          nome: "Leve", empilhamento: "■□□", efeito: [texto("Menos peso.")], bloqueia: [texto("—")], ...dados,
+        }),
+      ]);
+    expect(validar([modificacao({})])).toEqual([]);
+    expect(mensagens([modificacao({ empilhamento: "", efeito: [], bloqueia: [] })])).toEqual([
+      "Falta o empilhamento (ao menos um ■ inicial).",
+      "Falta o efeito.",
+      "Falta o que a modificação bloqueia (use — se nada).",
+    ]);
+    expect(mensagens([modificacao({ empilhamento: "□■" })])).toEqual(["Falta o empilhamento (ao menos um ■ inicial)."]);
+  });
+
+  it("exige empilhamento válido e efeito no amplificador", () => {
+    const amplificador = (dados: Record<string, unknown>) =>
+      peca(Tipo.AMPLIFICADORES, "amps", {}, [
+        peca(Tipo.AMPLIFICADOR, "vida", { nome: "Vida", empilhamento: "■", efeito: [texto("+5 Vida.")], ...dados }),
+      ]);
+    expect(validar([amplificador({})])).toEqual([]);
+    expect(mensagens([amplificador({ empilhamento: "", efeito: [] })])).toEqual([
+      "Falta o empilhamento (ao menos um ■ inicial).",
+      "Falta o efeito.",
+    ]);
+  });
+});
+
 describe("tabela de aninhamento", () => {
   it("cobre todos os tipos de peça", () => {
     expect(Object.keys(LIVRO_FILHOS_PERMITIDOS).sort()).toEqual(Object.values(Tipo).sort());

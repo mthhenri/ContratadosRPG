@@ -107,6 +107,8 @@ export interface NormalizadoEquipamentos extends FonteTabela {
   readonly tipo: "equipamentos";
   readonly categoria: string;
   readonly itens: readonly {
+    /** Identificador da peça do item (só na projeção da Oficina). */
+    readonly peca?: string;
     readonly nome: string;
     readonly custo: Trechos;
     readonly descricao: Trechos;
@@ -123,6 +125,8 @@ export interface NormalizadoModificacoes extends FonteTabela {
   readonly categoria: string;
   readonly nota?: Trechos;
   readonly itens: readonly {
+    /** Identificador da peça do item (só na projeção da Oficina). */
+    readonly peca?: string;
     readonly nome: string;
     readonly empilhamento: string;
     readonly efeito: Trechos;
@@ -132,7 +136,13 @@ export interface NormalizadoModificacoes extends FonteTabela {
 
 export interface NormalizadoAmplificadores extends FonteTabela {
   readonly tipo: "amplificadores";
-  readonly itens: readonly { readonly nome: string; readonly empilhamento: string; readonly efeito: Trechos }[];
+  readonly itens: readonly {
+    /** Identificador da peça do item (só na projeção da Oficina). */
+    readonly peca?: string;
+    readonly nome: string;
+    readonly empilhamento: string;
+    readonly efeito: Trechos;
+  }[];
 }
 
 export interface NormalizadoModulos extends FonteTabela {
