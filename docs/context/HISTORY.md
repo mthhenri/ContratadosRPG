@@ -1,5 +1,28 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-11 — M11-06: núcleo da Oficina (API de edição e edição no lugar)
+
+Corte 1 (`9d1e7479`): API de edição da cópia de trabalho, só `ADMIN` — alterar `dados`, mover, duplicar,
+excluir e restaurar com `revisao` otimista (409) e trava por livro. Corte 2: `POST /livros/:codigo/pecas`
+(criar) e o modo Oficina no leitor (`?modo=oficina`, só `ADMIN`): campos `contenteditable` para título de
+seção, parágrafo/exemplo/nota/fórmula, nome e efeito da habilidade e citação; selo de custo editável
+(`app-valor-editavel`); REAÇÃO, subir/descer, duplicar e remover (novo primitivo `app-barra-ferramentas`);
+salvamento automático por peça (300 ms no campo + 800 ms no store, na hora ao sair do campo e antes de ações
+estruturais, uma requisição em voo por peça com reenvio pela `revisao` nova); Desfazer de 100 passos só da
+sessão, sem refazer; pendências pelo `validarArvoreLivro`; Ir para peça (Ctrl+K). A projeção ganhou
+`incluirPecas` (o `identificador` em `peca` de cada bloco). Lógica em `modules/regras/oficina/`, não no leitor.
+
+Verificado: frontend 3278, shared 1198, backend 1080 testes, lint sem erros; gate visual no app real (sessão
+`ADMIN`, API simulada por rota, fixture do importador sobre `docs/core`) em 1920×1080 e 360×800, claro e
+escuro, com todos os estados da spec; regressão do leitor contra o build do commit anterior: 24 pares com 0
+pixel de diferença. A revisão independente achou 12 problemas, dois deles graves e só visíveis com dados
+reais: remover a habilidade inicial de arquétipo/subclasse derrubava a projeção (agora recusado no backend e
+na UI) e mexer em filhos de roteiro descolocava as fatias de introdução/conclusão (idem; estruturar roteiro
+fica para a `m11-07`); os demais foram corrigidos. Achado só ao vivo: o selo de custo no celular herda o piso
+de 44 px do primitivo e fica mais alto que na Leitura (mantido); a navegação por âncora disparava "Seção não
+encontrada" antes da cópia de trabalho carregar. Limite: API simulada no gate (sem teste HTTP ponta a ponta),
+só Chromium, importador ainda não executado no banco de dev. [Verificação](../specs/done/m11-06-oficina-nucleo/verificacao.md).
+
 ## 2026-10-10 — M11-05: comparador puro das versões dos livros
 
 `compararLivros` (`shared/src/livro`) casa peças por `identificador` e devolve nova, removida, alterada

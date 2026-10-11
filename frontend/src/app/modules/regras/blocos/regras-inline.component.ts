@@ -1,7 +1,9 @@
-import { Component, forwardRef, input, output } from "@angular/core";
+import { Component, computed, forwardRef, inject, input, output } from "@angular/core";
 import { RegrasDocumento, RegrasTrecho } from "../regras.model";
 import { NIVEIS_AMEACA, RegrasAmeaca } from "./regras-ameaca.component";
 import { Tooltip } from "../../../shared/tooltip/tooltip.directive";
+import { OficinaStore } from "../oficina/oficina.store";
+import { OficinaTexto } from "../oficina/oficina-texto.component";
 import { descreverCondicao, separarCondicoesTexto } from "../../../shared/condicoes/condicoes";
 
 /** Parte de um texto corrido; `recurso` pinta Vida/Energia na cor do recurso. */
@@ -13,7 +15,7 @@ interface RegrasParteTexto {
 
 @Component({
     selector: "app-regras-inline",
-    imports: [forwardRef(() => RegrasInline), RegrasAmeaca, Tooltip],
+    imports: [forwardRef(() => RegrasInline), RegrasAmeaca, Tooltip, OficinaTexto],
     templateUrl: "./regras-inline.component.html",
     styleUrl: "./regras-inline.component.scss",
 })
@@ -22,7 +24,14 @@ export class RegrasInline {
     readonly documento = input<RegrasDocumento["id"]>("sistema");
     /** Nome de item (ex.: amplificador "Vida"): palavra de recurso fica sem a cor do recurso. */
     readonly semCorRecurso = input(false);
+    /** Peça e campo que este texto edita na Oficina; sem eles (ou fora da Oficina) é só leitura. */
+    readonly peca = input<string | undefined>(undefined);
+    readonly campo = input("trechos");
+    readonly rotuloEdicao = input("Texto");
     readonly navegarAncora = output<string>();
+    private readonly oficina = inject(OficinaStore, { optional: true });
+    protected readonly editavel = computed(() =>
+        !!this.peca() && !!this.oficina && this.oficina.estado() === "ok");
     protected readonly descreverCondicao = descreverCondicao;
 
     /**

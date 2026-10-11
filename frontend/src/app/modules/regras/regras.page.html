@@ -1,6 +1,8 @@
 <app-regras-leitor
     [livro]="livro()"
     [ancoraInicial]="ancoraInicial()"
+    [modoOficina]="modoOficina()"
+    (modoAlterado)="alterarModo($event)"
     (livroAlterado)="trocarDocumento($event)"
     (secaoAlterada)="alterarUrl($event)"
 />

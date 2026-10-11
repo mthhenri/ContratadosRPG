@@ -1,0 +1,46 @@
+<div class="oficina-barra" role="region" aria-label="Oficina das Regras">
+    <app-chip [severidade]="severidadeEstado()" tom="sutil" role="status" aria-live="polite">
+        {{ rotuloEstado() }}
+    </app-chip>
+    @if (totalPendencias() > 0) {
+        <button
+            app-botao
+            variante="aviso"
+            estilo="contorno"
+            tamanho="pequeno"
+            posicaoIcone="esquerda"
+            type="button"
+            appTooltip="Ir para a próxima pendência"
+            (click)="abrirPendencia()"
+        >
+            <app-icone nome="alerta" />
+            {{ totalPendencias() }} {{ totalPendencias() === 1 ? "pendência" : "pendências" }}
+        </button>
+    }
+    <span class="oficina-barra__espaco"></span>
+    <button
+        app-botao
+        variante="secundario"
+        estilo="contorno"
+        tamanho="pequeno"
+        posicaoIcone="esquerda"
+        type="button"
+        appTooltip="Ir para peça (Ctrl+K)"
+        (click)="irPara.emit()"
+    >
+        <app-icone nome="busca" /> Ir para peça
+    </button>
+    <button
+        app-botao
+        variante="secundario"
+        estilo="contorno"
+        tamanho="pequeno"
+        posicaoIcone="esquerda"
+        type="button"
+        [disabled]="!store.podeDesfazer()"
+        [appTooltip]="store.rotuloDesfazer() ? 'Desfazer: ' + store.rotuloDesfazer() + ' (Ctrl+Z)' : 'Nada para desfazer'"
+        (click)="store.desfazer()"
+    >
+        <app-icone nome="desfazer" /> Desfazer
+    </button>
+</div>

@@ -1,0 +1,71 @@
+<ng-content />
+@if (pendencias().length > 0) {
+    <span class="oficina-peca__pendencia" role="note">
+        <app-icone nome="alerta" /> Pendência: {{ mensagemPendencia() }}
+    </span>
+}
+@if (selecionada()) {
+    <app-barra-ferramentas class="oficina-peca__ferramentas" rotulo="Ferramentas da peça">
+        @if (ehHabilidade()) {
+            <button
+                app-botao
+                variante="ajuda"
+                [estilo]="reacao() ? 'preenchido' : 'contorno'"
+                tamanho="pequeno"
+                type="button"
+                [attr.aria-pressed]="reacao()"
+                appTooltip="Marcar como Reação"
+                (click)="alternarReacao()"
+            >
+                Reação
+            </button>
+            <app-barra-ferramentas-separador />
+        }
+        <button
+            app-botao-icone
+            tamanho="compacto"
+            type="button"
+            aria-label="Mover para cima"
+            appTooltip="Mover para cima"
+            [disabled]="!podeSubir()"
+            (click)="mover(-1)"
+        >
+            <span aria-hidden="true">↑</span>
+        </button>
+        <button
+            app-botao-icone
+            tamanho="compacto"
+            type="button"
+            aria-label="Mover para baixo"
+            appTooltip="Mover para baixo"
+            [disabled]="!podeDescer()"
+            (click)="mover(1)"
+        >
+            <span aria-hidden="true">↓</span>
+        </button>
+        <app-barra-ferramentas-separador />
+        <button
+            app-botao-icone
+            tamanho="compacto"
+            type="button"
+            aria-label="Duplicar peça"
+            appTooltip="Duplicar peça"
+            [disabled]="!podeEstruturar()"
+            (click)="duplicar()"
+        >
+            <app-icone nome="duplicar" />
+        </button>
+        <button
+            app-botao-icone
+            tamanho="compacto"
+            variante="perigo"
+            type="button"
+            aria-label="Remover peça"
+            appTooltip="Remover peça"
+            [disabled]="!podeEstruturar()"
+            (click)="remover()"
+        >
+            <app-icone nome="excluir" />
+        </button>
+    </app-barra-ferramentas>
+}

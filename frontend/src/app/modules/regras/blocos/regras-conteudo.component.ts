@@ -29,6 +29,7 @@ import { RegrasSubclasse } from "./regras-subclasse.component";
 import { RegrasTermos } from "./regras-termos.component";
 import { RegrasGrade } from "./regras-grade.component";
 import { RegrasAbertura } from "./regras-abertura.component";
+import { OficinaPeca } from "../oficina/oficina-peca.component";
 
 @Component({
     selector: "app-regras-conteudo",
@@ -42,7 +43,7 @@ import { RegrasAbertura } from "./regras-abertura.component";
             RegrasIdentidade,
             RegrasAtributos, RegrasHabilidadeCriatura, forwardRef(() => RegrasFichaCriatura),
             RegrasNiveisAmeaca, forwardRef(() => RegrasSubclasse), RegrasTermos, RegrasGrade,
-            RegrasAbertura,
+            RegrasAbertura, OficinaPeca,
     ],
     templateUrl: "./regras-conteudo.component.html",
     styleUrl: "./regras-conteudo.component.scss",
@@ -51,6 +52,9 @@ export class RegrasConteudoRender {
     readonly filhos = input.required<readonly RegrasConteudo[]>();
     readonly documento = input<RegrasDocumento["id"]>("sistema");
     readonly navegarAncora = output<string>();
+    protected pecaDe(bloco: RegrasConteudo): string | undefined {
+        return (bloco as { readonly peca?: string }).peca;
+    }
     protected readonly grupos = computed(() => {
         const grupos: { habilidades: boolean; blocos: RegrasConteudo[] }[] = [];
         for (const bloco of this.filhos()) {

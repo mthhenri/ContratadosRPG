@@ -1,24 +1,41 @@
 <div class="regras-habilidade">
     <div class="regras-habilidade__nome">
-        <span aria-hidden="true">{{ bloco().glifo }}</span> {{ bloco().nome }}
+        <span aria-hidden="true">{{ bloco().glifo }}</span>
+        @if (editando()) {
+            <app-oficina-texto
+                campo="nome"
+                rotulo="Nome da habilidade"
+                vazio="Nome da habilidade"
+                [peca]="bloco().peca!"
+                [texto]="bloco().nome"
+            />
+        } @else {
+            {{ bloco().nome }}
+        }
     </div>
     <div class="regras-habilidade__selos">
         @if (bloco().reacao) {
             <app-chip severidade="ajuda" tom="contorno">REAÇÃO</app-chip>
         }
-        <app-chip
-            severidade="energia"
-            tom="sutil"
-            [appTooltip]="bloco().custo + ' de Energia'"
-            tabindex="0"
-            [attr.aria-label]="bloco().custo + ' de Energia'"
-        >
-            <app-icone nome="energia" /> {{ bloco().custo }}
-        </app-chip>
+        @if (editando()) {
+            <app-oficina-custo [peca]="bloco().peca!" [custo]="bloco().custo" />
+        } @else {
+            <app-chip
+                severidade="energia"
+                tom="sutil"
+                [appTooltip]="bloco().custo + ' de Energia'"
+                tabindex="0"
+                [attr.aria-label]="bloco().custo + ' de Energia'"
+            >
+                <app-icone nome="energia" /> {{ bloco().custo }}
+            </app-chip>
+        }
     </div>
     <p>
         <app-regras-inline
             [trechos]="bloco().trechos"
+            [peca]="bloco().peca"
+            rotuloEdicao="Efeito da habilidade"
             [documento]="documento()"
             (navegarAncora)="navegarAncora.emit($event)"
         />

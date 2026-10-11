@@ -1,77 +1,87 @@
-@for (trecho of trechos(); track $index) {
-    @switch (trecho.tipo) {
-        @case ("texto") {
-            @for (parte of partes(trecho.texto); track $index) {
-                @if (parte.condicao) {
+@if (editavel()) {
+    <app-oficina-texto
+        [peca]="peca()!"
+        [campo]="campo()"
+        [rotulo]="rotuloEdicao()"
+        [trechos]="trechos()"
+    />
+} @else {
+    @for (trecho of trechos(); track $index) {
+        @switch (trecho.tipo) {
+            @case ("texto") {
+                @for (parte of partes(trecho.texto); track $index) {
+                    @if (parte.condicao) {
+                        <span
+                            tabindex="0"
+                            [appTooltip]="parte.condicao"
+                            [appTooltipIndicador]="true"
+                            [textContent]="parte.texto"
+                        ></span>
+                    } @else if (parte.recurso) {
+                        <span
+                            [class]="'regras-inline__recurso regras-inline__recurso--' + parte.recurso"
+                            [textContent]="parte.texto"
+                        ></span>
+                    } @else {
+                        <span [textContent]="parte.texto"></span>
+                    }
+                }
+            }
+            @case ("negrito") {
+                <strong
+                    ><app-regras-inline
+                        [trechos]="trecho.filhos"
+                        [documento]="documento()"
+                        [semCorRecurso]="semCorRecurso()"
+                        (navegarAncora)="navegarAncora.emit($event)"
+                /></strong>
+            }
+            @case ("italico") {
+                <em
+                    ><app-regras-inline
+                        [trechos]="trecho.filhos"
+                        [documento]="documento()"
+                        [semCorRecurso]="semCorRecurso()"
+                        (navegarAncora)="navegarAncora.emit($event)"
+                /></em>
+            }
+            @case ("tarja") {
+                <span
+                    class="regras-inline__tarja"
+                    [style.width.ch]="larguraTarja(trecho.comprimento)"
+                    role="img"
+                    aria-label="Trecho censurado"
+                ></span>
+            }
+            @case ("link-interno") {
+                <a
+                    [href]="'/regras/' + documento() + '#' + trecho.ancora"
+                    [appTooltip]="descreverCondicao(trecho.texto)"
+                    [appTooltipIndicador]="true"
+                    (click)="navegar($event, trecho.ancora)"
+                    >{{ trecho.texto }}</a
+                >
+            }
+            @case ("link-externo") {
+                <a [href]="trecho.destino" target="_blank" rel="noopener noreferrer"
+                    ><app-regras-inline
+                        [trechos]="trecho.filhos"
+                        [documento]="documento()"
+                        [semCorRecurso]="semCorRecurso()"
+                        (navegarAncora)="navegarAncora.emit($event)"
+                /></a>
+            }
+            @case ("nivel-ameaca") {
+                @if (trecho.compacto) {
                     <span
-                        tabindex="0"
-                        [appTooltip]="parte.condicao"
-                        [appTooltipIndicador]="true"
-                        [textContent]="parte.texto"
-                    ></span>
-                } @else if (parte.recurso) {
-                    <span
-                        [class]="'regras-inline__recurso regras-inline__recurso--' + parte.recurso"
-                        [textContent]="parte.texto"
+                        [class]="'regras-inline__ameaca regras-inline__ameaca--' + corAmeaca(trecho.nivel)"
+                        [textContent]="trecho.texto"
                     ></span>
                 } @else {
-                    <span [textContent]="parte.texto"></span>
+                    <app-regras-ameaca [nivel]="trecho.nivel" [rotulo]="trecho.texto" />
                 }
             }
         }
-        @case ("negrito") {
-            <strong
-                ><app-regras-inline
-                    [trechos]="trecho.filhos"
-                    [documento]="documento()"
-                    [semCorRecurso]="semCorRecurso()"
-                    (navegarAncora)="navegarAncora.emit($event)"
-            /></strong>
-        }
-        @case ("italico") {
-            <em
-                ><app-regras-inline
-                    [trechos]="trecho.filhos"
-                    [documento]="documento()"
-                    [semCorRecurso]="semCorRecurso()"
-                    (navegarAncora)="navegarAncora.emit($event)"
-            /></em>
-        }
-        @case ("tarja") {
-            <span
-                class="regras-inline__tarja"
-                [style.width.ch]="larguraTarja(trecho.comprimento)"
-                role="img"
-                aria-label="Trecho censurado"
-            ></span>
-        }
-        @case ("link-interno") {
-            <a
-                [href]="'/regras/' + documento() + '#' + trecho.ancora"
-                [appTooltip]="descreverCondicao(trecho.texto)"
-                [appTooltipIndicador]="true"
-                (click)="navegar($event, trecho.ancora)"
-                >{{ trecho.texto }}</a
-            >
-        }
-        @case ("link-externo") {
-            <a [href]="trecho.destino" target="_blank" rel="noopener noreferrer"
-                ><app-regras-inline
-                    [trechos]="trecho.filhos"
-                    [documento]="documento()"
-                    [semCorRecurso]="semCorRecurso()"
-                    (navegarAncora)="navegarAncora.emit($event)"
-            /></a>
-        }
-        @case ("nivel-ameaca") {
-            @if (trecho.compacto) {
-                <span
-                    [class]="'regras-inline__ameaca regras-inline__ameaca--' + corAmeaca(trecho.nivel)"
-                    [textContent]="trecho.texto"
-                ></span>
-            } @else {
-                <app-regras-ameaca [nivel]="trecho.nivel" [rotulo]="trecho.texto" />
-            }
-        }
     }
+
 }

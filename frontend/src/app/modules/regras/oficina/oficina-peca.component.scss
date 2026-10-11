@@ -1,0 +1,28 @@
+// Casca de uma peça na Oficina: transparente fora dela; dentro, ancora as ferramentas e a pendência
+// (o `.peca` do exemplão: ferramentas acima, à direita; barra de acento na peça selecionada).
+:host {
+    display: contents;
+}
+:host(.oficina-peca) {
+    display: block;
+    position: relative;
+    min-width: 0;
+}
+:host(.oficina-peca--selecionada) {
+    box-shadow: -14px 0 0 -12px var(--accent);
+}
+.oficina-peca__ferramentas {
+    position: absolute;
+    top: 6px;
+    right: 0;
+    transform: translateY(-100%);
+    z-index: 5;
+}
+.oficina-peca__pendencia {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-4);
+    margin-top: var(--space-4);
+    font: 500 11.5px var(--font-mono);
+    color: var(--warning);
+}

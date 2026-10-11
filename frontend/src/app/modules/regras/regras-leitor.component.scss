@@ -2,6 +2,13 @@
 
 // Análogo: trilhos e sumário dos patchnotes; largura/coluna do exemplão aprovado M10.
 .regras {
+    // A barra da Oficina fica fixa logo abaixo da topbar (e da barra do celular).
+    app-oficina-barra {
+        --oficina-topo: var(--altura-topbar);
+    }
+    &--gaveta:not(.regras--painel) app-oficina-barra {
+        --oficina-topo: calc(var(--altura-topbar) + 60px);
+    }
     &__pesquisa-contador {
         position: sticky;
         top: var(--altura-topbar);

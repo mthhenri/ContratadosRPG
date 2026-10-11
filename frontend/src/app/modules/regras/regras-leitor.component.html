@@ -53,7 +53,10 @@
         </aside>
     }
     <div class="regras__rolagem" [attr.inert]="gavetaAberta() ? '' : null">
-        @if (pesquisa.termo().trim().length >= 2 && documento()) {
+        @if (oficinaAtiva()) {
+            <app-oficina-barra (irPara)="abrirPaleta()" (irParaPeca)="irParaPeca($event)" />
+        }
+        @if (pesquisa.termo().trim().length >= 2 && documento() && !oficinaAtiva()) {
             <div class="regras__pesquisa-contador">
                 <span role="status"
                     >{{ pesquisa.resultados().length ? pesquisa.selecionado() + 1 : 0 }} de
@@ -96,8 +99,8 @@
                 Você está vendo uma versão ainda não publicada.
             </p>
         }
-        <app-cartao class="regras__documento" [attr.aria-busy]="estado() === 'carregando'">
-            @if (documento(); as livroAberto) {
+        <app-cartao class="regras__documento" [attr.aria-busy]="estadoExibido() === 'carregando'">
+            @if (exibido(); as livroAberto) {
                 <app-regras-conteudo
                     [filhos]="livroAberto.filhos"
                     [documento]="livroAberto.id"
@@ -134,7 +137,7 @@
                         >.
                     </p>
                 </footer>
-            } @else if (estado() === "carregando") {
+            } @else if (estadoExibido() === "carregando") {
                 <div class="regras__esqueletos" role="status" aria-label="Carregando documento">
                     <app-esqueleto class="regras__esqueleto-titulo" />
                     @for (linha of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; track linha) {
@@ -210,6 +213,28 @@
                 Guia
             </button>
         </app-segmentado>
+        @if (podeEditar()) {
+            <app-segmentado rotulo="Modo do documento" [fluido]="true">
+                <button
+                    app-segmentado-item
+                    class="regras__seletor"
+                    type="button"
+                    [ativo]="!oficinaAtiva()"
+                    (click)="alternarModo(false)"
+                >
+                    Leitura
+                </button>
+                <button
+                    app-segmentado-item
+                    class="regras__seletor"
+                    type="button"
+                    [ativo]="oficinaAtiva()"
+                    (click)="alternarModo(true)"
+                >
+                    Oficina
+                </button>
+            </app-segmentado>
+        }
         @if (documento() && !usarGaveta()) {
             <button
                 app-botao
@@ -224,7 +249,7 @@
                 <app-icone nome="busca" /> Ir para… <kbd class="regras__atalho">Ctrl K</kbd>
             </button>
         }
-        @if (documento()) {
+        @if (documento() && !oficinaAtiva()) {
             <app-regras-pesquisa
                 (selecionar)="selecionarResultado($event)"
                 (abrirOutro)="abrirOutroDocumento()"
@@ -290,10 +315,10 @@
 </ng-template>
 <app-paleta
     [aberto]="paletaAberta()"
-    titulo="Ir para uma seção"
-    placeholder="Ex.: habilidades"
-    vazio="Nenhuma seção encontrada."
-    [itens]="itensPaleta()"
+    [titulo]="oficinaAtiva() ? 'Ir para peça' : 'Ir para uma seção'"
+    [placeholder]="oficinaAtiva() ? 'Ex.: Golpe Furtivo' : 'Ex.: habilidades'"
+    [vazio]="oficinaAtiva() ? 'Nenhuma peça encontrada.' : 'Nenhuma seção encontrada.'"
+    [itens]="oficinaAtiva() ? itensPecas() : itensPaleta()"
     (escolheu)="escolherNaPaleta($event)"
     (fechou)="paletaAberta.set(false)"
 />

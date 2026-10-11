@@ -1,0 +1,20 @@
+// Barra da Oficina (`.barra` do exemplão): fileira compacta que acompanha a rolagem do livro.
+:host {
+    display: block;
+    position: sticky;
+    top: var(--oficina-topo, 0px);
+    z-index: 20;
+}
+.oficina-barra {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-8) var(--space-12);
+    padding: var(--space-8) 0;
+    margin-bottom: var(--space-12);
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+}
+.oficina-barra__espaco {
+    margin-right: auto;
+}

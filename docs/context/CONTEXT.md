@@ -2180,7 +2180,7 @@ incluindo todos os ajustes avulsos de pós-milestone.
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
 | `revisao-formatacao-pdf-regras` | regras | revisão substancial da apresentação e aprovação visual do autor; Sistema suspenso (P-108) |
 | `regras-glossario` | regras | esboço independente do M10: termos marcados com cartão; pontos a fechar com o autor |
-| `m11-06`…`m11-10` | regras | Oficina das Regras: migration, importador, publicação, comparador, editor, mudanças e troca da fonte da verdade; ver [guarda-chuva](../specs/backlog/m11-oficina-regras.spec.md) |
+| `m11-07`…`m11-10` | regras | Oficina das Regras: inserir e estruturar, blocos ricos, mudanças e publicar, troca da fonte da verdade; ver [guarda-chuva](../specs/backlog/m11-oficina-regras.spec.md) |
 | `regras-visual-06`…`10` | regras | cinco correções restantes após bateria visual; textos e contraste; [mapa e prioridades](../specs/done/regras-auditoria-visual-completa/auditoria.md) |
 
 Spec avulsa ativa: `montador-rolagem-experimento`, mantida em experimentação pelo autor.
@@ -2228,7 +2228,7 @@ reproduzem isoladas (arquivo único), não na suíte completa.
 | M6 | Gestão de Usuários e Papéis | **concluído** — `m6-01`…`m6-08` (`m6-08`: impersonação administrativa auditável) |
 | M7 | Encontro de Combate | **concluído** — 8 tasks originais (`m7-01` contrato, `m7-02` motor puro, `m7-03` backend de montagem, `m7-04` backend de condução/tempo real, `m7-05` painel do mestre, `m7-06` visão do jogador, `m7-07` log da rodada, `m7-08` refinamento mobile) + 9 ajustes de pós-milestone (`m7-09`…`m7-17`, ver seção 4 "Encontro de Combate"). Numeração M7 é sugestão, não decisão de roadmap |
 | M8 | Espectadores e Prévias de Campanha | **concluído** — `m8-01`…`m8-06` (banco + contratos do papel ESPECTADOR; backend de permissões e as duas projeções de leitura; frontend de entrada/gestão de convites-membros/Painel do espectador ao vivo/Prévia de jogador fidedigna/visão read-only de Iniciativa; `m8-06` fechou com gate de validação integrada entre 4 contas reais). Numeração M8 é sugestão, não decisão de roadmap — ver `docs/context/IDEAS.md` |
-| M11 | Oficina das Regras (editor da estrutura dos livros no site) | **em andamento** — `m11-01` (contrato da árvore no `shared/`) e `m11-02` (tabelas e repositórios) `m11-03` (importador) e `m11-04` (publicação e leitura por papel) e `m11-05` (comparador puro) concluídas; `m11-06`…`m11-10` no backlog; [guarda-chuva](../specs/backlog/m11-oficina-regras.spec.md) |
+| M11 | Oficina das Regras (editor da estrutura dos livros no site) | **em andamento** — `m11-01` (contrato da árvore no `shared/`) e `m11-02` (tabelas e repositórios) `m11-03` (importador) e `m11-04` (publicação e leitura por papel) e `m11-05` (comparador puro) e `m11-06` (núcleo da Oficina: API de edição e edição no lugar) concluídas; `m11-07`…`m11-10` no backlog; [guarda-chuva](../specs/backlog/m11-oficina-regras.spec.md) |
 | M10 | Regras (documentos do sistema no site) | **implementada, 11/11** — revisão editorial da exportação pendente (P-108); fonte visual `docs/specs/done/m10-regras/m10-regras-exemplao.html` |
 
 ---
@@ -2267,8 +2267,8 @@ Peça (`LivroPecaDto`) é o nó do livro: `identificador` estável, `ancora` opc
 A apresentação refinada pelo leitor (`GRADE.apresentacao`, `TABELA.emPares`, `FAIXAS`) é dado da
 peça, não dedução. `validarArvoreLivro` valida a árvore (`trabalho` ou `fotografia`) e devolve
 pendências `ESTRUTURAL` (impedem qualquer publicação) ou `CONTEUDO` (impedem só a versão); a tabela
-de aninhamento (`LIVRO_FILHOS_PERMITIDOS`) alimenta também o menu de inserção da Oficina. Ainda sem
-API nem UI: vêm nas `m11-03`…`m11-09`. Banco (M11-02): migration `0036`, módulo
+de aninhamento (`LIVRO_FILHOS_PERMITIDOS`) alimenta também o menu de inserção da Oficina. API e UI vêm nas
+`m11-03`…`m11-09`. Banco (M11-02): migration `0036`, módulo
 `backend/src/modules/livro` (`LivroRepository`, `RegraPecaRepository`, `LivroVersaoRepository`);
 ver `docs/SCHEMA.md`. Importador (M11-03): `backend/src/modules/livro/importador/` converte a saída do
 normalizador em peças (`converterRegrasEmPecas`), projeta de volta no formato do leitor
@@ -2286,6 +2286,20 @@ leem a publicada, `TESTER`/`ADMIN` a mais recente entre rascunho e publicada, `n
 por livro e por sessão e cai no JSON estático só em 404/rede, sem guardá-lo (sai na `m11-10`); a projeção
 fotografia → formato do leitor mora em `shared/src/livro/projetar-pecas-em-regras.ts`. Reiniciar o
 `ng serve` para o proxy `/livros`. Comparador (M11-05): `compararLivros` em `shared/src/livro` (nova/removida/alterada/movida por `identificador`, diff por palavras do texto rico, resumo agregado); ainda sem consumidor (`m11-09`). [Verificação](../specs/done/m11-04-publicacao-e-leitura-por-papel/verificacao.md).
+
+Oficina (M11-06): API de edição da cópia de trabalho, só `ADMIN` (`RegraPecaController`/`RegraPecaService`,
+`/livros/:codigo/pecas`: listar, criar, alterar `dados`, mover, duplicar, excluir, restaurar; `revisao`
+otimista → 409, trava por livro nas operações estruturais, soft delete restaurável). No leitor, o modo
+Oficina (`?modo=oficina`, só `ADMIN`, só na página e só com o livro vindo da API) vive em
+`frontend/src/app/modules/regras/oficina/`: `OficinaStore` (cópia de trabalho em memória, salvamento
+automático por peça com uma requisição em voo, conflito, Desfazer de 100 passos só da sessão, pendências
+pelo `validarArvoreLivro`), `OficinaApi`, `oficina-trechos.ts` (texto rico ↔ DOM editável, selo `NA`),
+`app-oficina-texto` (`contenteditable`), `app-oficina-custo`, `app-oficina-peca` (invólucro com as
+ferramentas) e `app-oficina-barra`; o `RegrasInline` e os blocos editam quando há `OficinaStore` ativo. A
+projeção com `incluirPecas` põe o `identificador` em `peca` de cada bloco. Edição ainda limitada a título de
+seção, parágrafo/exemplo/nota/fórmula, habilidade e citação de classe/subclasse; estruturar é a `m11-07`,
+demais blocos a `m11-08`, publicar a `m11-09`. Primitivo novo `app-barra-ferramentas`
+(`docs/design/DESIGN.md`). [Verificação e decisões](../specs/done/m11-06-oficina-nucleo/verificacao.md).
 
 ### Ícones de identidade (M10-03)
 

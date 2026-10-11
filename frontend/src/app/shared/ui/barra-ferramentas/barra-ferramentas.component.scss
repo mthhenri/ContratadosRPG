@@ -1,0 +1,12 @@
+// Bloco `.ferramentas` do exemplão da Oficina (m11-oficina-exemplao.html): superfície elevada,
+// borda forte e sombra, com ações compactas lado a lado.
+:host {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  box-shadow: 0 6px 16px rgb(0 0 0 / 45%);
+}

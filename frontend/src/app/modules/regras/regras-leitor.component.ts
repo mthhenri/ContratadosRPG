@@ -3,13 +3,16 @@ import {
     ChangeDetectionStrategy, Component, DestroyRef, ElementRef, Injector,
     afterNextRender, computed, effect, inject, input, output, signal, untracked,
 } from "@angular/core";
-import { TipoLivroVersaoSituacaoEnum } from "@contratados-rpg/shared/enums";
+import { TipoLivroVersaoSituacaoEnum, TipoUsuarioEnum } from "@contratados-rpg/shared/enums";
 import { Subscription } from "rxjs";
 
 import { Gaveta } from "../../shared/ui/gaveta/gaveta.component";
 import { Paleta } from "../../shared/ui/paleta/paleta.component";
 import type { PaletaItem } from "../../shared/ui/paleta/paleta";
+import { SessaoService } from "../../core/services/sessao.service";
 import { RegrasLeituraStore } from "./regras-leitura.store";
+import { OficinaStore } from "./oficina/oficina.store";
+import { OficinaBarra } from "./oficina/oficina-barra.component";
 import { RegrasLeitorContexto } from "./regras-leitor-contexto";
 import { RegrasConsultaService } from "./regras-consulta.service";
 import { RegrasPesquisaController } from "./regras-pesquisa.controller";
@@ -36,17 +39,18 @@ import { construirSumarioRegras, listarAncorasRegras } from "./regras-sumario";
 
 @Component({
     selector: "app-regras-leitor",
-    providers: [RegrasLeitorContexto, RegrasPesquisaController],
+    providers: [RegrasLeitorContexto, RegrasPesquisaController, OficinaStore],
     imports: [NgTemplateOutlet, Icone, Marca, Botao, Cartao, Esqueleto, EstadoVazio,
         Segmentado, SegmentadoItem, Gaveta, Paleta, RegrasPesquisa, RegrasPesquisaProjecao,
         BotaoIcone, Tooltip, Chip,
-        RegrasConteudoRender],
+        RegrasConteudoRender, OficinaBarra],
     templateUrl: "./regras-leitor.component.html",
     styleUrl: "./regras-leitor.component.scss",
     changeDetection: ChangeDetectionStrategy.OnPush,
     host: { "(window:resize)": "redimensionarViewport()",
         "(keydown)": "pesquisa.tratarTecla($event)",
-        "(document:keydown)": "tratarAtalhoIrPara($event)" },
+        "(document:keydown)": "tratarAtalhoIrPara($event); tratarDesfazer($event)",
+        "(window:beforeunload)": "avisarAntesDeSair($event)" },
 })
 export class RegrasLeitor {
     readonly livro = input.required<RegrasDocumento["id"]>();
@@ -54,10 +58,15 @@ export class RegrasLeitor {
     readonly ancoraInicial = input<string | null>(null);
     readonly emPainel = input(false);
     readonly maximizada = input(false);
+    /** Modo Oficina pedido pela rota (`?modo=oficina`); só vale para ADMIN, na página. */
+    readonly modoOficina = input(false);
+    readonly modoAlterado = output<boolean>();
     readonly livroAlterado = output<RegrasDocumento["id"]>();
     readonly secaoAlterada = output<string | null>();
     private readonly memoria = inject(RegrasLeituraStore);
     private readonly consulta = inject(RegrasConsultaService);
+    private readonly sessao = inject(SessaoService);
+    protected readonly oficina = inject(OficinaStore);
     protected readonly pesquisa = inject(RegrasPesquisaController);
     protected readonly impressao = inject(RegrasImpressaoService);
     protected readonly gavetaAberta = signal(false);
@@ -76,12 +85,26 @@ export class RegrasLeitor {
 
     protected readonly documento = signal<RegrasDocumento | null>(null);
     protected readonly leitura = signal<RegrasLeitura | null>(null);
+    /** A Oficina edita a cópia de trabalho do banco: só ADMIN, na página, com o livro vindo da API. */
+    protected readonly podeEditar = computed(() => this.sessao.usuario()?.tipo === TipoUsuarioEnum.ADMIN
+        && !this.emPainel() && this.leitura()?.situacao != null);
+    protected readonly oficinaAtiva = computed(() => this.podeEditar() && this.modoOficina());
+    /** O que a tela mostra: na Oficina, a cópia de trabalho; fora dela, a leitura publicada. */
+    protected readonly exibido = computed(() => this.oficinaAtiva() ? this.oficina.documento() : this.documento());
+    protected readonly estadoExibido = computed(() => {
+        if (!this.oficinaAtiva()) return this.estado();
+        const estadoOficina = this.oficina.estado();
+        return estadoOficina === "ok" ? "ok" : estadoOficina === "falha" ? "falha" : "carregando";
+    });
     protected readonly emRascunho = computed(() => this.leitura()?.situacao === TipoLivroVersaoSituacaoEnum.RASCUNHO);
     protected readonly estado = signal<"carregando" | "ok" | "falha">("carregando");
     protected readonly ativo = signal<string | null>(null);
     protected readonly sumario = computed(() =>
         construirSumarioRegras(this.documento()?.filhos ?? []));
     /** Todas as seções do sumário, com os ancestrais como caminho, para a paleta Ctrl+K. */
+    protected readonly itensPecas = computed<PaletaItem[]>(() => this.oficina.rotulos().map((peca) => ({
+        id: peca.identificador, rotulo: peca.rotulo, ...(peca.contexto ? { contexto: peca.contexto } : {}),
+    })));
     protected readonly itensPaleta = computed<PaletaItem[]>(() => {
         const achatar = (itens: ReturnType<typeof construirSumarioRegras>,
             caminho: readonly string[]): PaletaItem[] => itens.flatMap((item) => [
@@ -106,11 +129,24 @@ export class RegrasLeitor {
             untracked(() => this.carregarDocumento(livro));
         });
         effect(() => {
+            const ativa = this.oficinaAtiva();
+            const documento = this.documento();
+            untracked(() => {
+                if (ativa && documento) {
+                    void this.oficina.carregar(this.livro(), { titulo: documento.titulo, numero: documento.versao });
+                } else {
+                    void this.oficina.encerrar();
+                }
+            });
+        });
+        effect(() => {
             const documento = this.documento();
             const pedido = this.ancoraInicial();
+            // Na Oficina o livro mostrado vem da cópia de trabalho: só navega quando ele já está na tela.
+            const pronto = this.estadoExibido() === "ok";
             // URL de antes de uma renomeação: a âncora antiga leva à atual.
             const fragmento = pedido ? (this.leitura()?.ancorasAntigas[pedido] ?? pedido) : pedido;
-            if (documento) {
+            if (documento && pronto) {
                 untracked(() => this.prepararNavegacao(documento, fragmento ?? null));
             }
         });
@@ -135,6 +171,7 @@ export class RegrasLeitor {
             }, { injector: this.injector });
         });
         this.destroyRef.onDestroy(() => {
+            void this.oficina.encerrar();
             this.geracao++;
             this.assinatura?.unsubscribe();
             this.desconectar?.();
@@ -147,7 +184,52 @@ export class RegrasLeitor {
     }
 
     protected tentarNovamente(): void {
+        const documento = this.documento();
+        if (this.oficinaAtiva() && documento) {
+            void this.oficina.carregar(this.livro(), { titulo: documento.titulo, numero: documento.versao });
+            return;
+        }
         this.carregarDocumento(this.livro());
+    }
+
+    protected alternarModo(oficina: boolean): void {
+        this.gavetaAberta.set(false);
+        this.modoAlterado.emit(oficina);
+    }
+
+    protected avisarAntesDeSair(evento: BeforeUnloadEvent): void {
+        if (this.oficina.temPendenteDeSalvar) evento.preventDefault();
+    }
+
+    /** Ctrl/⌘+Z na Oficina desfaz o último passo da sessão (e não o desfazer nativo do campo). */
+    protected tratarDesfazer(evento: KeyboardEvent): void {
+        if (!this.oficinaAtiva() || this.paletaAberta() || evento.key.toLowerCase() !== "z"
+            || !(evento.ctrlKey || evento.metaKey) || evento.shiftKey || evento.altKey) return;
+        const alvo = evento.target as HTMLElement | null;
+        if (alvo && alvo !== document.body && !this.elemento.nativeElement.contains(alvo)) return;
+        evento.preventDefault();
+        void this.oficina.desfazer();
+    }
+
+    /** Leva à peça (do Ir para peça ou da próxima pendência): seleciona, rola e põe o cursor nela. */
+    protected irParaPeca(identificador: string): void {
+        this.paletaAberta.set(false);
+        // Pendência de uma peça que a tela ainda não desenha leva ao ancestral mais próximo que ela desenha.
+        const alvoId = this.oficina.alvoVisivel(identificador);
+        if (!alvoId) return;
+        identificador = alvoId;
+        this.oficina.selecionar(identificador);
+        afterNextRender(() => {
+            const raiz = this.elemento.nativeElement;
+            const alvo = raiz.querySelector<HTMLElement>(`[data-peca-oficina="${identificador}"]`)
+                ?? raiz.querySelector<HTMLElement>(`.oficina-texto[data-peca="${identificador}"]`);
+            if (!alvo) return;
+            // A barra da Oficina também fica fixa acima do texto.
+            const distancia = alvo.getBoundingClientRect().top - this.linhaLeitura() - 56;
+            window.scrollTo({ top: window.scrollY + distancia, behavior: "auto" });
+            const campo = alvo.classList.contains("oficina-texto") ? alvo : alvo.querySelector<HTMLElement>(".oficina-texto");
+            campo?.focus({ preventScroll: true });
+        }, { injector: this.injector });
     }
 
     protected abrirPaleta(): void {
@@ -158,6 +240,10 @@ export class RegrasLeitor {
 
     protected escolherNaPaleta(ancora: string): void {
         this.paletaAberta.set(false);
+        if (this.oficinaAtiva()) {
+            this.irParaPeca(ancora);
+            return;
+        }
         this.navegarAncora(ancora);
     }
 

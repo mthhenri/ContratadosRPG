@@ -54,6 +54,11 @@ Inserir peças (`+`, `/`) e esqueletos (`m11-07`); arrastar no sumário (`m11-07
 além dos desta lista (`m11-08`); marcas de mudança, "O que mudou" e Publicar (`m11-09`); edição por
 não-admin (`I-060`); edição pesada no celular.
 
+## Resultado
+
+Concluída em dois cortes (API de edição; UI da Oficina). Decisões, verificação, revisão independente e
+limites em [`m11-06-oficina-nucleo/verificacao.md`](m11-06-oficina-nucleo/verificacao.md).
+
 ## Dependências
 
 `m11-04` em `done/` (e API de leitura em uso pelo leitor). `docs/design/DESIGN.md` e

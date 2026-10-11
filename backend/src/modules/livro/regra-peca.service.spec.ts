@@ -184,6 +184,32 @@ describe("RegraPecaService — mover", () => {
   });
 });
 
+describe("RegraPecaService — criar", () => {
+  const dadosParagrafo = { trechos: [{ tipo: "texto" as const, texto: "novo" }] };
+
+  it("cria depois da irmã indicada, sem âncora, deslocando as seguintes", async () => {
+    const { servico, linhas } = criar([secao(1, null, 0), paragrafo(2, 1, 0), paragrafo(3, 1, 1)]);
+    const { peca, pecas } = await servico.criar(
+      { codigo: "sistema", tipo: Tipo.PARAGRAFO, pecaPaiId: 1, indice: 1, dados: dadosParagrafo },
+      admin,
+    );
+    expect(peca.ancora).toBeNull();
+    expect(peca.ordem).toBe(1);
+    expect(ordensDe(linhas, 1)).toEqual([2, peca.id, 3]);
+    expect(pecas.map((item) => [item.id, item.ordem])).toEqual([[3, 2]]);
+  });
+
+  it("recusa tipo que não cabe no pai, pai inexistente, dados malformados e não-ADMIN", async () => {
+    const { servico } = criar([secao(1, null, 0), paragrafo(2, 1, 0)]);
+    const base = { codigo: "sistema", tipo: Tipo.PARAGRAFO, pecaPaiId: 1, indice: 0, dados: dadosParagrafo };
+    await expect(servico.criar({ ...base, pecaPaiId: 2 }, admin)).rejects.toThrow(BusinessException);
+    await expect(servico.criar({ ...base, pecaPaiId: 999 }, admin)).rejects.toThrow(ResourceNotFoundException);
+    await expect(servico.criar({ ...base, dados: { texto: "x" } as never }, admin)).rejects.toThrow(BusinessException);
+    await expect(servico.criar({ ...base, dados: null as never }, admin)).rejects.toThrow(BusinessException);
+    await expect(servico.criar(base, normal)).rejects.toThrow(UnauthorizedAccessException);
+  });
+});
+
 describe("RegraPecaService — duplicar, excluir e restaurar", () => {
   it("duplica a peça com as descendentes logo depois dela: ids novos, sem âncora, irmãs deslocadas", async () => {
     const { servico, linhas } = criar([secao(1, null, 0), secao(5, 1, 0), paragrafo(6, 5, 0), paragrafo(7, 1, 1), secao(8, null, 1)]);
@@ -259,5 +285,34 @@ describe("RegraPecaService — duplicar, excluir e restaurar", () => {
     await expect(servico.restaurar({ codigo: "sistema", id: 1 }, admin)).rejects.toMatchObject(mensagem("Nada para restaurar"));
     repositorio.restaurarPeca.mockRejectedValueOnce(Object.assign(new Error("duplicate key"), { code: "23505" }));
     await expect(servico.restaurar({ codigo: "sistema", id: 1 }, admin)).rejects.toMatchObject(mensagem("âncora"));
+  });
+});
+
+describe("RegraPecaService — estruturas que o livro exige", () => {
+  const habilidade = (id: number, pai: number, ordem: number, inicial: boolean): RegraPecaArvoreItemDto => ({
+    id, livroId: 1, pecaPaiId: pai, tipo: Tipo.HABILIDADE, identificador: uuid(id), ancora: null, ordem, revisao: 1,
+    dados: { nome: `H${id}`, custo: 1, reacao: false, glifo: null, trechos: [{ tipo: "texto", texto: "x" }], ...(inicial ? { inicial: true } : {}) },
+  });
+  const roteiro = (id: number): RegraPecaArvoreItemDto => ({
+    id, livroId: 1, pecaPaiId: null, tipo: Tipo.ROTEIRO, identificador: uuid(id), ancora: null, ordem: 0, revisao: 1,
+    dados: { etapas: [], introducaoQuantidade: 1, conclusaoQuantidade: 0 },
+  });
+
+  it("não exclui nem duplica a habilidade inicial", async () => {
+    const { servico } = criar([
+      { ...secao(1, null, 0), tipo: Tipo.SUBCLASSE, dados: { nome: "S", classe: "C", citacao: [], custos: [], saude: { vida: [], energia: [] }, progressao: { vida: [], energia: [] }, atributosBonus: [], apresentacao: "saude", itens: [] } as never },
+      habilidade(2, 1, 0, true),
+    ]);
+    await expect(servico.excluir({ codigo: "sistema", id: 2, revisao: 1 }, admin)).rejects.toMatchObject(mensagem("habilidade inicial"));
+    await expect(servico.duplicar({ codigo: "sistema", id: 2 }, admin)).rejects.toMatchObject(mensagem("habilidade inicial"));
+  });
+
+  it("não cria, move, duplica nem exclui filhos de um roteiro", async () => {
+    const { servico } = criar([roteiro(1), paragrafo(2, 1, 0), paragrafo(3, 1, 1)]);
+    const dados = { trechos: [{ tipo: "texto" as const, texto: "n" }] };
+    await expect(servico.criar({ codigo: "sistema", tipo: Tipo.PARAGRAFO, pecaPaiId: 1, indice: 0, dados }, admin)).rejects.toMatchObject(mensagem("roteiro"));
+    await expect(servico.alterarPosicao({ codigo: "sistema", id: 3, pecaPaiId: 1, indice: 0, revisao: 1 }, admin)).rejects.toMatchObject(mensagem("roteiro"));
+    await expect(servico.duplicar({ codigo: "sistema", id: 2 }, admin)).rejects.toMatchObject(mensagem("roteiro"));
+    await expect(servico.excluir({ codigo: "sistema", id: 2, revisao: 1 }, admin)).rejects.toMatchObject(mensagem("roteiro"));
   });
 });

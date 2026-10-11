@@ -1,6 +1,8 @@
 import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query } from "@nestjs/common";
 import type {
   RegraPecaAlteradaDto,
+  RegraPecaCriadaDto,
+  RegraPecaCriarDto,
   RegraPecaArvoreItemDto,
   RegraPecaDadosAlterarDto,
   RegraPecaDuplicadaDto,
@@ -29,6 +31,15 @@ export class RegraPecaController {
   @Get(":codigo/pecas")
   listar(@Param("codigo") codigo: string, @ActiveUser() usuarioAtivo: JwtPayload): Promise<RegraPecaArvoreItemDto[]> {
     return this.regraPecaService.listarArvore({ codigo }, usuarioAtivo);
+  }
+
+  @Post(":codigo/pecas")
+  criar(
+    @Param("codigo") codigo: string,
+    @Body() dto: Omit<RegraPecaCriarDto, "codigo">,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<RegraPecaCriadaDto> {
+    return this.regraPecaService.criar({ ...dto, codigo }, usuarioAtivo);
   }
 
   @Get(":codigo/pecas/:id")

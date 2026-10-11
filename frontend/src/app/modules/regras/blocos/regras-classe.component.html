@@ -11,6 +11,9 @@
         <p class="regras-classe__citacao">
             <app-regras-inline
                 [trechos]="bloco().citacao"
+                [peca]="bloco().peca"
+                campo="citacao"
+                rotuloEdicao="Citação"
                 [documento]="documento()"
                 (navegarAncora)="navegarAncora.emit($event)"
             />

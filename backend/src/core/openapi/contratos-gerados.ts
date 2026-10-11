@@ -7732,6 +7732,175 @@ export const schemasContratosPublicos = {
         ],
         "additionalProperties": false
     },
+    "RegraPecaCriarDto": {
+        "type": "object",
+        "properties": {
+            "codigo": {
+                "type": "string"
+            },
+            "tipo": {
+                "type": "string",
+                "enum": [
+                    "SECAO",
+                    "PARAGRAFO",
+                    "EXEMPLO",
+                    "FORMULA",
+                    "NOTA",
+                    "LISTA",
+                    "TABELA",
+                    "HABILIDADE",
+                    "CLASSE",
+                    "ARQUETIPO",
+                    "SUBCLASSE",
+                    "ORIGENS",
+                    "ORIGEM",
+                    "TERMOS",
+                    "TERMO",
+                    "EQUIPAMENTOS",
+                    "EQUIPAMENTO",
+                    "MODIFICACOES",
+                    "MODIFICACAO",
+                    "AMPLIFICADORES",
+                    "AMPLIFICADOR",
+                    "MODULOS",
+                    "NIVEIS_AMEACA",
+                    "FICHA_CRIATURA",
+                    "HABILIDADE_CRIATURA",
+                    "ROTEIRO",
+                    "FAIXAS",
+                    "GRADE",
+                    "ABERTURA",
+                    "GENERICO"
+                ]
+            },
+            "pecaPaiId": {
+                "type": "number"
+            },
+            "indice": {
+                "type": "number"
+            },
+            "dados": {
+                "oneOf": [
+                    {
+                        "$ref": "#/components/schemas/LivroSecaoDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroTextoDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroListaDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroTabelaDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroHabilidadeDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroClasseDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroArquetipoDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroSubclasseDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroOrigensDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroOrigemDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroTermosDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroTermoDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroEquipamentosDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroEquipamentoDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroModificacoesDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroModificacaoDadosDto"
+                    },
+                    {
+                        "type": "object",
+                        "additionalProperties": true
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroAmplificadorDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroModulosDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroNiveisAmeacaDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroFichaCriaturaDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroHabilidadeCriaturaDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroRoteiroDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroFaixasDadosDto"
+                    },
+                    {
+                        "type": "object",
+                        "additionalProperties": true
+                    },
+                    {
+                        "type": "object",
+                        "additionalProperties": true
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroAberturaDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroGenericoDadosDto"
+                    }
+                ]
+            }
+        },
+        "required": [
+            "codigo",
+            "tipo",
+            "pecaPaiId",
+            "indice",
+            "dados"
+        ],
+        "additionalProperties": false,
+        "description": "Cria uma peça do livro `codigo` dentro de `pecaPaiId` (`null` = raiz), na posição `indice`."
+    },
+    "RegraPecaCriadaDto": {
+        "type": "object",
+        "properties": {
+            "peca": {
+                "$ref": "#/components/schemas/RegraPecaRecuperadaDto"
+            },
+            "pecas": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/RegraPecaArvoreItemDto"
+                }
+            }
+        },
+        "required": [
+            "peca",
+            "pecas"
+        ],
+        "additionalProperties": false,
+        "description": "A peça criada e as irmãs que mudaram de posição para abrir espaço."
+    },
     "LivroSecaoDadosDto": {
         "type": "object",
         "properties": {
@@ -11896,6 +12065,15 @@ export const operacoesContratosPublicos = {
         "tag": "Livros de regras",
         "publica": false,
         "responseSchema": "RegraPecaArvoreItemDto[]"
+    },
+    "RegraPecaController_criar": {
+        "controller": "RegraPecaController",
+        "metodo": "post",
+        "caminho": "/livros/:codigo/pecas",
+        "tag": "Livros de regras",
+        "publica": false,
+        "requestSchema": "Omit",
+        "responseSchema": "RegraPecaCriadaDto"
     },
     "RegraPecaController_recuperar": {
         "controller": "RegraPecaController",

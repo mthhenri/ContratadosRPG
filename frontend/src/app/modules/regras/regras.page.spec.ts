@@ -1,6 +1,6 @@
 import { Location } from "@angular/common";
 import { TestBed } from "@angular/core/testing";
-import { ActivatedRoute, provideRouter } from "@angular/router";
+import { ActivatedRoute, convertToParamMap, provideRouter } from "@angular/router";
 import { BehaviorSubject, Subject, map } from "rxjs";
 
 import { RegrasDocumento } from "./regras.model";
@@ -25,7 +25,7 @@ describe("RegrasPage", () => {
             replaceState: vi.fn() };
         await TestBed.configureTestingModule({ imports: [RegrasPage], providers: [
             provideRouter([]),
-            { provide: ActivatedRoute, useValue: { fragment: new BehaviorSubject(null) } },
+            { provide: ActivatedRoute, useValue: { fragment: new BehaviorSubject(null), queryParamMap: new BehaviorSubject(convertToParamMap({})) } },
             { provide: RegrasService, useValue: {
                 carregarDocumento: carregar,
                 carregarLeitura: (id: RegrasDocumento["id"]) => carregar(id).pipe(map((documento) =>

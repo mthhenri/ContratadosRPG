@@ -1,0 +1,48 @@
+// Campo editável no lugar (m11-06). Herda tipografia do bloco que o hospeda: só acrescenta
+// o contorno de edição e o placeholder, como o `[data-campo]` do exemplão da Oficina.
+:host {
+    display: inline;
+    outline: none;
+    border-radius: var(--radius-control);
+    cursor: text;
+    // Palavra longa não estoura a caixa do bloco.
+    overflow-wrap: anywhere;
+}
+:host(:hover) {
+    box-shadow: 0 0 0 1px var(--border-strong);
+}
+:host(:focus) {
+    background: color-mix(in srgb, var(--accent) 5%, transparent);
+    box-shadow: 0 0 0 1px var(--accent-border);
+}
+:host(:empty)::before {
+    content: attr(data-vazio);
+    color: var(--text-mute);
+    font-style: italic;
+    font-weight: 400;
+    pointer-events: none;
+}
+:host(.oficina-texto--simples) {
+    white-space: pre-wrap;
+}
+:host ::ng-deep .oficina-atomo {
+    display: inline-block;
+    padding: 0 var(--space-4);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    font: 500 0.9em var(--font-mono);
+    color: var(--text-dim);
+    user-select: all;
+    cursor: default;
+}
+:host ::ng-deep .oficina-atomo--link {
+    color: var(--accent);
+    border-color: var(--accent-border);
+}
+:host ::ng-deep .oficina-atomo--ameaca {
+    color: var(--warning);
+    border-color: var(--warning);
+}
+:host ::ng-deep .oficina-atomo--tarja {
+    letter-spacing: -0.1em;
+}

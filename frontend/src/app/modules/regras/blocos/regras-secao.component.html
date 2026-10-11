@@ -6,7 +6,7 @@
                 [id]="identificador()"
                 [attr.data-ancora-regras]="bloco().ancora"
             >
-                <span aria-hidden="true">{{ bloco().glifo }}</span> {{ bloco().titulo }}
+                <span aria-hidden="true">{{ bloco().glifo }}</span> <ng-container [ngTemplateOutlet]="titulo" />
             </h2>
         }
         @case (2) {
@@ -20,7 +20,7 @@
                 } @else {
                     <span aria-hidden="true">{{ bloco().glifo }}</span>
                 }
-                {{ bloco().titulo }}
+                <ng-container [ngTemplateOutlet]="titulo" />
             </h3>
         }
         @case (3) {
@@ -29,7 +29,7 @@
                 [id]="identificador()"
                 [attr.data-ancora-regras]="bloco().ancora"
             >
-                <span aria-hidden="true">{{ bloco().glifo }}</span> {{ bloco().titulo }}
+                <span aria-hidden="true">{{ bloco().glifo }}</span> <ng-container [ngTemplateOutlet]="titulo" />
             </h4>
         }
         @case (4) {
@@ -41,7 +41,7 @@
                 [id]="identificador()"
                 [attr.data-ancora-regras]="bloco().ancora"
             >
-                <span aria-hidden="true">{{ bloco().glifo }}</span> {{ bloco().titulo }}
+                <span aria-hidden="true">{{ bloco().glifo }}</span> <ng-container [ngTemplateOutlet]="titulo" />
             </h5>
         }
     }
@@ -51,3 +51,16 @@
         (navegarAncora)="navegarAncora.emit($event)"
     />
 </section>
+<ng-template #titulo>
+    @if (editando()) {
+        <app-oficina-texto
+            campo="titulo"
+            rotulo="Título da seção"
+            vazio="Título da seção"
+            [peca]="bloco().peca!"
+            [texto]="bloco().titulo"
+        />
+    } @else {
+        {{ bloco().titulo }}
+    }
+</ng-template>

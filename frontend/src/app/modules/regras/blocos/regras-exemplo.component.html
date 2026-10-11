@@ -3,6 +3,8 @@
     <p>
         <app-regras-inline
             [trechos]="bloco().trechos"
+            [peca]="bloco().peca"
+            rotuloEdicao="Exemplo"
             [documento]="documento()"
             (navegarAncora)="navegarAncora.emit($event)"
         />

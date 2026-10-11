@@ -299,3 +299,18 @@ export interface RegraPecaRestaurarDto {
 export interface RegraPecaRestauradaDto {
   readonly pecas: readonly RegraPecaArvoreItemDto[];
 }
+
+/** Cria uma peça do livro `codigo` dentro de `pecaPaiId` (`null` = raiz), na posição `indice`. */
+export interface RegraPecaCriarDto {
+  readonly codigo: string;
+  readonly tipo: TipoRegraPecaEnum;
+  readonly pecaPaiId: number | null;
+  readonly indice: number;
+  readonly dados: LivroPecaDadosPorTipo[TipoRegraPecaEnum];
+}
+
+/** A peça criada e as irmãs que mudaram de posição para abrir espaço. */
+export interface RegraPecaCriadaDto {
+  readonly peca: RegraPecaRecuperadaDto;
+  readonly pecas: readonly RegraPecaArvoreItemDto[];
+}

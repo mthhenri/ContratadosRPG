@@ -1,6 +1,8 @@
 <p class="regras-paragrafo">
     <app-regras-inline
         [trechos]="bloco().trechos"
+        [peca]="bloco().peca"
+        rotuloEdicao="Parágrafo"
         [documento]="documento()"
         (navegarAncora)="navegarAncora.emit($event)"
     />

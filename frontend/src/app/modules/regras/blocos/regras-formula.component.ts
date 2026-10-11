@@ -10,6 +10,8 @@ import { RegrasInline } from "./regras-inline.component";
         <p class="regras-formula">
             <app-regras-inline
                 [trechos]="trechos()"
+                [peca]="peca()"
+                rotuloEdicao="Fórmula"
                 [documento]="documento()"
                 (navegarAncora)="navegarAncora.emit($event)"
             />
@@ -19,6 +21,7 @@ import { RegrasInline } from "./regras-inline.component";
 })
 export class RegrasFormula {
     readonly trechos = input.required<readonly RegrasTrecho[]>();
+    readonly peca = input<string | undefined>(undefined);
     readonly documento = input<RegrasDocumento["id"]>("sistema");
     readonly navegarAncora = output<string>();
 }

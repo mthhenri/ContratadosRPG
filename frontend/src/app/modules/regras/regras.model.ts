@@ -13,6 +13,8 @@ export type RegrasConteudo = RegrasSecao | RegrasBloco;
 
 export interface RegrasSecao {
     readonly tipo: "secao";
+    /** Identificador da peça do livro (só na Oficina, que projeta com `incluirPecas`). */
+    readonly peca?: string;
     readonly nivel: 1 | 2 | 3 | 4;
     readonly glifo: "⬢" | "⬡" | "⬥" | "⬦" | null;
     readonly titulo: string;
@@ -30,16 +32,16 @@ export type RegrasBloco =
     | RegrasEquipamentos | RegrasModificacoes | RegrasAmplificadores | RegrasIdentidade | RegrasAtributos
     | RegrasRoteiro | RegrasFichaCriatura | RegrasHabilidadeCriatura | RegrasNiveisAmeaca
     | RegrasSubclasse | RegrasTermos | RegrasGrade | RegrasAbertura | RegrasCapa | RegrasFaixas
-    | { readonly tipo: "formula"; readonly trechos: readonly RegrasTrecho[] }
-    | { readonly tipo: "paragrafo" | "exemplo"; readonly trechos: readonly RegrasTrecho[] }
+    | { readonly tipo: "formula"; readonly peca?: string; readonly trechos: readonly RegrasTrecho[] }
+    | { readonly tipo: "paragrafo" | "exemplo"; readonly peca?: string; readonly trechos: readonly RegrasTrecho[] }
     | { readonly tipo: "lista"; readonly ordenada: boolean; readonly inicio: number;
         readonly itens: readonly (readonly RegrasBloco[])[] }
-    | { readonly tipo: "nota"; readonly trechos: readonly RegrasTrecho[] }
+    | { readonly tipo: "nota"; readonly peca?: string; readonly trechos: readonly RegrasTrecho[] }
     | { readonly tipo: "tabela"; readonly cabecalho: readonly (readonly RegrasTrecho[])[];
         readonly linhas: readonly (readonly (readonly RegrasTrecho[])[])[];
         /** Duas metades independentes em sequência; a fonte acima permanece íntegra. */
         readonly pares?: RegrasFonteTabela }
-    | { readonly tipo: "habilidade"; readonly nome: string; readonly custo: number | "X";
+    | { readonly tipo: "habilidade"; readonly peca?: string; readonly nome: string; readonly custo: number | "X";
         readonly reacao: boolean; readonly glifo: "⬦" | "◈" | "◻" | null;
         readonly trechos: readonly RegrasTrecho[] }
     | { readonly tipo: "generico"; readonly motivo: string;
@@ -54,6 +56,8 @@ export interface RegrasFonteTabela {
 
 export interface RegrasClasse extends RegrasFonteTabela {
     readonly tipo: "classe";
+    /** Identificador da peça do livro (só na Oficina, que projeta com `incluirPecas`). */
+    readonly peca?: string;
     readonly nome: string;
     readonly ancora?: string;
     readonly citacao: readonly RegrasTrecho[];
@@ -70,6 +74,8 @@ export interface RegrasClasse extends RegrasFonteTabela {
 /** Subclasse de Experimento: substitui o arquétipo e carrega custos próprios. */
 export interface RegrasSubclasse extends RegrasFonteTabela {
     readonly tipo: "subclasse";
+    /** Identificador da peça do livro (só na Oficina, que projeta com `incluirPecas`). */
+    readonly peca?: string;
     readonly nome: string;
     readonly ancora?: string;
     readonly classe: string;

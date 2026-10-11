@@ -1,0 +1,20 @@
+:host {
+    display: inline-flex;
+}
+.oficina-custo__entrada {
+    width: 3.2ch;
+    min-width: 40px;
+    height: 18px;
+    line-height: 1;
+    padding: 0 var(--space-4);
+    border: 1px solid var(--energy);
+    border-radius: var(--radius-control);
+    background: var(--bg);
+    color: var(--energy);
+    font: 600 11px var(--font-mono);
+    text-align: center;
+}
+.oficina-custo__entrada--invalida {
+    border-color: var(--erro);
+    color: var(--erro);
+}

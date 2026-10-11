@@ -31,18 +31,38 @@ function listaDoItem(bloco: LivroListaItemBlocoDto): NormalizadoConteudo {
   return lista;
 }
 
+/** Ligado só durante uma projeção com `incluirPecas`: cada bloco ganha o `identificador` da peça. */
+let incluirPecasNaProjecao = false;
+
+function comPeca<T extends object>(bloco: T, peca: LivroPecaDto): T {
+  return incluirPecasNaProjecao ? { ...bloco, peca: peca.identificador } : bloco;
+}
+
 function habilidadeDe(peca: LivroPecaDto): NormalizadoHabilidade {
   const { nome, custo, reacao, glifo, trechos } = dadosDe(peca, Tipo.HABILIDADE);
-  return { tipo: "habilidade", nome, custo, reacao, glifo, trechos };
+  return comPeca({ tipo: "habilidade", nome, custo, reacao, glifo, trechos }, peca);
 }
 
 /**
  * Projeta a árvore de peças de volta no formato que o leitor de Regras consome (o do normalizador).
- * É a outra metade da prova de ida e volta da m11-03 e, depois, a ponte entre a fotografia do
+ * Com `incluirPecas`, cada bloco carrega `peca` (o `identificador`): é como a Oficina liga o que vê
+ * na tela à peça que edita. É a outra metade da prova de ida e volta da m11-03 e, depois, a ponte entre a fotografia do
  * banco e o leitor atual. O que o conversor não guarda (campos de auditoria da fonte) não volta;
  * as divergências aceitas estão listadas em `diagnostico.md` da spec.
  */
-export function projetarPecasEmRegras(conteudo: LivroVersaoConteudoDto): NormalizadoDocumento {
+export function projetarPecasEmRegras(
+  conteudo: LivroVersaoConteudoDto,
+  opcoes: { readonly incluirPecas?: boolean } = {},
+): NormalizadoDocumento {
+  incluirPecasNaProjecao = opcoes.incluirPecas === true;
+  try {
+    return projetarDocumento(conteudo);
+  } finally {
+    incluirPecasNaProjecao = false;
+  }
+}
+
+function projetarDocumento(conteudo: LivroVersaoConteudoDto): NormalizadoDocumento {
   const filhos: NormalizadoConteudo[] = projetarLista(conteudo.pecas);
   const aberturaAte = filhos.findIndex((filho) => filho.tipo !== "abertura");
   const selo = acharSelo(conteudo.pecas);
@@ -75,6 +95,10 @@ function projetarLista(pecas: readonly LivroPecaDto[]): NormalizadoConteudo[] {
 }
 
 function projetar(peca: LivroPecaDto): NormalizadoConteudo {
+  return comPeca(projetarBase(peca), peca);
+}
+
+function projetarBase(peca: LivroPecaDto): NormalizadoConteudo {
   switch (peca.tipo) {
     case Tipo.SECAO: {
       const { titulo, nivel, glifo, origemTabela } = dadosDe(peca, Tipo.SECAO);
