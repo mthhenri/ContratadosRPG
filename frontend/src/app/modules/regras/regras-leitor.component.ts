@@ -3,6 +3,7 @@ import {
     ChangeDetectionStrategy, Component, DestroyRef, ElementRef, Injector,
     afterNextRender, computed, effect, inject, input, output, signal, untracked,
 } from "@angular/core";
+import { TipoLivroVersaoSituacaoEnum } from "@contratados-rpg/shared/enums";
 import { Subscription } from "rxjs";
 
 import { Gaveta } from "../../shared/ui/gaveta/gaveta.component";
@@ -24,12 +25,13 @@ import { Cartao } from "../../shared/ui/cartao/cartao.component";
 import { Esqueleto } from "../../shared/ui/esqueleto/esqueleto.component";
 import { EstadoVazio } from "../../shared/ui/estado-vazio/estado-vazio.component";
 import { NotificacaoService } from "../../shared/ui/notificacao/notificacao.service";
+import { Chip } from "../../shared/ui/chip/chip.component";
 import { Segmentado } from "../../shared/ui/segmentado/segmentado.component";
 import { SegmentadoItem } from "../../shared/ui/segmentado/segmentado-item.component";
 import { observarSecaoRegras } from "./regras-navegacao";
 import { RegrasConteudoRender } from "./blocos/regras-conteudo.component";
 import { RegrasDocumento } from "./regras.model";
-import { RegrasService } from "./regras.service";
+import { RegrasService, type RegrasLeitura } from "./regras.service";
 import { construirSumarioRegras, listarAncorasRegras } from "./regras-sumario";
 
 @Component({
@@ -37,7 +39,7 @@ import { construirSumarioRegras, listarAncorasRegras } from "./regras-sumario";
     providers: [RegrasLeitorContexto, RegrasPesquisaController],
     imports: [NgTemplateOutlet, Icone, Marca, Botao, Cartao, Esqueleto, EstadoVazio,
         Segmentado, SegmentadoItem, Gaveta, Paleta, RegrasPesquisa, RegrasPesquisaProjecao,
-        BotaoIcone, Tooltip,
+        BotaoIcone, Tooltip, Chip,
         RegrasConteudoRender],
     templateUrl: "./regras-leitor.component.html",
     styleUrl: "./regras-leitor.component.scss",
@@ -73,6 +75,8 @@ export class RegrasLeitor {
     private silenciadoAte = 0;
 
     protected readonly documento = signal<RegrasDocumento | null>(null);
+    protected readonly leitura = signal<RegrasLeitura | null>(null);
+    protected readonly emRascunho = computed(() => this.leitura()?.situacao === TipoLivroVersaoSituacaoEnum.RASCUNHO);
     protected readonly estado = signal<"carregando" | "ok" | "falha">("carregando");
     protected readonly ativo = signal<string | null>(null);
     protected readonly sumario = computed(() =>
@@ -103,7 +107,9 @@ export class RegrasLeitor {
         });
         effect(() => {
             const documento = this.documento();
-            const fragmento = this.ancoraInicial();
+            const pedido = this.ancoraInicial();
+            // URL de antes de uma renomeação: a âncora antiga leva à atual.
+            const fragmento = pedido ? (this.leitura()?.ancorasAntigas[pedido] ?? pedido) : pedido;
             if (documento) {
                 untracked(() => this.prepararNavegacao(documento, fragmento ?? null));
             }
@@ -208,10 +214,12 @@ export class RegrasLeitor {
         this.desconectar?.();
         this.assinatura?.unsubscribe();
         this.documento.set(null);
+        this.leitura.set(null);
         this.ativo.set(null);
         this.estado.set("carregando");
-        this.assinatura = this.service.carregarDocumento(livro).subscribe({
-            next: (documento) => {
+        this.assinatura = this.service.carregarLeitura(livro).subscribe({
+            next: ({ documento, ...origem }) => {
+                this.leitura.set({ documento, ...origem });
                 this.documento.set(documento);
                 this.estado.set("ok");
                 this.pesquisa.conectarDocumento(documento, this.elemento.nativeElement,

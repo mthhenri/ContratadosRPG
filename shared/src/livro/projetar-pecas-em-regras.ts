@@ -1,16 +1,16 @@
+import type { LivroListaItemBlocoDto } from "../dtos/livro/livro-peca-dados.dtos";
 import type {
-  LivroListaItemBlocoDto,
   LivroPecaDadosPorTipo,
   LivroPecaDto,
   LivroVersaoConteudoDto,
-} from "@contratados-rpg/shared/dtos/livro";
-import { TipoRegraPecaEnum as Tipo } from "@contratados-rpg/shared/enums";
+} from "../dtos/livro/livro-peca.dtos";
+import { TipoRegraPecaEnum as Tipo } from "../enums/tipo-regra-peca.enum";
 import type {
   NormalizadoConteudo,
   NormalizadoDocumento,
   NormalizadoHabilidade,
   NormalizadoLista,
-} from "./regras-normalizadas.tipos";
+} from "./regras-formato";
 
 /** Título da capa de todo livro: texto fixo da marca, não varia por livro nem por versão. */
 const TITULO_DA_CAPA = "Contratados";

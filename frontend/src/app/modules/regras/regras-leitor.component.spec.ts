@@ -15,7 +15,10 @@ describe("Leitor compartilhado de Regras", () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({ imports: [RegrasLeitor], providers: [
-            { provide: RegrasService, useValue: { carregarDocumento: () => of(documento) } },
+            { provide: RegrasService, useValue: {
+                carregarDocumento: () => of(documento),
+                carregarLeitura: () => of({ documento, situacao: null, numero: null, ancorasAntigas: {} }),
+            } },
         ] });
         vi.spyOn(window, "scrollTo").mockImplementation(() => undefined);
     });

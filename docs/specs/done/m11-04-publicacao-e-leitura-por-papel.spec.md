@@ -61,3 +61,10 @@ distinto do papel por campanha).
 - **Rascunho vazando para público.** Teste de papel por rota e por id, mais revisão independente.
 - **Regressão de abertura do leitor.** Medir antes/depois; o cache é parte do aceite.
 - **Leitura pública exige saber o papel.** Rota opcionalmente autenticada; sem token = `NORMAL`.
+
+## Resultado (10/10/2026)
+
+Implementada conforme os entregáveis 1–5; o 6 (evento `livro:publicado`) foi avaliado e ficou fora
+(`IDEAS.md` `I-061`). Estratégia de cache, equivalência do leitor e limites:
+[`verificacao.md`](m11-04-publicacao-e-leitura-por-papel/verificacao.md). A prova de equivalência
+reutiliza o conversor e a projeção da `m11-03`; revisão independente feita (permissão e leitura por papel).

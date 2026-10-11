@@ -242,6 +242,15 @@
 
 ## Abertas
 
+### I-061 — Evento de tempo real `livro:publicado` para o leitor de Regras · backend/livro
+
+- **Ideia:** ao publicar rascunho ou versão, emitir `livro:publicado` (broadcast-only, sala por papel) para
+  o leitor aberto avisar "há versão nova" sem recarregar.
+- **Origem:** item 6 da `m11-04`, avaliado e deixado de fora.
+- **Por quê:** o leitor só revalida ao abrir; quem lê durante uma publicação não percebe.
+- **Custo aparente:** baixo no backend (evento após o commit, §9), mas exige sala por papel (tester não
+  pode receber o evento do rascunho de quem não vê rascunho) e UI de aviso no leitor.
+
 ### I-060 — Permissões extras de usuário, começando por editar as Regras · backend/usuario
 
 - **Ideia:** conceder a um usuário permissões além do seu tipo (`NORMAL`/`TESTER`/`ADMIN`).

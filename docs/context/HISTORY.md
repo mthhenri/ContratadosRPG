@@ -1,5 +1,24 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-10 — M11-04: publicação e leitura por papel dos livros de regras
+
+`LivroService` + `LivroController` (`/livros`): leitura aberta com login opcional (novo
+`@AutenticacaoOpcional()`; o papel vem do banco, token inválido vira visitante) e publicação/histórico só
+`ADMIN`. Fotografia com links resolvidos para a âncora atual e `ancorasAntigas`; versão exige zero
+pendência, rascunho aceita pendência de conteúdo, estrutural recusa. A projeção peças → formato do
+leitor foi para o `shared` e o leitor passou a ler a API (cache por livro e sessão, plano B no JSON
+estático só em 404/rede), com marcador "Rascunho x.y.z". OpenAPI regenerado (controller no mapa de tags).
+
+Verificado: equivalência do leitor com a fotografia real dos dois livros (texto e capturas idênticos ao
+JSON estático em 1920×1080 e 360×800, por interceptação da rota), tempos equivalentes, marcador de
+rascunho nos dois viewports; backend 1055+, shared 1172, specs de Regras 95, lint sem erros. Revisão
+independente: sem vazamento no backend; achados corrigidos — cache do frontend vazava rascunho após
+logout e não mostrava rascunho após login (chave por sessão), plano B engolia 5xx e ficava preso
+(só 404/rede, não guardado), controller fora do mapa OpenAPI, pendência de link perdida na
+deduplicação, 500 por tipo errado, comentário `no-store`, DTOs inline. Não feito: HTTP ponta a ponta com
+os guardas reais (sem `supertest`), API com dados no banco do autor, tempo em rede real/offline;
+evento `livro:publicado` vira `I-061`.
+
 ## 2026-10-10 — M11-03: importador dos livros de regras para o banco
 
 Conversor puro `converterRegrasEmPecas` (backend, `livro/importador/`) lê a saída do normalizador

@@ -41,6 +41,7 @@ const TAGS_POR_CONTROLLER: Readonly<Record<string, string>> = {
     CenaController: "Cenas",
     DocumentoController: "Documentos",
     PatchnoteController: "Patchnotes",
+    LivroController: "Livros de regras",
 };
 
 function listarArquivosTypescript(diretorio: string): string[] {
@@ -252,7 +253,7 @@ function gerarOperacoes(programa: ts.Program): Record<string, OperacaoContratoGe
                     metodo,
                     caminho,
                     tag,
-                    publica: obterDecorators(membro).some((decorator) => nomeDecorator(decorator) === "Public"),
+                    publica: obterDecorators(membro).some((decorator) => ["Public", "AutenticacaoOpcional"].includes(nomeDecorator(decorator) ?? "")),
                     ...(parametroBody ? { requestSchema: normalizarTipoContrato(nomeSchema(parametroBody.type)) } : {}),
                     responseSchema: normalizarTipoContrato(retorno),
                 };

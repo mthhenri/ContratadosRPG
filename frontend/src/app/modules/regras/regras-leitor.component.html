@@ -90,6 +90,12 @@
                 </button>
             </div>
         }
+        @if (emRascunho()) {
+            <p class="regras__rascunho" role="status">
+                <app-chip severidade="aviso">Rascunho {{ leitura()?.numero }}</app-chip>
+                Você está vendo uma versão ainda não publicada.
+            </p>
+        }
         <app-cartao class="regras__documento" [attr.aria-busy]="estado() === 'carregando'">
             @if (documento(); as livroAberto) {
                 <app-regras-conteudo

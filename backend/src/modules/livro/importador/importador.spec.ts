@@ -5,8 +5,8 @@ import { beforeAll, describe, expect, it, vi } from "vitest";
 import { converterRegrasEmPecas } from "./converter-regras-em-pecas";
 import { importarLivro, importarLivros, type DependenciasImportacao } from "./importar-livro";
 import { lerFontesDeRegras, type FonteDeRegras } from "./ler-fontes-regras";
-import { projetarPecasEmRegras } from "./projetar-pecas-em-regras";
-import type { NormalizadoDocumento } from "./regras-normalizadas.tipos";
+import { projetarPecasEmRegras } from "@contratados-rpg/shared/livro";
+import type { NormalizadoDocumento } from "@contratados-rpg/shared/livro";
 
 /** UUID determinístico por ordem de geração, para o teste ser reprodutível. */
 function criarGerador(): () => string {

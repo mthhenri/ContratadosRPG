@@ -17,7 +17,7 @@ import type {
   NormalizadoHabilidadeCriatura,
   NormalizadoIdentidade,
   NormalizadoLista,
-} from "./regras-normalizadas.tipos";
+} from "@contratados-rpg/shared/livro";
 
 export interface ConverterRegrasOpcoes {
   /** Gera o `identificador` de cada peça; o padrão é um UUID aleatório (gravado uma única vez). */

@@ -69,4 +69,40 @@ describe('AutorizacaoGuard', () => {
     recuperarSessao.mockResolvedValue({ tipo: TipoUsuarioEnum.ADMIN, tokenVersao: 2, isDeleted: false });
     await expect(guard.canActivate(contexto(usuario))).resolves.toBe(true);
   });
+
+  describe('rota de login opcional', () => {
+    const contextoMutavel = (user?: JwtPayload) => {
+      const requisicao: { user?: JwtPayload } = { user };
+      const executionContext = {
+        getHandler: vi.fn(),
+        getClass: vi.fn(),
+        switchToHttp: () => ({ getRequest: () => requisicao }),
+      } as unknown as ExecutionContext;
+      return { requisicao, executionContext };
+    };
+
+    it('sem token segue como visitante e não consulta a sessão', async () => {
+      getAllAndOverride.mockReturnValueOnce('opcional');
+      const { requisicao, executionContext } = contextoMutavel();
+      await expect(guard.canActivate(executionContext)).resolves.toBe(true);
+      expect(requisicao.user).toBeUndefined();
+      expect(recuperarSessao).not.toHaveBeenCalled();
+    });
+
+    it('com sessão viva usa o tipo atual do banco, não o do token', async () => {
+      getAllAndOverride.mockReturnValueOnce('opcional');
+      recuperarSessao.mockResolvedValue({ tipo: TipoUsuarioEnum.NORMAL, tokenVersao: 2, isDeleted: false });
+      const { requisicao, executionContext } = contextoMutavel(usuario);
+      await expect(guard.canActivate(executionContext)).resolves.toBe(true);
+      expect(requisicao.user).toEqual({ ...usuario, tipo: TipoUsuarioEnum.NORMAL });
+    });
+
+    it('token revogado vira visitante em vez de falhar', async () => {
+      getAllAndOverride.mockReturnValueOnce('opcional');
+      recuperarSessao.mockResolvedValue({ tipo: TipoUsuarioEnum.ADMIN, tokenVersao: 9, isDeleted: false });
+      const { requisicao, executionContext } = contextoMutavel(usuario);
+      await expect(guard.canActivate(executionContext)).resolves.toBe(true);
+      expect(requisicao.user).toBeUndefined();
+    });
+  });
 });

@@ -17,6 +17,15 @@
     &--painel .regras__pesquisa-contador {
         top: 0;
     }
+    &__rascunho {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--space-8);
+        margin: 0 0 var(--space-12);
+        color: var(--text-mute);
+        font: 500 12px var(--font-mono);
+    }
     &--gaveta:not(.regras--painel) .regras__pesquisa-contador {
         top: calc(var(--altura-topbar) + 60px);
     }

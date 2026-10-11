@@ -1,7 +1,7 @@
 import { readFile, readdir } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import type { NormalizadoDocumento } from "./regras-normalizadas.tipos";
+import type { NormalizadoDocumento } from "@contratados-rpg/shared/livro";
 
 export interface AvisoDoNormalizador {
   readonly documento: "sistema" | "guia";

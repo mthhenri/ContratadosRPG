@@ -96,6 +96,11 @@ export interface LivroVersaoConteudoDto {
   /** Número editorial da versão (ex.: `4.1.4`). */
   readonly numero: string;
   readonly pecas: readonly LivroPecaDto[];
+  /**
+   * Âncoras que peças já tiveram e hoje levam a outra âncora (`antiga → atual`), para o link e a
+   * URL publicados antes da renomeação continuarem valendo. Ausente quando não há nenhuma.
+   */
+  readonly ancorasAntigas?: Readonly<Record<string, string>>;
 }
 
 /** Entrada do validador: a árvore e se ela é a cópia de trabalho ou uma fotografia. */

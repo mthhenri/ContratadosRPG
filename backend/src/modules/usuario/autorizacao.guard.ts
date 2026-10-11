@@ -1,7 +1,7 @@
 import { Injectable, UnauthorizedException, type CanActivate, type ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import type { TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
-import { IS_PUBLIC_KEY } from '../../core/decorators/public.decorator';
+import { AUTENTICACAO_OPCIONAL, IS_PUBLIC_KEY } from '../../core/decorators/public.decorator';
 import { TIPOS_PERMITIDOS_KEY } from '../../core/decorators/tipos-permitidos.decorator';
 import { UnauthorizedAccessException } from '../../core/exceptions';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
@@ -17,7 +17,14 @@ export class AutorizacaoGuard implements CanActivate {
 
   async canActivate(contexto: ExecutionContext): Promise<boolean> {
     const alvos = [contexto.getHandler(), contexto.getClass()];
-    const rotaPublica = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, alvos);
+    const rotaPublica = this.reflector.getAllAndOverride<boolean | typeof AUTENTICACAO_OPCIONAL>(
+      IS_PUBLIC_KEY,
+      alvos,
+    );
+    if (rotaPublica === AUTENTICACAO_OPCIONAL) {
+      await this.identificarUsuarioOpcional(contexto);
+      return true;
+    }
     if (rotaPublica) {
       return true;
     }
@@ -41,5 +48,22 @@ export class AutorizacaoGuard implements CanActivate {
       throw new UnauthorizedAccessException();
     }
     return true;
+  }
+
+  /**
+   * Rota de login opcional: com token válido e sessão viva, `request.user.tipo` passa a ser o do
+   * banco; sessão revogada ou excluída vira visitante (nunca erro, nunca o tipo antigo do token).
+   */
+  private async identificarUsuarioOpcional(contexto: ExecutionContext): Promise<void> {
+    const requisicao = contexto.switchToHttp().getRequest<{ user?: JwtPayload }>();
+    const payload = requisicao.user;
+    if (!payload) {
+      return;
+    }
+    const sessao = await this.usuarioService.recuperarSessao({ id: payload.sub });
+    requisicao.user =
+      !sessao || sessao.isDeleted || sessao.tokenVersao !== payload.tokenVersao
+        ? undefined
+        : { ...payload, tipo: sessao.tipo };
   }
 }

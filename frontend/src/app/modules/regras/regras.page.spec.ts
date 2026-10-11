@@ -1,7 +1,7 @@
 import { Location } from "@angular/common";
 import { TestBed } from "@angular/core/testing";
 import { ActivatedRoute, provideRouter } from "@angular/router";
-import { BehaviorSubject, Subject } from "rxjs";
+import { BehaviorSubject, Subject, map } from "rxjs";
 
 import { RegrasDocumento } from "./regras.model";
 import { RegrasPage } from "./regras.page";
@@ -26,7 +26,11 @@ describe("RegrasPage", () => {
         await TestBed.configureTestingModule({ imports: [RegrasPage], providers: [
             provideRouter([]),
             { provide: ActivatedRoute, useValue: { fragment: new BehaviorSubject(null) } },
-            { provide: RegrasService, useValue: { carregarDocumento: carregar } },
+            { provide: RegrasService, useValue: {
+                carregarDocumento: carregar,
+                carregarLeitura: (id: RegrasDocumento["id"]) => carregar(id).pipe(map((documento) =>
+                    ({ documento, situacao: null, numero: null, ancorasAntigas: {} }))),
+            } },
             { provide: Location, useValue: location },
         ] }).compileComponents();
         vi.spyOn(window, "scrollTo").mockImplementation(() => undefined);

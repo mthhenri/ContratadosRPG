@@ -1,10 +1,10 @@
-import type { LivroTrechoDto } from "@contratados-rpg/shared/dtos/livro";
+import type { LivroTrechoDto } from "../dtos/livro/livro-trecho.dtos";
 
 /**
- * Forma do JSON que o normalizador de Regras produz (`frontend/scripts/normalizar-regras.mjs`),
- * lida pelo importador da Oficina. A definição canônica do formato é
- * `frontend/src/app/modules/regras/regras.model.ts`; aqui vive só o recorte estrutural de que o
- * conversor precisa, para o backend não importar código do frontend.
+ * Forma do JSON que o normalizador de Regras produz (`frontend/scripts/normalizar-regras.mjs`) e que
+ * o leitor consome. A definição canônica do formato é
+ * `frontend/src/app/modules/regras/regras.model.ts`; aqui vive o recorte estrutural de que o
+ * conversor (backend) e a projeção (backend e frontend) precisam, sem importar código do frontend.
  */
 
 export type Trechos = readonly LivroTrechoDto[];

@@ -12,3 +12,15 @@ export const IS_PUBLIC_KEY = 'isPublic';
  * está de fato protegida ainda. Ver SYSTEM.SPEC §12.
  */
 export const Public = (): CustomDecorator => SetMetadata(IS_PUBLIC_KEY, true);
+
+/** Valor de `IS_PUBLIC_KEY` das rotas com login opcional (ver {@link AutenticacaoOpcional}). */
+export const AUTENTICACAO_OPCIONAL = 'opcional';
+
+/**
+ * Rota pública que, quando a requisição traz um token válido, também recebe o usuário em
+ * `@ActiveUser()` — com o `tipo` atual do banco, nunca o do token. Sem token, ou com token
+ * revogado/expirado, a requisição segue como visitante (`request.user` ausente) em vez de falhar.
+ * Serve a leituras abertas cujo conteúdo varia por papel (ex.: livros de regras).
+ */
+export const AutenticacaoOpcional = (): CustomDecorator =>
+  SetMetadata(IS_PUBLIC_KEY, AUTENTICACAO_OPCIONAL);

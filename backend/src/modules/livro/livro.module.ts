@@ -1,15 +1,17 @@
 import { Module } from "@nestjs/common";
+import { LivroController } from "./livro.controller";
 import { LivroRepository } from "./livro.repository";
+import { LivroService } from "./livro.service";
 import { LivroVersaoRepository } from "./livro-versao.repository";
 import { RegraPecaRepository } from "./regra-peca.repository";
 
 /**
- * Módulo `livro` (m11-02) — os livros de regras no banco: cópia de trabalho (`regra_peca`) e
- * fotografias publicadas (`livro_versao`). Por ora só a camada de dados; a service de publicação e a
- * API de leitura chegam na `m11-04`.
+ * Módulo `livro` (m11-02, m11-04) — os livros de regras no banco: cópia de trabalho (`regra_peca`),
+ * fotografias (`livro_versao`), publicação e leitura por papel.
  */
 @Module({
-  providers: [LivroRepository, RegraPecaRepository, LivroVersaoRepository],
-  exports: [LivroRepository, RegraPecaRepository, LivroVersaoRepository],
+  controllers: [LivroController],
+  providers: [LivroRepository, RegraPecaRepository, LivroVersaoRepository, LivroService],
+  exports: [LivroRepository, RegraPecaRepository, LivroVersaoRepository, LivroService],
 })
 export class LivroModule {}

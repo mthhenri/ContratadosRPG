@@ -417,6 +417,10 @@ export const schemasContratosPublicos = {
             "id": {
                 "type": "number"
             },
+            "updatedDate": {
+                "type": "string",
+                "description": "Data da última alteração; define a ficha de identidade da presença no Caderno."
+            },
             "nome": {
                 "type": "string"
             },
@@ -469,6 +473,7 @@ export const schemasContratosPublicos = {
         },
         "required": [
             "id",
+            "updatedDate",
             "nome",
             "classe",
             "arquetipo",
@@ -4596,6 +4601,30 @@ export const schemasContratosPublicos = {
         "additionalProperties": false,
         "description": "Faixa social e conduta tática inicial conforme o guia de mestre."
     },
+    "NpcHabilidadeReferenciaDto": {
+        "type": "object",
+        "properties": {
+            "categoria": {
+                "type": "string",
+                "enum": [
+                    "CIVIL",
+                    "OPERATIVO",
+                    "VETERANO",
+                    "ELITE",
+                    "LENDARIO"
+                ]
+            },
+            "habilidade": {
+                "$ref": "#/components/schemas/FichaNpcHabilidadeDto"
+            }
+        },
+        "required": [
+            "categoria",
+            "habilidade"
+        ],
+        "additionalProperties": false,
+        "description": "Modelo pronto da Biblioteca de Referência do guia de mestre, por Categoria de origem."
+    },
     "FichaNpcDadosDto": {
         "type": "object",
         "properties": {
@@ -6456,6 +6485,2764 @@ export const schemasContratosPublicos = {
         ],
         "additionalProperties": false,
         "description": "Documento completo `ficha.dados` de uma ficha de jogador — a forma final do\nJSONB (m3-01, estendido em m3-10). Consumível por backend e frontend sem redefinição."
+    },
+    "LivroResumoDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "codigo": {
+                "type": "string"
+            },
+            "titulo": {
+                "type": "string"
+            },
+            "ordem": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "id",
+            "codigo",
+            "titulo",
+            "ordem"
+        ],
+        "additionalProperties": false,
+        "description": "Livro de regras (Sistema, Guia do Mestre, expansões). `codigo` vira a URL `/regras/<codigo>`."
+    },
+    "LivroCodigoRecuperarDto": {
+        "type": "object",
+        "properties": {
+            "codigo": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "codigo"
+        ],
+        "additionalProperties": false
+    },
+    "RegraPecaRecuperadaDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "livroId": {
+                "type": "number"
+            },
+            "pecaPaiId": {
+                "type": "number"
+            },
+            "tipo": {
+                "type": "string",
+                "enum": [
+                    "SECAO",
+                    "PARAGRAFO",
+                    "EXEMPLO",
+                    "FORMULA",
+                    "NOTA",
+                    "LISTA",
+                    "TABELA",
+                    "HABILIDADE",
+                    "CLASSE",
+                    "ARQUETIPO",
+                    "SUBCLASSE",
+                    "ORIGENS",
+                    "ORIGEM",
+                    "TERMOS",
+                    "TERMO",
+                    "EQUIPAMENTOS",
+                    "EQUIPAMENTO",
+                    "MODIFICACOES",
+                    "MODIFICACAO",
+                    "AMPLIFICADORES",
+                    "AMPLIFICADOR",
+                    "MODULOS",
+                    "NIVEIS_AMEACA",
+                    "FICHA_CRIATURA",
+                    "HABILIDADE_CRIATURA",
+                    "ROTEIRO",
+                    "FAIXAS",
+                    "GRADE",
+                    "ABERTURA",
+                    "GENERICO"
+                ]
+            },
+            "identificador": {
+                "type": "string"
+            },
+            "ancora": {
+                "type": "string"
+            },
+            "ordem": {
+                "type": "number"
+            },
+            "dados": {
+                "oneOf": [
+                    {
+                        "$ref": "#/components/schemas/LivroSecaoDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroTextoDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroListaDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroTabelaDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroHabilidadeDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroClasseDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroArquetipoDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroSubclasseDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroOrigensDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroOrigemDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroTermosDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroTermoDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroEquipamentosDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroEquipamentoDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroModificacoesDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroModificacaoDadosDto"
+                    },
+                    {
+                        "type": "object",
+                        "additionalProperties": true
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroAmplificadorDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroModulosDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroNiveisAmeacaDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroFichaCriaturaDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroHabilidadeCriaturaDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroRoteiroDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroFaixasDadosDto"
+                    },
+                    {
+                        "type": "object",
+                        "additionalProperties": true
+                    },
+                    {
+                        "type": "object",
+                        "additionalProperties": true
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroAberturaDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroGenericoDadosDto"
+                    }
+                ]
+            },
+            "revisao": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "id",
+            "livroId",
+            "pecaPaiId",
+            "tipo",
+            "identificador",
+            "ancora",
+            "ordem",
+            "dados",
+            "revisao"
+        ],
+        "additionalProperties": false,
+        "description": "Peça da cópia de trabalho (`regra_peca`), com o `dados` completo."
+    },
+    "RegraPecaRecuperarDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "id"
+        ],
+        "additionalProperties": false
+    },
+    "RegraPecaIdentificadorRecuperarDto": {
+        "type": "object",
+        "properties": {
+            "identificador": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "identificador"
+        ],
+        "additionalProperties": false
+    },
+    "RegraPecaArvoreListarDto": {
+        "type": "object",
+        "properties": {
+            "livroId": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "livroId"
+        ],
+        "additionalProperties": false
+    },
+    "RegraPecaArvoreItemDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "livroId": {
+                "type": "number"
+            },
+            "pecaPaiId": {
+                "type": "number"
+            },
+            "tipo": {
+                "type": "string",
+                "enum": [
+                    "SECAO",
+                    "PARAGRAFO",
+                    "EXEMPLO",
+                    "FORMULA",
+                    "NOTA",
+                    "LISTA",
+                    "TABELA",
+                    "HABILIDADE",
+                    "CLASSE",
+                    "ARQUETIPO",
+                    "SUBCLASSE",
+                    "ORIGENS",
+                    "ORIGEM",
+                    "TERMOS",
+                    "TERMO",
+                    "EQUIPAMENTOS",
+                    "EQUIPAMENTO",
+                    "MODIFICACOES",
+                    "MODIFICACAO",
+                    "AMPLIFICADORES",
+                    "AMPLIFICADOR",
+                    "MODULOS",
+                    "NIVEIS_AMEACA",
+                    "FICHA_CRIATURA",
+                    "HABILIDADE_CRIATURA",
+                    "ROTEIRO",
+                    "FAIXAS",
+                    "GRADE",
+                    "ABERTURA",
+                    "GENERICO"
+                ]
+            },
+            "identificador": {
+                "type": "string"
+            },
+            "ancora": {
+                "type": "string"
+            },
+            "ordem": {
+                "type": "number"
+            },
+            "dados": {
+                "oneOf": [
+                    {
+                        "$ref": "#/components/schemas/LivroSecaoDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroTextoDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroListaDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroTabelaDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroHabilidadeDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroClasseDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroArquetipoDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroSubclasseDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroOrigensDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroOrigemDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroTermosDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroTermoDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroEquipamentosDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroEquipamentoDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroModificacoesDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroModificacaoDadosDto"
+                    },
+                    {
+                        "type": "object",
+                        "additionalProperties": true
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroAmplificadorDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroModulosDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroNiveisAmeacaDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroFichaCriaturaDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroHabilidadeCriaturaDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroRoteiroDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroFaixasDadosDto"
+                    },
+                    {
+                        "type": "object",
+                        "additionalProperties": true
+                    },
+                    {
+                        "type": "object",
+                        "additionalProperties": true
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroAberturaDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroGenericoDadosDto"
+                    }
+                ]
+            },
+            "revisao": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "id",
+            "livroId",
+            "pecaPaiId",
+            "tipo",
+            "identificador",
+            "ancora",
+            "ordem",
+            "dados",
+            "revisao"
+        ],
+        "additionalProperties": false,
+        "description": "Linha da árvore do livro (plana, ordenada por pai e `ordem`); a service monta o aninhamento."
+    },
+    "RegraPecaRemoverDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "revisao": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "id",
+            "revisao"
+        ],
+        "additionalProperties": false,
+        "description": "Exclui (soft) a peça e todas as descendentes, se `revisao` for a do banco."
+    },
+    "RegraPecaAncorasAntigasListarDto": {
+        "type": "object",
+        "properties": {
+            "livroId": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "livroId"
+        ],
+        "additionalProperties": false
+    },
+    "RegraPecaAncoraAntigaResumoDto": {
+        "type": "object",
+        "properties": {
+            "regraPecaId": {
+                "type": "number"
+            },
+            "identificador": {
+                "type": "string"
+            },
+            "ancora": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "regraPecaId",
+            "identificador",
+            "ancora"
+        ],
+        "additionalProperties": false,
+        "description": "Âncora que a peça já teve, com o identificador da peça a que hoje ela leva."
+    },
+    "LivroVersaoRecuperadaDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "livroId": {
+                "type": "number"
+            },
+            "situacao": {
+                "type": "string",
+                "enum": [
+                    "RASCUNHO",
+                    "PUBLICADA"
+                ]
+            },
+            "numero": {
+                "type": "string"
+            },
+            "formato": {
+                "type": "number"
+            },
+            "conteudo": {
+                "$ref": "#/components/schemas/LivroVersaoConteudoDto"
+            },
+            "publicacaoData": {
+                "type": "string",
+                "description": "Instante da publicação, texto ISO em UTC."
+            },
+            "usuarioId": {
+                "type": "number"
+            },
+            "nota": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "id",
+            "livroId",
+            "situacao",
+            "numero",
+            "formato",
+            "conteudo",
+            "publicacaoData",
+            "usuarioId",
+            "nota"
+        ],
+        "additionalProperties": false,
+        "description": "Fotografia completa de um livro (`livro_versao`), com o conteúdo."
+    },
+    "LivroVersaoRecuperarDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "id"
+        ],
+        "additionalProperties": false
+    },
+    "LivroVersaoAtualRecuperarDto": {
+        "type": "object",
+        "properties": {
+            "livroId": {
+                "type": "number"
+            },
+            "situacao": {
+                "type": "string",
+                "enum": [
+                    "RASCUNHO",
+                    "PUBLICADA"
+                ]
+            }
+        },
+        "required": [
+            "livroId",
+            "situacao"
+        ],
+        "additionalProperties": false,
+        "description": "A fotografia mais recente de um livro numa situação."
+    },
+    "LivroVersoesListarDto": {
+        "type": "object",
+        "properties": {
+            "livroId": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "livroId"
+        ],
+        "additionalProperties": false
+    },
+    "LivroVersaoResumoDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "livroId": {
+                "type": "number"
+            },
+            "situacao": {
+                "type": "string",
+                "enum": [
+                    "RASCUNHO",
+                    "PUBLICADA"
+                ]
+            },
+            "numero": {
+                "type": "string"
+            },
+            "formato": {
+                "type": "number"
+            },
+            "publicacaoData": {
+                "type": "string"
+            },
+            "usuarioId": {
+                "type": "number"
+            },
+            "nota": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "id",
+            "livroId",
+            "situacao",
+            "numero",
+            "formato",
+            "publicacaoData",
+            "usuarioId",
+            "nota"
+        ],
+        "additionalProperties": false,
+        "description": "Fotografia sem o conteúdo, para listar o histórico."
+    },
+    "LivroImportadoDto": {
+        "type": "object",
+        "properties": {
+            "livroId": {
+                "type": "number"
+            },
+            "codigo": {
+                "type": "string"
+            },
+            "numero": {
+                "type": "string"
+            },
+            "pecas": {
+                "type": "number"
+            },
+            "versaoId": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "livroId",
+            "codigo",
+            "numero",
+            "pecas",
+            "versaoId"
+        ],
+        "additionalProperties": false
+    },
+    "LivroLeituraDto": {
+        "type": "object",
+        "properties": {
+            "codigo": {
+                "type": "string"
+            },
+            "titulo": {
+                "type": "string"
+            },
+            "situacao": {
+                "type": "string",
+                "enum": [
+                    "RASCUNHO",
+                    "PUBLICADA"
+                ]
+            },
+            "numero": {
+                "type": "string"
+            },
+            "publicacaoData": {
+                "type": "string",
+                "description": "Instante da publicação, texto ISO em UTC."
+            },
+            "conteudo": {
+                "$ref": "#/components/schemas/LivroVersaoConteudoDto"
+            }
+        },
+        "required": [
+            "codigo",
+            "titulo",
+            "situacao",
+            "numero",
+            "publicacaoData",
+            "conteudo"
+        ],
+        "additionalProperties": false,
+        "description": "Livro como o leitor o recebe: a fotografia visível ao papel, sem dados internos de quem publicou."
+    },
+    "LivroListarDto": {
+        "type": "object",
+        "properties": {
+            "tipoUsuario": {
+                "type": "string",
+                "enum": [
+                    "NORMAL",
+                    "ADMIN",
+                    "TESTER"
+                ]
+            }
+        },
+        "required": [
+            "tipoUsuario"
+        ],
+        "additionalProperties": false,
+        "description": "Lista os livros visíveis ao papel global de quem pede (`null` = visitante sem login)."
+    },
+    "LivroLeituraRecuperarDto": {
+        "type": "object",
+        "properties": {
+            "codigo": {
+                "type": "string"
+            },
+            "tipoUsuario": {
+                "type": "string",
+                "enum": [
+                    "NORMAL",
+                    "ADMIN",
+                    "TESTER"
+                ]
+            }
+        },
+        "required": [
+            "codigo",
+            "tipoUsuario"
+        ],
+        "additionalProperties": false,
+        "description": "Papel global de quem pede (`null` = visitante sem login), com o livro pedido pelo código."
+    },
+    "LivroVersaoPorCodigoRecuperarDto": {
+        "type": "object",
+        "properties": {
+            "codigo": {
+                "type": "string"
+            },
+            "id": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "codigo",
+            "id"
+        ],
+        "additionalProperties": false,
+        "description": "Fotografia pedida por id dentro de um livro (só `ADMIN`)."
+    },
+    "LivroPublicarDto": {
+        "type": "object",
+        "properties": {
+            "codigo": {
+                "type": "string"
+            },
+            "situacao": {
+                "type": "string",
+                "enum": [
+                    "RASCUNHO",
+                    "PUBLICADA"
+                ]
+            },
+            "numero": {
+                "type": "string",
+                "description": "Número editorial (ex.: `4.1.5`)."
+            },
+            "nota": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "codigo",
+            "situacao",
+            "numero"
+        ],
+        "additionalProperties": false,
+        "description": "Publica o estado atual da cópia de trabalho como rascunho ou versão (só `ADMIN`)."
+    },
+    "LivroPublicadoDto": {
+        "type": "object",
+        "properties": {
+            "versao": {
+                "$ref": "#/components/schemas/LivroVersaoResumoDto"
+            },
+            "pendencias": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/LivroPendenciaDto"
+                }
+            }
+        },
+        "required": [
+            "versao",
+            "pendencias"
+        ],
+        "additionalProperties": false,
+        "description": "Fotografia criada e as pendências que ainda restavam (só um rascunho publica com pendência)."
+    },
+    "LivroSecaoDadosDto": {
+        "type": "object",
+        "properties": {
+            "titulo": {
+                "type": "string"
+            },
+            "nivel": {
+                "type": "number",
+                "enum": [
+                    1,
+                    2,
+                    3,
+                    4
+                ]
+            },
+            "glifo": {
+                "type": "string",
+                "enum": [
+                    "⬢",
+                    "⬡",
+                    "⬥",
+                    "⬦"
+                ]
+            },
+            "origemTabela": {
+                "type": "boolean",
+                "description": "Título extraído do cabeçalho de uma tabela."
+            }
+        },
+        "required": [
+            "titulo",
+            "nivel",
+            "glifo"
+        ],
+        "additionalProperties": false
+    },
+    "LivroTextoDadosDto": {
+        "type": "object",
+        "properties": {
+            "trechos": {
+                "type": "array",
+                "items": {
+                    "oneOf": [
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    ]
+                }
+            }
+        },
+        "required": [
+            "trechos"
+        ],
+        "additionalProperties": false,
+        "description": "Dados de PARAGRAFO, EXEMPLO, FORMULA e NOTA: só o texto rico."
+    },
+    "LivroListaDadosDto": {
+        "type": "object",
+        "properties": {
+            "ordenada": {
+                "type": "boolean"
+            },
+            "inicio": {
+                "type": "number"
+            },
+            "itens": {
+                "type": "array",
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "oneOf": [
+                            {
+                                "type": "object",
+                                "additionalProperties": true
+                            },
+                            {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        "required": [
+            "ordenada",
+            "inicio",
+            "itens"
+        ],
+        "additionalProperties": false
+    },
+    "LivroTabelaDadosDto": {
+        "type": "object",
+        "properties": {
+            "cabecalho": {
+                "type": "array",
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "oneOf": [
+                            {
+                                "type": "object",
+                                "additionalProperties": true
+                            },
+                            {
+                                "type": "object",
+                                "additionalProperties": true
+                            },
+                            {
+                                "type": "object",
+                                "additionalProperties": true
+                            },
+                            {
+                                "type": "object",
+                                "additionalProperties": true
+                            },
+                            {
+                                "type": "object",
+                                "additionalProperties": true
+                            },
+                            {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        ]
+                    }
+                }
+            },
+            "linhas": {
+                "type": "array",
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "oneOf": [
+                                {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                },
+                                {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                },
+                                {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                },
+                                {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                },
+                                {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                },
+                                {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "emPares": {
+                "type": "boolean",
+                "description": "Apresentação: as colunas viram duas metades independentes, uma sobre a outra."
+            }
+        },
+        "required": [
+            "cabecalho",
+            "linhas"
+        ],
+        "additionalProperties": false
+    },
+    "LivroHabilidadeDadosDto": {
+        "type": "object",
+        "properties": {
+            "nome": {
+                "type": "string"
+            },
+            "custo": {
+                "oneOf": [
+                    {
+                        "type": "number"
+                    },
+                    {
+                        "type": "string"
+                    }
+                ]
+            },
+            "reacao": {
+                "type": "boolean"
+            },
+            "glifo": {
+                "type": "string",
+                "enum": [
+                    "⬦",
+                    "◈",
+                    "◻"
+                ]
+            },
+            "trechos": {
+                "type": "array",
+                "items": {
+                    "oneOf": [
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    ]
+                }
+            },
+            "inicial": {
+                "type": "boolean",
+                "description": "Habilidade inicial do arquétipo ou da subclasse."
+            },
+            "melhorada": {
+                "type": "boolean",
+                "description": "Habilidade geral melhorada por um arquétipo."
+            }
+        },
+        "required": [
+            "nome",
+            "custo",
+            "reacao",
+            "glifo",
+            "trechos"
+        ],
+        "additionalProperties": false
+    },
+    "LivroSaudeRecursosDto": {
+        "type": "object",
+        "properties": {
+            "vida": {
+                "type": "array",
+                "items": {
+                    "oneOf": [
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    ]
+                }
+            },
+            "energia": {
+                "type": "array",
+                "items": {
+                    "oneOf": [
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    ]
+                }
+            }
+        },
+        "required": [
+            "vida",
+            "energia"
+        ],
+        "additionalProperties": false
+    },
+    "LivroClasseDadosDto": {
+        "type": "object",
+        "properties": {
+            "nome": {
+                "type": "string"
+            },
+            "citacao": {
+                "type": "array",
+                "items": {
+                    "oneOf": [
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    ]
+                }
+            },
+            "saude": {
+                "$ref": "#/components/schemas/LivroSaudeRecursosDto"
+            },
+            "progressao": {
+                "$ref": "#/components/schemas/LivroSaudeRecursosDto"
+            },
+            "cabecalho": {
+                "type": "array",
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "oneOf": [
+                            {
+                                "type": "object",
+                                "additionalProperties": true
+                            },
+                            {
+                                "type": "object",
+                                "additionalProperties": true
+                            },
+                            {
+                                "type": "object",
+                                "additionalProperties": true
+                            },
+                            {
+                                "type": "object",
+                                "additionalProperties": true
+                            },
+                            {
+                                "type": "object",
+                                "additionalProperties": true
+                            },
+                            {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        ]
+                    }
+                },
+                "description": "Tabela de progressão da classe, na ordem da fonte."
+            },
+            "linhas": {
+                "type": "array",
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "oneOf": [
+                                {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                },
+                                {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                },
+                                {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                },
+                                {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                },
+                                {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                },
+                                {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "required": [
+            "nome",
+            "citacao",
+            "saude",
+            "progressao",
+            "cabecalho",
+            "linhas"
+        ],
+        "additionalProperties": false
+    },
+    "LivroArquetipoDadosDto": {
+        "type": "object",
+        "properties": {
+            "nome": {
+                "type": "string"
+            },
+            "citacao": {
+                "type": "array",
+                "items": {
+                    "oneOf": [
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    ]
+                }
+            },
+            "atributosBonus": {
+                "type": "array",
+                "items": {
+                    "oneOf": [
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    ]
+                }
+            }
+        },
+        "required": [
+            "nome",
+            "citacao",
+            "atributosBonus"
+        ],
+        "additionalProperties": false
+    },
+    "LivroSubclasseDadosDto": {
+        "type": "object",
+        "properties": {
+            "nome": {
+                "type": "string"
+            },
+            "classe": {
+                "type": "string"
+            },
+            "citacao": {
+                "type": "array",
+                "items": {
+                    "oneOf": [
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    ]
+                }
+            },
+            "custos": {
+                "type": "array",
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "oneOf": [
+                            {
+                                "type": "object",
+                                "additionalProperties": true
+                            },
+                            {
+                                "type": "object",
+                                "additionalProperties": true
+                            },
+                            {
+                                "type": "object",
+                                "additionalProperties": true
+                            },
+                            {
+                                "type": "object",
+                                "additionalProperties": true
+                            },
+                            {
+                                "type": "object",
+                                "additionalProperties": true
+                            },
+                            {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        ]
+                    }
+                }
+            },
+            "saude": {
+                "$ref": "#/components/schemas/LivroSaudeRecursosDto"
+            },
+            "progressao": {
+                "$ref": "#/components/schemas/LivroSaudeRecursosDto"
+            },
+            "atributosBonus": {
+                "type": "array",
+                "items": {
+                    "oneOf": [
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    ]
+                }
+            }
+        },
+        "required": [
+            "nome",
+            "classe",
+            "citacao",
+            "custos",
+            "saude",
+            "progressao",
+            "atributosBonus"
+        ],
+        "additionalProperties": false
+    },
+    "LivroOrigensDadosDto": {
+        "type": "object",
+        "properties": {
+            "cabecalho": {
+                "type": "array",
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "oneOf": [
+                            {
+                                "type": "object",
+                                "additionalProperties": true
+                            },
+                            {
+                                "type": "object",
+                                "additionalProperties": true
+                            },
+                            {
+                                "type": "object",
+                                "additionalProperties": true
+                            },
+                            {
+                                "type": "object",
+                                "additionalProperties": true
+                            },
+                            {
+                                "type": "object",
+                                "additionalProperties": true
+                            },
+                            {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        ]
+                    }
+                }
+            },
+            "linhas": {
+                "type": "array",
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "oneOf": [
+                                {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                },
+                                {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                },
+                                {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                },
+                                {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                },
+                                {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                },
+                                {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "required": [
+            "cabecalho",
+            "linhas"
+        ],
+        "additionalProperties": false,
+        "description": "Container de origens (a tabela de origens do livro)."
+    },
+    "LivroOrigemDadosDto": {
+        "type": "object",
+        "properties": {
+            "nome": {
+                "type": "string"
+            },
+            "citacao": {
+                "type": "array",
+                "items": {
+                    "oneOf": [
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    ]
+                }
+            },
+            "formacao": {
+                "type": "array",
+                "items": {
+                    "oneOf": [
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    ]
+                }
+            },
+            "especialidade": {
+                "type": "array",
+                "items": {
+                    "oneOf": [
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    ]
+                }
+            },
+            "saberCampo": {
+                "type": "array",
+                "items": {
+                    "oneOf": [
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    ]
+                }
+            }
+        },
+        "required": [
+            "nome",
+            "citacao",
+            "formacao",
+            "especialidade",
+            "saberCampo"
+        ],
+        "additionalProperties": false
+    },
+    "LivroTermosDadosDto": {
+        "type": "object",
+        "properties": {
+            "variante": {
+                "type": "string",
+                "enum": [
+                    "atributos",
+                    "maestrias",
+                    "penalidades",
+                    "verbetes"
+                ]
+            }
+        },
+        "required": [
+            "variante"
+        ],
+        "additionalProperties": false
+    },
+    "LivroTermoDadosDto": {
+        "type": "object",
+        "properties": {
+            "nome": {
+                "type": "string"
+            },
+            "numero": {
+                "type": "number"
+            },
+            "rotulo": {
+                "type": "string"
+            },
+            "descricao": {
+                "type": "array",
+                "items": {
+                    "oneOf": [
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    ]
+                }
+            }
+        },
+        "required": [
+            "nome",
+            "descricao"
+        ],
+        "additionalProperties": false
+    },
+    "LivroEquipamentosDadosDto": {
+        "type": "object",
+        "properties": {
+            "categoria": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "categoria"
+        ],
+        "additionalProperties": false
+    },
+    "LivroEquipamentoDadosDto": {
+        "type": "object",
+        "properties": {
+            "nome": {
+                "type": "string"
+            },
+            "custo": {
+                "type": "array",
+                "items": {
+                    "oneOf": [
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    ]
+                }
+            },
+            "descricao": {
+                "type": "array",
+                "items": {
+                    "oneOf": [
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    ]
+                }
+            },
+            "peso": {
+                "type": "array",
+                "items": {
+                    "oneOf": [
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    ]
+                }
+            },
+            "porte": {
+                "type": "array",
+                "items": {
+                    "oneOf": [
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    ]
+                }
+            },
+            "danos": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "additionalProperties": true
+                }
+            },
+            "especificacoes": {
+                "type": "array",
+                "items": {
+                    "oneOf": [
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    ]
+                }
+            },
+            "duracao": {
+                "type": "array",
+                "items": {
+                    "oneOf": [
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    ]
+                }
+            }
+        },
+        "required": [
+            "nome",
+            "custo",
+            "descricao",
+            "peso",
+            "danos"
+        ],
+        "additionalProperties": false
+    },
+    "LivroModificacoesDadosDto": {
+        "type": "object",
+        "properties": {
+            "categoria": {
+                "type": "string",
+                "description": "Categoria de Equipamentos a que a tabela pertence (ex.: \"Corpo a Corpo\")."
+            },
+            "nota": {
+                "type": "array",
+                "items": {
+                    "oneOf": [
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    ]
+                }
+            }
+        },
+        "required": [
+            "categoria"
+        ],
+        "additionalProperties": false
+    },
+    "LivroModificacaoDadosDto": {
+        "type": "object",
+        "properties": {
+            "nome": {
+                "type": "string"
+            },
+            "empilhamento": {
+                "type": "string"
+            },
+            "efeito": {
+                "type": "array",
+                "items": {
+                    "oneOf": [
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    ]
+                }
+            },
+            "bloqueia": {
+                "type": "array",
+                "items": {
+                    "oneOf": [
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    ]
+                }
+            }
+        },
+        "required": [
+            "nome",
+            "empilhamento",
+            "efeito",
+            "bloqueia"
+        ],
+        "additionalProperties": false
+    },
+    "LivroAmplificadorDadosDto": {
+        "type": "object",
+        "properties": {
+            "nome": {
+                "type": "string"
+            },
+            "empilhamento": {
+                "type": "string"
+            },
+            "efeito": {
+                "type": "array",
+                "items": {
+                    "oneOf": [
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    ]
+                }
+            }
+        },
+        "required": [
+            "nome",
+            "empilhamento",
+            "efeito"
+        ],
+        "additionalProperties": false
+    },
+    "LivroModulosDadosDto": {
+        "type": "object",
+        "properties": {
+            "modulos": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "additionalProperties": true
+                }
+            }
+        },
+        "required": [
+            "modulos"
+        ],
+        "additionalProperties": false
+    },
+    "LivroNiveisAmeacaDadosDto": {
+        "type": "object",
+        "properties": {
+            "niveis": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "additionalProperties": true
+                }
+            }
+        },
+        "required": [
+            "niveis"
+        ],
+        "additionalProperties": false
+    },
+    "LivroFichaCriaturaDadosDto": {
+        "type": "object",
+        "properties": {
+            "nome": {
+                "type": "string"
+            },
+            "identidade": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "additionalProperties": true
+                }
+            },
+            "atributos": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "additionalProperties": true
+                }
+            },
+            "vidaMaxima": {
+                "type": "string"
+            },
+            "defesaBase": {
+                "type": "string"
+            },
+            "resistencias": {
+                "type": "array",
+                "items": {
+                    "oneOf": [
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    ]
+                }
+            },
+            "fraquezas": {
+                "type": "array",
+                "items": {
+                    "oneOf": [
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    ]
+                }
+            },
+            "regeneracao": {
+                "type": "array",
+                "items": {
+                    "oneOf": [
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    ]
+                }
+            },
+            "porte": {
+                "type": "array",
+                "items": {
+                    "oneOf": [
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    ]
+                }
+            },
+            "deslocamento": {
+                "type": "array",
+                "items": {
+                    "oneOf": [
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    ]
+                }
+            },
+            "cadencia": {
+                "type": "string"
+            },
+            "ataques": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "additionalProperties": true
+                }
+            }
+        },
+        "required": [
+            "nome",
+            "identidade",
+            "atributos",
+            "vidaMaxima",
+            "defesaBase",
+            "resistencias",
+            "fraquezas",
+            "regeneracao",
+            "porte",
+            "deslocamento",
+            "cadencia",
+            "ataques"
+        ],
+        "additionalProperties": false
+    },
+    "LivroHabilidadeCriaturaDadosDto": {
+        "type": "object",
+        "properties": {
+            "nome": {
+                "type": "string"
+            },
+            "categoria": {
+                "type": "string",
+                "enum": [
+                    "PASSIVA",
+                    "ATIVA",
+                    "DE GATILHO"
+                ]
+            },
+            "trechos": {
+                "type": "array",
+                "items": {
+                    "oneOf": [
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    ]
+                }
+            },
+            "rotulo": {
+                "type": "string",
+                "description": "Cabeçalho original, para manter a escrita e a pontuação do livro."
+            }
+        },
+        "required": [
+            "nome",
+            "categoria",
+            "trechos",
+            "rotulo"
+        ],
+        "additionalProperties": false
+    },
+    "LivroRoteiroDadosDto": {
+        "type": "object",
+        "properties": {
+            "etapas": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "additionalProperties": true
+                }
+            },
+            "introducaoQuantidade": {
+                "type": "number"
+            },
+            "conclusaoQuantidade": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "etapas",
+            "introducaoQuantidade",
+            "conclusaoQuantidade"
+        ],
+        "additionalProperties": false,
+        "description": "Roteiro: lista numerada de etapas. As peças filhas, em ordem, são: as primeiras\n`introducaoQuantidade` (antes das etapas), o corpo e as últimas `conclusaoQuantidade` (depois)."
+    },
+    "LivroFaixasDadosDto": {
+        "type": "object",
+        "properties": {
+            "itens": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "additionalProperties": true
+                }
+            }
+        },
+        "required": [
+            "itens"
+        ],
+        "additionalProperties": false,
+        "description": "Tabela de uma linha do Deslocamento: cada faixa traz a condição e o valor em destaque."
+    },
+    "LivroGradeReferenciaItemDto": {
+        "type": "object",
+        "properties": {
+            "rotulo": {
+                "type": "string"
+            },
+            "conteudo": {
+                "type": "array",
+                "items": {
+                    "oneOf": [
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    ]
+                }
+            },
+            "nota": {
+                "type": "string"
+            },
+            "variante": {
+                "type": "string",
+                "enum": [
+                    "vida",
+                    "energia"
+                ]
+            }
+        },
+        "required": [
+            "rotulo",
+            "conteudo"
+        ],
+        "additionalProperties": false,
+        "description": "Item de uma grade de referência (cartões de Saúde, Alcances, Afinidade)."
+    },
+    "LivroAberturaDadosDto": {
+        "type": "object",
+        "properties": {
+            "titulo": {
+                "type": "string"
+            },
+            "trechos": {
+                "type": "array",
+                "items": {
+                    "oneOf": [
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    ]
+                }
+            },
+            "selo": {
+                "type": "string",
+                "description": "Selo de versão da capa (ex.: \"VERSÃO 4.1.4\"); só os livros que o exibem o têm."
+            }
+        },
+        "required": [
+            "titulo",
+            "trechos"
+        ],
+        "additionalProperties": false,
+        "description": "Registro oficial em itálico que abre cada livro."
+    },
+    "LivroGenericoDadosDto": {
+        "type": "object",
+        "properties": {
+            "motivo": {
+                "type": "string"
+            },
+            "trechos": {
+                "type": "array",
+                "items": {
+                    "oneOf": [
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    ]
+                }
+            }
+        },
+        "required": [
+            "motivo",
+            "trechos"
+        ],
+        "additionalProperties": false,
+        "description": "Reserva do importador: conteúdo que não casou com nenhum tipo, sem perder o texto."
+    },
+    "LivroPecaDto": {
+        "type": "object",
+        "properties": {
+            "identificador": {
+                "type": "string"
+            },
+            "ancora": {
+                "type": "string"
+            },
+            "tipo": {
+                "type": "object",
+                "additionalProperties": true
+            },
+            "ordem": {
+                "type": "number"
+            },
+            "dados": {
+                "type": "object",
+                "additionalProperties": true
+            },
+            "filhos": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/LivroPecaDto"
+                }
+            }
+        },
+        "required": [
+            "identificador",
+            "ancora",
+            "tipo",
+            "ordem",
+            "dados",
+            "filhos"
+        ],
+        "additionalProperties": false,
+        "description": "Peça de um livro: nó da árvore, na cópia de trabalho (`regra_peca`) e na fotografia\n(`livro_versao.conteudo`). `ancora` é única por livro quando existe (nem toda peça é linkável,\npor isso `null` é válido). `ordem` é a posição entre irmãs."
+    },
+    "LivroVersaoConteudoDto": {
+        "type": "object",
+        "properties": {
+            "formato": {
+                "type": "number"
+            },
+            "codigo": {
+                "type": "string"
+            },
+            "titulo": {
+                "type": "string"
+            },
+            "subtitulo": {
+                "type": "string"
+            },
+            "numero": {
+                "type": "string",
+                "description": "Número editorial da versão (ex.: `4.1.4`)."
+            },
+            "pecas": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/LivroPecaDto"
+                }
+            },
+            "ancorasAntigas": {
+                "type": "object",
+                "additionalProperties": true,
+                "description": "Âncoras que peças já tiveram e hoje levam a outra âncora (`antiga → atual`), para o link e a\nURL publicados antes da renomeação continuarem valendo. Ausente quando não há nenhuma."
+            }
+        },
+        "required": [
+            "formato",
+            "codigo",
+            "titulo",
+            "subtitulo",
+            "numero",
+            "pecas"
+        ],
+        "additionalProperties": false,
+        "description": "Conteúdo de uma fotografia (`livro_versao.conteudo`): o livro inteiro congelado, com o\n`identificador` de cada peça. `formato` é a versão deste contrato."
+    },
+    "LivroArvoreValidarDto": {
+        "type": "object",
+        "properties": {
+            "pecas": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/LivroPecaDto"
+                }
+            },
+            "modo": {
+                "type": "string",
+                "enum": [
+                    "trabalho",
+                    "fotografia"
+                ],
+                "description": "`trabalho`: links resolvem por `identificador`. `fotografia`: links resolvem por `ancora`."
+            }
+        },
+        "required": [
+            "pecas",
+            "modo"
+        ],
+        "additionalProperties": false,
+        "description": "Entrada do validador: a árvore e se ela é a cópia de trabalho ou uma fotografia."
+    },
+    "LivroPendenciaDto": {
+        "type": "object",
+        "properties": {
+            "codigo": {
+                "type": "string",
+                "enum": [
+                    "IDENTIFICADOR_DUPLICADO",
+                    "ANCORA_DUPLICADA",
+                    "FILHO_NAO_PERMITIDO",
+                    "DADOS_INVALIDOS",
+                    "LINK_INEXISTENTE",
+                    "LINK_SEM_IDENTIFICADOR",
+                    "CONTEUDO_INCOMPLETO"
+                ]
+            },
+            "gravidade": {
+                "type": "string",
+                "enum": [
+                    "ESTRUTURAL",
+                    "CONTEUDO"
+                ]
+            },
+            "identificador": {
+                "type": "string"
+            },
+            "caminho": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                },
+                "description": "Títulos das peças ancestrais até a peça (a própria incluída), para exibir \"onde\"."
+            },
+            "mensagem": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "codigo",
+            "gravidade",
+            "identificador",
+            "caminho",
+            "mensagem"
+        ],
+        "additionalProperties": false,
+        "description": "Uma pendência encontrada na árvore, apontando a peça e o caminho legível até ela."
     },
     "PaginaCadernoEsquadraoCriarDto": {
         "type": "object",
@@ -8579,6 +11366,47 @@ export const operacoesContratosPublicos = {
         "tag": "Fichas",
         "publica": false,
         "responseSchema": "FichaAcessoRevogadoDto"
+    },
+    "LivroController_listar": {
+        "controller": "LivroController",
+        "metodo": "get",
+        "caminho": "/livros",
+        "tag": "Livros de regras",
+        "publica": true,
+        "responseSchema": "LivroResumoDto[]"
+    },
+    "LivroController_recuperar": {
+        "controller": "LivroController",
+        "metodo": "get",
+        "caminho": "/livros/:codigo",
+        "tag": "Livros de regras",
+        "publica": true,
+        "responseSchema": "LivroLeituraDto"
+    },
+    "LivroController_listarVersoes": {
+        "controller": "LivroController",
+        "metodo": "get",
+        "caminho": "/livros/:codigo/versoes",
+        "tag": "Livros de regras",
+        "publica": false,
+        "responseSchema": "LivroVersaoResumoDto[]"
+    },
+    "LivroController_recuperarVersao": {
+        "controller": "LivroController",
+        "metodo": "get",
+        "caminho": "/livros/:codigo/versoes/:id",
+        "tag": "Livros de regras",
+        "publica": false,
+        "responseSchema": "LivroVersaoRecuperadaDto"
+    },
+    "LivroController_publicar": {
+        "controller": "LivroController",
+        "metodo": "post",
+        "caminho": "/livros/:codigo/publicacoes",
+        "tag": "Livros de regras",
+        "publica": false,
+        "requestSchema": "Omit",
+        "responseSchema": "LivroPublicadoDto"
     },
     "PaginaCadernoController_listar": {
         "controller": "PaginaCadernoController",

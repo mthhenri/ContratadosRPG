@@ -70,6 +70,13 @@
     "secure": false,
     "changeOrigin": true
   },
+  // Livros de regras (m11-04): `GET /livros`, `GET /livros/:codigo` e as rotas de ADMIN. Regex com o
+  // mesmo boundary dos demais; a página de leitura é "/regras", sem colisão de prefixo.
+  "^/livros(?:$|[/?])": {
+    "target": "http://localhost:3100",
+    "secure": false,
+    "changeOrigin": true
+  },
   "/usuario": {
     "target": "http://localhost:3100",
     "secure": false,

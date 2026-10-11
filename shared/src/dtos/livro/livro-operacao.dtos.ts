@@ -1,6 +1,7 @@
+import { TipoUsuarioEnum } from "../../enums/tipo-usuario.enum";
 import { TipoLivroVersaoSituacaoEnum } from "../../enums/tipo-livro-versao-situacao.enum";
 import { TipoRegraPecaEnum } from "../../enums/tipo-regra-peca.enum";
-import { LivroPecaDadosPorTipo, LivroVersaoConteudoDto } from "./livro-peca.dtos";
+import { LivroPecaDadosPorTipo, LivroPendenciaDto, LivroVersaoConteudoDto } from "./livro-peca.dtos";
 
 /** Livro de regras (Sistema, Guia do Mestre, expansões). `codigo` vira a URL `/regras/<codigo>`. */
 export interface LivroResumoDto {
@@ -183,4 +184,47 @@ export interface LivroImportadoDto {
 /** Descarta (soft delete) todas as fotografias de um livro; só a importação em dev usa. */
 export interface LivroVersoesInternoRemoverDto {
   readonly livroId: number;
+}
+
+/** Livro como o leitor o recebe: a fotografia visível ao papel, sem dados internos de quem publicou. */
+export interface LivroLeituraDto {
+  readonly codigo: string;
+  readonly titulo: string;
+  readonly situacao: TipoLivroVersaoSituacaoEnum;
+  readonly numero: string;
+  /** Instante da publicação, texto ISO em UTC. */
+  readonly publicacaoData: string;
+  readonly conteudo: LivroVersaoConteudoDto;
+}
+
+/** Lista os livros visíveis ao papel global de quem pede (`null` = visitante sem login). */
+export interface LivroListarDto {
+  readonly tipoUsuario: TipoUsuarioEnum | null;
+}
+
+/** Papel global de quem pede (`null` = visitante sem login), com o livro pedido pelo código. */
+export interface LivroLeituraRecuperarDto {
+  readonly codigo: string;
+  readonly tipoUsuario: TipoUsuarioEnum | null;
+}
+
+/** Fotografia pedida por id dentro de um livro (só `ADMIN`). */
+export interface LivroVersaoPorCodigoRecuperarDto {
+  readonly codigo: string;
+  readonly id: number;
+}
+
+/** Publica o estado atual da cópia de trabalho como rascunho ou versão (só `ADMIN`). */
+export interface LivroPublicarDto {
+  readonly codigo: string;
+  readonly situacao: TipoLivroVersaoSituacaoEnum;
+  /** Número editorial (ex.: `4.1.5`). */
+  readonly numero: string;
+  readonly nota?: string | null;
+}
+
+/** Fotografia criada e as pendências que ainda restavam (só um rascunho publica com pendência). */
+export interface LivroPublicadoDto {
+  readonly versao: LivroVersaoResumoDto;
+  readonly pendencias: readonly LivroPendenciaDto[];
 }
