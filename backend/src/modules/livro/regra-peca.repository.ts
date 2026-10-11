@@ -10,10 +10,12 @@ import type {
   RegraPecaDadosInternoAlterarDto,
   RegraPecaIdentificadorRecuperarDto,
   RegraPecaInternoCriarDto,
+  RegraPecaOrdemInternoAlterarDto,
   RegraPecaPosicaoInternoAlterarDto,
   RegraPecaRecuperadaDto,
   RegraPecaRecuperarDto,
   RegraPecaRemoverDto,
+  RegraPecaRestaurarInternoDto,
 } from "@contratados-rpg/shared/dtos/livro";
 import { BaseRepository } from "../../core/base/base.repository";
 import { KNEX_CONNECTION } from "../../database/database.provider";
@@ -189,9 +191,69 @@ export class RegraPecaRepository extends BaseRepository {
   }
 
   /**
+   * Troca só a `ordem` de uma peça ativa, sem mexer na `revisao`: é o ajuste de posição das irmãs
+   * quando outra peça entra ou sai da lista, não uma edição do conteúdo delas.
+   */
+  async alterarOrdem(dto: RegraPecaOrdemInternoAlterarDto): Promise<number> {
+    return this.executarComando(
+      `UPDATE regra_peca
+       SET ordem = :ordem
+       WHERE regra_peca.id = :id AND regra_peca.is_deleted = false`,
+      { id: dto.id, ordem: dto.ordem },
+    );
+  }
+
+  /**
+   * Desfaz `removerPeca`: reativa a peça, as descendentes e as âncoras antigas que saíram na mesma
+   * exclusão (mesmo `deleted_date`; as excluídas antes continuam excluídas). Devolve quantas peças
+   * voltaram — 0 se a peça não está excluída ou o pai dela continua excluído. Uma âncora que outra
+   * peça ativa passou a usar faz o banco recusar (violação de unicidade), e a service traduz.
+   */
+  async restaurarPeca(dto: RegraPecaRestaurarInternoDto): Promise<number> {
+    const [resultado] = await this.executarConsulta<{ total: number }>(
+      `WITH RECURSIVE raiz AS (
+         SELECT regra_peca.id, regra_peca.deleted_date
+         FROM regra_peca
+         WHERE regra_peca.id = :id AND regra_peca.livro_id = :livroId
+           AND regra_peca.is_deleted = true
+           AND (regra_peca.peca_pai_id IS NULL
+                OR EXISTS (SELECT 1 FROM regra_peca AS peca_pai
+                           WHERE peca_pai.id = regra_peca.peca_pai_id AND peca_pai.is_deleted = false))
+       ),
+       restauraveis AS (
+         SELECT raiz.id FROM raiz
+         UNION
+         SELECT filha.id
+         FROM regra_peca AS filha
+         INNER JOIN restauraveis ON filha.peca_pai_id = restauraveis.id
+         INNER JOIN raiz ON filha.is_deleted = true AND filha.deleted_date = raiz.deleted_date
+       ),
+       pecas_restauradas AS (
+         UPDATE regra_peca
+         SET is_deleted = false, deleted_date = NULL
+         WHERE regra_peca.id IN (SELECT restauraveis.id FROM restauraveis)
+         RETURNING regra_peca.id
+       ),
+       ancoras_restauradas AS (
+         UPDATE regra_peca_ancora_antiga
+         SET is_deleted = false, deleted_date = NULL
+         WHERE regra_peca_ancora_antiga.regra_peca_id IN (SELECT restauraveis.id FROM restauraveis)
+           AND regra_peca_ancora_antiga.is_deleted = true
+           AND regra_peca_ancora_antiga.deleted_date = (SELECT raiz.deleted_date FROM raiz)
+         RETURNING regra_peca_ancora_antiga.id
+       )
+       SELECT COUNT(*)::int AS total FROM pecas_restauradas`,
+      { id: dto.id, livroId: dto.livroId },
+    );
+    return resultado.total;
+  }
+
+  /**
    * Exclui (soft delete) a peça e todas as descendentes, e as âncoras antigas de todas elas, numa
    * só instrução — nunca sobra filha órfã visível. Só aplica se a revisão da peça ainda for a do
-   * banco. Devolve quantas peças saíram (0 se a peça não existe ou a revisão está defasada).
+   * banco. Devolve quantas peças saíram (0 se a peça não existe ou a revisão está defasada). A data da
+   * exclusão é `statement_timestamp()`: igual em todas as linhas do comando e diferente entre
+   * comandos, mesmo numa só transação — é o que `restaurarPeca` usa para saber o que saiu junto.
    */
   async removerPeca(dto: RegraPecaRemoverDto): Promise<number> {
     const [resultado] = await this.executarConsulta<{ total: number }>(
@@ -208,13 +270,13 @@ export class RegraPecaRepository extends BaseRepository {
        ),
        pecas_removidas AS (
          UPDATE regra_peca
-         SET is_deleted = true, deleted_date = NOW()
+         SET is_deleted = true, deleted_date = statement_timestamp()
          WHERE regra_peca.id IN (SELECT descendentes.id FROM descendentes)
          RETURNING regra_peca.id
        ),
        ancoras_removidas AS (
          UPDATE regra_peca_ancora_antiga
-         SET is_deleted = true, deleted_date = NOW()
+         SET is_deleted = true, deleted_date = statement_timestamp()
          WHERE regra_peca_ancora_antiga.regra_peca_id IN (SELECT descendentes.id FROM descendentes)
            AND regra_peca_ancora_antiga.is_deleted = false
          RETURNING regra_peca_ancora_antiga.id

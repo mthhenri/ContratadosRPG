@@ -7461,6 +7461,277 @@ export const schemasContratosPublicos = {
         "additionalProperties": false,
         "description": "Fotografia criada e as pendências que ainda restavam (só um rascunho publica com pendência)."
     },
+    "RegraPecaDadosAlterarDto": {
+        "type": "object",
+        "properties": {
+            "codigo": {
+                "type": "string"
+            },
+            "id": {
+                "type": "number"
+            },
+            "dados": {
+                "oneOf": [
+                    {
+                        "$ref": "#/components/schemas/LivroSecaoDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroTextoDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroListaDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroTabelaDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroHabilidadeDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroClasseDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroArquetipoDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroSubclasseDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroOrigensDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroOrigemDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroTermosDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroTermoDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroEquipamentosDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroEquipamentoDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroModificacoesDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroModificacaoDadosDto"
+                    },
+                    {
+                        "type": "object",
+                        "additionalProperties": true
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroAmplificadorDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroModulosDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroNiveisAmeacaDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroFichaCriaturaDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroHabilidadeCriaturaDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroRoteiroDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroFaixasDadosDto"
+                    },
+                    {
+                        "type": "object",
+                        "additionalProperties": true
+                    },
+                    {
+                        "type": "object",
+                        "additionalProperties": true
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroAberturaDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroGenericoDadosDto"
+                    }
+                ]
+            },
+            "revisao": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "codigo",
+            "id",
+            "dados",
+            "revisao"
+        ],
+        "additionalProperties": false,
+        "description": "Altera o `dados` de uma peça do livro `codigo` (só `ADMIN`); `revisao` é a que o cliente leu."
+    },
+    "RegraPecaAlteradaDto": {
+        "type": "object",
+        "properties": {
+            "peca": {
+                "$ref": "#/components/schemas/RegraPecaRecuperadaDto"
+            }
+        },
+        "required": [
+            "peca"
+        ],
+        "additionalProperties": false
+    },
+    "RegraPecaPosicaoAlterarDto": {
+        "type": "object",
+        "properties": {
+            "codigo": {
+                "type": "string"
+            },
+            "id": {
+                "type": "number"
+            },
+            "pecaPaiId": {
+                "type": "number"
+            },
+            "indice": {
+                "type": "number"
+            },
+            "revisao": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "codigo",
+            "id",
+            "pecaPaiId",
+            "indice",
+            "revisao"
+        ],
+        "additionalProperties": false,
+        "description": "Move a peça para o pai informado, na posição `indice` entre as irmãs (0 = primeira)."
+    },
+    "RegraPecaMovidaDto": {
+        "type": "object",
+        "properties": {
+            "pecas": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/RegraPecaArvoreItemDto"
+                }
+            }
+        },
+        "required": [
+            "pecas"
+        ],
+        "additionalProperties": false,
+        "description": "A peça movida e as irmãs cuja `ordem` mudou, com a posição nova de cada uma."
+    },
+    "RegraPecaDuplicarDto": {
+        "type": "object",
+        "properties": {
+            "codigo": {
+                "type": "string"
+            },
+            "id": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "codigo",
+            "id"
+        ],
+        "additionalProperties": false
+    },
+    "RegraPecaDuplicadaDto": {
+        "type": "object",
+        "properties": {
+            "copiaId": {
+                "type": "number",
+                "description": "Id da raiz da cópia."
+            },
+            "pecas": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/RegraPecaArvoreItemDto"
+                }
+            }
+        },
+        "required": [
+            "copiaId",
+            "pecas"
+        ],
+        "additionalProperties": false,
+        "description": "A cópia (raiz e descendentes, identificadores novos, sem âncora) e as irmãs reordenadas."
+    },
+    "RegraPecaExcluirDto": {
+        "type": "object",
+        "properties": {
+            "codigo": {
+                "type": "string"
+            },
+            "id": {
+                "type": "number"
+            },
+            "revisao": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "codigo",
+            "id",
+            "revisao"
+        ],
+        "additionalProperties": false
+    },
+    "RegraPecaExcluidaDto": {
+        "type": "object",
+        "properties": {
+            "removidas": {
+                "type": "number",
+                "description": "Quantas peças saíram (a peça e as descendentes)."
+            }
+        },
+        "required": [
+            "removidas"
+        ],
+        "additionalProperties": false
+    },
+    "RegraPecaRestaurarDto": {
+        "type": "object",
+        "properties": {
+            "codigo": {
+                "type": "string"
+            },
+            "id": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "codigo",
+            "id"
+        ],
+        "additionalProperties": false
+    },
+    "RegraPecaRestauradaDto": {
+        "type": "object",
+        "properties": {
+            "pecas": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/RegraPecaArvoreItemDto"
+                }
+            }
+        },
+        "required": [
+            "pecas"
+        ],
+        "additionalProperties": false
+    },
     "LivroSecaoDadosDto": {
         "type": "object",
         "properties": {
@@ -11617,6 +11888,64 @@ export const operacoesContratosPublicos = {
         "publica": false,
         "requestSchema": "Omit",
         "responseSchema": "LivroPublicadoDto"
+    },
+    "RegraPecaController_listar": {
+        "controller": "RegraPecaController",
+        "metodo": "get",
+        "caminho": "/livros/:codigo/pecas",
+        "tag": "Livros de regras",
+        "publica": false,
+        "responseSchema": "RegraPecaArvoreItemDto[]"
+    },
+    "RegraPecaController_recuperar": {
+        "controller": "RegraPecaController",
+        "metodo": "get",
+        "caminho": "/livros/:codigo/pecas/:id",
+        "tag": "Livros de regras",
+        "publica": false,
+        "responseSchema": "RegraPecaRecuperadaDto"
+    },
+    "RegraPecaController_alterarDados": {
+        "controller": "RegraPecaController",
+        "metodo": "patch",
+        "caminho": "/livros/:codigo/pecas/:id/dados",
+        "tag": "Livros de regras",
+        "publica": false,
+        "requestSchema": "Omit",
+        "responseSchema": "RegraPecaAlteradaDto"
+    },
+    "RegraPecaController_alterarPosicao": {
+        "controller": "RegraPecaController",
+        "metodo": "patch",
+        "caminho": "/livros/:codigo/pecas/:id/posicao",
+        "tag": "Livros de regras",
+        "publica": false,
+        "requestSchema": "Omit",
+        "responseSchema": "RegraPecaMovidaDto"
+    },
+    "RegraPecaController_duplicar": {
+        "controller": "RegraPecaController",
+        "metodo": "post",
+        "caminho": "/livros/:codigo/pecas/:id/duplicacoes",
+        "tag": "Livros de regras",
+        "publica": false,
+        "responseSchema": "RegraPecaDuplicadaDto"
+    },
+    "RegraPecaController_excluir": {
+        "controller": "RegraPecaController",
+        "metodo": "delete",
+        "caminho": "/livros/:codigo/pecas/:id",
+        "tag": "Livros de regras",
+        "publica": false,
+        "responseSchema": "RegraPecaExcluidaDto"
+    },
+    "RegraPecaController_restaurar": {
+        "controller": "RegraPecaController",
+        "metodo": "post",
+        "caminho": "/livros/:codigo/pecas/:id/restauracoes",
+        "tag": "Livros de regras",
+        "publica": false,
+        "responseSchema": "RegraPecaRestauradaDto"
     },
     "PaginaCadernoController_listar": {
         "controller": "PaginaCadernoController",

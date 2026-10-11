@@ -228,3 +228,74 @@ export interface LivroPublicadoDto {
   readonly versao: LivroVersaoResumoDto;
   readonly pendencias: readonly LivroPendenciaDto[];
 }
+
+/** Troca só a `ordem` de uma irmã (sem alterar a `revisao`): ajuste de posição, não edição. */
+export interface RegraPecaOrdemInternoAlterarDto {
+  readonly id: number;
+  readonly ordem: number;
+}
+
+/** Desfaz a exclusão de uma peça e das descendentes excluídas junto com ela. */
+export interface RegraPecaRestaurarInternoDto {
+  readonly id: number;
+  /** Só restaura peça deste livro. */
+  readonly livroId: number;
+}
+
+/** Altera o `dados` de uma peça do livro `codigo` (só `ADMIN`); `revisao` é a que o cliente leu. */
+export interface RegraPecaDadosAlterarDto {
+  readonly codigo: string;
+  readonly id: number;
+  readonly dados: LivroPecaDadosPorTipo[TipoRegraPecaEnum];
+  readonly revisao: number;
+}
+
+export interface RegraPecaAlteradaDto {
+  readonly peca: RegraPecaRecuperadaDto;
+}
+
+/** Move a peça para o pai informado, na posição `indice` entre as irmãs (0 = primeira). */
+export interface RegraPecaPosicaoAlterarDto {
+  readonly codigo: string;
+  readonly id: number;
+  readonly pecaPaiId: number | null;
+  readonly indice: number;
+  readonly revisao: number;
+}
+
+/** A peça movida e as irmãs cuja `ordem` mudou, com a posição nova de cada uma. */
+export interface RegraPecaMovidaDto {
+  readonly pecas: readonly RegraPecaArvoreItemDto[];
+}
+
+export interface RegraPecaDuplicarDto {
+  readonly codigo: string;
+  readonly id: number;
+}
+
+/** A cópia (raiz e descendentes, identificadores novos, sem âncora) e as irmãs reordenadas. */
+export interface RegraPecaDuplicadaDto {
+  /** Id da raiz da cópia. */
+  readonly copiaId: number;
+  readonly pecas: readonly RegraPecaArvoreItemDto[];
+}
+
+export interface RegraPecaExcluirDto {
+  readonly codigo: string;
+  readonly id: number;
+  readonly revisao: number;
+}
+
+export interface RegraPecaExcluidaDto {
+  /** Quantas peças saíram (a peça e as descendentes). */
+  readonly removidas: number;
+}
+
+export interface RegraPecaRestaurarDto {
+  readonly codigo: string;
+  readonly id: number;
+}
+
+export interface RegraPecaRestauradaDto {
+  readonly pecas: readonly RegraPecaArvoreItemDto[];
+}

@@ -84,7 +84,7 @@ describe("RegraPecaRepository", () => {
 
     const [sql, parametros] = raw.mock.calls[0] as [string, Record<string, unknown>];
     expect(sql).toContain("WITH RECURSIVE descendentes");
-    expect(sql).toContain("UPDATE regra_peca\n         SET is_deleted = true, deleted_date = NOW()");
+    expect(sql).toContain("UPDATE regra_peca\n         SET is_deleted = true, deleted_date = statement_timestamp()");
     expect(sql).toContain("UPDATE regra_peca_ancora_antiga");
     expect(sql).not.toContain("DELETE");
     expect(parametros).toEqual({ id: 9, revisao: 4 });
@@ -107,5 +107,35 @@ describe("RegraPecaRepository", () => {
     const [sqlListar] = raw.mock.calls[1] as [string];
     expect(sqlListar).toContain("regra_peca_ancora_antiga.is_deleted = false");
     expect(sqlListar).toContain("regra_peca.is_deleted = false");
+  });
+
+  it("altera só a ordem, sem tocar a revisão", async () => {
+    const raw = vi.fn().mockResolvedValue({ rowCount: 1, rows: [] });
+    const repositorio = new RegraPecaRepository({ raw } as unknown as Knex);
+
+    await repositorio.alterarOrdem({ id: 9, ordem: 3 });
+
+    const [sql, parametros] = raw.mock.calls[0] as [string, Record<string, unknown>];
+    expect(sql).toContain("SET ordem = :ordem");
+    expect(sql).not.toContain("revisao");
+    expect(sql).toContain("regra_peca.is_deleted = false");
+    expect(parametros).toEqual({ id: 9, ordem: 3 });
+  });
+
+  it("restaura a peça, as descendentes e as âncoras da mesma exclusão", async () => {
+    const raw = vi.fn().mockResolvedValue({ rows: [{ total: 2 }] });
+    const repositorio = new RegraPecaRepository({ raw } as unknown as Knex);
+
+    const restauradas = await repositorio.restaurarPeca({ id: 9, livroId: 1 });
+
+    const [sql, parametros] = raw.mock.calls[0] as [string, Record<string, unknown>];
+    expect(sql).toContain("WITH RECURSIVE raiz");
+    expect(sql).toContain("filha.deleted_date = raiz.deleted_date");
+    expect(sql).toContain("SET is_deleted = false, deleted_date = NULL");
+    expect(sql).toContain("UPDATE regra_peca_ancora_antiga");
+    expect(sql).not.toContain("DELETE");
+    expect(sql).toContain("regra_peca.livro_id = :livroId");
+    expect(parametros).toEqual({ id: 9, livroId: 1 });
+    expect(restauradas).toBe(2);
   });
 });

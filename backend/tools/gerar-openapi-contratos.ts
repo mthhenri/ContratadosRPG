@@ -42,6 +42,7 @@ const TAGS_POR_CONTROLLER: Readonly<Record<string, string>> = {
     DocumentoController: "Documentos",
     PatchnoteController: "Patchnotes",
     LivroController: "Livros de regras",
+    RegraPecaController: "Livros de regras",
 };
 
 function listarArquivosTypescript(diretorio: string): string[] {

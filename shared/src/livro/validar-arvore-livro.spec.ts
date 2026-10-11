@@ -198,3 +198,11 @@ describe("tabela de aninhamento", () => {
     expect(LIVRO_RAIZ_PERMITIDA).not.toContain(Tipo.EQUIPAMENTO);
   });
 });
+
+describe("validarArvoreLivro — dados que não são objeto", () => {
+  it.each([null, undefined, "x", 7, []])("não lança com dados %j e acusa DADOS_INVALIDOS", (dados) => {
+    const peca = { identificador: "00000000-0000-4000-8000-000000000001", ancora: null, tipo: Tipo.PARAGRAFO, ordem: 0, dados: dados as never, filhos: [] };
+    const pendencias = validarArvoreLivro({ pecas: [peca], modo: "trabalho" });
+    expect(pendencias.map((pendencia) => pendencia.codigo)).toContain(Codigo.DADOS_INVALIDOS);
+  });
+});

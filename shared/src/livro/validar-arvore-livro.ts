@@ -156,7 +156,8 @@ function coletarLinks(valor: unknown, destino: Record<string, unknown>[]): void 
 }
 
 function rotuloDaPeca(peca: LivroPecaDto): string {
-  const dados = peca.dados as unknown as Record<string, unknown>;
+  const dados: unknown = peca.dados;
+  if (!ehObjeto(dados)) return peca.tipo;
   const nome = dados["titulo"] ?? dados["nome"];
   return typeof nome === "string" && nome.trim() ? nome : peca.tipo;
 }

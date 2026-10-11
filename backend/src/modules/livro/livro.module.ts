@@ -1,5 +1,7 @@
 import { Module } from "@nestjs/common";
 import { LivroController } from "./livro.controller";
+import { RegraPecaController } from "./regra-peca.controller";
+import { RegraPecaService } from "./regra-peca.service";
 import { LivroRepository } from "./livro.repository";
 import { LivroService } from "./livro.service";
 import { LivroVersaoRepository } from "./livro-versao.repository";
@@ -10,8 +12,8 @@ import { RegraPecaRepository } from "./regra-peca.repository";
  * fotografias (`livro_versao`), publicação e leitura por papel.
  */
 @Module({
-  controllers: [LivroController],
-  providers: [LivroRepository, RegraPecaRepository, LivroVersaoRepository, LivroService],
-  exports: [LivroRepository, RegraPecaRepository, LivroVersaoRepository, LivroService],
+  controllers: [LivroController, RegraPecaController],
+  providers: [LivroRepository, RegraPecaRepository, LivroVersaoRepository, LivroService, RegraPecaService],
+  exports: [LivroRepository, RegraPecaRepository, LivroVersaoRepository, LivroService, RegraPecaService],
 })
 export class LivroModule {}

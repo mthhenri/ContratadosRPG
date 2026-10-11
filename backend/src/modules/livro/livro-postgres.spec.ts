@@ -149,6 +149,48 @@ describe.runIf(process.env.TESTAR_POSTGRES_LIVRO === "1")("livro no PostgreSQL l
             await expect(pecas.criarPeca(peca(livro.id, 1))).rejects.toThrow("uix_regra_peca_identificador");
         }));
 
+    it("restaura a subárvore e as âncoras; recusa quando o pai está excluído ou a âncora foi tomada", () =>
+        emTransacao(async () => {
+            const livro = await livros.criarLivro({ codigo: "teste-restaurar", titulo: "T", ordem: 99 });
+            const raiz = await pecas.criarPeca(peca(livro.id, 1, { tipo: TipoRegraPecaEnum.SECAO, dados: secao, ancora: "cap" }));
+            const filha = await pecas.criarPeca(peca(livro.id, 2, { pecaPaiId: raiz!.id }));
+            await pecas.criarAncoraAntiga({ regraPecaId: raiz!.id, ancora: "cap-velho" });
+
+            expect(await pecas.removerPeca({ id: raiz!.id, revisao: 1 })).toBe(2);
+            expect(await pecas.listarArvore({ livroId: livro.id })).toEqual([]);
+            expect(await pecas.restaurarPeca({ id: filha!.id, livroId: livro.id })).toBe(0); // o pai continua excluído
+            expect(await pecas.restaurarPeca({ id: raiz!.id, livroId: livro.id + 1 })).toBe(0); // outro livro
+            expect(await pecas.restaurarPeca({ id: raiz!.id, livroId: livro.id })).toBe(2);
+            expect((await pecas.listarArvore({ livroId: livro.id })).map((item) => item.id)).toEqual([raiz!.id, filha!.id]);
+            expect((await pecas.listarAncorasAntigas({ livroId: livro.id })).map((item) => item.ancora)).toEqual(["cap-velho"]);
+            expect(await pecas.restaurarPeca({ id: raiz!.id, livroId: livro.id })).toBe(0); // já ativa
+
+            await pecas.alterarOrdem({ id: filha!.id, ordem: 7 });
+            const recuperada = await pecas.recuperarPeca({ id: filha!.id });
+            expect([recuperada!.ordem, recuperada!.revisao]).toEqual([7, 1]);
+        }));
+
+    it("restaurar o pai não traz de volta a filha excluída antes (mesmo na mesma transação)", () =>
+        emTransacao(async () => {
+            const livro = await livros.criarLivro({ codigo: "teste-restaurar-antes", titulo: "T", ordem: 99 });
+            const raiz = await pecas.criarPeca(peca(livro.id, 1, { tipo: TipoRegraPecaEnum.SECAO, dados: secao }));
+            const filha = await pecas.criarPeca(peca(livro.id, 2, { pecaPaiId: raiz!.id }));
+            await pecas.removerPeca({ id: filha!.id, revisao: 1 });
+            await pecas.removerPeca({ id: raiz!.id, revisao: 1 });
+            expect(await pecas.restaurarPeca({ id: raiz!.id, livroId: livro.id })).toBe(1);
+            expect((await pecas.listarArvore({ livroId: livro.id })).map((item) => item.id)).toEqual([raiz!.id]);
+        }));
+
+    it("não restaura quando outra peça ativa já usa a âncora", async () => {
+        await emTransacao(async () => {
+            const livro = await livros.criarLivro({ codigo: "teste-restaurar-ancora", titulo: "T", ordem: 99 });
+            const raiz = await pecas.criarPeca(peca(livro.id, 1, { tipo: TipoRegraPecaEnum.SECAO, dados: secao, ancora: "cap" }));
+            await pecas.removerPeca({ id: raiz!.id, revisao: 1 });
+            await pecas.criarPeca(peca(livro.id, 2, { tipo: TipoRegraPecaEnum.SECAO, dados: secao, ancora: "cap" }));
+            await expect(pecas.restaurarPeca({ id: raiz!.id, livroId: livro.id })).rejects.toThrow("uix_regra_peca_livro_ancora_ativo");
+        });
+    });
+
     it("recusa código de livro repetido ou fora do padrão", async () => {
         await emTransacao(async () => {
             await livros.criarLivro({ codigo: "teste-repetido", titulo: "A", ordem: 1 });

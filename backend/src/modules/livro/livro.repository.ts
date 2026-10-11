@@ -50,4 +50,15 @@ export class LivroRepository extends BaseRepository {
     );
     return livroCriado;
   }
+
+  /**
+   * Trava a linha do livro até o fim da transação, para serializar as edições de estrutura (mover,
+   * duplicar, restaurar): quem chega depois espera e lê a árvore já confirmada.
+   */
+  async bloquearLivro(dto: { readonly livroId: number }): Promise<void> {
+    await this.executarConsulta(
+      `SELECT livro.id FROM livro WHERE livro.id = :livroId AND livro.is_deleted = false FOR UPDATE`,
+      { livroId: dto.livroId },
+    );
+  }
 }
