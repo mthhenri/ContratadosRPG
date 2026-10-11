@@ -1,5 +1,28 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-10 — RV-05: espaço para nomes e ícones das abas de arquétipo
+
+Corrigido P-118 com distribuição no consumidor de Abas/Aba: largura mínima
+intrínseca e quebra entre alvos, conservando fonte, ícones, estados e API dos
+primitivos. Em 360×800 os três grupos usam duas linhas (2+1), com altura de
+44px; a container query usa os valores do handoff e cobre também leitores
+estreitos. Desktop conserva as abas em linha. Sem alteração de regra, catálogo,
+normalizador ou JSON; `usabilidade-02-consulta-arquetipos` continua no backlog.
+
+Análogo desktop do próprio leitor inspecionado antes da edição; comparação
+pessoal na SPA pela skill verify em 1920×1080, 1366×768, 960×1080 e 360×800,
+página/painel normal/maximizado quando disponível. Nove seleções por superfície,
+99 medições sem overflow e fonte 10px preservada. Teclado/foco, roving tabindex
+e busca por “Classificação de Campo” revelando Acadêmico oculto conferidos.
+Frontend: 88 testes de normalização e 3219 Angular passaram; build/fidelidade
+passaram, com aviso preexistente do bundle; lint dos três workspaces sem erros
+e com avisos existentes. Diff revisado com convencoes-check e gates de organização
+normal/staged no fecho. Alterações paralelas de outras tarefas preservadas.
+
+Spec e anexos em done; P-118 retirado de PROBLEMS, CONTEXT e contrato visual
+alinhados. Próxima correção: RV-06, notas e formações. RV-06…10 e P-124 seguem
+abertos. [Evidências, cobertura e limites](../specs/done/regras-visual-05-abas-arquetipos-mobile/verificacao.md).
+
 ## 2026-10-10 — M11-02: tabelas do livro e repositórios
 
 Migration `0036` (`livro`, `tipo_regra_peca` com os 30 tipos, `regra_peca`, `regra_peca_ancora_antiga`,

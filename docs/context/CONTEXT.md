@@ -2181,7 +2181,7 @@ incluindo todos os ajustes avulsos de pós-milestone.
 | `revisao-formatacao-pdf-regras` | regras | revisão substancial da apresentação e aprovação visual do autor; Sistema suspenso (P-108) |
 | `regras-glossario` | regras | esboço independente do M10: termos marcados com cartão; pontos a fechar com o autor |
 | `m11-03`…`m11-10` | regras | Oficina das Regras: migration, importador, publicação, comparador, editor, mudanças e troca da fonte da verdade; ver [guarda-chuva](../specs/backlog/m11-oficina-regras.spec.md) |
-| `regras-visual-05`…`10` | regras | seis correções restantes após bateria visual; abas, textos e contraste; [mapa e prioridades](../specs/done/regras-auditoria-visual-completa/auditoria.md) |
+| `regras-visual-06`…`10` | regras | cinco correções restantes após bateria visual; textos e contraste; [mapa e prioridades](../specs/done/regras-auditoria-visual-completa/auditoria.md) |
 
 Spec avulsa ativa: `montador-rolagem-experimento`, mantida em experimentação pelo autor.
 `icones-recursos-sistema` arquivada em `done/`; sua continuação
@@ -3334,10 +3334,16 @@ Alcances usam cartões com condição/tipo e conteúdo associados. Fonte, limite
 vazios e fallback preservados; duas bases, página/painel normal/maximizado nos
 quatro viewports e busca conferidos;
 [evidências e limites](../specs/done/regras-visual-04-grades-semanticas/verificacao.md).
-Correções `regras-visual-05`…`10` em backlog, `P-118`…`P-123` abertos.
+`regras-visual-05` concluída em 10/10: abas de arquétipo preservam largura
+intrínseca de nome/ícone e quebram entre alvos quando necessário, com altura
+canônica de 44px no contêiner mobile. Tipografia e primitivos preservados;
+nove seleções, página/painel normal/maximizado nos quatro viewports, foco,
+teclado e busca em aba oculta conferidos;
+[evidências e limites](../specs/done/regras-visual-05-abas-arquetipos-mobile/verificacao.md).
+Correções `regras-visual-06`…`10` em backlog, `P-119`…`P-123` abertos.
 P-124 registra contraste preexistente das marcas não selecionadas de pesquisa
 sobre os fundos semânticos de ameaça; permanece aberto.
-Há ainda abas/notas/passivas degradadas, tachado literal, contraste na base clara
+Há ainda notas/passivas degradadas, tachado literal, contraste na base clara
 e acabamento de busca.
 Páginas percorridas nos viewports extremos; painel e bases por recortes nos quatro viewports.
 Esta auditoria encerra a investigação documental, não certifica o leitor como corrigido.

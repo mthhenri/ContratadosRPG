@@ -1,7 +1,7 @@
 # Dar espaço aos nomes e ícones das abas mobile
 
-> Task de correção RV-05 / P-118; prioridade média. Criada após a bateria visual de 09/10/2026, por pedido do autor. **Backlog: não implementada.**
-> Evidência, cobertura e limites: [auditoria do leitor](../done/regras-auditoria-visual-completa/auditoria.md).
+> Task de correção RV-05 / P-118; prioridade média. Criada após a bateria visual de 09/10/2026, por pedido do autor. **Concluída em 10/10/2026.**
+> Evidência inicial: [auditoria do leitor](regras-auditoria-visual-completa/auditoria.md). Correção: [verificação](regras-visual-05-abas-arquetipos-mobile/verificacao.md).
 
 ## Problema e reprodução
 

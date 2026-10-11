@@ -37,14 +37,6 @@
 - **Correção:** Preservar contraste do destaque não selecionado nos fundos semânticos sem alterar a identidade de NA; fora do ajuste de largura RV-03.
 - **Desde:** identificado em 10/10/2026 durante RV-03; [evidências e limites](../specs/done/regras-visual-03-rotulos-ameaca-tabelas/verificacao.md).
 
-### P-118 — Dar espaço aos nomes e ícones das abas mobile · `ABERTO` · frontend/regras
-
-- **Sintoma:** Sistema → Combatente em 360×800: três abas com aproximadamente 83px cada e fonte de 10px. Nome de Mercenário e ícones encostam nas fronteiras entre abas; o problema também aparece em Especialista e Suporte. Seleção por teclado funciona, mas o texto/ícone ficam excessivamente comprimidos.
-- **Causa:** Nome e ícone comprimidos em abas de ≈83×44px e fonte de 10px; solução responsiva ainda não definida.
-- **Contorno:** Nome completo permanece no painel selecionado; seleção por teclado funciona.
-- **Correção:** [regras-visual-05-abas-arquetipos-mobile](../specs/backlog/regras-visual-05-abas-arquetipos-mobile.spec.md).
-- **Desde:** observado em 09/10/2026; [RV-05, cobertura e evidências](../specs/done/regras-auditoria-visual-completa/auditoria.md). Nenhuma correção aplicada nesta auditoria.
-
 ### P-119 — Estruturar notas e bônus apresentados como texto contínuo · `ABERTO` · frontend/regras
 
 - **Sintoma:** Sistema → Origem → Bombeiro/Alpinista: os dois bônus da Formação aparecem na mesma frase sem delimitador. A nota Amaldiçoado pelo Passado apresenta título, descrição, três itens ▢ e ressalva em um parágrafo contínuo. A nota de Armazenamento junta a ausência de peso e o custo de 300$.

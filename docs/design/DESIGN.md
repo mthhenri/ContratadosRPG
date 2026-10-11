@@ -278,7 +278,9 @@ Essa decisão prevalece sobre o uso anterior do logo oficial no exemplão.
 
 Dossiês/origens usam `app-cartao`, Vida/Energia/Defesa usam `app-stat` com valor
 projetado e ícone de recurso. Arquétipos usam `app-abas` com ícone, habilidade inicial,
-habilidades e melhorias gerais. Habilidades e equipamentos formam grades densas de
+habilidades e melhorias gerais. As abas conservam a largura intrínseca de nome e
+ícone e quebram entre alvos em contêiner estreito, mantendo a altura canônica de
+toque no mobile. Habilidades e equipamentos formam grades densas de
 duas colunas que recolhem a uma no celular. Danos Uma/Duas Mãos têm chips distintos;
 modificações conservam ■□ e Bloqueia. Cinco módulos permanecem V → I, com tooltip
 explícito de Energia Máxima; identidade/atributos/roteiro e ficha do Guia preservam

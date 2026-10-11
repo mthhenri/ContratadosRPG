@@ -57,7 +57,7 @@ A leitura contínua cobriu os estados padrão Lutador, Engenheiro e Paramédico;
 | RV-02 / P-115 | alta | Conter os bônus longos dos cartões | [regras-visual-02-bonus-longos](../../done/regras-visual-02-bonus-longos.spec.md) |
 | RV-03 / P-116 | alta | Conter rótulos de ameaça nas tabelas mobile | [regras-visual-03-rotulos-ameaca-tabelas](../regras-visual-03-rotulos-ameaca-tabelas.spec.md) |
 | RV-04 / P-117 | alta | Preservar a hierarquia das grades de referência | [regras-visual-04-grades-semanticas](../regras-visual-04-grades-semanticas.spec.md) |
-| RV-05 / P-118 | média | Dar espaço aos nomes e ícones das abas mobile | [regras-visual-05-abas-arquetipos-mobile](../../backlog/regras-visual-05-abas-arquetipos-mobile.spec.md) |
+| RV-05 / P-118 | média | Dar espaço aos nomes e ícones das abas mobile | [regras-visual-05-abas-arquetipos-mobile](../regras-visual-05-abas-arquetipos-mobile.spec.md) |
 | RV-06 / P-119 | média | Estruturar notas e bônus apresentados como texto contínuo | [regras-visual-06-notas-e-formacoes](../../backlog/regras-visual-06-notas-e-formacoes.spec.md) |
 | RV-07 / P-120 | média | Renderizar o tachado do Markdown no leitor | [regras-visual-07-tachado-inline](../../backlog/regras-visual-07-tachado-inline.spec.md) |
 | RV-08 / P-121 | média | Uniformizar a apresentação das habilidades passivas de NPCs | [regras-visual-08-habilidades-passivas-npcs](../../backlog/regras-visual-08-habilidades-passivas-npcs.spec.md) |

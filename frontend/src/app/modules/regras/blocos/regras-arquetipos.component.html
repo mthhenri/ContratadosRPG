@@ -1,9 +1,14 @@
 <div class="regras-arquetipos">
     <h3 class="regras-arquetipos__titulo">Arquétipos · {{ bloco().classe }}</h3>
-    <app-abas [rotulo]="'Arquétipos de ' + bloco().classe" (navegou)="selecionar($event)">
+    <app-abas
+        class="regras-arquetipos__abas"
+        [rotulo]="'Arquétipos de ' + bloco().classe"
+        (navegou)="selecionar($event)"
+    >
         @for (arquetipo of bloco().arquetipos; track arquetipo.nome) {
             <button
                 app-aba
+                class="regras-arquetipos__aba"
                 type="button"
                 [valor]="arquetipo.nome"
                 [ativa]="ativo() === arquetipo.nome"
