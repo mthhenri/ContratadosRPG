@@ -6,6 +6,7 @@ import type {
   LivroVersaoRecuperadaDto,
   LivroVersaoRecuperarDto,
   LivroVersaoResumoDto,
+  LivroVersoesInternoRemoverDto,
   LivroVersoesListarDto,
 } from "@contratados-rpg/shared/dtos/livro";
 import { BaseRepository } from "../../core/base/base.repository";
@@ -107,6 +108,16 @@ export class LivroVersaoRepository extends BaseRepository {
        ${this.juncaoSituacao()}
        WHERE livro_versao.livro_id = :livroId AND livro_versao.is_deleted = false
        ORDER BY livro_versao.publicacao_data DESC, livro_versao.id DESC`,
+      { livroId: dto.livroId },
+    );
+  }
+
+  /** Soft delete de todas as fotografias do livro (só o `--refazer` da importação, em dev). */
+  async removerVersoes(dto: LivroVersoesInternoRemoverDto): Promise<number> {
+    return this.executarComando(
+      `UPDATE livro_versao
+       SET is_deleted = true, deleted_date = NOW()
+       WHERE livro_versao.livro_id = :livroId AND livro_versao.is_deleted = false`,
       { livroId: dto.livroId },
     );
   }

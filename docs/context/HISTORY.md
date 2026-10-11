@@ -1,5 +1,25 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-10 — M11-03: importador dos livros de regras para o banco
+
+Conversor puro `converterRegrasEmPecas` (backend, `livro/importador/`) lê a saída do normalizador
+existente e produz a árvore de peças com `identificador` por peça, links internos resolvidos e as
+âncoras de hoje preservadas; `projetarPecasEmRegras` faz o caminho inverso. `importarLivros` valida os
+dois livros antes de abrir a transação e grava ambos em uma só (livro, `regra_peca`, 1ª `livro_versao`
+`PUBLICADA`); aborta se o livro já tem peças, e `--refazer` exige o guard do reset-dev e descarta
+também as fotografias antigas. Diagnóstico com o autor: 9 grades (3 reconhecidas, 6 genéricas mantidas)
+e 4 tabelas em pares — as "11 grades" da umbrella não se reproduzem; selo da capa em `ABERTURA.selo`;
+"Contratados" fixo no leitor; nenhuma versão anterior.
+
+Verificado: ida e volta idêntica ao `sistema.json`/`guia.json` nos dois livros (com teste negativo);
+importação real dos dois livros no Postgres local em transação revertida (sem órfã, identificadores e
+âncoras únicos, cópia de trabalho reconstrói a fotografia); backend 1025, shared 1172, `test:regras`
+88, lint sem erros. Revisão independente: 7 achados corrigidos (bloco genérico com filhos perdia
+conteúdo, dois livros em transações separadas, `--refazer` sem guard e sem descartar fotografias, DTOs
+no backend, descarte da ficha sem conferir igualdade, teste de Postgres que pulava, `--simular` sem
+validar). Não feito: rodar o comando no banco de dev do autor (precisa de `--usuario`) e executar a
+partir do `dist`.
+
 ## 2026-10-10 — RV-05: espaço para nomes e ícones das abas de arquétipo
 
 Corrigido P-118 com distribuição no consumidor de Abas/Aba: largura mínima

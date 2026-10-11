@@ -76,6 +76,7 @@ describe("LivroVersaoRepository", () => {
       "listarVersoes",
       "recuperarVersao",
       "recuperarVersaoAtual",
+      "removerVersoes",
     ]);
   });
 });

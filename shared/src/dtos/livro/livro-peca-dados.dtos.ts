@@ -254,6 +254,8 @@ export type LivroGradeDadosDto =
 export interface LivroAberturaDadosDto {
   readonly titulo: string;
   readonly trechos: readonly LivroTrechoDto[];
+  /** Selo de versão da capa (ex.: "VERSÃO 4.1.4"); só os livros que o exibem o têm. */
+  readonly selo?: string;
 }
 
 /** Reserva do importador: conteúdo que não casou com nenhum tipo, sem perder o texto. */

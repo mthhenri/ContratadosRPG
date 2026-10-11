@@ -161,3 +161,26 @@ export interface LivroVersaoInternoCriarDto {
   readonly usuarioId: number;
   readonly nota: string | null;
 }
+
+/** Importação única de um livro (`regras:importar`): grava a cópia de trabalho e a 1ª fotografia. */
+export interface LivroInternoImportarDto {
+  readonly conteudo: LivroVersaoConteudoDto;
+  /** Posição do livro na lista de livros. */
+  readonly ordemDoLivro: number;
+  readonly usuarioId: number;
+  /** Só em desenvolvimento: descarta as peças e as fotografias atuais e importa de novo. */
+  readonly refazer: boolean;
+}
+
+export interface LivroImportadoDto {
+  readonly livroId: number;
+  readonly codigo: string;
+  readonly numero: string;
+  readonly pecas: number;
+  readonly versaoId: number;
+}
+
+/** Descarta (soft delete) todas as fotografias de um livro; só a importação em dev usa. */
+export interface LivroVersoesInternoRemoverDto {
+  readonly livroId: number;
+}

@@ -57,3 +57,19 @@ sem implementar nada além da primeira `PUBLICADA` de cada livro); `.docx`.
   fica aberta.
 - **Identificadores gerados na importação e perdidos.** O banco é a única fonte deles; fazer
   backup/exportar a fotografia antes de qualquer reimportação em ambiente real.
+
+## Resultado (10/10/2026)
+
+- **Onde mora o conversor:** `backend/src/modules/livro/importador/`. Lê o normalizador existente por
+  `import()` nativo (`ler-fontes-regras.ts`), sem duplicar o parser; `converterRegrasEmPecas` é puro.
+  `projetarPecasEmRegras` faz o caminho inverso (peças → formato do leitor) e sustenta a prova de ida e
+  volta; a `m11-04` o reutiliza como ponte para o leitor atual.
+- **Comando:** `npm run regras:importar --workspace=backend -- --usuario=<id> [--simular] [--refazer]`.
+  Valida os dois livros antes de abrir a transação e grava ambos numa só. `--refazer` exige o guard do
+  `db:reset:dev` e também descarta as fotografias anteriores.
+- **Diagnóstico:** [`diagnostico.md`](m11-03-importador-livros/diagnostico.md), com as quatro decisões do
+  autor. Contrato ajustado: `LivroAberturaDadosDto.selo?`.
+- **Ida e volta:** `importador.spec.ts`, com a lista de diferenças aceitas no próprio teste e no
+  diagnóstico; a revisão independente confirmou que a redução não esconde perda além delas.
+- **Limite:** o comando não foi executado no banco de desenvolvimento do autor (exige `--usuario`);
+  a importação real foi exercitada só em transação revertida (`TESTAR_POSTGRES_LIVRO=1`).
