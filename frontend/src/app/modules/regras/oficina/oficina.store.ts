@@ -12,6 +12,7 @@ import { NotificacaoService } from "../../../shared/ui/notificacao/notificacao.s
 import type { RegrasDocumento } from "../regras.model";
 import { OficinaApi } from "./oficina-api.service";
 import { definirNoCaminho, nomeDoCaminho, type CaminhoDeDados } from "./oficina-dados";
+import { contarColunas, type Matriz } from "./oficina-matriz";
 import {
     campoInicialDe, construirLinhasSumario, destinoPorTeclado, NOME_DO_TIPO, opcoesDeInsercao, resolverDestino,
     type LinhaSumario, type ResultadoDoDestino, type TeclaDeEstrutura,
@@ -67,7 +68,8 @@ const TIPOS_COM_TELA: readonly TipoRegraPecaEnum[] = [
     TipoRegraPecaEnum.FORMULA, TipoRegraPecaEnum.HABILIDADE, TipoRegraPecaEnum.CLASSE, TipoRegraPecaEnum.SUBCLASSE,
     TipoRegraPecaEnum.EQUIPAMENTOS, TipoRegraPecaEnum.MODIFICACOES, TipoRegraPecaEnum.EQUIPAMENTO, TipoRegraPecaEnum.MODIFICACAO, TipoRegraPecaEnum.AMPLIFICADOR,
     TipoRegraPecaEnum.ORIGEM, TipoRegraPecaEnum.TERMO, TipoRegraPecaEnum.FICHA_CRIATURA,
-    TipoRegraPecaEnum.HABILIDADE_CRIATURA, TipoRegraPecaEnum.ROTEIRO,
+    TipoRegraPecaEnum.HABILIDADE_CRIATURA, TipoRegraPecaEnum.ROTEIRO, TipoRegraPecaEnum.TABELA,
+    TipoRegraPecaEnum.GRADE, TipoRegraPecaEnum.FAIXAS, TipoRegraPecaEnum.NIVEIS_AMEACA,
 ];
 
 /** Irmãs que aparecem lado a lado na tela: a inicial e as melhoradas de um arquétipo são grupos à parte. */
@@ -321,6 +323,23 @@ export class OficinaStore {
         if (!item) return;
         this.alterarDados(identificador, definirNoCaminho(item.dados, caminho, valor), {
             rotulo, chave: `${identificador}:${nomeDoCaminho(caminho)}${fundir ? "" : ":" + Date.now()}`,
+        });
+        void this.salvarAgora(item.id);
+    }
+
+    /**
+     * Transforma a tabela da peça (`cabecalho` e `linhas`) de uma vez — adicionar e remover linha ou coluna —, com
+     * salvamento na hora e um passo de Desfazer próprio.
+     */
+    alterarMatriz(identificador: string, transformar: (matriz: Matriz) => Matriz, rotulo: string): void {
+        const item = this.item(identificador);
+        if (!item) return;
+        const dados = item.dados as unknown as Partial<Matriz>;
+        const nova = transformar({ cabecalho: dados.cabecalho ?? [], linhas: dados.linhas ?? [] });
+        // A grade genérica guarda a largura do desenho em `colunas`: acompanha as colunas da tabela.
+        const largura = "colunas" in (item.dados as object) ? { colunas: contarColunas(nova) } : {};
+        this.alterarDados(identificador, { ...item.dados, ...largura, cabecalho: nova.cabecalho, linhas: nova.linhas } as typeof item.dados, {
+            rotulo, chave: `${identificador}:matriz:${Date.now()}`,
         });
         void this.salvarAgora(item.id);
     }

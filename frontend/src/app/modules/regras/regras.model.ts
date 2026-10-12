@@ -109,6 +109,7 @@ export interface RegrasTermos extends RegrasFonteTabela {
 /** Tabela de layout sem assinatura conhecida: células na ordem da fonte, uma por caixa. */
 export interface RegrasGrade extends RegrasFonteTabela {
     readonly tipo: "grade";
+    readonly peca?: string;
     readonly colunas: number;
     /** Projeção explícita; cabeçalho e linhas continuam sendo o registro integral da fonte. */
     readonly referencia?: {
@@ -133,6 +134,7 @@ export interface RegrasAbertura {
 /** Tabela de uma linha do Deslocamento: cada faixa traz a condição e o valor em destaque. */
 export interface RegrasFaixas extends RegrasFonteTabela {
     readonly tipo: "faixas";
+    readonly peca?: string;
     readonly itens: readonly { readonly rotulo: string; readonly valor: string }[];
 }
 
@@ -229,6 +231,7 @@ export interface RegrasIdentidade extends RegrasFonteTabela {
 
 export interface RegrasNiveisAmeaca extends RegrasFonteTabela {
     readonly tipo: "niveis-ameaca";
+    readonly peca?: string;
     readonly niveis: readonly { readonly nivel: number;
         readonly referenciaImagem: string; readonly descricao: readonly RegrasTrecho[] }[];
 }

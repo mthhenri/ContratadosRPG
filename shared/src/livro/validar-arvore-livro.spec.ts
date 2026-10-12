@@ -330,6 +330,30 @@ describe("validarArvoreLivro — criatura e roteiro (m11-08)", () => {
   });
 });
 
+describe("validarArvoreLivro — faixas, níveis e grades (m11-08)", () => {
+  const mensagens = (pecas: readonly LivroPecaDto[]) => validar(pecas).map((item) => item.mensagem);
+
+  it("aceita faixas, níveis e grade de cartões completos", () => {
+    expect(validar([
+      peca(Tipo.FAIXAS, "f", { itens: [{ rotulo: "Normal", valor: "5m" }] }),
+      peca(Tipo.NIVEIS_AMEACA, "n", { niveis: [{ nivel: 1, referenciaImagem: "", descricao: [texto("x")] }] }),
+      peca(Tipo.GRADE, "g", { apresentacao: "cartoes", colunas: 2, itens: [{ rotulo: "A", conteudo: [texto("x")] }] }),
+    ])).toEqual([]);
+  });
+
+  it("pede condição e valor da faixa, descrição do nível e título e conteúdo do cartão", () => {
+    expect(mensagens([peca(Tipo.FAIXAS, "f", { itens: [{ rotulo: "", valor: "5m" }] })])).toEqual(["Há uma faixa sem condição ou sem valor."]);
+    expect(mensagens([peca(Tipo.NIVEIS_AMEACA, "n", { niveis: [{ nivel: 1, referenciaImagem: "", descricao: [] }] })]))
+      .toEqual(["Há um nível de ameaça sem descrição."]);
+    expect(mensagens([peca(Tipo.GRADE, "g", { apresentacao: "saude", colunas: 2, itens: [{ rotulo: "A", conteudo: [] }] })]))
+      .toEqual(["Há um cartão da grade sem título ou sem conteúdo."]);
+  });
+
+  it("a grade genérica pode ter células vazias", () => {
+    expect(validar([peca(Tipo.GRADE, "g", { apresentacao: "generica", colunas: 2, cabecalho: [[], []], linhas: [[[], []]] })])).toEqual([]);
+  });
+});
+
 describe("tabela de aninhamento", () => {
   it("cobre todos os tipos de peça", () => {
     expect(Object.keys(LIVRO_FILHOS_PERMITIDOS).sort()).toEqual(Object.values(Tipo).sort());

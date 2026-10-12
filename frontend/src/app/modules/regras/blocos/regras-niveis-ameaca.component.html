@@ -5,6 +5,11 @@
             <p>
                 <app-regras-inline
                     [trechos]="nivel.descricao"
+                    [peca]="bloco().peca"
+                    [campo]="'niveis.' + $index + '.descricao'"
+                    [caminho]="['niveis', $index, 'descricao']"
+                    [rotuloEdicao]="'Descrição do nível ' + nivel.nivel"
+                    dica="Descrição"
                     [documento]="documento()"
                     (navegarAncora)="navegarAncora.emit($event)"
                 />

@@ -10,28 +10,56 @@
         @if (tabela().cabecalho.length) {
             <thead>
                 <tr>
-                    @for (celula of tabela().cabecalho; track $index) {
+                    @for (celula of tabela().cabecalho; track $index; let coluna = $index) {
                         <th scope="col">
                             <app-regras-inline
                                 [trechos]="celula"
+                                [peca]="bloco().peca"
+                                [campo]="'cabecalho.' + coluna"
+                                [caminho]="['cabecalho', coluna]"
+                                [rotuloEdicao]="'Cabeçalho da coluna ' + (coluna + 1)"
+                                dica="Coluna"
                                 [documento]="documento()"
                                 (navegarAncora)="navegarAncora.emit($event)"
                             />
                         </th>
                     }
+                    @if (selecionada()) {
+                        <th scope="col" class="regras-tabela__acao"></th>
+                    }
                 </tr>
             </thead>
         }
         <tbody>
-            @for (linha of tabela().linhas; track $index) {
+            @for (linha of tabela().linhas; track $index; let indiceLinha = $index) {
                 <tr>
-                    @for (celula of linha; track $index) {
+                    @for (celula of linha; track $index; let coluna = $index) {
                         <td>
                             <app-regras-inline
                                 [trechos]="celula"
+                                [peca]="bloco().peca"
+                                [campo]="'linhas.' + indiceLinha + '.' + coluna"
+                                [caminho]="['linhas', indiceLinha, coluna]"
+                                [rotuloEdicao]="'Linha ' + (indiceLinha + 1) + ', coluna ' + (coluna + 1)"
+                                dica="—"
                                 [documento]="documento()"
                                 (navegarAncora)="navegarAncora.emit($event)"
                             />
+                        </td>
+                    }
+                    @if (selecionada()) {
+                        <td class="regras-tabela__acao">
+                            <button
+                                app-botao-icone
+                                tamanho="compacto"
+                                variante="perigo"
+                                type="button"
+                                [attr.aria-label]="'Remover linha ' + (indiceLinha + 1)"
+                                appTooltip="Remover linha"
+                                (click)="removerLinha(indiceLinha)"
+                            >
+                                <app-icone nome="excluir" />
+                            </button>
                         </td>
                     }
                 </tr>
@@ -39,3 +67,4 @@
         </tbody>
     </table>
 </div>
+<app-oficina-matriz-controles [peca]="bloco().peca" />

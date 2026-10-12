@@ -1,7 +1,7 @@
 # m11-08 — verificação por fatia
 
 Spec: [`m11-08-oficina-blocos-ricos.spec.md`](../m11-08-oficina-blocos-ricos.spec.md). A task é fatiada por bloco
-(uma entrega e um gate por fatia); ela só vai para `done/` quando todas as fatias estiverem fechadas.
+(uma entrega e um gate por fatia). As cinco fatias estão fechadas e a task foi para `done/`.
 
 | Fatia | Blocos | Situação |
 |---|---|---|
@@ -9,7 +9,7 @@ Spec: [`m11-08-oficina-blocos-ricos.spec.md`](../m11-08-oficina-blocos-ricos.spe
 | 2 | Classe, Arquétipo, Subclasse | **fechada** (seção abaixo) |
 | 3 | Origem, Termos | **fechada** (seção abaixo) |
 | 4 | Ficha de criatura, Roteiro | **fechada** (seção abaixo) |
-| 5 | Tabela, Grade, Faixas, Níveis de ameaça | aberta |
+| 5 | Tabela, Grade, Faixas, Níveis de ameaça | **fechada** (seção abaixo) |
 
 ## Fatia 1 — Equipamento, Modificação e Amplificador
 
@@ -137,3 +137,36 @@ usam primitivos de `shared/ui` (`app-botao`, `app-botao-icone`, `app-chip`, `app
 - Na Oficina o campo de Nível de Ameaça mostra o texto editável no lugar do selo; o selo volta na Leitura.
 - Regeneração, porte e deslocamento da ficha ficam visíveis na Oficina mesmo quando a Leitura mostra no lugar os
   parágrafos de apoio (os dois vêm de dados diferentes).
+
+## Fatia 5 — Tabela, Grade, Faixas e Níveis de ameaça
+
+### O que mudou
+- `shared`: o esqueleto de tabela e de grade genérica nasce com duas colunas e uma linha (editável de imediato);
+  pendências de conteúdo (faixa sem condição ou valor, nível de ameaça sem descrição, cartão de grade de referência
+  sem título ou conteúdo). Células vazias da grade genérica e das tabelas não são pendência. Livros importados sem
+  pendência nova.
+- Frontend: `oficina-matriz.ts` (adicionar/remover linha, adicionar coluna, remover a última coluna, com testes),
+  `OficinaStore.alterarMatriz` (a grade acompanha `colunas`), `app-oficina-matriz-controles` ("+ Linha",
+  "+ Coluna", "− Coluna", e "− Linha" na grade). Tabela: toda célula e cabeçalho editáveis, lixeira por linha na
+  tabela selecionada (na Oficina a tabela "em pares" mostra a matriz inteira). Grade genérica: células (todas,
+  inclusive vazias) editáveis. Grade de referência: título e conteúdo dos cartões, e adicionar/remover cartão nas
+  de "cartões". Faixas: condição e valor, adicionar e remover. Níveis de ameaça: descrição. O menu da seção oferece
+  Tabela, Grade e Faixas.
+- Fora do escopo definido pela spec: redimensionar colunas e mesclar células.
+
+### Verificação
+- Testes: shared 1252, backend 1093 (12 ignorados já existiam), frontend 3371; lint sem erros nos três.
+- Gate visual (pilha isolada, Sistema importado) em 1920×1080 e 360×800 com toque: tabela (Leitura, Oficina,
+  selecionada, +linha, +coluna, −coluna, remover linha), faixas do Deslocamento, grade genérica, grade de cartões e
+  níveis de ameaça. Sem overflow e sem erro de console. Ida e volta: linha nova digitada, rascunho publicado com 0
+  pendências e a Leitura mostra a mesma tabela (6 linhas e o texto novo).
+- Sem revisão independente nesta fatia (mesma maquinaria revisada na fatia 1).
+
+### Limites
+- Nas grades genéricas com cabeçalho "Módulo I…", a Oficina mostra as células em grade em vez dos cartões de módulo.
+- Os módulos de fragmento (`MODULOS`) e a tabela do container de origens e da classe não ganharam edição.
+- A variante do container de termos e criar ficha de criatura nova ficam como nas fatias 3 e 4.
+
+## Fecho da m11-08
+Todas as fatias fechadas, cada uma com gate visual nos dois viewports, ida e volta e suítes verdes. Mapa de onde
+cada bloco é editado em `docs/context/MEMORY.md`.

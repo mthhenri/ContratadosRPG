@@ -264,6 +264,7 @@ export function validarArvoreLivro(dto: LivroArvoreValidarDto): LivroPendenciaDt
     conferirClasse(peca, caminho, dados);
     conferirOrigemETermo(peca, caminho, dados);
     conferirCriatura(peca, caminho, dados);
+    conferirReferencias(peca, caminho, dados);
     if (peca.tipo === Tipo.HABILIDADE) {
       if (typeof dados["custo"] === "number" && dados["custo"] < 0) {
         registrar(peca, caminho, Codigo.CONTEUDO_INCOMPLETO, Gravidade.CONTEUDO,
@@ -385,6 +386,28 @@ export function validarArvoreLivro(dto: LivroArvoreValidarDto): LivroPendenciaDt
         || !extrairTexto(etapa["descricao"]).trim())) {
         faltou("Há uma etapa sem título ou sem descrição.");
       }
+    }
+  };
+
+  /** Pendências de conteúdo de faixas, níveis de ameaça e itens de grade de referência (m11-08). */
+  const conferirReferencias = (
+    peca: LivroPecaDto,
+    caminho: readonly string[],
+    dados: Record<string, unknown>,
+  ): void => {
+    const faltou = (mensagem: string): void =>
+      registrar(peca, caminho, Codigo.CONTEUDO_INCOMPLETO, Gravidade.CONTEUDO, mensagem);
+    const texto = (valor: unknown): string => (typeof valor === "string" ? valor.trim() : "");
+    const lista = (campo: string): unknown[] => (Array.isArray(dados[campo]) ? (dados[campo] as unknown[]) : []);
+    if (peca.tipo === Tipo.FAIXAS && lista("itens").some((item) => !ehObjeto(item) || !texto(item["rotulo"]) || !texto(item["valor"]))) {
+      faltou("Há uma faixa sem condição ou sem valor.");
+    }
+    if (peca.tipo === Tipo.NIVEIS_AMEACA && lista("niveis").some((nivel) => !ehObjeto(nivel) || !extrairTexto(nivel["descricao"]).trim())) {
+      faltou("Há um nível de ameaça sem descrição.");
+    }
+    if (peca.tipo === Tipo.GRADE && dados["apresentacao"] !== "generica"
+      && lista("itens").some((item) => !ehObjeto(item) || !texto(item["rotulo"]) || !extrairTexto(item["conteudo"]).trim())) {
+      faltou("Há um cartão da grade sem título ou sem conteúdo.");
     }
   };
 

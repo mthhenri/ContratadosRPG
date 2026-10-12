@@ -1,5 +1,17 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-11 — M11-08 fatia 5 e fecho: tabela, grade, faixas e níveis editáveis; blocos ricos concluídos
+
+Tabela (células, cabeçalho, linhas e colunas), grade genérica e de cartões, faixas e níveis de ameaça editam-se no lugar,
+com "+ Linha/+ Coluna/− Coluna" (`oficina-matriz`, `alterarMatriz`), lixeira por linha e cartão/faixa novos; o menu
+oferece Tabela, Grade e Faixas e o validador ganhou as pendências de faixa, nível e cartão. Verificado: shared 1252,
+backend 1093, frontend 3371, lint limpo nos três; gate visual em 1920×1080 e 360×800 (toque) e ida e volta (tabela
+com linha nova publicada e lida igual). Com isso a **m11-08 está concluída** (cinco fatias: equipamentos/modificações/
+amplificadores, classe/arquétipo/subclasse, origem/termos, ficha de criatura/roteiro, tabelas), e a spec foi para
+`done/`. Ficam como limites registrados: módulos de fragmento, tabela das origens e da classe, variante do container
+de termos, ficha de criatura nova pelo menu e a introdução/conclusão do roteiro.
+[Verificação](../specs/done/m11-08-oficina-blocos-ricos/verificacao.md).
+
 ## 2026-10-11 — M11-08 fatia 4: ficha de criatura e roteiro editáveis na Oficina
 
 Ficha de criatura (nome, conceito, identidade com Nível de Ameaça, atributos, Vida/Defesa, resistências, fraquezas,
@@ -8,7 +20,7 @@ efeito, "+" no fim da ficha) e roteiro (etapas com adicionar/remover e renumera�
 as pendências correspondentes. Verificado: shared 1249, backend 1093, frontend 3361, lint limpo; gate visual em
 1920×1080 e 360×800 (toque) e ida e volta pelo rascunho do Guia. Fora: criar ficha nova pelo menu e a introdução/
 conclusão do roteiro.
-[Verificação](../specs/active/m11-08-oficina-blocos-ricos/verificacao.md).
+[Verificação](../specs/done/m11-08-oficina-blocos-ricos/verificacao.md).
 
 ## 2026-10-11 — M11-08 fatia 3: origem e termos editáveis na Oficina
 
@@ -17,7 +29,7 @@ lugar, com "+ Origem"/"+ Termo" no fim do container e os containers no menu da s
 pendências de conteúdo sem tocar nos livros importados. Verificado: shared 1246, backend 1093, frontend 3356, lint
 limpo; gate visual em 1920×1080 e 360×800 (toque) e ida e volta pelo rascunho. Ficam fora a tabela das origens
 (fatia 5) e a variante do container de termos.
-[Verificação](../specs/active/m11-08-oficina-blocos-ricos/verificacao.md).
+[Verificação](../specs/done/m11-08-oficina-blocos-ricos/verificacao.md).
 
 ## 2026-10-11 — M11-08 fatia 2: classe, arquétipo e subclasse editáveis na Oficina
 
@@ -26,7 +38,7 @@ classe e custos do experimento da subclasse (adicionar/remover no item seleciona
 ganhou as pendências correspondentes sem tocar nos livros importados. Verificado: shared 1244, backend 1093,
 frontend 3353, lint limpo; gate visual em 1920×1080 e 360×800 (toque) e ida e volta pelo rascunho. A tabela de
 progressão da classe fica para a fatia 5.
-[Verificação](../specs/active/m11-08-oficina-blocos-ricos/verificacao.md).
+[Verificação](../specs/done/m11-08-oficina-blocos-ricos/verificacao.md).
 
 ## 2026-10-11 — M11-08 fatia 1: equipamentos, modificações e amplificadores editáveis na Oficina
 
@@ -43,7 +55,7 @@ celular (z-index da m11-07), nome da modificação espremido pelos contadores, m
 independente achou a entrega atrasada que recriava dano removido, a lista de danos lida do template, Desfazer
 fundindo adicionar/remover e categoria vazia sem pendência: corrigidos. Limite: área de toque do botão de tipo de
 dano abaixo de 44 px no celular (decisão do autor sobre o primitivo).
-[Verificação](../specs/active/m11-08-oficina-blocos-ricos/verificacao.md).
+[Verificação](../specs/done/m11-08-oficina-blocos-ricos/verificacao.md).
 
 ## 2026-10-11 — M11-07: inserir e estruturar na Oficina
 

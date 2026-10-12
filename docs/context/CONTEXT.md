@@ -2180,7 +2180,7 @@ incluindo todos os ajustes avulsos de pós-milestone.
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
 | `revisao-formatacao-pdf-regras` | regras | revisão substancial da apresentação e aprovação visual do autor; Sistema suspenso (P-108) |
 | `regras-glossario` | regras | esboço independente do M10: termos marcados com cartão; pontos a fechar com o autor |
-| `m11-08`…`m11-10` | regras | Oficina das Regras: blocos ricos, mudanças e publicar, troca da fonte da verdade; ver [guarda-chuva](../specs/backlog/m11-oficina-regras.spec.md) |
+| `m11-09`…`m11-10` | regras | Oficina das Regras: mudanças e publicar, troca da fonte da verdade; ver [guarda-chuva](../specs/backlog/m11-oficina-regras.spec.md) |
 | `regras-visual-06`…`10` | regras | cinco correções restantes após bateria visual; textos e contraste; [mapa e prioridades](../specs/done/regras-auditoria-visual-completa/auditoria.md) |
 
 Spec avulsa ativa: `montador-rolagem-experimento`, mantida em experimentação pelo autor.
@@ -2228,7 +2228,7 @@ reproduzem isoladas (arquivo único), não na suíte completa.
 | M6 | Gestão de Usuários e Papéis | **concluído** — `m6-01`…`m6-08` (`m6-08`: impersonação administrativa auditável) |
 | M7 | Encontro de Combate | **concluído** — 8 tasks originais (`m7-01` contrato, `m7-02` motor puro, `m7-03` backend de montagem, `m7-04` backend de condução/tempo real, `m7-05` painel do mestre, `m7-06` visão do jogador, `m7-07` log da rodada, `m7-08` refinamento mobile) + 9 ajustes de pós-milestone (`m7-09`…`m7-17`, ver seção 4 "Encontro de Combate"). Numeração M7 é sugestão, não decisão de roadmap |
 | M8 | Espectadores e Prévias de Campanha | **concluído** — `m8-01`…`m8-06` (banco + contratos do papel ESPECTADOR; backend de permissões e as duas projeções de leitura; frontend de entrada/gestão de convites-membros/Painel do espectador ao vivo/Prévia de jogador fidedigna/visão read-only de Iniciativa; `m8-06` fechou com gate de validação integrada entre 4 contas reais). Numeração M8 é sugestão, não decisão de roadmap — ver `docs/context/IDEAS.md` |
-| M11 | Oficina das Regras (editor da estrutura dos livros no site) | **em andamento** — `m11-01` (contrato da árvore no `shared/`) e `m11-02` (tabelas e repositórios) `m11-03` (importador) e `m11-04` (publicação e leitura por papel) e `m11-05` (comparador puro) e `m11-06` (núcleo da Oficina: API de edição e edição no lugar) e `m11-07` (inserir e estruturar) concluídas; `m11-08`…`m11-10` no backlog; [guarda-chuva](../specs/backlog/m11-oficina-regras.spec.md) |
+| M11 | Oficina das Regras (editor da estrutura dos livros no site) | **em andamento** — `m11-01` (contrato da árvore no `shared/`) e `m11-02` (tabelas e repositórios) `m11-03` (importador) e `m11-04` (publicação e leitura por papel) e `m11-05` (comparador puro) e `m11-06` (núcleo da Oficina: API de edição e edição no lugar) e `m11-07` (inserir e estruturar) e `m11-08` (blocos ricos) concluídas; `m11-09`…`m11-10` no backlog; [guarda-chuva](../specs/backlog/m11-oficina-regras.spec.md) |
 | M10 | Regras (documentos do sistema no site) | **implementada, 11/11** — revisão editorial da exportação pendente (P-108); fonte visual `docs/specs/done/m10-regras/m10-regras-exemplao.html` |
 
 ---
@@ -2297,7 +2297,7 @@ pelo `validarArvoreLivro`), `OficinaApi`, `oficina-trechos.ts` (texto rico ↔ D
 `app-oficina-texto` (`contenteditable`), `app-oficina-custo`, `app-oficina-peca` (invólucro com as
 ferramentas) e `app-oficina-barra`; o `RegrasInline` e os blocos editam quando há `OficinaStore` ativo. A
 projeção com `incluirPecas` põe o `identificador` em `peca` de cada bloco. Edição ainda limitada a título de
-seção, parágrafo/exemplo/nota/fórmula, habilidade e citação de classe/subclasse; demais blocos são a `m11-08`,
+seção, parágrafo/exemplo/nota/fórmula, habilidade e citação de classe/subclasse; demais blocos foram a `m11-08`,
 publicar a `m11-09`. Primitivo novo `app-barra-ferramentas` (`docs/design/DESIGN.md`).
 [Verificação e decisões](../specs/done/m11-06-oficina-nucleo/verificacao.md).
 
@@ -2315,11 +2315,11 @@ função pura `oficina-estrutura.ts`; só movimentos permitidos pela tabela pass
 pelas `ancorasAntigas` da fotografia. Peça nova nasce sem âncora até ser renomeada.
 [Verificação e decisões](../specs/done/m11-07-oficina-inserir-e-estruturar/verificacao.md).
 
-Blocos ricos (M11-08, fatias 1 a 4 de 5; a 2 cobre classe, arquétipo e subclasse, a 3 origem e termos, a 4 ficha de criatura e roteiro): equipamentos, modificações e amplificadores se editam no lugar
-(`regras-equipamentos|modificacoes|amplificadores.component`, `oficina-empilhamento.component`, campo aninhado por
-`oficina-dados.ts`); o "+" do fim da lista cria o item. As demais fatias (classe/arquétipo/subclasse, origem/termos,
-ficha de criatura/roteiro, tabela/grade/faixas/níveis) seguem abertas em
-[`active/`](../specs/active/m11-08-oficina-blocos-ricos.spec.md).
+Blocos ricos (M11-08, concluída): equipamentos/modificações/amplificadores, classe/arquétipo/subclasse, origem/termos,
+ficha de criatura/habilidade de criatura/roteiro e tabela/grade/faixas/níveis de ameaça se editam no lugar, cada um no
+renderer do próprio bloco (`regras/blocos/`), sobre a base comum `oficina-dados.ts` (campo aninhado por caminho),
+`OficinaTexto` (`caminho`, `opcional`), `OficinaStore.alterarCampo`/`alterarMatriz` e `oficina-matriz.ts`. O "+" do
+fim de cada lista cria o item. [Verificação por fatia](../specs/done/m11-08-oficina-blocos-ricos/verificacao.md).
 
 ### Ícones de identidade (M10-03)
 

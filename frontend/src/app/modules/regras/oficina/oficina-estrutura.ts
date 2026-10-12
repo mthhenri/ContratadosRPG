@@ -41,6 +41,7 @@ export const NOME_DO_TIPO: Readonly<Partial<Record<Tipo, string>>> = {
     [Tipo.AMPLIFICADORES]: "Amplificadores", [Tipo.AMPLIFICADOR]: "Amplificador",
     [Tipo.ORIGENS]: "Origens", [Tipo.ORIGEM]: "Origem", [Tipo.TERMOS]: "Termos", [Tipo.TERMO]: "Termo",
     [Tipo.ROTEIRO]: "Roteiro", [Tipo.FICHA_CRIATURA]: "Ficha de criatura", [Tipo.HABILIDADE_CRIATURA]: "Habilidade de criatura",
+    [Tipo.TABELA]: "Tabela", [Tipo.GRADE]: "Grade", [Tipo.FAIXAS]: "Faixas", [Tipo.NIVEIS_AMEACA]: "Níveis de ameaça",
 };
 
 /**
@@ -90,6 +91,12 @@ const CATALOGO: readonly (MenuInsercaoOpcao & { readonly tipo: Tipo })[] = [
         descricao: "Lista numerada de etapas." },
     { id: Tipo.HABILIDADE_CRIATURA, tipo: Tipo.HABILIDADE_CRIATURA, rotulo: "Habilidade de criatura", marca: "⬦", termos: ["hab"],
         descricao: "Nome, categoria e efeito." },
+    { id: Tipo.TABELA, tipo: Tipo.TABELA, rotulo: "Tabela", marca: "▦", termos: ["tab", "linhas"],
+        descricao: "Colunas e linhas de texto." },
+    { id: Tipo.GRADE, tipo: Tipo.GRADE, rotulo: "Grade", marca: "▦", termos: ["celulas"],
+        descricao: "Células de texto em colunas." },
+    { id: Tipo.FAIXAS, tipo: Tipo.FAIXAS, rotulo: "Faixas", marca: "≡", termos: ["deslocamento"],
+        descricao: "Condição e valor em destaque." },
 ];
 
 /** Tipos que cabem dentro de `paiTipo` (`null` = raiz do livro), pela tabela de aninhamento do validador. */
@@ -118,7 +125,7 @@ export function campoInicialDe(tipo: Tipo): string | null {
         case Tipo.EQUIPAMENTOS: case Tipo.MODIFICACOES: return "categoria";
         // Nome de classe, subclasse e arquétipo ainda não se edita na tela (m11-08): sem campo para o cursor.
         // O container de amplificadores não tem campo próprio.
-        case Tipo.CLASSE: case Tipo.SUBCLASSE: case Tipo.ARQUETIPO: case Tipo.AMPLIFICADORES: case Tipo.ORIGENS: case Tipo.TERMOS: case Tipo.ROTEIRO: case Tipo.FICHA_CRIATURA: return null;
+        case Tipo.CLASSE: case Tipo.SUBCLASSE: case Tipo.ARQUETIPO: case Tipo.AMPLIFICADORES: case Tipo.ORIGENS: case Tipo.TERMOS: case Tipo.ROTEIRO: case Tipo.FICHA_CRIATURA: case Tipo.TABELA: case Tipo.GRADE: case Tipo.FAIXAS: case Tipo.NIVEIS_AMEACA: return null;
         default: return "trechos";
     }
 }

@@ -83,3 +83,10 @@ table:has(td:first-child app-regras-ameaca) {
         box-shadow: 8px 0 10px -10px var(--text-mute);
     }
 }
+
+// Coluna das lixeiras de linha (só na Oficina, tabela selecionada): estreita e sem borda.
+.regras-tabela__acao {
+    width: 1%;
+    white-space: nowrap;
+    border: 0;
+}

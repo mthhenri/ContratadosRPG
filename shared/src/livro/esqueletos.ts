@@ -32,7 +32,7 @@ export function criarEsqueletoPeca(tipo: Tipo): RegraPecaEsqueletoDto {
     case Tipo.LISTA:
       return esqueleto({ ordenada: false, inicio: 1, itens: [] });
     case Tipo.TABELA:
-      return esqueleto(tabela);
+      return esqueleto({ cabecalho: [[], []], linhas: [[[], []]] });
     case Tipo.HABILIDADE:
       return esqueleto({ nome: "", custo: 0, reacao: false, glifo: null, trechos: [] });
     case Tipo.CLASSE:
@@ -98,7 +98,7 @@ export function criarEsqueletoPeca(tipo: Tipo): RegraPecaEsqueletoDto {
     case Tipo.FAIXAS:
       return esqueleto({ itens: [] });
     case Tipo.GRADE:
-      return esqueleto({ apresentacao: "generica", colunas: 2, ...tabela });
+      return esqueleto({ apresentacao: "generica", colunas: 2, cabecalho: [[], []], linhas: [[[], []]] });
     case Tipo.ABERTURA:
       return esqueleto({ titulo: "", trechos: [] });
     case Tipo.GENERICO:
