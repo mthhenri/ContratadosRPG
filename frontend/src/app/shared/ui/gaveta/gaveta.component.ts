@@ -13,6 +13,8 @@ const SELETOR_FOCAVEL =
  * Gaveta sobre o ancestral posicionado: o consumidor define a área de contenção.
  * Não usa top layer nem bloqueia a página inteira; mantém o texto visível sob o véu.
  * O model controla todas as vias de fechamento e preserva o conteúdo projetado.
+ * `modo="lateral"` (m11-10): sem véu, ocupa só uma coluna livre à direita do contêiner (largura em
+ * `--gaveta-lateral-largura`) e deixa o resto da página clicável e do mesmo tamanho; o foco não fica preso.
  */
 @Component({
     selector: "app-gaveta",
@@ -23,12 +25,14 @@ const SELETOR_FOCAVEL =
     host: {
         "[class.gaveta--aberta]": "aberta()",
         "[class.gaveta--fim]": "lado() === 'fim'",
+        "[class.gaveta--lateral]": "modo() === 'lateral'",
     },
 })
 export class Gaveta {
     readonly aberta = model(false);
     readonly lado = input<"inicio" | "fim">("inicio");
     readonly rotulo = input.required<string>();
+    readonly modo = input<"sobreposta" | "lateral">("sobreposta");
 
     private readonly documento = inject(DOCUMENT);
     private readonly painel = viewChild.required<ElementRef<HTMLElement>>("painel");
@@ -64,7 +68,7 @@ export class Gaveta {
             this.fechar();
             return;
         }
-        if (evento.key !== "Tab") return;
+        if (evento.key !== "Tab" || this.modo() === "lateral") return;
         evento.stopPropagation();
         const painel = this.painel().nativeElement;
         const controles = Array.from(painel.querySelectorAll<HTMLElement>(SELETOR_FOCAVEL))

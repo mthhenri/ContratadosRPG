@@ -208,9 +208,14 @@
         right: var(--space-20);
         bottom: var(--space-20);
         z-index: 4;
+        transition: right 180ms ease;
     }
     &__icone-topo {
         transform: rotate(180deg);
+    }
+    // Painel lateral aberto: a seta sai da frente dele e fica logo ao lado, sem encolher o livro.
+    &--lateral-aberta &__topo {
+        right: calc(var(--gaveta-lateral-largura) + var(--space-20) + var(--space-8));
     }
     &--painel &__topo {
         position: absolute;

@@ -23,7 +23,7 @@ export class OficinaBarra {
     protected readonly store = inject(OficinaStore);
     protected readonly mudancas = inject(OficinaMudancas);
     readonly irPara = output<void>();
-    readonly abrirMudancas = output<void>();
+    readonly alternarMudancas = output<void>();
     readonly irParaPeca = output<string>();
     private proxima = 0;
 

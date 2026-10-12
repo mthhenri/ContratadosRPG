@@ -46,6 +46,11 @@ import { RegrasDocumento } from "./regras.model";
 import { RegrasService, type RegrasLeitura } from "./regras.service";
 import { construirSumarioRegras, listarAncorasRegras } from "./regras-sumario";
 
+/** Painel lateral do "O que mudou": largura que cabe na coluna livre (com a margem) e teto de largura. */
+const LARGURA_MINIMA_LATERAL = 360;
+const LARGURA_MAXIMA_LATERAL = 440;
+const MARGEM_LATERAL = 32;
+
 @Component({
     selector: "app-regras-leitor",
     providers: [RegrasLeitorContexto, RegrasPesquisaController, OficinaStore, OficinaMudancas],
@@ -58,7 +63,7 @@ import { construirSumarioRegras, listarAncorasRegras } from "./regras-sumario";
     changeDetection: ChangeDetectionStrategy.OnPush,
     host: { "(window:resize)": "redimensionarViewport()",
         "(keydown)": "pesquisa.tratarTecla($event)",
-        "(document:keydown)": "tratarAtalhoIrPara($event); tratarDesfazer($event)",
+        "(document:keydown)": "tratarAtalhoIrPara($event); tratarDesfazer($event); tratarEscape($event)",
         "(window:beforeunload)": "avisarAntesDeSair($event)" },
 })
 export class RegrasLeitor {
@@ -101,6 +106,12 @@ export class RegrasLeitor {
     protected readonly oficinaAtiva = computed(() => this.podeEditar() && this.modoOficina() && this.versaoVista() === null);
     /** Gaveta "O que mudou" (só na Oficina). */
     protected readonly mudancasAbertas = signal(false);
+    /** Largura livre à direita da coluna do livro (px); o "O que mudou" só vira painel lateral se ela comportar o painel. */
+    private readonly espacoLateral = signal(0);
+    protected readonly usarLateral = computed(() =>
+        !this.usarGaveta() && !this.emPainel() && this.espacoLateral() >= LARGURA_MINIMA_LATERAL + MARGEM_LATERAL);
+    protected readonly larguraLateral = computed(() =>
+        Math.min(LARGURA_MAXIMA_LATERAL, this.espacoLateral() - MARGEM_LATERAL));
     /** As versões do livro (só ADMIN) e a versão antiga aberta para leitura (m11-09); `null` = a atual. */
     protected readonly versoes = signal<readonly LivroVersaoResumoDto[]>([]);
     protected readonly versaoVista = signal<LivroVersaoResumoDto | null>(null);
@@ -141,6 +152,12 @@ export class RegrasLeitor {
     });
 
     constructor() {
+        // A coluna do livro só existe depois de renderizar: mede a faixa livre ao lado dela.
+        effect(() => {
+            this.oficinaAtiva();
+            this.estadoExibido();
+            afterNextRender(() => this.medirEspacoLateral(), { injector: this.injector });
+        });
         // Depois de publicar na Oficina, o seletor de versões acompanha a lista nova.
         effect(() => {
             const lista = this.mudancas.versoes();
@@ -172,7 +189,9 @@ export class RegrasLeitor {
             // Na Oficina o livro mostrado vem da cópia de trabalho: só navega quando ele já está na tela.
             const pronto = this.estadoExibido() === "ok";
             // URL de antes de uma renomeação: a âncora antiga leva à atual.
-            const fragmento = pedido ? (this.leitura()?.ancorasAntigas[pedido] ?? pedido) : pedido;
+            // Sem âncora pedida o livro abre na primeira seção (Introdução), logo depois da abertura e da capa.
+            const primeiraSecao = documento?.filhos.find((bloco) => bloco.tipo === "secao")?.ancora ?? null;
+            const fragmento = pedido ? (this.leitura()?.ancorasAntigas[pedido] ?? pedido) : primeiraSecao;
             if (documento && pronto) {
                 untracked(() => this.prepararNavegacao(documento, fragmento ?? null));
             }
@@ -294,7 +313,8 @@ export class RegrasLeitor {
 
     /** Clique numa mudança da gaveta: fecha a gaveta e leva à peça. */
     protected irParaMudanca(identificador: string): void {
-        this.mudancasAbertas.set(false);
+        // Painel lateral fica aberto ao lado do livro; só a gaveta de sobreposição precisa sair da frente.
+        if (!this.usarLateral()) this.mudancasAbertas.set(false);
         this.irParaPeca(identificador);
     }
 
@@ -310,6 +330,20 @@ export class RegrasLeitor {
         if (alvo && alvo !== document.body && !this.elemento.nativeElement.contains(alvo)) return;
         evento.preventDefault();
         void this.oficina.desfazer();
+    }
+
+    /** Esc na Oficina tira a seleção da peça (depois que o campo em edição já perdeu o foco). */
+    protected tratarEscape(evento: KeyboardEvent): void {
+        if (evento.key !== "Escape" || evento.defaultPrevented || !this.oficinaAtiva() || this.oficina.selecionada() === null
+            || this.paletaAberta() || this.gavetaAberta() || (this.mudancasAbertas() && !this.usarLateral())) return;
+        // Menu, diálogo ou lista aberta tratam o próprio Esc.
+        if (document.querySelector("dialog[open], [role='menu'], .menu-insercao")) return;
+        const alvo = evento.target as HTMLElement | null;
+        if (alvo && alvo !== document.body && !this.elemento.nativeElement.contains(alvo)) return;
+        if (document.activeElement instanceof HTMLElement && this.elemento.nativeElement.contains(document.activeElement)) {
+            document.activeElement.blur();
+        }
+        this.oficina.selecionar(null);
     }
 
     /** Leva à peça (do Ir para peça ou da próxima pendência): seleciona, rola e põe o cursor nela. */
@@ -498,8 +532,15 @@ export class RegrasLeitor {
         }
     }
 
+    /** Mede a faixa vazia à direita do livro (onde fica a seta de voltar ao topo). */
+    private medirEspacoLateral(): void {
+        const coluna = this.elemento.nativeElement.querySelector<HTMLElement>(".regras__rolagem");
+        this.espacoLateral.set(coluna ? Math.max(0, Math.round(window.innerWidth - coluna.getBoundingClientRect().right)) : 0);
+    }
+
     protected redimensionarViewport(): void {
         this.mobile.set(window.innerWidth <= 560);
+        this.medirEspacoLateral();
         if (!this.usarGaveta()) this.gavetaAberta.set(false);
     }
 

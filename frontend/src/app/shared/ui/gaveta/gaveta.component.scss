@@ -99,6 +99,23 @@
     }
 }
 
+// Lateral: só a coluna livre à direita, sem véu; desliza para dentro da própria coluna (o host recorta); a página ao lado continua clicável.
+:host(.gaveta--lateral) {
+    inset: 0 0 0 auto;
+    width: var(--gaveta-lateral-largura, 440px);
+
+    .gaveta__veu {
+        display: none;
+    }
+
+    .gaveta__painel {
+        inset-inline: 0;
+        width: auto;
+        box-shadow: none;
+        border-inline: 1px solid var(--border-strong);
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     :host,
     .gaveta__veu,

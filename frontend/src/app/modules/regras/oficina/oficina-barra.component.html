@@ -42,7 +42,7 @@
         posicaoIcone="esquerda"
         type="button"
         appTooltip="O que mudou desde a versão publicada"
-        (click)="abrirMudancas.emit()"
+        (click)="alternarMudancas.emit()"
     >
         <app-icone nome="camadas" /> O que mudou
         <span class="oficina-barra__contador" [class.oficina-barra__contador--zero]="mudancas.total() === 0">{{ mudancas.total() }}</span>

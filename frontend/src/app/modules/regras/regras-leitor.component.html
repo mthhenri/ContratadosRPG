@@ -1,4 +1,5 @@
-<div class="regras" [class.regras--gaveta]="usarGaveta()" [class.regras--painel]="emPainel()">
+<div class="regras" [class.regras--gaveta]="usarGaveta()" [class.regras--painel]="emPainel()"
+    [class.regras--lateral-aberta]="usarLateral() && mudancasAbertas()" [style.--gaveta-lateral-largura.px]="larguraLateral()">
     @if (usarGaveta()) {
         <div class="regras__barra">
             <button
@@ -54,7 +55,7 @@
     }
     <div class="regras__rolagem" [attr.inert]="gavetaAberta() ? '' : null">
         @if (oficinaAtiva()) {
-            <app-oficina-barra (irPara)="abrirPaleta()" (irParaPeca)="irParaPeca($event)" (abrirMudancas)="mudancasAbertas.set(true)" />
+            <app-oficina-barra (irPara)="abrirPaleta()" (irParaPeca)="irParaPeca($event)" (alternarMudancas)="mudancasAbertas.set(!mudancasAbertas())" />
         }
         @if (pesquisa.termo().trim().length >= 2 && documento() && !oficinaAtiva()) {
             <div class="regras__pesquisa-contador">
@@ -184,7 +185,7 @@
     }
     @if (oficinaAtiva()) {
         <div class="regras__gaveta-area">
-            <app-gaveta [(aberta)]="mudancasAbertas" rotulo="O que mudou" lado="fim">
+            <app-gaveta [(aberta)]="mudancasAbertas" rotulo="O que mudou" lado="fim" [modo]="usarLateral() ? 'lateral' : 'sobreposta'">
                 <app-oficina-mudancas (irPara)="irParaMudanca($event)" />
             </app-gaveta>
         </div>

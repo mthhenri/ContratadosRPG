@@ -97,6 +97,15 @@ describe("Oficina: mudanças e versões no leitor (m11-09)", () => {
         const selos = Array.from(raiz.querySelectorAll(".oficina-mudancas__cab app-chip")).map((selo) => selo.textContent?.trim());
         expect(selos).toEqual(expect.arrayContaining(["alterada", "nova"]));
         expect(raiz.querySelector(".oficina-mudancas__resumo")?.textContent).toContain("1 nova");
+
+        const botao = () => Array.from(raiz.querySelectorAll<HTMLButtonElement>(".oficina-barra button"))
+            .find((item) => item.textContent?.includes("O que mudou"))!;
+        botao().click();
+        leitor.detectChanges();
+        expect(raiz.querySelector("app-gaveta.gaveta--aberta")).toBeNull();
+        botao().click();
+        leitor.detectChanges();
+        expect(raiz.querySelector("app-gaveta.gaveta--aberta")).not.toBeNull();
         leitor.destroy();
     });
 
@@ -119,6 +128,27 @@ describe("Oficina: mudanças e versões no leitor (m11-09)", () => {
         leitor.detectChanges();
         expect(raiz.querySelector(".regras__rascunho")).toBeNull();
         expect(raiz.querySelector("app-oficina-barra")).not.toBeNull();
+        leitor.destroy();
+    });
+
+    it("Esc tira a seleção da peça, mas deixa o menu aberto cuidar do próprio Esc", async () => {
+        const { leitor, raiz } = await abrir(true);
+        const peca = raiz.querySelector<HTMLElement>(`[data-peca-oficina="${ID(2)}"]`)!;
+        peca.click();
+        leitor.detectChanges();
+        expect(peca.classList.contains("oficina-peca--selecionada")).toBe(true);
+
+        const menu = document.createElement("div");
+        menu.setAttribute("role", "menu");
+        document.body.append(menu);
+        document.body.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+        leitor.detectChanges();
+        expect(peca.classList.contains("oficina-peca--selecionada")).toBe(true);
+        menu.remove();
+
+        document.body.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+        leitor.detectChanges();
+        expect(peca.classList.contains("oficina-peca--selecionada")).toBe(false);
         leitor.destroy();
     });
 

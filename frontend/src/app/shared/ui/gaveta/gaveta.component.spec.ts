@@ -7,7 +7,7 @@ import { Gaveta } from "./gaveta.component";
     imports: [Gaveta],
     template: `
         <button class="gatilho" (click)="aberta.set(true)">Abrir</button>
-        <app-gaveta [(aberta)]="aberta" [lado]="lado()" rotulo="Sumário">
+        <app-gaveta [(aberta)]="aberta" [lado]="lado()" [modo]="modo()" rotulo="Sumário">
             <button class="primeiro">Introdução</button>
             <button class="ultimo">Equipamentos</button>
             <button hidden>Oculto</button>
@@ -18,6 +18,7 @@ import { Gaveta } from "./gaveta.component";
 class Hospedeiro {
     readonly aberta = signal(false);
     readonly lado = signal<"inicio" | "fim">("inicio");
+    readonly modo = signal<"sobreposta" | "lateral">("sobreposta");
 }
 
 describe("Gaveta", () => {
@@ -103,6 +104,22 @@ describe("Gaveta", () => {
         fixture.detectChanges();
         expect(raiz.querySelector(".gaveta--fim")).not.toBeNull();
         expect(fixture.componentInstance.aberta()).toBe(true);
+    });
+
+    it("no modo lateral não prende o foco, mas o Esc dentro dela ainda fecha", () => {
+        const { fixture, raiz, painel, abrir } = montar();
+        fixture.componentInstance.modo.set("lateral");
+        fixture.detectChanges();
+        expect(raiz.querySelector(".gaveta--lateral")).not.toBeNull();
+        abrir();
+        const ultimo = raiz.querySelector<HTMLElement>(".ultimo")!;
+        ultimo.focus();
+        const tab = new KeyboardEvent("keydown", { key: "Tab", bubbles: true, cancelable: true });
+        ultimo.dispatchEvent(tab);
+        expect(tab.defaultPrevented).toBe(false);
+        painel.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }));
+        fixture.detectChanges();
+        expect(fixture.componentInstance.aberta()).toBe(false);
     });
 
     it("restaura o gatilho se a gaveta aberta for destruída", () => {
