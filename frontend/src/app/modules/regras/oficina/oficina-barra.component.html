@@ -2,6 +2,10 @@
     <app-chip [severidade]="severidadeEstado()" tom="sutil" role="status" aria-live="polite">
         {{ rotuloEstado() }}
     </app-chip>
+    <app-chip severidade="secundario" tom="contorno" class="oficina-barra__estado">{{ estadoEdicao() }}</app-chip>
+    @if (publicacao(); as pub) {
+        <app-chip severidade="primario" tom="sutil" [appTooltip]="pub.dica" tabindex="0">{{ pub.rotulo }}</app-chip>
+    }
     @if (totalPendencias() > 0) {
         <button
             app-botao
@@ -37,10 +41,24 @@
         tamanho="pequeno"
         posicaoIcone="esquerda"
         type="button"
+        appTooltip="O que mudou desde a versão publicada"
+        (click)="abrirMudancas.emit()"
+    >
+        <app-icone nome="camadas" /> O que mudou
+        <span class="oficina-barra__contador" [class.oficina-barra__contador--zero]="mudancas.total() === 0">{{ mudancas.total() }}</span>
+    </button>
+    <button
+        app-botao
+        variante="secundario"
+        estilo="contorno"
+        tamanho="pequeno"
+        posicaoIcone="esquerda"
+        type="button"
         [disabled]="!store.podeDesfazer()"
         [appTooltip]="store.rotuloDesfazer() ? 'Desfazer: ' + store.rotuloDesfazer() + ' (Ctrl+Z)' : 'Nada para desfazer'"
         (click)="store.desfazer()"
     >
         <app-icone nome="desfazer" /> Desfazer
     </button>
+    <app-oficina-publicar />
 </div>

@@ -11,6 +11,7 @@ import { Icone } from "../../../shared/icone/icone.component";
 import { BotaoIcone } from "../../../shared/ui/botao-icone/botao-icone.component";
 import { NotificacaoService } from "../../../shared/ui/notificacao/notificacao.service";
 import type { LinhaSumario, ResultadoDoDestino, TeclaDeEstrutura } from "./oficina-estrutura";
+import { OficinaMudancas } from "./oficina-mudancas.service";
 import { OficinaStore } from "./oficina.store";
 
 /** Largura de um nível de recuo, em px: é também a distância de arrasto que muda a profundidade. */
@@ -41,6 +42,12 @@ const TECLAS: Readonly<Record<string, TeclaDeEstrutura>> = {
 })
 export class OficinaSumario {
     protected readonly store = inject(OficinaStore);
+    private readonly mudancas = inject(OficinaMudancas, { optional: true });
+
+    /** Ponto de mudança da linha em relação à versão publicada (verde nova, amarelo alterada). */
+    protected marca(linha: LinhaSumario): "nova" | "alterada" | undefined {
+        return this.mudancas?.marcas().get(linha.identificador);
+    }
     private readonly notificacao = inject(NotificacaoService);
     private readonly injector = inject(Injector);
     private readonly raiz = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;

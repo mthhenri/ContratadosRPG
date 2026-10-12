@@ -505,7 +505,7 @@ export class OficinaStore {
         return ordenar(this.itens().filter((candidato) => candidato.pecaPaiId === item.pecaPaiId));
     }
 
-    private pai(item: Item): Item | undefined {
+    pai(item: Item): Item | undefined {
         return item.pecaPaiId === null ? undefined : this.itens().find((candidato) => candidato.id === item.pecaPaiId);
     }
 

@@ -18,3 +18,16 @@
 .oficina-barra__espaco {
     margin-right: auto;
 }
+.oficina-barra__contador {
+    min-width: 18px;
+    padding: 0 var(--space-4);
+    border-radius: var(--radius-tight);
+    background: var(--warning);
+    color: var(--bg);
+    font: 700 10.5px var(--font-mono);
+    text-align: center;
+    &--zero {
+        background: var(--surface-2);
+        color: var(--text-mute);
+    }
+}

@@ -7,6 +7,7 @@ import { Botao } from "../../../shared/ui/botao/botao.component";
 import { BotaoIcone } from "../../../shared/ui/botao-icone/botao-icone.component";
 import { BarraFerramentas } from "../../../shared/ui/barra-ferramentas/barra-ferramentas.component";
 import { BarraFerramentasSeparador } from "../../../shared/ui/barra-ferramentas/barra-ferramentas-separador.component";
+import { OficinaMudancas } from "./oficina-mudancas.service";
 import { OficinaStore } from "./oficina.store";
 
 /**
@@ -23,6 +24,8 @@ import { OficinaStore } from "./oficina.store";
         "[class.oficina-peca]": "ativa()",
         "[class.oficina-peca--selecionada]": "selecionada()",
         "[class.oficina-peca--pendencia]": "pendencias().length > 0",
+        "[class.oficina-peca--nova]": "marca() === 'nova'",
+        "[class.oficina-peca--alterada]": "marca() === 'alterada'",
         "[attr.data-peca-oficina]": "ativa() ? peca() : null",
         "(click)": "aoClicar($event)",
         "(focusin)": "aoFocar($event)",
@@ -35,11 +38,14 @@ export class OficinaPeca {
     readonly semFerramentas = input(false);
 
     protected readonly store = inject(OficinaStore, { optional: true });
+    private readonly mudancas = inject(OficinaMudancas, { optional: true });
     protected readonly ativa = computed(() => !!this.store && this.store.estado() !== "inativo" && !!this.peca()
         && !this.semFerramentas());
     protected readonly selecionada = computed(() => this.ativa() && this.store?.selecionada() === this.peca());
     protected readonly pendencias = computed(() =>
         this.ativa() ? (this.store?.pendenciasPorPeca().get(this.peca() as string) ?? []) : []);
+    /** Ponto de peça nova (verde) ou alterada (amarelo) em relação à versão publicada. */
+    protected readonly marca = computed(() => (this.ativa() ? this.mudancas?.marcas().get(this.peca() as string) : undefined));
     protected readonly mensagemPendencia = computed(() =>
         this.pendencias().map((pendencia) => pendencia.mensagem).join(" "));
     protected readonly item = computed(() => {

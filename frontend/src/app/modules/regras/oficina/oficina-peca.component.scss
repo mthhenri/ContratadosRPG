@@ -1,3 +1,4 @@
+@use "tema/breakpoints" as bp;
 // Casca de uma peça na Oficina: transparente fora dela; dentro, ancora as ferramentas e a pendência
 // (o `.peca` do exemplão: ferramentas acima, à direita; barra de acento na peça selecionada).
 :host {
@@ -26,4 +27,23 @@
     margin-top: var(--space-4);
     font: 500 11.5px var(--font-mono);
     color: var(--warning);
+}
+// Ponto de mudança (`.marca-alteracao` do exemplão): verde na peça nova, amarelo na alterada, na margem esquerda.
+.oficina-peca__marca {
+    position: absolute;
+    left: -18px;
+    top: 14px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--warning);
+    pointer-events: none;
+}
+:host(.oficina-peca--nova) .oficina-peca__marca {
+    background: var(--positive);
+}
+@include bp.mobile {
+    .oficina-peca__marca {
+        left: -10px;
+    }
 }

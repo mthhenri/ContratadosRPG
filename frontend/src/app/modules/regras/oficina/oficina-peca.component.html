@@ -1,4 +1,11 @@
 <ng-content />
+@if (marca(); as marcaDaPeca) {
+    <span
+        class="oficina-peca__marca"
+        role="img"
+        [attr.aria-label]="marcaDaPeca === 'nova' ? 'Peça nova desde a versão publicada' : 'Peça alterada desde a versão publicada'"
+    ></span>
+}
 @if (pendencias().length > 0) {
     <span class="oficina-peca__pendencia" role="note">
         <app-icone nome="alerta" /> Pendência: {{ mensagemPendencia() }}

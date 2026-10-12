@@ -13,6 +13,13 @@ import { SessaoService } from "../../core/services/sessao.service";
 import { RegrasLeituraStore } from "./regras-leitura.store";
 import { OficinaStore } from "./oficina/oficina.store";
 import { OficinaBarra } from "./oficina/oficina-barra.component";
+import { OficinaApi } from "./oficina/oficina-api.service";
+import { OficinaMudancas } from "./oficina/oficina-mudancas.service";
+import { OficinaMudancasLista } from "./oficina/oficina-mudancas.component";
+import { Campo } from "../../shared/ui/campo/campo.component";
+import type { LivroVersaoResumoDto } from "@contratados-rpg/shared/dtos/livro";
+import { projetarPecasEmRegras } from "@contratados-rpg/shared/livro";
+import { firstValueFrom } from "rxjs";
 import { OficinaSumario } from "./oficina/oficina-sumario.component";
 import { MenuInsercao } from "../../shared/ui/menu-insercao/menu-insercao.component";
 import { RegrasLeitorContexto } from "./regras-leitor-contexto";
@@ -41,11 +48,11 @@ import { construirSumarioRegras, listarAncorasRegras } from "./regras-sumario";
 
 @Component({
     selector: "app-regras-leitor",
-    providers: [RegrasLeitorContexto, RegrasPesquisaController, OficinaStore],
+    providers: [RegrasLeitorContexto, RegrasPesquisaController, OficinaStore, OficinaMudancas],
     imports: [NgTemplateOutlet, Icone, Marca, Botao, Cartao, Esqueleto, EstadoVazio,
         Segmentado, SegmentadoItem, Gaveta, Paleta, RegrasPesquisa, RegrasPesquisaProjecao,
         BotaoIcone, Tooltip, Chip,
-        RegrasConteudoRender, OficinaBarra, OficinaSumario, MenuInsercao],
+        RegrasConteudoRender, OficinaBarra, OficinaSumario, MenuInsercao, OficinaMudancasLista, Campo],
     templateUrl: "./regras-leitor.component.html",
     styleUrl: "./regras-leitor.component.scss",
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -83,6 +90,7 @@ export class RegrasLeitor {
     private assinatura?: Subscription;
     private desconectar?: () => void;
     private geracao = 0;
+    private geracaoVersao = 0;
     private silenciadoAte = 0;
 
     protected readonly documento = signal<RegrasDocumento | null>(null);
@@ -90,7 +98,14 @@ export class RegrasLeitor {
     /** A Oficina edita a cópia de trabalho do banco: só ADMIN, na página, com o livro vindo da API. */
     protected readonly podeEditar = computed(() => this.sessao.usuario()?.tipo === TipoUsuarioEnum.ADMIN
         && !this.emPainel() && this.leitura()?.situacao != null);
-    protected readonly oficinaAtiva = computed(() => this.podeEditar() && this.modoOficina());
+    protected readonly oficinaAtiva = computed(() => this.podeEditar() && this.modoOficina() && this.versaoVista() === null);
+    /** Gaveta "O que mudou" (só na Oficina). */
+    protected readonly mudancasAbertas = signal(false);
+    /** As versões do livro (só ADMIN) e a versão antiga aberta para leitura (m11-09); `null` = a atual. */
+    protected readonly versoes = signal<readonly LivroVersaoResumoDto[]>([]);
+    protected readonly versaoVista = signal<LivroVersaoResumoDto | null>(null);
+    private readonly api = inject(OficinaApi);
+    private readonly mudancas = inject(OficinaMudancas);
     /** O que a tela mostra: na Oficina, a cópia de trabalho; fora dela, a leitura publicada. */
     protected readonly exibido = computed(() => this.oficinaAtiva() ? this.oficina.documento() : this.documento());
     protected readonly estadoExibido = computed(() => {
@@ -126,6 +141,16 @@ export class RegrasLeitor {
     });
 
     constructor() {
+        // Depois de publicar na Oficina, o seletor de versões acompanha a lista nova.
+        effect(() => {
+            const lista = this.mudancas.versoes();
+            if (lista.length > 0) untracked(() => this.versoes.set(lista));
+        });
+        effect(() => {
+            const livro = this.livro();
+            const podeVer = this.podeEditar();
+            untracked(() => void this.carregarVersoes(livro, podeVer));
+        });
         effect(() => {
             const livro = this.livro();
             untracked(() => this.carregarDocumento(livro));
@@ -196,7 +221,81 @@ export class RegrasLeitor {
 
     protected alternarModo(oficina: boolean): void {
         this.gavetaAberta.set(false);
+        if (oficina) this.voltarVersaoAtual();
+        else if (this.oficinaAtiva()) {
+            // O que a Oficina gravou ou publicou não está na leitura em cache: lê de novo ao voltar para a Leitura.
+            this.service.invalidarLeitura(this.livro());
+            this.carregarDocumento(this.livro());
+        }
         this.modoAlterado.emit(oficina);
+    }
+
+    private async carregarVersoes(livro: RegrasDocumento["id"], podeVer: boolean): Promise<void> {
+        this.geracaoVersao++;
+        this.versaoVista.set(null);
+        this.versoes.set([]);
+        if (!podeVer) return;
+        try {
+            const lista = await firstValueFrom(this.api.listarVersoes(livro));
+            if (this.livro() === livro) {
+                this.versoes.set([...lista].sort((a, b) => b.publicacaoData.localeCompare(a.publicacaoData) || b.id - a.id));
+            }
+        } catch {
+            this.versoes.set([]);
+        }
+    }
+
+    protected rotuloVersao(versao: LivroVersaoResumoDto): string {
+        return `${versao.numero} · ${versao.situacao === TipoLivroVersaoSituacaoEnum.PUBLICADA ? "publicada" : "rascunho"}`;
+    }
+
+    /** Abre uma versão antiga só para leitura (sem a Oficina) ou volta à atual (`0`). */
+    protected async escolherVersao(evento: Event): Promise<void> {
+        const id = Number((evento.target as HTMLSelectElement).value);
+        if (!id) {
+            this.voltarVersaoAtual();
+            return;
+        }
+        const versao = this.versoes().find((candidata) => candidata.id === id);
+        if (!versao) return;
+        const livro = this.livro();
+        const geracao = ++this.geracaoVersao;
+        try {
+            const conteudo = await firstValueFrom(this.api.recuperarVersao(livro, id));
+            // Trocou de livro, voltou à atual ou escolheu outra versão enquanto esta vinha: a resposta velha não vale.
+            if (geracao !== this.geracaoVersao || this.livro() !== livro || this.destroyRef.destroyed) return;
+            const documento = projetarPecasEmRegras(conteudo.conteudo) as unknown as RegrasDocumento;
+            this.mudancasAbertas.set(false);
+            this.versaoVista.set(versao);
+            this.documento.set(documento);
+            this.ativo.set(null);
+            this.pesquisa.conectarDocumento(documento, this.elemento.nativeElement,
+                (marca, ancora) => this.posicionarOcorrencia(marca, ancora));
+        } catch {
+            if (geracao !== this.geracaoVersao) return;
+            (evento.target as HTMLSelectElement).value = String(this.versaoVista()?.id ?? 0);
+            this.notificacao.notificar({ severidade: "erro", resumo: "Não foi possível abrir a versão",
+                detalhe: "Tente de novo." });
+        }
+    }
+
+    protected voltarVersaoAtual(): void {
+        this.geracaoVersao++;
+        if (this.versaoVista() === null) return;
+        this.versaoVista.set(null);
+        const atual = this.leitura()?.documento ?? null;
+        this.documento.set(atual);
+        this.ativo.set(null);
+        if (atual) {
+            this.pesquisa.conectarDocumento(atual, this.elemento.nativeElement,
+                (marca, ancora) => this.posicionarOcorrencia(marca, ancora));
+        }
+    }
+
+    /** Clique numa mudança da gaveta: fecha a gaveta e leva à peça. */
+    protected irParaMudanca(identificador: string): void {
+        this.mudancasAbertas.set(false);
+        this.irParaPeca(identificador);
     }
 
     protected avisarAntesDeSair(evento: BeforeUnloadEvent): void {

@@ -54,7 +54,7 @@
     }
     <div class="regras__rolagem" [attr.inert]="gavetaAberta() ? '' : null">
         @if (oficinaAtiva()) {
-            <app-oficina-barra (irPara)="abrirPaleta()" (irParaPeca)="irParaPeca($event)" />
+            <app-oficina-barra (irPara)="abrirPaleta()" (irParaPeca)="irParaPeca($event)" (abrirMudancas)="mudancasAbertas.set(true)" />
         }
         @if (pesquisa.termo().trim().length >= 2 && documento() && !oficinaAtiva()) {
             <div class="regras__pesquisa-contador">
@@ -93,7 +93,15 @@
                 </button>
             </div>
         }
-        @if (emRascunho()) {
+        @if (versaoVista(); as vista) {
+            <p class="regras__rascunho" role="status">
+                <app-chip severidade="primario">Versão {{ vista.numero }}</app-chip>
+                Somente leitura: você está vendo uma versão antiga.
+                <button app-botao variante="secundario" estilo="contorno" tamanho="pequeno" type="button" (click)="voltarVersaoAtual()">
+                    Voltar à atual
+                </button>
+            </p>
+        } @else if (emRascunho()) {
             <p class="regras__rascunho" role="status">
                 <app-chip severidade="aviso">Rascunho {{ leitura()?.numero }}</app-chip>
                 Você está vendo uma versão ainda não publicada.
@@ -174,6 +182,13 @@
             </app-gaveta>
         </div>
     }
+    @if (oficinaAtiva()) {
+        <div class="regras__gaveta-area">
+            <app-gaveta [(aberta)]="mudancasAbertas" rotulo="O que mudou" lado="fim">
+                <app-oficina-mudancas (irPara)="irParaMudanca($event)" />
+            </app-gaveta>
+        </div>
+    }
     <button
         app-botao-icone
         class="regras__topo"
@@ -235,6 +250,16 @@
                     Oficina
                 </button>
             </app-segmentado>
+        }
+        @if (podeEditar() && versoes().length > 0) {
+            <app-campo rotulo="Versão" tamanho="compacto">
+                <select class="campo__controle regras__versao" aria-label="Versão do livro" (change)="escolherVersao($event)">
+                    <option value="0" [selected]="versaoVista() === null">Atual</option>
+                    @for (versao of versoes(); track versao.id) {
+                        <option [value]="versao.id" [selected]="versaoVista()?.id === versao.id">{{ rotuloVersao(versao) }}</option>
+                    }
+                </select>
+            </app-campo>
         }
         @if (documento() && !usarGaveta()) {
             <button

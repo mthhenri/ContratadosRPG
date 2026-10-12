@@ -1,0 +1,57 @@
+// Diálogo "Publicar" (`.dialogo` do exemplão da Oficina): a caixa e as ações são do `app-modal`, o rótulo do `app-campo`.
+@use "tema/breakpoints" as bp;
+
+:host {
+    display: inline-block;
+}
+.oficina-publicar {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-16);
+
+    &__resumo {
+        display: grid;
+        gap: var(--space-4);
+    }
+    &__rotulo {
+        font: 500 10.5px var(--font-mono);
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        color: var(--text-mute);
+    }
+    &__contagem,
+    &__nada {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-4) var(--space-12);
+        margin: 0;
+        font: 500 13px var(--font-mono);
+        color: var(--text-dim);
+    }
+    &__c--nova {
+        color: var(--positive);
+    }
+    &__c--removida {
+        color: var(--erro);
+    }
+    &__c--alterada {
+        color: var(--warning);
+    }
+    &__alerta {
+        display: flex;
+        gap: var(--space-8);
+        padding: var(--space-8) var(--space-12);
+        border-radius: var(--radius-control);
+        background: color-mix(in srgb, var(--warning) 14%, transparent);
+        color: var(--warning);
+        font-size: 13px;
+        &--erro {
+            background: color-mix(in srgb, var(--erro) 14%, transparent);
+            color: var(--erro);
+        }
+        ul {
+            margin: var(--space-4) 0 0;
+            padding-left: var(--space-16);
+        }
+    }
+}

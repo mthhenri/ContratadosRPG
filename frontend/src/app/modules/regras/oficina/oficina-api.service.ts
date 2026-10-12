@@ -3,6 +3,7 @@ import { Injectable, inject } from "@angular/core";
 import type {
     RegraPecaAlteradaDto, RegraPecaArvoreItemDto, RegraPecaCriadaDto, RegraPecaCriarDto,
     RegraPecaDuplicadaDto, RegraPecaExcluidaDto, RegraPecaMovidaDto, RegraPecaNomeAlteradaDto,
+    LivroPublicadoDto, LivroPublicarDto, LivroVersaoRecuperadaDto, LivroVersaoResumoDto,
     RegraPecaRecuperadaDto, RegraPecaRestauradaDto,
 } from "@contratados-rpg/shared/dtos/livro";
 import type { StandardResponse } from "@contratados-rpg/shared/interfaces";
@@ -77,5 +78,28 @@ export class OficinaApi {
         return this.httpClient.post<StandardResponse<RegraPecaCriadaDto>>(
             this.base(codigo), dto, { context: this.contexto })
             .pipe(map((resposta) => resposta.dados as RegraPecaCriadaDto));
+    }
+
+    /** As versões do livro (publicadas e rascunhos), da mais recente à mais antiga. */
+    listarVersoes(codigo: string): Observable<LivroVersaoResumoDto[]> {
+        return this.httpClient.get<StandardResponse<LivroVersaoResumoDto[]>>(this.baseLivro(codigo, "versoes"),
+            { context: this.contexto }).pipe(map((resposta) => resposta.dados as LivroVersaoResumoDto[]));
+    }
+
+    /** Uma versão com o conteúdo da fotografia (só ADMIN). */
+    recuperarVersao(codigo: string, id: number): Observable<LivroVersaoRecuperadaDto> {
+        return this.httpClient.get<StandardResponse<LivroVersaoRecuperadaDto>>(
+            `${this.baseLivro(codigo, "versoes")}/${id}`, { context: this.contexto })
+            .pipe(map((resposta) => resposta.dados as LivroVersaoRecuperadaDto));
+    }
+
+    /** Fotografa a cópia de trabalho como rascunho ou versão; a recusa (400) traz as pendências em `erros`. */
+    publicar(codigo: string, dto: Omit<LivroPublicarDto, "codigo">): Observable<LivroPublicadoDto> {
+        return this.httpClient.post<StandardResponse<LivroPublicadoDto>>(this.baseLivro(codigo, "publicacoes"), dto,
+            { context: this.contexto }).pipe(map((resposta) => resposta.dados as LivroPublicadoDto));
+    }
+
+    private baseLivro(codigo: string, recurso: string): string {
+        return `${environment.apiBase}/livros/${encodeURIComponent(codigo)}/${recurso}`;
     }
 }

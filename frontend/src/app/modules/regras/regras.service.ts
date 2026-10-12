@@ -39,6 +39,11 @@ export class RegrasService {
         return this.carregarLeitura(id).pipe(map((leitura) => leitura.documento));
     }
 
+    /** Descarta a leitura em cache do livro (a Oficina gravou ou publicou desde então). */
+    invalidarLeitura(id: RegrasDocumento["id"]): void {
+        this.leituras.delete(`${id}|${this.sessao.obterToken() ?? ""}`);
+    }
+
     /** Compartilha a leitura e conserva o sucesso; uma falha permite nova tentativa. */
     carregarLeitura(id: RegrasDocumento["id"]): Observable<RegrasLeitura> {
         const chave = `${id}|${this.sessao.obterToken() ?? ""}`;

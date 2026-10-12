@@ -1,5 +1,19 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-11 — M11-09: mudanças e publicar na Oficina
+
+A Oficina marca cada peça nova (ponto verde) ou alterada (amarelo) contra a última versão publicada, mostra o estado
+("Em edição"/"Igual à publicada" e a publicação mais recente) e abre a gaveta "O que mudou" (abas *Edição × publicada*
+e *Histórico*, com diff palavra a palavra e clique que leva à peça). "Publicar ▾" (primitivo novo `app-menu-acoes`,
+aprovado pelo autor) abre o diálogo com resumo, número sugerido (`sugerirNumeroVersao` em `shared`), nota e pendências;
+o admin ainda abre versões antigas só para leitura. O comparador mede ~2 ms em 1080 peças, então não houve cálculo
+incremental. Testes: shared 1258, backend 1093, frontend 3403; lint sem erros; gate visual nos dois viewports, escuro e
+claro; ponta a ponta com admin, tester e comum (rascunho vê o tester, versão vê o comum). A revisão independente achou
+12 pontos; corrigi os reais — publicar com salvamento falho, leitura em cache velha depois de publicar, falha de
+listagem lida como "nunca publicado", corrida do seletor de versão, resumo divergente da lista, receitas locais de
+campo/selo — e registrei os três que ficam (regra de bloqueio duplicada no front, peça movida pintada, leitor de tela).
+[Verificação](../specs/done/m11-09-oficina-mudancas-e-publicar/verificacao.md).
+
 ## 2026-10-11 — M11-08 fatia 5 e fecho: tabela, grade, faixas e níveis editáveis; blocos ricos concluídos
 
 Tabela (células, cabeçalho, linhas e colunas), grade genérica e de cartões, faixas e níveis de ameaça editam-se no lugar,

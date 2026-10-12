@@ -47,6 +47,14 @@
                             (click)="irPara.emit(linha.identificador)"
                             (keydown)="aoTeclar($event, linha)"
                         >
+                            @if (marca(linha); as marcaDaLinha) {
+                                <span
+                                    class="oficina-sumario__marca"
+                                    [class.oficina-sumario__marca--nova]="marcaDaLinha === 'nova'"
+                                    role="img"
+                                    [attr.aria-label]="marcaDaLinha === 'nova' ? 'Nova desde a versão publicada' : 'Alterada desde a versão publicada'"
+                                ></span>
+                            }
                             <span class="oficina-sumario__glifo" aria-hidden="true">{{ glifo(linha) }}</span>
                             @if (linha.rotulo) {
                                 {{ linha.rotulo }}

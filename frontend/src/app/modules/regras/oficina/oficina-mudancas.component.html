@@ -1,0 +1,135 @@
+<div class="oficina-mudancas">
+    <div class="oficina-mudancas__controles">
+        <app-segmentado rotulo="Comparação" [fluido]="true">
+            <button app-segmentado-item type="button" [ativo]="modo() === 'edicao'" (click)="modo.set('edicao')">
+                Edição × publicada
+            </button>
+            <button app-segmentado-item type="button" [ativo]="modo() === 'historico'" (click)="modo.set('historico')">
+                Histórico
+            </button>
+        </app-segmentado>
+        @if (modo() === "historico") {
+            <div class="oficina-mudancas__versoes">
+                <app-campo rotulo="De" tamanho="compacto">
+                    <select class="campo__controle" [value]="versaoAntes()" (change)="escolherVersao('antes', $event)">
+                        @for (versao of mudancas.versoes(); track versao.id) {
+                            <option [value]="versao.id" [selected]="versao.id === versaoAntes()">{{ rotuloVersao(versao) }}</option>
+                        }
+                    </select>
+                </app-campo>
+                <app-campo rotulo="Para" tamanho="compacto">
+                    <select class="campo__controle" [value]="versaoDepois()" (change)="escolherVersao('depois', $event)">
+                        @for (versao of mudancas.versoes(); track versao.id) {
+                            <option [value]="versao.id" [selected]="versao.id === versaoDepois()">{{ rotuloVersao(versao) }}</option>
+                        }
+                    </select>
+                </app-campo>
+            </div>
+        }
+        @if (resumo(); as contagem) {
+            <p class="oficina-mudancas__resumo" role="status">
+                @if (contagem.ALTERADA) {
+                    <span class="oficina-mudancas__c--alterada">{{ contagem.ALTERADA }} {{ contagem.ALTERADA === 1 ? "alterada" : "alteradas" }}</span>
+                }
+                @if (contagem.NOVA) {
+                    <span class="oficina-mudancas__c--nova">{{ contagem.NOVA }} {{ contagem.NOVA === 1 ? "nova" : "novas" }}</span>
+                }
+                @if (contagem.REMOVIDA) {
+                    <span class="oficina-mudancas__c--removida">{{ contagem.REMOVIDA }} {{ contagem.REMOVIDA === 1 ? "removida" : "removidas" }}</span>
+                }
+                @if (contagem.MOVIDA) {
+                    <span class="oficina-mudancas__c--movida">{{ contagem.MOVIDA }} {{ contagem.MOVIDA === 1 ? "movida" : "movidas" }}</span>
+                }
+            </p>
+        }
+    </div>
+
+    <div class="oficina-mudancas__lista">
+        @if (modo() === "historico" && carregandoHistorico()) {
+            <p class="oficina-mudancas__vazio" role="status">Comparando as versões…</p>
+        } @else if (modo() === "historico" && falhaHistorico()) {
+            <p class="oficina-mudancas__vazio" role="alert"><strong>Não foi possível comparar.</strong>Tente de novo.</p>
+        } @else if (comparacao() === null) {
+            <p class="oficina-mudancas__vazio">
+                <strong>Nada para comparar</strong>
+                @if (modo() === "edicao") {
+                    Ainda não há versão publicada deste livro para servir de base.
+                } @else {
+                    Escolha duas versões.
+                }
+            </p>
+        } @else if (lista().length === 0) {
+            <p class="oficina-mudancas__vazio">
+                <strong>Nada mudou</strong>
+                {{ modo() === "edicao" ? "A edição está igual à versão publicada." : "As duas versões são iguais." }}
+            </p>
+        } @else {
+            @for (mudanca of lista(); track $index) {
+                <article
+                    class="oficina-mudancas__item"
+                    [class.oficina-mudancas__item--clicavel]="podeIr(mudanca)"
+                    [attr.tabindex]="podeIr(mudanca) ? 0 : null"
+                    [attr.role]="podeIr(mudanca) ? 'button' : null"
+                    [attr.aria-label]="podeIr(mudanca) ? 'Ir para ' + nome(mudanca) : null"
+                    (click)="ir(mudanca)"
+                    (keydown.enter)="ir(mudanca)"
+                    (keydown.space)="ir(mudanca); $event.preventDefault()"
+                >
+                    <span class="oficina-mudancas__onde">{{ onde(mudanca) }}</span>
+                    <div class="oficina-mudancas__cab">
+                        <strong>{{ nome(mudanca) }}</strong>
+                        <app-chip [severidade]="severidade[mudanca.situacao]" tom="contorno">{{ rotuloSituacao[mudanca.situacao] }}</app-chip>
+                        <span class="oficina-mudancas__onde">{{ tipo(mudanca) }}</span>
+                    </div>
+                    @if (mudanca.situacao === Situacao.ALTERADA && mudanca.campos) {
+                        <dl class="oficina-mudancas__campos">
+                            @for (campo of mudanca.campos; track campo.campo) {
+                                <dt>{{ rotuloCampo(campo.campo) }}</dt>
+                                <dd>
+                                    @if (campo.texto; as trechos) {
+                                        @for (trecho of trechos; track $index) {
+                                            @switch (trecho.operacao) {
+                                                @case (Operacao.ADICIONADO) {
+                                                    <ins>{{ trecho.texto }}</ins>
+                                                }
+                                                @case (Operacao.REMOVIDO) {
+                                                    <del>{{ trecho.texto }}</del>
+                                                }
+                                                @case (Operacao.FORMATACAO) {
+                                                    <span class="oficina-mudancas__formatacao">{{ trecho.texto }}</span>
+                                                }
+                                                @default {
+                                                    <span>{{ trecho.texto }}</span>
+                                                }
+                                            }
+                                        }
+                                    } @else {
+                                        <del>{{ valor(campo.antes) }}</del> <ins>{{ valor(campo.depois) }}</ins>
+                                    }
+                                </dd>
+                            }
+                        </dl>
+                    }
+                    @if (mudanca.situacao === Situacao.MOVIDA) {
+                        <dl class="oficina-mudancas__campos">
+                            <dt>Posição</dt>
+                            <dd>{{ textoDoPosicao(mudanca) }}</dd>
+                        </dl>
+                    }
+                </article>
+            }
+        }
+    </div>
+
+    <p class="oficina-mudancas__pe">
+        @if (modo() === "edicao") {
+            @if (publicadaNumero(); as numero) {
+                Comparando o que você está editando com a versão publicada {{ numero }}. Clique numa mudança para ir até a peça.
+            } @else {
+                Este livro ainda não tem versão publicada.
+            }
+        } @else {
+            Versões anteriores à importação não entram na comparação peça a peça.
+        }
+    </p>
+</div>

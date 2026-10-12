@@ -200,3 +200,16 @@
         width: 28px;
     }
 }
+// Ponto de mudança da linha (verde nova, amarelo alterada).
+.oficina-sumario__marca {
+    display: inline-block;
+    flex: none;
+    width: 6px;
+    height: 6px;
+    margin-right: var(--space-4);
+    border-radius: 50%;
+    background: var(--warning);
+    &--nova {
+        background: var(--positive);
+    }
+}

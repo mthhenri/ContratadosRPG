@@ -1,0 +1,56 @@
+<span #gatilho class="menu-acoes">
+  <button
+    app-botao
+    type="button"
+    posicaoIcone="direita"
+    aria-haspopup="menu"
+    [variante]="variante()"
+    [estilo]="estilo()"
+    [tamanho]="tamanho()"
+    [disabled]="desabilitado()"
+    [attr.aria-expanded]="aberto()"
+    [attr.aria-controls]="aberto() ? menuId : null"
+    (click)="alternar()"
+    (keydown)="aoTeclarNoGatilho($event)"
+  >
+    {{ rotulo() }}
+    <app-icone nome="chevron" />
+  </button>
+</span>
+@if (aberto()) {
+  <div
+    #painel
+    class="menu-acoes__painel"
+    role="menu"
+    tabindex="-1"
+    [id]="menuId"
+    [attr.aria-label]="rotulo()"
+    [attr.aria-activedescendant]="indiceAtivo() >= 0 ? id(indiceAtivo()) : null"
+    [style.right.px]="posicao().direita"
+    [style.top.px]="posicao().topo"
+    [style.bottom.px]="posicao().base"
+    [style.width.px]="posicao().largura"
+    (keydown)="aoTeclarNoMenu($event)"
+  >
+    @for (item of itens(); track item.id; let i = $index) {
+      <div
+        class="menu-acoes__item"
+        role="menuitem"
+        tabindex="-1"
+        [id]="id(i)"
+        [class.menu-acoes__item--ativo]="i === indiceAtivo()"
+        [class.menu-acoes__item--desabilitado]="item.desabilitado"
+        [attr.aria-disabled]="item.desabilitado ? 'true' : null"
+        (mousedown)="$event.preventDefault()"
+        (click)="escolher(item)"
+        (keydown.enter)="escolher(item)"
+        (mousemove)="item.desabilitado || indiceAtivo.set(i)"
+      >
+        <strong class="menu-acoes__rotulo">{{ item.rotulo }}</strong>
+        @if (item.descricao) {
+          <span class="menu-acoes__descricao">{{ item.descricao }}</span>
+        }
+      </div>
+    }
+  </div>
+}
