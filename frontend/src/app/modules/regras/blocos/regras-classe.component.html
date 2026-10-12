@@ -8,6 +8,18 @@
         <app-icone cartaoIndice [nome]="nomeIcone" />
     }
     <div class="regras-classe">
+    @if (editando()) {
+        <div class="regras-classe__campo-nome">
+            <span>Nome</span>
+            <app-oficina-texto
+                campo="nome"
+                rotulo="Nome da classe"
+                vazio="Nome da classe"
+                [peca]="bloco().peca!"
+                [texto]="bloco().nome"
+            />
+        </div>
+    }
         <p class="regras-classe__citacao">
             <app-regras-inline
                 [trechos]="bloco().citacao"
@@ -19,6 +31,7 @@
             />
         </p>
         <app-regras-saude
+            [peca]="bloco().peca"
             [saude]="bloco().saude"
             [progressao]="bloco().progressao"
             [documento]="documento()"

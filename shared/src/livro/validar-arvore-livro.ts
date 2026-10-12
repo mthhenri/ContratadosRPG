@@ -261,6 +261,7 @@ export function validarArvoreLivro(dto: LivroArvoreValidarDto): LivroPendenciaDt
       }
     }
     conferirEquipamento(peca, caminho, dados);
+    conferirClasse(peca, caminho, dados);
     if (peca.tipo === Tipo.HABILIDADE) {
       if (typeof dados["custo"] === "number" && dados["custo"] < 0) {
         registrar(peca, caminho, Codigo.CONTEUDO_INCOMPLETO, Gravidade.CONTEUDO,
@@ -304,6 +305,36 @@ export function validarArvoreLivro(dto: LivroArvoreValidarDto): LivroPendenciaDt
     }
     if (peca.tipo === Tipo.MODIFICACAO && vazio("bloqueia")) {
       faltou("Falta o que a modificação bloqueia (use — se nada).");
+    }
+  };
+
+  /** Pendências de conteúdo de classe, arquétipo e subclasse (m11-08). */
+  const conferirClasse = (
+    peca: LivroPecaDto,
+    caminho: readonly string[],
+    dados: Record<string, unknown>,
+  ): void => {
+    const faltou = (mensagem: string): void =>
+      registrar(peca, caminho, Codigo.CONTEUDO_INCOMPLETO, Gravidade.CONTEUDO, mensagem);
+    const recurso = (grupo: string, campo: string): string => {
+      const valor = dados[grupo];
+      return ehObjeto(valor) ? extrairTexto(valor[campo]).trim() : "";
+    };
+    if (peca.tipo === Tipo.CLASSE || peca.tipo === Tipo.SUBCLASSE) {
+      if (!recurso("saude", "vida") || !recurso("saude", "energia")) faltou("Falta a Vida e a Energia iniciais.");
+      if (!recurso("progressao", "vida") || !recurso("progressao", "energia")) {
+        faltou("Falta a progressão de Vida e de Energia por nível.");
+      }
+    }
+    if (peca.tipo === Tipo.ARQUETIPO || peca.tipo === Tipo.SUBCLASSE) {
+      if (!extrairTexto(dados["atributosBonus"]).trim()) faltou("Faltam os atributos bônus.");
+    }
+    if (peca.tipo === Tipo.SUBCLASSE) {
+      if (typeof dados["classe"] === "string" && !dados["classe"].trim()) faltou("Falta a classe da subclasse.");
+      const custos: unknown[] = Array.isArray(dados["custos"]) ? dados["custos"] : [];
+      if (custos.length === 0 || custos.some((custo) => !extrairTexto(custo).trim())) {
+        faltou("Falta o custo do experimento (ao menos um, sem linha vazia).");
+      }
     }
   };
 

@@ -10,11 +10,13 @@ import { recuperarIconeIdentidade } from "./regras-identidade-icone";
 import { RegrasSaude } from "./regras-saude.component";
 import { TipoRegraPecaEnum } from "@contratados-rpg/shared/enums";
 import { OficinaInsercao } from "../oficina/oficina-insercao.component";
+import { OficinaTexto } from "../oficina/oficina-texto.component";
+import { OficinaStore } from "../oficina/oficina.store";
 
 @Component({
     selector: "app-regras-classe",
     imports: [
-        Cartao, Icone, RegrasInline, RegrasArquetipos, RegrasSaude, OficinaInsercao,
+        Cartao, Icone, RegrasInline, RegrasArquetipos, RegrasSaude, OficinaInsercao, OficinaTexto,
         forwardRef(() => RegrasConteudoRender),
     ],
     templateUrl: "./regras-classe.component.html",
@@ -27,6 +29,8 @@ export class RegrasClasse {
     /** O "+ Arquétipo" no fim da classe só oferece o que a classe aceita como filho além da habilidade. */
     protected readonly tiposArquetipo = [TipoRegraPecaEnum.ARQUETIPO];
     private readonly contexto = inject(RegrasLeitorContexto, { optional: true });
+    private readonly oficina = inject(OficinaStore, { optional: true });
+    protected readonly editando = computed(() => !!this.bloco().peca && this.oficina?.estado() === "ok");
     protected readonly identificador = computed(() => {
         const ancora = this.bloco().ancora;
         return ancora ? this.contexto?.identificar(ancora) ?? ancora : null;

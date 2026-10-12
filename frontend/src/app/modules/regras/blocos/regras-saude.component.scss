@@ -14,7 +14,24 @@
         }
     }
 }
+// Progressão por nível: só existe na Oficina (na Leitura ela já aparece como nota do Stat).
+.regras-saude__progressao {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-12);
+    padding-top: var(--space-8);
+}
+.regras-saude__progressao-rotulo {
+    display: block;
+    font: 400 10px var(--font-mono);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--text-mute);
+}
 @include bp.mobile {
+    .regras-saude__progressao {
+        grid-template-columns: 1fr;
+    }
     .regras-saude {
         grid-template-columns: 1fr;
     }

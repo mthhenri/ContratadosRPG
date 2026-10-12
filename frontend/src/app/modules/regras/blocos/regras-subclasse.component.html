@@ -8,7 +8,30 @@
         <app-icone cartaoIndice [nome]="nomeIcone" />
     }
     <div class="regras-subclasse">
-        <span class="regras-subclasse__tipo">Subclasse · {{ bloco().classe }}</span>
+    @if (editando()) {
+        <div class="regras-subclasse__campo-nome">
+            <span>Nome</span>
+            <app-oficina-texto
+                campo="nome"
+                rotulo="Nome da subclasse"
+                vazio="Nome da subclasse"
+                [peca]="bloco().peca!"
+                [texto]="bloco().nome"
+            />
+        </div>
+    }
+        <span class="regras-subclasse__tipo"
+            >Subclasse ·
+            @if (editando()) {
+                <app-oficina-texto
+                    campo="classe"
+                    rotulo="Classe da subclasse"
+                    vazio="Classe"
+                    [peca]="bloco().peca!"
+                    [texto]="bloco().classe"
+                />
+            } @else {{{ bloco().classe }}}
+        </span>
         <p class="regras-subclasse__citacao">
             <app-regras-inline
                 [trechos]="bloco().citacao"
@@ -25,15 +48,48 @@
                     <li>
                         <app-regras-inline
                             [trechos]="custo"
+                            [peca]="bloco().peca"
+                            [campo]="'custos.' + $index"
+                            [caminho]="['custos', $index]"
+                            rotuloEdicao="Custo do experimento"
+                            dica="Custo (ex.: 5 de Vida)"
                             [documento]="documento()"
                             (navegarAncora)="navegarAncora.emit($event)"
                         />
+                        @if (selecionada()) {
+                            <button
+                                app-botao-icone
+                                tamanho="compacto"
+                                variante="perigo"
+                                type="button"
+                                [attr.aria-label]="'Remover custo ' + ($index + 1)"
+                                appTooltip="Remover custo"
+                                (click)="removerCusto($index)"
+                            >
+                                <app-icone nome="excluir" />
+                            </button>
+                        }
                     </li>
                 }
             </ul>
+            @if (selecionada()) {
+                <button
+                    app-botao
+                    variante="secundario"
+                    estilo="contorno"
+                    tamanho="pequeno"
+                    posicaoIcone="esquerda"
+                    type="button"
+                    aria-label="Adicionar custo"
+                    (click)="adicionarCusto()"
+                >
+                    <app-icone nome="mais" /> Custo
+                </button>
+            }
         </app-regras-destaque>
         <app-regras-saude
             class="regras-subclasse__saude"
+            [peca]="bloco().peca"
             [saude]="bloco().saude"
             [progressao]="bloco().progressao"
             [documento]="documento()"
@@ -42,11 +98,24 @@
         <div class="regras-subclasse__painel">
             <div class="regras-subclasse__lado">
                 <span class="regras-subclasse__rotulo">Atributos bônus</span>
-                <div class="regras-subclasse__bonus">
-                    @for (item of bonus(); track $index) {
-                        <app-chip variante="sutil" [quebravel]="true">{{ item }}</app-chip>
-                    }
-                </div>
+                @if (editando()) {
+                    <app-regras-inline
+                        class="regras-subclasse__bonus-edicao"
+                        [trechos]="bloco().atributosBonus"
+                        [peca]="bloco().peca"
+                        campo="atributosBonus"
+                        rotuloEdicao="Atributos bônus"
+                        dica="+1 em Força +1 em Vigor"
+                        [documento]="documento()"
+                        (navegarAncora)="navegarAncora.emit($event)"
+                    />
+                } @else {
+                    <div class="regras-subclasse__bonus">
+                        @for (item of bonus(); track $index) {
+                            <app-chip variante="sutil" [quebravel]="true">{{ item }}</app-chip>
+                        }
+                    </div>
+                }
                 <app-regras-destaque rotulo="Habilidade inicial">
                     <app-regras-conteudo
                         [filhos]="[bloco().habilidadeInicial]"

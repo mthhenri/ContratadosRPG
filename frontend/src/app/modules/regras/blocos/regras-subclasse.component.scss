@@ -66,3 +66,23 @@
         grid-template-columns: minmax(0, 1fr);
     }
 }
+
+// Nome editável na Oficina (o título do cartão é só leitura): linha de rótulo + campo, como a categoria dos equipamentos.
+.regras-subclasse__campo-nome {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-8);
+    padding-bottom: var(--space-8);
+    font: 400 10px var(--font-mono);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--text-mute);
+}
+.regras-subclasse__campo-nome app-oficina-texto {
+    flex: 1;
+    min-width: 0;
+    font: 600 14px var(--font-mono);
+    letter-spacing: normal;
+    text-transform: none;
+    color: var(--text);
+}

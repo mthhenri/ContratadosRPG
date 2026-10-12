@@ -37,18 +37,43 @@
                     @if (icone(arquetipo.nome); as nomeIcone) {
                         <app-icone [nome]="nomeIcone" />
                     }
-                    {{ arquetipo.nome || "Arquétipo sem nome" }}
+                    @if (editavel(arquetipo)) {
+                        <app-oficina-texto
+                            campo="nome"
+                            rotulo="Nome do arquétipo"
+                            vazio="Nome do arquétipo"
+                            [peca]="arquetipo.peca!"
+                            [texto]="arquetipo.nome"
+                        />
+                    } @else {
+                        {{ arquetipo.nome || "Arquétipo sem nome" }}
+                    }
                 </div>
-                @if (arquetipo.citacao.length) {
+                @if (arquetipo.citacao.length || editavel(arquetipo)) {
                     <p class="regras-arquetipos__citacao">
                         <app-regras-inline
                             [trechos]="arquetipo.citacao"
+                            [peca]="arquetipo.peca"
+                            campo="citacao"
+                            rotuloEdicao="Citação do arquétipo"
+                            dica="Citação"
                             [documento]="documento()"
                             (navegarAncora)="navegarAncora.emit($event)"
                         />
                     </p>
                 }
-                @if (bonus(arquetipo.atributosBonus); as itens) {
+                @if (editavel(arquetipo)) {
+                    <span class="regras-arquetipos__rotulo">Atributos bônus</span>
+                    <app-regras-inline
+                        [trechos]="arquetipo.atributosBonus"
+                        [peca]="arquetipo.peca"
+                        campo="atributosBonus"
+                        rotuloEdicao="Atributos bônus"
+                        dica="+1 em Força +1 em Vigor"
+                        [documento]="documento()"
+                        (navegarAncora)="navegarAncora.emit($event)"
+                    />
+                } @else if (bonus(arquetipo.atributosBonus); as itens) {
                     <span class="regras-arquetipos__rotulo">Atributos bônus</span>
                     <div class="regras-arquetipos__bonus">
                         @for (item of itens; track $index) {

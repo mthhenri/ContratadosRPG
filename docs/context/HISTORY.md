@@ -1,5 +1,14 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-11 — M11-08 fatia 2: classe, arquétipo e subclasse editáveis na Oficina
+
+Nome, citação, atributos bônus, Vida/Energia iniciais e progressão por nível (`app-regras-saude` ganhou `peca`),
+classe e custos do experimento da subclasse (adicionar/remover no item selecionado) editam-se no lugar; o validador
+ganhou as pendências correspondentes sem tocar nos livros importados. Verificado: shared 1244, backend 1093,
+frontend 3353, lint limpo; gate visual em 1920×1080 e 360×800 (toque) e ida e volta pelo rascunho. A tabela de
+progressão da classe fica para a fatia 5.
+[Verificação](../specs/active/m11-08-oficina-blocos-ricos/verificacao.md).
+
 ## 2026-10-11 — M11-08 fatia 1: equipamentos, modificações e amplificadores editáveis na Oficina
 
 Primeira fatia da m11-08 (a spec segue em `active/`; fatias 2 a 5 abertas). Os três blocos ficam editáveis no

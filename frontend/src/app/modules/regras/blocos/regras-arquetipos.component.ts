@@ -11,11 +11,13 @@ import { RegrasConteudoRender } from "./regras-conteudo.component";
 import { recuperarIconeIdentidade } from "./regras-identidade-icone";
 import { lerTextoRegras } from "./regras-texto";
 import { RegrasDestaque } from "./regras-destaque.component";
+import { OficinaTexto } from "../oficina/oficina-texto.component";
+import { OficinaStore } from "../oficina/oficina.store";
 
 @Component({
     selector: "app-regras-arquetipos",
     imports: [
-        Abas, Aba, AbaPainel, Icone, Chip, RegrasInline, RegrasDestaque,
+        Abas, Aba, AbaPainel, Icone, Chip, RegrasInline, RegrasDestaque, OficinaTexto,
         forwardRef(() => RegrasConteudoRender),
     ],
     templateUrl: "./regras-arquetipos.component.html",
@@ -35,6 +37,11 @@ export class RegrasArquetipos {
     });
     protected readonly icone = recuperarIconeIdentidade;
     private readonly contexto = inject(RegrasLeitorContexto, { optional: true });
+    private readonly oficina = inject(OficinaStore, { optional: true });
+    /** A Oficina está aberta e o arquétipo tem peça: nome, citação e bônus viram campos. */
+    protected editavel(arquetipo: { readonly peca?: string }): boolean {
+        return !!arquetipo.peca && this.oficina?.estado() === "ok";
+    }
     protected selecionar(chave: string): void { this.selecionado.set(chave); }
     /** Na Oficina o arquétipo ainda sem nome é identificado pela peça, não pelo nome (que pode repetir vazio). */
     protected chave(arquetipo: { readonly peca?: string; readonly nome: string }): string {

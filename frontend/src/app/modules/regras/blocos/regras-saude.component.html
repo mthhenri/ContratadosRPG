@@ -6,16 +6,30 @@
         [nota]="'Por nível: +' + texto(progressao().vida)"
     >
         <app-icone statIcone nome="vida" />
-        <span
-            appStatValor
-            class="regras-saude__valor"
-            tabindex="0"
-            [appTooltip]="texto(saude().vida) + ' de Vida inicial'"
-            ><app-regras-inline
-                [trechos]="saude().vida"
-                [documento]="documento()"
-                (navegarAncora)="navegarAncora.emit($event)"
-        /></span>
+        @if (editando()) {
+            <span appStatValor class="regras-saude__valor"
+                ><app-regras-inline
+                    [trechos]="saude().vida"
+                    [peca]="peca()"
+                    campo="saude.vida"
+                    [caminho]="['saude', 'vida']"
+                    rotuloEdicao="Vida inicial"
+                    dica="Vida inicial"
+                    [documento]="documento()"
+                    (navegarAncora)="navegarAncora.emit($event)"
+            /></span>
+        } @else {
+            <span
+                appStatValor
+                class="regras-saude__valor"
+                tabindex="0"
+                [appTooltip]="texto(saude().vida) + ' de Vida inicial'"
+                ><app-regras-inline
+                    [trechos]="saude().vida"
+                    [documento]="documento()"
+                    (navegarAncora)="navegarAncora.emit($event)"
+            /></span>
+        }
     </app-stat>
     <app-stat
         rotulo="Energia inicial"
@@ -24,15 +38,48 @@
         [nota]="'Por nível: +' + texto(progressao().energia)"
     >
         <app-icone statIcone nome="energia" />
-        <span
-            appStatValor
-            class="regras-saude__valor"
-            tabindex="0"
-            [appTooltip]="texto(saude().energia) + ' de Energia inicial'"
-            ><app-regras-inline
-                [trechos]="saude().energia"
-                [documento]="documento()"
-                (navegarAncora)="navegarAncora.emit($event)"
-        /></span>
+        @if (editando()) {
+            <span appStatValor class="regras-saude__valor"
+                ><app-regras-inline
+                    [trechos]="saude().energia"
+                    [peca]="peca()"
+                    campo="saude.energia"
+                    [caminho]="['saude', 'energia']"
+                    rotuloEdicao="Energia inicial"
+                    dica="Energia inicial"
+                    [documento]="documento()"
+                    (navegarAncora)="navegarAncora.emit($event)"
+            /></span>
+        } @else {
+            <span
+                appStatValor
+                class="regras-saude__valor"
+                tabindex="0"
+                [appTooltip]="texto(saude().energia) + ' de Energia inicial'"
+                ><app-regras-inline
+                    [trechos]="saude().energia"
+                    [documento]="documento()"
+                    (navegarAncora)="navegarAncora.emit($event)"
+            /></span>
+        }
     </app-stat>
 </div>
+@if (editando()) {
+    <div class="regras-saude__progressao">
+        @for (recurso of recursos; track recurso.chave) {
+            <span class="regras-saude__progressao-item">
+                <span class="regras-saude__progressao-rotulo">Por nível · {{ recurso.nome }} +</span>
+                <app-regras-inline
+                    [trechos]="progressao()[recurso.chave]"
+                    [peca]="peca()"
+                    [campo]="'progressao.' + recurso.chave"
+                    [caminho]="['progressao', recurso.chave]"
+                    [rotuloEdicao]="'Progressão de ' + recurso.nome"
+                    dica="por nível"
+                    [documento]="documento()"
+                    (navegarAncora)="navegarAncora.emit($event)"
+                />
+            </span>
+        }
+    </div>
+}

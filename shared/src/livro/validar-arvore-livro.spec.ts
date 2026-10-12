@@ -118,7 +118,7 @@ describe("validarArvoreLivro", () => {
   });
 
   it("acusa tipo que não pode ficar na raiz", () => {
-    const pendencias = validar([habilidade("h"), peca(Tipo.ARQUETIPO, "a", { nome: "A", citacao: [], atributosBonus: [] })]);
+    const pendencias = validar([habilidade("h"), peca(Tipo.ARQUETIPO, "a", { nome: "A", citacao: [], atributosBonus: [texto("+1 FOR")] })]);
     expect(pendencias.map((item) => item.codigo)).toEqual([Codigo.FILHO_NAO_PERMITIDO]);
     expect(pendencias[0].mensagem).toContain("na raiz do livro");
   });
@@ -248,6 +248,35 @@ describe("validarArvoreLivro — equipamentos, modificações e amplificadores (
       "Falta o empilhamento (ao menos um ■ inicial).",
       "Falta o efeito.",
     ]);
+  });
+});
+
+describe("validarArvoreLivro — classe, arquétipo e subclasse (m11-08)", () => {
+  const mensagens = (pecas: readonly LivroPecaDto[]) => validar(pecas).map((item) => item.mensagem);
+  const subclasse = (dados: Record<string, unknown>) => peca(Tipo.SUBCLASSE, "sub", {
+    nome: "Sub", classe: "Experimento", citacao: [], custos: [[texto("2 Vida")]], saude, progressao: saude,
+    atributosBonus: [texto("+1 FOR")], ...dados,
+  }, [habilidade("ini")]);
+
+  it("aceita uma subclasse completa", () => {
+    expect(validar([subclasse({})])).toEqual([]);
+  });
+
+  it("pede saúde, progressão, bônus, classe e custos da subclasse", () => {
+    const vazia = { vida: [], energia: [] };
+    expect(mensagens([subclasse({ saude: vazia, progressao: vazia, atributosBonus: [], classe: " ", custos: [[]] })])).toEqual([
+      "Falta a Vida e a Energia iniciais.",
+      "Falta a progressão de Vida e de Energia por nível.",
+      "Faltam os atributos bônus.",
+      "Falta a classe da subclasse.",
+      "Falta o custo do experimento (ao menos um, sem linha vazia).",
+    ]);
+  });
+
+  it("pede os atributos bônus do arquétipo e a saúde da classe", () => {
+    const arquetipo = peca(Tipo.CLASSE, "c", { nome: "C", citacao: [], saude: { vida: [], energia: [] }, progressao: saude,
+      cabecalho: [], linhas: [] }, [peca(Tipo.ARQUETIPO, "a", { nome: "A", citacao: [], atributosBonus: [] }, [habilidade("h")])]);
+    expect(mensagens([arquetipo])).toEqual(["Falta a Vida e a Energia iniciais.", "Faltam os atributos bônus."]);
   });
 });
 
