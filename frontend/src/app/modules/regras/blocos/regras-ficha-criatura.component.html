@@ -7,10 +7,25 @@
     <header class="regras-ficha__cabecalho">
         <app-regras-ameaca [nivel]="nivel()" />
         <div>
-            <h3>{{ bloco().nome }}</h3>
+            <h3>
+                @if (editando()) {
+                    <app-oficina-texto
+                        campo="nome"
+                        rotulo="Nome da criatura"
+                        vazio="Nome da criatura"
+                        [peca]="bloco().peca!"
+                        [texto]="bloco().nome"
+                    />
+                } @else {{{ bloco().nome }}}
+            </h3>
             <blockquote>
                 <app-regras-inline
                     [trechos]="conceito()"
+                    [peca]="indiceConceito() >= 0 ? bloco().peca : undefined"
+                    [campo]="'identidade.' + indiceConceito() + '.valor'"
+                    [caminho]="['identidade', indiceConceito(), 'valor']"
+                    rotuloEdicao="Conceito"
+                    dica="Conceito"
                     [documento]="documento()"
                     (navegarAncora)="navegarAncora.emit($event)"
                 />
@@ -26,6 +41,7 @@
     </h4>
     <app-regras-identidade
         [bloco]="bloco().identidade"
+        [peca]="bloco().peca"
         [documento]="documento()"
         (navegarAncora)="navegarAncora.emit($event)"
     />
@@ -41,7 +57,7 @@
         [documento]="documento()"
         (navegarAncora)="navegarAncora.emit($event)"
     />
-    <app-regras-atributos [bloco]="bloco().atributos" />
+    <app-regras-atributos [bloco]="bloco().atributos" [peca]="bloco().peca" />
     <h4
         class="regras-ficha__divisor"
         [id]="identificador('Saúde, Defesa e Resistências')"
@@ -62,7 +78,11 @@
                 [appTooltip]="bloco().vidaMaxima + ' de Vida'"
                 tabindex="0"
             >
-                <app-icone nome="vida" /> {{ bloco().vidaMaxima }}
+                <app-icone nome="vida" />
+                @if (editando()) {
+                    <app-oficina-texto campo="vidaMaxima" rotulo="Vida máxima" vazio="Vida"
+                        [peca]="bloco().peca!" [texto]="bloco().vidaMaxima" />
+                } @else {{{ bloco().vidaMaxima }}}
             </span>
         </app-stat>
         <app-stat rotulo="Defesa base" icone="defesa" tamanho="compacto">
@@ -72,17 +92,38 @@
                 [appTooltip]="bloco().defesaBase + ' de Defesa'"
                 tabindex="0"
             >
-                <app-icone nome="defesa" /> {{ bloco().defesaBase }}
+                <app-icone nome="defesa" />
+                @if (editando()) {
+                    <app-oficina-texto campo="defesaBase" rotulo="Defesa base" vazio="Defesa"
+                        [peca]="bloco().peca!" [texto]="bloco().defesaBase" />
+                } @else {{{ bloco().defesaBase }}}
             </span>
         </app-stat>
     </div>
     <div class="regras-ficha__chips">
-        @for (resistencia of resistencias(); track $index) {
-            <app-chip severidade="secundario" tom="contorno">{{ resistencia }}</app-chip>
+        @if (editando()) {
+            <app-chip severidade="secundario" tom="contorno"
+                ><app-regras-inline
+                    [trechos]="bloco().resistencias"
+                    [peca]="bloco().peca"
+                    campo="resistencias"
+                    rotuloEdicao="Resistências"
+                    dica="Resistências escolhidas: … e …"
+                    [documento]="documento()"
+                    (navegarAncora)="navegarAncora.emit($event)"
+            /></app-chip>
+        } @else {
+            @for (resistencia of resistencias(); track $index) {
+                <app-chip severidade="secundario" tom="contorno">{{ resistencia }}</app-chip>
+            }
         }
         <app-chip severidade="perigo" tom="contorno"
             ><app-regras-inline
                 [trechos]="bloco().fraquezas"
+                [peca]="bloco().peca"
+                campo="fraquezas"
+                rotuloEdicao="Fraquezas"
+                dica="Fraquezas"
                 [documento]="documento()"
                 (navegarAncora)="navegarAncora.emit($event)"
         /></app-chip>
@@ -99,12 +140,16 @@
         [documento]="documento()"
         (navegarAncora)="navegarAncora.emit($event)"
     />
-    @if (!apoio("Regeneração e Deslocamento").length) {
+    @if (!apoio("Regeneração e Deslocamento").length || editando()) {
         @for (campo of deslocamentos(); track campo.rotulo) {
             <p>
                 <strong>{{ campo.rotulo }}: </strong
                 ><app-regras-inline
                     [trechos]="campo.trechos"
+                    [peca]="bloco().peca"
+                    [campo]="campo.campo"
+                    [rotuloEdicao]="campo.rotulo"
+                    [dica]="campo.rotulo"
                     [documento]="documento()"
                     (navegarAncora)="navegarAncora.emit($event)"
                 />
@@ -123,21 +168,88 @@
         [documento]="documento()"
         (navegarAncora)="navegarAncora.emit($event)"
     />
-    <app-chip severidade="secundario" tom="contorno">Cadência {{ bloco().cadencia }}</app-chip>
+    <app-chip severidade="secundario" tom="contorno"
+        >Cadência
+        @if (editando()) {
+            <app-oficina-texto campo="cadencia" rotulo="Cadência" vazio="cadência"
+                [peca]="bloco().peca!" [texto]="bloco().cadencia" />
+        } @else {{{ bloco().cadencia }}}
+    </app-chip>
     <div class="regras-ficha__ataques">
-        @for (ataque of bloco().ataques; track $index) {
+        @for (ataque of bloco().ataques; track $index; let indice = $index) {
             <article>
-                <h5>{{ ataque.nome }}</h5>
+                <h5>
+                    @if (editando()) {
+                        <app-oficina-texto
+                            [campo]="'ataques.' + indice + '.nome'"
+                            [caminho]="['ataques', indice, 'nome']"
+                            rotulo="Nome do ataque"
+                            vazio="Nome do ataque"
+                            [peca]="bloco().peca!"
+                            [texto]="ataque.nome"
+                        />
+                    } @else {{{ ataque.nome }}}
+                </h5>
                 <div class="regras-ficha__chips">
-                    <app-chip severidade="secundario" tom="contorno">{{ ataque.acao }}</app-chip>
-                    <app-chip severidade="secundario" tom="contorno"
-                        >Teste {{ ataque.teste }}</app-chip
-                    >
-                    <app-chip severidade="perigo" tom="contorno">Dano {{ ataque.dano }}</app-chip>
+                    @if (editando()) {
+                        <app-chip severidade="secundario" tom="contorno"
+                            ><app-oficina-texto
+                                [campo]="'ataques.' + indice + '.acao'"
+                                [caminho]="['ataques', indice, 'acao']"
+                                rotulo="Ação do ataque"
+                                vazio="ação"
+                                [peca]="bloco().peca!"
+                                [texto]="ataque.acao"
+                        /></app-chip>
+                        <app-chip severidade="secundario" tom="contorno"
+                            >Teste
+                            <app-oficina-texto
+                                [campo]="'ataques.' + indice + '.teste'"
+                                [caminho]="['ataques', indice, 'teste']"
+                                rotulo="Teste do ataque"
+                                vazio="teste"
+                                [peca]="bloco().peca!"
+                                [texto]="ataque.teste"
+                        /></app-chip>
+                        <app-chip severidade="perigo" tom="contorno"
+                            >Dano
+                            <app-oficina-texto
+                                [campo]="'ataques.' + indice + '.dano'"
+                                [caminho]="['ataques', indice, 'dano']"
+                                rotulo="Dano do ataque"
+                                vazio="dano"
+                                [peca]="bloco().peca!"
+                                [texto]="ataque.dano"
+                        /></app-chip>
+                        @if (selecionada()) {
+                            <button
+                                app-botao-icone
+                                tamanho="compacto"
+                                variante="perigo"
+                                type="button"
+                                [attr.aria-label]="'Remover ataque ' + (indice + 1)"
+                                appTooltip="Remover ataque"
+                                (click)="removerAtaque(indice)"
+                            >
+                                <app-icone nome="excluir" />
+                            </button>
+                        }
+                    } @else {
+                        <app-chip severidade="secundario" tom="contorno">{{ ataque.acao }}</app-chip>
+                        <app-chip severidade="secundario" tom="contorno"
+                            >Teste {{ ataque.teste }}</app-chip
+                        >
+                        <app-chip severidade="perigo" tom="contorno">Dano {{ ataque.dano }}</app-chip>
+                    }
                 </div>
                 <p>
                     <app-regras-inline
                         [trechos]="ataque.efeito"
+                        [peca]="bloco().peca"
+                        [campo]="'ataques.' + indice + '.efeito'"
+                        [caminho]="['ataques', indice, 'efeito']"
+                        rotuloEdicao="Efeito do ataque"
+                        dica="Efeito"
                         [documento]="documento()"
                         (navegarAncora)="navegarAncora.emit($event)"
                     />
@@ -145,6 +257,20 @@
             </article>
         }
     </div>
+    @if (selecionada()) {
+        <button
+            app-botao
+            variante="secundario"
+            estilo="contorno"
+            tamanho="pequeno"
+            posicaoIcone="esquerda"
+            type="button"
+            aria-label="Adicionar ataque"
+            (click)="adicionarAtaque()"
+        >
+            <app-icone nome="mais" /> Ataque
+        </button>
+    }
     <div class="regras-ficha__habilidades">
         @for (habilidade of bloco().habilidades; track $index) {
             <app-regras-habilidade-criatura
@@ -154,4 +280,7 @@
             />
         }
     </div>
+    @if (bloco().peca; as pecaFicha) {
+        <app-oficina-insercao [pai]="pecaFicha" [restritoA]="tiposHabilidade" [fim]="true" rotulo="Habilidade de criatura" />
+    }
 </app-cartao>

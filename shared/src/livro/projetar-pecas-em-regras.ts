@@ -319,7 +319,7 @@ function projetarBase(peca: LivroPecaDto): NormalizadoConteudo {
         ataques: dados.ataques,
         habilidades: peca.filhos
           .filter((filho) => filho.tipo === Tipo.HABILIDADE_CRIATURA)
-          .map((filho) => ({ tipo: "habilidade-criatura", ...dadosDe(filho, Tipo.HABILIDADE_CRIATURA) })),
+          .map((filho) => comPeca({ tipo: "habilidade-criatura", ...dadosDe(filho, Tipo.HABILIDADE_CRIATURA) }, filho)),
         filhos: projetarLista(peca.filhos.filter((filho) => filho.tipo !== Tipo.HABILIDADE_CRIATURA)),
       };
     }

@@ -241,6 +241,7 @@ export interface RegrasAtributos extends RegrasFonteTabela {
 
 export interface RegrasRoteiro {
     readonly tipo: "roteiro";
+    readonly peca?: string;
     readonly etapas: readonly { readonly ordem: number;
         readonly titulo: readonly RegrasTrecho[];
         readonly descricao: readonly RegrasTrecho[] }[];
@@ -252,6 +253,7 @@ export interface RegrasRoteiro {
 
 export interface RegrasHabilidadeCriatura {
     readonly tipo: "habilidade-criatura";
+    readonly peca?: string;
     readonly nome: string;
     readonly categoria: "PASSIVA" | "ATIVA" | "DE GATILHO";
     readonly trechos: readonly RegrasTrecho[];
@@ -262,6 +264,7 @@ export interface RegrasHabilidadeCriatura {
 /** Só emitida quando identidade, dez atributos, saúde e ataques estão completos. */
 export interface RegrasFichaCriatura {
     readonly tipo: "ficha-criatura";
+    readonly peca?: string;
     readonly nome: string;
     readonly identidade: RegrasIdentidade;
     readonly atributos: RegrasAtributos;

@@ -8,7 +8,7 @@ Spec: [`m11-08-oficina-blocos-ricos.spec.md`](../m11-08-oficina-blocos-ricos.spe
 | 1 | Equipamento, Modificação, Amplificador | **fechada** (esta verificação) |
 | 2 | Classe, Arquétipo, Subclasse | **fechada** (seção abaixo) |
 | 3 | Origem, Termos | **fechada** (seção abaixo) |
-| 4 | Ficha de criatura, Roteiro | aberta |
+| 4 | Ficha de criatura, Roteiro | **fechada** (seção abaixo) |
 | 5 | Tabela, Grade, Faixas, Níveis de ameaça | aberta |
 
 ## Fatia 1 — Equipamento, Modificação e Amplificador
@@ -108,3 +108,32 @@ usam primitivos de `shared/ui` (`app-botao`, `app-botao-icone`, `app-chip`, `app
 ### Limites
 - A variante do container de termos não é editável na tela.
 - Termo numerado mostra o contador com sinal (+3) ao lado do número do desenho.
+
+## Fatia 4 — Ficha de criatura e Roteiro
+
+### O que mudou
+- `shared`: habilidades de criatura carregam `peca` na projeção da Oficina; pendências de conteúdo (Vida máxima,
+  Defesa base e cadência da ficha; ataque sem nome ou dano; efeito da habilidade de criatura; etapa de roteiro sem
+  título ou descrição). O efeito vazio de um ataque não é pendência (um ataque do Guia importado o tem vazio).
+- Frontend: ficha — nome, conceito, campos da identidade (com contador do Nível de Ameaça no item selecionado),
+  atributos (valor, modificador e bônus, no item selecionado), Vida máxima, Defesa base, resistências, fraquezas,
+  regeneração, porte, deslocamento, cadência e ataques (nome, ação, teste, dano, efeito; adicionar e remover);
+  habilidade de criatura (nome, categoria alternável, efeito) com "+ Habilidade de criatura" no fim da ficha;
+  roteiro — título e descrição de cada etapa, adicionar e remover etapa com renumeração. O menu oferece Roteiro e,
+  dentro da ficha, só a habilidade de criatura.
+- Fora desta fatia: criar uma ficha de criatura nova pelo menu (o esqueleto nasce sem identidade nem atributos, e
+  esses campos não se criam pela tela); a introdução e a conclusão do roteiro (peças filhas dependentes de posição).
+
+### Verificação
+- Testes: shared 1249, backend 1093 (12 ignorados já existiam), frontend 3361; lint do frontend sem erros.
+- Gate visual (pilha isolada, Guia importado) em 1920×1080 e 360×800 com toque: Leitura × Oficina da ficha,
+  ficha selecionada (atributos, nível), ataque novo e remover, habilidades de criatura, roteiro com etapa nova e
+  remover. Sem overflow e sem erro de console. Ida e volta: rascunho do Guia publicado com 0 pendências e a Leitura
+  mostra o atributo editado.
+- Achado só ao vivo: o contador do Nível de Ameaça esticava pela coluna toda; agora tem largura própria.
+- Sem revisão independente (mesma maquinaria revisada na fatia 1).
+
+### Limites
+- Na Oficina o campo de Nível de Ameaça mostra o texto editável no lugar do selo; o selo volta na Leitura.
+- Regeneração, porte e deslocamento da ficha ficam visíveis na Oficina mesmo quando a Leitura mostra no lugar os
+  parágrafos de apoio (os dois vêm de dados diferentes).

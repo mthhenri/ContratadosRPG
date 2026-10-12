@@ -263,6 +263,7 @@ export function validarArvoreLivro(dto: LivroArvoreValidarDto): LivroPendenciaDt
     conferirEquipamento(peca, caminho, dados);
     conferirClasse(peca, caminho, dados);
     conferirOrigemETermo(peca, caminho, dados);
+    conferirCriatura(peca, caminho, dados);
     if (peca.tipo === Tipo.HABILIDADE) {
       if (typeof dados["custo"] === "number" && dados["custo"] < 0) {
         registrar(peca, caminho, Codigo.CONTEUDO_INCOMPLETO, Gravidade.CONTEUDO,
@@ -355,6 +356,36 @@ export function validarArvoreLivro(dto: LivroArvoreValidarDto): LivroPendenciaDt
       }
     }
     if (peca.tipo === Tipo.TERMO && vazio("descricao")) faltou("Falta a descrição do verbete.");
+  };
+
+  /** Pendências de conteúdo da ficha de criatura, da habilidade de criatura e do roteiro (m11-08). */
+  const conferirCriatura = (
+    peca: LivroPecaDto,
+    caminho: readonly string[],
+    dados: Record<string, unknown>,
+  ): void => {
+    const faltou = (mensagem: string): void =>
+      registrar(peca, caminho, Codigo.CONTEUDO_INCOMPLETO, Gravidade.CONTEUDO, mensagem);
+    const texto = (valor: unknown): string => (typeof valor === "string" ? valor.trim() : "");
+    if (peca.tipo === Tipo.FICHA_CRIATURA) {
+      if (!texto(dados["vidaMaxima"]) || !texto(dados["defesaBase"]) || !texto(dados["cadencia"])) {
+        faltou("Faltam a Vida máxima, a Defesa base ou a cadência da criatura.");
+      }
+      const ataques: unknown[] = Array.isArray(dados["ataques"]) ? dados["ataques"] : [];
+      if (ataques.some((ataque) => !ehObjeto(ataque) || !texto(ataque["nome"]) || !texto(ataque["dano"]))) {
+        faltou("Há um ataque sem nome ou sem dano.");
+      }
+    }
+    if (peca.tipo === Tipo.HABILIDADE_CRIATURA && !extrairTexto(dados["trechos"]).trim()) {
+      faltou("Falta o efeito da habilidade de criatura.");
+    }
+    if (peca.tipo === Tipo.ROTEIRO) {
+      const etapas: unknown[] = Array.isArray(dados["etapas"]) ? dados["etapas"] : [];
+      if (etapas.some((etapa) => !ehObjeto(etapa) || !extrairTexto(etapa["titulo"]).trim()
+        || !extrairTexto(etapa["descricao"]).trim())) {
+        faltou("Há uma etapa sem título ou sem descrição.");
+      }
+    }
   };
 
   const conferirGrade = (

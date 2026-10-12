@@ -1,18 +1,48 @@
-<article class="regras-guia__habilidade">
-    <div class="regras-guia__linha">
-        <h5>{{ bloco().nome }}</h5>
-        <app-chip
-            [severidade]="bloco().categoria === 'PASSIVA' ? 'secundario' : 'primario'"
-            tom="contorno"
-        >
-            {{ bloco().categoria }}
-        </app-chip>
-    </div>
-    <p>
-        <app-regras-inline
-            [trechos]="bloco().trechos"
-            [documento]="documento()"
-            (navegarAncora)="navegarAncora.emit($event)"
-        />
-    </p>
-</article>
+<app-oficina-peca [peca]="bloco().peca">
+    <article class="regras-guia__habilidade">
+        <div class="regras-guia__linha">
+            <h5>
+                @if (editando()) {
+                    <app-oficina-texto
+                        campo="nome"
+                        rotulo="Nome da habilidade de criatura"
+                        vazio="Nome da habilidade"
+                        [peca]="bloco().peca!"
+                        [texto]="bloco().nome"
+                    />
+                } @else {{{ bloco().nome }}}
+            </h5>
+            <app-chip
+                [severidade]="bloco().categoria === 'PASSIVA' ? 'secundario' : 'primario'"
+                tom="contorno"
+            >
+                @if (selecionada()) {
+                    <button
+                        app-botao
+                        estilo="texto"
+                        variante="secundario"
+                        type="button"
+                        class="regras-guia__modificador-botao"
+                        [attr.aria-label]="'Categoria: ' + bloco().categoria + ', trocar'"
+                        appTooltip="Trocar a categoria"
+                        (click)="alternarCategoria()"
+                    >
+                        {{ bloco().categoria }}
+                    </button>
+                } @else {
+                    {{ bloco().categoria }}
+                }
+            </app-chip>
+        </div>
+        <p>
+            <app-regras-inline
+                [trechos]="bloco().trechos"
+                [peca]="bloco().peca"
+                rotuloEdicao="Efeito da habilidade de criatura"
+                dica="Efeito"
+                [documento]="documento()"
+                (navegarAncora)="navegarAncora.emit($event)"
+            />
+        </p>
+    </article>
+</app-oficina-peca>

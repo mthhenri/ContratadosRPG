@@ -1,15 +1,54 @@
 <div class="regras-guia__atributos">
-    @for (atributo of bloco().atributos; track $index) {
+    @for (atributo of bloco().atributos; track $index; let indice = $index) {
         <div>
             <app-stat [rotulo]="atributo.nome" [valor]="atributo.valor" tamanho="compacto" />
-            <p
-                [class]="
-                    'regras-guia__modificador regras-guia__modificador--' +
-                    corModificador(atributo.modificador)
-                "
-            >
-                {{ atributo.modificador }} {{ atributo.bonus }}
-            </p>
+            @if (selecionada()) {
+                <app-step-input
+                    tamanho="micro"
+                    [digitavel]="false"
+                    [min]="0"
+                    [max]="20"
+                    [valorExterno]="atributo.valor"
+                    [ariaRotulo]="'valor de ' + atributo.nome"
+                    (valorAlterado)="definirValor(indice, $event)"
+                />
+                <p
+                    [class]="
+                        'regras-guia__modificador regras-guia__modificador--' +
+                        corModificador(atributo.modificador)
+                    "
+                >
+                    <button
+                        app-botao
+                        estilo="texto"
+                        variante="secundario"
+                        type="button"
+                        class="regras-guia__modificador-botao"
+                        [attr.aria-label]="'Modificador de ' + atributo.nome + ': ' + atributo.modificador + ', trocar'"
+                        appTooltip="Trocar o modificador"
+                        (click)="alternarModificador(indice, atributo.modificador)"
+                    >
+                        {{ atributo.modificador }}
+                    </button>
+                    <app-oficina-texto
+                        [campo]="'atributos.' + indice + '.bonus'"
+                        [caminho]="['atributos', indice, 'bonus']"
+                        [rotulo]="'Bônus de ' + atributo.nome"
+                        vazio="bônus"
+                        [peca]="peca()!"
+                        [texto]="atributo.bonus"
+                    />
+                </p>
+            } @else {
+                <p
+                    [class]="
+                        'regras-guia__modificador regras-guia__modificador--' +
+                        corModificador(atributo.modificador)
+                    "
+                >
+                    {{ atributo.modificador }} {{ atributo.bonus }}
+                </p>
+            }
         </div>
     }
 </div>

@@ -1,15 +1,31 @@
 <dl class="regras-guia__identidade">
-    @for (campo of bloco().campos; track $index) {
+    @for (campo of bloco().campos; track $index; let indice = $index) {
         <dt>{{ campo.rotulo }}</dt>
         <dd>
-            @if (campo.nivel !== undefined) {
+            @if (campo.nivel !== undefined && !editando()) {
                 <app-regras-ameaca [nivel]="campo.nivel" [rotulo]="lerTexto(campo.valor)" />
             } @else {
                 <app-regras-inline
                     [trechos]="campo.valor"
+                    [peca]="peca()"
+                    [campo]="'identidade.' + indice + '.valor'"
+                    [caminho]="['identidade', indice, 'valor']"
+                    [rotuloEdicao]="campo.rotulo"
+                    [dica]="campo.rotulo"
                     [documento]="documento()"
                     (navegarAncora)="navegarAncora.emit($event)"
                 />
+                @if (campo.nivel !== undefined && selecionada()) {
+                    <app-step-input
+                        tamanho="micro"
+                        [digitavel]="false"
+                        [min]="0"
+                        [max]="niveisAmeaca"
+                        [valorExterno]="campo.nivel"
+                        ariaRotulo="nível de ameaça"
+                        (valorAlterado)="definirNivel(indice, $event)"
+                    />
+                }
             }
         </dd>
     }

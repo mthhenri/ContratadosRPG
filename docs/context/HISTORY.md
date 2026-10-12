@@ -1,5 +1,15 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-11 — M11-08 fatia 4: ficha de criatura e roteiro editáveis na Oficina
+
+Ficha de criatura (nome, conceito, identidade com Nível de Ameaça, atributos, Vida/Defesa, resistências, fraquezas,
+regeneração, porte, deslocamento, cadência e ataques com adicionar/remover), habilidade de criatura (nome, categoria,
+efeito, "+" no fim da ficha) e roteiro (etapas com adicionar/remover e renumeração) editam-se no lugar; o validador ganhou
+as pendências correspondentes. Verificado: shared 1249, backend 1093, frontend 3361, lint limpo; gate visual em
+1920×1080 e 360×800 (toque) e ida e volta pelo rascunho do Guia. Fora: criar ficha nova pelo menu e a introdução/
+conclusão do roteiro.
+[Verificação](../specs/active/m11-08-oficina-blocos-ricos/verificacao.md).
+
 ## 2026-10-11 — M11-08 fatia 3: origem e termos editáveis na Oficina
 
 Origem (nome, citação, formação, especialidade, saber de campo) e termo (nome, rótulo, número, descrição) editam-se no

@@ -4,24 +4,61 @@
     (navegarAncora)="navegarAncora.emit($event)"
 />
 <ol class="regras-guia__roteiro">
-    @for (etapa of bloco().etapas; track $index) {
+    @for (etapa of bloco().etapas; track $index; let indice = $index) {
         <li [value]="etapa.ordem">
             <strong
                 ><app-regras-inline
                     [trechos]="etapa.titulo"
+                    [peca]="bloco().peca"
+                    [campo]="'etapas.' + indice + '.titulo'"
+                    [caminho]="['etapas', indice, 'titulo']"
+                    rotuloEdicao="Título da etapa"
+                    dica="Título da etapa"
                     [documento]="documento()"
                     (navegarAncora)="navegarAncora.emit($event)"
             /></strong>
             <p>
                 <app-regras-inline
                     [trechos]="etapa.descricao"
+                    [peca]="bloco().peca"
+                    [campo]="'etapas.' + indice + '.descricao'"
+                    [caminho]="['etapas', indice, 'descricao']"
+                    rotuloEdicao="Descrição da etapa"
+                    dica="Descrição"
                     [documento]="documento()"
                     (navegarAncora)="navegarAncora.emit($event)"
                 />
             </p>
+            @if (selecionado()) {
+                <button
+                    app-botao-icone
+                    tamanho="compacto"
+                    variante="perigo"
+                    type="button"
+                    [attr.aria-label]="'Remover etapa ' + (indice + 1)"
+                    appTooltip="Remover etapa"
+                    (click)="removerEtapa(indice)"
+                >
+                    <app-icone nome="excluir" />
+                </button>
+            }
         </li>
     }
 </ol>
+@if (selecionado()) {
+    <button
+        app-botao
+        variante="secundario"
+        estilo="contorno"
+        tamanho="pequeno"
+        posicaoIcone="esquerda"
+        type="button"
+        aria-label="Adicionar etapa"
+        (click)="adicionarEtapa()"
+    >
+        <app-icone nome="mais" /> Etapa
+    </button>
+}
 <app-regras-conteudo
     [filhos]="bloco().conclusao ?? bloco().filhos"
     [documento]="documento()"

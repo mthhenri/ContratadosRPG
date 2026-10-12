@@ -303,6 +303,33 @@ describe("validarArvoreLivro — origem e termo (m11-08)", () => {
   });
 });
 
+describe("validarArvoreLivro — criatura e roteiro (m11-08)", () => {
+  const mensagens = (pecas: readonly LivroPecaDto[]) => validar(pecas).map((item) => item.mensagem);
+  const ficha = (dados: Record<string, unknown>, filhos: LivroPecaDto[] = []) => peca(Tipo.FICHA_CRIATURA, "f", {
+    nome: "Coisa", identidade: [], atributos: [], vidaMaxima: "20", defesaBase: "10", resistencias: [], fraquezas: [],
+    regeneracao: [], porte: [], deslocamento: [], cadencia: "1", ataques: [{ nome: "Garra", acao: "Padrão", teste: "5", dano: "1D6", efeito: [] }],
+    ...dados }, filhos);
+
+  it("aceita uma ficha completa (efeito do ataque pode ficar vazio)", () => {
+    expect(validar([ficha({})])).toEqual([]);
+  });
+
+  it("pede Vida, Defesa, cadência e ataque com nome e dano", () => {
+    expect(mensagens([ficha({ vidaMaxima: " ", ataques: [{ nome: "", acao: "", teste: "", dano: "", efeito: [] }] })])).toEqual([
+      "Faltam a Vida máxima, a Defesa base ou a cadência da criatura.",
+      "Há um ataque sem nome ou sem dano.",
+    ]);
+  });
+
+  it("pede o efeito da habilidade de criatura e título e descrição das etapas", () => {
+    const habilidadeCriatura = peca(Tipo.HABILIDADE_CRIATURA, "h", { nome: "Fúria", categoria: "PASSIVA", trechos: [], rotulo: "Fúria" });
+    expect(mensagens([ficha({}, [habilidadeCriatura])])).toEqual(["Falta o efeito da habilidade de criatura."]);
+    const roteiro = peca(Tipo.ROTEIRO, "r", { etapas: [{ ordem: 1, titulo: [texto("A")], descricao: [] }], introducaoQuantidade: 0,
+      conclusaoQuantidade: 0 });
+    expect(mensagens([roteiro])).toEqual(["Há uma etapa sem título ou sem descrição."]);
+  });
+});
+
 describe("tabela de aninhamento", () => {
   it("cobre todos os tipos de peça", () => {
     expect(Object.keys(LIVRO_FILHOS_PERMITIDOS).sort()).toEqual(Object.values(Tipo).sort());

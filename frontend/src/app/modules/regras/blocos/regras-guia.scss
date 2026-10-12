@@ -102,3 +102,21 @@
         }
     }
 }
+
+// Controles do modo Oficina (m11-08): herdam a tipografia do modificador para não mudar o desenho do bloco.
+.regras-guia__modificador-botao {
+    padding: 0;
+    min-height: 0;
+    font: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+    color: inherit;
+}
+
+// Contador do Nível de Ameaça na identidade (só na Oficina, ficha selecionada): não estica pela coluna toda.
+.regras-guia__identidade app-step-input {
+    display: inline-block;
+    width: 9rem;
+    max-width: 100%;
+    margin-top: var(--space-4);
+}

@@ -40,6 +40,7 @@ export const NOME_DO_TIPO: Readonly<Partial<Record<Tipo, string>>> = {
     [Tipo.MODIFICACOES]: "Modificações", [Tipo.MODIFICACAO]: "Modificação",
     [Tipo.AMPLIFICADORES]: "Amplificadores", [Tipo.AMPLIFICADOR]: "Amplificador",
     [Tipo.ORIGENS]: "Origens", [Tipo.ORIGEM]: "Origem", [Tipo.TERMOS]: "Termos", [Tipo.TERMO]: "Termo",
+    [Tipo.ROTEIRO]: "Roteiro", [Tipo.FICHA_CRIATURA]: "Ficha de criatura", [Tipo.HABILIDADE_CRIATURA]: "Habilidade de criatura",
 };
 
 /**
@@ -85,12 +86,18 @@ const CATALOGO: readonly (MenuInsercaoOpcao & { readonly tipo: Tipo })[] = [
         descricao: "Lista de verbetes curtos." },
     { id: Tipo.TERMO, tipo: Tipo.TERMO, rotulo: "Termo", marca: "▪", termos: ["verbete"],
         descricao: "Nome, rótulo e descrição." },
+    { id: Tipo.ROTEIRO, tipo: Tipo.ROTEIRO, rotulo: "Roteiro", marca: "≡", termos: ["etapas", "passos"],
+        descricao: "Lista numerada de etapas." },
+    { id: Tipo.HABILIDADE_CRIATURA, tipo: Tipo.HABILIDADE_CRIATURA, rotulo: "Habilidade de criatura", marca: "⬦", termos: ["hab"],
+        descricao: "Nome, categoria e efeito." },
 ];
 
 /** Tipos que cabem dentro de `paiTipo` (`null` = raiz do livro), pela tabela de aninhamento do validador. */
 export function tiposInseriveis(paiTipo: Tipo | null): Tipo[] {
-    // Os filhos de um roteiro e de uma ficha de criatura dependem da posição: ainda não se estruturam aqui.
-    if (paiTipo === Tipo.ROTEIRO || paiTipo === Tipo.FICHA_CRIATURA) return [];
+    // Os filhos de um roteiro dependem da posição (introdução, corpo, conclusão): não se estruturam aqui. Na ficha de
+    // criatura só a habilidade de criatura entra, pois a ficha as agrupa pelo tipo.
+    if (paiTipo === Tipo.ROTEIRO) return [];
+    if (paiTipo === Tipo.FICHA_CRIATURA) return [Tipo.HABILIDADE_CRIATURA];
     const permitidos = paiTipo === null ? LIVRO_RAIZ_PERMITIDA : LIVRO_FILHOS_PERMITIDOS[paiTipo];
     return CATALOGO.map((opcao) => opcao.tipo).filter((tipo) => permitidos.includes(tipo));
 }
@@ -107,11 +114,11 @@ export function campoInicialDe(tipo: Tipo): string | null {
     switch (tipo) {
         case Tipo.SECAO: return "titulo";
         case Tipo.HABILIDADE: return "nome";
-        case Tipo.EQUIPAMENTO: case Tipo.MODIFICACAO: case Tipo.AMPLIFICADOR: case Tipo.ORIGEM: case Tipo.TERMO: return "nome";
+        case Tipo.EQUIPAMENTO: case Tipo.MODIFICACAO: case Tipo.AMPLIFICADOR: case Tipo.ORIGEM: case Tipo.TERMO: case Tipo.HABILIDADE_CRIATURA: return "nome";
         case Tipo.EQUIPAMENTOS: case Tipo.MODIFICACOES: return "categoria";
         // Nome de classe, subclasse e arquétipo ainda não se edita na tela (m11-08): sem campo para o cursor.
         // O container de amplificadores não tem campo próprio.
-        case Tipo.CLASSE: case Tipo.SUBCLASSE: case Tipo.ARQUETIPO: case Tipo.AMPLIFICADORES: case Tipo.ORIGENS: case Tipo.TERMOS: return null;
+        case Tipo.CLASSE: case Tipo.SUBCLASSE: case Tipo.ARQUETIPO: case Tipo.AMPLIFICADORES: case Tipo.ORIGENS: case Tipo.TERMOS: case Tipo.ROTEIRO: case Tipo.FICHA_CRIATURA: return null;
         default: return "trechos";
     }
 }

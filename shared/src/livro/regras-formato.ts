@@ -180,6 +180,8 @@ export interface NormalizadoAtributos extends FonteTabela {
 
 export interface NormalizadoHabilidadeCriatura {
   readonly tipo: "habilidade-criatura";
+  /** Identificador da peça (só na projeção da Oficina). */
+  readonly peca?: string;
   readonly nome: string;
   readonly categoria: "PASSIVA" | "ATIVA" | "DE GATILHO";
   readonly trechos: Trechos;
