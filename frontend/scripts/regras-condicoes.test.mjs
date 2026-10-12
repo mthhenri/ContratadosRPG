@@ -5,7 +5,7 @@ import { normalizarDocumento } from './normalizar-regras.mjs';
 import { extrairDescricoesCondicoes } from './regras-condicoes.mjs';
 
 test('extrai todas as condições da fonte vigente sem perder efeitos e remoção', async () => {
-    const fonte = await readFile(new URL('../../docs/core/sistema-v4.1.4.md', import.meta.url), 'utf8');
+    const fonte = await readFile(new URL('./fixtures/fonte-inicial/sistema-v4.1.4.md', import.meta.url), 'utf8');
     const { documento } = normalizarDocumento(fonte, 'sistema', '4.1.4');
     const condicoes = extrairDescricoesCondicoes(documento);
     assert.equal(condicoes.length, 28);

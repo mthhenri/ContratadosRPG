@@ -8,12 +8,6 @@ import type { RegrasDocumento } from "./regras.model";
 import { SessaoService } from "../../core/services/sessao.service";
 import { RegrasService, type RegrasLeitura } from "./regras.service";
 
-const sistema: RegrasDocumento = {
-    tipo: "documento", id: "sistema", titulo: "Sistema", versao: "4.1.3",
-    filhos: [{
-        tipo: "secao", nivel: 1, glifo: "⬢", titulo: "Agentes", ancora: "agentes", filhos: [],
-    }],
-};
 /** Fotografia mínima de um livro: uma seção com um parágrafo, com a âncora renomeada. */
 function livroDaApi(situacao = TipoLivroVersaoSituacaoEnum.PUBLICADA): { dados: LivroLeituraDto } {
     return {
@@ -81,28 +75,20 @@ describe("RegrasService", () => {
         expect(recebido?.situacao).toBe("RASCUNHO");
     });
 
-    it("sem fotografia na API (404), cai no JSON estático do build", () => {
-        let recebido: RegrasLeitura | undefined;
-        servico.carregarLeitura("sistema").subscribe((leitura) => recebido = leitura);
-
-        httpTestingController.expectOne("/livros/sistema").flush("Não encontrado", {
-            status: 404, statusText: "Not Found",
-        });
-        const estatico = httpTestingController.expectOne("/regras/sistema.json");
-        expect(estatico.request.method).toBe("GET");
-        estatico.flush(sistema);
-
-        expect(recebido).toEqual({
-            documento: sistema, situacao: null, numero: null, ancorasAntigas: {},
-        });
+    it("sem fotografia na API (404), o erro aparece e não há JSON estático de reserva", () => {
+        const erros: HttpErrorResponse[] = [];
+        servico.carregarLeitura("sistema").subscribe({ error: (erro) => erros.push(erro) });
+        httpTestingController.expectOne("/livros/sistema").flush("Não encontrado", { status: 404, statusText: "Not Found" });
+        httpTestingController.expectNone("/regras/sistema.json");
+        expect(erros.map((erro) => erro.status)).toEqual([404]);
     });
 
-    it("com a API fora do ar (rede), cai no JSON estático", () => {
-        let recebido: RegrasDocumento | undefined;
-        servico.carregarDocumento("sistema").subscribe((documento) => recebido = documento);
+    it("com a API fora do ar (rede), o erro aparece em vez de cair em JSON", () => {
+        let falhou = false;
+        servico.carregarDocumento("sistema").subscribe({ error: () => falhou = true });
         httpTestingController.expectOne("/livros/sistema").error(new ProgressEvent("error"));
-        httpTestingController.expectOne("/regras/sistema.json").flush(sistema);
-        expect(recebido).toEqual(sistema);
+        httpTestingController.expectNone("/regras/sistema.json");
+        expect(falhou).toBe(true);
     });
 
     it("compartilha uma única requisição entre leitores simultâneos", () => {
@@ -110,9 +96,8 @@ describe("RegrasService", () => {
         servico.carregarDocumento("sistema").subscribe((documento) => recebidos.push(documento));
         servico.carregarDocumento("sistema").subscribe((documento) => recebidos.push(documento));
 
-        httpTestingController.expectOne("/livros/sistema").flush("x", { status: 404, statusText: "Not Found" });
-        httpTestingController.expectOne("/regras/sistema.json").flush(sistema);
-        expect(recebidos).toEqual([sistema, sistema]);
+        httpTestingController.expectOne("/livros/sistema").flush(livroDaApi());
+        expect(recebidos.map((documento) => documento.id)).toEqual(["sistema", "sistema"]);
     });
 
     it("reutiliza o sucesso em memória e mantém caches separados por livro", () => {
@@ -127,7 +112,7 @@ describe("RegrasService", () => {
         httpTestingController.expectNone("/livros/guia");
     });
 
-    it("erro da API que não é 404 nem rede aparece, sem cair no JSON, e permite tentar novamente", () => {
+    it("erro da API aparece para todos os leitores e permite tentar novamente", () => {
         const erros: HttpErrorResponse[] = [];
         servico.carregarDocumento("sistema").subscribe({ error: (erro) => erros.push(erro) });
         servico.carregarDocumento("sistema").subscribe({ error: (erro) => erros.push(erro) });
@@ -143,10 +128,18 @@ describe("RegrasService", () => {
         httpTestingController.expectNone("/livros/sistema");
     });
 
-    it("o plano B não fica guardado: a próxima abertura tenta a API de novo", () => {
-        servico.carregarDocumento("sistema").subscribe();
+    it("a falha não fica guardada: a próxima abertura tenta a API de novo", () => {
+        servico.carregarDocumento("sistema").subscribe({ error: () => undefined });
         httpTestingController.expectOne("/livros/sistema").flush("x", { status: 404, statusText: "Not Found" });
-        httpTestingController.expectOne("/regras/sistema.json").flush(sistema);
+
+        servico.carregarDocumento("sistema").subscribe();
+        httpTestingController.expectOne("/livros/sistema").flush(livroDaApi());
+    });
+
+    it("invalidar a leitura faz a próxima abertura ler a API de novo", () => {
+        servico.carregarDocumento("sistema").subscribe();
+        httpTestingController.expectOne("/livros/sistema").flush(livroDaApi());
+        servico.invalidarLeitura("sistema");
 
         servico.carregarDocumento("sistema").subscribe();
         httpTestingController.expectOne("/livros/sistema").flush(livroDaApi());

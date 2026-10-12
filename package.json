@@ -24,6 +24,7 @@
     "backend:dev": "npm run start:dev --workspace=backend",
     "frontend:dev": "npm run start --workspace=frontend",
     "db:up": "node scripts/db-up.mjs",
+    "regras:exportar": "npm run regras:exportar --workspace=backend --",
     "db:down": "docker compose down",
     "db:migrate": "npm run db:migrate --workspace=backend",
     "db:rollback": "npm run db:rollback --workspace=backend",

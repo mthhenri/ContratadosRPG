@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { normalizarDocumento } from './normalizar-regras.mjs';
 
 const raiz = fileURLToPath(new URL('../../', import.meta.url));
-const fonte = readFileSync(join(raiz, 'docs/core/sistema-v4.1.4.md'), 'utf8');
+const fonte = readFileSync(join(raiz, 'frontend/scripts/fixtures/fonte-inicial/sistema-v4.1.4.md'), 'utf8');
 const documento = normalizarDocumento(fonte, 'sistema', '4.1.4').documento;
 const percorrer = (conteudo) => conteudo.flatMap((item) => [item,
     ...('filhos' in item ? percorrer(item.filhos) : [])]);

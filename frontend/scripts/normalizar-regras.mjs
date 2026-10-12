@@ -476,10 +476,10 @@ export function selecionarFonte(arquivos, prefixo) {
     return candidatas[0];
 }
 
-/** Publica JSONs determinísticos nos assets estáticos do Angular. */
+/** Lê as fontes iniciais em Markdown e grava JSONs determinísticos (ferramenta de importação; o site lê a API). */
 export async function prepararRegras(
-    diretorioOrigem = join(diretorioFrontend, '..', 'docs', 'core'),
-    diretorioDestino = join(diretorioFrontend, 'public', 'regras'),
+    diretorioOrigem = join(diretorioFrontend, 'scripts', 'fixtures', 'fonte-inicial'),
+    diretorioDestino = join(diretorioFrontend, '..', '.artifacts', 'regras-normalizadas'),
     diretorioCodigoCondicoes = null,
 ) {
     const arquivos = await readdir(diretorioOrigem);
@@ -512,6 +512,7 @@ export async function prepararRegras(
 }
 
 if (process.argv[1] && pathToFileURL(resolve(process.argv[1])).href === import.meta.url) {
-    await prepararRegras(undefined, undefined,
-        join(diretorioFrontend, 'src', 'app', 'shared', 'condicoes'));
+    // Ferramenta avulsa do importador (m11-10): não roda mais no prestart/prebuild e não mexe nas
+    // condições do frontend, que `npm run regras:exportar` gera a partir do livro publicado.
+    await prepararRegras();
 }

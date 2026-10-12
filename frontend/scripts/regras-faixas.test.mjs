@@ -5,7 +5,7 @@ import { normalizarDocumento } from './normalizar-regras.mjs';
 
 const texto = (trechos) => trechos.map((trecho) =>
     'filhos' in trecho ? texto(trecho.filhos) : trecho.texto).join('');
-const fonte = readFileSync(new URL('../../docs/core/sistema-v4.1.4.md', import.meta.url), 'utf8');
+const fonte = readFileSync(new URL('./fixtures/fonte-inicial/sistema-v4.1.4.md', import.meta.url), 'utf8');
 const { documento } = normalizarDocumento(fonte, 'sistema', '4.1.4');
 
 function coletar(filhos, tipo, achados = []) {

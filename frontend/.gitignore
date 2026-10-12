@@ -11,7 +11,7 @@
 npm-debug.log
 yarn-error.log
 
-# Formato canônico das regras, regenerado de docs/core em prestart/prebuild
+# Saída da ferramenta avulsa do normalizador (não é mais gerada no build; o site lê a API)
 /public/regras/
 
 # IDEs and editors

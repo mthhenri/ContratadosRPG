@@ -29,10 +29,10 @@
 
 ### I-053 — Editor do sistema no site · regras/documentação
 
-- **Promovida em 2026-10-09** a `docs/specs/backlog/m11-oficina-regras.spec.md` (M11 — Oficina das
+- **Promovida em 2026-10-09** a `docs/specs/done/m11-oficina-regras.spec.md` (M11 — Oficina das
   Regras): conversa de modelagem e usabilidade com o autor, exemplão interativo aprovado e
   diagrama da modelagem anexados à spec. Banco como fonte da verdade, três estados de publicação,
-  comparador (edição × publicada e histórico) no escopo; edição por não-admins ficou na `I-060`.
+  comparador (edição × publicada e histórico) no escopo; edição por não-admins ficou na `I-060`. **Concluída em 2026-10-12** com a `m11-10` (banco como fonte da verdade).
 
 ### I-047 — Ladrilho de atributo do NPC igual ao da Criatura · frontend/ficha
 
@@ -261,7 +261,7 @@
 - **Origem:** conversa de modelagem da Oficina das Regras com o autor, 2026-10-09
   ([diagrama](https://claude.ai/artifact/56C6KGre8n4EkuXPxBhK8C)). O autor tem um jogador de
   confiança que hoje edita o Google Docs; quer que ele edite pela Oficina e o autor revise
-  (com o comparador) e publique. Adiado para depois da M11 (`docs/specs/backlog/m11-oficina-regras.spec.md`) para não crescer o escopo.
+  (com o comparador) e publique. Adiado para depois da M11 (`docs/specs/done/m11-oficina-regras.spec.md`) para não crescer o escopo.
 - **Por quê:** permissão é assunto amplo do usuário, não do livro; evita uma tabela
   `livro_editor` específica e serve para futuras concessões.
 - **Custo aparente:** duas tabelas, guarda de permissão no backend, tela de admin para conceder.

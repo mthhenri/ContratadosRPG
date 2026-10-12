@@ -42,8 +42,8 @@ const importarModuloNativo = new Function(
 ) as ImportadorDeModulo;
 
 /**
- * Lê `docs/core/*.md` com o normalizador do frontend (a mesma etapa de leitura do build do site).
- * O parser não é duplicado: o importador só consome a saída dele. `importarModulo` existe para o
+ * Lê `frontend/scripts/fixtures/fonte-inicial/*.md` (a fonte da importação inicial)
+ * com o normalizador do frontend. O parser não é duplicado: o importador só consome a saída dele. `importarModulo` existe para o
  * teste (vitest tem o próprio `import()`); o comando usa o `import()` nativo.
  */
 export async function lerFontesDeRegras(
@@ -53,7 +53,7 @@ export async function lerFontesDeRegras(
   const normalizador = (await importarModulo(
     pathToFileURL(join(raiz, "frontend", "scripts", "normalizar-regras.mjs")).href,
   )) as ModuloNormalizador;
-  const diretorio = join(raiz, "docs", "core");
+  const diretorio = join(raiz, "frontend", "scripts", "fixtures", "fonte-inicial");
   const arquivos = await readdir(diretorio);
   const fontes: FonteDeRegras[] = [];
   for (const [id, prefixo] of [

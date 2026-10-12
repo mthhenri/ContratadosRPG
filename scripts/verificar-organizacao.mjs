@@ -1,4 +1,5 @@
 import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -72,6 +73,29 @@ export function verificarEspelhos(caminhos, lerArquivo) {
     });
 }
 
+// Mesma marca que backend/src/modules/livro/exportador/arquivo-gerado.ts grava (`npm run regras:exportar`).
+const MARCA_GERADA = /^<!-- GERADO por "npm run regras:exportar" .*? livro: ([\w-]+); versão: ([\w.-]+); sha256 do corpo: ([0-9a-f]{64}) -->\n\n/;
+const COPIA_GERADA = /^docs\/core\/(?:sistema|guia_de_mestre)-v[\w.-]+\.md$/;
+
+/**
+ * `docs/core/*.md` são cópias geradas do banco (m11-10): o cabeçalho "não edite" e o hash do corpo
+ * têm de estar íntegros, senão alguém editou à mão. Só confere a coerência do arquivo; comparar com o
+ * banco é `npm run regras:exportar -- --conferir`.
+ */
+export function verificarCopiasGeradas(caminhos, lerArquivo) {
+    return caminhos.filter(caminho => /^docs\/core\/[^/]+\.md$/.test(caminho)).flatMap(caminho => {
+        if (!COPIA_GERADA.test(caminho)) {
+            return [`${caminho}: docs/core só guarda cópias geradas (sistema-vX.md e guia_de_mestre-vX.md).`];
+        }
+        const texto = lerArquivo(caminho).toString("utf8").replace(/\r\n/g, "\n");
+        const marca = MARCA_GERADA.exec(texto);
+        if (!marca) return [`${caminho}: falta o cabeçalho de arquivo gerado; regenere com npm run regras:exportar.`];
+        const hash = createHash("sha256").update(texto.slice(marca[0].length), "utf8").digest("hex");
+        return hash === marca[3]
+            ? [] : [`${caminho}: corpo diferente do exportado (editado à mão?); altere pela Oficina e rode npm run regras:exportar.`];
+    });
+}
+
 /** Valida a árvore de trabalho ou o conteúdo efetivamente preparado no índice. */
 export function verificarRepositorio(raiz, preparado = false) {
     const git = argumentos => execFileSync("git", argumentos, { cwd: raiz });
@@ -82,7 +106,10 @@ export function verificarRepositorio(raiz, preparado = false) {
         .filter(caminho => preparado || existsSync(resolve(raiz, caminho)));
     const lerArquivo = caminho => preparado
         ? git(["show", `:${caminho}`]) : readFileSync(resolve(raiz, caminho));
-    return [...verificarCaminhos(caminhos), ...verificarEspelhos(caminhos, lerArquivo)];
+    return [
+        ...verificarCaminhos(caminhos), ...verificarEspelhos(caminhos, lerArquivo),
+        ...verificarCopiasGeradas(caminhos, lerArquivo)
+    ];
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

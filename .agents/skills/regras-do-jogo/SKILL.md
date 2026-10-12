@@ -9,7 +9,8 @@ description: >
 
 # Regras do Jogo — Documento, Motor e Consumidores
 
-> A regra canônica vive em [`docs/core/`](../../../docs/core/): jogador em
+> A regra canônica vive no **banco** (Oficina das Regras, `SYSTEM.SPEC.md` §1.1); a cópia que se
+> lê no repositório é gerada em [`docs/core/`](../../../docs/core/): jogador em
 > `sistema-v4.1.4.md`, ameaça/criatura/NPC em `guia_de_mestre-v4.2.0.md`. A arquitetura vive em
 > `SYSTEM.SPEC.md` §6.6 e a convenção curta em `CONVENTIONS.md` (“Motor de Regras”); o mapa de
 > localização está em `MEMORY.md` §1/§2. Em conflito, o documento vence — a skill executa o
@@ -20,7 +21,10 @@ description: >
 1. Classifique a regra: jogador → `docs/core/sistema-v4.1.4.md`; ameaça, criatura ou NPC →
    `docs/core/guia_de_mestre-v4.2.0.md`. Cite arquivo e seção no teste e no fecho.
 2. Leia a seção canônica antes do código. Se divergir do código, altere o código e o teste; não
-   adapte o documento sem decisão expressa do autor.
+   adapte o documento sem decisão expressa do autor. **`docs/core/` é cópia gerada: nunca edite
+   à mão.** Para mudar a regra, o autor (ADMIN) altera o livro na Oficina do site e publica;
+   depois rode `npm run regras:exportar` (`-- --conferir` compara sem gravar) e leve a cópia nova
+   no mesmo commit do código e dos testes. `repo:verificar` acusa a cópia editada à mão.
 3. Localize a área do motor pelo mapa abaixo e confira os arquivos reais, não só o nome da pasta.
    Regra nova ou composição reutilizável nasce ali como função pura compartilhada.
 4. Liste quem consome o resultado antes de editar. Frontend e backend usam o mesmo motor; não
@@ -40,9 +44,12 @@ description: >
 | Consulta de patente por Prestígio | `shared/src/regras/patente/` |
 | Fórmula, validação e rolagem de dados | `shared/src/regras/rolagem/` |
 
-A leitura de Regras no site usa `frontend/public/regras/sistema.json` e `guia.json`,
-gerados por `frontend/scripts/normalizar-regras.mjs`. São derivados de apresentação:
-para conferir uma regra, volte ao Markdown acima e ao motor puro, não ao JSON.
+A leitura de Regras no site vem da API (`/livros/<código>`, a fotografia que o papel vê,
+projetada em `shared/src/livro/projetar-pecas-em-regras.ts`). Derivados da publicação: o
+Markdown gerado (`shared/src/livro/exportar-markdown.ts`) e `condicoes.dados.ts` do frontend,
+ambos regenerados por `npm run regras:exportar`. O normalizador do frontend virou ferramenta
+do importador (fonte inicial em `frontend/scripts/fixtures/fonte-inicial/`). Para conferir uma
+regra, volte à cópia gerada acima e ao motor puro.
 
 ## 2. Limites do motor
 

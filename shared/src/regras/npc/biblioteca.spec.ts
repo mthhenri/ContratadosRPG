@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { CategoriaNpcEnum, HabilidadeTipoNpcEnum } from "../../enums";
@@ -12,30 +12,47 @@ const SECOES: Readonly<Record<string, CategoriaNpcEnum>> = {
     Elite: CategoriaNpcEnum.ELITE, Lendário: CategoriaNpcEnum.LENDARIO,
 };
 
-/** Lê a "Biblioteca de Referência" direto do Guia v4.2.0 — o documento é o oráculo, não o motor. */
+/**
+ * Lê a "Biblioteca de Referência" direto do Guia v4.2.0 — o documento é o oráculo, não o motor. O
+ * documento é a cópia gerada do banco (m11-10): a seção é `#### ⬥`, a categoria `##### ⬦` e cada
+ * habilidade sai em duas linhas (`Nome [Ex.: X]` e o corpo) ou numa só (`**Nome [Ex.: X]** [4 E] Ativa — …`).
+ */
 function lerBibliotecaDoGuia(): { categoria: CategoriaNpcEnum; habilidade: FichaNpcHabilidadeDto }[] {
-    const guia = readFileSync(join(RAIZ, "docs", "core", "guia_de_mestre-v4.2.0.md"), "utf8")
-        .replace(/\\([-+.()[\]])/g, "$1");
-    const inicio = guia.indexOf("### **⬥ Biblioteca de Referência**");
-    const fim = guia.indexOf("# **⬢ Guia de Criação de Missões**");
+    // O número da versão no nome do arquivo muda a cada publicação: acha pelo prefixo.
+    const pasta = join(RAIZ, "docs", "core");
+    const arquivo = readdirSync(pasta).find((nome) => /^guia_de_mestre-v[\d.]+\.md$/.test(nome))!;
+    const guia = readFileSync(join(pasta, arquivo), "utf8")
+        .replace(/\\([-+.()[\]*_])/g, "$1");
+    const inicio = guia.indexOf("#### ⬥ Biblioteca de Referência");
+    const fim = guia.indexOf("## ⬢ Guia de Criação de Missões");
     const linhas = guia.slice(inicio, fim).split(/\r?\n/).map((linha) => linha.trim());
     const entradas: { categoria: CategoriaNpcEnum; habilidade: FichaNpcHabilidadeDto }[] = [];
     let categoria: CategoriaNpcEnum | null = null;
+    const registrar = (nomeNeutro: string, nomeNarrativo: string, custo: string | undefined, tipo: string,
+        restricaoBruta: string | undefined, descricao: string): void => {
+        if (!categoria) return;
+        const restricao = restricaoBruta ? `${restricaoBruta[0].toUpperCase()}${restricaoBruta.slice(1)}.` : null;
+        entradas.push({ categoria, habilidade: {
+            nomeNeutro, nomeNarrativo,
+            tipo: tipo === "Passiva" ? HabilidadeTipoNpcEnum.PASSIVA : HabilidadeTipoNpcEnum.ATIVA,
+            ...(custo ? { custoEnergia: Number(custo) } : {}),
+            descricao,
+            ...(restricao ? { restricao } : {}),
+        } });
+    };
     for (let indice = 0; indice < linhas.length; indice++) {
-        const secao = /^\*\*⬦ (.+)\*\*$/.exec(linhas[indice]);
+        const secao = /^#{5} ⬦ (.+?)(?: \{#[^}]+\})?$/.exec(linhas[indice]);
         if (secao) { categoria = SECOES[secao[1]] ?? null; continue; }
+        const emUmaLinha = /^\*\*(.+?) \[Ex\.: (.+?)\]\*\*(?: \[(\d+) E\])? (Passiva|Ativa)(?: \((.+?)\))? — (.+)$/.exec(linhas[indice]);
+        if (emUmaLinha) {
+            registrar(emUmaLinha[1], emUmaLinha[2], emUmaLinha[3], emUmaLinha[4], emUmaLinha[5], emUmaLinha[6]);
+            continue;
+        }
         const cabecalho = /^(.+?) \[Ex\.: (.+?)\](?: \[(\d+) E\])?$/.exec(linhas[indice]);
         if (!cabecalho || !categoria) continue;
         const corpo = /^(Passiva|Ativa)(?: \((.+?)\))? — (.+)$/.exec(linhas[indice + 1]);
         if (!corpo) throw new Error(`Corpo ausente após "${linhas[indice]}"`);
-        const restricao = corpo[2] ? `${corpo[2][0].toUpperCase()}${corpo[2].slice(1)}.` : null;
-        entradas.push({ categoria, habilidade: {
-            nomeNeutro: cabecalho[1], nomeNarrativo: cabecalho[2],
-            tipo: corpo[1] === "Passiva" ? HabilidadeTipoNpcEnum.PASSIVA : HabilidadeTipoNpcEnum.ATIVA,
-            ...(cabecalho[3] ? { custoEnergia: Number(cabecalho[3]) } : {}),
-            descricao: corpo[3],
-            ...(restricao ? { restricao } : {}),
-        } });
+        registrar(cabecalho[1], cabecalho[2], cabecalho[3], corpo[1], corpo[2], corpo[3]);
     }
     return entradas;
 }

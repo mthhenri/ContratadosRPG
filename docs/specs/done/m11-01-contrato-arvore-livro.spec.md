@@ -4,7 +4,7 @@
 > das grades como dado da peça, para não perder o visual atual). Verificação no fecho de
 > `docs/context/HISTORY.md`.
 
-> Task 1/10 do milestone [`m11-oficina-regras.spec.md`](../backlog/m11-oficina-regras.spec.md). Primeira
+> Task 1/10 do milestone [`m11-oficina-regras.spec.md`](m11-oficina-regras.spec.md). Primeira
 > peça da Oficina das Regras: o contrato tipado da árvore de peças, que todas as outras tasks
 > (migration, importador, publicação, comparador, editor) consomem.
 

@@ -15,7 +15,7 @@ const fixture = (nome) => readFileSync(join(diretorioFixtures, `${nome}.md`), 'u
 const normalizar = (texto) => normalizarDocumento(texto, 'sistema', '4.1.3');
 
 test('classes e subclasses recebem destinos únicos sem alterar âncoras de seções', () => {
-    const fonte = readFileSync(join(diretorioRaiz, 'docs/core/sistema-v4.1.4.md'), 'utf8');
+    const fonte = readFileSync(join(diretorioRaiz, 'frontend/scripts/fixtures/fonte-inicial/sistema-v4.1.4.md'), 'utf8');
     const blocos = percorrer(normalizar(fonte).documento.filhos);
     const identidades = blocos.filter(item => ['classe', 'subclasse'].includes(item.tipo));
     assert.deepEqual(identidades.map(item => [item.nome, item.ancora]), [
@@ -39,7 +39,7 @@ function percorrer(conteudo) {
 }
 
 test('RV-04: referências preservam fonte, pares e limites literais dos três recortes', () => {
-    const fonte = readFileSync(join(diretorioRaiz, 'docs/core/sistema-v4.1.4.md'), 'utf8');
+    const fonte = readFileSync(join(diretorioRaiz, 'frontend/scripts/fixtures/fonte-inicial/sistema-v4.1.4.md'), 'utf8');
     const referencias = percorrer(normalizar(fonte).documento.filhos).filter(item => item.referencia);
     assert.equal(referencias.length, 3);
     const texto = trechos => trechos.map(t => 'filhos' in t ? texto(t.filhos) : t.texto).join('');
@@ -85,7 +85,7 @@ test('RV-04: reconhecimento exige contexto e assinatura completos, sem descartar
     assert.equal(reconhecer('# Saúde\n\n' + tabela).length, 0);
     assert.equal(reconhecer(contexto + tabela.replace('Progressão: DES', 'Complemento: DES')).length, 0);
     assert.equal(reconhecer(contexto + tabela.replace('*Inicial = 5 + DES · Progressão: DES*', '')).length, 0);
-    const fonte = readFileSync(join(diretorioRaiz, 'docs/core/sistema-v4.1.4.md'), 'utf8');
+    const fonte = readFileSync(join(diretorioRaiz, 'frontend/scripts/fixtures/fonte-inicial/sistema-v4.1.4.md'), 'utf8');
     assert.equal(reconhecer(fonte.replace('| Nível de Criatura |  |', '| Nível de Criatura | Observação |')).length, 2);
     assert.equal(reconhecer(fonte.replace('**Afinidade** até 9 *AMEAÇA BAIXA*', 'Faixa desconhecida')).length, 2);
     assert.equal(reconhecer(fonte.replace('| **Longo Alcance** De 17 a 24 metros. | **Longínquo** De 25 a 40 metros. |  |',
@@ -93,7 +93,7 @@ test('RV-04: reconhecimento exige contexto e assinatura completos, sem descartar
 });
 
 test('RV-01: quatro tabelas projetam pares na ordem lógica sem perder a fonte', () => {
-    const fonte = readFileSync(join(diretorioRaiz, 'docs/core/sistema-v4.1.4.md'), 'utf8');
+    const fonte = readFileSync(join(diretorioRaiz, 'frontend/scripts/fixtures/fonte-inicial/sistema-v4.1.4.md'), 'utf8');
     const tabelas = percorrer(normalizar(fonte).documento.filhos)
         .filter(bloco => bloco.tipo === 'tabela');
     const pares = tabelas.filter(bloco => bloco.pares);
@@ -134,7 +134,7 @@ test('RV-01: repetição de colunas desconhecidas não implica pares independent
 });
 
 test('categorias e modificações de equipamentos recuperam títulos e hierarquia da fonte', () => {
-    const fonte = readFileSync(join(diretorioRaiz, 'docs/core/sistema-v4.1.4.md'), 'utf8');
+    const fonte = readFileSync(join(diretorioRaiz, 'frontend/scripts/fixtures/fonte-inicial/sistema-v4.1.4.md'), 'utf8');
     const documento = normalizar(fonte).documento;
     const equipamentos = percorrer(documento.filhos).find(item => item.tipo === 'secao'
         && item.titulo === 'Equipamentos');
@@ -257,7 +257,7 @@ test('hierarquia e tradução de links do Docs', () => {
 });
 
 test('fixtures são recortes literais do Sistema vigente', () => {
-    const sistema = readFileSync(join(diretorioRaiz, 'docs/core/sistema-v4.1.4.md'), 'utf8')
+    const sistema = readFileSync(join(diretorioRaiz, 'frontend/scripts/fixtures/fonte-inicial/sistema-v4.1.4.md'), 'utf8')
         .replace(/\r\n/g, '\n');
     for (const arquivo of readdirSync(diretorioFixtures)) {
         assert.ok(sistema.includes(readFileSync(join(diretorioFixtures, arquivo), 'utf8')), arquivo);
@@ -396,7 +396,7 @@ for (const [id, arquivo, versao] of [
     ['sistema', 'sistema-v4.1.4.md', '4.1.4'], ['guia', 'guia_de_mestre-v4.2.0.md', '4.2.0'],
 ]) {
     test(`livro inteiro ${id}: cobertura de texto, âncoras únicas e todos os links rastreados`, () => {
-        const entrada = readFileSync(join(diretorioRaiz, 'docs/core', arquivo), 'utf8');
+        const entrada = readFileSync(join(diretorioRaiz, 'frontend/scripts/fixtures/fonte-inicial', arquivo), 'utf8');
         const { documento, avisos } = normalizarDocumento(entrada, id, versao);
         const secoes = percorrer(documento.filhos).filter((item) => item.tipo === 'secao');
         assert.ok(secoes.length > 50);
@@ -455,9 +455,9 @@ test('publicação escreve dois JSONs determinísticos e avisos legíveis', asyn
     contexto.mock.method(console, 'warn', (mensagem) => mensagens.push(mensagem));
     const destino = mkdtempSync(join(tmpdir(), 'contratados-regras-'));
     try {
-        await prepararRegras(join(diretorioRaiz, 'docs/core'), destino);
+        await prepararRegras(join(diretorioRaiz, 'frontend/scripts/fixtures/fonte-inicial'), destino);
         const primeira = readdirSync(destino).map((arquivo) => readFileSync(join(destino, arquivo), 'utf8'));
-        await prepararRegras(join(diretorioRaiz, 'docs/core'), destino);
+        await prepararRegras(join(diretorioRaiz, 'frontend/scripts/fixtures/fonte-inicial'), destino);
         assert.deepEqual(readdirSync(destino), ['guia.json', 'sistema.json']);
         assert.deepEqual(readdirSync(destino).map((arquivo) => readFileSync(join(destino, arquivo), 'utf8')),
             primeira);

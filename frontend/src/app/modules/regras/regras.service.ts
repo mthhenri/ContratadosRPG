@@ -1,4 +1,4 @@
-import { HttpClient, HttpContext, HttpErrorResponse } from "@angular/common/http";
+import { HttpClient, HttpContext } from "@angular/common/http";
 import { Injectable, inject } from "@angular/core";
 import type { LivroLeituraDto } from "@contratados-rpg/shared/dtos/livro";
 import { projetarPecasEmRegras } from "@contratados-rpg/shared/livro";
@@ -13,17 +13,16 @@ import type { RegrasDocumento } from "./regras.model";
 /** O que o leitor recebe de um livro: o documento e de onde ele veio. */
 export interface RegrasLeitura {
     readonly documento: RegrasDocumento;
-    /** `null` quando o livro veio do JSON estático (a API não tem fotografia dele). */
-    readonly situacao: LivroLeituraDto["situacao"] | null;
-    readonly numero: string | null;
+    readonly situacao: LivroLeituraDto["situacao"];
+    readonly numero: string;
     /** Âncoras renomeadas (`antiga → atual`): a URL publicada antes da troca continua valendo. */
     readonly ancorasAntigas: Readonly<Record<string, string>>;
 }
 
 /**
- * Leitura dos livros de Regras. A fonte é a API (`/livros/<código>`: a fotografia que o papel pode
- * ver); o JSON estático gerado do Markdown é o plano B enquanto a Oficina não é a fonte única
- * (`m11-10`) — vale para livro ainda não importado (404) e para API inalcançável (rede).
+ * Leitura dos livros de Regras. A fonte única é a API (`/livros/<código>`: a fotografia que o papel
+ * pode ver); sem ela (404 ou rede) o leitor mostra o erro e permite tentar de novo. O JSON estático
+ * gerado do Markdown saiu do build na `m11-10`.
  */
 @Injectable({ providedIn: "root" })
 export class RegrasService {
@@ -66,15 +65,6 @@ export class RegrasService {
                     };
                 }),
                 catchError((erro: unknown) => {
-                    // Só "sem fotografia" (404) e "API inalcançável" (0) usam o plano B, e ele não
-                    // fica guardado: a próxima abertura tenta a API de novo. Outros erros aparecem.
-                    if (erro instanceof HttpErrorResponse && (erro.status === 404 || erro.status === 0)) {
-                        this.leituras.delete(chave);
-                        return this.carregarEstatico(id);
-                    }
-                    return throwError(() => erro);
-                }),
-                catchError((erro: unknown) => {
                     this.leituras.delete(chave);
                     return throwError(() => erro);
                 }),
@@ -83,12 +73,5 @@ export class RegrasService {
             );
         this.leituras.set(chave, leitura);
         return leitura;
-    }
-
-    private carregarEstatico(id: RegrasDocumento["id"]): Observable<RegrasLeitura> {
-        return this.httpClient
-            .get<RegrasDocumento>(`/regras/${id}.json`, { context: this.contexto })
-            .pipe(map((documento): RegrasLeitura =>
-                ({ documento, situacao: null, numero: null, ancorasAntigas: {} })));
     }
 }

@@ -1,5 +1,20 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-12 — M11-10: o banco é a fonte da verdade das Regras; `docs/core/` vira cópia gerada
+
+`npm run regras:exportar` grava a versão publicada de cada livro em `docs/core/` (Markdown legível, formato escolhido
+pelo autor), idempotente, com cabeçalho "não edite" e hash do corpo; `repo:verificar` acusa cópia editada à mão e
+`-- --conferir` compara com o banco. O normalizador saiu do `prestart`/`prebuild`, o plano B do JSON estático saiu do
+leitor (`RegrasService` só lê a API), os `.md` originais foram para `frontend/scripts/fixtures/fonte-inicial/` (só
+importador e testes) e `condicoes.dados.ts` passou a ser gerado do Sistema publicado. `SYSTEM.SPEC` §1.1,
+`CLAUDE.md`/`AGENTS.md` e a skill `regras-do-jogo` foram emendados. Verificado: shared 1266, backend 1099, frontend 3404 e
+88 do normalizador, lint sem erros, build de produção sem o normalizador, gate visual (leitor, pesquisa, painel,
+impressão do Guia) em 1920×1080 e 360×800 sem pedir JSON estático. A revisão independente achou duas coisas que só o olho
+de fora via: o `shared/dist` desatualizado gerou a primeira cópia (agora `preregras:exportar` recompila o `shared`) e um
+teste do `shared` dependia do formato e do nome fixo do arquivo. Limite: a exportação saiu de um banco temporário que
+importou os mesmos `.md`, não do banco de dev do autor (que ainda não tem importação).
+[Verificação](../specs/done/m11-10-troca-fonte-da-verdade/verificacao.md).
+
 ## 2026-10-11 — M11-09: mudanças e publicar na Oficina
 
 A Oficina marca cada peça nova (ponto verde) ou alterada (amarelo) contra a última versão publicada, mostra o estado

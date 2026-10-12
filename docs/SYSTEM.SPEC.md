@@ -20,13 +20,24 @@ arquivada quando o milestone M1 (paridade da calculadora) for concluído.
 
 ### 1.1 Fontes da Verdade do Jogo
 
-| Documento | Escopo |
+A fonte da verdade das regras é **o banco** (M11, Oficina das Regras): cada livro tem a árvore de
+peças editada na Oficina do site e as versões publicadas (`livro_versao`). `docs/core/` guarda a
+**cópia gerada** da versão `PUBLICADA` atual de cada livro — é o que o Git e os agentes leem. Ela
+**não se edita à mão**: o arquivo traz o cabeçalho "gerado — não edite" e o hash do corpo, e
+`npm run repo:verificar` acusa edição manual. Para mudar uma regra, altere o livro na Oficina,
+publique e rode `npm run regras:exportar` (`-- --conferir` só compara com o banco); a cópia nova vai
+no mesmo commit da mudança de código que ela motivar.
+
+| Documento (cópia gerada) | Escopo |
 |---|---|
 | `docs/core/sistema-v4.1.4.md` | Regras de jogador: atributos, classes, progressão, equipamentos, patentes, descanso, compras |
 | `docs/core/guia_de_mestre-v4.2.0.md` | Criação de ameaças: identidade, atributos, modificadores, saúde, defesa, resistências, porte, ações |
 
-Consulte-os antes de alterar qualquer fórmula, tabela de progressão ou regra de domínio.
-**Em conflito entre código e documento, o documento vence.**
+O número no nome do arquivo segue a versão publicada (o comando remove o arquivo da versão
+anterior). Consulte-os antes de alterar qualquer fórmula, tabela de progressão ou regra de
+domínio. **Em conflito entre código e documento, o documento vence.** A importação inicial dos
+`.md` originais está preservada em `frontend/scripts/fixtures/fonte-inicial/` e só serve ao
+importador (`npm run regras:importar`) e aos testes do normalizador; não é fonte de regra.
 
 ---
 
@@ -116,6 +127,7 @@ contratados-rpg/
     SYSTEM.SPEC.md              → este arquivo — lido no início de toda sessão
     CONVENTIONS.md              → referência rápida de convenções
     SCHEMA.md                   → schema SQL alvo + forma dos documentos JSONB
+    core/                       → regras do jogo: cópia GERADA do banco (regras:exportar); não editar à mão
     context/                    → estado do projeto (atualizado após cada task)
       CONTEXT.md                → o que é verdade agora (REESCRITO, teto ~400 linhas)
       HISTORY.md                → o que aconteceu e por quê (ACUMULA, nunca reescrito)

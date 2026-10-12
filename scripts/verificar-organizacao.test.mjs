@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import test from "node:test";
-import { verificarCaminhos, verificarEspelhos, verificarRepositorio } from "./verificar-organizacao.mjs";
+import { verificarCaminhos, verificarCopiasGeradas, verificarEspelhos, verificarRepositorio } from "./verificar-organizacao.mjs";
 
 test("aceita anexos, fonte SVG, corpus e documentos canônicos", () => {
     assert.deepEqual(verificarCaminhos([
@@ -85,4 +86,22 @@ test("índice detecta captura forçada e espelho divergente escondidos na árvor
     } finally {
         rmSync(raiz, { recursive: true, force: true });
     }
+});
+
+test("docs/core só aceita cópias geradas íntegras (cabeçalho e hash do corpo)", () => {
+    const corpo = "# Livro\n\nTexto.\n";
+    const hash = createHash("sha256").update(corpo, "utf8").digest("hex");
+    const gerado = `<!-- GERADO por "npm run regras:exportar" a partir do banco. NÃO EDITE À MÃO. livro: sistema; versão: 4.1.4; sha256 do corpo: ${hash} -->\n\n${corpo}`;
+    const arquivos = { "docs/core/sistema-v4.1.4.md": gerado };
+    const ler = caminho => Buffer.from(arquivos[caminho]);
+    const caminhos = Object.keys(arquivos);
+    assert.deepEqual(verificarCopiasGeradas(caminhos, ler), []);
+    arquivos["docs/core/sistema-v4.1.4.md"] = gerado.replace(/\n/g, "\r\n");
+    assert.deepEqual(verificarCopiasGeradas(caminhos, ler), [], "CRLF do Git no Windows não conta como edição");
+    arquivos["docs/core/sistema-v4.1.4.md"] = gerado.replace("Texto.", "Texto editado.");
+    assert.ok(verificarCopiasGeradas(caminhos, ler)[0].includes("editado à mão"));
+    arquivos["docs/core/sistema-v4.1.4.md"] = corpo;
+    assert.ok(verificarCopiasGeradas(caminhos, ler)[0].includes("falta o cabeçalho"));
+    assert.ok(verificarCopiasGeradas(["docs/core/regras-soltas.md"], ler)[0].includes("só guarda cópias geradas"));
+    assert.deepEqual(verificarCopiasGeradas(["docs/core/livro.pdf", "docs/guia.md"], ler), []);
 });

@@ -6,3 +6,4 @@ export * from "./diff-texto-rico";
 export * from "./comparar-livros";
 export * from "./esqueletos";
 export * from "./numero-versao";
+export * from "./exportar-markdown";

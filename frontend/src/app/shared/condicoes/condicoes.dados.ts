@@ -1,5 +1,5 @@
-// Gerado por frontend/scripts/normalizar-regras.mjs. Não editar manualmente.
-// Fonte: docs/core/sistema-v4.1.4.md — Condições.
+// Gerado por `npm run regras:exportar` a partir do livro publicado. Não editar manualmente.
+// Fonte: livro sistema v4.1.4 — Condições.
 export const DESCRICOES_CONDICOES = [
     {
         "nome": "Abalado",

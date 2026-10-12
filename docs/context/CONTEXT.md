@@ -2180,7 +2180,7 @@ incluindo todos os ajustes avulsos de pós-milestone.
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
 | `revisao-formatacao-pdf-regras` | regras | revisão substancial da apresentação e aprovação visual do autor; Sistema suspenso (P-108) |
 | `regras-glossario` | regras | esboço independente do M10: termos marcados com cartão; pontos a fechar com o autor |
-| `m11-10` | regras | Oficina das Regras: troca da fonte da verdade; ver [guarda-chuva](../specs/backlog/m11-oficina-regras.spec.md) |
+| ~~`m11-10`~~ | regras | concluída; ver [guarda-chuva](../specs/done/m11-oficina-regras.spec.md) |
 | `regras-visual-06`…`10` | regras | cinco correções restantes após bateria visual; textos e contraste; [mapa e prioridades](../specs/done/regras-auditoria-visual-completa/auditoria.md) |
 
 Spec avulsa ativa: `montador-rolagem-experimento`, mantida em experimentação pelo autor.
@@ -2228,7 +2228,7 @@ reproduzem isoladas (arquivo único), não na suíte completa.
 | M6 | Gestão de Usuários e Papéis | **concluído** — `m6-01`…`m6-08` (`m6-08`: impersonação administrativa auditável) |
 | M7 | Encontro de Combate | **concluído** — 8 tasks originais (`m7-01` contrato, `m7-02` motor puro, `m7-03` backend de montagem, `m7-04` backend de condução/tempo real, `m7-05` painel do mestre, `m7-06` visão do jogador, `m7-07` log da rodada, `m7-08` refinamento mobile) + 9 ajustes de pós-milestone (`m7-09`…`m7-17`, ver seção 4 "Encontro de Combate"). Numeração M7 é sugestão, não decisão de roadmap |
 | M8 | Espectadores e Prévias de Campanha | **concluído** — `m8-01`…`m8-06` (banco + contratos do papel ESPECTADOR; backend de permissões e as duas projeções de leitura; frontend de entrada/gestão de convites-membros/Painel do espectador ao vivo/Prévia de jogador fidedigna/visão read-only de Iniciativa; `m8-06` fechou com gate de validação integrada entre 4 contas reais). Numeração M8 é sugestão, não decisão de roadmap — ver `docs/context/IDEAS.md` |
-| M11 | Oficina das Regras (editor da estrutura dos livros no site) | **em andamento** — `m11-01` (contrato da árvore no `shared/`) e `m11-02` (tabelas e repositórios) `m11-03` (importador) e `m11-04` (publicação e leitura por papel) e `m11-05` (comparador puro) e `m11-06` (núcleo da Oficina: API de edição e edição no lugar) e `m11-07` (inserir e estruturar) e `m11-08` (blocos ricos) e `m11-09` (mudanças e publicar) concluídas; `m11-10` no backlog; [guarda-chuva](../specs/backlog/m11-oficina-regras.spec.md) |
+| M11 | Oficina das Regras (editor da estrutura dos livros no site) | **concluída (10/10)** — `m11-01` (contrato da árvore no `shared/`) e `m11-02` (tabelas e repositórios) `m11-03` (importador) e `m11-04` (publicação e leitura por papel) e `m11-05` (comparador puro) e `m11-06` (núcleo da Oficina: API de edição e edição no lugar) e `m11-07` (inserir e estruturar) e `m11-08` (blocos ricos), `m11-09` (mudanças e publicar) e `m11-10` (troca da fonte da verdade) concluídas; [guarda-chuva](../specs/done/m11-oficina-regras.spec.md) |
 | M10 | Regras (documentos do sistema no site) | **implementada, 11/11** — revisão editorial da exportação pendente (P-108); fonte visual `docs/specs/done/m10-regras/m10-regras-exemplao.html` |
 
 ---
@@ -2240,8 +2240,9 @@ reproduzem isoladas (arquivo único), não na suíte completa.
 
 ### Regras — formato canônico e casos explícitos (M10-01/02)
 
-`frontend/scripts/normalizar-regras.mjs` gera `public/regras/sistema.json` e `guia.json`
-em `prestart`/`prebuild`, a partir da versão mais recente dos Markdown em `docs/core/`.
+`frontend/scripts/normalizar-regras.mjs` converte os Markdown em JSON de leitura; desde a `m11-10`
+é só ferramenta do importador (fonte inicial em `scripts/fixtures/fonte-inicial/`), fora do
+`prestart`/`prebuild`, e o site lê a API.
 Contrato em `modules/regras/regras.model.ts`; 68 testes do normalizador integram o `test`
 do frontend. Casos explícitos em `scripts/regras-personagens.mjs`, `regras-equipamentos.mjs`,
 `regras-termos.mjs` e `regras-guia.mjs`: abertura dos dois livros, 3 classes, 3 subclasses,
@@ -2320,6 +2321,11 @@ ficha de criatura/habilidade de criatura/roteiro e tabela/grade/faixas/níveis d
 renderer do próprio bloco (`regras/blocos/`), sobre a base comum `oficina-dados.ts` (campo aninhado por caminho),
 `OficinaTexto` (`caminho`, `opcional`), `OficinaStore.alterarCampo`/`alterarMatriz` e `oficina-matriz.ts`. O "+" do
 fim de cada lista cria o item. [Verificação por fatia](../specs/done/m11-08-oficina-blocos-ricos/verificacao.md).
+Fonte da verdade (M11-10, concluída): o banco; `docs/core/` é cópia gerada por `npm run regras:exportar`
+(Markdown legível, cabeçalho com hash do corpo; `-- --conferir` compara com o banco; também regenera
+`condicoes.dados.ts`). `repo:verificar` acusa cópia editada à mão. O leitor depende só da API: **antes de subir
+este frontend em qualquer ambiente é preciso ter rodado `regras:importar` (ou publicado os livros) no banco dele**,
+senão `/livros/<código>` responde 404 e as Regras mostram erro. [Verificação](../specs/done/m11-10-troca-fonte-da-verdade/verificacao.md).
 Mudanças e publicar (M11-09, concluída): `OficinaMudancas` (por leitor; versões, última publicada, comparação com
 debounce de 600 ms, marcas por peça, `publicar`), gaveta `app-oficina-mudancas`, `app-oficina-publicar` (menu + diálogo),
 estados na `app-oficina-barra` e seletor de versão do admin (versão antiga só leitura) no leitor. Primitivo novo

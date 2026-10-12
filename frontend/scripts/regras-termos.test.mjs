@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { normalizarDocumento } from './normalizar-regras.mjs';
 
 const fonte = (arquivo) => readFileSync(fileURLToPath(
-    new URL(`../../docs/core/${arquivo}`, import.meta.url)), 'utf8');
+    new URL(`./fixtures/fonte-inicial/${arquivo}`, import.meta.url)), 'utf8');
 const sistema = normalizarDocumento(fonte('sistema-v4.1.4.md'), 'sistema', '4.1.4').documento;
 const guia = normalizarDocumento(fonte('guia_de_mestre-v4.2.0.md'), 'guia', '4.2.0').documento;
 
