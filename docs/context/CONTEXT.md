@@ -2315,7 +2315,7 @@ função pura `oficina-estrutura.ts`; só movimentos permitidos pela tabela pass
 pelas `ancorasAntigas` da fotografia. Peça nova nasce sem âncora até ser renomeada.
 [Verificação e decisões](../specs/done/m11-07-oficina-inserir-e-estruturar/verificacao.md).
 
-Blocos ricos (M11-08, fatias 1 e 2 de 5; a 2 cobre classe, arquétipo e subclasse): equipamentos, modificações e amplificadores se editam no lugar
+Blocos ricos (M11-08, fatias 1 a 3 de 5; a 2 cobre classe, arquétipo e subclasse, a 3 origem e termos): equipamentos, modificações e amplificadores se editam no lugar
 (`regras-equipamentos|modificacoes|amplificadores.component`, `oficina-empilhamento.component`, campo aninhado por
 `oficina-dados.ts`); o "+" do fim da lista cria o item. As demais fatias (classe/arquétipo/subclasse, origem/termos,
 ficha de criatura/roteiro, tabela/grade/faixas/níveis) seguem abertas em

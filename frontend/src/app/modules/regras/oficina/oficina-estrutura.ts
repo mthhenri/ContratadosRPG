@@ -39,6 +39,7 @@ export const NOME_DO_TIPO: Readonly<Partial<Record<Tipo, string>>> = {
     [Tipo.EQUIPAMENTOS]: "Equipamentos", [Tipo.EQUIPAMENTO]: "Equipamento",
     [Tipo.MODIFICACOES]: "Modificações", [Tipo.MODIFICACAO]: "Modificação",
     [Tipo.AMPLIFICADORES]: "Amplificadores", [Tipo.AMPLIFICADOR]: "Amplificador",
+    [Tipo.ORIGENS]: "Origens", [Tipo.ORIGEM]: "Origem", [Tipo.TERMOS]: "Termos", [Tipo.TERMO]: "Termo",
 };
 
 /**
@@ -76,6 +77,14 @@ const CATALOGO: readonly (MenuInsercaoOpcao & { readonly tipo: Tipo })[] = [
         descricao: "Lista de amplificadores." },
     { id: Tipo.AMPLIFICADOR, tipo: Tipo.AMPLIFICADOR, rotulo: "Amplificador", marca: "▪", termos: ["amp"],
         descricao: "Empilhamento e efeito." },
+    { id: Tipo.ORIGENS, tipo: Tipo.ORIGENS, rotulo: "Origens", marca: "▤", termos: ["orig"],
+        descricao: "Cartões de origem: formação, especialidade e saber de campo." },
+    { id: Tipo.ORIGEM, tipo: Tipo.ORIGEM, rotulo: "Origem", marca: "▪", termos: ["orig"],
+        descricao: "Nome, citação, formação, especialidade e saber de campo." },
+    { id: Tipo.TERMOS, tipo: Tipo.TERMOS, rotulo: "Termos", marca: "▤", termos: ["verbetes", "glossario"],
+        descricao: "Lista de verbetes curtos." },
+    { id: Tipo.TERMO, tipo: Tipo.TERMO, rotulo: "Termo", marca: "▪", termos: ["verbete"],
+        descricao: "Nome, rótulo e descrição." },
 ];
 
 /** Tipos que cabem dentro de `paiTipo` (`null` = raiz do livro), pela tabela de aninhamento do validador. */
@@ -98,11 +107,11 @@ export function campoInicialDe(tipo: Tipo): string | null {
     switch (tipo) {
         case Tipo.SECAO: return "titulo";
         case Tipo.HABILIDADE: return "nome";
-        case Tipo.EQUIPAMENTO: case Tipo.MODIFICACAO: case Tipo.AMPLIFICADOR: return "nome";
+        case Tipo.EQUIPAMENTO: case Tipo.MODIFICACAO: case Tipo.AMPLIFICADOR: case Tipo.ORIGEM: case Tipo.TERMO: return "nome";
         case Tipo.EQUIPAMENTOS: case Tipo.MODIFICACOES: return "categoria";
         // Nome de classe, subclasse e arquétipo ainda não se edita na tela (m11-08): sem campo para o cursor.
         // O container de amplificadores não tem campo próprio.
-        case Tipo.CLASSE: case Tipo.SUBCLASSE: case Tipo.ARQUETIPO: case Tipo.AMPLIFICADORES: return null;
+        case Tipo.CLASSE: case Tipo.SUBCLASSE: case Tipo.ARQUETIPO: case Tipo.AMPLIFICADORES: case Tipo.ORIGENS: case Tipo.TERMOS: return null;
         default: return "trechos";
     }
 }

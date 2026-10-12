@@ -92,6 +92,7 @@ export interface RegrasSubclasse extends RegrasFonteTabela {
 
 /** Verbete curto de uma lista de termos (atributo, maestria, penalidade, sequela). */
 export interface RegrasTermo {
+    readonly peca?: string;
     readonly nome: string;
     readonly numero?: number;
     readonly rotulo?: string;
@@ -100,6 +101,7 @@ export interface RegrasTermo {
 
 export interface RegrasTermos extends RegrasFonteTabela {
     readonly tipo: "termos";
+    readonly peca?: string;
     readonly variante: "atributos" | "maestrias" | "penalidades" | "verbetes";
     readonly itens: readonly RegrasTermo[];
 }
@@ -154,7 +156,8 @@ export interface RegrasArquetipos extends RegrasFonteTabela {
 
 export interface RegrasOrigens extends RegrasFonteTabela {
     readonly tipo: "origens";
-    readonly origens: readonly { readonly nome: string;
+    readonly peca?: string;
+    readonly origens: readonly { readonly peca?: string; readonly nome: string;
         readonly citacao: readonly RegrasTrecho[];
         readonly formacao: readonly RegrasTrecho[];
         readonly especialidade: readonly RegrasTrecho[];

@@ -1,5 +1,14 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-11 — M11-08 fatia 3: origem e termos editáveis na Oficina
+
+Origem (nome, citação, formação, especialidade, saber de campo) e termo (nome, rótulo, número, descrição) editam-se no
+lugar, com "+ Origem"/"+ Termo" no fim do container e os containers no menu da seção; o validador ganhou as
+pendências de conteúdo sem tocar nos livros importados. Verificado: shared 1246, backend 1093, frontend 3356, lint
+limpo; gate visual em 1920×1080 e 360×800 (toque) e ida e volta pelo rascunho. Ficam fora a tabela das origens
+(fatia 5) e a variante do container de termos.
+[Verificação](../specs/active/m11-08-oficina-blocos-ricos/verificacao.md).
+
 ## 2026-10-11 — M11-08 fatia 2: classe, arquétipo e subclasse editáveis na Oficina
 
 Nome, citação, atributos bônus, Vida/Energia iniciais e progressão por nível (`app-regras-saude` ganhou `peca`),

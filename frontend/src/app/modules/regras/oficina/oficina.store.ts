@@ -66,6 +66,7 @@ const TIPOS_COM_TELA: readonly TipoRegraPecaEnum[] = [
     TipoRegraPecaEnum.SECAO, TipoRegraPecaEnum.PARAGRAFO, TipoRegraPecaEnum.EXEMPLO, TipoRegraPecaEnum.NOTA,
     TipoRegraPecaEnum.FORMULA, TipoRegraPecaEnum.HABILIDADE, TipoRegraPecaEnum.CLASSE, TipoRegraPecaEnum.SUBCLASSE,
     TipoRegraPecaEnum.EQUIPAMENTOS, TipoRegraPecaEnum.MODIFICACOES, TipoRegraPecaEnum.EQUIPAMENTO, TipoRegraPecaEnum.MODIFICACAO, TipoRegraPecaEnum.AMPLIFICADOR,
+    TipoRegraPecaEnum.ORIGEM, TipoRegraPecaEnum.TERMO,
 ];
 
 /** Irmãs que aparecem lado a lado na tela: a inicial e as melhoradas de um arquétipo são grupos à parte. */

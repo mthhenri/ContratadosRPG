@@ -262,6 +262,7 @@ export function validarArvoreLivro(dto: LivroArvoreValidarDto): LivroPendenciaDt
     }
     conferirEquipamento(peca, caminho, dados);
     conferirClasse(peca, caminho, dados);
+    conferirOrigemETermo(peca, caminho, dados);
     if (peca.tipo === Tipo.HABILIDADE) {
       if (typeof dados["custo"] === "number" && dados["custo"] < 0) {
         registrar(peca, caminho, Codigo.CONTEUDO_INCOMPLETO, Gravidade.CONTEUDO,
@@ -336,6 +337,24 @@ export function validarArvoreLivro(dto: LivroArvoreValidarDto): LivroPendenciaDt
         faltou("Falta o custo do experimento (ao menos um, sem linha vazia).");
       }
     }
+  };
+
+  /** Pendências de conteúdo de origem e termo (m11-08). */
+  const conferirOrigemETermo = (
+    peca: LivroPecaDto,
+    caminho: readonly string[],
+    dados: Record<string, unknown>,
+  ): void => {
+    const faltou = (mensagem: string): void =>
+      registrar(peca, caminho, Codigo.CONTEUDO_INCOMPLETO, Gravidade.CONTEUDO, mensagem);
+    const vazio = (campo: string): boolean => !extrairTexto(dados[campo]).trim();
+    if (peca.tipo === Tipo.ORIGEM) {
+      if (vazio("citacao")) faltou("Falta a citação da origem.");
+      if (vazio("formacao") || vazio("especialidade") || vazio("saberCampo")) {
+        faltou("Faltam a formação, a especialidade ou o saber de campo da origem.");
+      }
+    }
+    if (peca.tipo === Tipo.TERMO && vazio("descricao")) faltou("Falta a descrição do verbete.");
   };
 
   const conferirGrade = (

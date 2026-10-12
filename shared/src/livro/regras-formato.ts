@@ -84,6 +84,8 @@ export interface NormalizadoSubclasse extends FonteTabela {
 export interface NormalizadoOrigens extends FonteTabela {
   readonly tipo: "origens";
   readonly origens: readonly {
+    /** Identificador da peça do item (só na projeção da Oficina). */
+    readonly peca?: string;
     readonly nome: string;
     readonly citacao: Trechos;
     readonly formacao: Trechos;
@@ -96,6 +98,8 @@ export interface NormalizadoTermos extends FonteTabela {
   readonly tipo: "termos";
   readonly variante: "atributos" | "maestrias" | "penalidades" | "verbetes";
   readonly itens: readonly {
+    /** Identificador da peça do item (só na projeção da Oficina). */
+    readonly peca?: string;
     readonly nome: string;
     readonly numero?: number;
     readonly rotulo?: string;

@@ -59,3 +59,11 @@
         grid-template-columns: minmax(0, 1fr);
     }
 }
+
+// Número do termo (só na Oficina, no termo selecionado): contador ou "+ Número".
+.regras-termos__numero-edicao {
+    display: flex;
+    align-items: center;
+    gap: var(--space-8);
+    margin-top: var(--space-4);
+}

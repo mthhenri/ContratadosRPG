@@ -225,7 +225,7 @@ function projetarBase(peca: LivroPecaDto): NormalizadoConteudo {
         tipo: "origens",
         cabecalho,
         linhas,
-        origens: peca.filhos.map((filho) => ({ ...dadosDe(filho, Tipo.ORIGEM) })),
+        origens: peca.filhos.map((filho) => comPeca({ ...dadosDe(filho, Tipo.ORIGEM) }, filho)),
       };
     }
     case Tipo.TERMOS:
@@ -234,7 +234,7 @@ function projetarBase(peca: LivroPecaDto): NormalizadoConteudo {
         variante: dadosDe(peca, Tipo.TERMOS).variante,
         cabecalho: [],
         linhas: [],
-        itens: peca.filhos.map((filho) => ({ ...dadosDe(filho, Tipo.TERMO) })),
+        itens: peca.filhos.map((filho) => comPeca({ ...dadosDe(filho, Tipo.TERMO) }, filho)),
       };
     case Tipo.EQUIPAMENTOS:
       return {

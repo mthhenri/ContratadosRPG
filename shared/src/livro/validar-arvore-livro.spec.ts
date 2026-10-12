@@ -280,6 +280,29 @@ describe("validarArvoreLivro — classe, arquétipo e subclasse (m11-08)", () =>
   });
 });
 
+describe("validarArvoreLivro — origem e termo (m11-08)", () => {
+  const origem = (dados: Record<string, unknown>) => peca(Tipo.ORIGENS, "origens", { cabecalho: [], linhas: [] }, [
+    peca(Tipo.ORIGEM, "o", { nome: "Militar", citacao: [texto("x")], formacao: [texto("a")], especialidade: [texto("b")],
+      saberCampo: [texto("c")], ...dados }),
+  ]);
+  const termo = (dados: Record<string, unknown>) => peca(Tipo.TERMOS, "termos", { variante: "verbetes" }, [
+    peca(Tipo.TERMO, "t", { nome: "Alcance", descricao: [texto("x")], ...dados }),
+  ]);
+  const mensagens = (pecas: readonly LivroPecaDto[]) => validar(pecas).map((item) => item.mensagem);
+
+  it("aceita origem e termo completos", () => {
+    expect(validar([origem({}), termo({})])).toEqual([]);
+  });
+
+  it("pede citação, formação, especialidade, saber de campo e descrição", () => {
+    expect(mensagens([origem({ citacao: [], saberCampo: [] })])).toEqual([
+      "Falta a citação da origem.",
+      "Faltam a formação, a especialidade ou o saber de campo da origem.",
+    ]);
+    expect(mensagens([termo({ descricao: [] })])).toEqual(["Falta a descrição do verbete."]);
+  });
+});
+
 describe("tabela de aninhamento", () => {
   it("cobre todos os tipos de peça", () => {
     expect(Object.keys(LIVRO_FILHOS_PERMITIDOS).sort()).toEqual(Object.values(Tipo).sort());

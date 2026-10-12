@@ -7,7 +7,7 @@ Spec: [`m11-08-oficina-blocos-ricos.spec.md`](../m11-08-oficina-blocos-ricos.spe
 |---|---|---|
 | 1 | Equipamento, Modificação, Amplificador | **fechada** (esta verificação) |
 | 2 | Classe, Arquétipo, Subclasse | **fechada** (seção abaixo) |
-| 3 | Origem, Termos | aberta |
+| 3 | Origem, Termos | **fechada** (seção abaixo) |
 | 4 | Ficha de criatura, Roteiro | aberta |
 | 5 | Tabela, Grade, Faixas, Níveis de ameaça | aberta |
 
@@ -85,3 +85,26 @@ usam primitivos de `shared/ui` (`app-botao`, `app-botao-icone`, `app-chip`, `app
 ### Limites
 - Na Oficina o arquétipo e a subclasse mostram o texto dos bônus como campo, não como selos.
 - Digitar o nome não gera âncora nova depois da primeira (igual ao título da seção); use F2 para renomear.
+
+## Fatia 3 — Origem e Termos
+
+### O que mudou
+- `shared`: itens de origens e termos carregam `peca` na projeção da Oficina; pendências de conteúdo (citação,
+  formação, especialidade e saber de campo da origem; descrição do verbete). Livros importados sem pendência nova.
+- Frontend: origem (nome, citação, formação, especialidade, saber de campo) e termo (nome, rótulo opcional,
+  descrição, número com contador, adicionar e remover número no termo selecionado); "+ Origem" e "+ Termo" no fim
+  de cada container; o menu da seção oferece Origens e Termos.
+- Fora desta fatia: a tabela do container de origens (`cabecalho`/`linhas`) e a `variante` do container de termos
+  (atributos, maestrias, penalidades, verbetes; nasce `verbetes`) — a tabela é da fatia 5; a variante não tem
+  controle ainda.
+
+### Verificação
+- Testes: shared 1246, backend 1093 (12 ignorados já existiam), frontend 3356; lint do frontend sem erros.
+- Gate visual (pilha isolada) em 1920×1080 e 360×800 com toque: origens e termos na Leitura e na Oficina, edição de
+  campo, origem nova com pendência, termo selecionado com número (contador e remover). Sem overflow e sem erro de
+  console. Ida e volta: rascunho publicado e a Leitura mostra a origem nova e a formação editada.
+- Sem revisão independente (mesma maquinaria revisada na fatia 1).
+
+### Limites
+- A variante do container de termos não é editável na tela.
+- Termo numerado mostra o contador com sinal (+3) ao lado do número do desenho.

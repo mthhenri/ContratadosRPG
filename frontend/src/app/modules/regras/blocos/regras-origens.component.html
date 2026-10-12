@@ -1,40 +1,73 @@
 <div class="regras-origens">
-    @for (origem of bloco().origens; track origem.nome) {
-        <app-cartao [titulo]="origem.nome" [cabecalhoQuebravel]="true">
-            <span cartaoIndice aria-hidden="true">◻</span>
-            <p class="regras-origens__citacao">
-                <app-regras-inline
-                    [trechos]="origem.citacao"
-                    [documento]="documento()"
-                    (navegarAncora)="navegarAncora.emit($event)"
-                />
-            </p>
-            <dl class="regras-origens__campos">
-                <dt>Formação</dt>
-                <dd>
+    @for (origem of bloco().origens; track origem.peca ?? origem.nome) {
+        <app-oficina-peca [peca]="origem.peca">
+            <app-cartao [titulo]="origem.nome" [cabecalhoQuebravel]="true">
+                <span cartaoIndice aria-hidden="true">◻</span>
+                @if (editando() && origem.peca) {
+                    <div class="regras-origens__campo-nome">
+                        <span>Nome</span>
+                        <app-oficina-texto
+                            campo="nome"
+                            rotulo="Nome da origem"
+                            vazio="Nome da origem"
+                            [peca]="origem.peca"
+                            [texto]="origem.nome"
+                        />
+                    </div>
+                }
+                <p class="regras-origens__citacao">
                     <app-regras-inline
-                        [trechos]="origem.formacao"
+                        [trechos]="origem.citacao"
+                        [peca]="origem.peca"
+                        campo="citacao"
+                        rotuloEdicao="Citação da origem"
+                        dica="Citação"
                         [documento]="documento()"
                         (navegarAncora)="navegarAncora.emit($event)"
                     />
-                </dd>
-                <dt>Especialidade</dt>
-                <dd>
-                    <app-regras-inline
-                        [trechos]="origem.especialidade"
-                        [documento]="documento()"
-                        (navegarAncora)="navegarAncora.emit($event)"
-                    />
-                </dd>
-                <dt>Saber de Campo</dt>
-                <dd>
-                    <app-regras-inline
-                        [trechos]="origem.saberCampo"
-                        [documento]="documento()"
-                        (navegarAncora)="navegarAncora.emit($event)"
-                    />
-                </dd>
-            </dl>
-        </app-cartao>
+                </p>
+                <dl class="regras-origens__campos">
+                    <dt>Formação</dt>
+                    <dd>
+                        <app-regras-inline
+                            [trechos]="origem.formacao"
+                            [peca]="origem.peca"
+                            campo="formacao"
+                            rotuloEdicao="Formação"
+                            dica="Formação"
+                            [documento]="documento()"
+                            (navegarAncora)="navegarAncora.emit($event)"
+                        />
+                    </dd>
+                    <dt>Especialidade</dt>
+                    <dd>
+                        <app-regras-inline
+                            [trechos]="origem.especialidade"
+                            [peca]="origem.peca"
+                            campo="especialidade"
+                            rotuloEdicao="Especialidade"
+                            dica="Especialidade"
+                            [documento]="documento()"
+                            (navegarAncora)="navegarAncora.emit($event)"
+                        />
+                    </dd>
+                    <dt>Saber de Campo</dt>
+                    <dd>
+                        <app-regras-inline
+                            [trechos]="origem.saberCampo"
+                            [peca]="origem.peca"
+                            campo="saberCampo"
+                            rotuloEdicao="Saber de campo"
+                            dica="Saber de campo"
+                            [documento]="documento()"
+                            (navegarAncora)="navegarAncora.emit($event)"
+                        />
+                    </dd>
+                </dl>
+            </app-cartao>
+        </app-oficina-peca>
     }
 </div>
+@if (bloco().peca; as pecaContainer) {
+    <app-oficina-insercao [pai]="pecaContainer" [restritoA]="tiposItem" [fim]="true" rotulo="Origem" />
+}

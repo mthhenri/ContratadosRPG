@@ -1,22 +1,93 @@
 <dl [class]="'regras-termos regras-termos--' + bloco().variante">
-    @for (item of bloco().itens; track $index) {
-        <div class="regras-termos__item">
-            <dt class="regras-termos__nome">
-                @if (item.numero !== undefined) {
-                    <span class="regras-termos__numero">{{ item.numero }}</span>
+    @for (item of bloco().itens; track item.peca ?? $index) {
+        <app-oficina-peca [peca]="item.peca">
+            <div class="regras-termos__item">
+                <dt class="regras-termos__nome">
+                    @if (editando() && item.peca) {
+                        @if (item.numero !== undefined) {
+                            <span class="regras-termos__numero">{{ item.numero }}</span>
+                        }
+                        <app-oficina-texto
+                            campo="nome"
+                            rotulo="Nome do termo"
+                            vazio="Nome do termo"
+                            [peca]="item.peca"
+                            [texto]="item.nome"
+                        />
+                        @if (item.rotulo || selecionado(item)) {
+                            <span class="regras-termos__rotulo"
+                                ><app-oficina-texto
+                                    campo="rotulo"
+                                    rotulo="Rótulo do termo"
+                                    vazio="rótulo"
+                                    [peca]="item.peca"
+                                    [texto]="item.rotulo ?? ''"
+                                    [opcional]="true"
+                            /></span>
+                        }
+                    } @else {
+                        @if (item.numero !== undefined) {
+                            <span class="regras-termos__numero">{{ item.numero }}</span>
+                        }
+                        {{ item.nome }}
+                        @if (item.rotulo) {
+                            <span class="regras-termos__rotulo">{{ item.rotulo }}</span>
+                        }
+                    }
+                </dt>
+                @if (selecionado(item)) {
+                    <div class="regras-termos__numero-edicao">
+                        @if (item.numero !== undefined) {
+                            <app-step-input
+                                tamanho="micro"
+                                [digitavel]="false"
+                                [comSinal]="true"
+                                [valorExterno]="item.numero"
+                                ariaRotulo="número do termo"
+                                (valorAlterado)="definirNumero(item, $event)"
+                            />
+                            <button
+                                app-botao-icone
+                                tamanho="compacto"
+                                variante="perigo"
+                                type="button"
+                                aria-label="Remover número"
+                                appTooltip="Remover número"
+                                (click)="definirNumero(item, undefined)"
+                            >
+                                <app-icone nome="excluir" />
+                            </button>
+                        } @else {
+                            <button
+                                app-botao
+                                variante="secundario"
+                                estilo="contorno"
+                                tamanho="pequeno"
+                                posicaoIcone="esquerda"
+                                type="button"
+                                aria-label="Adicionar número"
+                                (click)="definirNumero(item, 0)"
+                            >
+                                <app-icone nome="mais" /> Número
+                            </button>
+                        }
+                    </div>
                 }
-                {{ item.nome }}
-                @if (item.rotulo) {
-                    <span class="regras-termos__rotulo">{{ item.rotulo }}</span>
-                }
-            </dt>
-            <dd class="regras-termos__descricao">
-                <app-regras-inline
-                    [trechos]="item.descricao"
-                    [documento]="documento()"
-                    (navegarAncora)="navegarAncora.emit($event)"
-                />
-            </dd>
-        </div>
+                <dd class="regras-termos__descricao">
+                    <app-regras-inline
+                        [trechos]="item.descricao"
+                        [peca]="item.peca"
+                        campo="descricao"
+                        rotuloEdicao="Descrição do termo"
+                        dica="Descrição"
+                        [documento]="documento()"
+                        (navegarAncora)="navegarAncora.emit($event)"
+                    />
+                </dd>
+            </div>
+        </app-oficina-peca>
     }
 </dl>
+@if (bloco().peca; as pecaContainer) {
+    <app-oficina-insercao [pai]="pecaContainer" [restritoA]="tiposItem" [fim]="true" rotulo="Termo" />
+}
