@@ -29,6 +29,19 @@
 
 ## Ativos
 
+### P-126 — Espelho `docs/design/tema/` ↔ `frontend/src/styles/tema/` divergiu nos tokens · `ABERTO` · design/tema
+
+- **Sintoma:** `DESIGN.md` declara as duas pastas "espelhadas 1:1", mas `_tokens.scss` difere em
+  valor: `--erro` é `#d62222` em `docs/design/tema/` e `var(--vida)` no runtime, e
+  `--cor-ficha-legivel` só existe no runtime. `_base`, `_breakpoints` e `_glow` também divergem
+  (comentários/formatação e conteúdo de `_breakpoints`).
+- **Causa:** edições aplicadas só na cópia do runtime; nenhum gate compara as duas pastas.
+- **Contorno:** em mudança de tema, consultar `frontend/src/styles/tema/` (o que o build usa) e
+  rodar `npm run impacto` nos dois `_tokens.scss`.
+- **Correção:** decidir com o autor qual pasta é a fonte, realinhar e acrescentar a comparação de
+  valores ao `repo:verificar`.
+- **Desde:** achado em `skills-10-gerenciamento-de-impacto` (2026-10-13); divergência anterior.
+
 ### P-124 — Destaque não selecionado perde contraste sobre ameaça · `ABERTO` · frontend/regras
 
 - **Sintoma:** Pesquisar Catastrófica no Guia, base escura: ocorrência não selecionada da tabela VD fica clara sobre o fundo claro do indicador. Na base clara, Apocalíptica não selecionada fica escura sobre fundo escuro. Página e painel, inclusive 360×800.

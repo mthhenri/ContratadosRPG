@@ -47,7 +47,7 @@ for estado in backlog active done; do
 done
 
 # 3. Skills (duas cópias idênticas) --------------------------------------------------------
-skills=(task-flow conventions-check dto-conventions sql-migrations domain-rules-engine realtime-sync verify)
+skills=(task-flow conventions-check dto-conventions sql-migrations domain-rules-engine realtime-sync verify gerenciamento-de-impacto)
 (( orquestracao )) && skills+=(orquestracao)
 (( ui )) && skills+=(design-fidelity)
 for skill in "${skills[@]}"; do
@@ -57,9 +57,13 @@ for skill in "${skills[@]}"; do
   done < <(cd "$origem/skills/$skill" && find . -type f | sed 's#^\./##')
 done
 
-# 4. Verificação de organização + CI ------------------------------------------------------
+# 4. Verificação de organização, mapa de impacto + CI -----------------------------------
 copiar scripts/verificar-organizacao.template.mjs scripts/verificar-organizacao.mjs
 copiar scripts/verificar-organizacao.test.template.mjs scripts/verificar-organizacao.test.mjs
+copiar scripts/impacto.template.mjs scripts/impacto.mjs
+copiar scripts/impacto.test.template.mjs scripts/impacto.test.mjs
+# hook-impacto vai sempre (o teste o importa); só o settings.json da orquestração o liga.
+copiar scripts/agentes/hook-impacto.mjs scripts/agentes/hook-impacto.mjs
 copiar config/ci.template.yml .github/workflows/ci.yml
 
 # 5. Orquestração multiagente -------------------------------------------------------------

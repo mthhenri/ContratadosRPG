@@ -40,6 +40,9 @@ import { Component, computed, input } from "@angular/core";
  * `info`, círculo com "i": mostra/oculta o texto da missão no cabeçalho da campanha do jogador.
  * `desfazer`/`refazer`, setas em gancho ("arrow-back-up"/"arrow-forward-up" da Tabler Icons, MIT):
  * histórico da barra do editor Markdown.
+ * `senha`, chave ("key" da Tabler Icons, MIT): ação "Trocar senha" do Perfil — antes
+ * reaproveitava `patente`, a medalha da Patente, que tem sentido próprio
+ * (skills-10-gerenciamento-de-impacto).
  * Biblioteca de documentos da campanha (m9-04), todos da Tabler Icons (MIT): `biblioteca`, estante de
  * livros ("books") — item "Biblioteca" do mestre, distinto de `documentos` (livro aberto, leitor
  * global das regras) e de `caderno`; `imagem`, moldura com montanha ("photo") — tipo de documento
@@ -147,6 +150,7 @@ export type IconeNome =
   | 'fantasma'
   | 'membros'
   | 'vincular'
+  | 'senha'
   | 'caderno'
   | 'desfazer'
   | 'refazer'

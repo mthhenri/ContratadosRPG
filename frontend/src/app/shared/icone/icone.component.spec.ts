@@ -109,6 +109,12 @@ describe('Icone', () => {
     expect(new Set(formas).size).toBe(nomes.length);
   });
 
+  it('`senha` tem glifo próprio, sem reaproveitar a medalha de `patente`', () => {
+    expect(assinatura('senha')).not.toBe('');
+    expect(assinatura('senha')).not.toBe(assinatura('patente'));
+    expect(assinatura('senha')).not.toBe(assinatura('vincular'));
+  });
+
     // M10-03: desenhos aprovados em ICO[nome].op[dec], sem escolhas locais do navegador.
     const identidade: ReadonlyArray<readonly [IconeNome, string]> = [
         [

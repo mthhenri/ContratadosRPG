@@ -123,6 +123,10 @@ Antes de alterar código:
    e permissão no service; UI/saída só apresenta estado>. Não duplique regra de domínio entre camadas.
 3. Ao tocar um componente/arquivo já extenso, não acrescente nova responsabilidade sem avaliar
    extraí-la; se a extração não for proporcional, registre no fecho por que o acréscimo é seguro.
+4. Ao alterar algo usado em vários lugares (ícone, primitivo, token, regra pura, DTO, enum, evento,
+   service) ou reaproveitar um item existente num uso novo, aplique a skill
+   `gerenciamento-de-impacto`: todo consumidor é avaliado e o que mudar além do pedido vai ao autor
+   antes de aplicar (`npm run impacto`).
 
 ### [OPCIONAL — só com UI] Biblioteca de componentes é obrigatória
 

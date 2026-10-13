@@ -177,6 +177,11 @@ Antes de alterar código:
    sem antes avaliar extraí-la para componente, composable/service ou função
    pura. Se a extração não for proporcional ao escopo, registre no fecho da
    tarefa por que o acréscimo local é seguro.
+4. Ao alterar algo usado em vários lugares (ícone, primitivo, token, regra
+   pura, DTO, enum, evento, service) ou reaproveitar um item existente num uso
+   novo, aplique a skill `gerenciamento-de-impacto`: todo consumidor é avaliado
+   e o que mudar além do pedido vai ao autor antes de aplicar
+   (`npm run impacto`).
 
 ### Biblioteca de componentes é obrigatória
 

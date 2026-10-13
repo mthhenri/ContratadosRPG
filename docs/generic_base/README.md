@@ -6,7 +6,7 @@
 > skills, subagentes, delegação entre agentes e a checagem de organização. Serve para começar um
 > projeto novo (qualquer stack) já com o processo calibrado.
 >
-> **Última sincronização com o repositório-fonte:** 2026-10-10 (a anterior foi 2026-09-08).
+> **Última sincronização com o repositório-fonte:** 2026-10-13 (a anterior foi 2026-10-10).
 > Para atualizar o kit quando o processo mudar no ContratadosRPG, veja "Manter o kit atualizado".
 
 ## O que está aqui
@@ -18,11 +18,12 @@
 | [`CONVENTIONS.template.md`](CONVENTIONS.template.md) | `docs/CONVENTIONS.md` | Nomenclatura (DTO, métodos, SQL, enums) com exemplos copiáveis |
 | [`specs/`](specs/) | `docs/specs/` | Template de spec e ciclo `backlog → active → done` |
 | [`context/`](context/) | `docs/context/` | Contexto persistente entre sessões (CONTEXT, HISTORY, PROBLEMS, MEMORY, IDEAS) |
-| [`skills/`](skills/) | `.claude/skills/` | Nove skills: `task-flow`, `conventions-check`, `orquestracao`, `verify`, `design-fidelity`, `dto-conventions`, `sql-migrations`, `domain-rules-engine`, `realtime-sync` |
+| [`skills/`](skills/) | `.claude/skills/` | Dez skills: `task-flow`, `conventions-check`, `orquestracao`, `verify`, `design-fidelity`, `dto-conventions`, `sql-migrations`, `domain-rules-engine`, `realtime-sync`, `gerenciamento-de-impacto` |
 | [`agents/`](agents/) | `.claude/agents/` | Subagentes `implementador`, `revisor`, `testador` |
 | [`scripts/agentes/`](scripts/agentes/) | `scripts/agentes/` | Delegação Claude ↔ Codex (guardas de profundidade, concorrência, duplicidade, log) |
 | [`scripts/verificar-organizacao.template.mjs`](scripts/) (+ teste) | `scripts/verificar-organizacao.mjs` | `npm run repo:verificar`: barra depósito paralelo de specs, evidência versionada, espelhos divergentes |
-| [`config/`](config/) | `.claude/settings.json`, `ci.yml`, `.gitignore` | Hook de profundidade, workflow de CI, trechos de `.gitignore` |
+| [`scripts/impacto.template.mjs`](scripts/) (+ teste) e [`scripts/agentes/hook-impacto.mjs`](scripts/agentes/) | `scripts/impacto.mjs`, `scripts/agentes/hook-impacto.mjs` | `npm run impacto`: consumidores de um arquivo, ícone ou símbolo antes de alterá-lo; hook que lembra a skill `gerenciamento-de-impacto` ao editar algo muito usado |
+| [`config/`](config/) | `.claude/settings.json`, `ci.yml`, `.gitignore` | Hooks de profundidade e de impacto, workflow de CI, trechos de `.gitignore` |
 | [`instalar-kit.sh`](instalar-kit.sh) | — | Copia tudo para o projeto novo, renomeando `.template`, sem sobrescrever nada |
 
 **Fora de propósito:** identidade visual/tema, regras do jogo, runbooks de deploy específicos,
@@ -58,7 +59,8 @@ Ordem pensada para você nunca ter um agente trabalhando sem as regras que o ori
   (`diff -r .claude/skills .agents/skills` vazio).
 - [ ] No `package.json` da raiz, registre:
   `"repo:verificar": "node scripts/verificar-organizacao.mjs"` e
-  `"repo:test": "node --test scripts/verificar-organizacao.test.mjs"`; rode os dois.
+  `"repo:test": "node --test scripts/verificar-organizacao.test.mjs scripts/impacto.test.mjs"` e
+  `"impacto": "node scripts/impacto.mjs"`; rode os três (`npm run impacto -- --simbolo x`).
 
 ### Etapa 3 — Preencher os `<...>` (é aqui que o kit vira o *seu* projeto)
 
@@ -73,6 +75,9 @@ Em cada arquivo, preencha tudo entre `<...>` e **apague** o que não se aplica (
   Apague os blocos `[OPCIONAL ...]` que não valem.
 - [ ] `skills/task-flow` §3: a tabela de gates com os comandos reais (teste focado, suíte, lint).
 - [ ] `skills/verify`: como subir o stack, portas, login de teste.
+- [ ] `scripts/impacto.mjs`: preencha o bloco CONFIGURAÇÃO (pastas, pacote compartilhado,
+  componente de ícone, zonas compartilhadas) e a tabela "Onde procurar" de
+  `skills/gerenciamento-de-impacto` com os caminhos reais; `npm run repo:test` confere.
 - [ ] `skills/conventions-check`: monte as buscas mecânicas (`references/buscas.md`) conforme as
   proibições do §16 — comece com 3 ou 4 e cresça.
 - [ ] `docs/context/CONTEXT.md` (§1 "Próxima Task") e `MEMORY.md` (aponte para os docs reais).

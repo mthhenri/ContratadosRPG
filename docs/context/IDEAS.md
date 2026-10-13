@@ -27,6 +27,12 @@
 
 ## Promovidas
 
+### I-062 — Levar o gerenciamento de impacto ao kit genérico · docs/generic_base
+
+- **Promovida e concluída em 2026-10-13** dentro de `docs/specs/done/skills-10-gerenciamento-de-impacto.spec.md`, a
+  pedido do autor: skill genérica, `scripts/impacto.template.mjs` (+ teste), `hook-impacto.mjs`, `settings.template.json`,
+  `CLAUDE.template.md` e instalador em `docs/generic_base/`.
+
 ### I-053 — Editor do sistema no site · regras/documentação
 
 - **Promovida em 2026-10-09** a `docs/specs/done/m11-oficina-regras.spec.md` (M11 — Oficina das

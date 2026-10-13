@@ -17,6 +17,12 @@ preexistentes em `oficina-texto.component.ts` (`9b853801`). Ao vivo 1920×1080 e
 da tela, aba Patentes com a medalha, sem overflow. O hook disparou de verdade nas edições do ícone. Achado na tarefa:
 `docs/design/tema/` e `frontend/src/styles/tema/` divergem em valores de token (`P-126`).
 [Spec](../specs/done/skills-10-gerenciamento-de-impacto.spec.md) · [validação](../specs/done/skills-10-gerenciamento-de-impacto/validacao.md).
+Levado ao kit genérico na mesma tarefa (`I-062`, a pedido do autor): o script ganhou um bloco CONFIGURAÇÃO único (pastas,
+pacote compartilhado, componente de ícone opcional, zonas, mínimo) lido pelo hook e pelos testes, e passou a tratar `.tsx/.js/.css`;
+`docs/generic_base/` recebeu a skill genérica, `scripts/impacto.template.mjs` (difere só no bloco CONFIGURAÇÃO), o teste e o hook
+idênticos, o `PostToolUse` no `settings.template.json`, o item 4 no `CLAUDE.template.md` e o instalador. Teste do kit (`instalar-kit.sh`
+em pasta vazia, completo e `--sem-orquestracao --sem-ui`): `node --test` 12 aprovados e 1 pulado (ícone sem configuração),
+`repo:verificar --staged` aprovado, `impacto --simbolo` roda. Sincronização do kit: 2026-10-13.
 
 ## 2026-10-13 — oficina-edicao-blocos-restantes: Abertura, Módulos, Genérico, Níveis de ameaça e propriedades estruturais editáveis na Oficina
 

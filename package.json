@@ -11,7 +11,8 @@
   ],
   "scripts": {
     "repo:verificar": "node scripts/verificar-organizacao.mjs",
-    "repo:test": "node --test scripts/verificar-organizacao.test.mjs",
+    "repo:test": "node --test scripts/verificar-organizacao.test.mjs scripts/impacto.test.mjs",
+    "impacto": "node scripts/impacto.mjs",
     "postinstall": "npm run build --workspace=shared",
     "build:shared": "npm run build --workspace=shared",
     "lint": "npm run lint --workspaces",
