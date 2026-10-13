@@ -1,26 +1,79 @@
 <div class="regras-modulos">
-    <div class="regras-modulos__grade">
-        @for (modulo of bloco().modulos; track $index) {
+    <div class="regras-modulos__grade" [class.regras-modulos__grade--edicao]="editando()">
+        @for (modulo of bloco().modulos; track $index; let indice = $index) {
             <app-cartao>
                 <div class="regras-modulos__conteudo">
                     <span class="regras-modulos__rotulo">Módulo</span>
-                    <strong class="regras-modulos__nivel">{{ modulo.nivel }}</strong>
-                    <app-chip
-                        severidade="energia"
-                        tom="sutil"
-                        tabindex="0"
-                        [appTooltip]="
-                            'Consome ' +
-                            modulo.energiaMaxima +
-                            ' de Energia Máxima enquanto estiver com você. Cessa ao retirar o fragmento do inventário.'
-                        "
-                    >
-                        <app-icone nome="energia" /> −{{ modulo.energiaMaxima }}
-                    </app-chip>
-                    <span class="regras-modulos__recurso">Energia Máxima</span>
+                    @if (editando()) {
+                        <strong class="regras-modulos__nivel">
+                            <app-oficina-texto
+                                [campo]="'modulos.' + indice + '.nivel'"
+                                [caminho]="['modulos', indice, 'nivel']"
+                                rotulo="Nível do módulo"
+                                vazio="Nível"
+                                [peca]="bloco().peca!"
+                                [texto]="modulo.nivel"
+                            />
+                        </strong>
+                        <span class="regras-modulos__energia">
+                            <span class="regras-modulos__sinal" aria-hidden="true">−</span>
+                            <app-step-input
+                                tamanho="mini"
+                                [min]="0"
+                                [digitavel]="false"
+                                [valorExterno]="modulo.energiaMaxima"
+                                [ariaRotulo]="'Energia Máxima do módulo ' + (modulo.nivel || indice + 1)"
+                                (valorAlterado)="alterarEnergia(indice, $event)"
+                            />
+                        </span>
+                        <span class="regras-modulos__recurso">Energia Máxima</span>
+                        @if (selecionada()) {
+                            <button
+                                app-botao-icone
+                                tamanho="compacto"
+                                variante="perigo"
+                                type="button"
+                                [attr.aria-label]="'Remover módulo ' + (modulo.nivel || indice + 1)"
+                                appTooltip="Remover módulo"
+                                (click)="remover(indice)"
+                            >
+                                <app-icone nome="excluir" />
+                            </button>
+                        }
+                    } @else {
+                        <strong class="regras-modulos__nivel">{{ modulo.nivel }}</strong>
+                        <app-chip
+                            severidade="energia"
+                            tom="sutil"
+                            tabindex="0"
+                            [appTooltip]="
+                                'Consome ' +
+                                modulo.energiaMaxima +
+                                ' de Energia Máxima enquanto estiver com você. Cessa ao retirar o fragmento do inventário.'
+                            "
+                        >
+                            <app-icone nome="energia" /> −{{ modulo.energiaMaxima }}
+                        </app-chip>
+                        <span class="regras-modulos__recurso">Energia Máxima</span>
+                    }
                 </div>
             </app-cartao>
         }
     </div>
     <div class="regras-modulos__escala"><span>← mais fraco</span><span>mais forte →</span></div>
+    @if (selecionada()) {
+        <button
+            app-botao
+            variante="secundario"
+            estilo="contorno"
+            tamanho="pequeno"
+            posicaoIcone="esquerda"
+            type="button"
+            class="regras-modulos__adicionar"
+            aria-label="Adicionar módulo"
+            (click)="adicionar()"
+        >
+            <app-icone nome="mais" /> Módulo
+        </button>
+    }
 </div>

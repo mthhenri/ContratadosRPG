@@ -1,19 +1,64 @@
 <div class="regras-niveis">
-    @for (nivel of bloco().niveis; track nivel.nivel) {
-        <app-cartao>
-            <app-regras-ameaca [nivel]="nivel.nivel" />
-            <p>
-                <app-regras-inline
-                    [trechos]="nivel.descricao"
-                    [peca]="bloco().peca"
-                    [campo]="'niveis.' + $index + '.descricao'"
-                    [caminho]="['niveis', $index, 'descricao']"
-                    [rotuloEdicao]="'Descrição do nível ' + nivel.nivel"
-                    dica="Descrição"
-                    [documento]="documento()"
-                    (navegarAncora)="navegarAncora.emit($event)"
-                />
-            </p>
-        </app-cartao>
+    <div class="regras-niveis__grade">
+        @for (nivel of bloco().niveis; track $index; let indice = $index) {
+            <app-cartao>
+                <div class="regras-niveis__topo">
+                    <app-regras-ameaca [nivel]="nivel.nivel" />
+                    @if (editando()) {
+                        <app-step-input
+                            tamanho="mini"
+                            [min]="nivelMinimo"
+                            [max]="nivelMaximo"
+                            [digitavel]="false"
+                            [valorExterno]="nivel.nivel"
+                            [ariaRotulo]="'Número do nível de ameaça ' + nivel.nivel"
+                            (valorAlterado)="alterarNivel(indice, $event)"
+                        />
+                        @if (selecionada()) {
+                            <button
+                                app-botao-icone
+                                tamanho="compacto"
+                                variante="perigo"
+                                type="button"
+                                class="regras-niveis__remover"
+                                [attr.aria-label]="'Remover nível de ameaça ' + nivel.nivel"
+                                appTooltip="Remover nível"
+                                (click)="remover(indice)"
+                            >
+                                <app-icone nome="excluir" />
+                            </button>
+                        }
+                    }
+                </div>
+                <p>
+                    <app-regras-inline
+                        [trechos]="nivel.descricao"
+                        [peca]="bloco().peca"
+                        [campo]="'niveis.' + indice + '.descricao'"
+                        [caminho]="['niveis', indice, 'descricao']"
+                        [rotuloEdicao]="'Descrição do nível ' + nivel.nivel"
+                        dica="Descrição"
+                        [documento]="documento()"
+                        (navegarAncora)="navegarAncora.emit($event)"
+                    />
+                </p>
+            </app-cartao>
+        }
+    </div>
+    @if (selecionada()) {
+        <button
+            app-botao
+            variante="secundario"
+            estilo="contorno"
+            tamanho="pequeno"
+            posicaoIcone="esquerda"
+            type="button"
+            class="regras-niveis__adicionar"
+            aria-label="Adicionar nível de ameaça"
+            [disabled]="!podeAdicionar()"
+            (click)="adicionar()"
+        >
+            <app-icone nome="mais" /> Nível
+        </button>
     }
 </div>

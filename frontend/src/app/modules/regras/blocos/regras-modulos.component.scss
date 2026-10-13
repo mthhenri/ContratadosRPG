@@ -26,6 +26,16 @@
     &__nivel {
         font: 600 22px var(--font-mono);
     }
+    &__energia {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-4);
+        font: 600 13px var(--font-mono);
+        color: var(--energy);
+    }
+    &__adicionar {
+        margin-top: var(--space-8);
+    }
     &__recurso {
         font-size: 11.5px;
         color: var(--text-dim);
@@ -46,6 +56,11 @@
     }
     .regras-modulos__grade {
         gap: var(--space-4);
+        // Com os botões de passo (alvo de toque de 44px) cinco colunas não cabem no celular.
+        &--edicao {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: var(--space-8);
+        }
     }
     .regras-modulos__conteudo {
         justify-items: center;
@@ -55,5 +70,11 @@
     }
     .regras-modulos__recurso {
         display: none;
+    }
+    .regras-modulos__sinal {
+        display: none;
+    }
+    .regras-modulos__grade--edicao .regras-modulos__recurso {
+        display: inline;
     }
 }

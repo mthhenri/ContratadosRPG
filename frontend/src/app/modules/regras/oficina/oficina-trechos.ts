@@ -135,6 +135,26 @@ export function normalizarTrechos(trechos: readonly LivroTrechoDto[]): LivroTrec
     return resultado;
 }
 
+/**
+ * Tira as quebras de linha do fim do texto (também dentro de negrito/itálico). Num campo `pre-wrap` o navegador
+ * mantém uma quebra final "de enchimento" depois do cursor; ela não é conteúdo do livro.
+ */
+export function apararQuebrasFinais(trechos: readonly LivroTrechoDto[]): LivroTrechoDto[] {
+    const resultado = [...trechos];
+    const ultimo = resultado.at(-1);
+    if (!ultimo) return resultado;
+    if (ultimo.tipo === "texto") {
+        const texto = ultimo.texto.replace(/\n+$/, "");
+        if (texto) resultado[resultado.length - 1] = { tipo: "texto", texto }; else resultado.pop();
+        return texto ? resultado : apararQuebrasFinais(resultado);
+    }
+    if (ultimo.tipo === "negrito" || ultimo.tipo === "italico") {
+        const filhos = apararQuebrasFinais(ultimo.filhos);
+        if (filhos.length) resultado[resultado.length - 1] = { ...ultimo, filhos }; else resultado.pop();
+    }
+    return resultado;
+}
+
 /** Lê o DOM editável de volta para trechos. */
 export function lerTrechos(raiz: HTMLElement): LivroTrechoDto[] {
     return normalizarTrechos(lerFilhos(raiz));

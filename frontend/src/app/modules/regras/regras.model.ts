@@ -44,7 +44,7 @@ export type RegrasBloco =
     | { readonly tipo: "habilidade"; readonly peca?: string; readonly nome: string; readonly custo: number | "X";
         readonly reacao: boolean; readonly glifo: "⬦" | "◈" | "◻" | null;
         readonly trechos: readonly RegrasTrecho[] }
-    | { readonly tipo: "generico"; readonly motivo: string;
+    | { readonly tipo: "generico"; readonly peca?: string; readonly motivo: string;
         readonly trechos: readonly RegrasTrecho[]; readonly origemMarkdown: string;
         readonly filhos?: readonly RegrasConteudo[] };
 
@@ -127,6 +127,7 @@ export interface RegrasGrade extends RegrasFonteTabela {
 /** Registro oficial em itálico que abre cada livro. */
 export interface RegrasAbertura {
     readonly tipo: "abertura";
+    readonly peca?: string;
     readonly titulo: string;
     readonly trechos: readonly RegrasTrecho[];
 }
@@ -168,6 +169,7 @@ export interface RegrasOrigens extends RegrasFonteTabela {
 
 export interface RegrasModulos extends RegrasFonteTabela {
     readonly tipo: "modulos";
+    readonly peca?: string;
     readonly modulos: readonly { readonly nivel: string;
         readonly energiaMaxima: number }[];
 }

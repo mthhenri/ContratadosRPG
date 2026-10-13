@@ -1,0 +1,66 @@
+@if (propriedades().length > 0) {
+    <div class="oficina-propriedades" role="group" aria-label="Propriedades da peça">
+        @for (propriedade of propriedades(); track propriedade.chave) {
+            <div class="oficina-propriedades__grupo">
+                @if (propriedade.tipo === "opcoes") {
+                    <span class="oficina-propriedades__rotulo">{{ propriedade.rotulo }}</span>
+                    <app-segmentado [rotulo]="propriedade.rotulo">
+                        @for (opcao of propriedade.opcoes; track opcao.rotulo) {
+                            <button
+                                app-segmentado-item
+                                type="button"
+                                class="oficina-propriedades__opcao"
+                                [ativo]="propriedade.atual === opcao.valor"
+                                [attr.aria-label]="propriedade.rotulo + ': ' + (opcao.dica ?? opcao.rotulo)"
+                                [appTooltip]="opcao.dica"
+                                (click)="escolher(propriedade, opcao.valor)"
+                            >
+                                {{ opcao.rotulo }}
+                            </button>
+                        }
+                    </app-segmentado>
+                } @else if (propriedade.tipo === "alternar") {
+                    <button
+                        app-botao
+                        variante="secundario"
+                        [estilo]="propriedade.atual ? 'preenchido' : 'contorno'"
+                        tamanho="pequeno"
+                        type="button"
+                        [attr.aria-pressed]="propriedade.atual"
+                        [appTooltip]="propriedade.dica"
+                        (click)="alternar(propriedade)"
+                    >
+                        {{ propriedade.rotulo }}
+                    </button>
+                } @else if (propriedade.tipo === "numero") {
+                    <span class="oficina-propriedades__rotulo">{{ propriedade.rotulo }}</span>
+                    <app-step-input
+                        tamanho="mini"
+                        [min]="propriedade.min"
+                        [max]="propriedade.max"
+                        [digitavel]="false"
+                        [valorExterno]="propriedade.atual"
+                        [ariaRotulo]="propriedade.rotulo"
+                        (valorAlterado)="alterarNumero(propriedade, $event)"
+                    />
+                } @else {
+                    <button
+                        app-botao
+                        variante="secundario"
+                        [estilo]="propriedade.atual ? 'preenchido' : 'contorno'"
+                        tamanho="pequeno"
+                        type="button"
+                        [attr.aria-pressed]="propriedade.atual"
+                        [disabled]="propriedade.atual"
+                        [appTooltip]="propriedade.atual
+                            ? 'É a habilidade inicial; para trocar, torne outra a inicial'
+                            : 'Torna esta a habilidade inicial e tira a marca da atual'"
+                        (click)="tornarInicial()"
+                    >
+                        {{ propriedade.rotulo }}
+                    </button>
+                }
+            </div>
+        }
+    </div>
+}

@@ -31,6 +31,19 @@
             }
             @if (selecionada()) {
                 <button
+                    app-botao
+                    variante="secundario"
+                    estilo="texto"
+                    tamanho="pequeno"
+                    posicaoIcone="esquerda"
+                    type="button"
+                    class="regras-lista__sublista"
+                    [attr.aria-label]="'Adicionar sublista ao item ' + (indice + 1)"
+                    (click)="adicionarSublista(indice)"
+                >
+                    <app-icone nome="mais" /> Sublista
+                </button>
+                <button
                     app-botao-icone
                     tamanho="compacto"
                     variante="perigo"
@@ -46,6 +59,9 @@
         </li>
     }
 </ng-template>
+@if (selecionada()) {
+    <app-oficina-propriedades [peca]="dona()" [caminhoDaLista]="caminho()" />
+}
 @if (bloco().ordenada) {
     <ol class="regras-lista" [class.regras-lista--selecionada]="selecionada()" [start]="bloco().inicio">
         <ng-container [ngTemplateOutlet]="conteudo" />
@@ -69,4 +85,19 @@
     >
         <app-icone nome="mais" /> Item
     </button>
+    @if (ehSublista()) {
+        <button
+            app-botao
+            variante="perigo"
+            estilo="texto"
+            tamanho="pequeno"
+            posicaoIcone="esquerda"
+            type="button"
+            class="regras-lista__adicionar"
+            aria-label="Remover sublista"
+            (click)="removerSublista()"
+        >
+            <app-icone nome="excluir" /> Sublista
+        </button>
+    }
 }

@@ -1,0 +1,35 @@
+@use "tema/breakpoints" as bp;
+// Faixa de propriedades da peça selecionada: rótulo em mono e o controle ao lado, quebrando linha quando falta largura.
+:host {
+    display: block;
+    min-width: 0;
+}
+.oficina-propriedades {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-8) var(--space-16);
+    margin-top: var(--space-8);
+    &__grupo {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-8);
+        min-width: 0;
+    }
+    &__rotulo {
+        font: 500 10px var(--font-mono);
+        color: var(--text-dim);
+        text-transform: uppercase;
+    }
+    &__opcao {
+        min-width: 28px;
+        padding: var(--space-4) var(--space-8);
+        font: 500 12px var(--font-mono);
+    }
+}
+@include bp.mobile {
+    .oficina-propriedades__opcao {
+        min-width: 44px;
+        min-height: 44px;
+    }
+}

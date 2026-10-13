@@ -26,6 +26,11 @@ const campoObjeto = (campo: string): CampoEsperado => ({ campo, tipo: "objeto" }
 const TEXTO_RICO: readonly CampoEsperado[] = [campoLista("trechos")];
 const TABELA_FONTE: readonly CampoEsperado[] = [campoLista("cabecalho"), campoLista("linhas")];
 
+/** Conjuntos aceitos das propriedades estruturais (espelham `livro-peca-dados.dtos.ts`). */
+const GLIFOS_SECAO: readonly string[] = ["⬢", "⬡", "⬥", "⬦"];
+const GLIFOS_HABILIDADE: readonly string[] = ["⬦", "◈", "◻"];
+const VARIANTES_TERMOS: readonly string[] = ["atributos", "maestrias", "penalidades", "verbetes"];
+
 /** Forma mínima do `dados` de cada tipo; o que falta ou destoa é pendência ESTRUTURAL. */
 const ESQUEMA_DADOS: Readonly<Record<Tipo, readonly CampoEsperado[]>> = {
   [Tipo.SECAO]: [campoTexto("titulo"), campoNumero("nivel"), { campo: "glifo", tipo: "textoOuNulo" }],
@@ -109,6 +114,7 @@ const TEXTO_OBRIGATORIO: Readonly<Partial<Record<Tipo, readonly string[]>>> = {
   [Tipo.AMPLIFICADOR]: ["nome"],
   [Tipo.FICHA_CRIATURA]: ["nome"],
   [Tipo.HABILIDADE_CRIATURA]: ["nome"],
+  [Tipo.ABERTURA]: ["titulo"],
 };
 
 const DANOS_VALIDOS: readonly string[] = ["DANO", "UMA MÃO", "DUAS MÃOS"];
@@ -272,6 +278,8 @@ export function validarArvoreLivro(dto: LivroArvoreValidarDto): LivroPendenciaDt
           `Falta preencher "${campo}".`);
       }
     }
+    conferirPropriedades(peca, caminho, dados);
+    conferirAberturaEModulos(peca, caminho, dados);
     conferirEquipamento(peca, caminho, dados);
     conferirClasse(peca, caminho, dados);
     conferirOrigemETermo(peca, caminho, dados);
@@ -285,6 +293,64 @@ export function validarArvoreLivro(dto: LivroArvoreValidarDto): LivroPendenciaDt
       if (!extrairTexto(dados["trechos"]).trim()) {
         registrar(peca, caminho, Codigo.CONTEUDO_INCOMPLETO, Gravidade.CONTEUDO,
           "Falta o efeito da habilidade.");
+      }
+    }
+  };
+
+  /**
+   * Propriedades estruturais que a Oficina edita (oficina-edicao-blocos-restantes): valor fora do conjunto aceito
+   * e a habilidade inicial, de que a projeção do livro depende (uma, e só uma, por arquétipo e subclasse).
+   */
+  const conferirPropriedades = (
+    peca: LivroPecaDto,
+    caminho: readonly string[],
+    dados: Record<string, unknown>,
+  ): void => {
+    const invalido = (mensagem: string): void =>
+      registrar(peca, caminho, Codigo.DADOS_INVALIDOS, Gravidade.ESTRUTURAL, mensagem);
+    const glifoFora = (permitidos: readonly string[]): boolean =>
+      dados["glifo"] !== null && !permitidos.includes(dados["glifo"] as string);
+    if (peca.tipo === Tipo.SECAO && glifoFora(GLIFOS_SECAO)) invalido("O glifo da seção não é um dos aceitos.");
+    if (peca.tipo === Tipo.HABILIDADE && glifoFora(GLIFOS_HABILIDADE)) invalido("O glifo da habilidade não é um dos aceitos.");
+    if (peca.tipo === Tipo.TERMOS && !VARIANTES_TERMOS.includes(dados["variante"] as string)) {
+      invalido("A variante dos termos precisa ser atributos, maestrias, penalidades ou verbetes.");
+    }
+    if (peca.tipo === Tipo.LISTA && (!Number.isInteger(dados["inicio"]) || (dados["inicio"] as number) < 0)) {
+      invalido("O início da lista precisa ser um inteiro a partir de 0.");
+    }
+    if (peca.tipo === Tipo.ARQUETIPO || peca.tipo === Tipo.SUBCLASSE) {
+      const iniciais = peca.filhos.filter((filho) => filho.tipo === Tipo.HABILIDADE
+        && (filho.dados as { inicial?: boolean }).inicial === true).length;
+      if (iniciais !== 1) {
+        invalido(`${peca.tipo === Tipo.ARQUETIPO ? "O arquétipo" : "A subclasse"} precisa de exatamente uma habilidade inicial.`);
+      }
+    }
+  };
+
+  /** Pendências de conteúdo da abertura do livro e dos módulos (oficina-edicao-blocos-restantes). */
+  const conferirAberturaEModulos = (
+    peca: LivroPecaDto,
+    caminho: readonly string[],
+    dados: Record<string, unknown>,
+  ): void => {
+    const faltou = (mensagem: string): void =>
+      registrar(peca, caminho, Codigo.CONTEUDO_INCOMPLETO, Gravidade.CONTEUDO, mensagem);
+    if (peca.tipo === Tipo.ABERTURA && !extrairTexto(dados["trechos"]).trim()) {
+      faltou("Falta o texto da abertura.");
+    }
+    if (peca.tipo === Tipo.MODULOS && Array.isArray(dados["modulos"])) {
+      for (const modulo of dados["modulos"] as unknown[]) {
+        if (!ehObjeto(modulo) || typeof modulo["nivel"] !== "string" || !modulo["nivel"].trim()) {
+          faltou("Há um módulo sem nível.");
+          break;
+        }
+      }
+      for (const modulo of dados["modulos"] as unknown[]) {
+        const energia = ehObjeto(modulo) ? modulo["energiaMaxima"] : undefined;
+        if (typeof energia !== "number" || !Number.isInteger(energia) || energia < 0) {
+          faltou("A Energia Máxima de cada módulo precisa ser um inteiro a partir de 0.");
+          break;
+        }
       }
     }
   };
@@ -420,6 +486,13 @@ export function validarArvoreLivro(dto: LivroArvoreValidarDto): LivroPendenciaDt
     }
     if (peca.tipo === Tipo.NIVEIS_AMEACA && lista("niveis").some((nivel) => !ehObjeto(nivel) || !extrairTexto(nivel["descricao"]).trim())) {
       faltou("Há um nível de ameaça sem descrição.");
+    }
+    if (peca.tipo === Tipo.NIVEIS_AMEACA) {
+      const numeros = lista("niveis").map((nivel) => (ehObjeto(nivel) ? nivel["nivel"] : undefined));
+      if (numeros.some((numero) => !Number.isInteger(numero) || (numero as number) < 0 || (numero as number) > 7)) {
+        faltou("O nível de ameaça precisa ser um inteiro de 0 a 7.");
+      }
+      if (new Set(numeros).size < numeros.length) faltou("Há um nível de ameaça repetido.");
     }
     if (peca.tipo === Tipo.GRADE && dados["apresentacao"] !== "generica"
       && lista("itens").some((item) => !ehObjeto(item) || !texto(item["rotulo"]) || !extrairTexto(item["conteudo"]).trim())) {

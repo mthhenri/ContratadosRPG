@@ -1,8 +1,13 @@
 <div class="regras-generico">
-    @if (bloco().trechos.length) {
+    @if (editando()) {
+        <p class="regras-generico__nota">Nota da importação: {{ bloco().motivo }}</p>
+    }
+    @if (bloco().trechos.length || editando()) {
         <p>
             <app-regras-inline
                 [trechos]="bloco().trechos"
+                [peca]="bloco().peca"
+                rotuloEdicao="Texto"
                 [documento]="documento()"
                 (navegarAncora)="navegarAncora.emit($event)"
             />

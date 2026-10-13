@@ -45,6 +45,9 @@
             </h5>
         }
     }
+    @if (editando()) {
+        <app-oficina-propriedades [peca]="bloco().peca" />
+    }
     <app-regras-conteudo
         [filhos]="bloco().filhos"
         [pai]="editando() ? (bloco().peca ?? undefined) : undefined"

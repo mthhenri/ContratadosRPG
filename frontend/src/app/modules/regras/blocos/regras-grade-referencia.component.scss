@@ -28,3 +28,15 @@
         grid-template-columns: minmax(0, 1fr);
     }
 }
+.regras-referencia__edicao {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-8);
+    margin-top: var(--space-4);
+    color: var(--text-dim);
+    font-size: 12.5px;
+}
+.regras-referencia__saude {
+    min-width: 0;
+}

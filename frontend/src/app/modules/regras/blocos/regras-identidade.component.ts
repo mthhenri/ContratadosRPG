@@ -4,11 +4,12 @@ import { RegrasInline } from "./regras-inline.component";
 import { RegrasAmeaca } from "./regras-ameaca.component";
 import { lerTextoRegras } from "./regras-texto";
 import { StepInput } from "../../../shared/ui/stepper/step-input.component";
+import { OficinaTexto } from "../oficina/oficina-texto.component";
 import { OficinaStore } from "../oficina/oficina.store";
 
 @Component({
     selector: "app-regras-identidade",
-    imports: [RegrasInline, RegrasAmeaca, StepInput],
+    imports: [RegrasInline, RegrasAmeaca, StepInput, OficinaTexto],
     templateUrl: "./regras-identidade.component.html",
     styleUrl: "./regras-guia.scss",
 })
@@ -20,6 +21,8 @@ export class RegrasIdentidade {
     readonly navegarAncora = output<string>();
     protected readonly lerTexto = lerTextoRegras;
     protected readonly niveisAmeaca = 7;
+    /** O cabeçalho da ficha acha o conceito por este nome: o rótulo dele não se renomeia. */
+    protected readonly rotuloDoConceito = "Conceito";
     private readonly oficina = inject(OficinaStore, { optional: true });
     protected readonly editando = computed(() => !!this.peca() && this.oficina?.estado() === "ok");
     /** O contador do Nível de Ameaça só aparece com a ficha selecionada. */

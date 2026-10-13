@@ -13,12 +13,14 @@ import { OficinaTexto } from "./oficina-texto.component";
         <app-oficina-texto peca="P2" campo="trechos" rotulo="Parágrafo" [trechos]="trechos()" />
         <app-oficina-texto peca="P3" campo="danos.0.trechos" rotulo="Dano" [caminho]="['danos', 0, 'trechos']" [trechos]="[]" />
         <app-oficina-texto peca="P4" campo="porte" rotulo="Porte" [opcional]="true" [trechos]="porte()" />
+        <app-oficina-texto peca="P5" campo="trechos" rotulo="Abertura" [quebras]="true" [trechos]="abertura" />
     `,
 })
 class Hospedeiro {
     readonly nome = signal("Golpe");
     readonly trechos = signal<LivroTrechoDto[]>([{ tipo: "texto", texto: "um dois" }]);
     readonly porte = signal<LivroTrechoDto[]>([{ tipo: "texto", texto: "Leve" }]);
+    readonly abertura: LivroTrechoDto[] = [{ tipo: "italico", filhos: [{ tipo: "texto", texto: "Um.\n\nDois." }] }];
 }
 
 describe("OficinaTexto", () => {
@@ -33,9 +35,9 @@ describe("OficinaTexto", () => {
         const raiz = fixture.nativeElement as HTMLElement;
         document.body.append(raiz);
         fixture.detectChanges();
-        const [nome, paragrafo, dano, porte] = Array.from(raiz.querySelectorAll<HTMLElement>(".oficina-texto")) as
-            [HTMLElement, HTMLElement, HTMLElement, HTMLElement];
-        return { fixture, nome, paragrafo, dano, porte };
+        const [nome, paragrafo, dano, porte, abertura] = Array.from(raiz.querySelectorAll<HTMLElement>(".oficina-texto")) as
+            [HTMLElement, HTMLElement, HTMLElement, HTMLElement, HTMLElement];
+        return { fixture, nome, paragrafo, dano, porte, abertura };
     }
     function teclar(alvo: HTMLElement, key: string, extra: KeyboardEventInit = {}): KeyboardEvent {
         const evento = new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true, ...extra });
@@ -169,6 +171,20 @@ describe("OficinaTexto", () => {
         const [, , dados, antes] = store.criarDepois.mock.calls[0];
         expect(antes.trechos).toEqual([{ tipo: "texto", texto: "um" }]);
         expect(dados.trechos).toEqual([{ tipo: "texto", texto: " dois" }]);
+    });
+
+    it("com `quebras`, Enter grava uma linha em branco e Shift+Enter uma quebra simples, preservando o itálico externo", () => {
+        const { abertura } = montar();
+        cursorEm(abertura.querySelector("em")!.firstChild as Text, 3);
+        teclar(abertura, "Enter");
+        expect(store.criarDepois).not.toHaveBeenCalled();
+        abertura.dispatchEvent(new Event("blur"));
+        const gravado = store.alterarDados.mock.calls.at(-1)![1] as { trechos: LivroTrechoDto[] };
+        expect(gravado.trechos).toEqual([{ tipo: "italico", filhos: [{ tipo: "texto", texto: "Um.\n\n\n\nDois." }] }]);
+        teclar(abertura, "Enter", { shiftKey: true });
+        abertura.dispatchEvent(new Event("blur"));
+        const outro = store.alterarDados.mock.calls.at(-1)![1] as { trechos: LivroTrechoDto[] };
+        expect(outro.trechos).toEqual([{ tipo: "italico", filhos: [{ tipo: "texto", texto: "Um.\n\n\n\n\nDois." }] }]);
     });
 
     it("Backspace em parágrafo vazio o remove e leva o foco ao campo anterior", () => {

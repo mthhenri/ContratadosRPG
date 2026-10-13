@@ -22,7 +22,8 @@
     font-weight: 400;
     pointer-events: none;
 }
-:host(.oficina-texto--simples) {
+:host(.oficina-texto--simples),
+:host(.oficina-texto--quebras) {
     white-space: pre-wrap;
 }
 :host ::ng-deep .oficina-atomo {

@@ -3,6 +3,14 @@
         <div>
             <app-stat [rotulo]="atributo.nome" [valor]="atributo.valor" tamanho="compacto" />
             @if (selecionada()) {
+                <app-oficina-texto
+                    [campo]="'atributos.' + indice + '.nome'"
+                    [caminho]="['atributos', indice, 'nome']"
+                    rotulo="Nome do atributo"
+                    vazio="Atributo"
+                    [peca]="peca()!"
+                    [texto]="atributo.nome"
+                />
                 <app-step-input
                     tamanho="micro"
                     [digitavel]="false"

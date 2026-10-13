@@ -8,6 +8,7 @@ import { BotaoIcone } from "../../../shared/ui/botao-icone/botao-icone.component
 import { BarraFerramentas } from "../../../shared/ui/barra-ferramentas/barra-ferramentas.component";
 import { BarraFerramentasSeparador } from "../../../shared/ui/barra-ferramentas/barra-ferramentas-separador.component";
 import { OficinaMudancas } from "./oficina-mudancas.service";
+import { OficinaPropriedades } from "./oficina-propriedades.component";
 import { OficinaStore } from "./oficina.store";
 
 /**
@@ -17,7 +18,7 @@ import { OficinaStore } from "./oficina.store";
  */
 @Component({
     selector: "app-oficina-peca",
-    imports: [Botao, BotaoIcone, Icone, Tooltip, BarraFerramentas, BarraFerramentasSeparador],
+    imports: [Botao, BotaoIcone, Icone, Tooltip, BarraFerramentas, BarraFerramentasSeparador, OficinaPropriedades],
     templateUrl: "./oficina-peca.component.html",
     styleUrl: "./oficina-peca.component.scss",
     host: {

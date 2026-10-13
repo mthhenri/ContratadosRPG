@@ -75,4 +75,20 @@ describe("RegrasLista", () => {
         expect(store.alterarCampo).toHaveBeenCalledWith(
             "peca-1", ["itens", 1, 1, "itens"], [[paragrafo("Filho")], [{ tipo: "paragrafo", trechos: [] }]], "Adicionar item", false);
     });
+
+    it("selecionada: + Sublista põe uma sublista de marcadores no item e remover sublista a tira", () => {
+        const { raiz, store } = montar({ selecionada: true });
+        raiz.querySelector<HTMLButtonElement>('[aria-label="Adicionar sublista ao item 1"]')!.click();
+        expect(store.alterarCampo).toHaveBeenCalledWith("peca-1", ["itens"], [
+            [paragrafo("Primeiro"), { tipo: "lista", ordenada: false, inicio: 1, itens: [[{ tipo: "paragrafo", trechos: [] }]] }],
+            itens[1],
+        ], "Adicionar sublista", false);
+        expect(store.pedirFoco).toHaveBeenCalledWith({
+            identificador: "peca-1", campo: "itens.0.1.itens.0.0.trechos", posicao: "inicio",
+        });
+        raiz.querySelector<HTMLButtonElement>('[aria-label="Remover sublista"]')!.click();
+        expect(store.alterarCampo).toHaveBeenLastCalledWith("peca-1", ["itens", 1], [paragrafo("Segundo")], "Remover sublista", false);
+        // A lista raiz não tem de onde sair.
+        expect(raiz.querySelectorAll('[aria-label="Remover sublista"]')).toHaveLength(1);
+    });
 });

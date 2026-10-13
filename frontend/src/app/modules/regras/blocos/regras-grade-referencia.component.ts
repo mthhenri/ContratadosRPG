@@ -8,12 +8,14 @@ import { Botao } from "../../../shared/ui/botao/botao.component";
 import { BotaoIcone } from "../../../shared/ui/botao-icone/botao-icone.component";
 import { Tooltip } from "../../../shared/tooltip/tooltip.directive";
 import { OficinaTexto } from "../oficina/oficina-texto.component";
+import { Segmentado } from "../../../shared/ui/segmentado/segmentado.component";
+import { SegmentadoItem } from "../../../shared/ui/segmentado/segmentado-item.component";
 import { OficinaStore } from "../oficina/oficina.store";
 
 /** Referências reconhecidas: título e conteúdo nunca se separam ao mudar de coluna. */
 @Component({
     selector: "app-regras-grade-referencia",
-    imports: [Cartao, Stat, StatValor, Icone, RegrasInline, Botao, BotaoIcone, Tooltip, OficinaTexto],
+    imports: [Cartao, Stat, StatValor, Icone, RegrasInline, Botao, BotaoIcone, Tooltip, OficinaTexto, Segmentado, SegmentadoItem],
     template: `
         @if (referencia().titulo; as titulo) {
             <app-cartao [titulo]="titulo" [semCaixa]="true">
@@ -21,8 +23,9 @@ import { OficinaStore } from "../oficina/oficina.store";
             </app-cartao>
         }
         <div class="regras-referencia">
-            @for (item of referencia().itens; track $index) {
+            @for (item of referencia().itens; track $index; let posicao = $index) {
                 @if (referencia().tipo === "saude") {
+                  <div class="regras-referencia__saude">
                     <app-stat [rotulo]="item.rotulo" [variante]="item.variante"
                         [faixa]="true" tamanho="compacto" [nota]="item.nota ?? ''">
                         <app-icone statIcone [nome]="item.variante === 'vida' ? 'vida' : 'energia'" />
@@ -33,6 +36,36 @@ import { OficinaStore } from "../oficina/oficina.store";
                                 (navegarAncora)="navegarAncora.emit($event)" />
                         </span>
                     </app-stat>
+                    @if (editando()) {
+                        <div class="regras-referencia__edicao">
+                            <app-oficina-texto
+                                [campo]="'itens.' + $index + '.rotulo'"
+                                [caminho]="['itens', $index, 'rotulo']"
+                                rotulo="Título do item"
+                                vazio="Título"
+                                [peca]="peca()!"
+                                [texto]="item.rotulo"
+                            />
+                            <app-oficina-texto
+                                [campo]="'itens.' + $index + '.nota'"
+                                [caminho]="['itens', $index, 'nota']"
+                                rotulo="Nota do item"
+                                vazio="Nota"
+                                [opcional]="true"
+                                [peca]="peca()!"
+                                [texto]="item.nota ?? ''"
+                            />
+                            @if (selecionada()) {
+                                <app-segmentado [rotulo]="'Recurso de ' + item.rotulo">
+                                    @for (recurso of recursos; track recurso.valor) {
+                                        <button app-segmentado-item type="button" [ativo]="item.variante === recurso.valor"
+                                            (click)="definirVariante(posicao, recurso.valor)">{{ recurso.rotulo }}</button>
+                                    }
+                                </app-segmentado>
+                            }
+                        </div>
+                    }
+                  </div>
                 } @else {
                     <app-cartao [titulo]="item.rotulo">
                         <span cartaoIndice>{{ $index + 1 }}</span>
@@ -82,6 +115,14 @@ export class RegrasGradeReferencia {
     private itensDe(): NonNullable<RegrasGrade["referencia"]>["itens"] {
         const dados = this.oficina?.item(this.peca() as string)?.dados as { itens?: NonNullable<RegrasGrade["referencia"]>["itens"] } | undefined;
         return dados?.itens ?? this.referencia().itens;
+    }
+
+    protected readonly recursos = [{ valor: "vida", rotulo: "Vida" }, { valor: "energia", rotulo: "Energia" }] as const;
+
+    /** Vida ou Energia: a cor e o ícone do cartão de saúde. */
+    protected definirVariante(indice: number, variante: "vida" | "energia"): void {
+        if (this.itensDe()[indice]?.variante === variante) return;
+        this.oficina?.alterarCampo(this.peca() as string, ["itens", indice, "variante"], variante, "Recurso do item", false);
     }
 
     protected adicionar(): void {

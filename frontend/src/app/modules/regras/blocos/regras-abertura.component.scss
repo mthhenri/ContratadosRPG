@@ -36,4 +36,20 @@
             margin-top: calc(var(--space-20) + var(--space-8));
         }
     }
+    // Na edição o itálico externo some do desenho (é a marca da fonte, mantida no dado).
+    &__texto--edicao ::ng-deep em {
+        font-style: normal;
+    }
+    &__selo {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        justify-content: center;
+        gap: var(--space-8);
+        margin: var(--space-20) 0 0;
+        font: 500 11px var(--font-mono);
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        color: var(--text-mute);
+    }
 }

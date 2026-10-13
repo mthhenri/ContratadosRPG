@@ -4,6 +4,7 @@ import { Icone } from "../../../shared/icone/icone.component";
 import { Tooltip } from "../../../shared/tooltip/tooltip.directive";
 import { Botao } from "../../../shared/ui/botao/botao.component";
 import { BotaoIcone } from "../../../shared/ui/botao-icone/botao-icone.component";
+import { OficinaPropriedades } from "../oficina/oficina-propriedades.component";
 import { OficinaStore } from "../oficina/oficina.store";
 import { lerNoCaminho, nomeDoCaminho, type CaminhoDeDados } from "../oficina/oficina-dados";
 import { RegrasBloco, RegrasDocumento } from "../regras.model";
@@ -17,12 +18,13 @@ type Item = Lista["itens"][number];
  * Lista com marcadores ou numerada. Na Oficina cada parágrafo de item é um campo editável no lugar
  * (`["itens", i, j, "trechos"]` no `dados` da peça; sublista: o mesmo, a partir do caminho dela) e, com a
  * lista selecionada, aparecem "Remover item" e "+ Item". A sublista não tem peça própria: ela recebe a
- * peça da lista raiz e o `caminho` até si. Fora da Oficina o desenho é o mesmo, só leitura.
+ * peça da lista raiz e o `caminho` até si. Com a lista selecionada também aparecem a faixa de propriedades (marcadores
+ * ou numerada, número inicial), "+ Sublista" em cada item e "Remover sublista". Fora da Oficina o desenho é o mesmo, só leitura.
  */
 @Component({
     selector: "app-regras-lista",
     imports: [
-        NgTemplateOutlet, Botao, BotaoIcone, Icone, Tooltip, RegrasParagrafo,
+        NgTemplateOutlet, Botao, BotaoIcone, Icone, Tooltip, RegrasParagrafo, OficinaPropriedades,
         forwardRef(() => RegrasConteudoRender), forwardRef(() => RegrasLista),
     ],
     templateUrl: "./regras-lista.component.html",
@@ -77,5 +79,36 @@ export class RegrasLista {
 
     protected removerItem(indice: number): void {
         this.gravar(this.itensDe().filter((_, posicao) => posicao !== indice), "Remover item");
+    }
+
+    /** Põe uma sublista de marcadores, com um item vazio, depois do que o item já tem, e pede o foco nele. */
+    protected adicionarSublista(indice: number): void {
+        const itens = this.itensDe();
+        const bloco = itens[indice] ?? [];
+        const sublista: Item[number] = {
+            tipo: "lista", ordenada: false, inicio: 1, itens: [[{ tipo: "paragrafo", trechos: [] }]],
+        };
+        this.gravar(itens.map((item, posicao) => (posicao === indice ? [...bloco, sublista] : item)), "Adicionar sublista");
+        this.oficina?.pedirFoco({
+            identificador: this.dona() as string,
+            campo: nomeDoCaminho([...this.caminhoDoBloco(indice, bloco.length), "itens", 0, 0, "trechos"]),
+            posicao: "inicio",
+        });
+    }
+
+    /** Só a sublista tem de onde sair: o caminho dela termina em `[..., "itens", item, bloco]`. */
+    protected readonly ehSublista = computed(() => this.caminho().length > 0);
+
+    protected removerSublista(): void {
+        const caminho = this.caminho();
+        const posicao = caminho.at(-1);
+        if (typeof posicao !== "number") return;
+        const caminhoDoItem = caminho.slice(0, -1);
+        const dona = this.dona();
+        const dados = dona ? this.oficina?.item(dona)?.dados : undefined;
+        const bloco = lerNoCaminho(dados, caminhoDoItem);
+        if (!Array.isArray(bloco)) return;
+        this.oficina?.alterarCampo(dona as string, caminhoDoItem,
+            bloco.filter((_, indice) => indice !== posicao), "Remover sublista", false);
     }
 }

@@ -4,16 +4,30 @@
     margin: var(--space-16) 0;
 }
 .regras-niveis {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--space-12);
-    p {
-        margin: var(--space-8) 0 0;
-        color: var(--text-dim);
+    &__grade {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--space-12);
+        p {
+            margin: var(--space-8) 0 0;
+            color: var(--text-dim);
+        }
+    }
+    &__topo {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: var(--space-8);
+    }
+    &__remover {
+        margin-left: auto;
+    }
+    &__adicionar {
+        margin-top: var(--space-12);
     }
 }
 @include bp.mobile {
-    .regras-niveis {
+    .regras-niveis__grade {
         grid-template-columns: minmax(0, 1fr);
     }
 }

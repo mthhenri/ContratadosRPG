@@ -4,7 +4,7 @@ import type { LivroTrechoDto } from "@contratados-rpg/shared/dtos/livro";
 import { definirNoCaminho, lerNoCaminho, type CaminhoDeDados } from "./oficina-dados";
 import { OficinaStore } from "./oficina.store";
 import {
-    criarSeloNivel, detectarNivelAmeaca, dividirTrechos, lerTrechos, montarTrechos, trechosIguais,
+    apararQuebrasFinais, criarSeloNivel, detectarNivelAmeaca, dividirTrechos, lerTrechos, montarTrechos, trechosIguais,
 } from "./oficina-trechos";
 
 /** Espera do texto parado antes de entregá-lo ao store (perder o foco entrega na hora). */
@@ -31,6 +31,7 @@ const ESPERA_ENTREGA_MS = 300;
         contenteditable: "true",
         spellcheck: "true",
         "[class.oficina-texto--simples]": "simples()",
+        "[class.oficina-texto--quebras]": "quebras()",
         "[attr.aria-label]": "rotulo()",
         "[attr.data-peca]": "peca()",
         "[attr.data-campo]": "campo()",
@@ -57,6 +58,8 @@ export class OficinaTexto {
     readonly trechos = input<readonly LivroTrechoDto[] | null>(null);
     readonly texto = input<string | null>(null);
     readonly vazio = input("Escreva aqui");
+    /** Texto de várias linhas (abertura do livro): Enter grava uma linha em branco, Shift+Enter uma quebra simples. */
+    readonly quebras = input(false);
 
     private readonly store = inject(OficinaStore);
     private readonly elemento = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
@@ -108,7 +111,9 @@ export class OficinaTexto {
     // ------------------------------------------------------------- entrega
 
     private valorAtual(): string | LivroTrechoDto[] {
-        return this.simples() ? (this.elemento.textContent ?? "").replace(/\u00a0/g, " ") : lerTrechos(this.elemento);
+        if (this.simples()) return (this.elemento.textContent ?? "").replace(/\u00a0/g, " ");
+        const trechos = lerTrechos(this.elemento);
+        return this.quebras() ? apararQuebrasFinais(trechos) : trechos;
     }
 
     private entregar(): void {
@@ -199,7 +204,12 @@ export class OficinaTexto {
         }
         if (evento.key === "Enter") {
             evento.preventDefault();
-            if (evento.shiftKey || evento.isComposing) return;
+            if (evento.isComposing) return;
+            if (this.quebras()) {
+                this.inserirQuebra(evento.shiftKey ? "\n" : "\n\n");
+                return;
+            }
+            if (evento.shiftKey) return;
             this.aoTeclarEnter();
             return;
         }
@@ -213,6 +223,22 @@ export class OficinaTexto {
                 void this.store.remover(this.peca(), foco);
             }
         }
+    }
+
+    /** Insere a quebra no cursor como texto (o campo é `pre-wrap`) e entrega como qualquer digitação. */
+    private inserirQuebra(quebra: string): void {
+        const selecao = window.getSelection();
+        if (!selecao || selecao.rangeCount === 0 || !this.elemento.contains(selecao.anchorNode)) return;
+        const intervalo = selecao.getRangeAt(0);
+        intervalo.deleteContents();
+        // O ​ depois da quebra impede o navegador de tratá-la como "quebra final de enchimento" e pôr o cursor antes dela.
+        const no = document.createTextNode(`${quebra}​`);
+        intervalo.insertNode(no);
+        intervalo.setStart(no, quebra.length);
+        intervalo.collapse(true);
+        selecao.removeAllRanges();
+        selecao.addRange(intervalo);
+        this.aoEntrar(new Event("input"));
     }
 
     private estaVazio(): boolean {

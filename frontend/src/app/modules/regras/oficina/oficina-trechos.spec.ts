@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import { lerCustoDigitado } from "./oficina-custo";
 import {
-    criarSeloNivel, detectarNivelAmeaca, dividirTrechos, lerSiglaNivel, lerTrechos, montarTrechos,
+    apararQuebrasFinais, criarSeloNivel, detectarNivelAmeaca, dividirTrechos, lerSiglaNivel, lerTrechos, montarTrechos,
     normalizarTrechos, textoDe, textoNivelAmeaca, trechosIguais,
 } from "./oficina-trechos";
 
@@ -17,6 +17,33 @@ const rico: LivroTrechoDto[] = [
     { tipo: "tarja", comprimento: 6 },
     { tipo: "link-externo", destino: "https://exemplo.com", filhos: [{ tipo: "texto", texto: "fonte" }] },
 ];
+
+describe("abertura do livro — ida e volta", () => {
+    it("preserva o itálico externo, as pausas, o negrito e a tarja ao montar e reler", () => {
+        const abertura: LivroTrechoDto[] = [
+            { tipo: "italico", filhos: [{ tipo: "texto", texto: "Autorização " }, { tipo: "tarja", comprimento: 8 }] },
+            { tipo: "texto", texto: "\n\n" },
+            { tipo: "italico", filhos: [
+                { tipo: "texto", texto: "Você não erra.\n" },
+                { tipo: "negrito", filhos: [{ tipo: "texto", texto: "Você escreve." }] },
+            ] },
+        ];
+        const raiz = document.createElement("div");
+        montarTrechos(raiz, abertura);
+        expect(lerTrechos(raiz)).toEqual(abertura);
+    });
+
+    it("tira só as quebras do fim, mesmo dentro do itálico, e não toca no meio", () => {
+        const trechos: LivroTrechoDto[] = [
+            { tipo: "italico", filhos: [{ tipo: "texto", texto: "Um.\n\nDois.\n\n" }] },
+            { tipo: "texto", texto: "\n" },
+        ];
+        expect(apararQuebrasFinais(trechos)).toEqual([
+            { tipo: "italico", filhos: [{ tipo: "texto", texto: "Um.\n\nDois." }] },
+        ]);
+        expect(apararQuebrasFinais([{ tipo: "texto", texto: "\n\n" }])).toEqual([]);
+    });
+});
 
 describe("ponte entre texto rico e DOM editável", () => {
     it("monta e lê de volta o mesmo texto rico, átomos intactos", () => {

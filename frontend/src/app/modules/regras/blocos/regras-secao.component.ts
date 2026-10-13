@@ -9,11 +9,12 @@ import { Tooltip } from "../../../shared/tooltip/tooltip.directive";
 import { descreverCondicao } from "../../../shared/condicoes/condicoes";
 import { OficinaStore } from "../oficina/oficina.store";
 import { OficinaTexto } from "../oficina/oficina-texto.component";
+import { OficinaPropriedades } from "../oficina/oficina-propriedades.component";
 
 
 @Component({
     selector: "app-regras-secao",
-    imports: [forwardRef(() => RegrasConteudoRender), Icone, Tooltip, NgTemplateOutlet, OficinaTexto],
+    imports: [forwardRef(() => RegrasConteudoRender), Icone, Tooltip, NgTemplateOutlet, OficinaTexto, OficinaPropriedades],
     templateUrl: "./regras-secao.component.html",
     styleUrl: "./regras-secao.component.scss",
 })

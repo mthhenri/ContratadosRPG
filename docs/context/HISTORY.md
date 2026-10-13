@@ -1,5 +1,24 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-13 — oficina-edicao-blocos-restantes (parcial): Abertura, Módulos, Genérico, Níveis de ameaça e propriedades estruturais editáveis na Oficina
+
+Fatias 1 a 5 da spec implementadas e testadas (ainda em `active/`: faltam o gate visual ao vivo das fatias 3 e 5 — o ambiente
+negou criar o ADMIN de teste — e a reauditoria, fatia 6). Decisão do autor: `referenciaImagem` é identificador interno
+(preservado, não editável). Fatia 3: número 0–7 em `app-step-input`, adicionar/remover nível, pendências de nível repetido/fora
+de 0–7. Fatia 5: `app-oficina-propriedades` (glifo/nível de seção, glifo/inicial/melhorada de habilidade, variante de termos,
+saúde↔cartões, tabela em pares, lista numerada/início/sublista, nota e recurso dos itens de saúde, rótulos de identidade e nomes
+de atributo); a habilidade inicial só muda de mãos (a projeção exige uma por arquétipo/subclasse) e o validador a confere.
+A barra vermelha da peça selecionada deixou de encurtar e de colar no texto (`::before`). [Detalhes](../specs/active/oficina-edicao-blocos-restantes/verificacao.md).
+Fatias 1, 2 e 4: Abertura: título e selo da capa (campos simples; selo opcional) e o corpo como **um** campo sobre os
+`trechos` originais, preservando o itálico externo, as pausas, negritos e tarjas; `OficinaTexto` ganhou `[quebras]` (Enter =
+linha em branco, Shift+Enter = quebra simples, sem criar peça) e `apararQuebrasFinais`. Módulos: nível em campo, Energia
+Máxima em `app-step-input` (inteiro ≥ 0), "Remover módulo" e "+ Módulo" com o bloco selecionado. Genérico: `trechos` no
+lugar e `motivo` como nota somente leitura. Validador: abertura sem título/texto e módulo sem nível ou com Energia Máxima
+inválida viram pendência de conteúdo. Testes: `shared` 1273, `frontend` 3438, `backend` filtrado em `livro` 99; lint sem erros.
+Ao vivo (1920×1080 e 360×800, Oficina real, dados restaurados depois): achados — cinco cartões de Módulos não cabiam no
+celular com o stepper (agora 2 colunas em edição) e o Enter gravava uma só quebra (o Chrome põe o cursor antes da quebra
+final; resolvido com `\u200b` e aparando o fim). [Verificação e limites](../specs/active/oficina-edicao-blocos-restantes/verificacao.md).
+
 ## 2026-10-13 — regras-seletores-e-paleta-arvore: ícones nos livros, alternador de modo e paleta "Ir para uma seção" em árvore
 
 Entrega A (trilho do leitor): os itens Sistema/Guia ganharam `d20`/`coroa` (13px, trilho, barra do topo e gaveta) e o

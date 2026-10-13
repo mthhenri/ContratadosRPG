@@ -1,6 +1,19 @@
 <dl class="regras-guia__identidade">
     @for (campo of bloco().campos; track $index; let indice = $index) {
-        <dt>{{ campo.rotulo }}</dt>
+        <dt>
+            @if (editando() && campo.rotulo !== rotuloDoConceito) {
+                <app-oficina-texto
+                    [campo]="'identidade.' + indice + '.rotulo'"
+                    [caminho]="['identidade', indice, 'rotulo']"
+                    rotulo="Nome do campo de identidade"
+                    vazio="Campo"
+                    [peca]="peca()!"
+                    [texto]="campo.rotulo"
+                />
+            } @else {
+                {{ campo.rotulo }}
+            }
+        </dt>
         <dd>
             @if (campo.nivel !== undefined && !editando()) {
                 <app-regras-ameaca [nivel]="campo.nivel" [rotulo]="lerTexto(campo.valor)" />

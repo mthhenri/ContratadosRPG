@@ -29,13 +29,13 @@
 
 ## Ativos
 
-### P-125 — Abertura, Módulos e Níveis de ameaça (número/imagem) sem edição na Oficina · `ABERTO` · frontend/regras
+### P-125 — Níveis de ameaça (número/imagem) e campos estruturais sem edição na Oficina · `ABERTO` · frontend/regras
 
 - **Sintoma:** o texto do registro de abertura (título, corpo e selo), os níveis e a Energia Máxima dos Módulos e o número/imagem de referência dos Níveis de ameaça só se leem na Oficina; nenhum clique abre edição.
 - **Causa:** os renderers `RegrasAbertura`, `RegrasModulos` e (em parte) `RegrasNiveisAmeaca` não ligam o texto a `app-oficina-texto`/`alterarCampo`; a `m11-08` não os cobriu.
 - **Contorno:** editar o JSON da peça direto no banco (rascunho) e publicar.
-- **Correção:** uma spec por bloco, na ordem sugerida em [`auditoria-ineditaveis.md`](../specs/done/oficina-edicao-de-listas/auditoria-ineditaveis.md). Princípio do autor: nada do conteúdo do livro fora do alcance da Oficina.
-- **Desde:** levantado em 13/10/2026 na `oficina-edicao-de-listas`.
+- **Correção:** [`oficina-edicao-blocos-restantes`](../specs/active/oficina-edicao-blocos-restantes.spec.md) (uma fatia por bloco), na ordem sugerida em [`auditoria-ineditaveis.md`](../specs/done/oficina-edicao-de-listas/auditoria-ineditaveis.md). Princípio do autor: nada do conteúdo do livro fora do alcance da Oficina.
+- **Desde:** levantado em 13/10/2026 na `oficina-edicao-de-listas`. Abertura, Módulos, Genérico, Níveis de ameaça e as propriedades estruturais já editáveis (fatias 1 a 5, testadas); falta o gate visual ao vivo das fatias 3 e 5 e a reauditoria (6).
 
 ### P-124 — Destaque não selecionado perde contraste sobre ameaça · `ABERTO` · frontend/regras
 

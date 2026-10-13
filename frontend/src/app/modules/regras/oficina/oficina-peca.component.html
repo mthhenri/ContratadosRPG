@@ -11,6 +11,9 @@
         <app-icone nome="alerta" /> Pendência: {{ mensagemPendencia() }}
     </span>
 }
+@if (ativa()) {
+    <app-oficina-propriedades [peca]="peca()" />
+}
 @if (selecionada()) {
     <app-barra-ferramentas class="oficina-peca__ferramentas" rotulo="Ferramentas da peça">
         @if (ehHabilidade()) {

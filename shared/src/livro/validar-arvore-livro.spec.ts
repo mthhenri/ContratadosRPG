@@ -23,13 +23,19 @@ function peca<T extends Tipo>(
 
 const saude = { vida: [texto("Inicial = 10")], energia: [texto("Inicial = 5")] };
 
-function habilidade(identificador: string, nome = "Golpe Certeiro", trechos = [texto("Causa dano.")]) {
+function habilidade(
+  identificador: string,
+  nome = "Golpe Certeiro",
+  trechos = [texto("Causa dano.")],
+  marcas: Record<string, boolean> = {},
+) {
   return peca(Tipo.HABILIDADE, identificador, {
     nome,
     custo: 2,
     reacao: false,
     glifo: "⬦",
     trechos,
+    ...marcas,
   });
 }
 
@@ -62,7 +68,7 @@ function livroValido(): LivroPecaDto[] {
               Tipo.ARQUETIPO,
               "lutador",
               { nome: "Lutador", citacao: [], atributosBonus: [texto("+1 FOR")] },
-              [habilidade("soco", "Soco Forte")],
+              [habilidade("soco", "Soco Forte", undefined, { inicial: true })],
               "lutador",
             ),
           ],
@@ -118,7 +124,7 @@ describe("validarArvoreLivro", () => {
   });
 
   it("acusa tipo que não pode ficar na raiz", () => {
-    const pendencias = validar([habilidade("h"), peca(Tipo.ARQUETIPO, "a", { nome: "A", citacao: [], atributosBonus: [texto("+1 FOR")] })]);
+    const pendencias = validar([habilidade("h"), peca(Tipo.ARQUETIPO, "a", { nome: "A", citacao: [], atributosBonus: [texto("+1 FOR")] }, [habilidade("i", undefined, undefined, { inicial: true })])]);
     expect(pendencias.map((item) => item.codigo)).toEqual([Codigo.FILHO_NAO_PERMITIDO]);
     expect(pendencias[0].mensagem).toContain("na raiz do livro");
   });
@@ -256,7 +262,7 @@ describe("validarArvoreLivro — classe, arquétipo e subclasse (m11-08)", () =>
   const subclasse = (dados: Record<string, unknown>) => peca(Tipo.SUBCLASSE, "sub", {
     nome: "Sub", classe: "Experimento", citacao: [], custos: [[texto("2 Vida")]], saude, progressao: saude,
     atributosBonus: [texto("+1 FOR")], ...dados,
-  }, [habilidade("ini")]);
+  }, [habilidade("ini", undefined, undefined, { inicial: true })]);
 
   it("aceita uma subclasse completa", () => {
     expect(validar([subclasse({})])).toEqual([]);
@@ -275,7 +281,7 @@ describe("validarArvoreLivro — classe, arquétipo e subclasse (m11-08)", () =>
 
   it("pede os atributos bônus do arquétipo e a saúde da classe", () => {
     const arquetipo = peca(Tipo.CLASSE, "c", { nome: "C", citacao: [], saude: { vida: [], energia: [] }, progressao: saude,
-      cabecalho: [], linhas: [] }, [peca(Tipo.ARQUETIPO, "a", { nome: "A", citacao: [], atributosBonus: [] }, [habilidade("h")])]);
+      cabecalho: [], linhas: [] }, [peca(Tipo.ARQUETIPO, "a", { nome: "A", citacao: [], atributosBonus: [] }, [habilidade("h", undefined, undefined, { inicial: true })])]);
     expect(mensagens([arquetipo])).toEqual(["Falta a Vida e a Energia iniciais.", "Faltam os atributos bônus."]);
   });
 });
@@ -349,6 +355,17 @@ describe("validarArvoreLivro — faixas, níveis e grades (m11-08)", () => {
       .toEqual(["Há um cartão da grade sem título ou sem conteúdo."]);
   });
 
+  it("recusa nível de ameaça fora de 0 a 7, fracionário ou repetido", () => {
+    const niveis = (...numeros: number[]) => peca(Tipo.NIVEIS_AMEACA, "n", {
+      niveis: numeros.map((nivel) => ({ nivel, referenciaImagem: "", descricao: [texto("x")] })),
+    });
+    expect(mensagens([niveis(0, 1, 7)])).toEqual([]);
+    expect(mensagens([niveis(8)])).toEqual(["O nível de ameaça precisa ser um inteiro de 0 a 7."]);
+    expect(mensagens([niveis(-1)])).toEqual(["O nível de ameaça precisa ser um inteiro de 0 a 7."]);
+    expect(mensagens([niveis(1.5)])).toEqual(["O nível de ameaça precisa ser um inteiro de 0 a 7."]);
+    expect(mensagens([niveis(2, 3, 2)])).toEqual(["Há um nível de ameaça repetido."]);
+  });
+
   it("a grade genérica pode ter células vazias", () => {
     expect(validar([peca(Tipo.GRADE, "g", { apresentacao: "generica", colunas: 2, cabecalho: [[], []], linhas: [[[], []]] })])).toEqual([]);
   });
@@ -394,5 +411,62 @@ describe("validarArvoreLivro — lista (oficina-edicao-de-listas)", () => {
     expect(validar([lista([[sublista]])])).toEqual([]);
     const vazia = { tipo: "lista", ordenada: false, inicio: 1, itens: [[paragrafo("")]] };
     expect(mensagens([lista([[vazia]])])).toEqual(["Há um item da lista sem texto."]);
+  });
+});
+
+describe("validarArvoreLivro — abertura e módulos (oficina-edicao-blocos-restantes)", () => {
+  const mensagens = (pecas: readonly LivroPecaDto[]) => validar(pecas).map((item) => item.mensagem);
+
+  it("aceita abertura e módulos completos", () => {
+    expect(mensagens([
+      peca(Tipo.ABERTURA, "a", { titulo: "Registro", trechos: [{ tipo: "italico", filhos: [texto("Oficial.")] }] }),
+      peca(Tipo.MODULOS, "m", { modulos: [{ nivel: "V", energiaMaxima: 0 }, { nivel: "IV", energiaMaxima: 3 }] }),
+    ])).toEqual([]);
+  });
+
+  it("pede título e texto da abertura", () => {
+    expect(mensagens([peca(Tipo.ABERTURA, "a", { titulo: " ", trechos: [] })]))
+      .toEqual(["Falta preencher \"titulo\".", "Falta o texto da abertura."]);
+  });
+
+  it("recusa módulo sem nível e Energia Máxima negativa, fracionária ou ausente", () => {
+    expect(mensagens([peca(Tipo.MODULOS, "m", { modulos: [{ nivel: "", energiaMaxima: 1 }] })]))
+      .toEqual(["Há um módulo sem nível."]);
+    for (const energiaMaxima of [-1, 1.5, "2"]) {
+      expect(mensagens([peca(Tipo.MODULOS, "m", { modulos: [{ nivel: "V", energiaMaxima }] })]))
+        .toEqual(["A Energia Máxima de cada módulo precisa ser um inteiro a partir de 0."]);
+    }
+  });
+});
+
+describe("validarArvoreLivro — propriedades estruturais (oficina-edicao-blocos-restantes)", () => {
+  const mensagens = (pecas: readonly LivroPecaDto[]) => validar(pecas).map((item) => item.mensagem);
+  const arquetipo = (...filhos: LivroPecaDto[]) => peca(Tipo.CLASSE, "c", {
+    nome: "C", citacao: [], saude, progressao: saude, cabecalho: [], linhas: [],
+  }, [peca(Tipo.ARQUETIPO, "a", { nome: "A", citacao: [], atributosBonus: [texto("+1")] }, filhos)]);
+
+  it("exige exatamente uma habilidade inicial por arquétipo e por subclasse", () => {
+    const inicial = habilidade("i", undefined, undefined, { inicial: true });
+    expect(mensagens([arquetipo(inicial, habilidade("g"))])).toEqual([]);
+    expect(mensagens([arquetipo(habilidade("g"))])).toEqual(["O arquétipo precisa de exatamente uma habilidade inicial."]);
+    expect(mensagens([arquetipo(inicial, habilidade("j", undefined, undefined, { inicial: true }))]))
+      .toEqual(["O arquétipo precisa de exatamente uma habilidade inicial."]);
+  });
+
+  it("recusa glifo, variante e início de lista fora do conjunto aceito", () => {
+    expect(mensagens([peca(Tipo.SECAO, "s", { titulo: "T", nivel: 2, glifo: "X" })]))
+      .toEqual(["O glifo da seção não é um dos aceitos."]);
+    expect(mensagens([peca(Tipo.SECAO, "s", { titulo: "T", nivel: 2, glifo: null })])).toEqual([]);
+    expect(mensagens([peca(Tipo.HABILIDADE, "h", { nome: "N", custo: 1, reacao: false, glifo: "⬢", trechos: [texto("x")] })]))
+      .toEqual(["O glifo da habilidade não é um dos aceitos."]);
+    expect(mensagens([peca(Tipo.TERMOS, "t", { variante: "outra" })]))
+      .toEqual(["A variante dos termos precisa ser atributos, maestrias, penalidades ou verbetes."]);
+    const lista = (inicio: number) => peca(Tipo.LISTA, "l", {
+      ordenada: true, inicio, itens: [[{ tipo: "paragrafo", trechos: [texto("A")] }]],
+    });
+    expect(mensagens([lista(3)])).toEqual([]);
+    for (const invalida of [lista(-1), lista(1.5)]) {
+      expect(mensagens([invalida])).toEqual(["O início da lista precisa ser um inteiro a partir de 0."]);
+    }
   });
 });

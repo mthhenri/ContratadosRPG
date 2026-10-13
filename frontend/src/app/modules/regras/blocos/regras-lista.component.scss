@@ -31,3 +31,6 @@ li:has(> .regras-lista__remover) {
 li::marker {
     color: var(--text-dim);
 }
+.regras-lista__sublista {
+    margin-top: var(--space-4);
+}

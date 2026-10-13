@@ -9,8 +9,17 @@
     position: relative;
     min-width: 0;
 }
-:host(.oficina-peca--selecionada) {
-    box-shadow: -14px 0 0 -12px var(--accent);
+// Barra de acento na margem: altura inteira da peça e afastada do texto (um box-shadow com spread negativo a encurtava).
+:host(.oficina-peca--selecionada)::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: calc(var(--space-12) * -1);
+    width: 2px;
+    border-radius: 1px;
+    background: var(--accent);
+    pointer-events: none;
 }
 .oficina-peca__ferramentas {
     position: absolute;
@@ -45,5 +54,8 @@
 @include bp.mobile {
     .oficina-peca__marca {
         left: -10px;
+    }
+    :host(.oficina-peca--selecionada)::before {
+        left: calc(var(--space-8) * -1);
     }
 }
