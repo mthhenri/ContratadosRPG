@@ -45,3 +45,17 @@
     text-align: center;
   }
 }
+
+// Modo árvore: linha em uma só faixa, indentada por nível (padrão do `.regras__sumario-item`).
+.paleta__item--arvore {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-4);
+  padding-left: calc(var(--space-8) + (var(--paleta-nivel, 1) - 1) * var(--space-16));
+}
+
+.paleta__alternar {
+  flex: none;
+  width: 16px;
+  height: 16px;
+}

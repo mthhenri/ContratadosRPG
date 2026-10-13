@@ -35,7 +35,7 @@
                     [ativo]="livro() === 'sistema'"
                     (click)="trocarDocumento('sistema')"
                 >
-                    Sistema
+                    <app-icone nome="d20" /> Sistema
                 </button>
                 <button
                     app-segmentado-item
@@ -44,7 +44,7 @@
                     [ativo]="livro() === 'guia'"
                     (click)="trocarDocumento('guia')"
                 >
-                    Guia
+                    <app-icone nome="coroa" /> Guia
                 </button>
             </app-segmentado>
         </div>
@@ -210,48 +210,43 @@
 }
 <ng-template #navegacao>
     <div class="regras__trilho-conteudo">
-        <app-segmentado rotulo="Documento de Regras" [fluido]="true">
-            <button
-                app-segmentado-item
-                class="regras__seletor"
-                type="button"
-                [ativo]="livro() === 'sistema'"
-                (click)="trocarDocumento('sistema')"
-            >
-                Sistema
-            </button>
-            <button
-                app-segmentado-item
-                class="regras__seletor"
-                type="button"
-                [ativo]="livro() === 'guia'"
-                (click)="trocarDocumento('guia')"
-            >
-                Guia
-            </button>
-        </app-segmentado>
-        @if (podeEditar()) {
-            <app-segmentado rotulo="Modo do documento" [fluido]="true">
+        <div class="regras__livro-linha">
+            <app-segmentado rotulo="Documento de Regras" [fluido]="true">
                 <button
                     app-segmentado-item
                     class="regras__seletor"
                     type="button"
-                    [ativo]="!oficinaAtiva()"
-                    (click)="alternarModo(false)"
+                    [ativo]="livro() === 'sistema'"
+                    (click)="trocarDocumento('sistema')"
                 >
-                    Leitura
+                    <app-icone nome="d20" /> Sistema
                 </button>
                 <button
                     app-segmentado-item
                     class="regras__seletor"
                     type="button"
-                    [ativo]="oficinaAtiva()"
-                    (click)="alternarModo(true)"
+                    [ativo]="livro() === 'guia'"
+                    (click)="trocarDocumento('guia')"
                 >
-                    Oficina
+                    <app-icone nome="coroa" /> Guia
                 </button>
             </app-segmentado>
-        }
+            @if (podeEditar()) {
+                <button
+                    app-botao-icone
+                    class="regras__modo"
+                    tamanho="padrao"
+                    type="button"
+                    [ativo]="oficinaAtiva()"
+                    [attr.aria-pressed]="oficinaAtiva()"
+                    [attr.aria-label]="oficinaAtiva() ? 'Voltar à leitura' : 'Entrar na Oficina'"
+                    [appTooltip]="oficinaAtiva() ? 'Voltar à leitura' : 'Entrar na Oficina'"
+                    (click)="alternarModo(!oficinaAtiva())"
+                >
+                    <app-icone [nome]="oficinaAtiva() ? 'olho' : 'editar'" />
+                </button>
+            }
+        </div>
         @if (podeEditar() && versoes().length > 0) {
             <app-campo rotulo="Versão" tamanho="compacto">
                 <select class="campo__controle regras__versao" aria-label="Versão do livro" (change)="escolherVersao($event)">
@@ -360,6 +355,8 @@
     [placeholder]="oficinaAtiva() ? 'Ex.: Golpe Furtivo' : 'Ex.: habilidades'"
     [vazio]="oficinaAtiva() ? 'Nenhuma peça encontrada.' : 'Nenhuma seção encontrada.'"
     [itens]="oficinaAtiva() ? itensPecas() : itensPaleta()"
+    [arvore]="oficinaAtiva() ? undefined : arvorePaleta()"
+    [idAtivo]="ativoSumario()"
     (escolheu)="escolherNaPaleta($event)"
     (fechou)="paletaAberta.set(false)"
 />

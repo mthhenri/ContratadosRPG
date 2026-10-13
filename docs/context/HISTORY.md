@@ -1,5 +1,24 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-13 — regras-seletores-e-paleta-arvore: ícones nos livros, alternador de modo e paleta "Ir para uma seção" em árvore
+
+Entrega A (trilho do leitor): os itens Sistema/Guia ganharam `d20`/`coroa` (13px, trilho, barra do topo e gaveta) e o
+segmentado Leitura/Oficina saiu: um `app-botao-icone` `[ativo]` (`editar` na Leitura, `olho` na Oficina; `aria-pressed`,
+`aria-label` e `appTooltip` descrevem a ação) fica na mesma linha do seletor de livro, só com `podeEditar()`. A barra
+mobile não recebe o alternador; ele vive na gaveta. Entrega B: `app-paleta` ganhou `[arvore]`/`[idAtivo]`; sem termo mostra a
+hierarquia recolhida (chevron ou → ← abrem/fecham, ↑ ↓ Home End Enter), o caminho até a seção ativa nasce aberto e com termo
+volta à lista plana filtrada; `role="tree"`/`treeitem` com `aria-level`/`aria-expanded`. Lógica pura em `paleta.ts`
+(`linhasVisiveisArvore`, `ancestraisDe`). Oficina e uso sem `[arvore]` ficam como eram. Por pedido do autor durante a
+verificação, o chevron é `app-botao-icone` `mini` (sem contorno: só a seta, vermelha no hover, pointer; no mobile o alvo
+segue 44px) e o `mousedown` não rouba o foco do campo.
+Verificado: testes frontend 3428 (268 arquivos; o teste de `oficina-leitor.spec.ts` que procurava o segmentado antigo foi
+atualizado para `.regras__modo`), lint sem erros, build ok, `repo:verificar` ok. Ao vivo (1920×1080 e 360×800; ADMIN e
+não-ADMIN): ícones nos livros, alternador (tooltip "Entrar na Oficina"/"Voltar à leitura", estado ativo), paleta recolhida,
+expandida, filtrada, apagada, reaberta já no caminho de Maestrias, paleta da Oficina plana, sem overflow. Medida mobile
+(360px): barra do topo com 336px úteis e Sumário 99 + busca 50 + livros 174 sem estouro, então o rótulo "Sumário"
+permanece. Achado só ao vivo: clicar no chevron tirava o foco do campo e as setas paravam de funcionar (corrigido). Limite:
+Guia e o mobile da Oficina foram vistos por captura única; o chevron `mini` foi reconferido só na sessão pública.
+
 ## 2026-10-13 — oficina-edicao-de-listas: listas editáveis na Oficina e auditoria do que ainda não se edita
 
 O autor não conseguia corrigir o item "Interrupção externa" (Sistema › Perseguição › Encerramento, `I**nterrupção

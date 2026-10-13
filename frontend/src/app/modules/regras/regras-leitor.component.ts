@@ -8,7 +8,7 @@ import { Subscription } from "rxjs";
 
 import { Gaveta } from "../../shared/ui/gaveta/gaveta.component";
 import { Paleta } from "../../shared/ui/paleta/paleta.component";
-import type { PaletaItem } from "../../shared/ui/paleta/paleta";
+import type { PaletaItem, PaletaNo } from "../../shared/ui/paleta/paleta";
 import { SessaoService } from "../../core/services/sessao.service";
 import { RegrasLeituraStore } from "./regras-leitura.store";
 import { OficinaStore } from "./oficina/oficina.store";
@@ -44,7 +44,7 @@ import { observarSecaoRegras } from "./regras-navegacao";
 import { RegrasConteudoRender } from "./blocos/regras-conteudo.component";
 import { RegrasDocumento } from "./regras.model";
 import { RegrasService, type RegrasLeitura } from "./regras.service";
-import { construirSumarioRegras, listarAncorasRegras } from "./regras-sumario";
+import { construirSumarioRegras, listarAncorasRegras, type RegrasSumarioItem } from "./regras-sumario";
 
 /** Painel lateral do "O que mudou": largura que cabe na coluna livre (com a margem) e teto de largura. */
 const LARGURA_MINIMA_LATERAL = 360;
@@ -141,6 +141,13 @@ export class RegrasLeitor {
             ...achatar([...item.filhos], [...caminho, item.titulo]),
         ]);
         return achatar(this.sumario(), []);
+    });
+    /** Mesma hierarquia do sumário, para a paleta Ctrl+K navegar em árvore na Leitura. */
+    protected readonly arvorePaleta = computed<PaletaNo[]>(() => {
+        const converter = (itens: readonly RegrasSumarioItem[]): PaletaNo[] => itens.map((item) => ({
+            id: item.ancora, rotulo: item.titulo, filhos: converter(item.filhos),
+        }));
+        return converter(this.sumario());
     });
     protected readonly ativoSumario = computed(() => {
         const coletar = (itens: ReturnType<typeof construirSumarioRegras>): string[] =>

@@ -64,14 +64,14 @@ describe("Oficina no leitor de Regras", () => {
     });
     afterEach(() => { vi.restoreAllMocks(); document.body.replaceChildren(); });
 
-    it("o interruptor Leitura/Oficina aparece só para ADMIN, com o livro vindo da API", () => {
+    it("o alternador de modo aparece só para ADMIN, com o livro vindo da API", () => {
         const admin = criar(false);
-        expect(admin.raiz.querySelector('[aria-label="Modo do documento"]')).not.toBeNull();
+        expect(admin.raiz.querySelector(".regras__modo")).not.toBeNull();
         expect(admin.raiz.querySelector("app-oficina-barra")).toBeNull();
         admin.leitor.destroy();
     });
 
-    it("quem não é ADMIN não vê o interruptor, nem com ?modo=oficina na URL", () => {
+    it("quem não é ADMIN não vê o alternador, nem com ?modo=oficina na URL", () => {
         tipo = TipoUsuarioEnum.TESTER;
         TestBed.resetTestingModule();
         TestBed.configureTestingModule({
@@ -84,7 +84,7 @@ describe("Oficina no leitor de Regras", () => {
             ],
         });
         const { raiz, leitor } = criar(true);
-        expect(raiz.querySelector('[aria-label="Modo do documento"]')).toBeNull();
+        expect(raiz.querySelector(".regras__modo")).toBeNull();
         expect(raiz.querySelector("app-oficina-barra")).toBeNull();
         expect(api.listar).not.toHaveBeenCalled();
         leitor.destroy();
@@ -92,7 +92,7 @@ describe("Oficina no leitor de Regras", () => {
 
     it("sem fotografia na API (JSON estático) a Oficina não é oferecida", () => {
         const { raiz, leitor } = criar(true, null);
-        expect(raiz.querySelector('[aria-label="Modo do documento"]')).toBeNull();
+        expect(raiz.querySelector(".regras__modo")).toBeNull();
         expect(api.listar).not.toHaveBeenCalled();
         leitor.destroy();
     });

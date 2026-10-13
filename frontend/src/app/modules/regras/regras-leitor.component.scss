@@ -73,6 +73,26 @@
         padding: var(--space-8) var(--space-12);
         min-height: 36px;
         font: 600 11px var(--font-mono);
+        // Ícone do livro na escala da fonte de 9px do item; o gap vem do primitivo.
+        app-icone {
+            font-size: 13px;
+        }
+    }
+
+    // Livro (fluido) + alternador de modo na mesma linha; o botão acompanha a altura do seletor.
+    &__livro-linha {
+        display: flex;
+        gap: var(--space-8);
+        min-width: 0;
+        app-segmentado {
+            flex: 1;
+            min-width: 0;
+        }
+    }
+
+    .regras__livro-linha &__modo {
+        align-self: stretch;
+        height: auto;
     }
 
     &__abrir-sumario {

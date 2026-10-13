@@ -1,4 +1,7 @@
+import { signal } from "@angular/core";
 import { TestBed } from "@angular/core/testing";
+import { TipoLivroVersaoSituacaoEnum, TipoUsuarioEnum } from "@contratados-rpg/shared/enums";
+import { SessaoService } from "../../core/services/sessao.service";
 import { of } from "rxjs";
 import { RegrasDocumento } from "./regras.model";
 import { RegrasLeitor } from "./regras-leitor.component";
@@ -160,5 +163,83 @@ describe("Leitor compartilhado de Regras", () => {
         vi.spyOn(contador, "getBoundingClientRect").mockReturnValue({ height: 43 } as DOMRect);
         expect(leitor.componentInstance["linhaLeitura"]()).toBe(111);
         barra.remove(); leitor.destroy();
+    });
+
+    describe("seletores do trilho e paleta em árvore", () => {
+        function montarComEdicao(admin: boolean, modoOficina = false) {
+            const usuario = signal(admin ? { tipo: TipoUsuarioEnum.ADMIN } : null);
+            TestBed.resetTestingModule();
+            TestBed.configureTestingModule({ imports: [RegrasLeitor], providers: [
+                { provide: SessaoService, useValue: { usuario } },
+                { provide: RegrasService, useValue: {
+                    invalidarLeitura: () => undefined,
+                    carregarDocumento: () => of(documento),
+                    carregarLeitura: () => of({ documento, situacao: TipoLivroVersaoSituacaoEnum.PUBLICADA,
+                        numero: 1, ancorasAntigas: {} }),
+                } },
+            ] });
+            const leitor = TestBed.createComponent(RegrasLeitor);
+            leitor.componentRef.setInput("livro", "sistema");
+            leitor.componentRef.setInput("modoOficina", modoOficina);
+            leitor.detectChanges();
+            return leitor;
+        }
+
+        it("mostra os ícones d20 e coroa nos livros do trilho e da barra", () => {
+            const leitor = montarComEdicao(false);
+            const itens = [...(leitor.nativeElement as HTMLElement)
+                .querySelectorAll("button[app-segmentado-item]")];
+            expect(itens.map(i => i.querySelector("app-icone svg, app-icone")!== null)).toEqual([true, true]);
+            expect(itens.map(i => i.textContent?.trim())).toEqual(["Sistema", "Guia"]);
+            leitor.destroy();
+        });
+
+        it("esconde o alternador de modo sem permissão de edição", () => {
+            const leitor = montarComEdicao(false);
+            expect((leitor.nativeElement as HTMLElement).querySelector(".regras__modo")).toBeNull();
+            leitor.destroy();
+        });
+
+        it("alternador na Leitura descreve a ação, não está pressionado e entra na Oficina", () => {
+            const leitor = montarComEdicao(true);
+            const botao = (leitor.nativeElement as HTMLElement)
+                .querySelector<HTMLButtonElement>(".regras__modo")!;
+            expect(botao.getAttribute("aria-label")).toBe("Entrar na Oficina");
+            expect(botao.getAttribute("aria-pressed")).toBe("false");
+            expect(botao.hasAttribute("title")).toBe(false);
+            const alterou = vi.fn();
+            leitor.componentInstance.modoAlterado.subscribe(alterou);
+            botao.click();
+            expect(alterou).toHaveBeenCalledWith(true);
+            leitor.destroy();
+        });
+
+        it("alternador na Oficina volta à leitura e fica pressionado", () => {
+            const leitor = montarComEdicao(true, true);
+            const botao = (leitor.nativeElement as HTMLElement)
+                .querySelector<HTMLButtonElement>(".regras__modo")!;
+            expect(botao.getAttribute("aria-label")).toBe("Voltar à leitura");
+            expect(botao.getAttribute("aria-pressed")).toBe("true");
+            const alterou = vi.fn();
+            leitor.componentInstance.modoAlterado.subscribe(alterou);
+            botao.click();
+            expect(alterou).toHaveBeenCalledWith(false);
+            leitor.destroy();
+        });
+
+        it("a paleta usa árvore na Leitura e lista plana de peças na Oficina", () => {
+            const leitura = montarComEdicao(true);
+            leitura.componentInstance["abrirPaleta"]();
+            leitura.detectChanges();
+            expect((leitura.nativeElement as HTMLElement).querySelector("ul.paleta__lista")
+                ?.getAttribute("role")).toBe("tree");
+            leitura.destroy();
+            const oficina = montarComEdicao(true, true);
+            oficina.componentInstance["abrirPaleta"]();
+            oficina.detectChanges();
+            expect((oficina.nativeElement as HTMLElement).querySelector("ul.paleta__lista")
+                ?.getAttribute("role")).toBe("listbox");
+            oficina.destroy();
+        });
     });
 });

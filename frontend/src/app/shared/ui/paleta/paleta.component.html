@@ -16,33 +16,74 @@
       aria-autocomplete="list"
       aria-expanded="true"
       [attr.aria-controls]="listaId"
-      [attr.aria-activedescendant]="visiveis().length ? id(indiceAtivo()) : null"
+      [attr.aria-activedescendant]="total() ? id(indiceAtivo()) : null"
       [placeholder]="placeholder()"
       [value]="consulta()"
       (input)="digitar($event)"
       (keydown)="tratarTecla($event)"
     />
   </app-campo>
-  <ul #lista class="paleta__lista" role="listbox" [id]="listaId" [attr.aria-label]="titulo()">
-    @for (item of visiveis(); track item.id; let i = $index) {
-      <li
-        class="paleta__item"
-        role="option"
-        [id]="id(i)"
-        [class.paleta__item--ativo]="i === indiceAtivo()"
-        [attr.aria-selected]="i === indiceAtivo()"
-        tabindex="-1"
-        (click)="escolher(item)"
-        (keydown.enter)="escolher(item)"
-        (mousemove)="indiceAtivo.set(i)"
-      >
-        <span class="paleta__rotulo">{{ item.rotulo }}</span>
-        @if (item.contexto) {
-          <span class="paleta__contexto">{{ item.contexto }}</span>
-        }
-      </li>
-    } @empty {
-      <li class="paleta__vazio" role="presentation">{{ vazio() }}</li>
-    }
-  </ul>
+  @if (emArvore()) {
+    <ul #lista class="paleta__lista" role="tree" [id]="listaId" [attr.aria-label]="titulo()">
+      @for (linha of linhas(); track linha.id; let i = $index) {
+        <li
+          class="paleta__item paleta__item--arvore"
+          role="treeitem"
+          [id]="id(i)"
+          [class.paleta__item--ativo]="i === indiceAtivo()"
+          [style.--paleta-nivel]="linha.nivel"
+          [attr.aria-level]="linha.nivel"
+          [attr.aria-expanded]="linha.temFilhos ? linha.aberto : null"
+          [attr.aria-selected]="i === indiceAtivo()"
+          tabindex="-1"
+          (click)="escolher(linha)"
+          (keydown.enter)="escolher(linha)"
+          (mousemove)="indiceAtivo.set(i)"
+        >
+          @if (linha.temFilhos) {
+            <button
+              app-botao-icone
+              tamanho="mini"
+              class="paleta__alternar"
+              type="button"
+              tabindex="-1"
+              aria-hidden="true"
+              (mousedown)="$event.preventDefault()"
+              (click)="alternar(linha.id); $event.stopPropagation()"
+            >
+              <app-icone [nome]="linha.aberto ? 'chevron' : 'chevron-direita'" />
+            </button>
+          } @else {
+            <span class="paleta__alternar" aria-hidden="true"></span>
+          }
+          <span class="paleta__rotulo">{{ linha.rotulo }}</span>
+        </li>
+      } @empty {
+        <li class="paleta__vazio" role="presentation">{{ vazio() }}</li>
+      }
+    </ul>
+  } @else {
+    <ul #lista class="paleta__lista" role="listbox" [id]="listaId" [attr.aria-label]="titulo()">
+      @for (item of visiveis(); track item.id; let i = $index) {
+        <li
+          class="paleta__item"
+          role="option"
+          [id]="id(i)"
+          [class.paleta__item--ativo]="i === indiceAtivo()"
+          [attr.aria-selected]="i === indiceAtivo()"
+          tabindex="-1"
+          (click)="escolher(item)"
+          (keydown.enter)="escolher(item)"
+          (mousemove)="indiceAtivo.set(i)"
+        >
+          <span class="paleta__rotulo">{{ item.rotulo }}</span>
+          @if (item.contexto) {
+            <span class="paleta__contexto">{{ item.contexto }}</span>
+          }
+        </li>
+      } @empty {
+        <li class="paleta__vazio" role="presentation">{{ vazio() }}</li>
+      }
+    </ul>
+  }
 </app-modal>
