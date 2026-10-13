@@ -28,6 +28,7 @@ substitutions:
   _APP_FRONTEND_ORIGEM: '' # https://<projeto>.pages.dev — obrigatória no boot (CORS)
   _ARMAZENAMENTO_R2_BUCKET: ''
   _ARMAZENAMENTO_R2_URL_PUBLICA: ''
+  _IMPORTAR_LIVROS_USUARIO: '' # id de um ADMIN; vazio desliga o passo `importar-livros`
 
 # Só o segredo usado DENTRO de um passo do Cloud Build (a migration, rodada como container)
 # precisa estar aqui. Os segredos do deploy em si vão direto do Secret Manager pro Cloud Run
@@ -75,13 +76,37 @@ steps:
       - DB_USUARIO=$_DB_USUARIO
     waitFor: [build-migrator]
 
+  # 2b. Importação dos livros de regras (m11-03). Repetível: `--se-vazio` pula o livro que já tem
+  #     peças, então depois da 1ª vez o passo é um no-op e nunca sobrescreve o que a Oficina das
+  #     Regras editou. Fica desligado enquanto _IMPORTAR_LIVROS_USUARIO estiver vazio.
+  - id: importar-livros
+    name: $_SERVICE-migrator:$SHORT_SHA
+    dir: /app
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        if [ -z "$$USUARIO" ]; then
+          echo 'importar-livros: _IMPORTAR_LIVROS_USUARIO vazio; passo ignorado.'
+        else
+          npm run regras:importar --workspace=backend -- --usuario="$$USUARIO" --se-vazio
+        fi
+    secretEnv: [DB_SENHA]
+    env:
+      - DB_HOST=$_DB_HOST
+      - DB_PORT=$_DB_PORT
+      - DB_NOME=$_DB_NOME
+      - DB_USUARIO=$_DB_USUARIO
+      - USUARIO=$_IMPORTAR_LIVROS_USUARIO
+    waitFor: [migrate]
+
   # 3. Push da imagem de runtime pro Artifact Registry (só depois da migration ter passado).
   - id: push
     name: gcr.io/cloud-builders/docker
     args:
       - push
       - $_REGION-docker.pkg.dev/$PROJECT_ID/$_REPOSITORY/$_SERVICE:$SHORT_SHA
-    waitFor: [migrate]
+    waitFor: [importar-livros]
 
   # 4. Deploy no Cloud Run. APP_PORTA=8080 casa com o --port abaixo e com o EXPOSE do
   #    Dockerfile (Cloud Run injeta PORT=8080 por padrão; o backend só lê APP_PORTA via

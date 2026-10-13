@@ -371,6 +371,36 @@ describe("importarLivro", () => {
     expect(criarVersao).not.toHaveBeenCalled();
   });
 
+  it("com pularSeJaImportado deixa o livro que já tem peças intacto e importa o que falta", async () => {
+    const { dependencias, criarPeca, removerPeca, criarVersao } = criarDependencias([
+      { id: 1, pecaPaiId: null, revisao: 1 },
+    ]);
+    const vazio = criarDependencias();
+    const resumos = await importarLivros(
+      {
+        ...dependencias,
+        pecas: {
+          listarArvore: vi
+            .fn()
+            .mockResolvedValueOnce([{ id: 1, pecaPaiId: null, revisao: 1 }])
+            .mockResolvedValueOnce([]),
+          criarPeca: vazio.criarPeca,
+          removerPeca,
+        },
+        versoes: { criarVersao: vazio.criarVersao, removerVersoes: vazio.removerVersoes },
+      } as unknown as DependenciasImportacao,
+      [
+        { conteudo: conteudo(), ordemDoLivro: 1, usuarioId: 9, refazer: false, pularSeJaImportado: true },
+        { conteudo: { ...conteudo(), codigo: "sistema" }, ordemDoLivro: 2, usuarioId: 9, refazer: false, pularSeJaImportado: true },
+      ],
+    );
+    expect(resumos.map((resumo) => resumo.codigo)).toEqual(["sistema"]);
+    expect(criarPeca).not.toHaveBeenCalled();
+    expect(removerPeca).not.toHaveBeenCalled();
+    expect(criarVersao).not.toHaveBeenCalled();
+    expect(vazio.criarVersao).toHaveBeenCalledTimes(1);
+  });
+
   it("com refazer remove só as raízes (a exclusão leva as filhas) e importa de novo", async () => {
     const { dependencias, criarPeca, removerPeca, removerVersoes } = criarDependencias([
       { id: 1, pecaPaiId: null, revisao: 4 },

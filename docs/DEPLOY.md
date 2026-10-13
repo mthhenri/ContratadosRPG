@@ -226,6 +226,11 @@ para as notas aparecerem na hora.
   cadeia **Cloudflare → Render → Supabase**. Para checar só o backend, `GET
   https://<seu-servico>.onrender.com/health` deve responder `ok` isoladamente.
 - A partir daqui, todo push para `master` reimplanta as duas plataformas automaticamente.
+- **Livros de regras (Cloud Build):** o banco de produção nasce sem livros. No trigger do Cloud Build,
+  preencha a substituição `_IMPORTAR_LIVROS_USUARIO` com o id de um usuário `ADMIN`; o passo
+  `importar-livros` do `cloudbuild.yaml` importa `sistema` e `guia` no próximo deploy. É repetível
+  (`--se-vazio`): livro que já tem peças é pulado e nunca sobrescrito, então o valor pode ficar
+  preenchido. Vazio, o passo é ignorado. Confira com `GET /livros` na API.
 
 ---
 

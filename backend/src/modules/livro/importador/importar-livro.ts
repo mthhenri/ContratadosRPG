@@ -41,7 +41,7 @@ function conferirArvore({ conteudo }: LivroInternoImportarDto): void {
 async function gravarLivro(
   dependencias: DependenciasImportacao,
   dto: LivroInternoImportarDto,
-): Promise<LivroImportadoDto> {
+): Promise<LivroImportadoDto | null> {
   const { conteudo } = dto;
   const { livros, pecas, versoes } = dependencias;
   const livro =
@@ -54,6 +54,7 @@ async function gravarLivro(
 
   const existentes = await pecas.listarArvore({ livroId: livro.id });
   if (existentes.length > 0) {
+    if (!dto.refazer && dto.pularSeJaImportado) return null;
     if (!dto.refazer) {
       throw new Error(
         `O livro "${conteudo.codigo}" já tem ${existentes.length} peça(s); nada foi alterado. ` +
@@ -113,7 +114,10 @@ export async function importarLivros(
   dtos.forEach(conferirArvore);
   return dependencias.executarEmTransacao(async () => {
     const importados: LivroImportadoDto[] = [];
-    for (const dto of dtos) importados.push(await gravarLivro(dependencias, dto));
+    for (const dto of dtos) {
+      const importado = await gravarLivro(dependencias, dto);
+      if (importado) importados.push(importado);
+    }
     return importados;
   });
 }
@@ -123,5 +127,6 @@ export async function importarLivro(
   dto: LivroInternoImportarDto,
 ): Promise<LivroImportadoDto> {
   const [importado] = await importarLivros(dependencias, [dto]);
+  if (!importado) throw new Error(`O livro "${dto.conteudo.codigo}" já estava importado; nada foi alterado.`);
   return importado;
 }

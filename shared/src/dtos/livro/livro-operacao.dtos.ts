@@ -171,6 +171,8 @@ export interface LivroInternoImportarDto {
   readonly usuarioId: number;
   /** Só em desenvolvimento: descarta as peças e as fotografias atuais e importa de novo. */
   readonly refazer: boolean;
+  /** Pula o livro que já tem peças, sem erro e sem alterar nada; é o que torna a importação repetível no CI. */
+  readonly pularSeJaImportado?: boolean;
 }
 
 export interface LivroImportadoDto {

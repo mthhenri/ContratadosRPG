@@ -14,15 +14,16 @@ import { validarConfiguracaoResetDev } from '../database/reset-dev.guard';
 /**
  * Importação única dos `.md` vigentes (m11-03): popula `livro`, `regra_peca` e cria a primeira
  * `livro_versao` PUBLICADA de cada livro. Uso:
- * `npm run regras:importar --workspace=backend -- --usuario=<id> [--simular] [--refazer]`.
+ * `npm run regras:importar --workspace=backend -- --usuario=<id> [--simular] [--refazer] [--se-vazio]`.
  * - `--usuario`: id de quem consta como autor da publicação (obrigatório, exceto com `--simular`).
  * - `--simular`: converte, valida a árvore, lista os avisos do normalizador e não toca o banco.
+ * - `--se-vazio`: pula, sem erro, o livro que já tem peças (repetível; é o que o Cloud Build usa a cada deploy).
  * - `--refazer`: só em desenvolvimento (mesmo guard do `db:reset:dev`); descarta as peças e as
  *   fotografias do livro e importa de novo. Os dois livros entram numa única transação.
  */
 const ORDEM_DOS_LIVROS: Readonly<Record<string, number>> = { sistema: 1, guia: 2 };
 
-function lerArgumentos(argumentos: readonly string[]): { usuarioId: number | null; simular: boolean; refazer: boolean } {
+function lerArgumentos(argumentos: readonly string[]): { usuarioId: number | null; simular: boolean; refazer: boolean; seVazio: boolean } {
   const usuario = argumentos.find((argumento) => argumento.startsWith('--usuario='))?.slice('--usuario='.length);
   const usuarioId = usuario ? Number(usuario) : null;
   if (usuario && !Number.isInteger(usuarioId)) throw new Error(`--usuario inválido: "${usuario}".`);
@@ -30,11 +31,12 @@ function lerArgumentos(argumentos: readonly string[]): { usuarioId: number | nul
     usuarioId,
     simular: argumentos.includes('--simular'),
     refazer: argumentos.includes('--refazer'),
+    seVazio: argumentos.includes('--se-vazio'),
   };
 }
 
 export async function main(argumentos: readonly string[] = process.argv.slice(2)): Promise<void> {
-  const { usuarioId, simular, refazer } = lerArgumentos(argumentos);
+  const { usuarioId, simular, refazer, seVazio } = lerArgumentos(argumentos);
   if (!simular && usuarioId === null) throw new Error('Informe --usuario=<id> (ou use --simular).');
 
   const fontes = await lerFontesDeRegras();
@@ -76,8 +78,10 @@ export async function main(argumentos: readonly string[] = process.argv.slice(2)
         ordemDoLivro: ORDEM_DOS_LIVROS[conteudo.codigo] ?? 99,
         usuarioId,
         refazer,
+        pularSeJaImportado: seVazio,
       })),
     );
+    if (resumos.length === 0) console.log('[regras:importar] Todos os livros já estavam importados; nada foi alterado.');
     for (const resumo of resumos) {
       console.log(
         `[regras:importar] livro ${resumo.codigo} ${resumo.numero}: ` +

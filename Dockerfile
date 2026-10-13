@@ -31,6 +31,9 @@ RUN npm run build --workspace=backend
 # render.yaml encadeia no buildCommand). Reaproveita o `build` com devDependencies intactas —
 # o knexfile.ts precisa do ts-node pra ser lido pela CLI do knex.
 FROM build AS migrator
+# `regras:importar` (passo `importar-livros` do cloudbuild.yaml) lê o normalizador e os .md de
+# frontend/scripts; a imagem `build` só carrega o package.json do frontend.
+COPY frontend/scripts frontend/scripts
 CMD ["npm", "run", "db:migrate", "--workspace=backend"]
 
 # ---- runtime ---------------------------------------------------------------
