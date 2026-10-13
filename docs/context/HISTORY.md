@@ -1,14 +1,32 @@
 # HISTORY.md — Histórico do Projeto
 
-## 2026-10-13 — oficina-edicao-blocos-restantes (parcial): Abertura, Módulos, Genérico, Níveis de ameaça e propriedades estruturais editáveis na Oficina
+## 2026-10-13 — skills-10-gerenciamento-de-impacto: skill, `npm run impacto` e hook de lembrete; "Trocar senha" ganha ícone próprio
 
-Fatias 1 a 5 da spec implementadas e testadas (ainda em `active/`: faltam o gate visual ao vivo das fatias 3 e 5 — o ambiente
-negou criar o ADMIN de teste — e a reauditoria, fatia 6). Decisão do autor: `referenciaImagem` é identificador interno
+Pedido do autor: o projeto cresceu além do ponto em que o agente lembra quem usa o quê — o botão "Trocar senha" do Perfil
+exibia uma medalha. Investigação: `git log -L` no `@case ("patente")` mostra o desenho inalterado; o botão **nasceu**
+emprestando `patente` em `6b33f25d` (m2-14). O impacto corre nos dois sentidos (mudar o compartilhado muda todos; reaproveitar
+um item com sentido próprio prende o uso novo àquele sentido). Entregue: skill `gerenciamento-de-impacto` (`.claude/` e
+`.agents/`), com a regra do autor "tudo tem impacto" — todo consumidor é classificado (pedido/acompanha/destoa/quebra) e o que
+muda além do pedido vai ao autor antes de aplicar; `scripts/impacto.mjs` (`npm run impacto -- <arquivo> | --icone <nome> |
+--simbolo <Nome>`: importadores TS, consumidores de `@contratados-rpg/shared` por nome exportado, seletor Angular em templates,
+`@use` e `var(--x)`); hook `PostToolUse` `scripts/agentes/hook-impacto.mjs` que injeta o lembrete ao editar zona compartilhada
+ou arquivo com 3+ consumidores, uma vez por arquivo por sessão; item 4 em "Antes de alterar código" de `CLAUDE.md`/`AGENTS.md`.
+Validação por uso: glifo `senha` ("key" da Tabler, MIT) no Perfil; `patente` segue só na aba Patentes da simulação. Testes:
+`repo:test` 14/14 (6 novos), ícone 57/57; lint dos arquivos tocados limpo — `lint --workspace=frontend` falha por 2 erros
+preexistentes em `oficina-texto.component.ts` (`9b853801`). Ao vivo 1920×1080 e 360×800: chave no mesmo traço dos demais botões
+da tela, aba Patentes com a medalha, sem overflow. O hook disparou de verdade nas edições do ícone. Achado na tarefa:
+`docs/design/tema/` e `frontend/src/styles/tema/` divergem em valores de token (`P-126`).
+[Spec](../specs/done/skills-10-gerenciamento-de-impacto.spec.md) · [validação](../specs/done/skills-10-gerenciamento-de-impacto/validacao.md).
+
+## 2026-10-13 — oficina-edicao-blocos-restantes: Abertura, Módulos, Genérico, Níveis de ameaça e propriedades estruturais editáveis na Oficina
+
+Fatias 1 a 7 da spec concluídas (gate ao vivo das fatias 3 e 5 e reauditoria dos dois livros em
+[`reauditoria.md`](../specs/done/oficina-edicao-blocos-restantes/reauditoria.md): nenhum tipo de bloco sem controle de edição; `P-125` fechado). Decisão do autor: `referenciaImagem` é identificador interno
 (preservado, não editável). Fatia 3: número 0–7 em `app-step-input`, adicionar/remover nível, pendências de nível repetido/fora
 de 0–7. Fatia 5: `app-oficina-propriedades` (glifo/nível de seção, glifo/inicial/melhorada de habilidade, variante de termos,
 saúde↔cartões, tabela em pares, lista numerada/início/sublista, nota e recurso dos itens de saúde, rótulos de identidade e nomes
 de atributo); a habilidade inicial só muda de mãos (a projeção exige uma por arquétipo/subclasse) e o validador a confere.
-A barra vermelha da peça selecionada deixou de encurtar e de colar no texto (`::before`). [Detalhes](../specs/active/oficina-edicao-blocos-restantes/verificacao.md).
+A barra vermelha da peça selecionada deixou de encurtar e de colar no texto (`::before`). [Detalhes](../specs/done/oficina-edicao-blocos-restantes/verificacao.md).
 Fatias 1, 2 e 4: Abertura: título e selo da capa (campos simples; selo opcional) e o corpo como **um** campo sobre os
 `trechos` originais, preservando o itálico externo, as pausas, negritos e tarjas; `OficinaTexto` ganhou `[quebras]` (Enter =
 linha em branco, Shift+Enter = quebra simples, sem criar peça) e `apararQuebrasFinais`. Módulos: nível em campo, Energia
@@ -17,7 +35,7 @@ lugar e `motivo` como nota somente leitura. Validador: abertura sem título/text
 inválida viram pendência de conteúdo. Testes: `shared` 1273, `frontend` 3438, `backend` filtrado em `livro` 99; lint sem erros.
 Ao vivo (1920×1080 e 360×800, Oficina real, dados restaurados depois): achados — cinco cartões de Módulos não cabiam no
 celular com o stepper (agora 2 colunas em edição) e o Enter gravava uma só quebra (o Chrome põe o cursor antes da quebra
-final; resolvido com `\u200b` e aparando o fim). [Verificação e limites](../specs/active/oficina-edicao-blocos-restantes/verificacao.md).
+final; resolvido com `\u200b` e aparando o fim). [Verificação e limites](../specs/done/oficina-edicao-blocos-restantes/verificacao.md).
 
 ## 2026-10-13 — regras-seletores-e-paleta-arvore: ícones nos livros, alternador de modo e paleta "Ir para uma seção" em árvore
 

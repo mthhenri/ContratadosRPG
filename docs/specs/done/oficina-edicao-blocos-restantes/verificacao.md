@@ -1,9 +1,8 @@
-# Verificação — oficina-edicao-blocos-restantes (fatias 1 a 5)
+# Verificação — oficina-edicao-blocos-restantes (fatias 1 a 5; fechada)
 
 > Relatório textual de [`oficina-edicao-blocos-restantes.spec.md`](../oficina-edicao-blocos-restantes.spec.md). Capturas
 > locais em `.artifacts/oficina-edicao-blocos-restantes/` (ignoradas pelo Git); este texto não depende delas.
-> **A tarefa continua aberta**: as fatias 3 e 5 estão implementadas e testadas, mas **sem o gate visual ao vivo** (ver
-> "Segunda rodada"); a reauditoria (6) depende dele.
+> **Tarefa concluída.** A verificação ao vivo das fatias 3 e 5 e a reauditoria (fatia 6) estão em [`reauditoria.md`](reauditoria.md).
 
 ## O que foi entregue
 
@@ -89,9 +88,7 @@ fatia 5 vale como está na spec.
   `backend` filtrado em `livro` 99. Lint: 0 erros novos (2 erros `no-irregular-whitespace` preexistentes em
   `core/interceptors/error-handler.interceptor.ts`).
 
-### Limites desta rodada (o que ficou aberto)
+### Limites desta rodada
 
-- **Gate visual ao vivo (1920×1080 e 360×800) não executado** para níveis de ameaça, faixa de propriedades, sublistas, grade de
-  saúde, identidade/atributos e a nova barra de seleção: o ambiente negou criar o usuário ADMIN de teste no banco do autor.
-  Sem isso a reauditoria dos dois livros (fatia 6) e o fechamento do `P-125` ficam pendentes.
-- Não foi conferido ao vivo que os livros reais passam na nova regra "uma habilidade inicial por arquétipo/subclasse".
+- O gate ao vivo das fatias 3 e 5 foi feito depois, com um usuário ADMIN de teste na base de desenvolvimento: ver
+  [`reauditoria.md`](reauditoria.md). Tema claro e `GENERICO` real (não existe nos livros) seguem sem exercício ao vivo.

@@ -2324,11 +2324,12 @@ fim de cada lista cria o item. [Verificação por fatia](../specs/done/m11-08-of
 Listas (`oficina-edicao-de-listas`, 13/10/2026): o texto de cada item (e de sublistas) se edita no lugar pelo caminho
 `[...,"itens", i, j, "trechos"]` (`RegrasLista` recursivo, `RegrasParagrafo` com `campo`/`caminho`/`peca`); com a lista
 selecionada há "Remover item" e "+ Item"; "Lista" entra no menu "+"; o validador pede itens e texto em cada item.
-Abertura (título, corpo e selo), Módulos (nível, Energia Máxima, adicionar/remover) e Genérico (`trechos`) se editam no
-lugar desde `oficina-edicao-blocos-restantes` (13/10/2026, parcial; `OficinaTexto [quebras]` para texto de várias linhas).
-Níveis de ameaça (número, adicionar/remover) e as propriedades estruturais (`app-oficina-propriedades`) também, mas **sem gate visual ao vivo**; resta a reauditoria dos livros: `P-125`, a
-[spec ativa](../specs/active/oficina-edicao-blocos-restantes.spec.md) e a
-[auditoria](../specs/done/oficina-edicao-de-listas/auditoria-ineditaveis.md).
+Abertura (título, corpo e selo), Módulos, Genérico, Níveis de ameaça e propriedades estruturais (glifo/nível de seção, glifo/inicial/
+melhorada de habilidade, variante de termos, saúde↔cartões, tabela em pares, lista numerada/início/sublista, itens de grade de
+saúde, rótulos de identidade e nomes de atributo; `app-oficina-propriedades`) se editam no lugar desde
+`oficina-edicao-blocos-restantes` (13/10/2026). A `referenciaImagem` dos níveis é id interno da importação (preservado, sem campo);
+a habilidade inicial só muda de mãos (uma por arquétipo/subclasse, conferida pelo validador). Reauditoria dos dois livros:
+[relatório](../specs/done/oficina-edicao-blocos-restantes/reauditoria.md) — nada do conteúdo fica fora da Oficina.
 Fonte da verdade (M11-10, concluída): o banco; `docs/core/` é cópia gerada por `npm run regras:exportar`
 (Markdown legível, cabeçalho com hash do corpo; `-- --conferir` compara com o banco; também regenera
 `condicoes.dados.ts`). `repo:verificar` acusa cópia editada à mão. O leitor depende só da API: **antes de subir
