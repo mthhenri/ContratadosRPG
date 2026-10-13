@@ -24,6 +24,12 @@ idênticos, o `PostToolUse` no `settings.template.json`, o item 4 no `CLAUDE.tem
 em pasta vazia, completo e `--sem-orquestracao --sem-ui`): `node --test` 12 aprovados e 1 pulado (ícone sem configuração),
 `repo:verificar --staged` aprovado, `impacto --simbolo` roda. Sincronização do kit: 2026-10-13.
 
+## 2026-10-13 — versão 1.9.0: nota "Todo o conteúdo dos livros de Regras passa a ser editável no site"
+
+Nota `docs/patchnotes/1.9.0.md` (minor): listas, abertura, módulos, níveis de ameaça e propriedades estruturais editáveis, paleta
+"Ir para uma seção" em árvore, ícones nos livros. Versão sincronizada nos pacotes; `shared` 1276 testes; `--dry-run` da nota e
+do workflow conferidos (publicaria v1.9.0 e criaria a tag `v1.9.0`). A tag e a publicação no R2 nascem no workflow, no push.
+
 ## 2026-10-13 — oficina-edicao-blocos-restantes: Abertura, Módulos, Genérico, Níveis de ameaça e propriedades estruturais editáveis na Oficina
 
 Fatias 1 a 7 da spec concluídas (gate ao vivo das fatias 3 e 5 e reauditoria dos dois livros em
