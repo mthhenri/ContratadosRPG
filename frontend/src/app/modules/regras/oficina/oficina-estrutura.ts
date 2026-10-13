@@ -34,7 +34,7 @@ export type TeclaDeEstrutura = "subir" | "descer" | "recuar" | "avancar";
 
 export const NOME_DO_TIPO: Readonly<Partial<Record<Tipo, string>>> = {
     [Tipo.SECAO]: "Seção", [Tipo.PARAGRAFO]: "Parágrafo", [Tipo.NOTA]: "Nota", [Tipo.EXEMPLO]: "Exemplo",
-    [Tipo.FORMULA]: "Fórmula", [Tipo.HABILIDADE]: "Habilidade", [Tipo.CLASSE]: "Classe",
+    [Tipo.FORMULA]: "Fórmula", [Tipo.LISTA]: "Lista", [Tipo.HABILIDADE]: "Habilidade", [Tipo.CLASSE]: "Classe",
     [Tipo.SUBCLASSE]: "Subclasse", [Tipo.ARQUETIPO]: "Arquétipo",
     [Tipo.EQUIPAMENTOS]: "Equipamentos", [Tipo.EQUIPAMENTO]: "Equipamento",
     [Tipo.MODIFICACOES]: "Modificações", [Tipo.MODIFICACAO]: "Modificação",
@@ -61,6 +61,8 @@ const CATALOGO: readonly (MenuInsercaoOpcao & { readonly tipo: Tipo })[] = [
         descricao: "Situação de jogo que ilustra a regra." },
     { id: Tipo.FORMULA, tipo: Tipo.FORMULA, rotulo: "Fórmula", marca: "ƒ", termos: ["calculo", "form"],
         descricao: "Cálculo em linha própria." },
+    { id: Tipo.LISTA, tipo: Tipo.LISTA, rotulo: "Lista", marca: "•", termos: ["itens", "marcadores", "numerada"],
+        descricao: "Itens com marcadores ou numerados." },
     { id: Tipo.CLASSE, tipo: Tipo.CLASSE, rotulo: "Classe", marca: "⬥", termos: ["cla"],
         descricao: "Saúde, progressão e arquétipos." },
     { id: Tipo.SUBCLASSE, tipo: Tipo.SUBCLASSE, rotulo: "Subclasse", marca: "⬥", termos: ["sub"],
@@ -120,6 +122,8 @@ export function opcoesDeInsercao(paiTipo: Tipo | null, restritasA?: readonly Tip
 export function campoInicialDe(tipo: Tipo): string | null {
     switch (tipo) {
         case Tipo.SECAO: return "titulo";
+        // O cursor vai ao texto do primeiro item, que o esqueleto já traz.
+        case Tipo.LISTA: return "itens.0.0.trechos";
         case Tipo.HABILIDADE: return "nome";
         case Tipo.EQUIPAMENTO: case Tipo.MODIFICACAO: case Tipo.AMPLIFICADOR: case Tipo.ORIGEM: case Tipo.TERMO: case Tipo.HABILIDADE_CRIATURA: return "nome";
         case Tipo.EQUIPAMENTOS: case Tipo.MODIFICACOES: return "categoria";

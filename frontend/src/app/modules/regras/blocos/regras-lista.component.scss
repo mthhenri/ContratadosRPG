@@ -8,8 +8,25 @@
     line-height: 1.65;
     text-align: justify;
 }
+// A barra da peça (↑ ↓ duplicar remover) sobra um pouco sobre o topo: o primeiro item não fica por baixo dela.
+.regras-lista--selecionada {
+    margin-top: var(--space-8);
+}
 li {
+    position: relative;
     padding-left: var(--space-4);
+}
+// Com a lista selecionada o item ganha o botão de remover no canto; o texto não corre por baixo dele.
+li:has(> .regras-lista__remover) {
+    padding-right: calc(var(--space-20) * 2 + var(--space-8));
+}
+.regras-lista__remover {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+.regras-lista__adicionar {
+    margin: calc(var(--space-8) * -1) 0 var(--space-16);
 }
 li::marker {
     color: var(--text-dim);

@@ -57,4 +57,16 @@ describe("projetarPecasEmRegras — incluirPecas", () => {
     expect(itens).toEqual([id(11), id(21), id(31)]);
     expect(JSON.stringify(projetarPecasEmRegras(livro))).not.toContain("\"peca\"");
   });
+
+  it("a lista carrega a peça; a sublista dentro de um item não", () => {
+    const sublista = { tipo: "lista", ordenada: false, inicio: 1, itens: [[{ tipo: "paragrafo", trechos: [{ tipo: "texto", texto: "Filho" }] }]] };
+    const livro: LivroVersaoConteudoDto = { ...conteudo, pecas: [{
+      identificador: id(40), ancora: null, tipo: Tipo.LISTA, ordem: 0, filhos: [],
+      dados: { ordenada: true, inicio: 1, itens: [[sublista]] } as never,
+    }] };
+    const lista = projetarPecasEmRegras(livro, { incluirPecas: true }).filhos.find((filho) => filho.tipo === "lista") as { itens: unknown[][] } | undefined;
+    expect(lista).toMatchObject({ peca: id(40) });
+    expect(JSON.stringify(lista?.itens[0][0])).not.toContain("\"peca\"");
+    expect(JSON.stringify(projetarPecasEmRegras(livro))).not.toContain("\"peca\"");
+  });
 });

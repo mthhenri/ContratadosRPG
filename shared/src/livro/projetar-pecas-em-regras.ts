@@ -122,7 +122,7 @@ function projetarBase(peca: LivroPecaDto): NormalizadoConteudo {
       return { tipo: "nota", trechos: dadosDe(peca, Tipo.NOTA).trechos };
     case Tipo.LISTA: {
       const { ordenada, inicio, itens } = dadosDe(peca, Tipo.LISTA);
-      return { tipo: "lista", ordenada, inicio, itens: itens.map((item) => item.map(listaDoItem)) };
+      return comPeca({ tipo: "lista", ordenada, inicio, itens: itens.map((item) => item.map(listaDoItem)) }, peca);
     }
     case Tipo.TABELA: {
       const { cabecalho, linhas, emPares } = dadosDe(peca, Tipo.TABELA);

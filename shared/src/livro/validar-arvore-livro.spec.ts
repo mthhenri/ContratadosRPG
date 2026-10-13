@@ -373,3 +373,26 @@ describe("validarArvoreLivro — dados que não são objeto", () => {
     expect(pendencias.map((pendencia) => pendencia.codigo)).toContain(Codigo.DADOS_INVALIDOS);
   });
 });
+
+describe("validarArvoreLivro — lista (oficina-edicao-de-listas)", () => {
+  const mensagens = (pecas: readonly LivroPecaDto[]) => validar(pecas).map((item) => item.mensagem);
+  const lista = (itens: unknown[]) => peca(Tipo.LISTA, "l", { ordenada: true, inicio: 1, itens });
+  const paragrafo = (valor: string) => ({ tipo: "paragrafo", trechos: valor ? [texto(valor)] : [] });
+
+  it("aceita uma lista com texto em todos os itens", () => {
+    expect(validar([lista([[paragrafo("A")], [paragrafo("B")]])])).toEqual([]);
+  });
+
+  it("pede itens e texto em cada item", () => {
+    expect(mensagens([lista([])])).toEqual(["A lista está sem itens."]);
+    expect(mensagens([lista([[paragrafo("A")], [paragrafo("")]])])).toEqual(["Há um item da lista sem texto."]);
+    expect(mensagens([lista([[]])])).toEqual(["Há um item da lista sem texto."]);
+  });
+
+  it("conta o texto de uma sublista como texto do item", () => {
+    const sublista = { tipo: "lista", ordenada: false, inicio: 1, itens: [[paragrafo("Filho")]] };
+    expect(validar([lista([[sublista]])])).toEqual([]);
+    const vazia = { tipo: "lista", ordenada: false, inicio: 1, itens: [[paragrafo("")]] };
+    expect(mensagens([lista([[vazia]])])).toEqual(["Há um item da lista sem texto."]);
+  });
+});

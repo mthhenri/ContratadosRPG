@@ -30,7 +30,7 @@ export function criarEsqueletoPeca(tipo: Tipo): RegraPecaEsqueletoDto {
     case Tipo.NOTA:
       return esqueleto({ trechos: [] });
     case Tipo.LISTA:
-      return esqueleto({ ordenada: false, inicio: 1, itens: [] });
+      return esqueleto({ ordenada: false, inicio: 1, itens: [[{ tipo: "paragrafo", trechos: [] }]] });
     case Tipo.TABELA:
       return esqueleto({ cabecalho: [[], []], linhas: [[[], []]] });
     case Tipo.HABILIDADE:

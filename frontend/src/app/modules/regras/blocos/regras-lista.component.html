@@ -1,25 +1,72 @@
+<ng-template #conteudo>
+    @for (item of bloco().itens; track $index; let indice = $index) {
+        <li>
+            @for (filho of item; track $index; let posicao = $index) {
+                @if (filho.tipo === "paragrafo") {
+                    <app-regras-paragrafo
+                        [bloco]="filho"
+                        [peca]="dona()"
+                        [documento]="documento()"
+                        [campo]="nomeDoCampo(indice, posicao)"
+                        [caminho]="caminhoDoTexto(indice, posicao)"
+                        rotuloEdicao="Item da lista"
+                        dica="Item da lista"
+                        (navegarAncora)="navegarAncora.emit($event)"
+                    />
+                } @else if (filho.tipo === "lista") {
+                    <app-regras-lista
+                        [bloco]="filho"
+                        [documento]="documento()"
+                        [peca]="dona()"
+                        [caminho]="caminhoDoBloco(indice, posicao)"
+                        (navegarAncora)="navegarAncora.emit($event)"
+                    />
+                } @else {
+                    <app-regras-conteudo
+                        [filhos]="[filho]"
+                        [documento]="documento()"
+                        (navegarAncora)="navegarAncora.emit($event)"
+                    />
+                }
+            }
+            @if (selecionada()) {
+                <button
+                    app-botao-icone
+                    tamanho="compacto"
+                    variante="perigo"
+                    type="button"
+                    class="regras-lista__remover"
+                    [attr.aria-label]="'Remover item ' + (indice + 1)"
+                    appTooltip="Remover item"
+                    (click)="removerItem(indice)"
+                >
+                    <app-icone nome="excluir" />
+                </button>
+            }
+        </li>
+    }
+</ng-template>
 @if (bloco().ordenada) {
-    <ol class="regras-lista" [start]="bloco().inicio">
-        @for (item of bloco().itens; track $index) {
-            <li>
-                <app-regras-conteudo
-                    [filhos]="item"
-                    [documento]="documento()"
-                    (navegarAncora)="navegarAncora.emit($event)"
-                />
-            </li>
-        }
+    <ol class="regras-lista" [class.regras-lista--selecionada]="selecionada()" [start]="bloco().inicio">
+        <ng-container [ngTemplateOutlet]="conteudo" />
     </ol>
 } @else {
-    <ul class="regras-lista">
-        @for (item of bloco().itens; track $index) {
-            <li>
-                <app-regras-conteudo
-                    [filhos]="item"
-                    [documento]="documento()"
-                    (navegarAncora)="navegarAncora.emit($event)"
-                />
-            </li>
-        }
+    <ul class="regras-lista" [class.regras-lista--selecionada]="selecionada()">
+        <ng-container [ngTemplateOutlet]="conteudo" />
     </ul>
+}
+@if (selecionada()) {
+    <button
+        app-botao
+        variante="secundario"
+        estilo="contorno"
+        tamanho="pequeno"
+        posicaoIcone="esquerda"
+        type="button"
+        class="regras-lista__adicionar"
+        aria-label="Adicionar item"
+        (click)="adicionarItem()"
+    >
+        <app-icone nome="mais" /> Item
+    </button>
 }

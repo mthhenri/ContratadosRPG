@@ -1,5 +1,25 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-13 — oficina-edicao-de-listas: listas editáveis na Oficina e auditoria do que ainda não se edita
+
+O autor não conseguia corrigir o item "Interrupção externa" (Sistema › Perseguição › Encerramento, `I**nterrupção
+externa**` com o negrito começando na segunda letra, herança da fonte): clicar nele só selecionava a peça. A causa era uma
+lacuna da `m11-08`: a peça `LISTA` (35 no livro: 18 no Sistema, 17 no Guia) era desenhada só em leitura, com os itens como
+blocos sem peça. Agora o bloco `lista` da projeção leva o `identificador` da peça; `RegrasLista` é recursivo e liga cada
+parágrafo de item a `app-oficina-texto` pelo caminho `[...,"itens", i, j, "trechos"]` (sublista: o caminho dela, com a peça
+da raiz); com a lista selecionada aparecem "Remover item" por item e "+ Item" por nível (padrão do `RegrasRoteiro`).
+"Lista" entrou no menu "+" (o esqueleto agora traz um item vazio e o cursor vai a ele) e o validador pede itens e texto em
+cada item (sublista conta). Junto, o menu de inserção ficava sob os pontos "+ Inserir" seguintes (o menu `fixed` vive no
+contexto de empilhamento `z-index: 1` do ponto); o ponto com o menu aberto sobe para `z-index: 1100`. A fixture de
+importação foi corrigida; o banco se corrige pela Oficina. Auditoria do que mais não se edita (Abertura, Módulos, Níveis de
+ameaça; campos estruturais) em [`auditoria-ineditaveis.md`](../specs/done/oficina-edicao-de-listas/auditoria-ineditaveis.md),
+`P-125`. Verificado: shared 1270, frontend 3411 (268 arquivos), backend `livro` 99, lint sem erros. Ao vivo (Oficina real,
+1920×1080 e 360×800): editar o item, `+ Item` e remover persistem no banco (conferido pela API), Desfazer restaura, pendência
+"Há um item da lista sem texto" aparece, sem overflow, remover com alvo de 44×44 px (o "+ Item" tem a altura de 35 px do botão pequeno canônico). Achados só na verificação: a barra da peça
+cobria o botão de remover do primeiro item (margem no topo da lista selecionada) e, no celular, o texto corria por baixo do
+botão (reserva de 48 px). Limite: o ciclo completo de inserir uma lista nova pelo "+" não foi exercido ao vivo (só unitário e
+o catálogo do menu).
+
 ## 2026-10-12 — M11-10: o banco é a fonte da verdade das Regras; `docs/core/` vira cópia gerada
 
 `npm run regras:exportar` grava a versão publicada de cada livro em `docs/core/` (Markdown legível, formato escolhido

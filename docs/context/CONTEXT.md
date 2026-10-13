@@ -2321,6 +2321,11 @@ ficha de criatura/habilidade de criatura/roteiro e tabela/grade/faixas/níveis d
 renderer do próprio bloco (`regras/blocos/`), sobre a base comum `oficina-dados.ts` (campo aninhado por caminho),
 `OficinaTexto` (`caminho`, `opcional`), `OficinaStore.alterarCampo`/`alterarMatriz` e `oficina-matriz.ts`. O "+" do
 fim de cada lista cria o item. [Verificação por fatia](../specs/done/m11-08-oficina-blocos-ricos/verificacao.md).
+Listas (`oficina-edicao-de-listas`, 13/10/2026): o texto de cada item (e de sublistas) se edita no lugar pelo caminho
+`[...,"itens", i, j, "trechos"]` (`RegrasLista` recursivo, `RegrasParagrafo` com `campo`/`caminho`/`peca`); com a lista
+selecionada há "Remover item" e "+ Item"; "Lista" entra no menu "+"; o validador pede itens e texto em cada item.
+Lacunas restantes (Abertura, Módulos, Níveis de ameaça): `P-125` e a
+[auditoria](../specs/done/oficina-edicao-de-listas/auditoria-ineditaveis.md).
 Fonte da verdade (M11-10, concluída): o banco; `docs/core/` é cópia gerada por `npm run regras:exportar`
 (Markdown legível, cabeçalho com hash do corpo; `-- --conferir` compara com o banco; também regenera
 `condicoes.dados.ts`). `repo:verificar` acusa cópia editada à mão. O leitor depende só da API: **antes de subir

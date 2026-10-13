@@ -19,6 +19,11 @@
         border-top: 1px dashed transparent;
     }
 }
+// Com o menu aberto o ponto sobe de camada: o menu é `fixed` mas vive no contexto de empilhamento do
+// ponto (z-index 1), então os pontos seguintes (mesmo z-index, depois no DOM) o cobriam.
+:host(.oficina-insercao:has(.oficina-insercao__botao[aria-expanded="true"])) {
+    z-index: 1100;
+}
 :host(.oficina-insercao:hover)::before,
 :host(.oficina-insercao:focus-within)::before {
     border-top-color: var(--accent-border);

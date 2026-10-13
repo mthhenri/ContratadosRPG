@@ -34,6 +34,7 @@ describe("OficinaInsercao", () => {
         fixture.detectChanges();
         expect(rotulos()).toContain("Seção");
         expect(rotulos()).toContain("Parágrafo");
+        expect(rotulos()).toContain("Lista");
         expect(rotulos()).not.toContain("Arquétipo");
     });
 

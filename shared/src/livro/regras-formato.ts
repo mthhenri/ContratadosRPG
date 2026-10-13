@@ -255,6 +255,8 @@ export interface NormalizadoCapa {
 
 export interface NormalizadoLista {
   readonly tipo: "lista";
+  /** `identificador` da peça, só numa projeção com `incluirPecas` (Oficina). */
+  readonly peca?: string;
   readonly ordenada: boolean;
   readonly inicio: number;
   readonly itens: readonly (readonly NormalizadoConteudo[])[];

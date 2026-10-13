@@ -34,7 +34,7 @@ export type RegrasBloco =
     | RegrasSubclasse | RegrasTermos | RegrasGrade | RegrasAbertura | RegrasCapa | RegrasFaixas
     | { readonly tipo: "formula"; readonly peca?: string; readonly trechos: readonly RegrasTrecho[] }
     | { readonly tipo: "paragrafo" | "exemplo"; readonly peca?: string; readonly trechos: readonly RegrasTrecho[] }
-    | { readonly tipo: "lista"; readonly ordenada: boolean; readonly inicio: number;
+    | { readonly tipo: "lista"; readonly peca?: string; readonly ordenada: boolean; readonly inicio: number;
         readonly itens: readonly (readonly RegrasBloco[])[] }
     | { readonly tipo: "nota"; readonly peca?: string; readonly trechos: readonly RegrasTrecho[] }
     | { readonly tipo: "tabela"; readonly cabecalho: readonly (readonly RegrasTrecho[])[];

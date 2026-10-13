@@ -29,6 +29,14 @@
 
 ## Ativos
 
+### P-125 — Abertura, Módulos e Níveis de ameaça (número/imagem) sem edição na Oficina · `ABERTO` · frontend/regras
+
+- **Sintoma:** o texto do registro de abertura (título, corpo e selo), os níveis e a Energia Máxima dos Módulos e o número/imagem de referência dos Níveis de ameaça só se leem na Oficina; nenhum clique abre edição.
+- **Causa:** os renderers `RegrasAbertura`, `RegrasModulos` e (em parte) `RegrasNiveisAmeaca` não ligam o texto a `app-oficina-texto`/`alterarCampo`; a `m11-08` não os cobriu.
+- **Contorno:** editar o JSON da peça direto no banco (rascunho) e publicar.
+- **Correção:** uma spec por bloco, na ordem sugerida em [`auditoria-ineditaveis.md`](../specs/done/oficina-edicao-de-listas/auditoria-ineditaveis.md). Princípio do autor: nada do conteúdo do livro fora do alcance da Oficina.
+- **Desde:** levantado em 13/10/2026 na `oficina-edicao-de-listas`.
+
 ### P-124 — Destaque não selecionado perde contraste sobre ameaça · `ABERTO` · frontend/regras
 
 - **Sintoma:** Pesquisar Catastrófica no Guia, base escura: ocorrência não selecionada da tabela VD fica clara sobre o fundo claro do indicador. Na base clara, Apocalíptica não selecionada fica escura sobre fundo escuro. Página e painel, inclusive 360×800.

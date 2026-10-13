@@ -148,6 +148,18 @@ function extrairTexto(trechos: unknown): string {
     .join("");
 }
 
+/** Um item de lista tem texto se algum parágrafo seu, ou de uma sublista dele, tem. */
+function itemDeListaTemTexto(item: unknown): boolean {
+  if (!Array.isArray(item)) return false;
+  return item.some((bloco) => {
+    if (!ehObjeto(bloco)) return false;
+    if (bloco["tipo"] === "lista") {
+      return Array.isArray(bloco["itens"]) && bloco["itens"].some((subitem) => itemDeListaTemTexto(subitem));
+    }
+    return extrairTexto(bloco["trechos"]).trim().length > 0;
+  });
+}
+
 /** Percorre qualquer valor do `dados` procurando links internos. */
 function coletarLinks(valor: unknown, destino: Record<string, unknown>[]): void {
   if (Array.isArray(valor)) {
@@ -389,7 +401,7 @@ export function validarArvoreLivro(dto: LivroArvoreValidarDto): LivroPendenciaDt
     }
   };
 
-  /** Pendências de conteúdo de faixas, níveis de ameaça e itens de grade de referência (m11-08). */
+  /** Pendências de conteúdo de listas, faixas, níveis de ameaça e itens de grade de referência (m11-08). */
   const conferirReferencias = (
     peca: LivroPecaDto,
     caminho: readonly string[],
@@ -399,6 +411,10 @@ export function validarArvoreLivro(dto: LivroArvoreValidarDto): LivroPendenciaDt
       registrar(peca, caminho, Codigo.CONTEUDO_INCOMPLETO, Gravidade.CONTEUDO, mensagem);
     const texto = (valor: unknown): string => (typeof valor === "string" ? valor.trim() : "");
     const lista = (campo: string): unknown[] => (Array.isArray(dados[campo]) ? (dados[campo] as unknown[]) : []);
+    if (peca.tipo === Tipo.LISTA) {
+      if (lista("itens").length === 0) faltou("A lista está sem itens.");
+      else if (lista("itens").some((item) => !itemDeListaTemTexto(item))) faltou("Há um item da lista sem texto.");
+    }
     if (peca.tipo === Tipo.FAIXAS && lista("itens").some((item) => !ehObjeto(item) || !texto(item["rotulo"]) || !texto(item["valor"]))) {
       faltou("Há uma faixa sem condição ou sem valor.");
     }

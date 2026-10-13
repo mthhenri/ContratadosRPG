@@ -1669,7 +1669,7 @@ Com a inversão, a regra de ordem de turno muda imediatamente: quem agia por úl
 1. **Fuga bem-sucedida**: todos os personagens estão além do deslocamento × 5 do perseguidor por 2 turnos consecutivos.  
 2. **Captura**: o perseguidor alcança distância adjacente de um personagem.  
 3. **Alvo capturado**: os personagens alcançam distância adjacente do alvo que perseguiam.  
-4. I**nterrupção externa**: um evento narrativo encerra a cena.
+4. **Interrupção externa**: um evento narrativo encerra a cena.
 
 ### **⬥ Resistência** {#⬥-resistência}
 
