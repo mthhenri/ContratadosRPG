@@ -35,6 +35,10 @@
      tem cor definida — sem quebra para fichas existentes. */
   --cor-ficha-dim: color-mix(in srgb, var(--cor-ficha, var(--accent)) 12%, transparent);
   --cor-ficha-border: color-mix(in srgb, var(--cor-ficha, var(--accent)) 40%, transparent);
+  /* `--cor-ficha` vem de um `<input type="color">` livre (sem piso de luminância): um matiz escuro vira
+     texto/borda quase invisível sobre `--surface-2`. Mistura 45% em direção a `--text` para garantir piso de
+     legibilidade. Só para TEXTO/BORDA lidos sobre fundo escuro; dim/border acima continuam na cor crua. */
+  --cor-ficha-legivel: color-mix(in srgb, var(--cor-ficha, var(--accent)) 55%, var(--text) 45%);
 
   /* --- Cores semânticas de domínio (mesma chroma/lightness, só varia o matiz) --- */
   /* Vida é vermelho FIXO da identidade — não acompanha a troca de `--accent` (que só
