@@ -1,5 +1,29 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-14 — Contratados Transcriber: revisão e preparação documental, sem implementação
+
+Pedido do autor limitado a leitura, confronto com arquitetura atual e specs em backlog.
+Importadas a guarda-chuva e nove tasks do pacote; 20 decisões de produto preservadas
+textualmente e quatro auxiliares originais mantidos íntegros como anexos da guarda-chuva.
+Revisão identificou a dependência da importação no shell Windows: ordem local
+01→03→02→04→05→06→07, sem renumeração. 08–09 nuvem continuam bloqueadas até nova autorização.
+Nenhuma task foi ativada/encerrada como produto. Critérios ampliados para auth por campanha,
+revogação/tokenVersao, cadeia de ids, payload do app, OpenAPI, reenvio concorrente/recibo perdido,
+correção vazia/409, offsets/export e quatro viewports, sem WAV local enviado ao servidor.
+Conflitos documentados: sessão de gravação inexistente, Biblioteca revelável, storage público,
+ValidationPipe versus P-003, menção legada de PrimeNG e número de migration desatualizado.
+D-01…D-08 são recomendações pendentes, não decisões de produto assumidas.
+
+Validação documental: repo:test 14/14 e repo:verificar aprovados após contornar restrição
+ambiental de subprocesso git EPERM, sem mudar scripts. Conferência local: dez specs com
+seções/numeração, 20 decisões integrais, quatro auxiliares byte a byte, links e grafo sem ciclo.
+Gate do índice/whitespace e limites registrados na [verificação](../specs/backlog/transcricoes/verificacao.md).
+Sem testes funcionais, migrations, UI real, hardware Windows ou deploy; produto permanece aberto.
+O autor confirmou “Não sei; prepare branch local e patch” quanto a previews automáticos:
+branch/commit locais e patch, sem push/PR remoto/merge. Texto de PR pronto para futura autorização.
+[Revisão e mapa](../specs/backlog/transcricoes/revisao.md) ·
+[guarda-chuva](../specs/backlog/transcricoes.spec.md).
+
 ## 2026-10-14 — oito specs de backlog a partir de uma rodada de pedidos do autor
 
 Pedido do autor numa única mensagem, com instrução expressa de **não implementar**, só especificar. Triagem no código para
