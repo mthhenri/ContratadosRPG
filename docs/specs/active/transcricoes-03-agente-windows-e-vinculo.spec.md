@@ -1,9 +1,9 @@
 # transcricoes-03-agente-windows-e-vinculo.spec.md
 
-> **Task 03/09** do guarda-chuva `transcricoes.spec.md`. Instalador e vínculo seguro do aplicativo auxiliar.
+> **Task 03/09** do guarda-chuva `../backlog/transcricoes.spec.md`. Instalador e vínculo seguro do aplicativo auxiliar.
 
-> **Estado: backlog; preparação documental. Implementação depende de aprovação expressa do autor.**
-> Decisões pendentes, matriz de acesso e gates: [revisão](transcricoes/revisao.md). Anexos próprios: `transcricoes-03-agente-windows-e-vinculo/` no mesmo estado; evidência bruta em `.artifacts/transcricoes-03-agente-windows-e-vinculo/`.
+> **Estado: active; implementação autorizada pelo autor em 2026-10-14.**
+> Decisões pendentes, matriz de acesso e gates: [revisão](../backlog/transcricoes/revisao.md). Anexos próprios: `transcricoes-03-agente-windows-e-vinculo/` no mesmo estado; evidência bruta em `.artifacts/transcricoes-03-agente-windows-e-vinculo/`.
 
 ## Objetivo
 
@@ -17,7 +17,7 @@ Disponibilizar um aplicativo Windows instalável que possa ser vinculado à cont
 4. Site identifica aplicativo ausente ou não responsivo e oferece instrução/instalação em vez de deixar a jornada travada.
 5. Checagem de recursos locais/compatibilidade e canal seguro para obter contexto **autorizado** de campanha/sessão; dados do Mestre A nunca acessam cache do Mestre B na máquina compartilhada.
 
-6. Antes de construir o app, fechar D-02/D-03: stack/instalador, localização no monorepo sem pressupor quarto workspace npm, distribuição, credencial de dispositivo, prazo/renovação/revogação e transporte site↔app. Recomendar shell Windows com worker Python empacotado e vínculo aprovado no navegador; isso é proposta, não escolha aprovada de framework ou protocolo.
+6. D-02/D-03 aprovadas em 2026-10-14, conforme `transcricoes-03-agente-windows-e-vinculo/design.md`. Preservar: stack/instalador, localização no monorepo sem pressupor quarto workspace npm, distribuição, credencial de dispositivo, prazo/renovação/revogação e transporte site↔app. Recomendar shell Windows com worker Python empacotado e vínculo aprovado no navegador; stack aprovada: PySide6/PyInstaller/Inno Setup; vínculo pelo site/DPAPI, credencial restrita e intenção opaca.
 7. A abertura contextual é intenção de uso único/curta validade e não autentica por si: app vinculado resolve contexto no servidor com autorização atual. Não carregar senha, JWT web, BYOK, texto privado, comando de shell ou caminho arbitrário na URI. Expiração, consumo repetido, adulteração e conta errada são rejeitados.
 8. Credenciais do dispositivo ficam protegidas pelo sistema Windows (alternativa concreta sujeita a D-03); caches/outbox são separados por conta. Desconectar não elimina resultado pendente silenciosamente. Expiração durante offline pausa apenas operações que exigem servidor, sem autenticar como outro usuário.
 9. Se houver ponte loopback, exigir interface somente local, origem autorizada, autenticação própria, defesa contra CSRF/replay/DNS rebinding e seleção explícita dos arquivos. O `auth-token.interceptor` atual injeta JWT em toda chamada: uma ponte não pode recebê-lo por acidente. URI customizada não prova instalação; ausência de confirmação deve apresentar caminho manual claro, sem alegar detecção infalível do navegador.
@@ -32,7 +32,7 @@ Disponibilizar um aplicativo Windows instalável que possa ser vinculado à cont
 - Testar replay/alteração da intenção, origem não permitida, duas contas no mesmo Windows e credencial de dispositivo revogada; antigo Mestre não resolve contexto após transferência de papel.
 - Verificar app ausente, app ocupado/não responsivo, protocolo não registrado e recusa do navegador. UI mantém instalação/abertura manual disponível; não depender somente de temporizador de foco.
 - Instalar/desinstalar sem Python manual em Windows x64 limpo; registrar versões, artefato, assinatura ou ausência e limitações. Proteger downloads/atualização de binários/modelos contra execução de origem adulterada. Distribuição/publicação só mediante autorização própria; nenhum deploy nesta revisão.
-- Aplicar os [gates comuns](transcricoes/revisao.md#gates-de-implementação) ao recorte desta task e registrar comandos, resultados e limites no anexo proprietário. Critérios são futuros: esta revisão documental não os executou.
+- Aplicar os [gates comuns](../backlog/transcricoes/revisao.md#gates-de-implementação) ao recorte desta task e registrar comandos, resultados e limites no anexo proprietário. Resultados e gates ainda abertos estão no anexo `verificacao.md`.
 
 ## Fora de Escopo
 
@@ -41,7 +41,7 @@ Disponibilizar um aplicativo Windows instalável que possa ser vinculado à cont
 
 ## Dependências
 
-- `../active/transcricoes-01-sessoes-e-contratos.spec.md`; autenticação do site e `docs/SYSTEM.SPEC.md`; `docs/design/DESIGN.md`.
+- `transcricoes-01-sessoes-e-contratos.spec.md`; autenticação do site e `docs/SYSTEM.SPEC.md`; `docs/design/DESIGN.md`.
 
 ## Riscos e Mitigação
 

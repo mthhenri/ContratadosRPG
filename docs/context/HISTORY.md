@@ -1,5 +1,31 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-14 — transcricoes-03: vínculo restrito, telas e shell Windows em branch local
+
+Task 03 autorizada após aprovação do desenho D02/D03: PySide6/PyInstaller/Inno
+Setup por usuário, DPAPI, credencial restrita/revogável e intenção de uso único.
+Contratos/migration 0038, guard/endpoints de vínculo e abertura, telas Angular
+(privadas do Mestre) e shell desktop com empacotamento versionado implementados.
+Sem produção, push, PR remoto, release, merge, deploy ou nuvem. Spec permanece
+active: não há host Windows para construir/certificar instalador e DPAPI/DPI reais.
+
+Verificados 16 testes desktop/Qt Linux, 14 PostgreSQL e 9 REST reais em banco
+local descartável; shared 1276/1276. Testes Angular afetados (Transcrição/Perfil/
+Detalhe Mestre) 66/66; último ajuste offline passa nos 6/6 testes de transcrição.
+24 capturas web nos quatro viewports e dois temas, inspeção pelo agente principal,
+alvos ≥44px/sem overflow; vínculo/fallback/revogação/offline ao vivo. Inspeção
+corrigiu identidade dos campos e toast técnico de rede; teste Qt corrigiu retenção
+do job assíncrono. Revisão independente única encontrou dois P2 (pedido pendente
+continuava confirmável após desconectar e segredo confirmado podia ser substituído
+antes do refresh): reproduzidos RED e corrigidos GREEN, incluindo corrida real de
+cancelamento/confirmar. Relatório completo e gates em
+[verificação da 03](../specs/active/transcricoes-03-agente-windows-e-vinculo/verificacao.md).
+
+Backend completo mantém apenas as duas falhas preexistentes de regra-peca
+(1139 aprovados/59 skips); lint frontend mantém dois erros preexistentes da Oficina;
+suíte frontend global teve exit137 e não foi certificada. 01 continua active;
+02/04–07 backlog local e 08–09 bloqueadas. Desinstalação não apaga resultados.
+
 ## 2026-10-14 — transcricoes-01: fundação local implementada, fecho global ainda aberto
 
 Após autorização da V1 local e aprovação explícita do desenho, D-01 e contrato

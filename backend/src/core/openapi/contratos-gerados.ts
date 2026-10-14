@@ -10790,6 +10790,215 @@ export const schemasContratosPublicos = {
         "additionalProperties": false,
         "description": "Saída da exclusão — também o payload de `rolagem:excluida` no tempo real. Carrega só o necessário\npara cada cliente tirar a rolagem da lista e para o gateway escolher a sala: nada do conteúdo\n(`resultado`, `rotulo`) viaja, então uma rolagem `PRIVADA` excluída não vaza para a sala cheia."
     },
+    "DispositivoVinculoCriarDto": {
+        "type": "object",
+        "properties": {
+            "segredoHash": {
+                "type": "string"
+            },
+            "nome": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "segredoHash",
+            "nome"
+        ],
+        "additionalProperties": false,
+        "description": "Hash e nome são os únicos dados do pedido; segredo nunca sai do dispositivo."
+    },
+    "DispositivoVinculoCriadoDto": {
+        "type": "object",
+        "properties": {
+            "identificador": {
+                "type": "string"
+            },
+            "codigo": {
+                "type": "string"
+            },
+            "expiraEm": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "identificador",
+            "codigo",
+            "expiraEm"
+        ],
+        "additionalProperties": false
+    },
+    "DispositivoVinculoRecuperadoDto": {
+        "type": "object",
+        "properties": {
+            "identificador": {
+                "type": "string"
+            },
+            "nome": {
+                "type": "string"
+            },
+            "codigo": {
+                "type": "string"
+            },
+            "expiraEm": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "identificador",
+            "nome",
+            "codigo",
+            "expiraEm"
+        ],
+        "additionalProperties": false
+    },
+    "DispositivoVinculoConfirmarDto": {
+        "type": "object",
+        "properties": {
+            "identificador": {
+                "type": "string"
+            },
+            "codigo": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "identificador",
+            "codigo"
+        ],
+        "additionalProperties": false
+    },
+    "DispositivoResumoDto": {
+        "type": "object",
+        "properties": {
+            "identificador": {
+                "type": "string"
+            },
+            "nome": {
+                "type": "string"
+            },
+            "ultimoUso": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "identificador",
+            "nome",
+            "ultimoUso"
+        ],
+        "additionalProperties": false
+    },
+    "DispositivoEstadoDto": {
+        "type": "object",
+        "properties": {
+            "vinculado": {
+                "type": "boolean"
+            },
+            "expirado": {
+                "type": "boolean"
+            },
+            "usuarioId": {
+                "type": "number"
+            },
+            "login": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "vinculado",
+            "expirado",
+            "usuarioId",
+            "login"
+        ],
+        "additionalProperties": false
+    },
+    "TranscricaoIntencaoCriarDto": {
+        "type": "object",
+        "properties": {
+            "sessaoId": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "sessaoId"
+        ],
+        "additionalProperties": false
+    },
+    "TranscricaoIntencaoCriadaDto": {
+        "type": "object",
+        "properties": {
+            "identificador": {
+                "type": "string"
+            },
+            "expiraEm": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "identificador",
+            "expiraEm"
+        ],
+        "additionalProperties": false
+    },
+    "TranscricaoIntencaoEstadoDto": {
+        "type": "object",
+        "properties": {
+            "confirmada": {
+                "type": "boolean"
+            },
+            "expirada": {
+                "type": "boolean"
+            }
+        },
+        "required": [
+            "confirmada",
+            "expirada"
+        ],
+        "additionalProperties": false
+    },
+    "DispositivoContextoDto": {
+        "type": "object",
+        "properties": {
+            "sessaoId": {
+                "type": "number"
+            },
+            "campanhaId": {
+                "type": "number"
+            },
+            "titulo": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "sessaoId",
+            "campanhaId",
+            "titulo"
+        ],
+        "additionalProperties": false
+    },
+    "DispositivoIdentificadorRecuperarDto": {
+        "type": "object",
+        "properties": {
+            "identificador": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "identificador"
+        ],
+        "additionalProperties": false
+    },
+    "TranscricaoIntencaoConsumidaDto": {
+        "type": "object",
+        "properties": {
+            "sessaoId": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "sessaoId"
+        ],
+        "additionalProperties": false
+    },
     "SessaoTranscricaoCriarDto": {
         "type": "object",
         "properties": {
@@ -13160,6 +13369,96 @@ export const operacoesContratosPublicos = {
         "tag": "Rolagens",
         "publica": false,
         "responseSchema": "RolagemExcluidaDto"
+    },
+    "VinculoController_iniciar": {
+        "controller": "VinculoController",
+        "metodo": "post",
+        "caminho": "/transcricao/vinculo",
+        "tag": "Transcrições",
+        "publica": true,
+        "requestSchema": "DispositivoVinculoCriarDto",
+        "responseSchema": "DispositivoVinculoCriadoDto"
+    },
+    "VinculoController_desconectar": {
+        "controller": "VinculoController",
+        "metodo": "delete",
+        "caminho": "/transcricao/vinculo",
+        "tag": "Transcrições",
+        "publica": true,
+        "responseSchema": "null"
+    },
+    "VinculoController_estado": {
+        "controller": "VinculoController",
+        "metodo": "get",
+        "caminho": "/transcricao/vinculo/estado",
+        "tag": "Transcrições",
+        "publica": true,
+        "responseSchema": "DispositivoEstadoDto"
+    },
+    "DispositivoController_pedido": {
+        "controller": "DispositivoController",
+        "metodo": "get",
+        "caminho": "/transcricao/vinculo/:identificador",
+        "tag": "Transcrições",
+        "publica": false,
+        "responseSchema": "DispositivoVinculoRecuperadoDto"
+    },
+    "DispositivoController_confirmar": {
+        "controller": "DispositivoController",
+        "metodo": "post",
+        "caminho": "/transcricao/vinculo/:identificador/confirmar",
+        "tag": "Transcrições",
+        "publica": false,
+        "requestSchema": "DispositivoVinculoConfirmarDto",
+        "responseSchema": "DispositivoResumoDto"
+    },
+    "DispositivoController_listar": {
+        "controller": "DispositivoController",
+        "metodo": "get",
+        "caminho": "/transcricao/dispositivo",
+        "tag": "Transcrições",
+        "publica": false,
+        "responseSchema": "DispositivoResumoDto[]"
+    },
+    "DispositivoController_revogar": {
+        "controller": "DispositivoController",
+        "metodo": "delete",
+        "caminho": "/transcricao/dispositivo/:identificador",
+        "tag": "Transcrições",
+        "publica": false,
+        "responseSchema": "null"
+    },
+    "DispositivoController_criarIntencao": {
+        "controller": "DispositivoController",
+        "metodo": "post",
+        "caminho": "/transcricao/sessao/:sessaoId/abertura",
+        "tag": "Transcrições",
+        "publica": false,
+        "responseSchema": "TranscricaoIntencaoCriadaDto"
+    },
+    "DispositivoController_consultarIntencao": {
+        "controller": "DispositivoController",
+        "metodo": "get",
+        "caminho": "/transcricao/abertura/:identificador",
+        "tag": "Transcrições",
+        "publica": false,
+        "responseSchema": "TranscricaoIntencaoEstadoDto"
+    },
+    "AplicativoController_resolver": {
+        "controller": "AplicativoController",
+        "metodo": "post",
+        "caminho": "/transcricao/aplicativo/abertura/:identificador",
+        "tag": "Transcrições",
+        "publica": false,
+        "responseSchema": "DispositivoContextoDto"
+    },
+    "AplicativoController_desconectar": {
+        "controller": "AplicativoController",
+        "metodo": "delete",
+        "caminho": "/transcricao/aplicativo/vinculo",
+        "tag": "Transcrições",
+        "publica": false,
+        "responseSchema": "null"
     },
     "TranscricaoController_criarSessao": {
         "controller": "TranscricaoController",

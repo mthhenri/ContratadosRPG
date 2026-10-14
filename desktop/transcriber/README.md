@@ -1,0 +1,45 @@
+# Contratados Transcriber — task 03
+
+Shell Windows x64 em Python 3.12/PySide6. Nenhum Whisper, upload, importação, fila ou
+credencial cloud. Usuário final abre pelo menu Iniciar; não precisa Python ou terminal.
+
+## Desenvolvimento e build Windows
+
+Em checkout local, com Python 3.12 x64 e Inno Setup 6 instalados na máquina de build:
+
+```powershell
+cd desktop/transcriber
+python -m venv .venv
+.venv/Scripts/Activate.ps1
+python -m pip install -r requirements-build.txt
+python -m pip install --no-deps -e .
+./packaging/build.ps1
+```
+
+Build não publica nem assina. Instalador e SHA-256 em `dist/`; sem certificado
+Authenticode fornecido pelo mantenedor, permanece sem assinatura e pode mostrar avisos.
+Não desative as proteções do Windows. Hash acompanha o artefato local e não substitui
+assinatura ou origem confiável. Conferir redistribuíveis e avisos antes de distribuição.
+
+## Testes portáveis
+
+```bash
+PYTHONPATH=desktop/transcriber/src python -m unittest discover -s desktop/transcriber/tests
+```
+
+Credenciais usam exclusivamente DPAPI do usuário Windows, sem fallback plaintext.
+URI aceita apenas `contratados-transcriber://abrir/<uuid>`; segredo nunca está na URI.
+Cliente só usa HTTPS, valida certificados, recusa redirect e limita tamanho/tempo.
+API/site podem ser configurados conscientemente na janela; uma URI nunca os altera.
+IPC entre instâncias usa named pipe Qt restrito ao usuário Windows, sem HTTP loopback.
+Cache futuro é separado por origem + ID de conta do servidor; URI não escolhe conta.
+Desconectar offline limpa contexto e preserva segredo cifrado para tentar revogação
+quando voltar a conexão. Troca de conta exige concluir a desconexão anterior.
+Desinstalar mantém resultados/credenciais locais; revogue no site antes de desinstalar.
+
+## Gates Windows pendentes
+
+Build x64/VM limpa; instalação por usuário sem Python; registro/desregistro do protocolo;
+DPAPI real/troca de usuário Windows; browser→app/single-instance; 100/150/200% DPI;
+teclado e erros offline/ocupado. Testes Linux não certificam esses comportamentos.
+A task permanece active até estes gates e os gates web/projeto passarem.

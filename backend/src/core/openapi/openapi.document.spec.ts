@@ -46,7 +46,8 @@ describe("documentação OpenAPI", () => {
             expect(operacao, `${contrato.metodo.toUpperCase()} ${caminho}`).toBeDefined();
             expect(operacao?.operationId).toBe(operationId);
             expect(operacao?.tags).toEqual([contrato.tag]);
-            expect(operacao?.security).toEqual(contrato.publica ? [] : [{ jwt: [] }]);
+            const segredoApp = operationId.startsWith("AplicativoController_") || ["VinculoController_estado", "VinculoController_desconectar"].includes(operationId);
+            expect(operacao?.security).toEqual(segredoApp ? [{ dispositivo: [] }] : contrato.publica ? [] : [{ jwt: [] }]);
             const codigoSucesso = contrato.tag === "Transcrições" && contrato.metodo === "post"
                 ? "201" : "200";
             expect((operacao?.responses[codigoSucesso] as { description?: string } | undefined)
@@ -58,7 +59,7 @@ describe("documentação OpenAPI", () => {
         const documento = criarDocumentoDescoberto();
         enriquecerDocumentoOpenApi(documento);
         const contratos = Object.entries(operacoesContratosPublicos)
-            .filter(([, contrato]) => contrato.tag === "Transcrições");
+            .filter(([operationId]) => operationId.startsWith("TranscricaoController_"));
         expect(contratos).toHaveLength(9);
         for (const [, contrato] of contratos) {
             const caminho = contrato.caminho.replace(/:([A-Za-z]+)/g, "{$1}");

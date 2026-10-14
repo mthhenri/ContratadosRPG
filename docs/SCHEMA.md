@@ -549,6 +549,26 @@ editor, vínculo Windows ou endpoints cloud.
 
 ---
 
+## Vínculo do aplicativo — task 03
+
+Migration `0038 - Vinculo do transcriber.sql`, aplicada somente em PostgreSQL
+local descartável durante desenvolvimento. Três tabelas com BaseEntity, PKs
+numéricas e UUIDs opacos únicos, trigger de updated_date e FKs explícitas:
+
+| Tabela | Conteúdo próprio |
+|---|---|
+| `transcricao_vinculo` | Nome do dispositivo, hash SHA-256 do segredo, código de conferência, validade de dez minutos, confirmação atômica |
+| `transcricao_dispositivo` | Pedido único, conta/versão de token, hash único, nome e último uso; revogação por soft delete; expiração após 90 dias sem uso válido |
+| `transcricao_intencao` | Conta e sessão, validade de dois minutos e instante de consumo único |
+
+Segredo nunca persiste em claro no servidor. Credencial restrita ao aplicativo,
+sem autenticar controllers JWT. `DispositivoGuard` obrigatório no controller do
+app; o bypass dos guards JWT não torna essas rotas anônimas. Consumo bloqueia
+conta/dispositivo e revalida tokenVersao, exclusão, validade e propriedade;
+service revalida Mestre da sessão na mesma transação antes do commit.
+Confirmação/resgate concorrentes produzem no máximo um sucesso. Nenhum WAV,
+chave BYOK ou resultado de inferência é armazenado por esta migration.
+
 ## Forma dos documentos JSONB (`ficha.dados`)
 
 > Fontes correntes: `docs/core/sistema-v4.1.3.md` e `docs/core/guia_de_mestre-v4.2.0.md`.
