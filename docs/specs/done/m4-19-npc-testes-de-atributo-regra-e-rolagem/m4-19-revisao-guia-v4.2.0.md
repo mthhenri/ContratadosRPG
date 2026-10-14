@@ -77,7 +77,7 @@ O D20 informa crítico, mas o segundo pool desativa a identificação atual de t
 A fórmula livre não informa se ela é teste, bonificação ou resultado; tampouco conhece
 uma rolagem futura. O total32 na tabela foi a hipótese para um teste NPC explicitamente
 competente, não aprovação de um classificador global. Autor rejeitou inferência de
-resultado posterior. [P-099](../../backlog/p-099-critico-teste-com-dados-adicionais.spec.md)
+resultado posterior. P-099
 registra agora o descarte e seu motivo, sem execução ou dependência da m4-19.
 Aplicação do crítico e média do fluxo NPC serão revistas dentro do contrato escolhido,
 sem estender o escopo automaticamente a Formação ou fórmulas arbitrárias.

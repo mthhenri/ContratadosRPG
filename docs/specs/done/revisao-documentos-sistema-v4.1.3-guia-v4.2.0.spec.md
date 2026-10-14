@@ -34,7 +34,7 @@ Este arquivo coordena tasks; não é uma implementação única.
 | [P-095](../done/p-095-fixture-rolagens-feed-deterministica.spec.md) | Datas determinísticas e ordem do teste de reconexão | Concluída; testes e documentação |
 | [P-096](../done/p-096-fixture-resumo-rolagem-deterministica.spec.md) | Data estável e fixture única no teste de espectador | Concluída; testes e documentação |
 | [P-098](../done/p-098-ponteiros-auditoria-ficha-oculta.spec.md) | Ponteiros da spec arquivada; cobertura parcial da auditoria preservada | Concluída; documental |
-| [P-099](../backlog/p-099-critico-teste-com-dados-adicionais.spec.md) | Memória da proposta e motivo do descarte | DESCARTADA — NÃO EXECUTAR; arquivo preservado |
+| P-099 | Memória da proposta e motivo do descarte | DESCARTADA — NÃO EXECUTAR; arquivo preservado |
 | [P-100](../done/p-100-npc-criacao-atributo-zero.spec.md) | Zero e redistribuição na criação de NPC | Concluída; gates e criação/reabertura em quatro viewports |
 | [m4-19](../done/m4-19-npc-testes-de-atributo-regra-e-rolagem.spec.md) | Competências, ajustes, dadinho, leitura/privacidade | Concluída; +2 uma vez no teste explícito NPC, indicador fixo e gates completos |
 | [P-101-01](../done/p-101-01-criatura-realocacao-atributos.spec.md) | Realocação total3, várias origens e negativo | Concluída; shared/criação/REST e edição preservada |

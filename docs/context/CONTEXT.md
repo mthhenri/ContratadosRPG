@@ -978,7 +978,7 @@ do inventário do Jogador e "＋ Da biblioteca"/"＋ Personalizada" nas habilida
 ([gates](../specs/done/m4-21-ficha-npc-revisao-visual-usabilidade/m4-21-verificacao.md)). Assistente de criação ainda no arranjo antigo (`I-057`).
 Sem próxima implementação de NPC automaticamente autorizada. Fontes preservadas.
 P-097-01 corrigiu crítico de teste com um pool;
-[P-099](../specs/backlog/p-099-critico-teste-com-dados-adicionais.spec.md) teve a proposta
+P-099 teve a proposta
 global descartada pelo autor; arquivo preservado como memória, sem execução ou dependência
 executável. [P-100](../specs/done/p-100-npc-criacao-atributo-zero.spec.md)
 concluída: criação aceita zero, devolve o ponto e preserva teto/orçamento, exceções Civil

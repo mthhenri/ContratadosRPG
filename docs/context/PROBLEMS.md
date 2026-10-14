@@ -29,18 +29,17 @@
 
 ## Ativos
 
-### P-126 — Espelho `docs/design/tema/` ↔ `frontend/src/styles/tema/` divergiu nos tokens · `ABERTO` · design/tema
+### P-126 — Sem gate que compare `docs/design/tema/` e `frontend/src/styles/tema/` · `ABERTO` · design/tema
 
-- **Sintoma:** `DESIGN.md` declara as duas pastas "espelhadas 1:1", mas `_tokens.scss` difere em
-  valor: `--erro` é `#d62222` em `docs/design/tema/` e `var(--vida)` no runtime, e
-  `--cor-ficha-legivel` só existe no runtime. `_base`, `_breakpoints` e `_glow` também divergem
-  (comentários/formatação e conteúdo de `_breakpoints`).
-- **Causa:** edições aplicadas só na cópia do runtime; nenhum gate compara as duas pastas.
-- **Contorno:** em mudança de tema, consultar `frontend/src/styles/tema/` (o que o build usa) e
-  rodar `npm run impacto` nos dois `_tokens.scss`.
-- **Correção:** decidir com o autor qual pasta é a fonte, realinhar e acrescentar a comparação de
-  valores ao `repo:verificar`.
-- **Desde:** achado em `skills-10-gerenciamento-de-impacto` (2026-10-13); divergência anterior.
+- **Sintoma:** as duas pastas são "espelhadas 1:1", mas nada impede nova divergência. Em 2026-10-13
+  os valores foram realinhados (`--erro: #d62222`, independente de `--vida`; `--cor-ficha-legivel` e os
+  mixins de `_breakpoints` levados ao handoff). Restam diferenças só de formatação/comentário em
+  `_base`, `_glow` e `_tokens`.
+- **Causa:** edições aplicadas só na cópia do runtime; nenhum gate compara valores.
+- **Contorno:** em mudança de tema, editar as duas pastas e rodar `npm run impacto` nos `_tokens.scss`.
+- **Correção:** acrescentar ao `repo:verificar` a comparação de valores (custom properties e
+  variáveis/mixins Sass) das duas pastas.
+- **Desde:** achado em `skills-10-gerenciamento-de-impacto` (2026-10-13).
 
 ### P-124 — Destaque não selecionado perde contraste sobre ameaça · `ABERTO` · frontend/regras
 
@@ -116,22 +115,6 @@
 - **Correção:** [revisão da formatação](../specs/backlog/revisao-formatacao-pdf-regras.spec.md),
   com corte visual aprovado e conferência completa antes de reativar o Sistema.
 - **Desde:** avaliação do autor em 08/10/2026 após a entrega da M10-10.
-
-### P-099 — Rastreamento de rolagem resultante: proposta descartada · `ACEITO` · rolagem/contrato
-
-- **Sintoma:** expressão genérica não informa se o usuário fará dano/cura depois;
-  Medicina→cura e ataque→dano são operações separadas. O sistema não rastreia esse vínculo.
-  O autor descartou a proposta em 2026-10-06; este registro não é correção pendente.
-- **Causa:** fórmula descreve esta rolagem, não a intenção futura. A reprodução
-  anterior (D20 + Nível + D6 retorna30) não prova o tipo da operação de uma fórmula livre.
-- **Contorno:** manter teste e dano/cura posteriores como operações separadas.
-- **Correção:** nenhuma execução prevista. Não criar rastreamento, inferir intenção
-  futura, alterar classificador ou compensar crítico para executar esta proposta.
-  Competência dentro do teste NPC pertence à m4-19; P-099 não é sua dependência.
-- **Spec:** [P-099](../specs/backlog/p-099-critico-teste-com-dados-adicionais.spec.md),
-  marcada DESCARTADA/NÃO EXECUTAR, preservada para memória, fora da fila executável.
-- **Desde:** reprodução em 2026-10-06; proposta rejeitada/retirada após esclarecimento
-  do autor na mesma data. Reabertura somente por nova decisão expressa do autor.
 
 ### P-093 — Sistema contradiz a si mesmo no arredondamento de bônus · `ACEITO` · docs/core
 
