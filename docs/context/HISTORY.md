@@ -1,5 +1,18 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-14 — oito specs de backlog a partir de uma rodada de pedidos do autor
+
+Pedido do autor numa única mensagem, com instrução expressa de **não implementar**, só especificar. Triagem no código para
+cada item, registrada na seção "Situação atual" de cada spec: `ui-40-preview-avatar-investigacao-mestre` (a Investigação
+do mestre usa `app-espectador-ficha-card` sem ligar o preview; recomenda mover `PreviewAvatar` para dentro do card);
+`ui-41-cenas-icone-por-tipo` (botão "Cenas" do jogador fixo em `combate`; prancha de ícone por `CenaTipoEnum`);
+`caderno-vincular-trecho-biblioteca` (candidata a próxima feature, rascunho com decisões em aberto);
+`regras-visual-11-formulas-em-faixa` (Descanso como parágrafo itálico e não peça Fórmula; inventário dos dois livros e
+conversão pela Oficina); `montador-rolagem-cobertura-telas` (auditoria ao vivo das telas com fórmula livre; `rolagem-avulso`
+do encontro e a ficha de NPC sem montador); `icones-identidade-cards-agente` (glifos de m10-03 já existem, falta mapa por
+enum e adoção nos cards); `ui-42-criatura-card-icone-defesa`; `icones-criatura-vd-tenacidade` (prancha para voto). Nenhum
+código alterado.
+
 ## 2026-10-13 — skills-10-gerenciamento-de-impacto: skill, `npm run impacto` e hook de lembrete; "Trocar senha" ganha ícone próprio
 
 Pedido do autor: o projeto cresceu além do ponto em que o agente lembra quem usa o quê — o botão "Trocar senha" do Perfil
