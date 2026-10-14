@@ -41,7 +41,7 @@ Disponibilizar um aplicativo Windows instalável que possa ser vinculado à cont
 
 ## Dependências
 
-- `transcricoes-01-sessoes-e-contratos.spec.md`; autenticação do site e `docs/SYSTEM.SPEC.md`; `docs/design/DESIGN.md`.
+- `../active/transcricoes-01-sessoes-e-contratos.spec.md`; autenticação do site e `docs/SYSTEM.SPEC.md`; `docs/design/DESIGN.md`.
 
 ## Riscos e Mitigação
 

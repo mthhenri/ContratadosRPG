@@ -551,6 +551,7 @@ forma do documento (`@IsEnum`, `@IsInt`, ranges).
 | `autenticacao` | Registro, login e geração de JWT |
 | `usuario` | Perfil e troca de senha |
 | `campanha` | CRUD de campanhas, convite por código, membros e papéis |
+| `transcricao` | Metadados de sessões/faixas privados do Mestre; fundação local (01 ativa), sem WAV/inferência/cloud |
 | `ficha` | CRUD de fichas (jogador/criatura/NPC), JSONB `dados`, concessões de visualização, validação via motor de regras, emissão de eventos WS |
 
 | Módulo (frontend) | Responsabilidade |

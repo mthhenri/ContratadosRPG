@@ -106,7 +106,7 @@ consomem os dois o mesmo motor — nunca reimplemente uma fórmula de um lado s�
 | `@Public()`, `@ActiveUser()` | `backend/src/core/decorators/` |
 | Exceções de negócio | `backend/src/core/exceptions/` — `BusinessException`, `ResourceNotFoundException`, `UnauthorizedAccessException` |
 | Filtro global + interceptor de resposta | `backend/src/core/filters/`, `backend/src/core/interceptors/` |
-| Contratados Transcriber — proposta, specs e decisões pendentes (sem implementação) | `docs/specs/backlog/transcricoes.spec.md`; revisão/mapa em `docs/specs/backlog/transcricoes/revisao.md`; 01–07 local, 08–09 nuvem bloqueada |
+| Contratados Transcriber — fundação de metadados privada (01 ativa) | `backend/src/modules/transcricao/`, `shared/src/dtos/transcricao/`, migration `0037`; design/plano/verificação em `docs/specs/active/transcricoes-01-sessoes-e-contratos/`; 03–07 backlog local, 08–09 nuvem bloqueada |
 | Documentação REST OpenAPI/Swagger | `backend/src/core/openapi/` — `openapi.document.ts` registra `/api/docs` e `/api/docs-json`; `contratos-gerados.ts` é produzido por `backend/tools/gerar-openapi-contratos.ts` a partir de DTOs públicos e controllers |
 | **Gateway WebSocket** (broadcast-only) | `backend/src/core/gateway/` — `CampanhaGateway`, `WsIoAdapter` |
 | Resincronização da Iniciativa quando a ficha muda fora do `EncontroService` (ficha flutuante etc.) | `CampanhaGateway.emitirFichaAlterada` chama `EncontroService.sincronizarFichaAlterada` |

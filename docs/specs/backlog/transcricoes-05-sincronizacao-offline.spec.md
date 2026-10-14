@@ -41,7 +41,7 @@ Sincronizar as transcrições geradas pelo aplicativo local com o site de maneir
 
 ## Dependências
 
-- `transcricoes-01-sessoes-e-contratos.spec.md`, `transcricoes-03-agente-windows-e-vinculo.spec.md`, `transcricoes-04-motor-local-e-fila.spec.md`.
+- `../active/transcricoes-01-sessoes-e-contratos.spec.md`, `transcricoes-03-agente-windows-e-vinculo.spec.md`, `transcricoes-04-motor-local-e-fila.spec.md`.
 
 ## Riscos e Mitigação
 

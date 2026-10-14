@@ -1,5 +1,26 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-14 — transcricoes-01: fundação local implementada, fecho global ainda aberto
+
+Após autorização da V1 local e aprovação explícita do desenho, D-01 e contrato
+estrutural D-05 registrados na 01 ativa. Worktree/branch locais separados da revisão.
+Entregues schema 0037 (sessão/faixa/execução/segmento/estado), DTOs readonly e API
+NestJS privada de metadados com arquivamento reversível, soft delete transacional,
+cronologia em ms, autorização atual por campanha e OpenAPI. Sem UI, Windows,
+inferência, WAV enviado, outbox, exportação ou cloud; 03–07 continuam backlog e
+08–09 bloqueadas. Nenhum push/PR remoto/merge/deploy.
+
+Testes focados 31/31; PostgreSQL descartável 11/11 (UP/DOWN/concorrência/rollback);
+REST real com JWT/guards e documento servido 13/13; shared 1276/1276; builds dos
+três workspaces passam, frontend com aviso de bundle. Lint shared/backend sem erros,
+com warnings. Revisão independente: quatro achados reproduzidos e corrigidos
+(limite INTEGER, criar faixa/excluir raiz, selecionar/mudar estado, status OpenAPI).
+Gate global permanece aberto: dois testes preexistentes RegraPecaService falham;
+frontend lint tem dois whitespace preexistentes em oficina-texto.component.ts;
+suite Angular teve OOM/worker encerrado e não foi certificada completa, mesmo
+com heap maior. Nenhuma correção da Oficina fora do escopo. Task permanece active.
+[Resultados, comandos, impacto e limites](../specs/active/transcricoes-01-sessoes-e-contratos/verificacao.md).
+
 ## 2026-10-14 — Contratados Transcriber: revisão e preparação documental, sem implementação
 
 Pedido do autor limitado a leitura, confronto com arquitetura atual e specs em backlog.
