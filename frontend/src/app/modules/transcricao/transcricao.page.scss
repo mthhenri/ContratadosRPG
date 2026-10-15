@@ -34,5 +34,7 @@
     padding: var(--space-12) 0;
   }
   &__lista li + li, &__formulario + &__lista li:first-child { border-top: 1px solid var(--border); }
+  &__dispositivo { display: grid; gap: var(--space-4); min-width: 0; }
+  &__meta { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); }
   &__lista strong { overflow-wrap: anywhere; min-width: 0; }
 }

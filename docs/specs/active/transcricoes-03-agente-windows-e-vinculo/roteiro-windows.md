@@ -76,8 +76,9 @@ capturas e logs brutos ficam em `.artifacts/transcricoes-03-agente-windows-e-vin
 | U4 | Leitor de tela (Narrador) nos rótulos dos campos | Campos anunciados com o rótulo correto |
 | U5 | App ocupado (durante uma operação) e offline | Botões desabilitados/feedback claro; sem janela travada |
 
-Nota para quem registrar U1: o app hoje usa o estilo nativo do Qt, sem a identidade visual do
-site. Isso é decisão pendente do autor, não defeito deste roteiro.
+Nota para quem registrar U1: o app segue o tema do site (`theme.py`, base escura). As fontes IBM
+Plex não são embutidas; compare a renderização com `Consolas`/`Segoe UI` e registre se o resultado
+é aceitável ou se vale embutir as fontes (decisão do autor).
 
 ## 6. Fecho
 

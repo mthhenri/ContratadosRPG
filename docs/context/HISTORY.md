@@ -16,7 +16,7 @@ Revisão visual das telas de transcrição no app real (Perfil como análogo, 4 
 de cartão fixos (01→03), coluna à esquerda (`--space-24` não existe e invalidava o `margin`), link do Perfil sem estilo, lista sem
 separadores, e — só visto ao exercitar estados — offline ao confirmar culpando "código/prazo/permissão". Todos corrigidos. Spec 03
 segue ativa só pelos gates Windows; roteiro em `transcricoes-03-agente-windows-e-vinculo/roteiro-windows.md` (achado: o instalador
-exige Inno Setup 6.3+). Decisões do autor: app desktop seguirá o estilo do site e a lista de dispositivos mostrará o último uso.
+exige Inno Setup 6.3+). Decisões do autor, já aplicadas: app desktop no estilo do site (`theme.py`, cartões/campos/botões equivalentes aos do Perfil; correção: o app já era escuro, minha primeira captura omitiu o `STYLE` de `main()`) e último uso na lista de dispositivos.
 [Resultados da 01](../specs/done/transcricoes-01-sessoes-e-contratos/verificacao.md).
 
 ## 2026-10-15 — Oficina: atalho Ctrl+Shift+X aplica tachado (destrava o P-120)

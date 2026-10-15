@@ -1,4 +1,5 @@
 import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -13,7 +14,7 @@ import { TranscricaoService } from './transcricao.service';
 import { criarUriAbertura, estadoAbertura } from './abertura';
 /** Análogos: Perfil (cartões/formulário) e Biblioteca (lista privada do Mestre). */
 @Component({
-  selector: 'app-transcricoes', imports: [RouterLink, ReactiveFormsModule, Cartao, Botao, Campo, Icone],
+  selector: 'app-transcricoes', imports: [RouterLink, ReactiveFormsModule, Cartao, Botao, Campo, Icone, DatePipe],
   templateUrl: './transcricao.page.html', styleUrl: './transcricao.page.scss',
 })
 export class Transcricoes {

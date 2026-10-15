@@ -164,8 +164,9 @@ diálogo/protocolo Windows; dica do campo (texto pequeno) pertence ao `app-campo
 - **Janela do app renderizada offscreen** em 100%/150%/200% (`QT_SCALE_FACTOR`) e
   420 px de largura: sem corte, sobreposição ou botão fora da janela; mínimo do layout
   313×513. Evidência aproximada (fonte/estilo Windows diferem; não substitui U1–U5 do
-  roteiro). O app usa o estilo nativo do Qt, sem a identidade visual do site — decisão
-  pendente do autor.
+  roteiro). **Correção (mesma data):** esta captura omitiu a folha de estilo que `main()` aplica
+  (o app já era escuro, mapeado dos tokens), então a leitura "estilo nativo" estava errada;
+  o que faltava era a fidelidade ao site — ver "Tema do app desktop" abaixo.
 - **Estados web exercitados no app real** (desktop e 360×800): pedido inexistente,
   código errado, offline ao confirmar, vínculo com sucesso, revogação, "Abrir no
   aplicativo" sem app (fica em "Aguardando confirmação"). Zero erro de página, zero
@@ -185,3 +186,23 @@ test --workspace=frontend`, máquina sem outros processos: **278 arquivos / 3482
 aprovados, exit 0** (sem OOM); o `test:regras` roda antes na mesma execução. Com a
 suíte do backend (1142 aprovados) e `npm run lint` (0 erros nos três workspaces), os
 gates globais deixam de bloquear as specs 01 e 03; sobram os gates Windows da 03.
+
+## Tema do app desktop alinhado ao site (2026-10-15)
+
+Decisão do autor: o app segue o estilo do site. `desktop/transcriber/src/contratados_transcriber/theme.py`
+passa a ser o mapeamento único dos tokens de `docs/design/tema/_tokens.scss` (base escura) para
+QSS, e a janela usa os equivalentes Qt dos padrões do site: cartão com índice (`//`, `01`, `02`),
+título mono em caixa alta com régua hairline, rótulo mono em caixa alta, campo `surface-2`,
+botão primário em accent, secundário em contorno e perigo em `--erro`. Análogo escolhido:
+Perfil (cartões, campos e botões). Renderizado offscreen em 100%/150%/200%, largura mínima
+(560) e base (640×760): sem corte, sem rolagem horizontal, nada sobreposto; os 16 testes
+do desktop seguem passando. Largura mínima de 560 porque `QPushButton` não quebra linha e o
+maior rótulo precisa caber. Limites, para o roteiro (U1–U5): fontes IBM Plex **não** são
+embutidas (cai em Cascadia Mono/Consolas e Segoe UI) — embutir exige arquivos e aviso de
+licença, decisão do autor; botões sem ícone (o site usa ícones SVG); fidelidade em Windows real
+(renderização de fonte e DPI) só se confirma na bateria.
+
+## Último uso na lista de dispositivos (2026-10-15)
+
+Decisão do autor. A lista web passa a mostrar "Último uso: dd/MM/yy HH:mm" (`ultimoUso` já
+vinha no contrato), distinguindo dispositivos com o mesmo nome. Teste novo na página.

@@ -38,7 +38,7 @@
     <app-cartao titulo="Dispositivos vinculados">
       <span cartaoIndice>{{ indiceDispositivos }}</span>
       <ul class="transcricoes__lista">
-        @for (d of dispositivos(); track d.identificador) { <li><strong>{{ d.nome }}</strong><button app-botao variante="perigo" tamanho="medio" [disabled]="ocupado()" (click)="revogar(d.identificador)"><app-icone nome="excluir" />Revogar vínculo</button></li> }
+        @for (d of dispositivos(); track d.identificador) { <li><div class="transcricoes__dispositivo"><strong>{{ d.nome }}</strong>@if (d.ultimoUso) { <span class="transcricoes__meta">Último uso: {{ d.ultimoUso | date: "dd/MM/yy HH:mm" }}</span> }</div><button app-botao variante="perigo" tamanho="medio" [disabled]="ocupado()" (click)="revogar(d.identificador)"><app-icone nome="excluir" />Revogar vínculo</button></li> }
         @empty { <li>Nenhum dispositivo vinculado.</li> }
       </ul>
     </app-cartao>

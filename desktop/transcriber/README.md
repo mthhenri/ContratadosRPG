@@ -21,6 +21,11 @@ Authenticode fornecido pelo mantenedor, permanece sem assinatura e pode mostrar 
 Não desative as proteções do Windows. Hash acompanha o artefato local e não substitui
 assinatura ou origem confiável. Conferir redistribuíveis e avisos antes de distribuição.
 
+## Tema
+
+`src/contratados_transcriber/theme.py` mapeia os tokens de `docs/design/tema/_tokens.scss` (base escura) para QSS;
+cartões, rótulos, campos e botões são os equivalentes Qt dos padrões do site. Mudou um token do tema? Atualize só o mapa `TOKENS`.
+
 ## Testes portáveis
 
 ```bash

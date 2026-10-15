@@ -36,6 +36,15 @@ describe('Transcricoes — vínculo e fallback', () => {
     [...root.querySelectorAll('button')].find(b => b.textContent?.includes('Vincular'))!.click(); f.detectChanges();
     expect(root.textContent).toContain('Confira o código');
   });
+  it('lista de dispositivos mostra o último uso para distinguir nomes iguais', async () => {
+    api.listarDispositivos.mockReturnValue(of([
+      { identificador: 'a', nome: 'PC', ultimoUso: '2026-10-15T14:30:00.000Z' },
+      { identificador: 'b', nome: 'PC', ultimoUso: '2026-10-01T09:05:00.000Z' }]));
+    const f = await criar({}); const root = f.nativeElement as HTMLElement;
+    const metas = [...root.querySelectorAll('.transcricoes__meta')].map(e => e.textContent?.trim());
+    expect(metas).toHaveLength(2); expect(metas[0]).toMatch(/^Último uso: \d{2}\/10\/26 \d{2}:\d{2}$/);
+    expect(metas[0]).not.toEqual(metas[1]);
+  });
   it('pedido expirado mantém instruções de abertura manual', async () => {
     api.recuperarPedido.mockReturnValue(throwError(() => new Error('404')));
     const f = await criar({ identificador: id });
