@@ -238,8 +238,8 @@ export class OficinaTexto {
         if (!selecao || selecao.rangeCount === 0 || !this.elemento.contains(selecao.anchorNode)) return;
         const intervalo = selecao.getRangeAt(0);
         intervalo.deleteContents();
-        // O ​ depois da quebra impede o navegador de tratá-la como "quebra final de enchimento" e pôr o cursor antes dela.
-        const no = document.createTextNode(`${quebra}​`);
+        // O U+200B (espaço de largura zero) depois da quebra impede o navegador de tratá-la como "quebra final de enchimento" e pôr o cursor antes dela.
+        const no = document.createTextNode(`${quebra}\u200B`);
         intervalo.insertNode(no);
         intervalo.setStart(no, quebra.length);
         intervalo.collapse(true);

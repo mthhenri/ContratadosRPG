@@ -26,6 +26,7 @@ import type {
 import { LivroPendenciaCodigoEnum, TipoRegraPecaEnum, TipoUsuarioEnum } from "@contratados-rpg/shared/enums";
 import {
   campoNomeDaPeca,
+  criarEsqueletoPeca,
   derivarAncoraUnica,
   LIVRO_FILHOS_PERMITIDOS,
   LIVRO_RAIZ_PERMITIDA,
@@ -422,15 +423,30 @@ export class RegraPecaService {
     if (inicial) throw new BusinessException(`A habilidade inicial não pode ser ${acao}: o arquétipo ou a subclasse depende dela.`);
   }
 
-  /** Recusa (400) um `dados` sem a forma do tipo; campo vazio é pendência, não erro. */
+  /**
+   * Recusa (400) um `dados` sem a forma do tipo; campo vazio é pendência, não erro.
+   *
+   * A peça é validada sozinha, mas o validador também confere o conjunto de filhos (arquétipo e
+   * subclasse exigem uma habilidade inicial). Os filhos de referência do esqueleto do tipo
+   * mantêm essa regra fora desta checagem: o conjunto real é conferido onde os filhos existem
+   * (`exigirHabilidadeInicial` na criação; filhos já gravados na edição dos dados).
+   */
   private exigirDadosValidos(tipo: TipoRegraPecaEnum, dados: LivroPecaDto["dados"]): void {
+    const filhosDeReferencia: readonly LivroPecaDto[] = criarEsqueletoPeca(tipo).filhos.map((filho, ordem) => ({
+      identificador: `00000000-0000-4000-8000-${String(ordem + 1).padStart(12, "0")}`,
+      ancora: null,
+      tipo: filho.tipo,
+      ordem,
+      dados: filho.dados,
+      filhos: [],
+    }));
     const candidata: LivroPecaDto = {
       identificador: "00000000-0000-4000-8000-000000000000",
       ancora: null,
       tipo,
       ordem: 0,
       dados,
-      filhos: [],
+      filhos: filhosDeReferencia,
     };
     const recusadas = validarArvoreLivro({ pecas: [candidata], modo: "trabalho" }).filter((pendencia) =>
       PENDENCIAS_QUE_RECUSAM_EDICAO.includes(pendencia.codigo),

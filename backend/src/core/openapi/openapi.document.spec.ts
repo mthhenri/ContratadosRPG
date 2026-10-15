@@ -23,10 +23,11 @@ function criarDocumentoDescoberto(): OpenAPIObject {
 }
 
 describe("documentação OpenAPI", () => {
+    // A geração percorre todos os controllers (~4 s isolada): o teto padrão de 5 s estoura sob carga.
     it("gera os contratos a partir dos DTOs e controllers atuais", () => {
         const contratosAtuais = gerarContratosOpenApi();
         expect(operacoesContratosPublicos).toEqual(contratosAtuais.operacoes);
-    });
+    }, 30_000);
 
     it("cobre toda a matriz REST com segurança, schemas e envelope corretos", () => {
         const documento = criarDocumentoDescoberto();
