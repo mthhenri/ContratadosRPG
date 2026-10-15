@@ -290,3 +290,44 @@ sem administrador. Evidências em `.artifacts/transcricoes-03-agente-windows-e-v
 - Os endereços padrão da janela são os de produção; para os passos V/S é preciso apontar para um servidor de teste.
 - O gate "máquina limpa" (I4 com DLL, I1 sem Python no sistema, I3 via SmartScreen) só se fecha numa VM.
 
+## Bateria Windows — segunda rodada, com servidor de teste (2026-10-15)
+
+Mesma máquina (não é VM limpa). Stack descartável só para o teste: Postgres 16 em container (127.0.0.1:55439,
+migrations 0001–0038), API compilada na 53101, `ng serve` na 54301 e um proxy HTTPS (Node) em
+`https://localhost:8443` servindo site e API, com CA descartável de 3 dias que o **autor** confiou em
+`CurrentUser\Root` (removê-la ao fim). O app instalado foi apontado para `https://localhost:8443` pelos campos da
+janela; nenhuma credencial ou servidor de produção foi usado. Três contas de teste (Mestre A, Mestre B, jogador),
+semeadas por REST. O autor também mexeu no site e no app durante a rodada (confirmou o pedido `967DFE70` como
+Mestre B), o que me fez refazer o S5 do zero.
+
+| Passo | Resultado | Evidência / ressalva |
+|---|---|---|
+| V1 | passou | "Confira o código 97DC28BB no site…"; o app falou HTTPS com o servidor de teste (certificado validado) |
+| V2 | passou | confirmado no site como Mestre A; app: "Vinculado à conta t03_mestrea"; segredo não aparece na tela |
+| V3 | passou, com ressalva | URI disparada por `Start-Process contratados-transcriber://…` (handler do registro, como o navegador faria): janela mostra "Sessão mestreA \| Campanha: 1". **Não** passou pelo diálogo de permissão de um navegador real |
+| V4 | passou | 1 processo antes e depois; contexto atualizado (single-instance, pipe local) |
+| V5 | passou, com defeito | reabrir a intenção: "Abertura indisponível: prazo, conta ou permissão de Mestre." — mas o rótulo "Sessão: …" anterior continua na tela (P-128) |
+| V6 | passou, expectativa corrigida | o roteiro dizia "rejeitada sem acessar a API". Um UUID com o último caractere trocado continua válido no formato, então chega ao servidor e é rejeitado ali; só valor fora do formato (`not-a-uuid`, rodada anterior) é barrado localmente. Roteiro ajustado |
+| V7 | passou, parcial | com o app fechado, "Abrir no aplicativo" no navegador embutido ficou em "Aguardando confirmação do aplicativo…" (botão desabilitado) e o app não abriu. O fim dos 120 s e a queda para instruções já tinham sido vistos na rodada web; neste navegador o timer ficou throttled e não foi reobservado |
+| V8, V9 | **não executado** | exigem um navegador real (Edge/Chrome) com o diálogo "abrir aplicativo"; o navegador embutido não dispara protocolos externos |
+| V10 | passou | dispositivo revogado por `DELETE /transcricao/dispositivo/:id`; a abertura com intenção criada antes é recusada ("Vincule sua conta e confirme o vínculo…") e "Verificar" diz "Sem vínculo confirmado". Detalhe: o app não diz "revogado" e mantém o segredo morto até o usuário clicar Desconectar |
+| V11 | passou | intenção criada, Mestre da campanha 1 transferido (A→jogador), abertura recusada; `consumida_em` ficou nulo (rollback) |
+| S1 | **não executado** | exige uma segunda conta de usuário do Windows |
+| S2 | passou, escopo limitado | o `vinculo.bin` decifra por DPAPI para `{login, namespace, origin, request_id, secret, user_id}`; o segredo **não** aparece em claro no `vinculo.bin`, na pasta de dados, na pasta de instalação, no atalho nem no registro do protocolo. Não varri TEMP nem o disco inteiro, e o app não guarda JWT |
+| S3 | passou | com vínculo ativo, "Vincular conta" → "Desconecte o vínculo anterior antes de vincular outra conta."; nenhum pedido novo no servidor |
+| S4 | passou, simulação | "offline" = proxy HTTPS derrubado (não mexi na rede do Windows). Desconectar offline: "Sem conexão. Resultados locais foram preservados." Com o servidor de volta, "Verificar" concluiu ("Dispositivo desconectado") e novo vínculo foi permitido |
+| S5 | passou | jogador (sem papel de Mestre) tenta confirmar: 404 "Vínculo não encontrado", pedido segue sem confirmação; código errado de Mestre: 400 "Confira o código no aplicativo." |
+| S6 | passou | após 10 min: confirmar → 404; site "Vínculo indisponível ou expirado"; app "Vínculo expirado/revogado. Desconecte e vincule novamente." |
+| U1 | **parcial** | `QT_SCALE_FACTOR` 1, 1.5 e 2 no exe instalado (renderização Windows real, mas escala emulada pelo Qt, **não** a escala do Windows): sem corte horizontal, texto legível. Escala real 100/150/200% em Configurações → Tela não testada |
+| U2 | **não executado** | |
+| U3 | **parcial** | UI Automation: os 3 campos e os 3 botões são `IsKeyboardFocusable`. Ordem de Tab e anel de foco não foram exercitados |
+| U4 | **parcial** | UI Automation expõe os nomes acessíveis corretos (ex.: Edit "Servidor HTTPS", Button "Vincular conta"); leitor de tela (Narrador) não executado |
+| U5 | **não executado** | só o caso offline do S4 |
+
+Achados novos: P-127 (o usuário não acha o código de vínculo) e P-128 (rótulo de sessão mantido após recusa),
+ambos em `docs/context/PROBLEMS.md`. Também observado: os endereços dos campos não são lembrados entre execuções
+(sempre voltam ao padrão de produção), então abrir pela URI com o app fechado usa o padrão; é esperado para o
+usuário final e só atrapalha quem testa contra um servidor local.
+
+**Estado da task:** a 03 continua `active`. Faltam S1, V8/V9, U2, U5, Narrador/Tab reais, escala real do Windows,
+e os mesmos itens "máquina limpa" da primeira rodada (B4 jurídico, I1, I3, I4).

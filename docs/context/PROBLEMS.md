@@ -29,6 +29,26 @@
 
 ## Ativos
 
+### P-127 — Código de vínculo do app não diz onde está · `ABERTO` · transcrição/UX
+
+- **Sintoma:** a página de vínculo do site pede "o código mostrado no aplicativo" e o app mostra o código só
+  numa linha de status pequena do primeiro cartão ("Confira o código XXXXXXXX no site…"), depois de "Vincular
+  conta". Um usuário real (o autor, 2026-10-15) não achou o código e não entendeu o que digitar.
+- **Causa:** o texto do site não diz onde o código aparece; o app não o destaca nem oferece copiar.
+- **Contorno:** explicar de viva voz: abrir o app, clicar "Vincular conta" e ler o código no topo da janela.
+- **Correção:** dizer no site onde o código aparece e destacar o código no app (decisão de UX do autor).
+- **Desde:** task 03, bateria Windows de 2026-10-15.
+
+### P-128 — App mantém "Sessão: …" na tela depois de uma abertura recusada · `ABERTO` · transcrição/desktop
+
+- **Sintoma:** com uma sessão aberta no app, reabrir a mesma intenção (uso único) mostra "Abertura indisponível…" mas
+  o cartão continua exibindo "Sessão: <título> | Campanha: <id>", como se a sessão ainda estivesse autorizada.
+- **Causa:** `Window.work.fail` só limpa o rótulo quando o erro é `CredentialError`; `Session.resolve` já zera o
+  contexto internamente, então a tela fica incoerente com o estado.
+- **Contorno:** nenhum; o contexto interno já está limpo, só o rótulo mente.
+- **Correção:** limpar o rótulo em qualquer falha de `open_uri` (com teste Qt).
+- **Desde:** task 03, V5 da bateria Windows de 2026-10-15.
+
 ### P-126 — Sem gate que compare `docs/design/tema/` e `frontend/src/styles/tema/` · `ABERTO` · design/tema
 
 - **Sintoma:** as duas pastas são "espelhadas 1:1", mas nada impede nova divergência. Em 2026-10-13

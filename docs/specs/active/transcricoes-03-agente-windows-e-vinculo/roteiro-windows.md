@@ -50,7 +50,7 @@ capturas e logs brutos ficam em `.artifacts/transcricoes-03-agente-windows-e-vin
 | V3 | No site, abrir a sessão e clicar "Abrir no aplicativo" | Navegador pede permissão; app abre **no contexto da sessão** (título correto) |
 | V4 | Repetir V3 com o app já aberto | Uma única instância; contexto atualizado (single-instance, pipe local) |
 | V5 | Clicar a mesma intenção duas vezes (reabrir a URI da barra de endereço) | Segunda tentativa rejeitada com mensagem clara |
-| V6 | Alterar o identificador da URI (último caractere) e abrir | Rejeitada sem acessar a API |
+| V6 | Alterar o identificador da URI (último caractere) e abrir | Rejeitada: UUID ainda válido chega ao servidor e é recusado lá; valor fora do formato (ex.: `not-a-uuid`) é barrado no app, sem acessar a API |
 | V7 | Fechar o app e clicar "Abrir no aplicativo" | Site mostra "Aguardando…" e, sem confirmação, cai nas instruções manuais |
 | V8 | Desinstalar o protocolo (I5) e clicar "Abrir no aplicativo" | Mesma queda para instruções manuais; sem travar |
 | V9 | Recusar a permissão no diálogo do navegador | Mesma queda; site não declara "app não instalado" |
