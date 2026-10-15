@@ -1,4 +1,4 @@
-# Coleta evidências DEPOIS do build/instalação e grava um relatório em Markdown.
+﻿# Coleta evidências DEPOIS do build/instalação e grava um relatório em Markdown.
 # Uso (da pasta desktop/transcriber): ./packaging/coletar-evidencias.ps1
 # Só lê e grava o relatório; não instala, não assina, não publica.
 # NÃO foi executado em Windows na autoria (sem PowerShell no ambiente Linux): valide na primeira rodada.
@@ -36,7 +36,7 @@ $destinoInstalacao = Join-Path $env:LOCALAPPDATA "Programs/ContratadosTranscribe
 Adicionar "- Pasta esperada: $destinoInstalacao — existe: $(Test-Path $destinoInstalacao)"
 $exe = Join-Path $destinoInstalacao "ContratadosTranscriber.exe"
 if (Test-Path $exe) {
-    Adicionar "- Executável: $((Get-Item $exe).VersionInfo.FileVersion), assinatura: $((Get-AuthenticodeSignature $exe).Status)"
+    Adicionar "- Executável: SHA-256 $((Get-FileHash $exe -Algorithm SHA256).Hash.ToLower()), assinatura: $((Get-AuthenticodeSignature $exe).Status)"
     $tamanho = (Get-ChildItem $destinoInstalacao -Recurse -File | Measure-Object Length -Sum).Sum
     Adicionar "- Tamanho instalado: $([math]::Round($tamanho / 1MB, 1)) MB"
 }
@@ -47,8 +47,8 @@ Adicionar ""
 
 Adicionar "## Licenças empacotadas (gate B4)"
 $licencas = Get-ChildItem $destinoInstalacao -Recurse -File -ErrorAction SilentlyContinue |
-    Where-Object { $_.Name -match "LICEN[SC]E|COPYING|NOTICE|THIRD-PARTY" }
-if ($licencas) { foreach ($l in $licencas) { Adicionar "- $($l.FullName.Replace($destinoInstalacao, '.'))" } }
+    Where-Object { $_.Name -match "LICEN[SC]E|COPYING|NOTICE|THIRD-PARTY|GPL|LEIA-ME" -and $_.FullName -notmatch "[\/]PySide6[\/]" }
+if ($licencas) { foreach ($l in $licencas) { Adicionar "- $($l.FullName.Replace($destinoInstalacao, '.')) — SHA-256 $((Get-FileHash $l.FullName -Algorithm SHA256).Hash.ToLower())" } }
 else { Adicionar "- Nenhum arquivo de licença/aviso encontrado na instalação." }
 Adicionar ""
 

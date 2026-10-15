@@ -242,3 +242,51 @@ da LGPLv3 vem do `qt/qtbase`, que é o que o Qt distribui.
 FreeType, HarfBuzz etc.) conforme o que o instalador Windows realmente leva; termos do runtime C++
 da Microsoft; revisão jurídica da oferta de código-fonte. A licença do Python é a do 3.12.10; se a
 máquina de build usar outro 3.12.x, conferir se o texto mudou. Nada disso é verificável sem Windows.
+
+## Bateria Windows — primeira rodada (2026-10-15)
+
+**Ambiente: Windows 11 Pro 10.0.26300 na máquina de desenvolvimento do autor — NÃO é VM limpa**
+(tinha Python 3.12.10 e ferramentas de dev; sem snapshot). Python 3.12.10 x64, PySide6 6.8.3,
+PyInstaller 6.12.0, Inno Setup 6.7.3 (instalado por `winget`, por usuário). Instalação feita só em HKCU,
+sem administrador. Evidências em `.artifacts/transcricoes-03-agente-windows-e-vinculo/`.
+
+| Passo | Resultado | Evidência |
+|---|---|---|
+| B0 | passou após 3 correções nos `.ps1` (abaixo) | saída do script |
+| B1 | passou | venv + `requirements-build.txt` + `pip install --no-deps -e .` |
+| B2 | passou | `build.ps1` completo: testes portáveis, PyInstaller e Inno sem erro |
+| B3 | passou | `ContratadosTranscriber-0.3.0-Windows-x64.exe` (32,3 MB), SHA-256 `1ab52e35…c89d`, igual ao `.sha256` |
+| B4 | **parcial** | as 5 peças de `licencas/` na instalação têm o mesmo SHA-256 do repositório (`LEIA-ME.md` `f96b110e…0923`). Seguem abertos: avisos de terceiros do Qt, runtime C++ da Microsoft, revisão jurídica |
+| B5 | passou | `NotSigned` (instalador e executável) |
+| B6 | passou após correção | `evidencias-windows-20261015-1847.md` |
+| I1 | passou | instalou sem admin ("Administrative install mode: No"); atalho em Menu Iniciar\Contratados Transcriber |
+| I2 | passou | `HKCU\Software\Classes\contratados-transcriber\shell\open\command` aponta para o `.exe` instalado com `"%1"` |
+| I3 | **parcial** | janela abre e renderiza com o tema do site (`i3-janela-inicial.png`); aberto pelo `.exe`, **não** pelo clique no menu Iniciar; nenhum aviso de SmartScreen observado (execução local, sem Mark-of-the-Web) |
+| I4 | passou, com ressalva | quebrar `QtWidgets.pyd` numa cópia: mensagem do launcher, sem traceback (`i4-falha-startup.png`). Renomear `Qt6Widgets.dll`/`Qt6Core.dll` **não** derrubou o app — as DLLs foram achadas fora da pasta (PATH desta máquina), o que prova que a máquina não era limpa |
+| I5 | passou | app, atalho e chave do protocolo removidos; marcador em `%LOCALAPPDATA%\Contratados\Transcriber` preservado |
+| I6 | passou | dados preservados; protocolo voltou ao registro; app reinstalado abre |
+| V4 (parcial) | passou | 2ª execução com URI válida encerra sozinha e a janela já aberta recebe a intenção (pipe local; mensagem mudou para "Vincule sua conta e confirme o vínculo…"). Só a parte single-instance: sem vínculo não houve contexto de sessão |
+| V6 (parcial) | passou | URI `…/abrir/not-a-uuid` rejeitada com "Abertura inválida / Nenhuma ação executada" antes de qualquer ação |
+| V1–V3, V5, V7–V11 | **não executado** | exigem servidor HTTPS de teste + 2 contas de Mestre; os padrões do app apontam para a produção e nenhuma credencial/vínculo foi feito |
+| S1, S2, S3–S6 | **não executado** | exigem 2º usuário Windows, vínculo real e servidor de teste (S2 só faz sentido depois do vínculo; a pasta de dados nem existe sem vínculo) |
+| U1–U5 | **não executado** | exigem trocar escala do Windows, teclado/Narrador com o app em foco |
+
+### Defeitos achados nos scripts e corrigidos (todos `.ps1` só leem/empacotam)
+
+1. `build.ps1` e `verificar-ambiente.ps1` só procuravam o Inno em `Program Files (x86)`; o `winget`
+   instala por usuário em `%LOCALAPPDATA%\Programs`. Agora também procuram em `Program Files` e no perfil.
+2. `verificar-ambiente.ps1` lia a versão do `ISCC.exe`, que reporta `0.0.0.0` — a checagem "6.3+"
+   falhava mesmo com a 6.7.3. Agora lê o `unins000.exe` da mesma pasta.
+3. Os três `.ps1` estavam em UTF-8 sem BOM; o Windows PowerShell 5.1 os lia como ANSI e quebrava os acentos.
+   Agora UTF-8 com BOM.
+4. `coletar-evidencias.ps1`: o filtro de licenças não pegava `GPL-3.0-only`/`LEIA-ME.md` (listava 2 de 5) e a
+   linha do executável saía vazia. Agora lista todas com SHA-256 e mostra o hash do executável.
+
+### Achados para decisão do autor
+
+- O bundle leva `Qt6Pdf`, `Qt6Qml`, `Qt6QmlMeta`, `Qt6QmlModels`, `Qt6QmlWorkerScript`, `Qt6Quick`, `Qt6Svg`,
+  `Qt6VirtualKeyboard` e `Qt6OpenGL`, que o app não usa (só Core, Gui, Widgets, Network). Excluí-los reduz tamanho e
+  o que há para licenciar; não alterado no `.spec`.
+- Os endereços padrão da janela são os de produção; para os passos V/S é preciso apontar para um servidor de teste.
+- O gate "máquina limpa" (I4 com DLL, I1 sem Python no sistema, I3 via SmartScreen) só se fecha numa VM.
+

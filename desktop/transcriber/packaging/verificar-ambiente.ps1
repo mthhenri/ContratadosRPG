@@ -1,4 +1,4 @@
-# Confere a máquina de build ANTES de ./packaging/build.ps1. Só lê; não instala nem altera nada.
+﻿# Confere a máquina de build ANTES de ./packaging/build.ps1. Só lê; não instala nem altera nada.
 # NÃO foi executado em Windows na autoria (sem PowerShell no ambiente Linux): valide na primeira rodada.
 $ErrorActionPreference = "Continue"
 $falhas = 0
@@ -19,11 +19,15 @@ try {
 } catch { }
 Resultado $pythonOk "Python 3.12 x64 no PATH (o build exige exatamente 3.12 de 64 bits)"
 
-$compilador = Join-Path ${env:ProgramFiles(x86)} "Inno Setup 6/ISCC.exe"
+$compilador = @("${env:ProgramFiles(x86)}", $env:ProgramFiles, "$env:LOCALAPPDATA\Programs") |
+    ForEach-Object { Join-Path $_ "Inno Setup 6/ISCC.exe" } | Where-Object { Test-Path $_ } | Select-Object -First 1
+if (-not $compilador) { $compilador = Join-Path ${env:ProgramFiles(x86)} "Inno Setup 6/ISCC.exe" }
 $innoOk = Test-Path $compilador
 Resultado $innoOk "Inno Setup 6 encontrado em $compilador"
 if ($innoOk) {
-    $versao = (Get-Item $compilador).VersionInfo.ProductVersion
+    # O ISCC.exe reporta 0.0.0.0; a versão real está no unins000.exe da mesma pasta.
+    $desinstalador = Join-Path (Split-Path $compilador) "unins000.exe"
+    $versao = if (Test-Path $desinstalador) { (Get-Item $desinstalador).VersionInfo.ProductVersion } else { "0.0.0" }
     Write-Host "        Inno Setup: $versao"
     # O instalador usa 'x64compatible', que só existe a partir da 6.3.
     $partes = "$versao".Split(".")

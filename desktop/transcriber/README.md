@@ -17,7 +17,7 @@ python -m pip install --no-deps -e .
 ```
 
 Antes do build, `./packaging/verificar-ambiente.ps1`; depois da instalação, `./packaging/coletar-evidencias.ps1`
-(relatório em `.artifacts/`). Ambos só leem e ainda não foram executados em Windows.
+(relatório em `.artifacts/`). Ambos só leem; executados em Windows 11 em 2026-10-15 (ver `verificacao.md` da task).
 
 Build não publica nem assina. Instalador e SHA-256 em `dist/`; sem certificado
 Authenticode fornecido pelo mantenedor, permanece sem assinatura e pode mostrar avisos.
