@@ -1,5 +1,15 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-15 — Oficina: atalho Ctrl+Shift+X aplica tachado (destrava o P-120)
+
+A spec de execução do autor ficou com o P-120 bloqueado: a Oficina só tinha Ctrl+B/Ctrl+I. `oficina-texto` agora trata
+`Ctrl+Shift+X` com `execCommand("strikeThrough")` em texto rico (liga e desliga) e engole a tecla em campo simples, como já faz
+com negrito/itálico. A leitura do DOM já mapeava `<del>`/`<s>`/`<strike>` para o trecho `tachado` (RV-07); o Chrome gera `<strike>`,
+conferido no navegador e coberto por teste. Testes: Regras 314/314, lint limpo. Não verificado: o fluxo completo dentro da Oficina
+com login de admin (só o comando e a leitura, por teste e no navegador). Impacto: mudança aditiva num componente com 20 consumidores,
+sem alterar assinatura. A spec [livro-correcoes-editoriais-producao](../specs/backlog/livro-correcoes-editoriais-producao.spec.md)
+foi atualizada: bloco 4 destravado, dependente do deploy.
+
 ## 2026-10-15 — regras-visual-11 encerrada; correções do livro viram spec de execução do autor (produção)
 
 Com o livro em produção, toda alteração nele passou a ser do autor. Entregue: inventário dos dois livros (67 pontos, a partir da

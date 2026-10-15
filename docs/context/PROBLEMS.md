@@ -62,7 +62,7 @@
 - **Sintoma:** Guia → Introdução, em produção: a frase aparece com os delimitadores `~~`. O leitor, o normalizador, a exportação e o editor já modelam o trecho `tachado` (`regras-visual-07`), mas o dado publicado no banco é um trecho `texto` com o Markdown cru.
 - **Causa:** A importação inicial do Guia ocorreu antes de existir o token; o banco é a fonte da verdade e não é regenerado pelo normalizador.
 - **Contorno:** Nenhum no site; o texto continua legível com os delimitadores.
-- **Correção:** Converter o trecho no livro (rascunho e publicação) em `texto` + `tachado` + `texto` e republicar — execução do autor, por mexer em dado de produção, no bloco 4 de [livro-correcoes-editoriais-producao](../specs/backlog/livro-correcoes-editoriais-producao.spec.md). **Bloqueado:** a Oficina só tem Ctrl+B/Ctrl+I; falta um atalho de tachado (tarefa de código, a abrir a pedido do autor).
+- **Correção:** Converter o trecho no livro (rascunho e publicação) em `texto` + `tachado` + `texto` e republicar — execução do autor, por mexer em dado de produção, no bloco 4 de [livro-correcoes-editoriais-producao](../specs/backlog/livro-correcoes-editoriais-producao.spec.md). A Oficina ganhou o atalho `Ctrl+Shift+X` (tachado) em 15/10/2026 — vale depois do deploy do site com essa mudança.
 - **Desde:** observado em 09/10/2026; código corrigido em 15/10/2026 ([verificação](../specs/done/regras-visual-07-tachado-inline/verificacao.md)).
 
 ### P-111 — Recorrência de falha nativa no build com cache local · `CONTORNADO` · frontend/ambiente

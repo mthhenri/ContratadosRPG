@@ -45,6 +45,9 @@ describe("abertura do livro — ida e volta", () => {
         expect(lerTrechos(raiz)).toEqual(tachado);
         raiz.innerHTML = "a <s>torturar</s> b";
         expect(lerTrechos(raiz)).toEqual(tachado);
+        // O Chrome gera <strike> ao aplicar o tachado (Ctrl+Shift+X).
+        raiz.innerHTML = "a <strike>torturar</strike> b";
+        expect(lerTrechos(raiz)).toEqual(tachado);
         expect(textoDe(tachado)).toBe("a torturar b");
         expect(normalizarTrechos([{ tipo: "tachado", filhos: [] }])).toEqual([]);
     });

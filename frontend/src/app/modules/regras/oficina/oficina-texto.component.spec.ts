@@ -214,6 +214,18 @@ describe("OficinaTexto", () => {
         expect(comando).toHaveBeenCalledTimes(2);
     });
 
+    it("Ctrl+Shift+X aplica tachado em texto rico; em campo simples é engolido sem formatar", () => {
+        const comando = vi.fn(() => true);
+        (document as unknown as { execCommand: unknown }).execCommand = comando;
+        const { nome, paragrafo } = montar();
+        expect(teclar(paragrafo, "x", { ctrlKey: true, shiftKey: true }).defaultPrevented).toBe(true);
+        expect(comando.mock.calls.map((chamada) => (chamada as unknown[])[0])).toEqual(["strikeThrough"]);
+        expect(teclar(nome, "x", { ctrlKey: true, shiftKey: true }).defaultPrevented).toBe(true);
+        expect(comando).toHaveBeenCalledTimes(1);
+        teclar(paragrafo, "x", { ctrlKey: true });
+        expect(comando).toHaveBeenCalledTimes(1);
+    });
+
     it("Ctrl+Y e Ctrl+Shift+Z são engolidos (sem refazer nativo); Ctrl+Z fica para o leitor", () => {
         const { paragrafo } = montar();
         expect(teclar(paragrafo, "y", { ctrlKey: true }).defaultPrevented).toBe(true);

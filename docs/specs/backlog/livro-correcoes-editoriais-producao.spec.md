@@ -30,7 +30,7 @@ O resto do inventário (45 cálculos dentro de frases, 19 que já estão certos)
 - [ ] Confira no site que o texto de cada ponto abaixo ainda é igual ao descrito aqui. O inventário foi tirado da versão
       publicada em 12/10/2026 (Sistema 4.1.4, Guia 4.2.0). **Se a produção já mudou, pare nesse ponto e me avise.**
 - [ ] Ninguém mais está editando o mesmo livro.
-- [ ] P-120 depende de uma coisa que a Oficina ainda não tem (veja o bloco 4). Faça os blocos 1 a 3 sem ele, se preferir.
+- [ ] P-120 usa o atalho novo `Ctrl+Shift+X`, que só existe depois que o deploy do site com essa mudança estiver no ar (bloco 4).
 
 ## Bloco 1 — Sistema: Fórmula do Descanso (F1)
 
@@ -84,17 +84,18 @@ efeitos ▢ e a ressalva já aparecem separados no site (`regras-visual-06`).
 Se preferir quebra de linha de verdade nessas notas, isso é uma **tarefa de código minha** (permitir Shift+Enter em nota);
 me diga e eu abro.
 
-## Bloco 4 — Guia: tachado da Introdução (P-120) — **bloqueado**
+## Bloco 4 — Guia: tachado da Introdução (P-120)
 
 Onde: Guia › Introdução, no parágrafo "…ajudarão à executar essa árdua tarefa de ~~torturar psicologicamente~~ divertir e
-alegrar seus jogadores". O site já sabe mostrar tachado, mas o texto no banco tem os `~~` escritos à mão, e **a Oficina só tem
-Ctrl+B e Ctrl+I: não há como aplicar tachado**.
+alegrar seus jogadores". O site já sabe mostrar tachado, mas o texto no banco tem os `~~` escritos à mão.
 
-**Pré-requisito (código, meu):** acrescentar o atalho de tachado na Oficina (candidato: `Ctrl+Shift+X`). Pequeno; faço quando você
-mandar, com teste, e aviso aqui.
+**Pré-requisito resolvido (código, feito em 15/10/2026):** a Oficina agora tem o atalho **`Ctrl+Shift+X`** (tachado, em
+texto rico; liga e desliga como o negrito). Ele só vale depois que esta versão do site estiver publicada na produção — confira
+que o atalho funciona antes de editar o livro.
 
-Depois disso, os passos são: (1) apague os dois `~~` da frente e os dois de trás; (2) selecione "torturar psicologicamente" e
-aplique o tachado; (3) gaveta "O que mudou": 1 peça alterada (a Introdução). O texto das palavras não muda.
+Passos: (1) apague os dois `~~` da frente e os dois de trás; (2) selecione "torturar psicologicamente" e aperte
+`Ctrl+Shift+X`; (3) gaveta "O que mudou": 1 peça alterada (a Introdução). O texto das palavras não muda. Se o atalho não
+funcionar no seu navegador, me avise.
 
 ## Publicar (sempre nesta ordem)
 
@@ -133,7 +134,7 @@ aplique o tachado; (3) gaveta "O que mudou": 1 peça alterada (a Introdução). 
 
 Mudar regras ou valores; redesenhar a faixa; estilizar exemplos; permitir quebra de linha em nota (tarefa de código à parte).
 
-## Pendências minhas (código), se você mandar
+## Pendências minhas (código)
 
-1. Atalho de tachado na Oficina (destrava o bloco 4).
+1. ~~Atalho de tachado na Oficina~~ — feito (`Ctrl+Shift+X`).
 2. Quebra de linha em Nota na Oficina (só se você quiser separar título e descrição por linha em vez de pontuação).

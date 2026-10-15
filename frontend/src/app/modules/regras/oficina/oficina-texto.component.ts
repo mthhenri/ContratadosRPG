@@ -16,7 +16,7 @@ const ESPERA_ENTREGA_MS = 300;
  * `nome`/`titulo`) e devolve cada alteração ao `OficinaStore`, que salva e guarda o Desfazer.
  *
  * Atalhos: Enter pula ao próximo campo (campo curto, ou nota/exemplo/efeito) ou cria outro parágrafo;
- * Backspace em parágrafo vazio o remove; Ctrl+B / Ctrl+I; `NA0`…`NA7` + espaço vira o selo de Nível
+ * Backspace em parágrafo vazio o remove; Ctrl+B / Ctrl+I / Ctrl+Shift+X (tachado); `NA0`…`NA7` + espaço vira o selo de Nível
  * de Ameaça. O DOM só é refeito quando o valor muda por fora (Desfazer, conflito): digitar nunca
  * recoloca o cursor.
  */
@@ -179,6 +179,13 @@ export class OficinaTexto {
     protected aoTeclar(evento: KeyboardEvent): void {
         const comando = evento.ctrlKey || evento.metaKey;
         const tecla = evento.key.toLowerCase();
+        if (comando && evento.shiftKey && tecla === "x" && !evento.altKey) {
+            evento.preventDefault();
+            if (this.simples()) return;
+            document.execCommand("strikeThrough");
+            this.aoEntrar(new Event("input"));
+            return;
+        }
         if (comando && (tecla === "b" || tecla === "i" || tecla === "u") && this.simples()) {
             evento.preventDefault();
             return;
