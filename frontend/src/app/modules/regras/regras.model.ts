@@ -41,7 +41,7 @@ export type RegrasBloco =
         readonly linhas: readonly (readonly (readonly RegrasTrecho[])[])[];
         /** Duas metades independentes em sequência; a fonte acima permanece íntegra. */
         readonly pares?: RegrasFonteTabela }
-    | { readonly tipo: "habilidade"; readonly peca?: string; readonly nome: string; readonly custo: number | "X";
+    | { readonly tipo: "habilidade"; readonly peca?: string; readonly nome: string; readonly custo: number | "X" | null;
         readonly reacao: boolean; readonly glifo: "⬦" | "◈" | "◻" | null;
         readonly trechos: readonly RegrasTrecho[] }
     | { readonly tipo: "generico"; readonly peca?: string; readonly motivo: string;

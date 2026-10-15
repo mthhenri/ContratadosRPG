@@ -18,8 +18,8 @@
             <app-chip severidade="ajuda" tom="contorno">REAÇÃO</app-chip>
         }
         @if (editando()) {
-            <app-oficina-custo [peca]="bloco().peca!" [custo]="bloco().custo" />
-        } @else {
+            <app-oficina-custo [peca]="bloco().peca!" [custo]="bloco().custo!" />
+        } @else if (bloco().custo !== null) {
             <app-chip
                 severidade="energia"
                 tom="sutil"

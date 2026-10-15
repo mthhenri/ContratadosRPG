@@ -1,5 +1,15 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-15 — regras-visual-08: passivas de NPC aparecem como bloco de habilidade, só na leitura
+
+A spec previa mexer no reconhecedor do normalizador, mas o livro vive no banco: ali as ativas são `HABILIDADE` com custo e as 11
+passivas são `PARAGRAFO` (`Nome [Ex.: …]` + `Passiva — …`), e o bloco de habilidade exigia custo. O autor escolheu resolver só na
+leitura. A projeção compartilhada reconhece a assinatura completa dentro da "Biblioteca de Referência" — e só fora da Oficina — e
+devolve `habilidade` com `custo: null`; o bloco não desenha selo de Energia (nunca 0E). O teste de ida e volta do importador ganhou a
+diferença aceita nº 4, usando o mesmo reconhecedor exportado. Testes: shared 7/7, Regras 304/304, importador 19, lint do backend limpo.
+Ao vivo: 11 passivas + 11 ativas, mesma fonte e largura, 2 colunas a 1920/1366 e 1 a 960/360, base clara 8,24:1, sem overflow.
+Limite: a Oficina continua mostrando parágrafos. [Verificação](../specs/done/regras-visual-08-habilidades-passivas-npcs/verificacao.md).
+
 ## 2026-10-15 — regras-visual-09: rótulos de domínio da base clara chegam a 4,5:1 com tokens de texto
 
 A auditoria mediu três rótulos de 11px entre 1,87 e 3,22:1. Escurecer `--warning`/`--help`/`--energy` mudaria ~100 consumidores

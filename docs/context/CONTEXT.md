@@ -3414,7 +3414,9 @@ teclado e busca em aba oculta conferidos;
 `P-120` segue aberto só pelo dado em produção (o Guia publicado ainda traz `~~` literal).
 `regras-visual-09` (contraste dos rótulos na base clara) concluída em 15/10 com tokens `--*-texto`:
 [verificação](../specs/done/regras-visual-09-contraste-base-clara/verificacao.md).
-Correções `regras-visual-06` e `08` em backlog, `P-119` e `P-121` abertos.
+`regras-visual-08` (passivas de NPC como bloco de habilidade, só na leitura) concluída em 15/10:
+[verificação](../specs/done/regras-visual-08-habilidades-passivas-npcs/verificacao.md).
+Correção `regras-visual-06` em backlog, `P-119` aberto.
 P-124 registra contraste preexistente das marcas não selecionadas de pesquisa
 sobre os fundos semânticos de ameaça; permanece aberto.
 Há ainda notas/passivas degradadas, tachado literal, contraste na base clara

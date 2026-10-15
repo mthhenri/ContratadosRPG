@@ -1,11 +1,16 @@
-import type { LivroPecaDto, LivroVersaoConteudoDto } from "@contratados-rpg/shared/dtos/livro";
+import type { LivroPecaDto, LivroTrechoDto, LivroVersaoConteudoDto } from "@contratados-rpg/shared/dtos/livro";
 import { TipoLivroVersaoSituacaoEnum, TipoRegraPecaEnum } from "@contratados-rpg/shared/enums";
 import { validarArvoreLivro } from "@contratados-rpg/shared/livro";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { converterRegrasEmPecas } from "./converter-regras-em-pecas";
 import { importarLivro, importarLivros, type DependenciasImportacao } from "./importar-livro";
 import { lerFontesDeRegras, type FonteDeRegras } from "./ler-fontes-regras";
-import { compararLivros, projetarPecasEmRegras } from "@contratados-rpg/shared/livro";
+import {
+  compararLivros,
+  projetarPecasEmRegras,
+  reconhecerPassivaDaBiblioteca,
+  TITULO_BIBLIOTECA_REFERENCIA,
+} from "@contratados-rpg/shared/livro";
 import type { NormalizadoDocumento } from "@contratados-rpg/shared/livro";
 
 /** UUID determinístico por ordem de geração, para o teste ser reprodutível. */
@@ -24,6 +29,8 @@ type Valor = null | boolean | number | string | Valor[] | { [chave: string]: Val
  * 2. na ficha de criatura, os blocos `identidade`/`atributos`/`habilidade-criatura` repetidos dentro
  *    das seções (a ficha os guarda uma só vez, em `dados` e nas peças filhas);
  * 3. nas grades de referência, `cabecalho`/`linhas` (a estrutura é a apresentação, D8).
+ * 4. na Biblioteca de Referência do Guia, as passivas (parágrafos `Nome [Ex.: …]` + `Passiva — …`) que
+ *    a leitura apresenta como bloco de habilidade sem custo (RV-08): o contrato guarda o parágrafo.
  * O selo de versão da capa não é diferença: viaja no campo `selo` da peça `ABERTURA`.
  */
 function reduzirAoQueOContratoGuarda(documento: NormalizadoDocumento): Valor {
@@ -62,9 +69,25 @@ function reduzirAoQueOContratoGuarda(documento: NormalizadoDocumento): Valor {
       resultado["cabecalho"] = [];
       resultado["linhas"] = [];
     }
+    if (tipo === "secao" && typeof valor["titulo"] === "string" && valor["titulo"].trim() === TITULO_BIBLIOTECA_REFERENCIA) {
+      resultado["filhos"] = comPassivasReconhecidas(resultado["filhos"]);
+    }
     return resultado;
   };
   return reduzir(documento as unknown as Valor, false);
+}
+
+/** Aplica ao original o mesmo reconhecimento que a leitura faz nos filhos da Biblioteca (diferença 4). */
+function comPassivasReconhecidas(filhos: Valor): Valor {
+  if (!Array.isArray(filhos)) return filhos;
+  return filhos.map((filho) => {
+    if (typeof filho !== "object" || filho === null || Array.isArray(filho)) return filho;
+    if (filho["tipo"] === "paragrafo") {
+      const passiva = reconhecerPassivaDaBiblioteca(filho["trechos"] as unknown as LivroTrechoDto[]);
+      return passiva ? (JSON.parse(JSON.stringify(passiva)) as Valor) : filho;
+    }
+    return Array.isArray(filho["filhos"]) ? { ...filho, filhos: comPassivasReconhecidas(filho["filhos"]) } : filho;
+  });
 }
 
 /** O `identificador` de um link é dado novo da peça; a projeção devolve o que o leitor já lê. */

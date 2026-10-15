@@ -65,14 +65,6 @@
 - **Correção:** Converter o trecho no livro (rascunho e publicação) em `texto` + `tachado` + `texto` — via migração de dados ou na Oficina (que ainda não tem botão de tachado) — e republicar. Decisão e execução do autor, por mexer em dado de produção.
 - **Desde:** observado em 09/10/2026; código corrigido em 15/10/2026 ([verificação](../specs/done/regras-visual-07-tachado-inline/verificacao.md)).
 
-### P-121 — Uniformizar a apresentação das habilidades passivas de NPCs · `ABERTO` · frontend/regras
-
-- **Sintoma:** Guia → Biblioteca de Referência → Operativo/Veterano/Elite/Lendário: passivas como Treinamento de Campo aparecem como prosa cinza contínua. As ativas imediatamente abaixo usam título mono, separador e bloco de habilidade; as passivas não têm a mesma hierarquia de catálogo.
-- **Causa:** Passivas do catálogo não recebem a hierarquia das ativas; investigação completa do reconhecimento fica na spec.
-- **Contorno:** Conferir nome/tipo/efeito no parágrafo ou na fonte.
-- **Correção:** [regras-visual-08-habilidades-passivas-npcs](../specs/backlog/regras-visual-08-habilidades-passivas-npcs.spec.md).
-- **Desde:** observado em 09/10/2026; [RV-08, cobertura e evidências](../specs/done/regras-auditoria-visual-completa/auditoria.md). Nenhuma correção aplicada nesta auditoria.
-
 ### P-111 — Recorrência de falha nativa no build com cache local · `CONTORNADO` · frontend/ambiente
 
 - **Sintoma:** build habitual fora do sandbox voltou a terminar com código `3221225477`,

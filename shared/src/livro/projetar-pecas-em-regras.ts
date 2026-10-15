@@ -4,6 +4,7 @@ import type {
   LivroPecaDto,
   LivroVersaoConteudoDto,
 } from "../dtos/livro/livro-peca.dtos";
+import type { LivroTrechoDto } from "../dtos/livro/livro-trecho.dtos";
 import { TipoRegraPecaEnum as Tipo } from "../enums/tipo-regra-peca.enum";
 import type {
   NormalizadoConteudo,
@@ -36,6 +37,28 @@ let incluirPecasNaProjecao = false;
 
 function comPeca<T extends object>(bloco: T, peca: LivroPecaDto): T {
   return incluirPecasNaProjecao ? { ...bloco, peca: peca.identificador } : bloco;
+}
+
+/** Seção cujos parágrafos de habilidade passiva a leitura reconhece como bloco de habilidade. */
+export const TITULO_BIBLIOTECA_REFERENCIA = "Biblioteca de Referência";
+
+/** Ligado enquanto se projetam os filhos da Biblioteca de Referência (só na leitura). */
+let dentroDaBiblioteca = false;
+
+/**
+ * Passiva da Biblioteca: o livro guarda `Nome [Ex.: Narrativo]` e, na linha seguinte, `Passiva — efeito`
+ * num único parágrafo (as ativas são peças HABILIDADE com custo). A leitura as apresenta com o mesmo
+ * bloco das ativas, sem custo. A assinatura é completa (texto único, duas linhas, segunda linha
+ * iniciada por "Passiva"); qualquer outra forma segue como parágrafo.
+ */
+export function reconhecerPassivaDaBiblioteca(trechos: readonly LivroTrechoDto[]): NormalizadoHabilidade | null {
+  if (trechos.length !== 1 || trechos[0].tipo !== "texto") return null;
+  const quebra = trechos[0].texto.indexOf("\n");
+  if (quebra < 0) return null;
+  const nome = trechos[0].texto.slice(0, quebra).trim();
+  const efeito = trechos[0].texto.slice(quebra + 1).trim();
+  if (!nome || efeito.includes("\n") || !/^Passiva(?=[\s(—-])/.test(efeito)) return null;
+  return { tipo: "habilidade", nome, custo: null, reacao: false, glifo: null, trechos: [{ tipo: "texto", texto: efeito }] };
 }
 
 function habilidadeDe(peca: LivroPecaDto): NormalizadoHabilidade {
@@ -90,6 +113,16 @@ function acharSelo(pecas: readonly LivroPecaDto[]): string | undefined {
   return undefined;
 }
 
+function projetarFilhosDaSecao(titulo: string, filhos: readonly LivroPecaDto[]): NormalizadoConteudo[] {
+  if (dentroDaBiblioteca || titulo.trim() !== TITULO_BIBLIOTECA_REFERENCIA) return projetarLista(filhos);
+  dentroDaBiblioteca = true;
+  try {
+    return projetarLista(filhos);
+  } finally {
+    dentroDaBiblioteca = false;
+  }
+}
+
 function projetarLista(pecas: readonly LivroPecaDto[]): NormalizadoConteudo[] {
   return pecas.map(projetar);
 }
@@ -109,11 +142,15 @@ function projetarBase(peca: LivroPecaDto): NormalizadoConteudo {
         titulo,
         ancora: peca.ancora ?? "",
         ...(origemTabela ? { origemTabela: true } : {}),
-        filhos: projetarLista(peca.filhos),
+        filhos: projetarFilhosDaSecao(titulo, peca.filhos),
       };
     }
-    case Tipo.PARAGRAFO:
-      return { tipo: "paragrafo", trechos: dadosDe(peca, Tipo.PARAGRAFO).trechos };
+    case Tipo.PARAGRAFO: {
+      // Na Oficina a peça segue parágrafo editável; só a leitura reconhece a passiva.
+      const passiva = dentroDaBiblioteca && !incluirPecasNaProjecao
+        ? reconhecerPassivaDaBiblioteca(dadosDe(peca, Tipo.PARAGRAFO).trechos) : null;
+      return passiva ?? { tipo: "paragrafo", trechos: dadosDe(peca, Tipo.PARAGRAFO).trechos };
+    }
     case Tipo.EXEMPLO:
       return { tipo: "exemplo", trechos: dadosDe(peca, Tipo.EXEMPLO).trechos };
     case Tipo.FORMULA:

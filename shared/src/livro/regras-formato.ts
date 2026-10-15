@@ -20,7 +20,8 @@ export interface FonteTabela {
 export interface NormalizadoHabilidade {
   readonly tipo: "habilidade";
   readonly nome: string;
-  readonly custo: number | "X";
+  /** `null` nas passivas: sem custo de Energia (nunca 0). */
+  readonly custo: number | "X" | null;
   readonly reacao: boolean;
   readonly glifo: "⬦" | "◈" | "◻" | null;
   readonly trechos: Trechos;

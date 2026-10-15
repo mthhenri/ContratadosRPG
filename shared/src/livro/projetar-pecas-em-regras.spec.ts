@@ -70,3 +70,45 @@ describe("projetarPecasEmRegras — incluirPecas", () => {
     expect(JSON.stringify(projetarPecasEmRegras(livro))).not.toContain("\"peca\"");
   });
 });
+
+describe("projetarPecasEmRegras — passivas da Biblioteca de Referência (RV-08)", () => {
+  const texto = (valor: string) => [{ tipo: "texto" as const, texto: valor }];
+  const paragrafo = (n: number, valor: string): LivroPecaDto =>
+    ({ identificador: id(n), ancora: null, tipo: Tipo.PARAGRAFO, ordem: 0, filhos: [], dados: { trechos: texto(valor) } });
+  const secao = (n: number, titulo: string, filhos: LivroPecaDto[]): LivroPecaDto =>
+    ({ identificador: id(n), ancora: null, tipo: Tipo.SECAO, ordem: 0, dados: { titulo, nivel: 3, glifo: null }, filhos });
+  const passiva = "Treinamento de Campo [Ex.: Segunda Natureza]\nPassiva — Ignora penalidades de movimento.";
+  const livro = (titulo: string, filhos: LivroPecaDto[]): LivroVersaoConteudoDto =>
+    ({ ...conteudo, codigo: "guia", pecas: [secao(1, titulo, [secao(2, "Operativo", filhos)])] });
+  const folhas = (documento: ReturnType<typeof projetarPecasEmRegras>) => {
+    const externa = documento.filhos.find((filho) => filho.tipo === "secao");
+    const interna = externa && "filhos" in externa ? externa.filhos[0] : undefined;
+    return interna && "filhos" in interna ? interna.filhos : [];
+  };
+
+  it("vira bloco de habilidade sem custo, com nome, exemplo e 'Passiva —' preservados", () => {
+    const [bloco] = folhas(projetarPecasEmRegras(livro("Biblioteca de Referência", [paragrafo(3, passiva)])));
+    expect(bloco).toEqual({
+      tipo: "habilidade", nome: "Treinamento de Campo [Ex.: Segunda Natureza]", custo: null, reacao: false, glifo: null,
+      trechos: texto("Passiva — Ignora penalidades de movimento."),
+    });
+  });
+
+  it("mantém a frequência da passiva e continua separada da ativa vizinha", () => {
+    const frequente = "Lenda Viva [Ex.: Mito com Pulso]\nPassiva (uma vez por combate) — Recupera Energia.";
+    const blocos = folhas(projetarPecasEmRegras(livro("Biblioteca de Referência", [paragrafo(3, frequente), habilidade])));
+    expect(blocos.map((bloco) => bloco.tipo)).toEqual(["habilidade", "habilidade"]);
+    expect(blocos[0]).toMatchObject({ custo: null, trechos: texto("Passiva (uma vez por combate) — Recupera Energia.") });
+    expect(blocos[1]).toMatchObject({ custo: 2 });
+  });
+
+  it("não reconhece fora da Biblioteca, nem sem a assinatura completa, nem na Oficina", () => {
+    const fora = folhas(projetarPecasEmRegras(livro("Outra seção", [paragrafo(3, passiva)])));
+    expect(fora[0]).toMatchObject({ tipo: "paragrafo" });
+    const formas = ["Sem quebra de linha. Passiva — x", "Nome\nAtiva — efeito", "Nome\nPassivamente — efeito", "Nome\nPassiva — a\nsegunda linha"];
+    const dentro = folhas(projetarPecasEmRegras(livro("Biblioteca de Referência", formas.map((forma, i) => paragrafo(10 + i, forma)))));
+    expect(dentro.map((bloco) => bloco.tipo)).toEqual(["paragrafo", "paragrafo", "paragrafo", "paragrafo"]);
+    const oficina = folhas(projetarPecasEmRegras(livro("Biblioteca de Referência", [paragrafo(3, passiva)]), { incluirPecas: true }));
+    expect(oficina[0]).toMatchObject({ tipo: "paragrafo", peca: id(3) });
+  });
+});
