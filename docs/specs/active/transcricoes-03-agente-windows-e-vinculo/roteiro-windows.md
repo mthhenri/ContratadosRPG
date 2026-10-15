@@ -22,11 +22,11 @@ capturas e logs brutos ficam em `.artifacts/transcricoes-03-agente-windows-e-vin
 
 | # | Passo | Esperado |
 |---|-------|----------|
-| B0 | `./packaging/verificar-ambiente.ps1` (só lê) | Tudo `[ok]` exceto, por ora, `licencas/` (ver B4). **Os `.ps1` nunca rodaram em Windows**: se falharem por sintaxe, corrija e registre |
+| B0 | `./packaging/verificar-ambiente.ps1` (só lê) | Tudo `[ok]`. **Os `.ps1` nunca rodaram em Windows**: se falharem por sintaxe, corrija e registre |
 | B1 | `cd desktop/transcriber`; seguir o README (venv, `requirements-build.txt`, `pip install --no-deps -e .`) | Dependências instalam sem erro |
 | B2 | `./packaging/build.ps1` | Testes portáveis (16) passam; PyInstaller e Inno Setup concluem |
 | B3 | Conferir `dist/ContratadosTranscriber-0.3.0-Windows-x64.exe` e o `.sha256` | Hash confere com `Get-FileHash` |
-| B4 | Conferir licenças: **os wheels do PySide6 6.8.3 não trazem arquivo de licença** (achado da análise do PyInstaller em Linux; só o `THIRD-PARTY-NOTICES.md` entra no bundle). Reúna do upstream os textos exigidos (LGPLv3 do Qt for Python, avisos de terceiros do Qt 6.8.3, licença do Python de `sys.base_prefix`, `COPYING` do PyInstaller) e a oferta/endereço do código-fonte, versione em `desktop/transcriber/licencas/` e inclua no bundle antes de distribuir | Bundle contém os textos de todas as bibliotecas redistribuídas; lacuna registrada se faltar algum. Não escrever texto jurídico por conta própria |
+| B4 | Conferir licenças no instalador/instalação: `licencas/` (LGPL-3.0, GPL-3.0, Python 3.12, PyInstaller 6.12.0 e `LEIA-ME.md`, cópias exatas versionadas em `desktop/transcriber/licencas/`) deve estar presente e igual ao repositório (compare o SHA-256 do `LEIA-ME.md`). **Ainda abertos:** avisos de terceiros embutidos no Qt (ICU, FreeType, HarfBuzz etc.) das bibliotecas que o instalador Windows realmente leva, termos do runtime C++ da Microsoft e revisão jurídica | Textos presentes e íntegros; lacunas dos avisos do Qt e do runtime listadas com as bibliotecas reais do instalador (use o relatório do B6) |
 | B5 | Verificar assinatura (`Get-AuthenticodeSignature`) | Registrar "sem assinatura" ou o certificado; limitar a afirmação ao que foi visto |
 | B6 | `./packaging/coletar-evidencias.ps1` depois do build e da instalação | Gera `evidencias-windows-<data>.md` em `.artifacts/` com hash, assinatura, protocolo, licenças e módulos Qt; anexe ao relatório |
 

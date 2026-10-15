@@ -38,7 +38,7 @@ Resultado (Test-Path (Join-Path $raiz "THIRD-PARTY-NOTICES.md")) "THIRD-PARTY-NO
 
 $pasta = Join-Path $raiz "licencas"
 $temLicencas = (Test-Path $pasta) -and ((Get-ChildItem $pasta -File -ErrorAction SilentlyContinue | Measure-Object).Count -gt 0)
-Resultado $temLicencas "Pasta licencas/ com os textos de licença a empacotar (ainda não existe no repositório: gate B4)"
+Resultado $temLicencas "Pasta licencas/ com os textos de licença a empacotar"
 
 if ($falhas -gt 0) { Write-Host "`n$falhas verificação(ões) falharam. Resolva antes do build."; exit 1 }
 Write-Host "`nAmbiente pronto para ./packaging/build.ps1"

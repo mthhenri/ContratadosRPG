@@ -226,3 +226,19 @@ vinha no contrato), distinguindo dispositivos com o mesmo nome. Teste novo na p�
   no `.spec`: não há como validar o resultado em Windows aqui.
 - **Scripts de apoio** `packaging/verificar-ambiente.ps1` e `packaging/coletar-evidencias.ps1`
   escritos, **nunca executados** (sem PowerShell no ambiente Linux).
+
+## Licenças empacotadas — B4 parcialmente fechado (2026-10-15)
+
+Textos baixados dos repositórios oficiais nas versões usadas e versionados em
+`desktop/transcriber/licencas/` (LGPL-3.0-only e GPL-3.0-only do `qt/qtbase` v6.8.3, `LICENSE` do
+CPython v3.12.10, `COPYING.txt` do PyInstaller v6.12.0 — este idêntico, byte a byte, ao do pacote
+instalado), com `LEIA-ME.md` registrando origem, hash e a oferta de código-fonte. O `transcriber.spec`
+passa a incluir a pasta no bundle e **aborta a build** se ela estiver vazia ou ausente. Verificado
+com o PyInstaller em Linux: as cinco peças entram no bundle e são idênticas às do repositório; sem a
+pasta, a build falha com mensagem clara. `gnu.org` e `code.qt.io` não eram acessíveis daqui; o texto
+da LGPLv3 vem do `qt/qtbase`, que é o que o Qt distribui.
+
+**Continua aberto (não resolvido):** avisos de terceiros embutidos nas bibliotecas do Qt (ICU,
+FreeType, HarfBuzz etc.) conforme o que o instalador Windows realmente leva; termos do runtime C++
+da Microsoft; revisão jurídica da oferta de código-fonte. A licença do Python é a do 3.12.10; se a
+máquina de build usar outro 3.12.x, conferir se o texto mudou. Nada disso é verificável sem Windows.
