@@ -1,5 +1,18 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-15 — Transcriber 03: bateria Windows rodada, P-127 e P-128 corrigidos
+
+Duas rodadas em Windows 11 (máquina de desenvolvimento, não VM limpa; Inno Setup 6.7.3 via winget): build, instalador, instalação por
+usuário sem admin, protocolo no HKCU, desinstalação mantendo dados, falha de startup com mensagem nativa e, contra um stack descartável
+com HTTPS local (CA de 3 dias que o autor confiou e removeu), vínculo, abertura pelo protocolo, single-instance, reuso/adulteração da
+intenção, revogação, transferência de Mestre, jogador sem papel, desconexão offline e vínculo expirado. Os `.ps1` nunca tinham rodado:
+quatro defeitos corrigidos (Inno por usuário, versão do ISCC lida de `0.0.0.0`, falta de BOM quebrando acentos, filtro de licenças
+incompleto). Achados do uso real: o autor não achou o código de vínculo — o site agora diz que ele aparece no topo da janela do app
+depois de "Vincular conta" (P-127); abertura recusada deixava "Sessão: …" na tela — agora limpa o rótulo, com teste (P-128).
+Desktop 17/17 (Qt offscreen), página de transcrição 8/8. Ainda abertos para fechar a 03: VM limpa (I1, I3, I4, B4 jurídico), 2º usuário
+Windows (S1), navegador real (V8/V9), U2, U5, Tab/Narrador e escala real do Windows. Detalhes em
+[verificacao](../specs/active/transcricoes-03-agente-windows-e-vinculo/verificacao.md).
+
 ## 2026-10-15 — Transcriber 01 concluída: gates globais resolvidos, telas alinhadas ao Perfil, roteiro Windows
 
 A 01 saiu de `active/` para `done/`. O que segurava o fecho era global, não do Transcriber, e foi resolvido à parte:

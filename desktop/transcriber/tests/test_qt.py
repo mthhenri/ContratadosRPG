@@ -32,4 +32,25 @@ class QtTests(unittest.TestCase):
             configure.assert_not_called()
             self.assertIn("inválida", window.status.text())
         window.close()
+    def test_rejected_open_clears_the_previous_session_label(self):
+        # P-128: abertura recusada (uso único, prazo, permissão) não pode deixar a sessão anterior na tela.
+        from contratados_transcriber.app import Window
+        class Session:
+            def __init__(self): self.calls = 0
+            def refresh(self): pass
+            def resolve(self, intent):
+                self.calls += 1
+                if self.calls > 1: raise ValueError("Abertura indisponível: prazo, conta ou permissão de Mestre.")
+                return {"titulo": "Sessão A", "campanhaId": 1}
+        window, session = Window(), Session()
+        uri = "contratados-transcriber://abrir/e809de1e-005c-4943-9c68-5ce3b445065e"
+        with patch.object(window, "configure", return_value=session):
+            for _ in range(2):
+                window.open_uri(uri)
+                until = time.monotonic() + 3
+                while window.busy and time.monotonic() < until:
+                    self.app.processEvents(); time.sleep(.01)
+        self.assertIn("indisponível", window.status.text())
+        self.assertEqual(window.context.text(), "Nenhuma sessão aberta.")
+        window.close()
 if __name__ == '__main__': unittest.main()

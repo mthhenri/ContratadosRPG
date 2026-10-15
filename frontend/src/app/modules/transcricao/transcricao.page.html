@@ -13,7 +13,7 @@
     <app-cartao titulo="Confirmar vínculo">
       <span cartaoIndice>01</span>
       <p>Vincular <strong>{{ p.nome }}</strong> à conta <strong>{{ conta()?.login }}</strong>.</p>
-      <p>Digite o código mostrado no aplicativo. Confirme apenas se iniciou este pedido no seu computador.</p>
+      <p>Digite o código de oito caracteres que aparece no topo da janela do aplicativo Contratados Transcriber, logo depois de você clicar em “Vincular conta”. Confirme apenas se iniciou este pedido no seu computador.</p>
       <app-campo rotulo="Código do aplicativo" dica="Oito caracteres. O pedido expira após dez minutos.">
         <input [formControl]="codigo" maxlength="8" autocomplete="off" required />
       </app-campo>

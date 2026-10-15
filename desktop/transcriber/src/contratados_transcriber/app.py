@@ -82,7 +82,7 @@ class Window(QMainWindow):
         if not self.session or self.session.api.origin != origin:
             self.session = Session(Api(origin), store_for(origin))
         return self.session
-    def work(self, operation, success):
+    def work(self, operation, success, clear_context=False):
         if self.busy:
             self.status.setText("Aplicativo ocupado. Aguarde e tente abrir novamente pelo site."); return
         self.busy = True
@@ -93,7 +93,7 @@ class Window(QMainWindow):
         def ok(result): finish(); success(result)
         def fail(error):
             finish()
-            if isinstance(error, CredentialError):
+            if isinstance(error, CredentialError) or clear_context:
                 if self.session: self.session.context = None
                 self.context.setText("Nenhuma sessão aberta.")
             self.status.setText(str(error) if isinstance(error, (ValueError, CredentialError, OfflineError)) else "Falha local. Verifique o vínculo e a proteção Windows; nenhum resultado foi apagado.")
@@ -133,7 +133,7 @@ class Window(QMainWindow):
         try: intent = parse_uri(uri); session = self.configure()
         except Exception: self.status.setText("Abertura inválida; nenhuma ação executada."); return
         def operation(): session.refresh(); return session.resolve(intent)
-        self.work(operation, lambda c: (self.context.setText(f"Sessão: {c['titulo']}\nCampanha: {c['campanhaId']}"), self.status.setText("Contexto autorizado. Importação e transcrição serão disponibilizadas nas próximas etapas.")))
+        self.work(operation, lambda c: (self.context.setText(f"Sessão: {c['titulo']}\nCampanha: {c['campanhaId']}"), self.status.setText("Contexto autorizado. Importação e transcrição serão disponibilizadas nas próximas etapas.")), clear_context=True)
 
 class InstanceServer:
     """User-only local IPC, carrying only opaque URI, never credentials/audio/context."""

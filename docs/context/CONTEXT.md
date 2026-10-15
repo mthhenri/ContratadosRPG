@@ -2176,7 +2176,7 @@ incluindo todos os ajustes avulsos de pós-milestone.
 
 | Spec | Frente | O que é |
 |---|---|---|
-| `transcricoes-01`…`09` | Transcriber | V1 local autorizada; [01 concluída](../specs/done/transcricoes-01-sessoes-e-contratos.spec.md) (API de metadados e migration 0037, gates globais verdes em 15/10); [03 ativa](../specs/active/transcricoes-03-agente-windows-e-vinculo.spec.md) com backend de vínculo, telas e shell/empacotamento Windows, aguardando gates Windows; sequência 01→03→02→04→05→06→07; 08–09 nuvem bloqueadas; [revisão](../specs/backlog/transcricoes/revisao.md) |
+| `transcricoes-01`…`09` | Transcriber | V1 local autorizada; [01 concluída](../specs/done/transcricoes-01-sessoes-e-contratos.spec.md) (API de metadados e migration 0037, gates globais verdes em 15/10); [03 ativa](../specs/active/transcricoes-03-agente-windows-e-vinculo.spec.md) com backend de vínculo, telas e shell/empacotamento Windows, com a bateria Windows rodada em 15/10 (build, instalação, vínculo, revogação, expiração; faltam VM limpa, 2º usuário Windows, navegador real e DPI/leitor de tela reais); sequência 01→03→02→04→05→06→07; 08–09 nuvem bloqueadas; [revisão](../specs/backlog/transcricoes/revisao.md) |
 | `civil-guia-criacao` | ficha | mapeia o escopo de `PROBLEMS.md` `P-018` (o guia de criação trata a classe Civil como um agente comum em vários passos) — spec de levantamento, ainda não implementa |
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
 | `revisao-formatacao-pdf-regras` | regras | revisão substancial da apresentação e aprovação visual do autor; Sistema suspenso (P-108) |

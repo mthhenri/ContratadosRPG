@@ -331,3 +331,9 @@ usuário final e só atrapalha quem testa contra um servidor local.
 
 **Estado da task:** a 03 continua `active`. Faltam S1, V8/V9, U2, U5, Narrador/Tab reais, escala real do Windows,
 e os mesmos itens "máquina limpa" da primeira rodada (B4 jurídico, I1, I3, I4).
+
+**Correções feitas depois da rodada (2026-10-15):** P-128 — `Window.work` ganhou `clear_context` e `open_uri` o usa, então qualquer
+abertura recusada limpa "Sessão: …" (teste `test_rejected_open_clears_the_previous_session_label`, RED→GREEN; desktop 17/17).
+P-127 — a página de vínculo do site passou a dizer que o código de oito caracteres aparece no topo da janela do app logo depois
+de "Vincular conta" (página de transcrição 8/8; eslint 0 erros). Os dois saíram do `PROBLEMS.md`. Não reverificado no app instalado:
+o instalador em `dist/` ainda é o da primeira rodada (sem a correção do P-128); rebuild fica para a próxima rodada com VM.
