@@ -1,5 +1,24 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-15 — Transcriber 01 concluída: gates globais resolvidos, telas alinhadas ao Perfil, roteiro Windows
+
+A 01 saiu de `active/` para `done/`. O que segurava o fecho era global, não do Transcriber, e foi resolvido à parte:
+`RegraPecaService.exigirDadosValidos` validava a peça com `filhos: []`, mas desde `9b85380` (13/10) o validador exige uma
+habilidade inicial em arquétipo/subclasse — o que recusava criar **e também alterar os dados** de qualquer arquétipo na Oficina
+(bug real, não só de teste). Agora valida com os filhos de referência do esqueleto do tipo; teste novo cobre a edição. Também:
+`\u200B` escapado em `oficina-texto.component.ts` (eslint) e teto de 30 s no teste de geração do OpenAPI (~4 s isolado, estourava
+5 s sob carga). A suíte do frontend termina com `--max-old-space-size=4096` (o OOM não se repetiu).
+
+Números: backend 1142/0 falhas; frontend 278 arquivos / 3482 testes; `npm run lint` sem erros nos três workspaces; PostgreSQL
+descartável com schema 11/11, dispositivo 14/14 e REST 22/22 (13 da 01 + 9 da 03); desktop 16/16 em Linux (Qt offscreen).
+
+Revisão visual das telas de transcrição no app real (Perfil como análogo, 4 viewports × 2 temas): botões sem `[tamanho]`, índices
+de cartão fixos (01→03), coluna à esquerda (`--space-24` não existe e invalidava o `margin`), link do Perfil sem estilo, lista sem
+separadores, e — só visto ao exercitar estados — offline ao confirmar culpando "código/prazo/permissão". Todos corrigidos. Spec 03
+segue ativa só pelos gates Windows; roteiro em `transcricoes-03-agente-windows-e-vinculo/roteiro-windows.md` (achado: o instalador
+exige Inno Setup 6.3+). Decisões do autor: app desktop seguirá o estilo do site e a lista de dispositivos mostrará o último uso.
+[Resultados da 01](../specs/done/transcricoes-01-sessoes-e-contratos/verificacao.md).
+
 ## 2026-10-15 — Oficina: atalho Ctrl+Shift+X aplica tachado (destrava o P-120)
 
 A spec de execução do autor ficou com o P-120 bloqueado: a Oficina só tinha Ctrl+B/Ctrl+I. `oficina-texto` agora trata
@@ -116,7 +135,7 @@ Gate global permanece aberto: dois testes preexistentes RegraPecaService falham;
 frontend lint tem dois whitespace preexistentes em oficina-texto.component.ts;
 suite Angular teve OOM/worker encerrado e não foi certificada completa, mesmo
 com heap maior. Nenhuma correção da Oficina fora do escopo. Task permanece active.
-[Resultados, comandos, impacto e limites](../specs/active/transcricoes-01-sessoes-e-contratos/verificacao.md).
+[Resultados, comandos, impacto e limites](../specs/done/transcricoes-01-sessoes-e-contratos/verificacao.md).
 
 ## 2026-10-14 — Contratados Transcriber: revisão e preparação documental, sem implementação
 

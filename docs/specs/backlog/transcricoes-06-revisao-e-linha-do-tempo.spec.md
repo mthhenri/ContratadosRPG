@@ -43,7 +43,7 @@ Fornecer ao Mestre um editor de transcrição com visualizações individual e c
 
 ## Dependências
 
-- `../active/transcricoes-01-sessoes-e-contratos.spec.md`, `transcricoes-02-importacao-e-glossario.spec.md`, `transcricoes-05-sincronizacao-offline.spec.md`, `docs/design/DESIGN.md`.
+- `../done/transcricoes-01-sessoes-e-contratos.spec.md`, `transcricoes-02-importacao-e-glossario.spec.md`, `transcricoes-05-sincronizacao-offline.spec.md`, `docs/design/DESIGN.md`.
 
 ## Riscos e Mitigação
 

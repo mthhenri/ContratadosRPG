@@ -2,7 +2,7 @@
 
 > **Task 01/09** do guarda-chuva `transcricoes.spec.md`. Fundação de dados e autorizações, sem motor de reconhecimento nem UI extensa.
 
-> **Estado: active; implementação autorizada pelo autor em 2026-10-14, desenho aprovado.**
+> **Estado: done (2026-10-15); implementação autorizada pelo autor em 2026-10-14, desenho aprovado.**
 > Decisões pendentes, matriz de acesso e gates: [revisão](../backlog/transcricoes/revisao.md). Anexos próprios: `transcricoes-01-sessoes-e-contratos/` no mesmo estado; evidência bruta em `.artifacts/transcricoes-01-sessoes-e-contratos/`.
 
 ## Objetivo

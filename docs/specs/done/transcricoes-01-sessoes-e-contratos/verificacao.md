@@ -4,9 +4,10 @@ Data: 2026-10-14. Base: `d339e525f70328c69a0f5b42f8af00662bac255d`.
 Worktree: `/workspace/ContratadosRPG-transcricoes`; branch `feat/transcricoes-01`.
 Autor autorizou a V1 local e aprovou D-01/contrato estrutural D-05 (“aprovo”).
 
-**Estado: active.** Fundação implementada e verificada no recorte; o fecho global
-continua aberto pelos problemas abaixo. Nenhum Windows, UI, inferência, fila,
-sincronização, exportação ou nuvem foi entregue por esta task. 08–09 seguem bloqueadas.
+**Estado: done (2026-10-15).** Fundação implementada e verificada; os gates globais que
+seguravam o fecho foram resolvidos (ver "Resolução dos gates globais" no fim). Nenhum
+Windows, UI, inferência, fila, sincronização, exportação ou nuvem foi entregue por esta
+task. 08–09 seguem bloqueadas.
 Sem push, PR remoto, merge, deploy ou acesso a produção.
 
 ## Entrega
@@ -141,3 +142,15 @@ Transcriber, em trabalho separado, como a própria seção previa:
 Após as correções: backend 1142 aprovados / 0 falhas (59 pulados, opt-in); `npm run
 lint` sem erros nos três workspaces. Os resultados da suíte completa do frontend
 estão na verificação da task 03 (mesma data).
+
+## Fecho (2026-10-15)
+
+Releitura da revisão independente: os quatro achados constam reproduzidos, corrigidos e
+cobertos por teste; nenhum achado foi deferido. Reexecução das provas com banco real
+descartável (PostgreSQL 16, porta 55439, migrations 0001–0036 + UP/DOWN pela suíte):
+schema 11/11, API REST da 01 13/13 (JWT/guards/API compilada), junto com as suítes de
+dispositivo da task 03 (14/14 e 9/9). Backend 1142 aprovados / 0 falhas, frontend 278
+arquivos / 3482 testes aprovados, `npm run lint` sem erros nos três workspaces,
+`docs/SCHEMA.md` cobre a migration 0037. Limites: sem prova física Windows (não
+pertence a esta task); aviso de bundle inicial do frontend (598 kB sobre 450 kB) não foi
+comparado com a baseline e permanece como observação, sem relação com esta task.

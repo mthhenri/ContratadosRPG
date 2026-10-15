@@ -41,7 +41,7 @@ Permitir que o Mestre organize a importação multifaixa do Craig, confirme iden
 
 ## Dependências
 
-- `../active/transcricoes-01-sessoes-e-contratos.spec.md` e `../active/transcricoes-03-agente-windows-e-vinculo.spec.md` em `done/`; design de campanha; arquivo de referência `transcrever.py` do autor.
+- `../done/transcricoes-01-sessoes-e-contratos.spec.md` e `../active/transcricoes-03-agente-windows-e-vinculo.spec.md` em `done/`; design de campanha; arquivo de referência `transcrever.py` do autor.
 
 ## Riscos e Mitigação
 

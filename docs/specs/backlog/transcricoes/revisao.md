@@ -140,7 +140,7 @@ notificações públicas, buscas/estatísticas gerais ou logs.
 
 | Task | Entrega verificável | Predecessoras em done | Decisões antes do recorte | Evidência principal |
 |---|---|---|---|---|
-| [01](../../active/transcricoes-01-sessoes-e-contratos.spec.md) | Modelo/contratos, CRUD mínimo privado e autorização; futura migration/schema/OpenAPI | Nenhuma task do módulo; guarda-chuva é fonte, não predecessor executável | D-01, fundamento D-05 | REST real, SQL/transação/UP-DOWN em banco de testes, pais trocados e matriz |
+| [01](../../done/transcricoes-01-sessoes-e-contratos.spec.md) | Modelo/contratos, CRUD mínimo privado e autorização; futura migration/schema/OpenAPI | Nenhuma task do módulo; guarda-chuva é fonte, não predecessor executável | D-01, fundamento D-05 | REST real, SQL/transação/UP-DOWN em banco de testes, pais trocados e matriz |
 | [03](../../active/transcricoes-03-agente-windows-e-vinculo.spec.md) | Shell instalável x64, vínculo e abertura contextual | 01 | D-02/D-03 aprovadas; sem ponte HTTP | Windows limpo, revogação/replay/origem/contas, ausência de credenciais na URI |
 | [02](../transcricoes-02-importacao-e-glossario.spec.md) | Importação no shell, confirmação de mapeamento, offset/glossário da campanha | 01 e 03 | D-06, contrato D-05 | WAV/corpus, rede sem áudio, confirmação/glossário privado |
 | [04](../transcricoes-04-motor-local-e-fila.spec.md) | Faster-Whisper, automático/avançado, fila persistente por arquivo | 02 e 03 | Configurações base justificadas por corpus; dependências D-02 | Windows físico CPU/GPU, kill/restart/cancel/disco/OOM, baseline |
@@ -209,7 +209,7 @@ verificação visual real ou deploy. Não há suporte cloud entregue.
 ## Autorização posterior
 
 Em 2026-10-14 o autor autorizou começar a V1 local e aprovou o desenho
-da [01](../../active/transcricoes-01-sessoes-e-contratos/design.md): domínio próprio,
+da [01](../../done/transcricoes-01-sessoes-e-contratos/design.md): domínio próprio,
 arquivamento reversível, execução selecionada por faixa e milissegundos.
 D-01 e a parte estrutural de D-05 estão resolvidos; demais decisões mantidas.
 08–09 continuam bloqueadas; branch local/sem publicação preservados.
