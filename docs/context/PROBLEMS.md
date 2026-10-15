@@ -54,7 +54,7 @@
 - **Sintoma:** Restam dois trechos sem fronteira no dado: o título de Amaldiçoado pelo Passado fica colado à descrição (`⬦ Amaldiçoado pelo Passado Você é a sucessão…`) e a nota de Armazenamento junta "não agregam nenhum peso ao item" com "Modificações de Armazenamento custam 300 $". (Formação e os três itens ▢ do Amaldiçoado já saem estruturados na leitura — `regras-visual-06`.)
 - **Causa:** A exportação do Docs achatou as passagens em células únicas; sem delimitador na fonte, o código não pode inventar o limite.
 - **Contorno:** Nenhum; o texto está íntegro, só sem quebra.
-- **Correção:** Edição editorial pela Oficina, a cargo do autor: quebra depois do nome da condição e ponto final depois de "item". [Edição proposta](../specs/done/regras-visual-06-notas-e-formacoes/verificacao.md#pendências-editoriais-não-resolvidas-por-código).
+- **Correção:** Edição editorial pela Oficina, a cargo do autor: quebra depois do nome da condição e ponto final depois de "item". Passo a passo na spec de execução do autor: [livro-correcoes-editoriais-producao](../specs/backlog/livro-correcoes-editoriais-producao.spec.md) (bloco 3). Edição proposta: [verificação da 06](../specs/done/regras-visual-06-notas-e-formacoes/verificacao.md#pendências-editoriais-não-resolvidas-por-código).
 - **Desde:** observado em 09/10/2026; parcialmente corrigido em 15/10/2026.
 
 ### P-120 — Livro publicado ainda guarda `~~torturar psicologicamente~~` como texto literal · `ABERTO` · dados/regras
@@ -62,7 +62,7 @@
 - **Sintoma:** Guia → Introdução, em produção: a frase aparece com os delimitadores `~~`. O leitor, o normalizador, a exportação e o editor já modelam o trecho `tachado` (`regras-visual-07`), mas o dado publicado no banco é um trecho `texto` com o Markdown cru.
 - **Causa:** A importação inicial do Guia ocorreu antes de existir o token; o banco é a fonte da verdade e não é regenerado pelo normalizador.
 - **Contorno:** Nenhum no site; o texto continua legível com os delimitadores.
-- **Correção:** Converter o trecho no livro (rascunho e publicação) em `texto` + `tachado` + `texto` — via migração de dados ou na Oficina (que ainda não tem botão de tachado) — e republicar. Decisão e execução do autor, por mexer em dado de produção.
+- **Correção:** Converter o trecho no livro (rascunho e publicação) em `texto` + `tachado` + `texto` e republicar — execução do autor, por mexer em dado de produção, no bloco 4 de [livro-correcoes-editoriais-producao](../specs/backlog/livro-correcoes-editoriais-producao.spec.md). **Bloqueado:** a Oficina só tem Ctrl+B/Ctrl+I; falta um atalho de tachado (tarefa de código, a abrir a pedido do autor).
 - **Desde:** observado em 09/10/2026; código corrigido em 15/10/2026 ([verificação](../specs/done/regras-visual-07-tachado-inline/verificacao.md)).
 
 ### P-111 — Recorrência de falha nativa no build com cache local · `CONTORNADO` · frontend/ambiente

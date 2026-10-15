@@ -1,5 +1,17 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-15 — regras-visual-11 encerrada; correções do livro viram spec de execução do autor (produção)
+
+Com o livro em produção, toda alteração nele passou a ser do autor. Entregue: inventário dos dois livros (67 pontos, a partir da
+árvore de peças publicada em 12/10: 2 conversões em Fórmula — Descanso no Sistema e Defesa do NPC no Guia (1+3 peças) —, 1 decisão
+sobre a conta resolvida de Bônus Monetário, 19 já corretas, 45 a manter) e a spec
+[livro-correcoes-editoriais-producao](../specs/backlog/livro-correcoes-editoriais-producao.spec.md), que reúne RV-11, `P-119` e `P-120`
+num passo a passo para o autor (rascunho primeiro, conferência pela gaveta "O que mudou", publicar, exportar, conferir no site).
+Achados que moldaram a spec: a Oficina **não tem desfazer publicação**; **não aceita quebra de linha em Nota** (só pontuação serve
+para o P-119); e **não tem atalho de tachado** (P-120 fica bloqueado até um atalho, tarefa de código à parte). Limite: o passo a
+passo veio do código e das specs M11, sem teste ao vivo na produção; o levantamento é do banco local. `regras-visual-11` foi para `done/`
+com o inventário e a execução transferida.
+
 ## 2026-10-15 — regras-visual-06: Formação e efeitos ▢ estruturados na leitura; dois trechos editoriais ficam para o autor
 
 As três passagens chegaram achatadas da exportação do Docs (a própria fonte as traz numa célula só) e o dado vive no banco. Com a

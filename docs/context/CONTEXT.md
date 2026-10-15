@@ -3418,7 +3418,8 @@ teclado e busca em aba oculta conferidos;
 [verificação](../specs/done/regras-visual-08-habilidades-passivas-npcs/verificacao.md).
 `regras-visual-06` (Formação, efeitos ▢ e ressalva estruturados na leitura) concluída em 15/10:
 [verificação](../specs/done/regras-visual-06-notas-e-formacoes/verificacao.md); `P-119` reescopado para dois trechos
-editoriais (título do Amaldiçoado e nota de Armazenamento). Resta da série `regras-visual-11` (Oficina, do autor).
+editoriais (título do Amaldiçoado e nota de Armazenamento). A `regras-visual-11` foi encerrada com inventário; a execução na produção (Descanso, Defesa de NPC, notas, tachado) é do autor na spec
+[livro-correcoes-editoriais-producao](../specs/backlog/livro-correcoes-editoriais-producao.spec.md).
 P-124 registra contraste preexistente das marcas não selecionadas de pesquisa
 sobre os fundos semânticos de ameaça; permanece aberto.
 Há ainda notas/passivas degradadas, tachado literal, contraste na base clara

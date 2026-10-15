@@ -1,5 +1,7 @@
 # regras-visual-11-formulas-em-faixa.spec.md
 
+> **Encerrada em 15/10/2026 — inventário entregue; execução transferida.** O inventário completo está em [`inventario-formulas.md`](../backlog/livro-correcoes-editoriais-producao/inventario-formulas.md) (67 pontos: 2 conversões, 1 decisão do autor, 19 já corretas, 45 a manter). A conversão pela Oficina, a publicação e a exportação — entregáveis 2 a 4 e os critérios de aceite de livro publicado — passaram a ser do autor, na produção, na spec [livro-correcoes-editoriais-producao](../backlog/livro-correcoes-editoriais-producao.spec.md), junto com `P-119` e `P-120`.
+
 > Continuação da série `regras-visual-*`. Pedido do autor em 2026-10-14: no leitor de Regras, a regra
 > de Descanso mostra "ATRIBUTO dados de descanso + (NÍVEL × 2)" como texto corrido, sem a faixa de
 > fórmula que "Inventário Máximo = Força × 5" tem; revisar os outros pontos dos livros.
