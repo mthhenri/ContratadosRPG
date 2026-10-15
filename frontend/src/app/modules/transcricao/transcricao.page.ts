@@ -7,11 +7,12 @@ import { SessaoService } from '../../core/services/sessao.service';
 import { Cartao } from '../../shared/ui/cartao/cartao.component';
 import { Botao } from '../../shared/ui/botao/botao.component';
 import { Campo } from '../../shared/ui/campo/campo.component';
+import { Icone } from '../../shared/icone/icone.component';
 import { TranscricaoService } from './transcricao.service';
 import { criarUriAbertura, estadoAbertura } from './abertura';
 /** Análogos: Perfil (cartões/formulário) e Biblioteca (lista privada do Mestre). */
 @Component({
-  selector: 'app-transcricoes', imports: [RouterLink, ReactiveFormsModule, Cartao, Botao, Campo],
+  selector: 'app-transcricoes', imports: [RouterLink, ReactiveFormsModule, Cartao, Botao, Campo, Icone],
   templateUrl: './transcricao.page.html', styleUrl: './transcricao.page.scss',
 })
 export class Transcricoes {
@@ -21,6 +22,9 @@ export class Transcricoes {
   protected readonly conta = inject(SessaoService).usuario;
   protected readonly campanhaId = Number(this.rota.snapshot.paramMap.get('campanhaId'));
   protected readonly pedidoId = this.rota.snapshot.paramMap.get('identificador');
+  /** Índices dos cartões seguem os que a rota realmente mostra: sem lacuna nem início em 02. */
+  protected readonly indiceDispositivos = this.campanhaId && !this.pedidoId ? '02' : '01';
+  protected readonly indiceInstalacao = this.pedidoId ? '02' : this.campanhaId ? '03' : '02';
   protected readonly sessoes = signal<SessaoTranscricaoResumoDto[]>([]);
   protected readonly dispositivos = signal<DispositivoResumoDto[]>([]);
   protected readonly pedido = signal<DispositivoVinculoRecuperadoDto | null>(null);

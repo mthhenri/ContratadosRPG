@@ -31,6 +31,10 @@
         color: var(--text-dim);
     }
 
+    &__transcricao {
+        margin-bottom: 16px;
+    }
+
     &__formulario {
         display: flex;
         flex-direction: column;

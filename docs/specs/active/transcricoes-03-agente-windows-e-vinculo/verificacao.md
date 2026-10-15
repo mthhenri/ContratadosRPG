@@ -134,3 +134,24 @@ origem frontend `http://localhost:54301`. Rodar PostgreSQL antes de REST/browser
 a suíte SQL faz DOWN/UP da 0038 e deve terminar antes da inspeção/REST, nunca
 concorrer com ela. A massa e os cenários reproduzíveis vivem nas specs de teste
 versionadas; artefatos locais são somente suas saídas e capturas.
+
+## Revisão visual complementar e correções (2026-10-15)
+
+Nova inspeção pelo agente principal, no app real (API + Postgres descartável),
+contra o análogo Perfil: 3 telas (sessões, vínculo, dispositivos) + Perfil ×
+1920×1080, 1366×768, 960×1080, 360×800 × base clara/escura (32 capturas, só em
+`.artifacts/transcricoes-visual/`). Defeitos encontrados e corrigidos:
+
+- Botões sem `[tamanho]` (minúsculos, sem caixa alta/ícone): agora `tamanho="medio"` com
+  `app-icone`, como Perfil; removido o padding local que sobrescrevia o primitivo.
+- Índices de cartão fixos (vínculo mostrava 01→03; dispositivos começava em 02): agora
+  derivados da rota (`indiceDispositivos`/`indiceInstalacao`).
+- Coluna à esquerda: `margin: var(--space-24) auto` usava token inexistente (escala vai
+  a `--space-20`), invalidando a declaração; agora `margin: 0 auto`.
+- Link "Dispositivos de transcrição" do Perfil sem tamanho/ícone e colado ao aviso.
+- Lista sem separadores e colada ao formulário.
+
+Verificado: zero overflow horizontal, zero erro de página, alvos ≥44 px nas telas de
+transcrição; specs de transcrição e perfil (14 testes) e eslint (0 erros) verdes.
+Não coberto: estados de pedido expirado/inválido, offline, revogação em clique e
+diálogo/protocolo Windows; dica do campo (texto pequeno) pertence ao `app-campo`.

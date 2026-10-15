@@ -4,13 +4,14 @@
   display: grid;
   gap: var(--space-16);
   max-width: 960px;
-  margin: var(--space-24) auto;
+  margin: 0 auto;
   padding: var(--space-16);
   min-width: 0;
   p { overflow-wrap: anywhere; }
+  &__acoes { margin-top: var(--space-8); }
   &__acoes, &__formulario { display: flex; flex-wrap: wrap; gap: var(--space-12); align-items: end; }
   &__formulario app-campo { flex: 1 1 240px; min-width: 0; }
-  button, a[app-botao] { min-height: 44px; padding: var(--space-8) var(--space-12); }
+  button, a[app-botao] { min-height: 44px; }
   input {
     min-width: 0; width: 100%; min-height: 44px;
     background: var(--surface-2); border: 1px solid var(--border-strong);
@@ -19,7 +20,11 @@
     &:focus-visible { outline: 2px solid var(--accent-border); }
   }
   &__confirmar { margin-top: var(--space-16); }
-  &__lista { list-style: none; padding: 0; display: grid; gap: var(--space-12); }
-  &__lista li { display: flex; flex-wrap: wrap; gap: var(--space-12); align-items: center; justify-content: space-between; }
+  &__lista { list-style: none; margin: var(--space-16) 0 0; padding: 0; display: grid; }
+  &__lista li {
+    display: flex; flex-wrap: wrap; gap: var(--space-12); align-items: center; justify-content: space-between;
+    padding: var(--space-12) 0;
+  }
+  &__lista li + li, &__formulario + &__lista li:first-child { border-top: 1px solid var(--border); }
   &__lista strong { overflow-wrap: anywhere; min-width: 0; }
 }
