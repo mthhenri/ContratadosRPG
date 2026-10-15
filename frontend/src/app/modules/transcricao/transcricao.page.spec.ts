@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
 import { of, throwError, Subject } from 'rxjs';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { signal } from '@angular/core';
@@ -24,6 +25,16 @@ describe('Transcricoes — vínculo e fallback', () => {
     const input = root.querySelector('input')!; input.value = '1234abcd'; input.dispatchEvent(new Event('input')); f.detectChanges();
     api.confirmar.mockReturnValue(of({})); button.click(); f.detectChanges();
     expect(api.confirmar).toHaveBeenCalledWith(id, '1234ABCD'); expect(root.textContent).toContain('Volte ao aplicativo');
+  });
+  it('sem rede ao confirmar não culpa código, prazo ou permissão', async () => {
+    const f = await criar({ identificador: id }); const root = f.nativeElement as HTMLElement;
+    const input = root.querySelector('input')!; input.value = '1234abcd'; input.dispatchEvent(new Event('input')); f.detectChanges();
+    api.confirmar.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 0 })));
+    [...root.querySelectorAll('button')].find(b => b.textContent?.includes('Vincular'))!.click(); f.detectChanges();
+    expect(root.textContent).toContain('Sem conexão'); expect(root.textContent).not.toContain('Confira o código');
+    api.confirmar.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 400 })));
+    [...root.querySelectorAll('button')].find(b => b.textContent?.includes('Vincular'))!.click(); f.detectChanges();
+    expect(root.textContent).toContain('Confira o código');
   });
   it('pedido expirado mantém instruções de abertura manual', async () => {
     api.recuperarPedido.mockReturnValue(throwError(() => new Error('404')));

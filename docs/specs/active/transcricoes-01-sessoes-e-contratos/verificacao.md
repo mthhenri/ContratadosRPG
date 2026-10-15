@@ -119,3 +119,25 @@ Não apontar essas provas a produção/.env pessoal. Container sem volumes:
    porque a primeira aplica/remove as tabelas da task.
 5. Encerrar API/container criados por esta task. Dados eram sintéticos, sem WAV;
    nenhum volume nem produção é removido.
+
+## Resolução dos gates globais (2026-10-15)
+
+As falhas listadas acima eram preexistentes e foram resolvidas fora do escopo do
+Transcriber, em trabalho separado, como a própria seção previa:
+
+1. `regra-peca.service.spec.ts` (2 testes): causa real, não do teste. A regra "uma
+   habilidade inicial por arquétipo/subclasse" entrou no validador compartilhado
+   (`9b85380`, 13/10) mas `exigirDadosValidos` validava a peça com `filhos: []`; isso
+   recusava criar **e também alterar os dados** de qualquer arquétipo/subclasse na
+   Oficina. Corrigido com filhos de referência do esqueleto do tipo; teste novo para
+   a edição de arquétipo existente. RED sem a correção (3 falhas) → GREEN (34/34).
+2. `oficina-texto.component.ts`: o espaço de largura zero literal virou `​`
+   (comportamento idêntico); `eslint .` do frontend sem erros.
+3. Suíte do frontend: termina com `NODE_OPTIONS=--max-old-space-size=4096`, sem OOM.
+   Dois testes (`previa-jogador`, `cartao-combatente`) estouraram o teto de 5 s quando a
+   máquina estava ocupada e passam isolados; o teste de geração do OpenAPI (~4 s
+   isolado) ganhou teto de 30 s pelo mesmo motivo.
+
+Após as correções: backend 1142 aprovados / 0 falhas (59 pulados, opt-in); `npm run
+lint` sem erros nos três workspaces. Os resultados da suíte completa do frontend
+estão na verificação da task 03 (mesma data).

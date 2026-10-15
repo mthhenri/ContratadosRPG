@@ -6,8 +6,8 @@
       <a app-botao variante="secundario" tamanho="medio" routerLink="/campanhas"><app-icone nome="campanhas" />Campanhas</a>
       <a app-botao variante="secundario" tamanho="medio" routerLink="/transcricoes/dispositivos"><app-icone nome="vincular" />Dispositivos vinculados</a>
     </nav>
-    <p role="status" aria-live="polite">{{ mensagem() }}</p>
-    @if (erro()) { <p role="alert">{{ erro() }}</p> }
+    <p class="transcricoes__mensagem" role="status" aria-live="polite">{{ mensagem() }}</p>
+    @if (erro()) { <p class="transcricoes__erro" role="alert">{{ erro() }}</p> }
   </app-cartao>
   @if (pedido(); as p) {
     <app-cartao titulo="Confirmar vínculo">

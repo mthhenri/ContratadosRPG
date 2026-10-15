@@ -1,4 +1,5 @@
 import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { finalize, Subscription, timer, exhaustMap, take, takeWhile, timeout } from 'rxjs';
@@ -44,15 +45,17 @@ export class Transcricoes {
     if (this.campanhaId) this.api.listarSessoes(this.campanhaId).subscribe({ next: s => this.sessoes.set(s), error: () => this.erro.set('Não foi possível carregar as sessões. Verifique sua conexão e permissão de Mestre.') });
     this.api.listarDispositivos().subscribe({ next: d => this.dispositivos.set(d), error: () => this.erro.set('Não foi possível carregar os dispositivos.') });
   }
+  /** Status 0 é falha de rede (nada chegou ao servidor): a causa não é código, prazo nem permissão. */
+  private semConexao(erro: unknown): boolean { return erro instanceof HttpErrorResponse && erro.status === 0; }
   protected criar(): void {
     if (this.formulario.invalid || this.ocupado()) return;
     this.ocupado.set(true); this.erro.set('');
-    this.api.criarSessao(this.campanhaId, this.formulario.getRawValue().titulo.trim()).pipe(finalize(() => this.ocupado.set(false))).subscribe({ next: () => { this.formulario.reset(); this.carregar(); }, error: () => this.erro.set('Não foi possível criar a sessão.') });
+    this.api.criarSessao(this.campanhaId, this.formulario.getRawValue().titulo.trim()).pipe(finalize(() => this.ocupado.set(false))).subscribe({ next: () => { this.formulario.reset(); this.carregar(); }, error: e => this.erro.set(this.semConexao(e) ? 'Sem conexão com o servidor. Verifique a internet e tente criar de novo.' : 'Não foi possível criar a sessão.') });
   }
   protected confirmar(): void {
     if (!this.pedidoId || this.codigo.invalid || this.ocupado()) return;
     this.ocupado.set(true); this.erro.set('');
-    this.api.confirmar(this.pedidoId, this.codigo.value.toUpperCase()).pipe(finalize(() => this.ocupado.set(false))).subscribe({ next: () => { this.pedido.set(null); this.mensagem.set('Dispositivo vinculado. Volte ao aplicativo.'); }, error: () => this.erro.set('Não foi possível confirmar. Confira o código, o prazo e sua permissão de Mestre.') });
+    this.api.confirmar(this.pedidoId, this.codigo.value.toUpperCase()).pipe(finalize(() => this.ocupado.set(false))).subscribe({ next: () => { this.pedido.set(null); this.mensagem.set('Dispositivo vinculado. Volte ao aplicativo.'); }, error: e => this.erro.set(this.semConexao(e) ? 'Sem conexão com o servidor. Verifique a internet e confirme de novo; o pedido vale até expirar.' : 'Não foi possível confirmar. Confira o código, o prazo e sua permissão de Mestre.') });
   }
   protected revogar(id: string): void {
     if (this.ocupado()) return; this.ocupado.set(true);

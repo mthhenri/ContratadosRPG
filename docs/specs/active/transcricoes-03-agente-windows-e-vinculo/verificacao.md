@@ -155,3 +155,33 @@ Verificado: zero overflow horizontal, zero erro de página, alvos ≥44 px nas t
 transcrição; specs de transcrição e perfil (14 testes) e eslint (0 erros) verdes.
 Não coberto: estados de pedido expirado/inválido, offline, revogação em clique e
 diálogo/protocolo Windows; dica do campo (texto pequeno) pertence ao `app-campo`.
+
+## Adiantamento sem Windows (2026-10-15)
+
+- **Desktop em Linux:** `unittest discover` da pasta `desktop/transcriber/tests`
+  com Qt `offscreen` — 16/16 (núcleo 9, API 5, Qt 2; Python 3.13 aqui, 3.12 é a versão
+  fixada do projeto). Não certifica DPAPI, IPC, protocolo nem comportamento Windows.
+- **Janela do app renderizada offscreen** em 100%/150%/200% (`QT_SCALE_FACTOR`) e
+  420 px de largura: sem corte, sobreposição ou botão fora da janela; mínimo do layout
+  313×513. Evidência aproximada (fonte/estilo Windows diferem; não substitui U1–U5 do
+  roteiro). O app usa o estilo nativo do Qt, sem a identidade visual do site — decisão
+  pendente do autor.
+- **Estados web exercitados no app real** (desktop e 360×800): pedido inexistente,
+  código errado, offline ao confirmar, vínculo com sucesso, revogação, "Abrir no
+  aplicativo" sem app (fica em "Aguardando confirmação"). Zero erro de página, zero
+  toast técnico. Defeitos achados e corrigidos: offline ao confirmar culpava
+  "código, prazo e permissão" (agora "Sem conexão…", com teste); status/erro sem
+  tratamento visual (agora erro com destaque de alerta). Pendente: o fim do tempo de
+  espera de 120 s da abertura não foi esperado em tempo real.
+- **Roteiro da bateria Windows** pronto em `roteiro-windows.md` (build, instalação,
+  protocolo, jornada de aceite, segurança, DPI/teclado). Achado estático: o instalador
+  usa `x64compatible`, que exige Inno Setup **6.3+**; README corrigido.
+- Sugestão não implementada: a lista de dispositivos não mostra o último uso
+  (`ultimoUso` já vem no contrato), então dispositivos com o mesmo nome são
+  indistinguíveis. Depende de decisão do autor por ampliar a spec.
+
+**Gate global do frontend (2026-10-15):** `NODE_OPTIONS=--max-old-space-size=4096 npm run
+test --workspace=frontend`, máquina sem outros processos: **278 arquivos / 3482 testes
+aprovados, exit 0** (sem OOM); o `test:regras` roda antes na mesma execução. Com a
+suíte do backend (1142 aprovados) e `npm run lint` (0 erros nos três workspaces), os
+gates globais deixam de bloquear as specs 01 e 03; sobram os gates Windows da 03.

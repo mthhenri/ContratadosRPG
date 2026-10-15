@@ -5,7 +5,7 @@ credencial cloud. Usuário final abre pelo menu Iniciar; não precisa Python ou 
 
 ## Desenvolvimento e build Windows
 
-Em checkout local, com Python 3.12 x64 e Inno Setup 6 instalados na máquina de build:
+Em checkout local, com Python 3.12 x64 e Inno Setup 6.3 ou superior (o instalador usa `x64compatible`) instalados na máquina de build:
 
 ```powershell
 cd desktop/transcriber
