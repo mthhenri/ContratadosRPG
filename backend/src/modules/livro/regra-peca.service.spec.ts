@@ -296,6 +296,13 @@ describe("RegraPecaService — âncora do primeiro nome", () => {
     id: 1, livroId: 1, pecaPaiId: null, tipo, identificador: uuid(1), ancora, ordem: 0, dados: dados as never, revisao: 1,
   });
 
+  it("edita os dados de um arquétipo existente sem exigir os filhos na checagem da peça", async () => {
+    const { servico } = criar([nova(Tipo.ARQUETIPO, criarEsqueletoPeca(Tipo.ARQUETIPO).dados)]);
+    const dados = { ...criarEsqueletoPeca(Tipo.ARQUETIPO).dados, nome: "Atirador" } as never;
+    const { peca } = await servico.alterarDados({ codigo: "sistema", id: 1, dados, revisao: 1 }, admin);
+    expect(peca.dados).toMatchObject({ nome: "Atirador" });
+  });
+
   it("seção nova ganha a âncora quando recebe o primeiro título", async () => {
     const { servico } = criar([nova(Tipo.SECAO, { titulo: "", nivel: 2, glifo: null })]);
     const { peca } = await servico.alterarDados(

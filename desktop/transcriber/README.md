@@ -5,7 +5,7 @@ credencial cloud. Usuário final abre pelo menu Iniciar; não precisa Python ou 
 
 ## Desenvolvimento e build Windows
 
-Em checkout local, com Python 3.12 x64 e Inno Setup 6 instalados na máquina de build:
+Em checkout local, com Python 3.12 x64 e Inno Setup 6.3 ou superior (o instalador usa `x64compatible`) instalados na máquina de build:
 
 ```powershell
 cd desktop/transcriber
@@ -16,10 +16,18 @@ python -m pip install --no-deps -e .
 ./packaging/build.ps1
 ```
 
+Antes do build, `./packaging/verificar-ambiente.ps1`; depois da instalação, `./packaging/coletar-evidencias.ps1`
+(relatório em `.artifacts/`). Ambos só leem e ainda não foram executados em Windows.
+
 Build não publica nem assina. Instalador e SHA-256 em `dist/`; sem certificado
 Authenticode fornecido pelo mantenedor, permanece sem assinatura e pode mostrar avisos.
 Não desative as proteções do Windows. Hash acompanha o artefato local e não substitui
 assinatura ou origem confiável. Conferir redistribuíveis e avisos antes de distribuição.
+
+## Tema
+
+`src/contratados_transcriber/theme.py` mapeia os tokens de `docs/design/tema/_tokens.scss` (base escura) para QSS;
+cartões, rótulos, campos e botões são os equivalentes Qt dos padrões do site. Mudou um token do tema? Atualize só o mapa `TOKENS`.
 
 ## Testes portáveis
 

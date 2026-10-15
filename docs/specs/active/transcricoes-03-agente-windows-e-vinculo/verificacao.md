@@ -134,3 +134,111 @@ origem frontend `http://localhost:54301`. Rodar PostgreSQL antes de REST/browser
 a suíte SQL faz DOWN/UP da 0038 e deve terminar antes da inspeção/REST, nunca
 concorrer com ela. A massa e os cenários reproduzíveis vivem nas specs de teste
 versionadas; artefatos locais são somente suas saídas e capturas.
+
+## Revisão visual complementar e correções (2026-10-15)
+
+Nova inspeção pelo agente principal, no app real (API + Postgres descartável),
+contra o análogo Perfil: 3 telas (sessões, vínculo, dispositivos) + Perfil ×
+1920×1080, 1366×768, 960×1080, 360×800 × base clara/escura (32 capturas, só em
+`.artifacts/transcricoes-visual/`). Defeitos encontrados e corrigidos:
+
+- Botões sem `[tamanho]` (minúsculos, sem caixa alta/ícone): agora `tamanho="medio"` com
+  `app-icone`, como Perfil; removido o padding local que sobrescrevia o primitivo.
+- Índices de cartão fixos (vínculo mostrava 01→03; dispositivos começava em 02): agora
+  derivados da rota (`indiceDispositivos`/`indiceInstalacao`).
+- Coluna à esquerda: `margin: var(--space-24) auto` usava token inexistente (escala vai
+  a `--space-20`), invalidando a declaração; agora `margin: 0 auto`.
+- Link "Dispositivos de transcrição" do Perfil sem tamanho/ícone e colado ao aviso.
+- Lista sem separadores e colada ao formulário.
+
+Verificado: zero overflow horizontal, zero erro de página, alvos ≥44 px nas telas de
+transcrição; specs de transcrição e perfil (14 testes) e eslint (0 erros) verdes.
+Não coberto: estados de pedido expirado/inválido, offline, revogação em clique e
+diálogo/protocolo Windows; dica do campo (texto pequeno) pertence ao `app-campo`.
+
+## Adiantamento sem Windows (2026-10-15)
+
+- **Desktop em Linux:** `unittest discover` da pasta `desktop/transcriber/tests`
+  com Qt `offscreen` — 16/16 (núcleo 9, API 5, Qt 2; Python 3.13 aqui, 3.12 é a versão
+  fixada do projeto). Não certifica DPAPI, IPC, protocolo nem comportamento Windows.
+- **Janela do app renderizada offscreen** em 100%/150%/200% (`QT_SCALE_FACTOR`) e
+  420 px de largura: sem corte, sobreposição ou botão fora da janela; mínimo do layout
+  313×513. Evidência aproximada (fonte/estilo Windows diferem; não substitui U1–U5 do
+  roteiro). **Correção (mesma data):** esta captura omitiu a folha de estilo que `main()` aplica
+  (o app já era escuro, mapeado dos tokens), então a leitura "estilo nativo" estava errada;
+  o que faltava era a fidelidade ao site — ver "Tema do app desktop" abaixo.
+- **Estados web exercitados no app real** (desktop e 360×800): pedido inexistente,
+  código errado, offline ao confirmar, vínculo com sucesso, revogação, "Abrir no
+  aplicativo" sem app (fica em "Aguardando confirmação"). Zero erro de página, zero
+  toast técnico. Defeitos achados e corrigidos: offline ao confirmar culpava
+  "código, prazo e permissão" (agora "Sem conexão…", com teste); status/erro sem
+  tratamento visual (agora erro com destaque de alerta). Pendente: o fim do tempo de
+  espera de 120 s da abertura não foi esperado em tempo real.
+- **Roteiro da bateria Windows** pronto em `roteiro-windows.md` (build, instalação,
+  protocolo, jornada de aceite, segurança, DPI/teclado). Achado estático: o instalador
+  usa `x64compatible`, que exige Inno Setup **6.3+**; README corrigido.
+- Sugestão não implementada: a lista de dispositivos não mostra o último uso
+  (`ultimoUso` já vem no contrato), então dispositivos com o mesmo nome são
+  indistinguíveis. Depende de decisão do autor por ampliar a spec.
+
+**Gate global do frontend (2026-10-15):** `NODE_OPTIONS=--max-old-space-size=4096 npm run
+test --workspace=frontend`, máquina sem outros processos: **278 arquivos / 3482 testes
+aprovados, exit 0** (sem OOM); o `test:regras` roda antes na mesma execução. Com a
+suíte do backend (1142 aprovados) e `npm run lint` (0 erros nos três workspaces), os
+gates globais deixam de bloquear as specs 01 e 03; sobram os gates Windows da 03.
+
+## Tema do app desktop alinhado ao site (2026-10-15)
+
+Decisão do autor: o app segue o estilo do site. `desktop/transcriber/src/contratados_transcriber/theme.py`
+passa a ser o mapeamento único dos tokens de `docs/design/tema/_tokens.scss` (base escura) para
+QSS, e a janela usa os equivalentes Qt dos padrões do site: cartão com índice (`//`, `01`, `02`),
+título mono em caixa alta com régua hairline, rótulo mono em caixa alta, campo `surface-2`,
+botão primário em accent, secundário em contorno e perigo em `--erro`. Análogo escolhido:
+Perfil (cartões, campos e botões). Renderizado offscreen em 100%/150%/200%, largura mínima
+(560) e base (640×760): sem corte, sem rolagem horizontal, nada sobreposto; os 16 testes
+do desktop seguem passando. Largura mínima de 560 porque `QPushButton` não quebra linha e o
+maior rótulo precisa caber. Limites, para o roteiro (U1–U5): fontes IBM Plex **não** são
+embutidas (cai em Cascadia Mono/Consolas e Segoe UI) — embutir exige arquivos e aviso de
+licença, decisão do autor; botões sem ícone (o site usa ícones SVG); fidelidade em Windows real
+(renderização de fonte e DPI) só se confirma na bateria.
+
+## Último uso na lista de dispositivos (2026-10-15)
+
+Decisão do autor. A lista web passa a mostrar "Último uso: dd/MM/yy HH:mm" (`ultimoUso` já
+vinha no contrato), distinguindo dispositivos com o mesmo nome. Teste novo na página.
+
+## Estados web restantes e análise do empacotamento (2026-10-15)
+
+- **Estados web, app real (desktop/360×800):** pedido expirado de verdade (prazo vencido no
+  banco descartável): API devolve 404 em recuperar e em confirmar, a tela mostra "Vínculo
+  indisponível ou expirado", sem formulário e com as instruções de instalação/abertura manual.
+  Fim do tempo de espera da abertura: após ~120 s a mensagem passa a "Não recebemos
+  confirmação do aplicativo." e o botão volta a ficar ativo. Teclado nas telas de sessões e
+  dispositivos: ordem de foco lógica (topbar → navegação → campo → ações) e foco visível em
+  todos os controles. Zero erro de página. Não coberto: leitor de tela.
+- **Empacotamento (PyInstaller 6.12.0 rodado em Linux, só para análise estática do `.spec`):**
+  o `transcriber.spec` é válido e gera o bundle (169 MB no Linux, números do Windows diferem).
+  Achados: (1) **nenhum arquivo de licença no bundle** além de `THIRD-PARTY-NOTICES.md`, e os
+  wheels do PySide6 não trazem licenças — os textos exigidos pelo próprio aviso precisam vir
+  do upstream e ser versionados (gate B4); (2) o bundle leva módulos Qt que o app não usa
+  (Quick, Qml, Pdf no Linux), o que aumenta tamanho e o que precisa ser licenciado — conferir
+  no Windows com `coletar-evidencias.ps1` antes de decidir `excludes`. Nada disso foi alterado
+  no `.spec`: não há como validar o resultado em Windows aqui.
+- **Scripts de apoio** `packaging/verificar-ambiente.ps1` e `packaging/coletar-evidencias.ps1`
+  escritos, **nunca executados** (sem PowerShell no ambiente Linux).
+
+## Licenças empacotadas — B4 parcialmente fechado (2026-10-15)
+
+Textos baixados dos repositórios oficiais nas versões usadas e versionados em
+`desktop/transcriber/licencas/` (LGPL-3.0-only e GPL-3.0-only do `qt/qtbase` v6.8.3, `LICENSE` do
+CPython v3.12.10, `COPYING.txt` do PyInstaller v6.12.0 — este idêntico, byte a byte, ao do pacote
+instalado), com `LEIA-ME.md` registrando origem, hash e a oferta de código-fonte. O `transcriber.spec`
+passa a incluir a pasta no bundle e **aborta a build** se ela estiver vazia ou ausente. Verificado
+com o PyInstaller em Linux: as cinco peças entram no bundle e são idênticas às do repositório; sem a
+pasta, a build falha com mensagem clara. `gnu.org` e `code.qt.io` não eram acessíveis daqui; o texto
+da LGPLv3 vem do `qt/qtbase`, que é o que o Qt distribui.
+
+**Continua aberto (não resolvido):** avisos de terceiros embutidos nas bibliotecas do Qt (ICU,
+FreeType, HarfBuzz etc.) conforme o que o instalador Windows realmente leva; termos do runtime C++
+da Microsoft; revisão jurídica da oferta de código-fonte. A licença do Python é a do 3.12.10; se a
+máquina de build usar outro 3.12.x, conferir se o texto mudou. Nada disso é verificável sem Windows.

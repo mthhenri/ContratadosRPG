@@ -4,9 +4,10 @@ Data: 2026-10-14. Base: `d339e525f70328c69a0f5b42f8af00662bac255d`.
 Worktree: `/workspace/ContratadosRPG-transcricoes`; branch `feat/transcricoes-01`.
 Autor autorizou a V1 local e aprovou D-01/contrato estrutural D-05 (“aprovo”).
 
-**Estado: active.** Fundação implementada e verificada no recorte; o fecho global
-continua aberto pelos problemas abaixo. Nenhum Windows, UI, inferência, fila,
-sincronização, exportação ou nuvem foi entregue por esta task. 08–09 seguem bloqueadas.
+**Estado: done (2026-10-15).** Fundação implementada e verificada; os gates globais que
+seguravam o fecho foram resolvidos (ver "Resolução dos gates globais" no fim). Nenhum
+Windows, UI, inferência, fila, sincronização, exportação ou nuvem foi entregue por esta
+task. 08–09 seguem bloqueadas.
 Sem push, PR remoto, merge, deploy ou acesso a produção.
 
 ## Entrega
@@ -119,3 +120,37 @@ Não apontar essas provas a produção/.env pessoal. Container sem volumes:
    porque a primeira aplica/remove as tabelas da task.
 5. Encerrar API/container criados por esta task. Dados eram sintéticos, sem WAV;
    nenhum volume nem produção é removido.
+
+## Resolução dos gates globais (2026-10-15)
+
+As falhas listadas acima eram preexistentes e foram resolvidas fora do escopo do
+Transcriber, em trabalho separado, como a própria seção previa:
+
+1. `regra-peca.service.spec.ts` (2 testes): causa real, não do teste. A regra "uma
+   habilidade inicial por arquétipo/subclasse" entrou no validador compartilhado
+   (`9b85380`, 13/10) mas `exigirDadosValidos` validava a peça com `filhos: []`; isso
+   recusava criar **e também alterar os dados** de qualquer arquétipo/subclasse na
+   Oficina. Corrigido com filhos de referência do esqueleto do tipo; teste novo para
+   a edição de arquétipo existente. RED sem a correção (3 falhas) → GREEN (34/34).
+2. `oficina-texto.component.ts`: o espaço de largura zero literal virou `​`
+   (comportamento idêntico); `eslint .` do frontend sem erros.
+3. Suíte do frontend: termina com `NODE_OPTIONS=--max-old-space-size=4096`, sem OOM.
+   Dois testes (`previa-jogador`, `cartao-combatente`) estouraram o teto de 5 s quando a
+   máquina estava ocupada e passam isolados; o teste de geração do OpenAPI (~4 s
+   isolado) ganhou teto de 30 s pelo mesmo motivo.
+
+Após as correções: backend 1142 aprovados / 0 falhas (59 pulados, opt-in); `npm run
+lint` sem erros nos três workspaces. Os resultados da suíte completa do frontend
+estão na verificação da task 03 (mesma data).
+
+## Fecho (2026-10-15)
+
+Releitura da revisão independente: os quatro achados constam reproduzidos, corrigidos e
+cobertos por teste; nenhum achado foi deferido. Reexecução das provas com banco real
+descartável (PostgreSQL 16, porta 55439, migrations 0001–0036 + UP/DOWN pela suíte):
+schema 11/11, API REST da 01 13/13 (JWT/guards/API compilada), junto com as suítes de
+dispositivo da task 03 (14/14 e 9/9). Backend 1142 aprovados / 0 falhas, frontend 278
+arquivos / 3482 testes aprovados, `npm run lint` sem erros nos três workspaces,
+`docs/SCHEMA.md` cobre a migration 0037. Limites: sem prova física Windows (não
+pertence a esta task); aviso de bundle inicial do frontend (598 kB sobre 450 kB) não foi
+comparado com a baseline e permanece como observação, sem relação com esta task.

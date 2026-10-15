@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
 import { of, throwError, Subject } from 'rxjs';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { signal } from '@angular/core';
@@ -24,6 +25,25 @@ describe('Transcricoes — vínculo e fallback', () => {
     const input = root.querySelector('input')!; input.value = '1234abcd'; input.dispatchEvent(new Event('input')); f.detectChanges();
     api.confirmar.mockReturnValue(of({})); button.click(); f.detectChanges();
     expect(api.confirmar).toHaveBeenCalledWith(id, '1234ABCD'); expect(root.textContent).toContain('Volte ao aplicativo');
+  });
+  it('sem rede ao confirmar não culpa código, prazo ou permissão', async () => {
+    const f = await criar({ identificador: id }); const root = f.nativeElement as HTMLElement;
+    const input = root.querySelector('input')!; input.value = '1234abcd'; input.dispatchEvent(new Event('input')); f.detectChanges();
+    api.confirmar.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 0 })));
+    [...root.querySelectorAll('button')].find(b => b.textContent?.includes('Vincular'))!.click(); f.detectChanges();
+    expect(root.textContent).toContain('Sem conexão'); expect(root.textContent).not.toContain('Confira o código');
+    api.confirmar.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 400 })));
+    [...root.querySelectorAll('button')].find(b => b.textContent?.includes('Vincular'))!.click(); f.detectChanges();
+    expect(root.textContent).toContain('Confira o código');
+  });
+  it('lista de dispositivos mostra o último uso para distinguir nomes iguais', async () => {
+    api.listarDispositivos.mockReturnValue(of([
+      { identificador: 'a', nome: 'PC', ultimoUso: '2026-10-15T14:30:00.000Z' },
+      { identificador: 'b', nome: 'PC', ultimoUso: '2026-10-01T09:05:00.000Z' }]));
+    const f = await criar({}); const root = f.nativeElement as HTMLElement;
+    const metas = [...root.querySelectorAll('.transcricoes__meta')].map(e => e.textContent?.trim());
+    expect(metas).toHaveLength(2); expect(metas[0]).toMatch(/^Último uso: \d{2}\/10\/26 \d{2}:\d{2}$/);
+    expect(metas[0]).not.toEqual(metas[1]);
   });
   it('pedido expirado mantém instruções de abertura manual', async () => {
     api.recuperarPedido.mockReturnValue(throwError(() => new Error('404')));

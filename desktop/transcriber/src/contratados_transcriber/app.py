@@ -6,10 +6,12 @@ import sys
 import webbrowser
 from PySide6.QtCore import QObject, QRunnable, QThreadPool, Signal, Qt
 from PySide6.QtNetwork import QLocalServer, QLocalSocket
-from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel, QPushButton, QLineEdit, QMessageBox
+from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QLineEdit,
+                               QMessageBox, QFrame, QScrollArea)
 from .api import Api
 from .core import Session, parse_uri, validate_origin, CredentialError, OfflineError
 from .windows import store_for, resources
+from .theme import STYLE, rotular
 
 API_ORIGIN = "https://contratados-rpg-api-35du2tp43q-rj.a.run.app"
 SITE_ORIGIN = "https://contratados-rpg.pages.dev"
@@ -24,40 +26,54 @@ class Job(QRunnable):
         try: self.signals.success.emit(self.operation())
         except Exception as error: self.signals.failure.emit(error)
 
-# Explicit mapping of docs/design/tema/_tokens.scss, dark base, Qt equivalents.
-STYLE = """
-QWidget { background: #0a0c0f; color: #e6e8eb; font-family: 'Segoe UI'; font-size: 14px; }
-QLineEdit { background: #1a1e24; border: 1px solid #656a72; padding: 8px; border-radius: 4px; }
-QPushButton { background: #13161b; border: 1px solid #969ba3; padding: 10px; border-radius: 4px; min-height: 24px; }
-QPushButton:focus, QLineEdit:focus { border: 2px solid #d53030; }
-QPushButton:hover { background: #1a1e24; }
-QPushButton:disabled { color: #656a72; }
-"""
-
 def label(text=""):
     item = QLabel(text); item.setWordWrap(True); item.setTextFormat(Qt.TextFormat.PlainText)
     item.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
     return item
 
+def card(index, title):
+    """Cartão do site: índice `//`/`01`, título mono em caixa alta e régua hairline."""
+    frame = QFrame(); frame.setProperty("papel", "cartao")
+    layout = QVBoxLayout(frame); layout.setContentsMargins(20, 16, 20, 20); layout.setSpacing(12)
+    head = QHBoxLayout(); head.setSpacing(12)
+    chip = QLabel(index); chip.setProperty("papel", "indice")
+    heading = QLabel(title); heading.setProperty("papel", "titulo"); rotular(heading, 112)
+    rule = QFrame(); rule.setProperty("papel", "regua"); rule.setFixedHeight(1)
+    head.addWidget(chip); head.addWidget(heading); head.addWidget(rule, 1, Qt.AlignmentFlag.AlignVCenter)
+    layout.addLayout(head)
+    return frame, layout
+
+def button(text, variant=None):
+    item = QPushButton(text); rotular(item, 108)
+    if variant: item.setProperty("variante", variant)
+    item.setMinimumHeight(44)
+    return item
+
 class Window(QMainWindow):
     def __init__(self):
-        super().__init__(); self.setWindowTitle("Contratados Transcriber"); self.resize(640, 700)
-        widget = QWidget(); self.setCentralWidget(widget); layout = QVBoxLayout(widget); layout.setSpacing(16); layout.setContentsMargins(24, 24, 24, 24)
-        layout.addWidget(label("// CONTRATADOS TRANSCRIBER"))
+        super().__init__(); self.setWindowTitle("Contratados Transcriber"); self.resize(640, 760); self.setMinimumWidth(560)  # cabe o maior rótulo de botão (QPushButton não quebra linha)
+        area = QScrollArea(); area.setWidgetResizable(True); self.setCentralWidget(area)
+        area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        widget = QWidget(); area.setWidget(widget); layout = QVBoxLayout(widget); layout.setSpacing(16); layout.setContentsMargins(24, 24, 24, 24)
         self.api_origin = QLineEdit(API_ORIGIN); self.site_origin = QLineEdit(SITE_ORIGIN)
         self.name = QLineEdit(socket.gethostname()[:120]); self.name.setMaxLength(120)
+        for edit in (self.api_origin, self.site_origin, self.name): edit.setMinimumHeight(44)
+        self.status = label("Escolha Vincular conta. Nenhum áudio é enviado ao site."); self.context = label("Nenhuma sessão aberta.")
+        home, home_layout = card("//", "Contratados Transcriber"); home_layout.addWidget(self.status); home_layout.addWidget(self.context); layout.addWidget(home)
+        connection, connection_layout = card("01", "Conexão")
         for title, edit in [("Servidor HTTPS", self.api_origin), ("Site de confirmação HTTPS", self.site_origin), ("Nome do computador", self.name)]:
-            title_label = label(title); title_label.setBuddy(edit); layout.addWidget(title_label); layout.addWidget(edit)
-        self.status = label("Escolha Vincular conta. Nenhum áudio é enviado ao site."); layout.addWidget(self.status)
-        self.context = label("Nenhuma sessão aberta."); layout.addWidget(self.context)
-        self.link = QPushButton("Vincular conta"); self.link.clicked.connect(self.start_link); layout.addWidget(self.link)
-        self.refresh_button = QPushButton("Verificar vínculo / tentar revogação pendente"); self.refresh_button.clicked.connect(self.refresh); layout.addWidget(self.refresh_button)
-        self.disconnect_button = QPushButton("Desconectar e preservar resultados locais"); self.disconnect_button.clicked.connect(self.disconnect); layout.addWidget(self.disconnect_button)
-        self.local_resources = label(); layout.addWidget(self.local_resources)
+            title_label = label(title); title_label.setProperty("papel", "rotulo"); rotular(title_label, 111)
+            title_label.setBuddy(edit); connection_layout.addWidget(title_label); connection_layout.addWidget(edit)
+        self.link = button("Vincular conta", "primario"); self.link.clicked.connect(self.start_link); connection_layout.addWidget(self.link)
+        self.refresh_button = button("Verificar vínculo / tentar revogação pendente"); self.refresh_button.clicked.connect(self.refresh); connection_layout.addWidget(self.refresh_button)
+        self.disconnect_button = button("Desconectar e preservar resultados locais", "perigo"); self.disconnect_button.clicked.connect(self.disconnect); connection_layout.addWidget(self.disconnect_button)
+        layout.addWidget(connection)
+        resources_card, resources_layout = card("02", "Recursos locais")
+        self.local_resources = label(); self.local_resources.setProperty("papel", "dados"); resources_layout.addWidget(self.local_resources); layout.addWidget(resources_card)
         layout.addStretch(); self.session = None; self.busy = False
         self.refresh_resources()
     def refresh_resources(self):
-        try: self.local_resources.setText("Recursos locais\n" + "\n".join(f"{k}: {v}" for k, v in resources().items()))
+        try: self.local_resources.setText("\n".join(f"{k}: {v}" for k, v in resources().items()))
         except Exception: self.local_resources.setText("Não foi possível inspecionar todos os recursos locais.")
     def configure(self):
         origin = validate_origin(self.api_origin.text().strip())
