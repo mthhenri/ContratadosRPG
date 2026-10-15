@@ -1,5 +1,18 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-15 — regras-visual-09: rótulos de domínio da base clara chegam a 4,5:1 com tokens de texto
+
+A auditoria mediu três rótulos de 11px entre 1,87 e 3,22:1. Escurecer `--warning`/`--help`/`--energy` mudaria ~100 consumidores
+(ícones, bordas, fundos), então a solução foi **aditiva**: tokens de cor de texto `--vida-texto`, `--energy-texto`,
+`--warning-texto`, `--help-texto` — iguais à cor crua na base escura, e na clara misturados com `--text` por `TOKENS_CLARO`
+(mesma ideia de `--cor-ficha-legivel` e do P-113). Só `regras-destaque` e a variante `faixa` do `Stat` leem os novos tokens, para
+a cor do texto do rótulo; ícone, faixa e fundo seguem na cor crua. Vida inicial (4,28:1) entrou por dividir o tratamento.
+Medido ao vivo na base clara: 5,21 / 5,29 / 5,02 / 5,79:1; na escura, as quatro cores idênticas. Testes: Regras 302/302,
+`tema.service.spec` com caso novo, mesmas 3 falhas preexistentes de estilo. **Armadilha de medição:** o navegador devolve
+`color(srgb 0–1)` para cores resultantes de `color-mix`, e as transições do painel ficam congeladas — a primeira leitura deu
+"preto"; ambas corrigidas antes de concluir. Limites: sem imagem (capturas corrompidas), só um viewport medido, efeito só de cor.
+[Verificação](../specs/done/regras-visual-09-contraste-base-clara/verificacao.md).
+
 ## 2026-10-15 — regras-visual-07 e 10: tachado vira trecho do livro; busca flexiona singular e usa o ícone do primitivo
 
 Primeiras duas da fila `regras-visual-06`…`11`, executadas juntas por tocarem o mesmo leitor. **07:** o Markdown `~~x~~` não tinha

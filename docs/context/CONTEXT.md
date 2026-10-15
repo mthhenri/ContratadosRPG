@@ -3412,7 +3412,9 @@ teclado e busca em aba oculta conferidos;
 `regras-visual-07` (tachado inline) e `regras-visual-10` (busca: singular e seta) concluídas em 15/10:
 [tachado](../specs/done/regras-visual-07-tachado-inline/verificacao.md) · [busca](../specs/done/regras-visual-10-busca-microcopy-mobile/verificacao.md).
 `P-120` segue aberto só pelo dado em produção (o Guia publicado ainda traz `~~` literal).
-Correções `regras-visual-06`, `08` e `09` em backlog, `P-119`, `P-121` e `P-122` abertos.
+`regras-visual-09` (contraste dos rótulos na base clara) concluída em 15/10 com tokens `--*-texto`:
+[verificação](../specs/done/regras-visual-09-contraste-base-clara/verificacao.md).
+Correções `regras-visual-06` e `08` em backlog, `P-119` e `P-121` abertos.
 P-124 registra contraste preexistente das marcas não selecionadas de pesquisa
 sobre os fundos semânticos de ameaça; permanece aberto.
 Há ainda notas/passivas degradadas, tachado literal, contraste na base clara

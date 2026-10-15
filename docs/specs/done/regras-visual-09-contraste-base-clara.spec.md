@@ -1,7 +1,7 @@
 # Dar contraste aos rótulos semânticos na base clara
 
-> Task de correção RV-09 / P-122; prioridade média. Criada após a bateria visual de 09/10/2026, por pedido do autor. **Backlog: não implementada.**
-> Evidência, cobertura e limites: [auditoria do leitor](../done/regras-auditoria-visual-completa/auditoria.md).
+> Task de correção RV-09 / P-122; prioridade média. Criada após a bateria visual de 09/10/2026, por pedido do autor. **Concluída em 15/10/2026.**
+> Evidência inicial: [auditoria do leitor](regras-auditoria-visual-completa/auditoria.md). Correção: [verificação](regras-visual-09-contraste-base-clara/verificacao.md).
 
 ## Problema e reprodução
 

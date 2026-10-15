@@ -49,6 +49,12 @@
   --energy: #4c8dd0;    /* Energia */
   --positive: #4a9d6b;  /* dano furtivo / ganho */
   --warning: #d9a441;   /* aviso / prestígio */
+  /* Versão de TEXTO das cores acima, para rótulos pequenos sobre fundo tingido (RV-09 / P-122).
+     Na base escura são a própria cor; a base clara as escurece em direção a `--text`
+     (`TemaService`, `TOKENS_CLARO`) para atingir 4,5:1. Ícone, faixa e fundo seguem na cor crua. */
+  --vida-texto: var(--vida);
+  --energy-texto: var(--energy);
+  --warning-texto: var(--warning);
 
   /* --- Cores de severidade sem papel de domínio (ui-01b) — existem para o primitivo de botão
      cobrir as oito severidades da API própria. Mesma receita dim/border (12%/40%) das demais.
@@ -59,6 +65,7 @@
   --help: #9b78d0;
   --help-dim: color-mix(in srgb, var(--help) 12%, transparent);
   --help-border: color-mix(in srgb, var(--help) 40%, transparent);
+  --help-texto: var(--help); /* ver `--warning-texto` */
   --contrast: #f4f6f8;
   --contrast-dim: color-mix(in srgb, var(--contrast) 12%, transparent);
   --contrast-border: color-mix(in srgb, var(--contrast) 40%, transparent);

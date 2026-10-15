@@ -52,6 +52,7 @@ tudo de uma vez.
 | `--dano-quimico` | `#22c55e` | `34, 197, 94` | Chip de dano — Químico |
 | `--dano-geral` | `#e5e7eb` | `229, 231, 235` | Chip de dano — Geral (irredutível) |
 | `--help` | `#9b78d0` | `155, 120, 208` | Severidade `ajuda` do botão — **sem papel de domínio** (ui-01b) |
+| `--vida-texto`, `--energy-texto`, `--warning-texto`, `--help-texto` | a cor crua na base escura; na clara, mistura em direção a `--text` (80/70/50/70%) | — | Versão de **texto** das cores de domínio, para rótulos pequenos sobre fundo tingido (RV-09 / P-122). Ícone, faixa e fundo seguem na cor crua |
 | `--contrast` | `#f4f6f8` | `244, 246, 248` | Severidade `contraste` do botão — quase-branco de superfície, não de texto (ui-01b) |
 
 Cada cor semântica (`--vida`, `--energy`, `--positive`, `--warning`, `--dano-*`, `--help`,

@@ -150,6 +150,7 @@
     // variante, ícone em quadro tingido ocupando a altura do texto, rótulo colorido e nota mono.
     &--faixa {
         --stat-cor: var(--text-dim);
+        --stat-cor-texto: var(--text-dim);
         position: relative;
         overflow: hidden;
         display: grid;
@@ -170,10 +171,12 @@
 
         &.stat--vida {
             --stat-cor: var(--vida);
+            --stat-cor-texto: var(--vida-texto);
         }
 
         &.stat--energia {
             --stat-cor: var(--energy);
+            --stat-cor-texto: var(--energy-texto);
         }
 
         .stat__icone {
@@ -195,7 +198,7 @@
         .stat__rotulo {
             font-size: 11px;
             letter-spacing: var(--tracking-label);
-            color: var(--stat-cor);
+            color: var(--stat-cor-texto);
         }
 
         .stat__valor {

@@ -4,17 +4,19 @@
 }
 .regras-destaque {
     --destaque-cor: var(--warning);
+    --destaque-cor-texto: var(--warning-texto);
     padding: var(--space-12) var(--space-16);
     border: 1px solid color-mix(in srgb, var(--destaque-cor) 40%, transparent);
     border-radius: var(--radius-control);
     background: color-mix(in srgb, var(--destaque-cor) 8%, transparent);
     &--custo {
         --destaque-cor: var(--help);
+        --destaque-cor-texto: var(--help-texto);
     }
     &__rotulo {
         display: block;
         margin-bottom: var(--space-4);
-        color: var(--destaque-cor);
+        color: var(--destaque-cor-texto);
         font: 600 11px var(--font-mono);
         text-transform: uppercase;
         letter-spacing: var(--tracking-label);

@@ -135,6 +135,24 @@ describe('TemaService', () => {
     });
   });
 
+  describe('cor de texto dos rótulos de domínio (P-122)', () => {
+    const TOKENS = ['--vida-texto', '--energy-texto', '--warning-texto', '--help-texto'];
+
+    it('base clara escurece em direção a --text; escura não escreve override', () => {
+      const tema = criar();
+
+      tema.definirBase('claro');
+      for (const token of TOKENS) {
+        expect(raiz.style.getPropertyValue(token)).toContain('var(--text)');
+      }
+
+      tema.definirBase('escuro');
+      for (const token of TOKENS) {
+        expect(raiz.style.getPropertyValue(token).trim()).toBe('');
+      }
+    });
+  });
+
   describe('accent custom com trava', () => {
     it('bloqueia (retorna false) uma cor com contraste insuficiente e não aplica', () => {
       const tema = criar();

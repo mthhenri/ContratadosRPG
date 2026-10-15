@@ -66,6 +66,12 @@ const TOKENS_CLARO: Readonly<Record<string, string>> = {
   // Geral é "quase branco" no escuro (`--dano-geral`); no claro precisa de cinza escuro legível
   // sobre `--surface` (P-113). `-border`/`-dim` derivam dele por `color-mix`.
   '--dano-geral': '#4a4f57',
+  // Rótulos pequenos coloridos sobre fundo tingido precisam de 4,5:1 (P-122): a cor do domínio
+  // escurecida em direção a `--text`, só para TEXTO; ícone, faixa e fundo ficam na cor crua.
+  '--vida-texto': 'color-mix(in srgb, var(--vida) 80%, var(--text))',
+  '--energy-texto': 'color-mix(in srgb, var(--energy) 70%, var(--text))',
+  '--warning-texto': 'color-mix(in srgb, var(--warning) 50%, var(--text))',
+  '--help-texto': 'color-mix(in srgb, var(--help) 70%, var(--text))',
 };
 
 /** Superfície de conteúdo (`--surface`) de cada base — referência da trava de contraste. */

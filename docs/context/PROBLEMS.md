@@ -73,14 +73,6 @@
 - **Correção:** [regras-visual-08-habilidades-passivas-npcs](../specs/backlog/regras-visual-08-habilidades-passivas-npcs.spec.md).
 - **Desde:** observado em 09/10/2026; [RV-08, cobertura e evidências](../specs/done/regras-auditoria-visual-completa/auditoria.md). Nenhuma correção aplicada nesta auditoria.
 
-### P-122 — Dar contraste aos rótulos semânticos na base clara · `ABERTO` · frontend/regras
-
-- **Sintoma:** Ativar base Clara e abrir Experimento Híbrido. Os rótulos de 11px “Habilidade inicial”, “Custo do experimento” e “Energia inicial” ficam pálidos. Cores observadas e composição dos fundos produzem razões aproximadas de 1,87:1, 3,22:1 e 3,05:1 respectivamente.
-- **Causa:** Cores calculadas dão razões aproximadas de 1,87:1, 3,22:1 e 3,05:1 nos fundos observados; consumidores dos tokens precisam ser delimitados.
-- **Contorno:** Usar a base escura.
-- **Correção:** [regras-visual-09-contraste-base-clara](../specs/backlog/regras-visual-09-contraste-base-clara.spec.md).
-- **Desde:** observado em 09/10/2026; [RV-09, cobertura e evidências](../specs/done/regras-auditoria-visual-completa/auditoria.md). Nenhuma correção aplicada nesta auditoria.
-
 ### P-111 — Recorrência de falha nativa no build com cache local · `CONTORNADO` · frontend/ambiente
 
 - **Sintoma:** build habitual fora do sandbox voltou a terminar com código `3221225477`,
