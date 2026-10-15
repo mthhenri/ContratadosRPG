@@ -1,5 +1,16 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-15 — regras-visual-06: Formação e efeitos ▢ estruturados na leitura; dois trechos editoriais ficam para o autor
+
+As três passagens chegaram achatadas da exportação do Docs (a própria fonte as traz numa célula só) e o dado vive no banco. Com a
+decisão do autor de implementar **só o demonstrável**, `regras-texto.ts` ganhou duas funções puras: `separarBonusDeFormacao` (um
+bônus por `+N`, sem partir depois de "e/ou/vírgula") usada nos cartões de Origem, e `estruturarNotaComMarcadores` (introdução, um
+item por `▢`, ressalva) usada em `regras-nota`; ambas só na leitura, sem tocar dado, normalizador nem Oficina. Ficaram fora, por
+falta de delimitador, o título do Amaldiçoado pelo Passado e a nota de Armazenamento — inventário e edição proposta em
+`P-119` (reescopado) para o autor aplicar na Oficina. Testes: 13 novos casos, Regras 313/313, lint e `tsc` limpos. Ao vivo nos
+quatro viewports: bônus em itens, nota com três ▢ e ressalva, sem overflow; pesquisa destaca dentro do item. Limites: painel e base
+clara não observados à parte; sem imagem. [Verificação](../specs/done/regras-visual-06-notas-e-formacoes/verificacao.md).
+
 ## 2026-10-15 — regras-visual-08: passivas de NPC aparecem como bloco de habilidade, só na leitura
 
 A spec previa mexer no reconhecedor do normalizador, mas o livro vive no banco: ali as ativas são `HABILIDADE` com custo e as 11

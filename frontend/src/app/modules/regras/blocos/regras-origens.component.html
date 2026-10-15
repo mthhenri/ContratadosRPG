@@ -29,15 +29,29 @@
                 <dl class="regras-origens__campos">
                     <dt>Formação</dt>
                     <dd>
-                        <app-regras-inline
-                            [trechos]="origem.formacao"
-                            [peca]="origem.peca"
-                            campo="formacao"
-                            rotuloEdicao="Formação"
-                            dica="Formação"
-                            [documento]="documento()"
-                            (navegarAncora)="navegarAncora.emit($event)"
-                        />
+                        @if (editando() || separarBonus(origem.formacao).length < 2) {
+                            <app-regras-inline
+                                [trechos]="origem.formacao"
+                                [peca]="origem.peca"
+                                campo="formacao"
+                                rotuloEdicao="Formação"
+                                dica="Formação"
+                                [documento]="documento()"
+                                (navegarAncora)="navegarAncora.emit($event)"
+                            />
+                        } @else {
+                            <ul class="regras-origens__bonus">
+                                @for (bonus of separarBonus(origem.formacao); track $index) {
+                                    <li>
+                                        <app-regras-inline
+                                            [trechos]="bonus"
+                                            [documento]="documento()"
+                                            (navegarAncora)="navegarAncora.emit($event)"
+                                        />
+                                    </li>
+                                }
+                            </ul>
+                        }
                     </dd>
                     <dt>Especialidade</dt>
                     <dd>

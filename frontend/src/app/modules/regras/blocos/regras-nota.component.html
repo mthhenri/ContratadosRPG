@@ -1,14 +1,45 @@
 <aside class="regras-nota" aria-label="Nota">
     <div class="regras-nota__rotulo">// Nota</div>
-    <p>
-        <app-regras-inline
-            [trechos]="bloco().trechos"
-            [peca]="bloco().peca"
-            [campo]="campo()"
-            [opcional]="opcional()"
-            rotuloEdicao="Nota"
-            [documento]="documento()"
-            (navegarAncora)="navegarAncora.emit($event)"
-        />
-    </p>
+    @if (estrutura(); as nota) {
+        <p>
+            <app-regras-inline
+                [trechos]="nota.introducao"
+                [documento]="documento()"
+                (navegarAncora)="navegarAncora.emit($event)"
+            />
+        </p>
+        <ul class="regras-nota__efeitos">
+            @for (item of nota.itens; track $index) {
+                <li>
+                    <span class="regras-nota__marcador" aria-hidden="true">▢</span>
+                    <app-regras-inline
+                        [trechos]="item"
+                        [documento]="documento()"
+                        (navegarAncora)="navegarAncora.emit($event)"
+                    />
+                </li>
+            }
+        </ul>
+        @if (nota.ressalva.length) {
+            <p class="regras-nota__ressalva">
+                <app-regras-inline
+                    [trechos]="nota.ressalva"
+                    [documento]="documento()"
+                    (navegarAncora)="navegarAncora.emit($event)"
+                />
+            </p>
+        }
+    } @else {
+        <p>
+            <app-regras-inline
+                [trechos]="bloco().trechos"
+                [peca]="bloco().peca"
+                [campo]="campo()"
+                [opcional]="opcional()"
+                rotuloEdicao="Nota"
+                [documento]="documento()"
+                (navegarAncora)="navegarAncora.emit($event)"
+            />
+        </p>
+    }
 </aside>

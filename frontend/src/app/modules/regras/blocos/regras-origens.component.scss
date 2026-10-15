@@ -33,6 +33,14 @@
             overflow-wrap: anywhere;
         }
     }
+    // Bônus de Formação separados (RV-06): um por linha, mesmo ritmo das listas do leitor.
+    &__bonus {
+        margin: 0;
+        padding-left: var(--space-20);
+        li::marker {
+            color: var(--text-dim);
+        }
+    }
 }
 @include bp.mobile {
     .regras-origens {

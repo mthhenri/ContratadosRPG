@@ -8,6 +8,7 @@ import { OficinaTexto } from "../oficina/oficina-texto.component";
 import { OficinaStore } from "../oficina/oficina.store";
 import { RegrasOrigens as BlocoOrigens, RegrasDocumento } from "../regras.model";
 import { RegrasInline } from "./regras-inline.component";
+import { separarBonusDeFormacao } from "./regras-texto";
 
 @Component({
     selector: "app-regras-origens",
@@ -22,6 +23,7 @@ export class RegrasOrigens {
 
     private readonly oficina = inject(OficinaStore, { optional: true });
     protected readonly tiposItem = [TipoRegraPecaEnum.ORIGEM];
+    protected readonly separarBonus = separarBonusDeFormacao;
     /** O livro está aberto para edição e este bloco tem peça. */
     protected readonly editando = computed(() => !!this.bloco().peca && this.oficina?.estado() === "ok");
 }

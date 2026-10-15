@@ -24,3 +24,23 @@ p {
     overflow-wrap: anywhere;
     text-align: justify;
 }
+// Efeitos marcados por ▢ (RV-06): um por linha, com o marcador do próprio livro.
+.regras-nota__efeitos {
+    margin: var(--space-8) 0;
+    padding: 0;
+    list-style: none;
+    font-size: 14px;
+    line-height: 1.65;
+    overflow-wrap: anywhere;
+}
+.regras-nota__efeitos li {
+    display: flex;
+    gap: var(--space-8);
+}
+.regras-nota__marcador {
+    flex: none;
+    color: var(--text-dim);
+}
+.regras-nota__ressalva {
+    margin-top: var(--space-8);
+}

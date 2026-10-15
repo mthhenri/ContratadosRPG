@@ -21,4 +21,23 @@ describe("RegrasOrigens", () => {
         expect(raiz.textContent).not.toContain("FONTE");
         expect(raiz.querySelector("table")).toBeNull();
     });
+
+    it("apresenta os dois bônus da Formação em itens separados, sem mudar o texto (RV-06)", () => {
+        const fixture = TestBed.createComponent(RegrasOrigens);
+        fixture.componentRef.setInput("bloco", { tipo: "origens", cabecalho: [], linhas: [], origens: [{
+            nome: "Bombeiro", citacao: texto("c"), especialidade: texto("e"), saberCampo: texto("s"),
+            formacao: texto("+3 de resistência a dano Químico +1 dado em testes de Vigor") }] });
+        fixture.detectChanges();
+        const itens = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll(".regras-origens__bonus li"));
+        expect(itens.map(item => item.textContent?.trim())).toEqual(["+3 de resistência a dano Químico", "+1 dado em testes de Vigor"]);
+    });
+
+    it("Formação com um bônus só segue como texto corrido", () => {
+        const fixture = TestBed.createComponent(RegrasOrigens);
+        fixture.componentRef.setInput("bloco", { tipo: "origens", cabecalho: [], linhas: [], origens: [{
+            nome: "X", citacao: texto("c"), especialidade: texto("e"), saberCampo: texto("s"),
+            formacao: texto("+1 dado em testes de Vigor") }] });
+        fixture.detectChanges();
+        expect((fixture.nativeElement as HTMLElement).querySelector(".regras-origens__bonus")).toBeNull();
+    });
 });

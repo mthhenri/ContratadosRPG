@@ -49,13 +49,13 @@
 - **Correção:** Preservar contraste do destaque não selecionado nos fundos semânticos sem alterar a identidade de NA; fora do ajuste de largura RV-03.
 - **Desde:** identificado em 10/10/2026 durante RV-03; [evidências e limites](../specs/done/regras-visual-03-rotulos-ameaca-tabelas/verificacao.md).
 
-### P-119 — Estruturar notas e bônus apresentados como texto contínuo · `ABERTO` · frontend/regras
+### P-119 — Título de Amaldiçoado pelo Passado e nota de Armazenamento sem fronteira no dado · `ABERTO` · dados/regras
 
-- **Sintoma:** Sistema → Origem → Bombeiro/Alpinista: os dois bônus da Formação aparecem na mesma frase sem delimitador. A nota Amaldiçoado pelo Passado apresenta título, descrição, três itens ▢ e ressalva em um parágrafo contínuo. A nota de Armazenamento junta a ausência de peso e o custo de 300$.
-- **Causa:** Fonte já reúne afirmações/lista em células contínuas; segmentação de apresentação precisa preservar o texto autoral.
-- **Contorno:** Conferir rótulos/glyphs da fonte e distinguir cada efeito.
-- **Correção:** [regras-visual-06-notas-e-formacoes](../specs/backlog/regras-visual-06-notas-e-formacoes.spec.md).
-- **Desde:** observado em 09/10/2026; [RV-06, cobertura e evidências](../specs/done/regras-auditoria-visual-completa/auditoria.md). Nenhuma correção aplicada nesta auditoria.
+- **Sintoma:** Restam dois trechos sem fronteira no dado: o título de Amaldiçoado pelo Passado fica colado à descrição (`⬦ Amaldiçoado pelo Passado Você é a sucessão…`) e a nota de Armazenamento junta "não agregam nenhum peso ao item" com "Modificações de Armazenamento custam 300 $". (Formação e os três itens ▢ do Amaldiçoado já saem estruturados na leitura — `regras-visual-06`.)
+- **Causa:** A exportação do Docs achatou as passagens em células únicas; sem delimitador na fonte, o código não pode inventar o limite.
+- **Contorno:** Nenhum; o texto está íntegro, só sem quebra.
+- **Correção:** Edição editorial pela Oficina, a cargo do autor: quebra depois do nome da condição e ponto final depois de "item". [Edição proposta](../specs/done/regras-visual-06-notas-e-formacoes/verificacao.md#pendências-editoriais-não-resolvidas-por-código).
+- **Desde:** observado em 09/10/2026; parcialmente corrigido em 15/10/2026.
 
 ### P-120 — Livro publicado ainda guarda `~~torturar psicologicamente~~` como texto literal · `ABERTO` · dados/regras
 
