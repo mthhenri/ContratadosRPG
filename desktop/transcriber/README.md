@@ -16,6 +16,9 @@ python -m pip install --no-deps -e .
 ./packaging/build.ps1
 ```
 
+Antes do build, `./packaging/verificar-ambiente.ps1`; depois da instalação, `./packaging/coletar-evidencias.ps1`
+(relatório em `.artifacts/`). Ambos só leem e ainda não foram executados em Windows.
+
 Build não publica nem assina. Instalador e SHA-256 em `dist/`; sem certificado
 Authenticode fornecido pelo mantenedor, permanece sem assinatura e pode mostrar avisos.
 Não desative as proteções do Windows. Hash acompanha o artefato local e não substitui

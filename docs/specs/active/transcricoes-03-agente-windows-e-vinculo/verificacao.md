@@ -206,3 +206,23 @@ licença, decisão do autor; botões sem ícone (o site usa ícones SVG); fideli
 
 Decisão do autor. A lista web passa a mostrar "Último uso: dd/MM/yy HH:mm" (`ultimoUso` já
 vinha no contrato), distinguindo dispositivos com o mesmo nome. Teste novo na página.
+
+## Estados web restantes e análise do empacotamento (2026-10-15)
+
+- **Estados web, app real (desktop/360×800):** pedido expirado de verdade (prazo vencido no
+  banco descartável): API devolve 404 em recuperar e em confirmar, a tela mostra "Vínculo
+  indisponível ou expirado", sem formulário e com as instruções de instalação/abertura manual.
+  Fim do tempo de espera da abertura: após ~120 s a mensagem passa a "Não recebemos
+  confirmação do aplicativo." e o botão volta a ficar ativo. Teclado nas telas de sessões e
+  dispositivos: ordem de foco lógica (topbar → navegação → campo → ações) e foco visível em
+  todos os controles. Zero erro de página. Não coberto: leitor de tela.
+- **Empacotamento (PyInstaller 6.12.0 rodado em Linux, só para análise estática do `.spec`):**
+  o `transcriber.spec` é válido e gera o bundle (169 MB no Linux, números do Windows diferem).
+  Achados: (1) **nenhum arquivo de licença no bundle** além de `THIRD-PARTY-NOTICES.md`, e os
+  wheels do PySide6 não trazem licenças — os textos exigidos pelo próprio aviso precisam vir
+  do upstream e ser versionados (gate B4); (2) o bundle leva módulos Qt que o app não usa
+  (Quick, Qml, Pdf no Linux), o que aumenta tamanho e o que precisa ser licenciado — conferir
+  no Windows com `coletar-evidencias.ps1` antes de decidir `excludes`. Nada disso foi alterado
+  no `.spec`: não há como validar o resultado em Windows aqui.
+- **Scripts de apoio** `packaging/verificar-ambiente.ps1` e `packaging/coletar-evidencias.ps1`
+  escritos, **nunca executados** (sem PowerShell no ambiente Linux).
