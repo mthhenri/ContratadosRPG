@@ -10790,6 +10790,865 @@ export const schemasContratosPublicos = {
         "additionalProperties": false,
         "description": "Saída da exclusão — também o payload de `rolagem:excluida` no tempo real. Carrega só o necessário\npara cada cliente tirar a rolagem da lista e para o gateway escolher a sala: nada do conteúdo\n(`resultado`, `rotulo`) viaja, então uma rolagem `PRIVADA` excluída não vaza para a sala cheia."
     },
+    "DispositivoVinculoCriarDto": {
+        "type": "object",
+        "properties": {
+            "segredoHash": {
+                "type": "string"
+            },
+            "nome": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "segredoHash",
+            "nome"
+        ],
+        "additionalProperties": false,
+        "description": "Hash e nome são os únicos dados do pedido; segredo nunca sai do dispositivo."
+    },
+    "DispositivoVinculoCriadoDto": {
+        "type": "object",
+        "properties": {
+            "identificador": {
+                "type": "string"
+            },
+            "codigo": {
+                "type": "string"
+            },
+            "expiraEm": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "identificador",
+            "codigo",
+            "expiraEm"
+        ],
+        "additionalProperties": false
+    },
+    "DispositivoVinculoRecuperadoDto": {
+        "type": "object",
+        "properties": {
+            "identificador": {
+                "type": "string"
+            },
+            "nome": {
+                "type": "string"
+            },
+            "codigo": {
+                "type": "string"
+            },
+            "expiraEm": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "identificador",
+            "nome",
+            "codigo",
+            "expiraEm"
+        ],
+        "additionalProperties": false
+    },
+    "DispositivoVinculoConfirmarDto": {
+        "type": "object",
+        "properties": {
+            "identificador": {
+                "type": "string"
+            },
+            "codigo": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "identificador",
+            "codigo"
+        ],
+        "additionalProperties": false
+    },
+    "DispositivoResumoDto": {
+        "type": "object",
+        "properties": {
+            "identificador": {
+                "type": "string"
+            },
+            "nome": {
+                "type": "string"
+            },
+            "ultimoUso": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "identificador",
+            "nome",
+            "ultimoUso"
+        ],
+        "additionalProperties": false
+    },
+    "DispositivoEstadoDto": {
+        "type": "object",
+        "properties": {
+            "vinculado": {
+                "type": "boolean"
+            },
+            "expirado": {
+                "type": "boolean"
+            },
+            "usuarioId": {
+                "type": "number"
+            },
+            "login": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "vinculado",
+            "expirado",
+            "usuarioId",
+            "login"
+        ],
+        "additionalProperties": false
+    },
+    "TranscricaoIntencaoCriarDto": {
+        "type": "object",
+        "properties": {
+            "sessaoId": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "sessaoId"
+        ],
+        "additionalProperties": false
+    },
+    "TranscricaoIntencaoCriadaDto": {
+        "type": "object",
+        "properties": {
+            "identificador": {
+                "type": "string"
+            },
+            "expiraEm": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "identificador",
+            "expiraEm"
+        ],
+        "additionalProperties": false
+    },
+    "TranscricaoIntencaoEstadoDto": {
+        "type": "object",
+        "properties": {
+            "confirmada": {
+                "type": "boolean"
+            },
+            "expirada": {
+                "type": "boolean"
+            }
+        },
+        "required": [
+            "confirmada",
+            "expirada"
+        ],
+        "additionalProperties": false
+    },
+    "DispositivoContextoDto": {
+        "type": "object",
+        "properties": {
+            "sessaoId": {
+                "type": "number"
+            },
+            "campanhaId": {
+                "type": "number"
+            },
+            "titulo": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "sessaoId",
+            "campanhaId",
+            "titulo"
+        ],
+        "additionalProperties": false
+    },
+    "DispositivoIdentificadorRecuperarDto": {
+        "type": "object",
+        "properties": {
+            "identificador": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "identificador"
+        ],
+        "additionalProperties": false
+    },
+    "TranscricaoIntencaoConsumidaDto": {
+        "type": "object",
+        "properties": {
+            "sessaoId": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "sessaoId"
+        ],
+        "additionalProperties": false
+    },
+    "SessaoTranscricaoCriarDto": {
+        "type": "object",
+        "properties": {
+            "campanhaId": {
+                "type": "number"
+            },
+            "titulo": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "campanhaId",
+            "titulo"
+        ],
+        "additionalProperties": false,
+        "description": "Contrato SessaoTranscricaoCriarDto: tempos em milissegundos, sem mídia ou credenciais."
+    },
+    "SessaoTranscricaoCriadaDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "identificador": {
+                "type": "string"
+            },
+            "campanhaId": {
+                "type": "number"
+            },
+            "titulo": {
+                "type": "string"
+            },
+            "arquivada": {
+                "type": "boolean"
+            },
+            "createdDate": {
+                "type": "string"
+            },
+            "updatedDate": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "id",
+            "identificador",
+            "campanhaId",
+            "titulo",
+            "arquivada",
+            "createdDate",
+            "updatedDate"
+        ],
+        "additionalProperties": false,
+        "description": "Contrato SessaoTranscricaoCriadaDto: tempos em milissegundos, sem mídia ou credenciais."
+    },
+    "SessaoTranscricaoRecuperadaDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "identificador": {
+                "type": "string"
+            },
+            "campanhaId": {
+                "type": "number"
+            },
+            "titulo": {
+                "type": "string"
+            },
+            "arquivada": {
+                "type": "boolean"
+            },
+            "createdDate": {
+                "type": "string"
+            },
+            "updatedDate": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "id",
+            "identificador",
+            "campanhaId",
+            "titulo",
+            "arquivada",
+            "createdDate",
+            "updatedDate"
+        ],
+        "additionalProperties": false,
+        "description": "Contrato SessaoTranscricaoRecuperadaDto: tempos em milissegundos, sem mídia ou credenciais."
+    },
+    "SessaoTranscricaoResumoDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "identificador": {
+                "type": "string"
+            },
+            "campanhaId": {
+                "type": "number"
+            },
+            "titulo": {
+                "type": "string"
+            },
+            "arquivada": {
+                "type": "boolean"
+            },
+            "createdDate": {
+                "type": "string"
+            },
+            "updatedDate": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "id",
+            "identificador",
+            "campanhaId",
+            "titulo",
+            "arquivada",
+            "createdDate",
+            "updatedDate"
+        ],
+        "additionalProperties": false,
+        "description": "Contrato SessaoTranscricaoResumoDto: tempos em milissegundos, sem mídia ou credenciais."
+    },
+    "SessaoTranscricaoRecuperarDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "id"
+        ],
+        "additionalProperties": false,
+        "description": "Contrato SessaoTranscricaoRecuperarDto: tempos em milissegundos, sem mídia ou credenciais."
+    },
+    "SessaoTranscricaoAlterarDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "titulo": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "id",
+            "titulo"
+        ],
+        "additionalProperties": false,
+        "description": "Contrato SessaoTranscricaoAlterarDto: tempos em milissegundos, sem mídia ou credenciais."
+    },
+    "SessaoTranscricaoAlteradaDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "identificador": {
+                "type": "string"
+            },
+            "campanhaId": {
+                "type": "number"
+            },
+            "titulo": {
+                "type": "string"
+            },
+            "arquivada": {
+                "type": "boolean"
+            },
+            "createdDate": {
+                "type": "string"
+            },
+            "updatedDate": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "id",
+            "identificador",
+            "campanhaId",
+            "titulo",
+            "arquivada",
+            "createdDate",
+            "updatedDate"
+        ],
+        "additionalProperties": false,
+        "description": "Contrato SessaoTranscricaoAlteradaDto: tempos em milissegundos, sem mídia ou credenciais."
+    },
+    "SessaoTranscricaoArquivamentoAlterarDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "arquivada": {
+                "type": "boolean"
+            }
+        },
+        "required": [
+            "id",
+            "arquivada"
+        ],
+        "additionalProperties": false,
+        "description": "Contrato SessaoTranscricaoArquivamentoAlterarDto: tempos em milissegundos, sem mídia ou credenciais."
+    },
+    "SessaoTranscricaoArquivamentoAlteradaDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "identificador": {
+                "type": "string"
+            },
+            "campanhaId": {
+                "type": "number"
+            },
+            "titulo": {
+                "type": "string"
+            },
+            "arquivada": {
+                "type": "boolean"
+            },
+            "createdDate": {
+                "type": "string"
+            },
+            "updatedDate": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "id",
+            "identificador",
+            "campanhaId",
+            "titulo",
+            "arquivada",
+            "createdDate",
+            "updatedDate"
+        ],
+        "additionalProperties": false,
+        "description": "Contrato SessaoTranscricaoArquivamentoAlteradaDto: tempos em milissegundos, sem mídia ou credenciais."
+    },
+    "SessaoTranscricaoExcluirDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "id"
+        ],
+        "additionalProperties": false,
+        "description": "Contrato SessaoTranscricaoExcluirDto: tempos em milissegundos, sem mídia ou credenciais."
+    },
+    "SessaoTranscricaoListarDto": {
+        "type": "object",
+        "properties": {
+            "campanhaId": {
+                "type": "number"
+            },
+            "arquivadas": {
+                "type": "boolean"
+            }
+        },
+        "required": [
+            "campanhaId"
+        ],
+        "additionalProperties": false,
+        "description": "Contrato SessaoTranscricaoListarDto: tempos em milissegundos, sem mídia ou credenciais."
+    },
+    "FaixaTranscricaoCriarDto": {
+        "type": "object",
+        "properties": {
+            "sessaoId": {
+                "type": "number"
+            },
+            "nomeArquivo": {
+                "type": "string"
+            },
+            "participante": {
+                "type": "string"
+            },
+            "deslocamentoMilissegundos": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "sessaoId",
+            "nomeArquivo",
+            "participante",
+            "deslocamentoMilissegundos"
+        ],
+        "additionalProperties": false,
+        "description": "Contrato FaixaTranscricaoCriarDto: tempos em milissegundos, sem mídia ou credenciais."
+    },
+    "FaixaTranscricaoCriadaDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "identificador": {
+                "type": "string"
+            },
+            "sessaoId": {
+                "type": "number"
+            },
+            "nomeArquivo": {
+                "type": "string"
+            },
+            "participante": {
+                "type": "string"
+            },
+            "deslocamentoMilissegundos": {
+                "type": "number"
+            },
+            "execucaoSelecionadaId": {
+                "type": "number"
+            },
+            "createdDate": {
+                "type": "string"
+            },
+            "updatedDate": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "id",
+            "identificador",
+            "sessaoId",
+            "nomeArquivo",
+            "participante",
+            "deslocamentoMilissegundos",
+            "execucaoSelecionadaId",
+            "createdDate",
+            "updatedDate"
+        ],
+        "additionalProperties": false,
+        "description": "Contrato FaixaTranscricaoCriadaDto: tempos em milissegundos, sem mídia ou credenciais."
+    },
+    "FaixaTranscricaoResumoDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "identificador": {
+                "type": "string"
+            },
+            "sessaoId": {
+                "type": "number"
+            },
+            "nomeArquivo": {
+                "type": "string"
+            },
+            "participante": {
+                "type": "string"
+            },
+            "deslocamentoMilissegundos": {
+                "type": "number"
+            },
+            "execucaoSelecionadaId": {
+                "type": "number"
+            },
+            "createdDate": {
+                "type": "string"
+            },
+            "updatedDate": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "id",
+            "identificador",
+            "sessaoId",
+            "nomeArquivo",
+            "participante",
+            "deslocamentoMilissegundos",
+            "execucaoSelecionadaId",
+            "createdDate",
+            "updatedDate"
+        ],
+        "additionalProperties": false,
+        "description": "Contrato FaixaTranscricaoResumoDto: tempos em milissegundos, sem mídia ou credenciais."
+    },
+    "FaixaTranscricaoRecuperadaDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "identificador": {
+                "type": "string"
+            },
+            "sessaoId": {
+                "type": "number"
+            },
+            "nomeArquivo": {
+                "type": "string"
+            },
+            "participante": {
+                "type": "string"
+            },
+            "deslocamentoMilissegundos": {
+                "type": "number"
+            },
+            "execucaoSelecionadaId": {
+                "type": "number"
+            },
+            "createdDate": {
+                "type": "string"
+            },
+            "updatedDate": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "id",
+            "identificador",
+            "sessaoId",
+            "nomeArquivo",
+            "participante",
+            "deslocamentoMilissegundos",
+            "execucaoSelecionadaId",
+            "createdDate",
+            "updatedDate"
+        ],
+        "additionalProperties": false,
+        "description": "Contrato FaixaTranscricaoRecuperadaDto: tempos em milissegundos, sem mídia ou credenciais."
+    },
+    "FaixaTranscricaoListarDto": {
+        "type": "object",
+        "properties": {
+            "sessaoId": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "sessaoId"
+        ],
+        "additionalProperties": false,
+        "description": "Contrato FaixaTranscricaoListarDto: tempos em milissegundos, sem mídia ou credenciais."
+    },
+    "FaixaTranscricaoRecuperarDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "id"
+        ],
+        "additionalProperties": false,
+        "description": "Contrato FaixaTranscricaoRecuperarDto: tempos em milissegundos, sem mídia ou credenciais."
+    },
+    "ExecucaoTranscricaoRecuperarDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "id"
+        ],
+        "additionalProperties": false,
+        "description": "Contrato ExecucaoTranscricaoRecuperarDto: tempos em milissegundos, sem mídia ou credenciais."
+    },
+    "ExecucaoTranscricaoDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "identificador": {
+                "type": "string"
+            },
+            "faixaId": {
+                "type": "number"
+            },
+            "estado": {
+                "type": "string",
+                "enum": [
+                    "PENDENTE",
+                    "EM_PROCESSAMENTO",
+                    "CONCLUIDA",
+                    "FALHA",
+                    "CANCELADA"
+                ]
+            },
+            "motor": {
+                "type": "string"
+            },
+            "versaoMotor": {
+                "type": "string"
+            },
+            "idioma": {
+                "type": "string"
+            },
+            "configuracao": {
+                "type": "object",
+                "additionalProperties": true
+            }
+        },
+        "required": [
+            "id",
+            "identificador",
+            "faixaId",
+            "estado",
+            "motor",
+            "versaoMotor",
+            "idioma",
+            "configuracao"
+        ],
+        "additionalProperties": false,
+        "description": "Contrato ExecucaoTranscricaoDto: tempos em milissegundos, sem mídia ou credenciais."
+    },
+    "SegmentoTranscricaoDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "identificador": {
+                "type": "string"
+            },
+            "execucaoId": {
+                "type": "number"
+            },
+            "inicioMilissegundos": {
+                "type": "number"
+            },
+            "fimMilissegundos": {
+                "type": "number"
+            },
+            "textoOriginal": {
+                "type": "string"
+            },
+            "textoCorrigido": {
+                "type": "string"
+            },
+            "revisao": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "id",
+            "identificador",
+            "execucaoId",
+            "inicioMilissegundos",
+            "fimMilissegundos",
+            "textoOriginal",
+            "textoCorrigido",
+            "revisao"
+        ],
+        "additionalProperties": false,
+        "description": "Contrato SegmentoTranscricaoDto: tempos em milissegundos, sem mídia ou credenciais."
+    },
+    "SegmentoTranscricaoTextoDto": {
+        "type": "object",
+        "properties": {
+            "textoOriginal": {
+                "type": "string"
+            },
+            "textoCorrigido": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "textoOriginal",
+            "textoCorrigido"
+        ],
+        "additionalProperties": false,
+        "description": "Contrato SegmentoTranscricaoTextoDto: tempos em milissegundos, sem mídia ou credenciais."
+    },
+    "SegmentoTranscricaoTempoDto": {
+        "type": "object",
+        "properties": {
+            "identificador": {
+                "type": "string"
+            },
+            "faixaIdentificador": {
+                "type": "string"
+            },
+            "inicioMilissegundos": {
+                "type": "number"
+            },
+            "fimMilissegundos": {
+                "type": "number"
+            },
+            "deslocamentoMilissegundos": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "identificador",
+            "faixaIdentificador",
+            "inicioMilissegundos",
+            "fimMilissegundos",
+            "deslocamentoMilissegundos"
+        ],
+        "additionalProperties": false,
+        "description": "Contrato SegmentoTranscricaoTempoDto: tempos em milissegundos, sem mídia ou credenciais."
+    },
+    "SegmentoTranscricaoCronologiaDto": {
+        "type": "object",
+        "properties": {
+            "identificador": {
+                "type": "string"
+            },
+            "faixaIdentificador": {
+                "type": "string"
+            },
+            "inicioMilissegundos": {
+                "type": "number"
+            },
+            "fimMilissegundos": {
+                "type": "number"
+            },
+            "deslocamentoMilissegundos": {
+                "type": "number"
+            },
+            "inicioSessaoMilissegundos": {
+                "type": "number"
+            },
+            "fimSessaoMilissegundos": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "identificador",
+            "faixaIdentificador",
+            "inicioMilissegundos",
+            "fimMilissegundos",
+            "deslocamentoMilissegundos",
+            "inicioSessaoMilissegundos",
+            "fimSessaoMilissegundos"
+        ],
+        "additionalProperties": false,
+        "description": "Contrato SegmentoTranscricaoCronologiaDto: tempos em milissegundos, sem mídia ou credenciais."
+    },
     "UsuarioCriarDto": {
         "type": "object",
         "properties": {
@@ -12510,6 +13369,172 @@ export const operacoesContratosPublicos = {
         "tag": "Rolagens",
         "publica": false,
         "responseSchema": "RolagemExcluidaDto"
+    },
+    "VinculoController_iniciar": {
+        "controller": "VinculoController",
+        "metodo": "post",
+        "caminho": "/transcricao/vinculo",
+        "tag": "Transcrições",
+        "publica": true,
+        "requestSchema": "DispositivoVinculoCriarDto",
+        "responseSchema": "DispositivoVinculoCriadoDto"
+    },
+    "VinculoController_desconectar": {
+        "controller": "VinculoController",
+        "metodo": "delete",
+        "caminho": "/transcricao/vinculo",
+        "tag": "Transcrições",
+        "publica": true,
+        "responseSchema": "null"
+    },
+    "VinculoController_estado": {
+        "controller": "VinculoController",
+        "metodo": "get",
+        "caminho": "/transcricao/vinculo/estado",
+        "tag": "Transcrições",
+        "publica": true,
+        "responseSchema": "DispositivoEstadoDto"
+    },
+    "DispositivoController_pedido": {
+        "controller": "DispositivoController",
+        "metodo": "get",
+        "caminho": "/transcricao/vinculo/:identificador",
+        "tag": "Transcrições",
+        "publica": false,
+        "responseSchema": "DispositivoVinculoRecuperadoDto"
+    },
+    "DispositivoController_confirmar": {
+        "controller": "DispositivoController",
+        "metodo": "post",
+        "caminho": "/transcricao/vinculo/:identificador/confirmar",
+        "tag": "Transcrições",
+        "publica": false,
+        "requestSchema": "DispositivoVinculoConfirmarDto",
+        "responseSchema": "DispositivoResumoDto"
+    },
+    "DispositivoController_listar": {
+        "controller": "DispositivoController",
+        "metodo": "get",
+        "caminho": "/transcricao/dispositivo",
+        "tag": "Transcrições",
+        "publica": false,
+        "responseSchema": "DispositivoResumoDto[]"
+    },
+    "DispositivoController_revogar": {
+        "controller": "DispositivoController",
+        "metodo": "delete",
+        "caminho": "/transcricao/dispositivo/:identificador",
+        "tag": "Transcrições",
+        "publica": false,
+        "responseSchema": "null"
+    },
+    "DispositivoController_criarIntencao": {
+        "controller": "DispositivoController",
+        "metodo": "post",
+        "caminho": "/transcricao/sessao/:sessaoId/abertura",
+        "tag": "Transcrições",
+        "publica": false,
+        "responseSchema": "TranscricaoIntencaoCriadaDto"
+    },
+    "DispositivoController_consultarIntencao": {
+        "controller": "DispositivoController",
+        "metodo": "get",
+        "caminho": "/transcricao/abertura/:identificador",
+        "tag": "Transcrições",
+        "publica": false,
+        "responseSchema": "TranscricaoIntencaoEstadoDto"
+    },
+    "AplicativoController_resolver": {
+        "controller": "AplicativoController",
+        "metodo": "post",
+        "caminho": "/transcricao/aplicativo/abertura/:identificador",
+        "tag": "Transcrições",
+        "publica": false,
+        "responseSchema": "DispositivoContextoDto"
+    },
+    "AplicativoController_desconectar": {
+        "controller": "AplicativoController",
+        "metodo": "delete",
+        "caminho": "/transcricao/aplicativo/vinculo",
+        "tag": "Transcrições",
+        "publica": false,
+        "responseSchema": "null"
+    },
+    "TranscricaoController_criarSessao": {
+        "controller": "TranscricaoController",
+        "metodo": "post",
+        "caminho": "/transcricao/sessao",
+        "tag": "Transcrições",
+        "publica": false,
+        "requestSchema": "SessaoTranscricaoCriarDto",
+        "responseSchema": "SessaoTranscricaoCriadaDto"
+    },
+    "TranscricaoController_listarSessoes": {
+        "controller": "TranscricaoController",
+        "metodo": "get",
+        "caminho": "/transcricao/sessao",
+        "tag": "Transcrições",
+        "publica": false,
+        "responseSchema": "SessaoTranscricaoResumoDto[]"
+    },
+    "TranscricaoController_recuperarSessao": {
+        "controller": "TranscricaoController",
+        "metodo": "get",
+        "caminho": "/transcricao/sessao/:id",
+        "tag": "Transcrições",
+        "publica": false,
+        "responseSchema": "SessaoTranscricaoRecuperadaDto"
+    },
+    "TranscricaoController_alterarSessao": {
+        "controller": "TranscricaoController",
+        "metodo": "put",
+        "caminho": "/transcricao/sessao/:id",
+        "tag": "Transcrições",
+        "publica": false,
+        "requestSchema": "SessaoTranscricaoAlterarDto",
+        "responseSchema": "SessaoTranscricaoAlteradaDto"
+    },
+    "TranscricaoController_alterarArquivamento": {
+        "controller": "TranscricaoController",
+        "metodo": "put",
+        "caminho": "/transcricao/sessao/:id/arquivamento",
+        "tag": "Transcrições",
+        "publica": false,
+        "requestSchema": "SessaoTranscricaoArquivamentoAlterarDto",
+        "responseSchema": "SessaoTranscricaoArquivamentoAlteradaDto"
+    },
+    "TranscricaoController_excluirSessao": {
+        "controller": "TranscricaoController",
+        "metodo": "delete",
+        "caminho": "/transcricao/sessao/:id",
+        "tag": "Transcrições",
+        "publica": false,
+        "responseSchema": "null"
+    },
+    "TranscricaoController_criarFaixa": {
+        "controller": "TranscricaoController",
+        "metodo": "post",
+        "caminho": "/transcricao/sessao/:sessaoId/faixa",
+        "tag": "Transcrições",
+        "publica": false,
+        "requestSchema": "FaixaTranscricaoCriarDto",
+        "responseSchema": "FaixaTranscricaoCriadaDto"
+    },
+    "TranscricaoController_listarFaixas": {
+        "controller": "TranscricaoController",
+        "metodo": "get",
+        "caminho": "/transcricao/sessao/:sessaoId/faixa",
+        "tag": "Transcrições",
+        "publica": false,
+        "responseSchema": "FaixaTranscricaoResumoDto[]"
+    },
+    "TranscricaoController_recuperarFaixa": {
+        "controller": "TranscricaoController",
+        "metodo": "get",
+        "caminho": "/transcricao/faixa/:id",
+        "tag": "Transcrições",
+        "publica": false,
+        "responseSchema": "FaixaTranscricaoRecuperadaDto"
     },
     "UsuarioController_recuperarPerfil": {
         "controller": "UsuarioController",

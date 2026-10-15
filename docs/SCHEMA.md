@@ -511,6 +511,64 @@ completo na migration `0036 - Tabelas do livro e das pecas de regra.sql`; o cont
 
 ---
 
+## Transcrições de gravação — task 01
+
+Migration `0037 - Tabelas de transcricao.sql`; contrato readonly em
+`shared/src/dtos/transcricao/`. Domínio independente de cena/login/Biblioteca,
+privado do Mestre atual da campanha. Não armazena WAV ou credenciais.
+
+| Tabela | Conteúdo próprio |
+|---|---|
+| `sessao_transcricao` | `identificador` UUID único inclusive excluídos, `campanha_id`, `titulo` (1–120), `arquivada` |
+| `faixa_transcricao` | UUID único, `sessao_transcricao_id`, `nome_arquivo`, `participante` (sem conta obrigatória), `deslocamento_milissegundos` BIGINT assinado, `execucao_selecionada_id` nullable |
+| `tipo_execucao_transcricao_estado` | `codigo`/`descricao`: PENDENTE, EM_PROCESSAMENTO, CONCLUIDA, FALHA, CANCELADA |
+| `execucao_transcricao` | UUID único, `faixa_transcricao_id`, FK de estado, `motor`, `versao_motor`, `idioma`, `configuracao` JSONB objeto |
+| `segmento_transcricao` | UUID estável único por execução, `execucao_transcricao_id`, início/fim BIGINT em ms, `texto_original`, `texto_corrigido` nullable, `revisao` inteira ≥1 |
+
+Todas têm BaseEntity/trigger de updated_date, sem DEFAULT de negócio. Identidade
+relacional e permissão não ficam no JSONB. Faixa→execução selecionada usa FK
+composta `(id, execucao_selecionada_id)`→`(faixa_transcricao_id, id)`;
+triggers exigem execução ativa CONCLUIDA e impedem invalidá-la enquanto selecionada.
+Mudança de estado bloqueia/versiona a faixa, árbitro comum com seleção; criação de
+faixa bloqueia e revalida a sessão, serializando com exclusão.
+Índices cobrem pais, estado e cronologia. Originais/tempos/identidade de segmento
+são imutáveis; mudar correção exige próxima revisão. `null` não editado difere
+de `""` editado para vazio. Offsets não reescrevem tempos brutos.
+
+BIGINT temporal respeita o inteiro exato do JSON/TypeScript (±9007199254740991);
+início bruto ≥0, fim ≥início. Conversão de segundos arredonda ao ms mais próximo.
+Horário efetivo = bruto + offset, inclusive negativo; projeção recusa soma inexata.
+Sobreposição nunca é fundida. Seleção explícita de execução será exposta pela
+revisão (06); ingestão idempotente/outbox pertence à 05.
+
+Arquivamento é reversível e só muda listagem; exclusão faz soft delete transacional
+da raiz e descendentes, sem restore ou remoção do WAV local. A service verifica
+Mestre, campanha ativa e pais, inclusive após transferência. API inicial contém
+CRUD de sessão e criação/leitura de metadados de faixa; sem upload, inferência,
+editor, vínculo Windows ou endpoints cloud.
+
+---
+
+## Vínculo do aplicativo — task 03
+
+Migration `0038 - Vinculo do transcriber.sql`, aplicada somente em PostgreSQL
+local descartável durante desenvolvimento. Três tabelas com BaseEntity, PKs
+numéricas e UUIDs opacos únicos, trigger de updated_date e FKs explícitas:
+
+| Tabela | Conteúdo próprio |
+|---|---|
+| `transcricao_vinculo` | Nome do dispositivo, hash SHA-256 do segredo, código de conferência, validade de dez minutos, confirmação atômica |
+| `transcricao_dispositivo` | Pedido único, conta/versão de token, hash único, nome e último uso; revogação por soft delete; expiração após 90 dias sem uso válido |
+| `transcricao_intencao` | Conta e sessão, validade de dois minutos e instante de consumo único |
+
+Segredo nunca persiste em claro no servidor. Credencial restrita ao aplicativo,
+sem autenticar controllers JWT. `DispositivoGuard` obrigatório no controller do
+app; o bypass dos guards JWT não torna essas rotas anônimas. Consumo bloqueia
+conta/dispositivo e revalida tokenVersao, exclusão, validade e propriedade;
+service revalida Mestre da sessão na mesma transação antes do commit.
+Confirmação/resgate concorrentes produzem no máximo um sucesso. Nenhum WAV,
+chave BYOK ou resultado de inferência é armazenado por esta migration.
+
 ## Forma dos documentos JSONB (`ficha.dados`)
 
 > Fontes correntes: `docs/core/sistema-v4.1.3.md` e `docs/core/guia_de_mestre-v4.2.0.md`.

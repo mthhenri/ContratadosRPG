@@ -48,3 +48,11 @@ Thumbs.db
 /docs/superpowers/
 /docs/design/propostas/
 
+
+# Aplicativo auxiliar Windows — ambientes, caches e produtos locais de build
+/desktop/transcriber/.venv/
+/desktop/transcriber/build/
+/desktop/transcriber/dist/
+__pycache__/
+*.pyc
+*.egg-info/

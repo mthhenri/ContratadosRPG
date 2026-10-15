@@ -119,6 +119,10 @@
     "./regras/cena": {
       "types": "./dist/regras/cena/index.d.ts",
       "default": "./dist/regras/cena/index.js"
+    },
+    "./dtos/transcricao": {
+      "types": "./dist/dtos/transcricao/index.d.ts",
+      "default": "./dist/dtos/transcricao/index.js"
     }
   },
   "files": [

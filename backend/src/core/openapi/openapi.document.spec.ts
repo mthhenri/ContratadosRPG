@@ -46,8 +46,29 @@ describe("documentação OpenAPI", () => {
             expect(operacao, `${contrato.metodo.toUpperCase()} ${caminho}`).toBeDefined();
             expect(operacao?.operationId).toBe(operationId);
             expect(operacao?.tags).toEqual([contrato.tag]);
-            expect(operacao?.security).toEqual(contrato.publica ? [] : [{ jwt: [] }]);
-            expect((operacao?.responses["200"] as { description?: string } | undefined)?.description).toContain("StandardResponse");
+            const segredoApp = operationId.startsWith("AplicativoController_") || ["VinculoController_estado", "VinculoController_desconectar"].includes(operationId);
+            expect(operacao?.security).toEqual(segredoApp ? [{ dispositivo: [] }] : contrato.publica ? [] : [{ jwt: [] }]);
+            const codigoSucesso = contrato.tag === "Transcrições" && contrato.metodo === "post"
+                ? "201" : "200";
+            expect((operacao?.responses[codigoSucesso] as { description?: string } | undefined)
+                ?.description).toContain("StandardResponse");
+        }
+    });
+
+    it("documenta as nove operações privadas de transcrição com status reais", () => {
+        const documento = criarDocumentoDescoberto();
+        enriquecerDocumentoOpenApi(documento);
+        const contratos = Object.entries(operacoesContratosPublicos)
+            .filter(([operationId]) => operationId.startsWith("TranscricaoController_"));
+        expect(contratos).toHaveLength(9);
+        for (const [, contrato] of contratos) {
+            const caminho = contrato.caminho.replace(/:([A-Za-z]+)/g, "{$1}");
+            const operacao = documento.paths[caminho][contrato.metodo as "get"]!;
+            expect(operacao.responses[contrato.metodo === "post" ? "201" : "200"]).toBeDefined();
+            expect(operacao.responses["400"]).toBeDefined();
+            expect(operacao.responses["401"]).toBeDefined();
+            expect(operacao.responses["404"]).toBeDefined();
+            expect(operacao.responses["403"]).toBeUndefined();
         }
     });
 

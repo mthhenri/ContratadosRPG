@@ -26,6 +26,7 @@ const DESCRICOES_TAG: Readonly<Record<string, string>> = {
     "Caderno": "Páginas privadas, caderno do esquadrão e busca de campanha.",
     "Encontros": "Encontros de combate, combatentes, turnos, recursos e condições.",
     "Cenas": "Cenas da campanha: criação tipada, preparo, abertura, encerramento e ordem.",
+    "Transcrições": "Metadados de gravações privados do Mestre da campanha, sem upload de WAV.",
     "Documentos": "Biblioteca de documentos da campanha: texto e imagem, ordem e revelação à mesa.",
     "Patchnotes": "Notas de versão públicas do sistema, lidas do armazenamento (sem login).",
 };
@@ -182,6 +183,7 @@ export function criarDocumentoOpenApi(app: INestApplication): OpenAPIObject {
         .setVersion("0.0.1")
         .setOpenAPIVersion("3.0.3")
         .addBearerAuth({ type: "http", scheme: "bearer", bearerFormat: "JWT" }, NOME_SEGURANCA_JWT)
+        .addBearerAuth({ type: "http", scheme: "bearer", description: "Segredo restrito do aplicativo Windows; não é JWT web." }, "dispositivo")
         .build();
     const documento = SwaggerModule.createDocument(app, configuracao, { autoTagControllers: false });
     enriquecerDocumentoOpenApi(documento);
@@ -245,7 +247,8 @@ export function enriquecerDocumentoOpenApi(documento: OpenAPIObject): void {
             operation.tags = [contrato.tag];
             operation.summary = resumoOperacao(operation.operationId ?? "Operação");
             operation.description ??= "Consulte as regras de permissão da service do domínio.";
-            operation.security = contrato.publica ? [] : [{ [NOME_SEGURANCA_JWT]: [] }];
+            const dispositivo = operation.operationId?.startsWith("AplicativoController_") || ["VinculoController_estado", "VinculoController_desconectar"].includes(operation.operationId ?? "");
+            operation.security = dispositivo ? [{ dispositivo: [] }] : contrato.publica ? [] : [{ [NOME_SEGURANCA_JWT]: [] }];
             ajustarParametrosCaminho(caminho, operation);
             if (contrato.requestSchema && metodo !== "get") {
                 operation.requestBody = {
@@ -266,6 +269,16 @@ export function enriquecerDocumentoOpenApi(documento: OpenAPIObject): void {
             }
             if (possuiIdentificador(caminho)) {
                 operation.responses["404"] = respostaErro("Recurso identificado pela rota não foi encontrado.");
+            }
+            // Recorte novo: não alterar status/semântica de módulos existentes.
+            if (contrato.tag === "Transcrições") {
+                operation.responses = {
+                    [metodo === "post" ? "201" : "200"]: respostaSucesso(contrato.responseSchema),
+                    "400": respostaErro("Metadados, identificadores ou filtros inválidos."),
+                    "401": respostaErro("Sessão ausente, expirada ou revogada."),
+                    "404": respostaErro("Recurso indisponível ou sem acesso de Mestre."),
+                    ...(operation.operationId === "VinculoController_iniciar" ? { "429": respostaErro("Muitas solicitações; tente novamente mais tarde.") } : {}),
+                };
             }
         }
     }

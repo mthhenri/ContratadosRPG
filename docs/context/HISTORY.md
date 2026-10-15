@@ -71,6 +71,77 @@ para isso (decisão do autor, não aplicada). Limites: capturas do painel saíra
 base clara e painel maximizado não observados. [Tachado](../specs/done/regras-visual-07-tachado-inline/verificacao.md) ·
 [busca](../specs/done/regras-visual-10-busca-microcopy-mobile/verificacao.md).
 
+## 2026-10-14 — transcricoes-03: vínculo restrito, telas e shell Windows em branch local
+
+Task 03 autorizada após aprovação do desenho D02/D03: PySide6/PyInstaller/Inno
+Setup por usuário, DPAPI, credencial restrita/revogável e intenção de uso único.
+Contratos/migration 0038, guard/endpoints de vínculo e abertura, telas Angular
+(privadas do Mestre) e shell desktop com empacotamento versionado implementados.
+Sem produção, push, PR remoto, release, merge, deploy ou nuvem. Spec permanece
+active: não há host Windows para construir/certificar instalador e DPAPI/DPI reais.
+
+Verificados 16 testes desktop/Qt Linux, 14 PostgreSQL e 9 REST reais em banco
+local descartável; shared 1276/1276. Testes Angular afetados (Transcrição/Perfil/
+Detalhe Mestre) 66/66; último ajuste offline passa nos 6/6 testes de transcrição.
+24 capturas web nos quatro viewports e dois temas, inspeção pelo agente principal,
+alvos ≥44px/sem overflow; vínculo/fallback/revogação/offline ao vivo. Inspeção
+corrigiu identidade dos campos e toast técnico de rede; teste Qt corrigiu retenção
+do job assíncrono. Revisão independente única encontrou dois P2 (pedido pendente
+continuava confirmável após desconectar e segredo confirmado podia ser substituído
+antes do refresh): reproduzidos RED e corrigidos GREEN, incluindo corrida real de
+cancelamento/confirmar. Relatório completo e gates em
+[verificação da 03](../specs/active/transcricoes-03-agente-windows-e-vinculo/verificacao.md).
+
+Backend completo mantém apenas as duas falhas preexistentes de regra-peca
+(1139 aprovados/59 skips); lint frontend mantém dois erros preexistentes da Oficina;
+suíte frontend global teve exit137 e não foi certificada. 01 continua active;
+02/04–07 backlog local e 08–09 bloqueadas. Desinstalação não apaga resultados.
+
+## 2026-10-14 — transcricoes-01: fundação local implementada, fecho global ainda aberto
+
+Após autorização da V1 local e aprovação explícita do desenho, D-01 e contrato
+estrutural D-05 registrados na 01 ativa. Worktree/branch locais separados da revisão.
+Entregues schema 0037 (sessão/faixa/execução/segmento/estado), DTOs readonly e API
+NestJS privada de metadados com arquivamento reversível, soft delete transacional,
+cronologia em ms, autorização atual por campanha e OpenAPI. Sem UI, Windows,
+inferência, WAV enviado, outbox, exportação ou cloud; 03–07 continuam backlog e
+08–09 bloqueadas. Nenhum push/PR remoto/merge/deploy.
+
+Testes focados 31/31; PostgreSQL descartável 11/11 (UP/DOWN/concorrência/rollback);
+REST real com JWT/guards e documento servido 13/13; shared 1276/1276; builds dos
+três workspaces passam, frontend com aviso de bundle. Lint shared/backend sem erros,
+com warnings. Revisão independente: quatro achados reproduzidos e corrigidos
+(limite INTEGER, criar faixa/excluir raiz, selecionar/mudar estado, status OpenAPI).
+Gate global permanece aberto: dois testes preexistentes RegraPecaService falham;
+frontend lint tem dois whitespace preexistentes em oficina-texto.component.ts;
+suite Angular teve OOM/worker encerrado e não foi certificada completa, mesmo
+com heap maior. Nenhuma correção da Oficina fora do escopo. Task permanece active.
+[Resultados, comandos, impacto e limites](../specs/active/transcricoes-01-sessoes-e-contratos/verificacao.md).
+
+## 2026-10-14 — Contratados Transcriber: revisão e preparação documental, sem implementação
+
+Pedido do autor limitado a leitura, confronto com arquitetura atual e specs em backlog.
+Importadas a guarda-chuva e nove tasks do pacote; 20 decisões de produto preservadas
+textualmente e quatro auxiliares originais mantidos íntegros como anexos da guarda-chuva.
+Revisão identificou a dependência da importação no shell Windows: ordem local
+01→03→02→04→05→06→07, sem renumeração. 08–09 nuvem continuam bloqueadas até nova autorização.
+Nenhuma task foi ativada/encerrada como produto. Critérios ampliados para auth por campanha,
+revogação/tokenVersao, cadeia de ids, payload do app, OpenAPI, reenvio concorrente/recibo perdido,
+correção vazia/409, offsets/export e quatro viewports, sem WAV local enviado ao servidor.
+Conflitos documentados: sessão de gravação inexistente, Biblioteca revelável, storage público,
+ValidationPipe versus P-003, menção legada de PrimeNG e número de migration desatualizado.
+D-01…D-08 são recomendações pendentes, não decisões de produto assumidas.
+
+Validação documental: repo:test 14/14 e repo:verificar aprovados após contornar restrição
+ambiental de subprocesso git EPERM, sem mudar scripts. Conferência local: dez specs com
+seções/numeração, 20 decisões integrais, quatro auxiliares byte a byte, links e grafo sem ciclo.
+Gate do índice/whitespace e limites registrados na [verificação](../specs/backlog/transcricoes/verificacao.md).
+Sem testes funcionais, migrations, UI real, hardware Windows ou deploy; produto permanece aberto.
+O autor confirmou “Não sei; prepare branch local e patch” quanto a previews automáticos:
+branch/commit locais e patch, sem push/PR remoto/merge. Texto de PR pronto para futura autorização.
+[Revisão e mapa](../specs/backlog/transcricoes/revisao.md) ·
+[guarda-chuva](../specs/backlog/transcricoes.spec.md).
+
 ## 2026-10-14 — oito specs de backlog a partir de uma rodada de pedidos do autor
 
 Pedido do autor numa única mensagem, com instrução expressa de **não implementar**, só especificar. Triagem no código para
