@@ -64,6 +64,8 @@ function trecho(item: LivroTrechoDto): string {
       return envolver("**", inline(item.filhos));
     case "italico":
       return envolver("*", inline(item.filhos));
+    case "tachado":
+      return envolver("~~", inline(item.filhos));
     case "tarja":
       return "█".repeat(item.comprimento);
     case "link-interno":

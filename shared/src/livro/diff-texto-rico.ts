@@ -14,6 +14,7 @@ const TIPOS_DE_TRECHO = new Set([
   "texto",
   "negrito",
   "italico",
+  "tachado",
   "tarja",
   "link-interno",
   "nivel-ameaca",
@@ -36,6 +37,7 @@ function marcaDoTrecho(trecho: LivroTrechoDto): string | null {
   switch (trecho.tipo) {
     case "negrito":
     case "italico":
+    case "tachado":
       return trecho.tipo;
     case "link-interno":
       // O destino é o `identificador` (estável); sem ele, a âncora.

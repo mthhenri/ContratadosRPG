@@ -48,6 +48,15 @@
                         (navegarAncora)="navegarAncora.emit($event)"
                 /></em>
             }
+            @case ("tachado") {
+                <del
+                    ><app-regras-inline
+                        [trechos]="trecho.filhos"
+                        [documento]="documento()"
+                        [semCorRecurso]="semCorRecurso()"
+                        (navegarAncora)="navegarAncora.emit($event)"
+                /></del>
+            }
             @case ("tarja") {
                 <span
                     class="regras-inline__tarja"

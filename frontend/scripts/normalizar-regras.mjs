@@ -123,6 +123,9 @@ export function normalizarDocumento(texto, id, versao) {
                     return [{ tipo: token.type === 'strong' ? 'negrito' : 'italico',
                         filhos: converter(token.tokens, linhaToken) }];
                 }
+                if (token.type === 'del') {
+                    return [{ tipo: 'tachado', filhos: converter(token.tokens, linhaToken) }];
+                }
                 if (token.type === 'link') {
                     if (token.href.startsWith('#')) {
                         let identificador = limparEscapes(token.href.slice(1));

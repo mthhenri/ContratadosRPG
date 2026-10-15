@@ -40,7 +40,7 @@
             />
         } @else {
             <p class="regras-pesquisa__quantidade" role="status">
-                {{ pesquisa.resultados().length }} resultados
+                {{ rotuloResultados(pesquisa.resultados().length) }}
             </p>
             <ol class="regras-pesquisa__lista">
                 @for (resultado of pesquisa.resultados(); track $index) {
@@ -74,10 +74,12 @@
                 variante="secundario"
                 estilo="link"
                 tamanho="pequeno"
+                posicaoIcone="direita"
                 class="regras-pesquisa__outro"
                 (click)="abrirOutro.emit()"
             >
-                {{ pesquisa.quantidadeOutro() }} resultados no outro documento →
+                <app-icone nome="chevron-direita" />
+                {{ rotuloResultados(pesquisa.quantidadeOutro()) }} no outro documento
             </button>
         }
         @if (pesquisa.falhaOutro()) {

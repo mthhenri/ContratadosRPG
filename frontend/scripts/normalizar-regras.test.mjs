@@ -14,6 +14,19 @@ const diretorioFixtures = fileURLToPath(new URL('./fixtures/regras/', import.met
 const fixture = (nome) => readFileSync(join(diretorioFixtures, `${nome}.md`), 'utf8');
 const normalizar = (texto) => normalizarDocumento(texto, 'sistema', '4.1.3');
 
+test('RV-07: ~~tachado~~ vira trecho tachado, sem delimitadores, e compõe com outras ênfases', () => {
+    const { documento } = normalizar('# ⬢ Teste\n\nIsso é ~~torturar **muito**~~ divertir.\n');
+    const trechos = percorrer(documento.filhos).find((item) => item.tipo === 'paragrafo').trechos;
+    assert.deepEqual(trechos, [
+        { tipo: 'texto', texto: 'Isso é ' },
+        { tipo: 'tachado', filhos: [
+            { tipo: 'texto', texto: 'torturar ' },
+            { tipo: 'negrito', filhos: [{ tipo: 'texto', texto: 'muito' }] },
+        ] },
+        { tipo: 'texto', texto: ' divertir.' },
+    ]);
+});
+
 test('classes e subclasses recebem destinos únicos sem alterar âncoras de seções', () => {
     const fonte = readFileSync(join(diretorioRaiz, 'frontend/scripts/fixtures/fonte-inicial/sistema-v4.1.4.md'), 'utf8');
     const blocos = percorrer(normalizar(fonte).documento.filhos);
@@ -220,7 +233,7 @@ function textoEntrada(texto, secoes) {
                 return token.href.startsWith('#') && destinos.has(identificador)
                     ? destinos.get(identificador) : textoInline(token.text);
             }
-            if (token.type === 'strong' || token.type === 'em') return textoInline(token.text);
+            if (token.type === 'strong' || token.type === 'em' || token.type === 'del') return textoInline(token.text);
             if (token.type === 'br') return ' ';
             return ['text', 'escape', 'codespan'].includes(token.type) ? token.text : token.raw;
         }).join(' ');

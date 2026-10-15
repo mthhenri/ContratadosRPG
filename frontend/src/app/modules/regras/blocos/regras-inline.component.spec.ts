@@ -26,6 +26,26 @@ describe("condições no texto das Regras", () => {
         expect(dicas.every((dica) => dica.nativeElement.style.textDecoration.includes('dotted'))).toBe(true);
     });
 
+    it("renderiza o tachado como <del> sem delimitadores e mantém o texto pesquisável", () => {
+        TestBed.configureTestingModule({ imports: [RegrasInline] });
+        const fixture = TestBed.createComponent(RegrasInline);
+        fixture.componentRef.setInput("trechos", [
+            { tipo: "texto", texto: "executar a tarefa de " },
+            { tipo: "tachado", filhos: [
+                { tipo: "texto", texto: "torturar " },
+                { tipo: "negrito", filhos: [{ tipo: "texto", texto: "psicologicamente" }] },
+            ] },
+            { tipo: "texto", texto: " divertir" },
+        ] satisfies RegrasTrecho[]);
+        fixture.detectChanges();
+        const raiz = fixture.nativeElement as HTMLElement;
+        const del = raiz.querySelector("del");
+        expect(del?.textContent).toBe("torturar psicologicamente");
+        expect(del?.querySelector("strong")?.textContent).toBe("psicologicamente");
+        expect(raiz.textContent).toBe("executar a tarefa de torturar psicologicamente divertir");
+        expect(raiz.textContent).not.toContain("~");
+    });
+
     it("explica o link de condição sem retirar a navegação normal ou com modificador", () => {
         TestBed.configureTestingModule({ imports: [RegrasInline] });
         const fixture = TestBed.createComponent(RegrasInline);

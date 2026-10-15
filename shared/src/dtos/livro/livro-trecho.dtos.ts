@@ -8,7 +8,7 @@
  */
 export type LivroTrechoDto =
   | { readonly tipo: "texto"; readonly texto: string }
-  | { readonly tipo: "negrito" | "italico"; readonly filhos: readonly LivroTrechoDto[] }
+  | { readonly tipo: "negrito" | "italico" | "tachado"; readonly filhos: readonly LivroTrechoDto[] }
   | { readonly tipo: "tarja"; readonly comprimento: number }
   | {
       readonly tipo: "link-interno";

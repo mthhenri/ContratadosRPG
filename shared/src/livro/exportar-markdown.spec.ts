@@ -40,6 +40,15 @@ describe("exportarLivroEmMarkdown (m11-10)", () => {
     expect(saida).toContain("a \\* b \\_ c \\[d\\] **forte** *leve* ████[Testes](#testes)");
   });
 
+  it("devolve o tachado como ~~ e deixa o espaço de borda fora do marcador", () => {
+    const saida = exportarLivroEmMarkdown(livro([paragrafo(
+      texto("é "),
+      { tipo: "tachado", filhos: [texto("torturar ")] },
+      texto("divertir"),
+    )]));
+    expect(saida).toContain("é ~~torturar~~ divertir");
+  });
+
   it("exemplo, nota e fórmula levam uma marca em comentário; listas aninham", () => {
     const saida = exportarLivroEmMarkdown(livro([
       peca(Tipo.EXEMPLO, { trechos: [texto("Um exemplo.")] }),

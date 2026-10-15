@@ -44,13 +44,28 @@ export function criarSeloNivel(documento: Document, nivel: number): HTMLElement 
         textoNivelAmeaca(nivel), "oficina-atomo--ameaca");
 }
 
+type TipoMarca = "negrito" | "italico" | "tachado";
+type TrechoMarca = Extract<LivroTrechoDto, { tipo: TipoMarca }>;
+
+const TAG_DA_MARCA: Record<TipoMarca, string> = { negrito: "strong", italico: "em", tachado: "del" };
+const MARCA_DA_TAG: Partial<Record<string, TipoMarca>> = {
+    STRONG: "negrito", B: "negrito", EM: "italico", I: "italico",
+    DEL: "tachado", S: "tachado", STRIKE: "tachado",
+};
+
+/** Marcação inline com filhos (negrito, itálico, tachado). */
+function ehMarca(trecho: LivroTrechoDto): trecho is TrechoMarca {
+    return trecho.tipo === "negrito" || trecho.tipo === "italico" || trecho.tipo === "tachado";
+}
+
 function montarTrecho(documento: Document, trecho: LivroTrechoDto): Node {
     switch (trecho.tipo) {
         case "texto":
             return documento.createTextNode(trecho.texto);
         case "negrito":
-        case "italico": {
-            const elemento = documento.createElement(trecho.tipo === "negrito" ? "strong" : "em");
+        case "italico":
+        case "tachado": {
+            const elemento = documento.createElement(TAG_DA_MARCA[trecho.tipo]);
             for (const filho of trecho.filhos) elemento.append(montarTrecho(documento, filho));
             return elemento;
         }
@@ -70,7 +85,7 @@ export function textoDe(trechos: readonly LivroTrechoDto[]): string {
     return trechos.map((trecho) => {
         switch (trecho.tipo) {
             case "texto": return trecho.texto;
-            case "negrito": case "italico": case "link-externo": return textoDe(trecho.filhos);
+            case "negrito": case "italico": case "tachado": case "link-externo": return textoDe(trecho.filhos);
             case "link-interno": case "nivel-ameaca": return trecho.texto;
             case "tarja": return "";
         }
@@ -98,13 +113,9 @@ function lerFilhos(no: Node): LivroTrechoDto[] {
                     // Átomo adulterado: o texto visível ainda vale, como texto comum.
                     trechos.push({ tipo: "texto", texto: filho.textContent ?? "" });
                 }
-            } else if (filho.tagName === "STRONG" || filho.tagName === "B"
-                || filho.tagName === "EM" || filho.tagName === "I") {
+            } else if (MARCA_DA_TAG[filho.tagName]) {
                 const dentro = lerFilhos(filho);
-                if (dentro.length) {
-                    trechos.push({ tipo: filho.tagName === "STRONG" || filho.tagName === "B" ? "negrito" : "italico",
-                        filhos: dentro });
-                }
+                if (dentro.length) trechos.push({ tipo: MARCA_DA_TAG[filho.tagName]!, filhos: dentro });
             } else if (filho.tagName === "BR") {
                 continue;
             } else {
@@ -120,9 +131,9 @@ function lerFilhos(no: Node): LivroTrechoDto[] {
 export function normalizarTrechos(trechos: readonly LivroTrechoDto[]): LivroTrechoDto[] {
     const resultado: LivroTrechoDto[] = [];
     for (const trecho of trechos) {
-        const normalizado: LivroTrechoDto = trecho.tipo === "negrito" || trecho.tipo === "italico"
+        const normalizado: LivroTrechoDto = ehMarca(trecho)
             ? { ...trecho, filhos: normalizarTrechos(trecho.filhos) } : trecho;
-        if ((normalizado.tipo === "negrito" || normalizado.tipo === "italico") && normalizado.filhos.length === 0) continue;
+        if (ehMarca(normalizado) && normalizado.filhos.length === 0) continue;
         const anterior = resultado.at(-1);
         if (normalizado.tipo === "texto" && anterior?.tipo === "texto") {
             resultado[resultado.length - 1] = { tipo: "texto", texto: anterior.texto + normalizado.texto };
@@ -148,7 +159,7 @@ export function apararQuebrasFinais(trechos: readonly LivroTrechoDto[]): LivroTr
         if (texto) resultado[resultado.length - 1] = { tipo: "texto", texto }; else resultado.pop();
         return texto ? resultado : apararQuebrasFinais(resultado);
     }
-    if (ultimo.tipo === "negrito" || ultimo.tipo === "italico") {
+    if (ehMarca(ultimo)) {
         const filhos = apararQuebrasFinais(ultimo.filhos);
         if (filhos.length) resultado[resultado.length - 1] = { ...ultimo, filhos }; else resultado.pop();
     }
@@ -187,7 +198,7 @@ export function dividirTrechos(trechos: readonly LivroTrechoDto[], deslocamento:
                     saidaDepois.push({ tipo: "texto", texto: trecho.texto.slice(restante) });
                     restante = 0;
                 }
-            } else if (trecho.tipo === "negrito" || trecho.tipo === "italico") {
+            } else if (ehMarca(trecho)) {
                 const a: LivroTrechoDto[] = [];
                 const d: LivroTrechoDto[] = [];
                 percorrer(trecho.filhos, a, d);

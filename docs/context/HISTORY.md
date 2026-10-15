@@ -1,5 +1,20 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-15 — regras-visual-07 e 10: tachado vira trecho do livro; busca flexiona singular e usa o ícone do primitivo
+
+Primeiras duas da fila `regras-visual-06`…`11`, executadas juntas por tocarem o mesmo leitor. **07:** o Markdown `~~x~~` não tinha
+trecho próprio e aparecia literal. Novo `tipo: "tachado"` em `LivroTrechoDto` (com `filhos`, como negrito/itálico); consumidores
+levantados por busca de `"negrito"` e todos tratados: normalizador (token `del`), `regras-inline` (`<del>`), exportação (`~~`),
+diff de texto rico, editor da Oficina (monta `<del>`, lê `<del>`/`<s>`/`<strike>`; helper `ehMarca` no lugar de três
+comparações repetidas). **10:** `rotuloResultados` ("1 resultado"/"N resultados") nos dois resumos; a ação do outro livro troca a seta
+digitada por `app-icone` + `posicaoIcone="direita"`. Testes: scripts 89 aprovados (3 falhas preexistentes de estilo, iguais sem a
+mudança), Angular de Regras 302/302, shared ok. Ao vivo (1920, 1366, 960, 360): `<del>` riscado e pesquisável com o destaque dentro;
+"1 resultado" e legenda sem seta órfã. **Achado só ao vivo:** o banco guarda o `~~` como texto literal — o livro é a fonte da
+verdade e não passa mais pelo normalizador —, então em produção a frase só muda quando o dado for convertido; `P-120` foi reescopado
+para isso (decisão do autor, não aplicada). Limites: capturas do painel saíram corrompidas, verificação por DOM/estilo computado;
+base clara e painel maximizado não observados. [Tachado](../specs/done/regras-visual-07-tachado-inline/verificacao.md) ·
+[busca](../specs/done/regras-visual-10-busca-microcopy-mobile/verificacao.md).
+
 ## 2026-10-14 — oito specs de backlog a partir de uma rodada de pedidos do autor
 
 Pedido do autor numa única mensagem, com instrução expressa de **não implementar**, só especificar. Triagem no código para

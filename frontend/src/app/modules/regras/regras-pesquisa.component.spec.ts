@@ -51,6 +51,13 @@ describe("Campo de pesquisa dos livros", () => {
         vi.advanceTimersByTime(500); expect(pesquisa.termo()).toBe("defesa");
     });
 
+    it("usa singular para um resultado e plural para zero ou vários", () => {
+        const { fixture } = preparar();
+        const rotulo = (quantidade: number) => (fixture.componentInstance as unknown as {
+            rotuloResultados(n: number): string }).rotuloResultados(quantidade);
+        expect([0, 1, 2].map(rotulo)).toEqual(["0 resultados", "1 resultado", "2 resultados"]);
+    });
+
     it("não grava uma pesquisa pendente após destruir o hospedeiro", () => {
         const { digitar } = preparar(); digitar("vida");
         const memoria = TestBed.inject(RegrasLeituraStore);

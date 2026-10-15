@@ -57,13 +57,13 @@
 - **Correção:** [regras-visual-06-notas-e-formacoes](../specs/backlog/regras-visual-06-notas-e-formacoes.spec.md).
 - **Desde:** observado em 09/10/2026; [RV-06, cobertura e evidências](../specs/done/regras-auditoria-visual-completa/auditoria.md). Nenhuma correção aplicada nesta auditoria.
 
-### P-120 — Renderizar o tachado do Markdown no leitor · `ABERTO` · frontend/regras
+### P-120 — Livro publicado ainda guarda `~~torturar psicologicamente~~` como texto literal · `ABERTO` · dados/regras
 
-- **Sintoma:** Guia → Introdução: `~~torturar psicologicamente~~` aparece com os delimitadores literais, nas páginas desktop e mobile. O Markdown canônico marca esse trecho como tachado.
-- **Causa:** Token de tachado não é modelado/renderizado; fallback conserva a sintaxe literal.
-- **Contorno:** Ler a frase como tachado conforme o Markdown.
-- **Correção:** [regras-visual-07-tachado-inline](../specs/backlog/regras-visual-07-tachado-inline.spec.md).
-- **Desde:** observado em 09/10/2026; [RV-07, cobertura e evidências](../specs/done/regras-auditoria-visual-completa/auditoria.md). Nenhuma correção aplicada nesta auditoria.
+- **Sintoma:** Guia → Introdução, em produção: a frase aparece com os delimitadores `~~`. O leitor, o normalizador, a exportação e o editor já modelam o trecho `tachado` (`regras-visual-07`), mas o dado publicado no banco é um trecho `texto` com o Markdown cru.
+- **Causa:** A importação inicial do Guia ocorreu antes de existir o token; o banco é a fonte da verdade e não é regenerado pelo normalizador.
+- **Contorno:** Nenhum no site; o texto continua legível com os delimitadores.
+- **Correção:** Converter o trecho no livro (rascunho e publicação) em `texto` + `tachado` + `texto` — via migração de dados ou na Oficina (que ainda não tem botão de tachado) — e republicar. Decisão e execução do autor, por mexer em dado de produção.
+- **Desde:** observado em 09/10/2026; código corrigido em 15/10/2026 ([verificação](../specs/done/regras-visual-07-tachado-inline/verificacao.md)).
 
 ### P-121 — Uniformizar a apresentação das habilidades passivas de NPCs · `ABERTO` · frontend/regras
 
@@ -80,14 +80,6 @@
 - **Contorno:** Usar a base escura.
 - **Correção:** [regras-visual-09-contraste-base-clara](../specs/backlog/regras-visual-09-contraste-base-clara.spec.md).
 - **Desde:** observado em 09/10/2026; [RV-09, cobertura e evidências](../specs/done/regras-auditoria-visual-completa/auditoria.md). Nenhuma correção aplicada nesta auditoria.
-
-### P-123 — Evitar texto incorreto e seta órfã na busca · `ABERTO` · frontend/regras
-
-- **Sintoma:** Em 360×800, Guia → Sumário → pesquisar Mercenário. O estado vazio exibe “1 RESULTADOS NO OUTRO DOCUMENTO” e a seta sozinha na linha seguinte. A busca no Sistema também mostra “1 resultados”. A ação encontra o livro correto.
-- **Causa:** Resumo não flexiona singular e legenda textual longa quebra antes da seta; navegação funciona.
-- **Contorno:** A ação segue utilizável; resultado/destino corretos.
-- **Correção:** [regras-visual-10-busca-microcopy-mobile](../specs/backlog/regras-visual-10-busca-microcopy-mobile.spec.md).
-- **Desde:** observado em 09/10/2026; [RV-10, cobertura e evidências](../specs/done/regras-auditoria-visual-completa/auditoria.md). Nenhuma correção aplicada nesta auditoria.
 
 ### P-111 — Recorrência de falha nativa no build com cache local · `CONTORNADO` · frontend/ambiente
 

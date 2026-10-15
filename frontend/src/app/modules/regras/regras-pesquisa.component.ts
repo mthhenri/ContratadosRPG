@@ -4,12 +4,13 @@ import { Campo } from "../../shared/ui/campo/campo.component";
 import { Botao } from "../../shared/ui/botao/botao.component";
 import { BotaoIcone } from "../../shared/ui/botao-icone/botao-icone.component";
 import { Tooltip } from "../../shared/tooltip/tooltip.directive";
+import { Icone } from "../../shared/icone/icone.component";
 import { EstadoVazio } from "../../shared/ui/estado-vazio/estado-vazio.component";
 import { RegrasPesquisaController } from "./regras-pesquisa.controller";
 
 @Component({
     selector: "app-regras-pesquisa",
-    imports: [ReactiveFormsModule, Campo, Botao, BotaoIcone, Tooltip, EstadoVazio],
+    imports: [ReactiveFormsModule, Campo, Botao, BotaoIcone, Tooltip, EstadoVazio, Icone],
     templateUrl: "./regras-pesquisa.component.html",
     styleUrl: "./regras-pesquisa.component.scss",
     host: { "(keydown)": "tratarTecla($event)" },
@@ -26,6 +27,10 @@ export class RegrasPesquisa {
             this.pesquisa.alterarTermo(termo));
         inject(DestroyRef).onDestroy(() => assinatura.unsubscribe());
         effect(() => this.termo.setValue(this.pesquisa.termo(), { emitEvent: false }));
+    }
+
+    protected rotuloResultados(quantidade: number): string {
+        return quantidade === 1 ? "1 resultado" : `${quantidade} resultados`;
     }
 
     protected limpar(): void {

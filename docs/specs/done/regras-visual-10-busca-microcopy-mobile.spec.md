@@ -1,7 +1,7 @@
 # Evitar texto incorreto e seta órfã na busca
 
-> Task de correção RV-10 / P-123; prioridade baixa. Criada após a bateria visual de 09/10/2026, por pedido do autor. **Backlog: não implementada.**
-> Evidência, cobertura e limites: [auditoria do leitor](../done/regras-auditoria-visual-completa/auditoria.md).
+> Task de correção RV-10 / P-123; prioridade baixa. Criada após a bateria visual de 09/10/2026, por pedido do autor. **Concluída em 15/10/2026.**
+> Evidência inicial: [auditoria do leitor](regras-auditoria-visual-completa/auditoria.md). Correção: [verificação](regras-visual-10-busca-microcopy-mobile/verificacao.md).
 
 ## Problema e reprodução
 

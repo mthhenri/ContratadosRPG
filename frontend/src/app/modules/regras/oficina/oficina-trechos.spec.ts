@@ -33,6 +33,22 @@ describe("abertura do livro — ida e volta", () => {
         expect(lerTrechos(raiz)).toEqual(abertura);
     });
 
+    it("monta o tachado como <del>, relê <del>/<s> e não o perde ao normalizar", () => {
+        const tachado: LivroTrechoDto[] = [
+            { tipo: "texto", texto: "a " },
+            { tipo: "tachado", filhos: [{ tipo: "texto", texto: "torturar" }] },
+            { tipo: "texto", texto: " b" },
+        ];
+        const raiz = document.createElement("div");
+        montarTrechos(raiz, tachado);
+        expect(raiz.innerHTML).toBe("a <del>torturar</del> b");
+        expect(lerTrechos(raiz)).toEqual(tachado);
+        raiz.innerHTML = "a <s>torturar</s> b";
+        expect(lerTrechos(raiz)).toEqual(tachado);
+        expect(textoDe(tachado)).toBe("a torturar b");
+        expect(normalizarTrechos([{ tipo: "tachado", filhos: [] }])).toEqual([]);
+    });
+
     it("tira só as quebras do fim, mesmo dentro do itálico, e não toca no meio", () => {
         const trechos: LivroTrechoDto[] = [
             { tipo: "italico", filhos: [{ tipo: "texto", texto: "Um.\n\nDois.\n\n" }] },
