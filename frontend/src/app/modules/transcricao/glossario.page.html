@@ -1,0 +1,187 @@
+<section class="glossario">
+    <app-cartao titulo="Glossário da transcrição" nivelTitulo="h1">
+        <span cartaoIndice>//</span>
+        <p>
+            Nomes, lugares e termos da campanha que ajudam o reconhecimento de fala. Só o Mestre
+            edita; o aplicativo apenas lê. Cada termo tem até {{ maximo }} caracteres, e acento
+            diferente conta como outro termo.
+        </p>
+        <nav class="glossario__acoes" aria-label="Navegação do glossário">
+            <a
+                app-botao
+                variante="secundario"
+                tamanho="medio"
+                [routerLink]="['/campanhas', campanhaId, 'transcricoes']"
+                ><app-icone nome="voltar" />Transcrições</a
+            >
+        </nav>
+        <p class="glossario__mensagem" role="status" aria-live="polite">{{ aviso() }}</p>
+        @if (erro()) {
+        <p class="glossario__erro" role="alert">{{ erro() }}</p>
+        }
+    </app-cartao>
+
+    <app-cartao titulo="Termos">
+        <span cartaoIndice>01</span>
+        @if (termos().length) {
+        <button
+            cartaoFim
+            app-botao-icone
+            type="button"
+            [attr.aria-pressed]="modoEdicao()"
+            [attr.aria-label]="modoEdicao() ? 'Concluir edição' : 'Editar termos'"
+            [appTooltip]="modoEdicao() ? 'Concluir edição' : 'Editar termos'"
+            (click)="alternarEdicao()"
+        >
+            <app-icone [nome]="modoEdicao() ? 'check' : 'editar'" />
+        </button>
+        }
+        <form class="glossario__formulario" (submit)="adicionar($event)">
+            <app-campo rotulo="Novo termo" [erro]="mensagemDoTermo(novo())">
+                <input [value]="novo()" (input)="digitar($event)" autocomplete="off" required />
+            </app-campo>
+            <button
+                app-botao
+                variante="primario"
+                tamanho="medio"
+                [disabled]="ocupado() || !novo().trim() || !!mensagemDoTermo(novo())"
+            >
+                <app-icone nome="mais" />Adicionar
+            </button>
+        </form>
+        @if (carregado() && !termos().length) {
+        <app-estado-vazio
+            tamanho="compacto"
+            titulo="Nenhum termo ainda."
+            linhaApoio="Adicione nomes de personagens e lugares para ajudar o reconhecimento."
+        />
+        }
+        <ul class="glossario__lista">
+            @for (t of termos(); track t.id) {
+            <li>
+                @if (editandoId() === t.id) {
+                <form class="glossario__edicao" (submit)="salvar($event)">
+                    <app-campo rotulo="Termo" [erro]="erroEdicao()">
+                        <input
+                            [value]="rascunho()"
+                            (input)="digitarRascunho($event)"
+                            autocomplete="off"
+                            required
+                        />
+                    </app-campo>
+                    <button app-botao variante="primario" tamanho="medio" [disabled]="ocupado()">
+                        <app-icone nome="check" />Salvar
+                    </button>
+                    <button
+                        app-botao
+                        variante="secundario"
+                        tamanho="medio"
+                        type="button"
+                        (click)="cancelar()"
+                    >
+                        Cancelar
+                    </button>
+                </form>
+                } @else {
+                <strong>{{ t.termo }}</strong>
+                @if (modoEdicao()) {
+                <span class="glossario__itemAcoes">
+                    <button
+                        app-botao-icone
+                        type="button"
+                        [attr.aria-label]="'Editar ' + t.termo"
+                        [appTooltip]="'Editar'"
+                        [disabled]="ocupado()"
+                        (click)="editar(t)"
+                    >
+                        <app-icone nome="editar" />
+                    </button>
+                    <button
+                        app-botao-icone
+                        variante="perigo"
+                        type="button"
+                        [attr.aria-label]="'Excluir ' + t.termo"
+                        [appTooltip]="'Excluir'"
+                        [disabled]="ocupado()"
+                        (click)="excluir(t)"
+                    >
+                        <app-icone nome="excluir" />
+                    </button>
+                </span>
+                } }
+            </li>
+            }
+        </ul>
+    </app-cartao>
+
+    <app-cartao titulo="Identidades conhecidas">
+        <span cartaoIndice>02</span>
+        <p>Nome do arquivo associado ao participante, gravado pelo aplicativo. Somente leitura.</p>
+        @if (carregado() && !identidades().length) {
+        <app-estado-vazio
+            tamanho="compacto"
+            titulo="Nenhuma identidade ainda."
+            linhaApoio="Elas aparecem depois que você confirma faixas no aplicativo."
+        />
+        }
+        <ul class="glossario__lista">
+            @for (i of identidades(); track i.id) {
+            <li>
+                <span class="glossario__origem">{{ i.nomeOrigem }}</span
+                ><strong>{{ i.participante }}</strong>
+            </li>
+            }
+        </ul>
+    </app-cartao>
+
+    <app-cartao titulo="Faixas por sessão">
+        <span cartaoIndice>03</span>
+        <p>
+            Metadados das faixas já registradas pelo aplicativo. O áudio nunca sai do computador do
+            Mestre.
+        </p>
+        @if (carregado() && !sessoes().length) {
+        <app-estado-vazio tamanho="compacto" titulo="Nenhuma sessão ativa nesta campanha." /> }
+        <ul class="glossario__lista">
+            @for (s of sessoes(); track s.id) {
+            <li class="glossario__sessao">
+                <div class="glossario__sessaoTopo">
+                    <strong>{{ s.titulo }}</strong>
+                    <button
+                        app-botao
+                        variante="secundario"
+                        tamanho="medio"
+                        type="button"
+                        [attr.aria-expanded]="sessaoAberta() === s.id"
+                        (click)="verFaixas(s.id)"
+                    >
+                        {{ sessaoAberta() === s.id ? 'Ocultar faixas' : 'Ver faixas' }}
+                    </button>
+                </div>
+                @if (sessaoAberta() === s.id) { @if (!faixas().length) {
+                <app-estado-vazio tamanho="compacto" titulo="Nenhuma faixa registrada." /> }
+                <ul class="glossario__faixas">
+                    @for (f of faixas(); track f.id) {
+                    <li>
+                        <div class="glossario__faixaTopo">
+                            <span class="glossario__arquivo">{{ f.nomeArquivo }}</span>
+                            <app-chip [severidade]="f.identidadeConfirmada ? 'sucesso' : 'aviso'"
+                                >{{ f.identidadeConfirmada ? 'Confirmada' : 'Sem confirmação'
+                                }}</app-chip
+                            >
+                        </div>
+                        <span class="glossario__meta"
+                            >{{ f.participante || 'Sem participante' }} · deslocamento {{
+                            duracao(f.deslocamentoMilissegundos) }}@if
+                            (f.silencioInicialMilissegundos !== null) { · silêncio inicial {{
+                            duracao(f.silencioInicialMilissegundos) }} (informativo) }</span
+                        >
+                    </li>
+                    }
+                </ul>
+                }
+            </li>
+            }
+        </ul>
+    </app-cartao>
+</section>

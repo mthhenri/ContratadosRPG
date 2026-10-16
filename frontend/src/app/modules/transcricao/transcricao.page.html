@@ -4,6 +4,7 @@
     <p>Conta: <strong>{{ conta()?.login }}</strong></p>
     <nav class="transcricoes__acoes" aria-label="Navegação de transcrições">
       <a app-botao variante="secundario" tamanho="medio" routerLink="/campanhas"><app-icone nome="campanhas" />Campanhas</a>
+      @if (campanhaId && !pedidoId) { <a app-botao variante="secundario" tamanho="medio" [routerLink]="['/campanhas', campanhaId, 'transcricoes', 'glossario']"><app-icone nome="busca" />Glossário e faixas</a> }
       <a app-botao variante="secundario" tamanho="medio" routerLink="/transcricoes/dispositivos"><app-icone nome="vincular" />Dispositivos vinculados</a>
     </nav>
     <p class="transcricoes__mensagem" role="status" aria-live="polite">{{ mensagem() }}</p>

@@ -21,6 +21,10 @@ export const routes: Routes = [
     loadComponent: () => import('./modules/transcricao/transcricao.page').then(m => m.Transcricoes),
   },
   {
+    path: 'campanhas/:campanhaId/transcricoes/glossario', canActivate: [autenticacaoGuard, mestreCampanhaGuard],
+    loadComponent: () => import('./modules/transcricao/glossario.page').then(m => m.GlossarioTranscricao),
+  },
+  {
     path: "regras",
     loadChildren: () => import("./modules/regras/regras.routes")
       .then((modulo) => modulo.regrasRoutes),
