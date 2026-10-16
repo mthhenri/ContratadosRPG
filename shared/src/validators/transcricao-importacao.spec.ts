@@ -5,6 +5,7 @@ import {
   chaveTermoGlossario,
   detectarDuplicidadeArquivos,
   localizarConflitoTermo,
+  localizarParticipanteParecido,
   montarGlossarioEfetivoTranscricao,
   montarPacoteTrabalhoTranscricao,
   normalizarRotuloTranscricao,
@@ -223,5 +224,23 @@ describe("montarPacoteTrabalhoTranscricao", () => {
   });
   it("recusa duas faixas com o mesmo identificador", () => {
     expect(montarPacoteTrabalhoTranscricao({ ...base, faixas: [faixa, { ...faixa }] }).ok).toBe(false);
+  });
+});
+
+describe('localizarParticipanteParecido (D-06b)', () => {
+  it('João já existe e Joao é parecido: aponta o existente', () => {
+    expect(localizarParticipanteParecido('Joao', ['João', 'Maria'])).toBe('João');
+    expect(localizarParticipanteParecido('JOÃO', ['João'])).toBe('João');
+  });
+  it('o mesmo rótulo (mesma pessoa) não é parecido, nem na forma Unicode decomposta', () => {
+    expect(localizarParticipanteParecido('João', ['João'])).toBeNull();
+    expect(localizarParticipanteParecido('João', ['João'])).toBeNull();
+  });
+  it('se o rótulo exato já existe, ignora variantes parecidas', () => {
+    expect(localizarParticipanteParecido('Joao', ['João', 'Joao'])).toBeNull();
+  });
+  it('nome diferente ou lista vazia não é parecido', () => {
+    expect(localizarParticipanteParecido('Joana', ['João'])).toBeNull();
+    expect(localizarParticipanteParecido('Joao', [])).toBeNull();
   });
 });

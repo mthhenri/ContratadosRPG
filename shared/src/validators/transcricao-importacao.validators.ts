@@ -75,6 +75,19 @@ export function localizarConflitoTermo(termo: string, existentes: readonly strin
   return parecido !== undefined ? { tipo: "PARECIDO", existente: parecido } : null;
 }
 
+/**
+ * D-06b: devolve o participante já conhecido que é PARECIDO (só difere em caixa ou acento) com o informado,
+ * ou `null`. Um rótulo idêntico ao conhecido é a mesma pessoa e não conta como parecido.
+ */
+export function localizarParticipanteParecido(participante: string, conhecidos: readonly string[]): string | null {
+  const rotulo = normalizarRotuloTranscricao(participante);
+  const chave = chaveParecidaTranscricao(rotulo);
+  const iguais = conhecidos.some((conhecido) => normalizarRotuloTranscricao(conhecido) === rotulo);
+  if (iguais) return null;
+  const parecido = conhecidos.find((conhecido) => chaveParecidaTranscricao(conhecido) === chave);
+  return parecido !== undefined ? normalizarRotuloTranscricao(parecido) : null;
+}
+
 export interface AssociacaoIdentidadeTranscricao {
   readonly nomeOrigem: string;
   readonly participante: string;

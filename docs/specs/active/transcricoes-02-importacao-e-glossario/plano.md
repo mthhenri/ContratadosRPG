@@ -68,3 +68,16 @@ Ordem sugerida: **02.0 → 02.1 → (02.2, 02.3 e 02.4 em paralelo, pois não to
   Observação de projeto: ZWJ/ZWNJ são aceitos (nomes legítimos); os demais caracteres de controle/formato invisíveis são recusados.
 - Próximas sem dependência entre si: 02.2 (glossário no backend), 02.3 (identidades/faixa) e 02.4 (WAV no app). 02.2 e 02.3 tocam a mesma pasta e o
   gerador OpenAPI, então vão em sequência; 02.4 é só Python e pode andar em paralelo.
+- 2026-10-15 — **02.2 feita.** Migration `0039` (glossário, identidades, colunas da faixa e `glossario_efetivo`; `SCHEMA.md` atualizado), `Glossario*` sob
+  `/transcricao/glossario`, só o Mestre atual, 404 uniforme, 409 em duplicata de caixa, dica `parecidoCom` em acento diferente. Verificação do Mestre extraída para
+  `acesso-mestre.util` (usada também por `TranscricaoService`). Provas: service/controller (mocks), Postgres descartável com UP→DOWN→UP da 0039 e REST real com a
+  matriz (jogador, espectador, ADMIN, TESTER, Mestre de outra campanha, visitante 401, transferência de Mestre). O teste de banco achou um defeito real
+  (`ORDER BY … COLLATE` sobre `UNION`), corrigido com subconsulta.
+- 2026-10-15 — **02.3 feita.** Web: `/transcricao/identidade` (CRUD) e `PUT /transcricao/faixa/:id` (identidade confirmada, offset manual, silêncio informativo).
+  App: `/transcricao/aplicativo/{glossario,identidade,sessao/:id/faixa,faixa/:id}` sob a credencial do dispositivo (JWT web não autentica; revogado = 401; ex-Mestre
+  ou Mestre de outra campanha = 404; campo extra como `wav`/`caminhoLocal`/`hashAudio` = 400). D-06b em código: participante parecido (só caixa/acento) exige
+  `confirmarParecido`; a mesma pessoa pode ter várias origens; rótulo exato já conhecido não é conflito. Provas: unit 43, Postgres 12/12, REST 15/15 (e os REST antigos
+  seguem verdes). Backend 1219 testes, lint 0 erros; shared 1328.
+  Decisão de projeto: a rota do app **não** é limitada a uma sessão da intenção (que é de uso único e só resolve contexto); ela revalida o Mestre ATUAL da campanha do
+  recurso a cada chamada, igual à rota web, e só expõe estes endpoints. Se o autor quiser amarrar a credencial a uma sessão aberta, é uma decisão nova.
+- Próximas: 02.4 (WAV no app, só Python) e depois 02.5/02.6 (importação e telas Qt) e 02.7 (glossário no site).

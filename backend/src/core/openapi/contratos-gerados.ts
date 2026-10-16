@@ -11180,6 +11180,10 @@ export const schemasContratosPublicos = {
             },
             "participante": {
                 "type": "string"
+            },
+            "confirmarParecido": {
+                "type": "boolean",
+                "description": "D-06b: confirma explicitamente um participante parecido (só caixa/acento) com outro já conhecido."
             }
         },
         "required": [
@@ -11205,6 +11209,10 @@ export const schemasContratosPublicos = {
             "participante": {
                 "type": "string"
             },
+            "parecidoCom": {
+                "type": "string",
+                "description": "Participante já conhecido que só difere em caixa/acento, quando a gravação foi confirmada; senão `null`."
+            },
             "createdDate": {
                 "type": "string"
             },
@@ -11217,6 +11225,7 @@ export const schemasContratosPublicos = {
             "campanhaId",
             "nomeOrigem",
             "participante",
+            "parecidoCom",
             "createdDate",
             "updatedDate"
         ],
@@ -11231,6 +11240,9 @@ export const schemasContratosPublicos = {
             },
             "participante": {
                 "type": "string"
+            },
+            "confirmarParecido": {
+                "type": "boolean"
             }
         },
         "required": [
@@ -11255,6 +11267,10 @@ export const schemasContratosPublicos = {
             "participante": {
                 "type": "string"
             },
+            "parecidoCom": {
+                "type": "string",
+                "description": "Participante já conhecido que só difere em caixa/acento, quando a gravação foi confirmada; senão `null`."
+            },
             "createdDate": {
                 "type": "string"
             },
@@ -11267,6 +11283,7 @@ export const schemasContratosPublicos = {
             "campanhaId",
             "nomeOrigem",
             "participante",
+            "parecidoCom",
             "createdDate",
             "updatedDate"
         ],
@@ -11332,6 +11349,32 @@ export const schemasContratosPublicos = {
         "additionalProperties": false,
         "description": "Contrato IdentidadeTranscricaoResumoDto."
     },
+    "IdentidadeTranscricaoRecuperarDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "id"
+        ],
+        "additionalProperties": false,
+        "description": "Contrato IdentidadeTranscricaoRecuperarDto."
+    },
+    "ParticipanteTranscricaoListarDto": {
+        "type": "object",
+        "properties": {
+            "campanhaId": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "campanhaId"
+        ],
+        "additionalProperties": false,
+        "description": "Contrato ParticipanteTranscricaoListarDto: participantes já conhecidos da campanha (identidades e faixas)."
+    },
     "FaixaTranscricaoAlterarDto": {
         "type": "object",
         "properties": {
@@ -11349,6 +11392,9 @@ export const schemasContratosPublicos = {
             },
             "silencioInicialMilissegundos": {
                 "type": "number"
+            },
+            "confirmarParecido": {
+                "type": "boolean"
             }
         },
         "required": [
@@ -11391,6 +11437,10 @@ export const schemasContratosPublicos = {
             "execucaoSelecionadaId": {
                 "type": "number"
             },
+            "parecidoCom": {
+                "type": "string",
+                "description": "Participante já conhecido que só difere em caixa/acento (confirmado por `confirmarParecido`); senão `null`."
+            },
             "createdDate": {
                 "type": "string"
             },
@@ -11408,6 +11458,7 @@ export const schemasContratosPublicos = {
             "deslocamentoMilissegundos",
             "silencioInicialMilissegundos",
             "execucaoSelecionadaId",
+            "parecidoCom",
             "createdDate",
             "updatedDate"
         ],
@@ -13893,6 +13944,57 @@ export const operacoesContratosPublicos = {
         "publica": false,
         "responseSchema": "RolagemExcluidaDto"
     },
+    "AplicativoImportacaoController_listarGlossario": {
+        "controller": "AplicativoImportacaoController",
+        "metodo": "get",
+        "caminho": "/transcricao/aplicativo/glossario",
+        "tag": "Transcrições",
+        "publica": false,
+        "responseSchema": "TermoGlossarioTranscricaoResumoDto[]"
+    },
+    "AplicativoImportacaoController_listarIdentidades": {
+        "controller": "AplicativoImportacaoController",
+        "metodo": "get",
+        "caminho": "/transcricao/aplicativo/identidade",
+        "tag": "Transcrições",
+        "publica": false,
+        "responseSchema": "IdentidadeTranscricaoResumoDto[]"
+    },
+    "AplicativoImportacaoController_criarIdentidade": {
+        "controller": "AplicativoImportacaoController",
+        "metodo": "post",
+        "caminho": "/transcricao/aplicativo/identidade",
+        "tag": "Transcrições",
+        "publica": false,
+        "requestSchema": "IdentidadeTranscricaoCriarDto",
+        "responseSchema": "IdentidadeTranscricaoCriadaDto"
+    },
+    "AplicativoImportacaoController_listarFaixas": {
+        "controller": "AplicativoImportacaoController",
+        "metodo": "get",
+        "caminho": "/transcricao/aplicativo/sessao/:sessaoId/faixa",
+        "tag": "Transcrições",
+        "publica": false,
+        "responseSchema": "FaixaTranscricaoResumoDto[]"
+    },
+    "AplicativoImportacaoController_criarFaixa": {
+        "controller": "AplicativoImportacaoController",
+        "metodo": "post",
+        "caminho": "/transcricao/aplicativo/sessao/:sessaoId/faixa",
+        "tag": "Transcrições",
+        "publica": false,
+        "requestSchema": "FaixaTranscricaoCriarDto",
+        "responseSchema": "FaixaTranscricaoCriadaDto"
+    },
+    "AplicativoImportacaoController_alterarFaixa": {
+        "controller": "AplicativoImportacaoController",
+        "metodo": "put",
+        "caminho": "/transcricao/aplicativo/faixa/:id",
+        "tag": "Transcrições",
+        "publica": false,
+        "requestSchema": "FaixaTranscricaoAlterarDto",
+        "responseSchema": "FaixaTranscricaoAlteradaDto"
+    },
     "VinculoController_iniciar": {
         "controller": "VinculoController",
         "metodo": "post",
@@ -14016,6 +14118,49 @@ export const operacoesContratosPublicos = {
         "tag": "Transcrições",
         "publica": false,
         "responseSchema": "null"
+    },
+    "IdentidadeController_criarIdentidade": {
+        "controller": "IdentidadeController",
+        "metodo": "post",
+        "caminho": "/transcricao/identidade",
+        "tag": "Transcrições",
+        "publica": false,
+        "requestSchema": "IdentidadeTranscricaoCriarDto",
+        "responseSchema": "IdentidadeTranscricaoCriadaDto"
+    },
+    "IdentidadeController_listarIdentidades": {
+        "controller": "IdentidadeController",
+        "metodo": "get",
+        "caminho": "/transcricao/identidade",
+        "tag": "Transcrições",
+        "publica": false,
+        "responseSchema": "IdentidadeTranscricaoResumoDto[]"
+    },
+    "IdentidadeController_alterarIdentidade": {
+        "controller": "IdentidadeController",
+        "metodo": "put",
+        "caminho": "/transcricao/identidade/:id",
+        "tag": "Transcrições",
+        "publica": false,
+        "requestSchema": "IdentidadeTranscricaoAlterarDto",
+        "responseSchema": "IdentidadeTranscricaoAlteradaDto"
+    },
+    "IdentidadeController_excluirIdentidade": {
+        "controller": "IdentidadeController",
+        "metodo": "delete",
+        "caminho": "/transcricao/identidade/:id",
+        "tag": "Transcrições",
+        "publica": false,
+        "responseSchema": "null"
+    },
+    "FaixaAjusteController_alterarFaixa": {
+        "controller": "FaixaAjusteController",
+        "metodo": "put",
+        "caminho": "/transcricao/faixa/:id",
+        "tag": "Transcrições",
+        "publica": false,
+        "requestSchema": "FaixaTranscricaoAlterarDto",
+        "responseSchema": "FaixaTranscricaoAlteradaDto"
     },
     "TranscricaoController_criarSessao": {
         "controller": "TranscricaoController",

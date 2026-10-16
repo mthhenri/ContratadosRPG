@@ -77,6 +77,8 @@ export interface IdentidadeTranscricaoCriarDto {
     readonly campanhaId: number;
     readonly nomeOrigem: string;
     readonly participante: string;
+    /** D-06b: confirma explicitamente um participante parecido (só caixa/acento) com outro já conhecido. */
+    readonly confirmarParecido?: boolean;
 }
 
 /** Contrato IdentidadeTranscricaoCriadaDto. */
@@ -85,6 +87,8 @@ export interface IdentidadeTranscricaoCriadaDto {
     readonly campanhaId: number;
     readonly nomeOrigem: string;
     readonly participante: string;
+    /** Participante já conhecido que só difere em caixa/acento, quando a gravação foi confirmada; senão `null`. */
+    readonly parecidoCom: string | null;
     readonly createdDate: string;
     readonly updatedDate: string;
 }
@@ -93,6 +97,7 @@ export interface IdentidadeTranscricaoCriadaDto {
 export interface IdentidadeTranscricaoAlterarDto {
     readonly id: number;
     readonly participante: string;
+    readonly confirmarParecido?: boolean;
 }
 
 /** Contrato IdentidadeTranscricaoAlteradaDto. */
@@ -101,6 +106,8 @@ export interface IdentidadeTranscricaoAlteradaDto {
     readonly campanhaId: number;
     readonly nomeOrigem: string;
     readonly participante: string;
+    /** Participante já conhecido que só difere em caixa/acento, quando a gravação foi confirmada; senão `null`. */
+    readonly parecidoCom: string | null;
     readonly createdDate: string;
     readonly updatedDate: string;
 }
@@ -125,6 +132,39 @@ export interface IdentidadeTranscricaoResumoDto {
     readonly updatedDate: string;
 }
 
+/** Contrato IdentidadeTranscricaoRecuperarDto. */
+export interface IdentidadeTranscricaoRecuperarDto {
+    readonly id: number;
+}
+
+/** Contrato IdentidadeTranscricaoInternoCriarDto: service → repository, com a chave de unicidade já calculada. */
+export interface IdentidadeTranscricaoInternoCriarDto {
+    readonly campanhaId: number;
+    readonly nomeOrigem: string;
+    readonly chaveOrigem: string;
+    readonly participante: string;
+}
+
+/** Contrato IdentidadeTranscricaoInternoAlterarDto. */
+export interface IdentidadeTranscricaoInternoAlterarDto {
+    readonly id: number;
+    readonly participante: string;
+}
+
+/** Contrato ParticipanteTranscricaoListarDto: participantes já conhecidos da campanha (identidades e faixas). */
+export interface ParticipanteTranscricaoListarDto {
+    readonly campanhaId: number;
+}
+
+/** Contrato FaixaTranscricaoInternoAlterarDto. */
+export interface FaixaTranscricaoInternoAlterarDto {
+    readonly id: number;
+    readonly participante: string;
+    readonly identidadeConfirmada: boolean;
+    readonly deslocamentoMilissegundos: number;
+    readonly silencioInicialMilissegundos: number | null;
+}
+
 /**
  * Contrato FaixaTranscricaoAlterarDto: confirma/corrige a identidade e ajusta o offset manual da faixa.
  * `silencioInicialMilissegundos` é só informativo (medido pelo app, nunca aplicado ao offset).
@@ -135,6 +175,7 @@ export interface FaixaTranscricaoAlterarDto {
     readonly identidadeConfirmada: boolean;
     readonly deslocamentoMilissegundos: number;
     readonly silencioInicialMilissegundos: number | null;
+    readonly confirmarParecido?: boolean;
 }
 
 /** Contrato FaixaTranscricaoAlteradaDto. */
@@ -148,6 +189,8 @@ export interface FaixaTranscricaoAlteradaDto {
     readonly deslocamentoMilissegundos: number;
     readonly silencioInicialMilissegundos: number | null;
     readonly execucaoSelecionadaId: number | null;
+    /** Participante já conhecido que só difere em caixa/acento (confirmado por `confirmarParecido`); senão `null`. */
+    readonly parecidoCom: string | null;
     readonly createdDate: string;
     readonly updatedDate: string;
 }

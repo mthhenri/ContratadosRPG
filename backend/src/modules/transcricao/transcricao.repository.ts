@@ -6,7 +6,7 @@ import type {
     SessaoTranscricaoAlterarDto, SessaoTranscricaoArquivamentoAlterarDto,
     SessaoTranscricaoExcluirDto, FaixaTranscricaoInternoCriarDto,
     FaixaTranscricaoRecuperadaDto, FaixaTranscricaoRecuperarDto, FaixaTranscricaoListarDto,
-    FaixaTranscricaoResumoDto,
+    FaixaTranscricaoResumoDto, FaixaTranscricaoInternoAlterarDto,
 } from "@contratados-rpg/shared/dtos/transcricao";
 import { BaseRepository } from "../../core/base/base.repository";
 import { KNEX_CONNECTION } from "../../database/database.provider";
@@ -120,6 +120,20 @@ export class TranscricaoRepository extends BaseRepository {
               AND sessao_transcricao.is_deleted = false
              WHERE faixa_transcricao.sessao_transcricao_id = :sessaoId AND faixa_transcricao.is_deleted = false
              ORDER BY faixa_transcricao.id ASC`, { ...dto });
+    }
+
+    /** Ajusta identidade confirmada, offset e silêncio informativo; nome do arquivo e tempos brutos nunca mudam. */
+    async alterarFaixa(dto: FaixaTranscricaoInternoAlterarDto): Promise<FaixaTranscricaoRecuperadaDto | null> {
+        const [faixa] = await this.executarConsulta<FaixaTranscricaoRecuperadaDto>(
+            `UPDATE faixa_transcricao SET participante = :participante, identidade_confirmada = :identidadeConfirmada,
+                    deslocamento_milissegundos = :deslocamentoMilissegundos,
+                    silencio_inicial_milissegundos = :silencioInicialMilissegundos
+             WHERE faixa_transcricao.id = :id AND faixa_transcricao.is_deleted = false
+               AND EXISTS (SELECT 1 FROM sessao_transcricao
+                           WHERE sessao_transcricao.id = faixa_transcricao.sessao_transcricao_id
+                             AND sessao_transcricao.is_deleted = false)
+             RETURNING ${COLUNAS_FAIXA}`, { ...dto });
+        return faixa ?? null;
     }
 
     /** Recuperação respeita exclusão de qualquer pai da faixa. */
