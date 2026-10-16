@@ -82,6 +82,25 @@ Nota para quem registrar U1: o app segue o tema do site (`theme.py`, base escura
 Plex não são embutidas; compare a renderização com `Consolas`/`Segoe UI` e registre se o resultado
 é aceitável ou se vale embutir as fontes (decisão do autor).
 
+## 7. Rodar I1, I3 e I4 no Windows Sandbox (ambiente limpo e descartável)
+
+Habilitar uma vez (administrador + reinício): recurso "Windows Sandbox" em *Ativar ou desativar recursos do Windows*.
+O Sandbox nasce sem Python, sem Inno Setup e sem nada da máquina de desenvolvimento, e é descartado ao fechar; cobre
+**I1, I3 e I4** com a limpeza que a máquina de desenvolvimento não tem. Não cobre S1 (um único usuário), V8/V9
+(sem Edge com o diálogo de protocolo do seu perfil) nem escala real de DPI.
+
+1. No host, gere o instalador (`./packaging/build.ps1`) e abra `.artifacts/transcricoes-03-agente-windows-e-vinculo/contratados-sandbox.wsb`
+   (caminhos absolutos da sua máquina; regenere se mudar o checkout).
+2. **Fase 1 (automática):** o script `packaging/sandbox/verificar-no-sandbox.ps1` registra Windows, usuário, ausência de Python,
+   hash e assinatura, e deixa o instalador na Área de Trabalho **com Mark-of-the-Web**.
+3. **I1 e I3 (à mão):** dê duplo clique no instalador. Anote se apareceu SmartScreen, o que ele disse e se pediu administrador.
+   Conclua a instalação.
+4. **Fase 2:** duplo clique em "Fase 2 - depois de instalar.cmd": confere pasta, protocolo, atalho, licenças (hashes) e abre o app.
+5. **Fase 3 (I4):** duplo clique em "Fase 3 - falha de startup (I4).cmd": quebra um módulo numa cópia e abre; deve aparecer a mensagem do
+   launcher, sem traceback.
+6. Os logs e capturas caem em `.artifacts/transcricoes-03-agente-windows-e-vinculo/sandbox-evidencias/`. Compare os hashes de
+   `licencas/` com os de `desktop/transcriber/licencas/`.
+
 ## 6. Fecho
 
 Preencher a tabela com **passou / falhou / não executado** e a evidência de cada passo.
