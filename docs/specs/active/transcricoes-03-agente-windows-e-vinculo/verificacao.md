@@ -349,10 +349,10 @@ Evidência bruta em `.artifacts/transcricoes-03-agente-windows-e-vinculo/sandbox
 |---|---|---|
 | I1 | passou | antes: `ContratadosTranscriber` não existia e não havia Python; depois: instalado em `%LOCALAPPDATA%\Programs`, sem Python no PATH. O script não registrou pedido de senha de administrador; o autor não relatou. Ressalva: a janela do `.cmd` da Fase 2 aparece como "Administrator" no Sandbox, então esse ambiente não prova sozinho a ausência de elevação (o log do Inno na máquina de desenvolvimento diz "Administrative install mode: No") |
 | I2 | passou | `HKCU\Software\Classes\contratados-transcriber\shell\open\command` → `…\ContratadosTranscriber.exe "%1"` |
-| I3 | passou, parcial | atalho no Menu Iniciar existe e o app abre (`sandbox-i3-app-aberto.png`). **Aviso de SmartScreen ou antivírus: não registrado** — o autor não descreveu o que apareceu ao dar duplo clique no instalador marcado como baixado |
+| I3 | passou | atalho no Menu Iniciar existe e o app abre (`sandbox-i3-app-aberto.png`). **Nenhum aviso de SmartScreen nem de antivírus** apareceu ao abrir o instalador marcado como baixado (relato do autor; sem captura). Limitação: o Sandbox tem a reputação/política do próprio ambiente, então isso não prevê o que usuários finais verão com um download real e sem assinatura |
 | I4 | passou | com `QtWidgets.pyd` e `Qt6Widgets.dll` renomeados numa cópia, o app mostra "Não foi possível iniciar o Contratados Transcriber. Reinstale esta versão a partir do instalador confiável. Seus resultados locais foram preservados.", sem traceback (`sandbox-i4-falha-startup.png`). Na rodada anterior (máquina não limpa) as DLLs eram achadas fora da pasta; aqui, num Windows limpo, o teste vale também para elas |
 | B4 (licenças na instalação) | passou, parcial | as 5 peças de `licencas/` instaladas no Sandbox têm SHA-256 idêntico ao de `desktop/transcriber/licencas/`. Seguem abertos os avisos de terceiros do Qt, o runtime C++ da Microsoft e a revisão jurídica |
 
 **Estado da task:** continuam sem execução S1 (2º usuário do Windows), V8/V9 (navegador real com diálogo de protocolo), U2, U5,
-Tab/Narrador reais, escala real do Windows e o item de SmartScreen do I3. Os passos V/S já executados foram feitos com o instalador
+Tab/Narrador reais, escala real do Windows . Os passos V/S já executados foram feitos com o instalador
 da primeira rodada, anterior à correção do P-128 (que só mexe no rótulo da janela e tem teste automatizado).
