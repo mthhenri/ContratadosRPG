@@ -1,7 +1,7 @@
 # biblioteca-pastas.spec.md
 
 > Spec avulsa, **rascunho** (autor, 2026-10-16; modelo por cargo corrigido pelo autor no mesmo dia).
-> As decisões em aberto abaixo precisam de resposta do autor antes de mover para `active/`.
+> Decisões 1–7 respondidas pelo autor; restam três pontos menores abaixo, resolvíveis ao mover para `active/`.
 
 ## Objetivo
 
@@ -31,13 +31,13 @@ aparece. Documento sem vínculo fica na raiz.
 1. **Contrato** em `shared/` (DTOs `DocumentoPasta*Dto`, validadores de nome) e schema novo
    (skill `sql-migrations`): tabela `documento_pasta` por campanha com a coluna de **cargo** da
    organização (`MESTRE` ou `JOGADOR`, onde `JOGADOR` cobre jogadores e espectadores; decidir entre
-   tabela `tipo_*` e enum conforme a convenção), nome, pasta-mãe se houver aninhamento e `ordem`; e
+   tabela `tipo_*` e enum conforme a convenção), nome, pasta-mãe (aninhamento) e `ordem`; e
    vínculo documento↔pasta, no máximo um por documento e por cargo. Documentos nunca ganham coluna
    de pasta.
 2. **Backend**: criar, renomear, reordenar, excluir (soft delete) pasta e mover documento. O cargo do
    usuário na campanha define qual organização ele lê e escreve; nunca a do outro. Pasta
    compartilhada só aceita documento revelado; quando o mestre oculta ou exclui um documento, o
-   vínculo some da visão dos jogadores sem vazar título. Espectador: ver decisão 2.
+   vínculo some da visão dos jogadores sem vazar título.
 3. **Frontend** nas três visões da Biblioteca (página do mestre, página do jogador/espectador e
    painel flutuante): árvore/lista de pastas, criar/renomear/excluir, mover documento (arrastar no
    desktop; ação equivalente por menu no toque), pasta recolhível, busca respeitando as pastas.
@@ -47,18 +47,26 @@ aparece. Documento sem vínculo fica na raiz.
    vence a última gravação, sem estado corrompido) e de reconexão.
 5. Gravação das regras em `SYSTEM.SPEC.md` (Biblioteca), `SCHEMA.md` e `DESIGN.md`.
 
-## Decisões em aberto (autor)
+## Decisões do autor (2026-10-16)
 
-1. **Aninhamento**: pastas dentro de pastas, ou um único nível?
-2. **Espectador**: edita a organização compartilhada como o jogador, ou só a vê?
-3. **Documento novo / recém-revelado**: aparece na raiz da organização dos jogadores? Há destaque de
-   "não organizado"?
-4. **Ordem manual atual** (`documento.ordem`): permanece como ordem dentro de cada pasta (e vale só
-   para a visão do mestre) ou cada cargo passa a ter a sua?
-5. **Ao excluir pasta com documentos**: voltam à raiz (recomendado) ou a exclusão é bloqueada?
-6. **Importar Markdown como rascunho** (m9-08) e criação de documento: nascem na pasta aberta?
-7. **Quem exclui pasta compartilhada**: qualquer jogador (a organização é de todos) ou há alguma
-   proteção, como confirmação?
+1. **Aninhamento**: pastas podem conter pastas, sem limite de nível definido pela spec (a
+   implementação fixa um teto razoável de profundidade e o registra em `SCHEMA.md`).
+2. **Documento novo ou recém-revelado**: aparece na **raiz**, sem destaque de "não organizado".
+3. **Espectador**: vê a mesma organização dos jogadores (um só cargo `JOGADOR`).
+4. **Organização do mestre**: só dele; os jogadores não a herdam.
+5. **Ordem manual** (`documento.ordem`): vale dentro de cada pasta.
+6. **Excluir pasta com documentos** (e subpastas): tudo volta à raiz do mesmo cargo; a exclusão
+   nunca é bloqueada.
+7. **Documento criado ou importado** (m9-08): sempre nasce na raiz, mesmo com uma pasta aberta.
+
+## Pontos ainda em aberto (autor)
+
+1. O espectador **edita** a organização compartilhada como o jogador, ou só a vê? (A decisão 3
+   garante só a visão.)
+2. Qualquer jogador pode excluir uma pasta compartilhada sem confirmação, ou há uma confirmação
+   quando ela contém documentos?
+3. A ordem dentro das pastas da visão dos jogadores parte da ordem do mestre e depois é deles, ou
+   começa pela ordem de criação?
 
 ## Critérios de Aceite (provisórios)
 
