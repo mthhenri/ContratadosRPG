@@ -98,6 +98,17 @@ class Session:
         # Server validates current account, device, campaign/master and single-use intent.
         self.context = self.api.resolve(intent, data["secret"])
         return self.context
+    def credencial(self) -> str:
+        """Segredo do dispositivo para as rotas de importação; só existe com vínculo confirmado e sem revogação pendente."""
+        data = self.store.load()
+        if not data.get("secret") or not data.get("user_id") or data.get("revocation_pending"):
+            raise CredentialError("Vincule sua conta e confirme o vínculo antes de importar.")
+        return data["secret"]
+    def pasta_da_conta(self) -> Path:
+        """Pasta de dados locais desta origem + conta; resultados e importações de uma conta nunca ficam na pasta de outra."""
+        data = self.store.load()
+        if not data.get("namespace"): raise CredentialError("Confirme o vínculo antes de importar.")
+        return self.store.root / data["namespace"]
     def disconnect(self):
         self.context = None
         data = self.store.load()

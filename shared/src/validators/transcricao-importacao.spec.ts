@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   TRANSCRICAO_TERMO_MAXIMO,
@@ -227,20 +229,52 @@ describe("montarPacoteTrabalhoTranscricao", () => {
   });
 });
 
-describe('localizarParticipanteParecido (D-06b)', () => {
-  it('João já existe e Joao é parecido: aponta o existente', () => {
-    expect(localizarParticipanteParecido('Joao', ['João', 'Maria'])).toBe('João');
-    expect(localizarParticipanteParecido('JOÃO', ['João'])).toBe('João');
+describe("localizarParticipanteParecido (D-06b)", () => {
+  it("João já existe e Joao é parecido: aponta o existente", () => {
+    expect(localizarParticipanteParecido("Joao", ["João", "Maria"])).toBe("João");
+    expect(localizarParticipanteParecido("JOÃO", ["João"])).toBe("João");
   });
-  it('o mesmo rótulo (mesma pessoa) não é parecido, nem na forma Unicode decomposta', () => {
-    expect(localizarParticipanteParecido('João', ['João'])).toBeNull();
-    expect(localizarParticipanteParecido('João', ['João'])).toBeNull();
+  it("o mesmo rótulo (mesma pessoa) não é parecido, nem na forma Unicode decomposta", () => {
+    expect(localizarParticipanteParecido("João", ["João"])).toBeNull();
+    expect(localizarParticipanteParecido("João", ["João"])).toBeNull();
   });
-  it('se o rótulo exato já existe, ignora variantes parecidas', () => {
-    expect(localizarParticipanteParecido('Joao', ['João', 'Joao'])).toBeNull();
+  it("se o rótulo exato já existe, ignora variantes parecidas", () => {
+    expect(localizarParticipanteParecido("Joao", ["João", "Joao"])).toBeNull();
   });
-  it('nome diferente ou lista vazia não é parecido', () => {
-    expect(localizarParticipanteParecido('Joana', ['João'])).toBeNull();
-    expect(localizarParticipanteParecido('Joao', [])).toBeNull();
+  it("nome diferente ou lista vazia não é parecido", () => {
+    expect(localizarParticipanteParecido("Joana", ["João"])).toBeNull();
+    expect(localizarParticipanteParecido("Joao", [])).toBeNull();
+  });
+});
+
+describe("vetores compartilhados com o app Python", () => {
+  // O mesmo arquivo é testado em desktop/transcriber/tests/test_regras_transcricao.py. Mudou a regra? Regenere com
+  // `node shared/tools/gerar-vetores-transcricao.cjs` e confira os dois lados.
+  // Os vetores são JSON sem tipo: `never` deixa cada campo servir de argumento sem recorrer a `any`.
+  type Caso = Record<string, never>;
+  const vetores = JSON.parse(readFileSync(join(__dirname, "transcricao-importacao.vetores.json"), "utf8")) as Record<string, Caso[]>;
+
+  it("cobre todas as funções puras", () => {
+    expect(Object.keys(vetores).sort()).toEqual(["chaveParecida", "chaveTermo", "conflitoTermo", "duplicidade", "glossarioEfetivo",
+      "normalizarRotulo", "pacote", "participanteParecido", "participantesSemFaixa", "sugestao", "validarParticipante", "validarTermo"]);
+  });
+  it.each(["normalizarRotulo", "chaveTermo", "chaveParecida"] as const)("%s", (nome) => {
+    const funcao = { normalizarRotulo: normalizarRotuloTranscricao, chaveTermo: chaveTermoGlossario, chaveParecida: chaveParecidaTranscricao }[nome];
+    for (const caso of vetores[nome]) expect(funcao(caso.entrada)).toBe(caso.esperado);
+  });
+  it("validarTermo e validarParticipante", () => {
+    for (const caso of vetores.validarTermo) expect(validarTermoGlossario(caso.entrada)).toEqual(caso.esperado);
+    for (const caso of vetores.validarParticipante) expect(validarRotuloParticipante(caso.entrada)).toEqual(caso.esperado);
+  });
+  it("conflito de termo, sugestão, duplicidade, faltantes e parecido", () => {
+    for (const caso of vetores.conflitoTermo) expect(localizarConflitoTermo(caso.termo, caso.existentes)).toEqual(caso.esperado);
+    for (const caso of vetores.sugestao) expect(sugerirIdentidadeFaixa(caso.arquivo, caso.associacoes)).toEqual(caso.esperado);
+    for (const caso of vetores.duplicidade) expect(detectarDuplicidadeArquivos(caso.arquivos)).toEqual(caso.esperado);
+    for (const caso of vetores.participantesSemFaixa) expect(participantesSemFaixa(caso.esperados, caso.faixas)).toEqual(caso.esperado);
+    for (const caso of vetores.participanteParecido) expect(localizarParticipanteParecido(caso.participante, caso.conhecidos)).toEqual(caso.esperado);
+  });
+  it("glossário efetivo e pacote do motor", () => {
+    for (const caso of vetores.glossarioEfetivo) expect(montarGlossarioEfetivoTranscricao(caso.termos)).toEqual(caso.esperado);
+    for (const caso of vetores.pacote) expect(montarPacoteTrabalhoTranscricao(caso.entrada)).toEqual(caso.esperado);
   });
 });

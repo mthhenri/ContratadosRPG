@@ -1,0 +1,2442 @@
+{
+  "normalizarRotulo": [
+    {
+      "entrada": "João",
+      "esperado": "João"
+    },
+    {
+      "entrada": "  José   Silva ",
+      "esperado": "José Silva"
+    },
+    {
+      "entrada": "José",
+      "esperado": "José"
+    },
+    {
+      "entrada": "ZÉ",
+      "esperado": "ZÉ"
+    },
+    {
+      "entrada": "zé",
+      "esperado": "zé"
+    },
+    {
+      "entrada": "Ze",
+      "esperado": "Ze"
+    },
+    {
+      "entrada": "a b",
+      "esperado": "a b"
+    },
+    {
+      "entrada": "﻿abc",
+      "esperado": "abc"
+    },
+    {
+      "entrada": "a b",
+      "esperado": "a b"
+    },
+    {
+      "entrada": "tab\tinterno",
+      "esperado": "tab\tinterno"
+    },
+    {
+      "entrada": "linha\nquebra",
+      "esperado": "linha\nquebra"
+    },
+    {
+      "entrada": "zero​width",
+      "esperado": "zero​width"
+    },
+    {
+      "entrada": "zwnj‌ok",
+      "esperado": "zwnj‌ok"
+    },
+    {
+      "entrada": "zwj‍ok",
+      "esperado": "zwj‍ok"
+    },
+    {
+      "entrada": "xy",
+      "esperado": "xy"
+    },
+    {
+      "entrada": "x\u001fy",
+      "esperado": "x\u001fy"
+    },
+    {
+      "entrada": "😀😀",
+      "esperado": "😀😀"
+    },
+    {
+      "entrada": "Straße",
+      "esperado": "Straße"
+    },
+    {
+      "entrada": "İstanbul",
+      "esperado": "İstanbul"
+    },
+    {
+      "entrada": "ΟΔΥΣΣΕΥΣ",
+      "esperado": "ΟΔΥΣΣΕΥΣ"
+    },
+    {
+      "entrada": "ΑΣ",
+      "esperado": "ΑΣ"
+    },
+    {
+      "entrada": "ǅ",
+      "esperado": "ǅ"
+    },
+    {
+      "entrada": "ﬁsh",
+      "esperado": "ﬁsh"
+    },
+    {
+      "entrada": "多国語",
+      "esperado": "多国語"
+    },
+    {
+      "entrada": "",
+      "esperado": ""
+    },
+    {
+      "entrada": "   ",
+      "esperado": ""
+    },
+    {
+      "entrada": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "esperado": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    {
+      "entrada": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "esperado": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    {
+      "entrada": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+      "esperado": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀"
+    },
+    {
+      "entrada": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+      "esperado": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀"
+    },
+    {
+      "entrada": "Ａｂｃ",
+      "esperado": "Ａｂｃ"
+    },
+    {
+      "entrada": "é́",
+      "esperado": "é́"
+    },
+    {
+      "entrada": "ñ",
+      "esperado": "ñ"
+    },
+    {
+      "entrada": "ñ",
+      "esperado": "ñ"
+    }
+  ],
+  "chaveTermo": [
+    {
+      "entrada": "João",
+      "esperado": "joão"
+    },
+    {
+      "entrada": "  José   Silva ",
+      "esperado": "josé silva"
+    },
+    {
+      "entrada": "José",
+      "esperado": "josé"
+    },
+    {
+      "entrada": "ZÉ",
+      "esperado": "zé"
+    },
+    {
+      "entrada": "zé",
+      "esperado": "zé"
+    },
+    {
+      "entrada": "Ze",
+      "esperado": "ze"
+    },
+    {
+      "entrada": "a b",
+      "esperado": "a b"
+    },
+    {
+      "entrada": "﻿abc",
+      "esperado": "abc"
+    },
+    {
+      "entrada": "a b",
+      "esperado": "a b"
+    },
+    {
+      "entrada": "tab\tinterno",
+      "esperado": "tab\tinterno"
+    },
+    {
+      "entrada": "linha\nquebra",
+      "esperado": "linha\nquebra"
+    },
+    {
+      "entrada": "zero​width",
+      "esperado": "zero​width"
+    },
+    {
+      "entrada": "zwnj‌ok",
+      "esperado": "zwnj‌ok"
+    },
+    {
+      "entrada": "zwj‍ok",
+      "esperado": "zwj‍ok"
+    },
+    {
+      "entrada": "xy",
+      "esperado": "xy"
+    },
+    {
+      "entrada": "x\u001fy",
+      "esperado": "x\u001fy"
+    },
+    {
+      "entrada": "😀😀",
+      "esperado": "😀😀"
+    },
+    {
+      "entrada": "Straße",
+      "esperado": "straße"
+    },
+    {
+      "entrada": "İstanbul",
+      "esperado": "i̇stanbul"
+    },
+    {
+      "entrada": "ΟΔΥΣΣΕΥΣ",
+      "esperado": "οδυσσευς"
+    },
+    {
+      "entrada": "ΑΣ",
+      "esperado": "ας"
+    },
+    {
+      "entrada": "ǅ",
+      "esperado": "ǆ"
+    },
+    {
+      "entrada": "ﬁsh",
+      "esperado": "ﬁsh"
+    },
+    {
+      "entrada": "多国語",
+      "esperado": "多国語"
+    },
+    {
+      "entrada": "",
+      "esperado": ""
+    },
+    {
+      "entrada": "   ",
+      "esperado": ""
+    },
+    {
+      "entrada": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "esperado": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    {
+      "entrada": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "esperado": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    {
+      "entrada": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+      "esperado": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀"
+    },
+    {
+      "entrada": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+      "esperado": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀"
+    },
+    {
+      "entrada": "Ａｂｃ",
+      "esperado": "ａｂｃ"
+    },
+    {
+      "entrada": "é́",
+      "esperado": "é́"
+    },
+    {
+      "entrada": "ñ",
+      "esperado": "ñ"
+    },
+    {
+      "entrada": "ñ",
+      "esperado": "ñ"
+    }
+  ],
+  "chaveParecida": [
+    {
+      "entrada": "João",
+      "esperado": "joao"
+    },
+    {
+      "entrada": "  José   Silva ",
+      "esperado": "jose silva"
+    },
+    {
+      "entrada": "José",
+      "esperado": "jose"
+    },
+    {
+      "entrada": "ZÉ",
+      "esperado": "ze"
+    },
+    {
+      "entrada": "zé",
+      "esperado": "ze"
+    },
+    {
+      "entrada": "Ze",
+      "esperado": "ze"
+    },
+    {
+      "entrada": "a b",
+      "esperado": "a b"
+    },
+    {
+      "entrada": "﻿abc",
+      "esperado": "abc"
+    },
+    {
+      "entrada": "a b",
+      "esperado": "a b"
+    },
+    {
+      "entrada": "tab\tinterno",
+      "esperado": "tab\tinterno"
+    },
+    {
+      "entrada": "linha\nquebra",
+      "esperado": "linha\nquebra"
+    },
+    {
+      "entrada": "zero​width",
+      "esperado": "zero​width"
+    },
+    {
+      "entrada": "zwnj‌ok",
+      "esperado": "zwnj‌ok"
+    },
+    {
+      "entrada": "zwj‍ok",
+      "esperado": "zwj‍ok"
+    },
+    {
+      "entrada": "xy",
+      "esperado": "xy"
+    },
+    {
+      "entrada": "x\u001fy",
+      "esperado": "x\u001fy"
+    },
+    {
+      "entrada": "😀😀",
+      "esperado": "😀😀"
+    },
+    {
+      "entrada": "Straße",
+      "esperado": "straße"
+    },
+    {
+      "entrada": "İstanbul",
+      "esperado": "istanbul"
+    },
+    {
+      "entrada": "ΟΔΥΣΣΕΥΣ",
+      "esperado": "οδυσσευς"
+    },
+    {
+      "entrada": "ΑΣ",
+      "esperado": "ας"
+    },
+    {
+      "entrada": "ǅ",
+      "esperado": "ǆ"
+    },
+    {
+      "entrada": "ﬁsh",
+      "esperado": "ﬁsh"
+    },
+    {
+      "entrada": "多国語",
+      "esperado": "多国語"
+    },
+    {
+      "entrada": "",
+      "esperado": ""
+    },
+    {
+      "entrada": "   ",
+      "esperado": ""
+    },
+    {
+      "entrada": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "esperado": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    {
+      "entrada": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "esperado": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    {
+      "entrada": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+      "esperado": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀"
+    },
+    {
+      "entrada": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+      "esperado": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀"
+    },
+    {
+      "entrada": "Ａｂｃ",
+      "esperado": "ａｂｃ"
+    },
+    {
+      "entrada": "é́",
+      "esperado": "e"
+    },
+    {
+      "entrada": "ñ",
+      "esperado": "n"
+    },
+    {
+      "entrada": "ñ",
+      "esperado": "n"
+    }
+  ],
+  "validarTermo": [
+    {
+      "entrada": "João",
+      "esperado": {
+        "valido": true,
+        "valor": "João"
+      }
+    },
+    {
+      "entrada": "  José   Silva ",
+      "esperado": {
+        "valido": true,
+        "valor": "José Silva"
+      }
+    },
+    {
+      "entrada": "José",
+      "esperado": {
+        "valido": true,
+        "valor": "José"
+      }
+    },
+    {
+      "entrada": "ZÉ",
+      "esperado": {
+        "valido": true,
+        "valor": "ZÉ"
+      }
+    },
+    {
+      "entrada": "zé",
+      "esperado": {
+        "valido": true,
+        "valor": "zé"
+      }
+    },
+    {
+      "entrada": "Ze",
+      "esperado": {
+        "valido": true,
+        "valor": "Ze"
+      }
+    },
+    {
+      "entrada": "a b",
+      "esperado": {
+        "valido": true,
+        "valor": "a b"
+      }
+    },
+    {
+      "entrada": "﻿abc",
+      "esperado": {
+        "valido": true,
+        "valor": "abc"
+      }
+    },
+    {
+      "entrada": "a b",
+      "esperado": {
+        "valido": true,
+        "valor": "a b"
+      }
+    },
+    {
+      "entrada": "tab\tinterno",
+      "esperado": {
+        "valido": false,
+        "motivo": "CONTROLE"
+      }
+    },
+    {
+      "entrada": "linha\nquebra",
+      "esperado": {
+        "valido": false,
+        "motivo": "CONTROLE"
+      }
+    },
+    {
+      "entrada": "zero​width",
+      "esperado": {
+        "valido": false,
+        "motivo": "CONTROLE"
+      }
+    },
+    {
+      "entrada": "zwnj‌ok",
+      "esperado": {
+        "valido": true,
+        "valor": "zwnj‌ok"
+      }
+    },
+    {
+      "entrada": "zwj‍ok",
+      "esperado": {
+        "valido": true,
+        "valor": "zwj‍ok"
+      }
+    },
+    {
+      "entrada": "xy",
+      "esperado": {
+        "valido": false,
+        "motivo": "CONTROLE"
+      }
+    },
+    {
+      "entrada": "x\u001fy",
+      "esperado": {
+        "valido": false,
+        "motivo": "CONTROLE"
+      }
+    },
+    {
+      "entrada": "😀😀",
+      "esperado": {
+        "valido": true,
+        "valor": "😀😀"
+      }
+    },
+    {
+      "entrada": "Straße",
+      "esperado": {
+        "valido": true,
+        "valor": "Straße"
+      }
+    },
+    {
+      "entrada": "İstanbul",
+      "esperado": {
+        "valido": true,
+        "valor": "İstanbul"
+      }
+    },
+    {
+      "entrada": "ΟΔΥΣΣΕΥΣ",
+      "esperado": {
+        "valido": true,
+        "valor": "ΟΔΥΣΣΕΥΣ"
+      }
+    },
+    {
+      "entrada": "ΑΣ",
+      "esperado": {
+        "valido": true,
+        "valor": "ΑΣ"
+      }
+    },
+    {
+      "entrada": "ǅ",
+      "esperado": {
+        "valido": true,
+        "valor": "ǅ"
+      }
+    },
+    {
+      "entrada": "ﬁsh",
+      "esperado": {
+        "valido": true,
+        "valor": "ﬁsh"
+      }
+    },
+    {
+      "entrada": "多国語",
+      "esperado": {
+        "valido": true,
+        "valor": "多国語"
+      }
+    },
+    {
+      "entrada": "",
+      "esperado": {
+        "valido": false,
+        "motivo": "VAZIO"
+      }
+    },
+    {
+      "entrada": "   ",
+      "esperado": {
+        "valido": false,
+        "motivo": "VAZIO"
+      }
+    },
+    {
+      "entrada": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "esperado": {
+        "valido": true,
+        "valor": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    },
+    {
+      "entrada": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "esperado": {
+        "valido": false,
+        "motivo": "LONGO"
+      }
+    },
+    {
+      "entrada": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+      "esperado": {
+        "valido": true,
+        "valor": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀"
+      }
+    },
+    {
+      "entrada": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+      "esperado": {
+        "valido": false,
+        "motivo": "LONGO"
+      }
+    },
+    {
+      "entrada": "Ａｂｃ",
+      "esperado": {
+        "valido": true,
+        "valor": "Ａｂｃ"
+      }
+    },
+    {
+      "entrada": "é́",
+      "esperado": {
+        "valido": true,
+        "valor": "é́"
+      }
+    },
+    {
+      "entrada": "ñ",
+      "esperado": {
+        "valido": true,
+        "valor": "ñ"
+      }
+    },
+    {
+      "entrada": "ñ",
+      "esperado": {
+        "valido": true,
+        "valor": "ñ"
+      }
+    },
+    {
+      "entrada": null,
+      "esperado": {
+        "valido": false,
+        "motivo": "TIPO"
+      }
+    },
+    {
+      "entrada": 42,
+      "esperado": {
+        "valido": false,
+        "motivo": "TIPO"
+      }
+    },
+    {
+      "entrada": true,
+      "esperado": {
+        "valido": false,
+        "motivo": "TIPO"
+      }
+    },
+    {
+      "entrada": {},
+      "esperado": {
+        "valido": false,
+        "motivo": "TIPO"
+      }
+    },
+    {
+      "entrada": [],
+      "esperado": {
+        "valido": false,
+        "motivo": "TIPO"
+      }
+    }
+  ],
+  "validarParticipante": [
+    {
+      "entrada": "João",
+      "esperado": {
+        "valido": true,
+        "valor": "João"
+      }
+    },
+    {
+      "entrada": "  José   Silva ",
+      "esperado": {
+        "valido": true,
+        "valor": "José Silva"
+      }
+    },
+    {
+      "entrada": "José",
+      "esperado": {
+        "valido": true,
+        "valor": "José"
+      }
+    },
+    {
+      "entrada": "ZÉ",
+      "esperado": {
+        "valido": true,
+        "valor": "ZÉ"
+      }
+    },
+    {
+      "entrada": "zé",
+      "esperado": {
+        "valido": true,
+        "valor": "zé"
+      }
+    },
+    {
+      "entrada": "Ze",
+      "esperado": {
+        "valido": true,
+        "valor": "Ze"
+      }
+    },
+    {
+      "entrada": "a b",
+      "esperado": {
+        "valido": true,
+        "valor": "a b"
+      }
+    },
+    {
+      "entrada": "﻿abc",
+      "esperado": {
+        "valido": true,
+        "valor": "abc"
+      }
+    },
+    {
+      "entrada": "a b",
+      "esperado": {
+        "valido": true,
+        "valor": "a b"
+      }
+    },
+    {
+      "entrada": "tab\tinterno",
+      "esperado": {
+        "valido": false,
+        "motivo": "CONTROLE"
+      }
+    },
+    {
+      "entrada": "linha\nquebra",
+      "esperado": {
+        "valido": false,
+        "motivo": "CONTROLE"
+      }
+    },
+    {
+      "entrada": "zero​width",
+      "esperado": {
+        "valido": false,
+        "motivo": "CONTROLE"
+      }
+    },
+    {
+      "entrada": "zwnj‌ok",
+      "esperado": {
+        "valido": true,
+        "valor": "zwnj‌ok"
+      }
+    },
+    {
+      "entrada": "zwj‍ok",
+      "esperado": {
+        "valido": true,
+        "valor": "zwj‍ok"
+      }
+    },
+    {
+      "entrada": "xy",
+      "esperado": {
+        "valido": false,
+        "motivo": "CONTROLE"
+      }
+    },
+    {
+      "entrada": "x\u001fy",
+      "esperado": {
+        "valido": false,
+        "motivo": "CONTROLE"
+      }
+    },
+    {
+      "entrada": "😀😀",
+      "esperado": {
+        "valido": true,
+        "valor": "😀😀"
+      }
+    },
+    {
+      "entrada": "Straße",
+      "esperado": {
+        "valido": true,
+        "valor": "Straße"
+      }
+    },
+    {
+      "entrada": "İstanbul",
+      "esperado": {
+        "valido": true,
+        "valor": "İstanbul"
+      }
+    },
+    {
+      "entrada": "ΟΔΥΣΣΕΥΣ",
+      "esperado": {
+        "valido": true,
+        "valor": "ΟΔΥΣΣΕΥΣ"
+      }
+    },
+    {
+      "entrada": "ΑΣ",
+      "esperado": {
+        "valido": true,
+        "valor": "ΑΣ"
+      }
+    },
+    {
+      "entrada": "ǅ",
+      "esperado": {
+        "valido": true,
+        "valor": "ǅ"
+      }
+    },
+    {
+      "entrada": "ﬁsh",
+      "esperado": {
+        "valido": true,
+        "valor": "ﬁsh"
+      }
+    },
+    {
+      "entrada": "多国語",
+      "esperado": {
+        "valido": true,
+        "valor": "多国語"
+      }
+    },
+    {
+      "entrada": "",
+      "esperado": {
+        "valido": false,
+        "motivo": "VAZIO"
+      }
+    },
+    {
+      "entrada": "   ",
+      "esperado": {
+        "valido": false,
+        "motivo": "VAZIO"
+      }
+    },
+    {
+      "entrada": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "esperado": {
+        "valido": true,
+        "valor": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    },
+    {
+      "entrada": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "esperado": {
+        "valido": true,
+        "valor": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    },
+    {
+      "entrada": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+      "esperado": {
+        "valido": true,
+        "valor": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀"
+      }
+    },
+    {
+      "entrada": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+      "esperado": {
+        "valido": true,
+        "valor": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀"
+      }
+    },
+    {
+      "entrada": "Ａｂｃ",
+      "esperado": {
+        "valido": true,
+        "valor": "Ａｂｃ"
+      }
+    },
+    {
+      "entrada": "é́",
+      "esperado": {
+        "valido": true,
+        "valor": "é́"
+      }
+    },
+    {
+      "entrada": "ñ",
+      "esperado": {
+        "valido": true,
+        "valor": "ñ"
+      }
+    },
+    {
+      "entrada": "ñ",
+      "esperado": {
+        "valido": true,
+        "valor": "ñ"
+      }
+    },
+    {
+      "entrada": null,
+      "esperado": {
+        "valido": false,
+        "motivo": "TIPO"
+      }
+    },
+    {
+      "entrada": 42,
+      "esperado": {
+        "valido": false,
+        "motivo": "TIPO"
+      }
+    },
+    {
+      "entrada": true,
+      "esperado": {
+        "valido": false,
+        "motivo": "TIPO"
+      }
+    },
+    {
+      "entrada": {},
+      "esperado": {
+        "valido": false,
+        "motivo": "TIPO"
+      }
+    },
+    {
+      "entrada": [],
+      "esperado": {
+        "valido": false,
+        "motivo": "TIPO"
+      }
+    },
+    {
+      "entrada": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "esperado": {
+        "valido": true,
+        "valor": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    },
+    {
+      "entrada": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "esperado": {
+        "valido": false,
+        "motivo": "LONGO"
+      }
+    }
+  ],
+  "conflitoTermo": [
+    {
+      "termo": "zé",
+      "existentes": [
+        "Zé",
+        "Aragorn",
+        "Joao",
+        "ΑΣ"
+      ],
+      "esperado": {
+        "tipo": "DUPLICADO",
+        "existente": "Zé"
+      }
+    },
+    {
+      "termo": "ZÉ",
+      "existentes": [
+        "Zé",
+        "Aragorn",
+        "Joao",
+        "ΑΣ"
+      ],
+      "esperado": {
+        "tipo": "DUPLICADO",
+        "existente": "Zé"
+      }
+    },
+    {
+      "termo": "Ze",
+      "existentes": [
+        "Zé",
+        "Aragorn",
+        "Joao",
+        "ΑΣ"
+      ],
+      "esperado": {
+        "tipo": "PARECIDO",
+        "existente": "Zé"
+      }
+    },
+    {
+      "termo": "Aragorn",
+      "existentes": [
+        "Zé",
+        "Aragorn",
+        "Joao",
+        "ΑΣ"
+      ],
+      "esperado": {
+        "tipo": "DUPLICADO",
+        "existente": "Aragorn"
+      }
+    },
+    {
+      "termo": "ARAGORN ",
+      "existentes": [
+        "Zé",
+        "Aragorn",
+        "Joao",
+        "ΑΣ"
+      ],
+      "esperado": {
+        "tipo": "DUPLICADO",
+        "existente": "Aragorn"
+      }
+    },
+    {
+      "termo": "Gandalf",
+      "existentes": [
+        "Zé",
+        "Aragorn",
+        "Joao",
+        "ΑΣ"
+      ],
+      "esperado": null
+    },
+    {
+      "termo": "joão",
+      "existentes": [
+        "Zé",
+        "Aragorn",
+        "Joao",
+        "ΑΣ"
+      ],
+      "esperado": {
+        "tipo": "PARECIDO",
+        "existente": "Joao"
+      }
+    },
+    {
+      "termo": "ας",
+      "existentes": [
+        "Zé",
+        "Aragorn",
+        "Joao",
+        "ΑΣ"
+      ],
+      "esperado": {
+        "tipo": "DUPLICADO",
+        "existente": "ΑΣ"
+      }
+    },
+    {
+      "termo": "ΑΣ",
+      "existentes": [
+        "Zé",
+        "Aragorn",
+        "Joao",
+        "ΑΣ"
+      ],
+      "esperado": {
+        "tipo": "DUPLICADO",
+        "existente": "ΑΣ"
+      }
+    },
+    {
+      "termo": "Jóao",
+      "existentes": [
+        "Zé",
+        "Aragorn",
+        "Joao",
+        "ΑΣ"
+      ],
+      "esperado": {
+        "tipo": "PARECIDO",
+        "existente": "Joao"
+      }
+    }
+  ],
+  "sugestao": [
+    {
+      "arquivo": "1-joao.wav",
+      "associacoes": [
+        {
+          "nomeOrigem": "joao",
+          "participante": "João Silva"
+        },
+        {
+          "nomeOrigem": "maria_b",
+          "participante": "Maria B."
+        },
+        {
+          "nomeOrigem": "1-pedro",
+          "participante": "Pedro Um"
+        },
+        {
+          "nomeOrigem": "pedro",
+          "participante": "Pedro Sem Prefixo"
+        }
+      ],
+      "esperado": {
+        "origem": "ASSOCIACAO",
+        "participante": "João Silva",
+        "candidatos": [
+          "João Silva"
+        ]
+      }
+    },
+    {
+      "arquivo": "JOÃO.WAV",
+      "associacoes": [
+        {
+          "nomeOrigem": "joao",
+          "participante": "João Silva"
+        },
+        {
+          "nomeOrigem": "maria_b",
+          "participante": "Maria B."
+        },
+        {
+          "nomeOrigem": "1-pedro",
+          "participante": "Pedro Um"
+        },
+        {
+          "nomeOrigem": "pedro",
+          "participante": "Pedro Sem Prefixo"
+        }
+      ],
+      "esperado": {
+        "origem": "ASSOCIACAO",
+        "participante": "João Silva",
+        "candidatos": [
+          "João Silva"
+        ]
+      }
+    },
+    {
+      "arquivo": "02_maria_b.wav",
+      "associacoes": [
+        {
+          "nomeOrigem": "joao",
+          "participante": "João Silva"
+        },
+        {
+          "nomeOrigem": "maria_b",
+          "participante": "Maria B."
+        },
+        {
+          "nomeOrigem": "1-pedro",
+          "participante": "Pedro Um"
+        },
+        {
+          "nomeOrigem": "pedro",
+          "participante": "Pedro Sem Prefixo"
+        }
+      ],
+      "esperado": {
+        "origem": "ASSOCIACAO",
+        "participante": "Maria B.",
+        "candidatos": [
+          "Maria B."
+        ]
+      }
+    },
+    {
+      "arquivo": "C:\\sessao\\1-joao.wav",
+      "associacoes": [
+        {
+          "nomeOrigem": "joao",
+          "participante": "João Silva"
+        },
+        {
+          "nomeOrigem": "maria_b",
+          "participante": "Maria B."
+        },
+        {
+          "nomeOrigem": "1-pedro",
+          "participante": "Pedro Um"
+        },
+        {
+          "nomeOrigem": "pedro",
+          "participante": "Pedro Sem Prefixo"
+        }
+      ],
+      "esperado": {
+        "origem": "ASSOCIACAO",
+        "participante": "João Silva",
+        "candidatos": [
+          "João Silva"
+        ]
+      }
+    },
+    {
+      "arquivo": "/tmp/sessao/1-joao.wav",
+      "associacoes": [
+        {
+          "nomeOrigem": "joao",
+          "participante": "João Silva"
+        },
+        {
+          "nomeOrigem": "maria_b",
+          "participante": "Maria B."
+        },
+        {
+          "nomeOrigem": "1-pedro",
+          "participante": "Pedro Um"
+        },
+        {
+          "nomeOrigem": "pedro",
+          "participante": "Pedro Sem Prefixo"
+        }
+      ],
+      "esperado": {
+        "origem": "ASSOCIACAO",
+        "participante": "João Silva",
+        "candidatos": [
+          "João Silva"
+        ]
+      }
+    },
+    {
+      "arquivo": "3-carlos.wav",
+      "associacoes": [
+        {
+          "nomeOrigem": "joao",
+          "participante": "João Silva"
+        },
+        {
+          "nomeOrigem": "maria_b",
+          "participante": "Maria B."
+        },
+        {
+          "nomeOrigem": "1-pedro",
+          "participante": "Pedro Um"
+        },
+        {
+          "nomeOrigem": "pedro",
+          "participante": "Pedro Sem Prefixo"
+        }
+      ],
+      "esperado": {
+        "origem": "DESCONHECIDA",
+        "participante": null,
+        "candidatos": []
+      }
+    },
+    {
+      "arquivo": "1.wav",
+      "associacoes": [
+        {
+          "nomeOrigem": "joao",
+          "participante": "João Silva"
+        },
+        {
+          "nomeOrigem": "maria_b",
+          "participante": "Maria B."
+        },
+        {
+          "nomeOrigem": "1-pedro",
+          "participante": "Pedro Um"
+        },
+        {
+          "nomeOrigem": "pedro",
+          "participante": "Pedro Sem Prefixo"
+        }
+      ],
+      "esperado": {
+        "origem": "DESCONHECIDA",
+        "participante": null,
+        "candidatos": []
+      }
+    },
+    {
+      "arquivo": "1-pedro.wav",
+      "associacoes": [
+        {
+          "nomeOrigem": "joao",
+          "participante": "João Silva"
+        },
+        {
+          "nomeOrigem": "maria_b",
+          "participante": "Maria B."
+        },
+        {
+          "nomeOrigem": "1-pedro",
+          "participante": "Pedro Um"
+        },
+        {
+          "nomeOrigem": "pedro",
+          "participante": "Pedro Sem Prefixo"
+        }
+      ],
+      "esperado": {
+        "origem": "ASSOCIACAO",
+        "participante": "Pedro Um",
+        "candidatos": [
+          "Pedro Um"
+        ]
+      }
+    },
+    {
+      "arquivo": "5-pedro.flac",
+      "associacoes": [
+        {
+          "nomeOrigem": "joao",
+          "participante": "João Silva"
+        },
+        {
+          "nomeOrigem": "maria_b",
+          "participante": "Maria B."
+        },
+        {
+          "nomeOrigem": "1-pedro",
+          "participante": "Pedro Um"
+        },
+        {
+          "nomeOrigem": "pedro",
+          "participante": "Pedro Sem Prefixo"
+        }
+      ],
+      "esperado": {
+        "origem": "ASSOCIACAO",
+        "participante": "Pedro Sem Prefixo",
+        "candidatos": [
+          "Pedro Sem Prefixo"
+        ]
+      }
+    },
+    {
+      "arquivo": "",
+      "associacoes": [
+        {
+          "nomeOrigem": "joao",
+          "participante": "João Silva"
+        },
+        {
+          "nomeOrigem": "maria_b",
+          "participante": "Maria B."
+        },
+        {
+          "nomeOrigem": "1-pedro",
+          "participante": "Pedro Um"
+        },
+        {
+          "nomeOrigem": "pedro",
+          "participante": "Pedro Sem Prefixo"
+        }
+      ],
+      "esperado": {
+        "origem": "DESCONHECIDA",
+        "participante": null,
+        "candidatos": []
+      }
+    },
+    {
+      "arquivo": ".wav",
+      "associacoes": [
+        {
+          "nomeOrigem": "joao",
+          "participante": "João Silva"
+        },
+        {
+          "nomeOrigem": "maria_b",
+          "participante": "Maria B."
+        },
+        {
+          "nomeOrigem": "1-pedro",
+          "participante": "Pedro Um"
+        },
+        {
+          "nomeOrigem": "pedro",
+          "participante": "Pedro Sem Prefixo"
+        }
+      ],
+      "esperado": {
+        "origem": "DESCONHECIDA",
+        "participante": null,
+        "candidatos": []
+      }
+    },
+    {
+      "arquivo": "a.b.c.wav",
+      "associacoes": [
+        {
+          "nomeOrigem": "joao",
+          "participante": "João Silva"
+        },
+        {
+          "nomeOrigem": "maria_b",
+          "participante": "Maria B."
+        },
+        {
+          "nomeOrigem": "1-pedro",
+          "participante": "Pedro Um"
+        },
+        {
+          "nomeOrigem": "pedro",
+          "participante": "Pedro Sem Prefixo"
+        }
+      ],
+      "esperado": {
+        "origem": "DESCONHECIDA",
+        "participante": null,
+        "candidatos": []
+      }
+    },
+    {
+      "arquivo": "João Çã 日本.wav",
+      "associacoes": [
+        {
+          "nomeOrigem": "joao",
+          "participante": "João Silva"
+        },
+        {
+          "nomeOrigem": "maria_b",
+          "participante": "Maria B."
+        },
+        {
+          "nomeOrigem": "1-pedro",
+          "participante": "Pedro Um"
+        },
+        {
+          "nomeOrigem": "pedro",
+          "participante": "Pedro Sem Prefixo"
+        }
+      ],
+      "esperado": {
+        "origem": "DESCONHECIDA",
+        "participante": null,
+        "candidatos": []
+      }
+    },
+    {
+      "arquivo": "1-joao.wav",
+      "associacoes": [
+        {
+          "nomeOrigem": "joao",
+          "participante": "João A"
+        },
+        {
+          "nomeOrigem": "joão",
+          "participante": "João B"
+        }
+      ],
+      "esperado": {
+        "origem": "AMBIGUA",
+        "participante": null,
+        "candidatos": [
+          "João A",
+          "João B"
+        ]
+      }
+    },
+    {
+      "arquivo": "1-joao.wav",
+      "associacoes": [],
+      "esperado": {
+        "origem": "DESCONHECIDA",
+        "participante": null,
+        "candidatos": []
+      }
+    },
+    {
+      "arquivo": "joao.wav",
+      "associacoes": [
+        {
+          "nomeOrigem": "joao",
+          "participante": "João"
+        },
+        {
+          "nomeOrigem": "joão",
+          "participante": "João"
+        }
+      ],
+      "esperado": {
+        "origem": "ASSOCIACAO",
+        "participante": "João",
+        "candidatos": [
+          "João"
+        ]
+      }
+    }
+  ],
+  "duplicidade": [
+    {
+      "arquivos": [
+        {
+          "nomeArquivo": "1-joao.wav",
+          "tamanhoBytes": 1000,
+          "duracaoMilissegundos": 5000
+        },
+        {
+          "nomeArquivo": "1-joao.wav",
+          "tamanhoBytes": 1000,
+          "duracaoMilissegundos": 5000
+        },
+        {
+          "nomeArquivo": "outro.wav",
+          "tamanhoBytes": 7,
+          "duracaoMilissegundos": 5000
+        }
+      ],
+      "esperado": [
+        {
+          "tipo": "DUPLICADO",
+          "indices": [
+            0,
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "arquivos": [
+        {
+          "nomeArquivo": "1-joao.wav",
+          "tamanhoBytes": 1000,
+          "duracaoMilissegundos": 5000
+        },
+        {
+          "nomeArquivo": "1-JOAO.WAV",
+          "tamanhoBytes": 1000,
+          "duracaoMilissegundos": 5000
+        }
+      ],
+      "esperado": [
+        {
+          "tipo": "DUPLICADO",
+          "indices": [
+            0,
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "arquivos": [
+        {
+          "nomeArquivo": "1-joao.wav",
+          "tamanhoBytes": 1000,
+          "duracaoMilissegundos": 5000
+        },
+        {
+          "nomeArquivo": "1-joao.wav",
+          "tamanhoBytes": 1000,
+          "duracaoMilissegundos": 5001
+        }
+      ],
+      "esperado": [
+        {
+          "tipo": "MESMO_NOME_DIFERENTE",
+          "indices": [
+            0,
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "arquivos": [
+        {
+          "nomeArquivo": "1-joao.wav",
+          "tamanhoBytes": 1000,
+          "duracaoMilissegundos": 5000
+        },
+        {
+          "nomeArquivo": "copia.wav",
+          "tamanhoBytes": 1000,
+          "duracaoMilissegundos": 5000
+        }
+      ],
+      "esperado": [
+        {
+          "tipo": "POSSIVEL_COPIA_RENOMEADA",
+          "indices": [
+            0,
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "arquivos": [
+        {
+          "nomeArquivo": "1-joao.wav",
+          "tamanhoBytes": 1000,
+          "duracaoMilissegundos": 5000
+        },
+        {
+          "nomeArquivo": "2-maria.wav",
+          "tamanhoBytes": 99,
+          "duracaoMilissegundos": 123
+        }
+      ],
+      "esperado": []
+    },
+    {
+      "arquivos": [
+        {
+          "nomeArquivo": "1-joao.wav",
+          "tamanhoBytes": 1000,
+          "duracaoMilissegundos": 5000
+        },
+        {
+          "nomeArquivo": "1-joao.wav",
+          "tamanhoBytes": 1000,
+          "duracaoMilissegundos": 5000
+        },
+        {
+          "nomeArquivo": "1-joao.wav",
+          "tamanhoBytes": 1000,
+          "duracaoMilissegundos": 5000
+        },
+        {
+          "nomeArquivo": "x.wav",
+          "tamanhoBytes": 1000,
+          "duracaoMilissegundos": 5000
+        },
+        {
+          "nomeArquivo": "1-joao.wav",
+          "tamanhoBytes": 2,
+          "duracaoMilissegundos": 5000
+        }
+      ],
+      "esperado": [
+        {
+          "tipo": "DUPLICADO",
+          "indices": [
+            0,
+            1,
+            2
+          ]
+        },
+        {
+          "tipo": "MESMO_NOME_DIFERENTE",
+          "indices": [
+            0,
+            1,
+            2,
+            4
+          ]
+        },
+        {
+          "tipo": "POSSIVEL_COPIA_RENOMEADA",
+          "indices": [
+            0,
+            1,
+            2,
+            3
+          ]
+        }
+      ]
+    },
+    {
+      "arquivos": [],
+      "esperado": []
+    }
+  ],
+  "participantesSemFaixa": [
+    {
+      "esperados": [
+        "João",
+        "Maria",
+        "Zé"
+      ],
+      "faixas": [
+        "joao",
+        "ZE"
+      ],
+      "esperado": [
+        "Maria"
+      ]
+    },
+    {
+      "esperados": [],
+      "faixas": [
+        "x"
+      ],
+      "esperado": []
+    },
+    {
+      "esperados": [
+        "Ana"
+      ],
+      "faixas": [],
+      "esperado": [
+        "Ana"
+      ]
+    }
+  ],
+  "participanteParecido": [
+    {
+      "participante": "Joao",
+      "conhecidos": [
+        "João",
+        "Maria"
+      ],
+      "esperado": "João"
+    },
+    {
+      "participante": "JOÃO",
+      "conhecidos": [
+        "João"
+      ],
+      "esperado": "João"
+    },
+    {
+      "participante": "João",
+      "conhecidos": [
+        "João"
+      ],
+      "esperado": null
+    },
+    {
+      "participante": "João",
+      "conhecidos": [
+        "João"
+      ],
+      "esperado": null
+    },
+    {
+      "participante": "Joao",
+      "conhecidos": [
+        "João",
+        "Joao"
+      ],
+      "esperado": null
+    },
+    {
+      "participante": "Joana",
+      "conhecidos": [
+        "João"
+      ],
+      "esperado": null
+    },
+    {
+      "participante": "Joao",
+      "conhecidos": [],
+      "esperado": null
+    }
+  ],
+  "glossarioEfetivo": [
+    {
+      "termos": [
+        "zé",
+        "Aragorn",
+        "Zé",
+        "Ze",
+        "aragorn"
+      ],
+      "esperado": {
+        "versao": 1,
+        "termos": [
+          "Aragorn",
+          "Ze",
+          "Zé"
+        ]
+      }
+    },
+    {
+      "termos": [
+        "b",
+        "A",
+        "c",
+        "á"
+      ],
+      "esperado": {
+        "versao": 1,
+        "termos": [
+          "A",
+          "b",
+          "c",
+          "á"
+        ]
+      }
+    },
+    {
+      "termos": [
+        "á",
+        "b",
+        "A",
+        "c"
+      ],
+      "esperado": {
+        "versao": 1,
+        "termos": [
+          "A",
+          "b",
+          "c",
+          "á"
+        ]
+      }
+    },
+    {
+      "termos": [],
+      "esperado": {
+        "versao": 1,
+        "termos": []
+      }
+    },
+    {
+      "termos": [
+        "  ",
+        "x",
+        " x "
+      ],
+      "esperado": {
+        "versao": 1,
+        "termos": [
+          "x"
+        ]
+      }
+    },
+    {
+      "termos": [
+        "ΑΣ",
+        "ας"
+      ],
+      "esperado": {
+        "versao": 1,
+        "termos": [
+          "ΑΣ"
+        ]
+      }
+    }
+  ],
+  "pacote": [
+    {
+      "entrada": {
+        "campanhaId": 7,
+        "sessaoId": 3,
+        "idioma": "pt",
+        "glossario": [
+          {
+            "campanhaId": 7,
+            "termo": "Aragorn"
+          },
+          {
+            "campanhaId": 7,
+            "termo": "Zé"
+          },
+          {
+            "campanhaId": 7,
+            "termo": "zé"
+          }
+        ],
+        "faixas": [
+          {
+            "identificador": "11111111-1111-4111-8111-111111111111",
+            "nomeArquivo": "1-joao.wav",
+            "participante": "João",
+            "identidadeConfirmada": true,
+            "deslocamentoMilissegundos": -250,
+            "silencioInicialMilissegundos": 1200
+          }
+        ]
+      },
+      "esperado": {
+        "ok": true,
+        "pacote": {
+          "campanhaId": 7,
+          "sessaoId": 3,
+          "idioma": "pt",
+          "glossario": [
+            "Aragorn",
+            "Zé"
+          ],
+          "faixas": [
+            {
+              "identificador": "11111111-1111-4111-8111-111111111111",
+              "nomeArquivo": "1-joao.wav",
+              "participante": "João",
+              "deslocamentoMilissegundos": -250,
+              "silencioInicialMilissegundos": 1200
+            }
+          ]
+        }
+      }
+    },
+    {
+      "entrada": {
+        "campanhaId": 7,
+        "sessaoId": 3,
+        "idioma": "pt",
+        "glossario": [
+          {
+            "campanhaId": 8,
+            "termo": "Segredo do outro"
+          }
+        ],
+        "faixas": [
+          {
+            "identificador": "11111111-1111-4111-8111-111111111111",
+            "nomeArquivo": "1-joao.wav",
+            "participante": "João",
+            "identidadeConfirmada": true,
+            "deslocamentoMilissegundos": -250,
+            "silencioInicialMilissegundos": 1200
+          }
+        ]
+      },
+      "esperado": {
+        "ok": false,
+        "erros": [
+          "Glossário de outra campanha não pode entrar neste pacote."
+        ]
+      }
+    },
+    {
+      "entrada": {
+        "campanhaId": 7,
+        "sessaoId": 3,
+        "idioma": "pt",
+        "glossario": [
+          {
+            "campanhaId": 7,
+            "termo": "Aragorn"
+          },
+          {
+            "campanhaId": 7,
+            "termo": "Zé"
+          },
+          {
+            "campanhaId": 7,
+            "termo": "zé"
+          }
+        ],
+        "faixas": [
+          {
+            "identificador": "11111111-1111-4111-8111-111111111111",
+            "nomeArquivo": "1-joao.wav",
+            "participante": "João",
+            "identidadeConfirmada": false,
+            "deslocamentoMilissegundos": -250,
+            "silencioInicialMilissegundos": 1200
+          }
+        ]
+      },
+      "esperado": {
+        "ok": false,
+        "erros": [
+          "Faixa 1: a identidade ainda não foi confirmada."
+        ]
+      }
+    },
+    {
+      "entrada": {
+        "campanhaId": 7,
+        "sessaoId": 3,
+        "idioma": "pt",
+        "glossario": [
+          {
+            "campanhaId": 7,
+            "termo": "Aragorn"
+          },
+          {
+            "campanhaId": 7,
+            "termo": "Zé"
+          },
+          {
+            "campanhaId": 7,
+            "termo": "zé"
+          }
+        ],
+        "faixas": []
+      },
+      "esperado": {
+        "ok": false,
+        "erros": [
+          "O pacote precisa de ao menos uma faixa."
+        ]
+      }
+    },
+    {
+      "entrada": {
+        "campanhaId": 7,
+        "sessaoId": 3,
+        "idioma": "pt br!",
+        "glossario": [
+          {
+            "campanhaId": 7,
+            "termo": "Aragorn"
+          },
+          {
+            "campanhaId": 7,
+            "termo": "Zé"
+          },
+          {
+            "campanhaId": 7,
+            "termo": "zé"
+          }
+        ],
+        "faixas": [
+          {
+            "identificador": "11111111-1111-4111-8111-111111111111",
+            "nomeArquivo": "1-joao.wav",
+            "participante": "João",
+            "identidadeConfirmada": true,
+            "deslocamentoMilissegundos": -250,
+            "silencioInicialMilissegundos": 1200
+          }
+        ]
+      },
+      "esperado": {
+        "ok": false,
+        "erros": [
+          "Idioma inválido."
+        ]
+      }
+    },
+    {
+      "entrada": {
+        "campanhaId": 7,
+        "sessaoId": 3,
+        "idioma": "",
+        "glossario": [
+          {
+            "campanhaId": 7,
+            "termo": "Aragorn"
+          },
+          {
+            "campanhaId": 7,
+            "termo": "Zé"
+          },
+          {
+            "campanhaId": 7,
+            "termo": "zé"
+          }
+        ],
+        "faixas": [
+          {
+            "identificador": "11111111-1111-4111-8111-111111111111",
+            "nomeArquivo": "1-joao.wav",
+            "participante": "João",
+            "identidadeConfirmada": true,
+            "deslocamentoMilissegundos": -250,
+            "silencioInicialMilissegundos": 1200
+          }
+        ]
+      },
+      "esperado": {
+        "ok": false,
+        "erros": [
+          "Idioma inválido."
+        ]
+      }
+    },
+    {
+      "entrada": {
+        "campanhaId": 7,
+        "sessaoId": 3,
+        "idioma": "pt-BR",
+        "glossario": [
+          {
+            "campanhaId": 7,
+            "termo": "Aragorn"
+          },
+          {
+            "campanhaId": 7,
+            "termo": "Zé"
+          },
+          {
+            "campanhaId": 7,
+            "termo": "zé"
+          }
+        ],
+        "faixas": [
+          {
+            "identificador": "11111111-1111-4111-8111-111111111111",
+            "nomeArquivo": "1-joao.wav",
+            "participante": "João",
+            "identidadeConfirmada": true,
+            "deslocamentoMilissegundos": -250,
+            "silencioInicialMilissegundos": 1200
+          }
+        ]
+      },
+      "esperado": {
+        "ok": true,
+        "pacote": {
+          "campanhaId": 7,
+          "sessaoId": 3,
+          "idioma": "pt-BR",
+          "glossario": [
+            "Aragorn",
+            "Zé"
+          ],
+          "faixas": [
+            {
+              "identificador": "11111111-1111-4111-8111-111111111111",
+              "nomeArquivo": "1-joao.wav",
+              "participante": "João",
+              "deslocamentoMilissegundos": -250,
+              "silencioInicialMilissegundos": 1200
+            }
+          ]
+        }
+      }
+    },
+    {
+      "entrada": {
+        "campanhaId": 7,
+        "sessaoId": 3,
+        "idioma": "pt",
+        "glossario": [
+          {
+            "campanhaId": 7,
+            "termo": "Aragorn"
+          },
+          {
+            "campanhaId": 7,
+            "termo": "Zé"
+          },
+          {
+            "campanhaId": 7,
+            "termo": "zé"
+          }
+        ],
+        "faixas": [
+          {
+            "identificador": "11111111-1111-4111-8111-111111111111",
+            "nomeArquivo": "1-joao.wav",
+            "participante": "João",
+            "identidadeConfirmada": true,
+            "deslocamentoMilissegundos": 1.5,
+            "silencioInicialMilissegundos": 1200
+          }
+        ]
+      },
+      "esperado": {
+        "ok": false,
+        "erros": [
+          "Faixa 1: deslocamento inválido."
+        ]
+      }
+    },
+    {
+      "entrada": {
+        "campanhaId": 7,
+        "sessaoId": 3,
+        "idioma": "pt",
+        "glossario": [
+          {
+            "campanhaId": 7,
+            "termo": "Aragorn"
+          },
+          {
+            "campanhaId": 7,
+            "termo": "Zé"
+          },
+          {
+            "campanhaId": 7,
+            "termo": "zé"
+          }
+        ],
+        "faixas": [
+          {
+            "identificador": "11111111-1111-4111-8111-111111111111",
+            "nomeArquivo": "1-joao.wav",
+            "participante": "João",
+            "identidadeConfirmada": true,
+            "deslocamentoMilissegundos": 9007199254740992,
+            "silencioInicialMilissegundos": 1200
+          }
+        ]
+      },
+      "esperado": {
+        "ok": false,
+        "erros": [
+          "Faixa 1: deslocamento inválido."
+        ]
+      }
+    },
+    {
+      "entrada": {
+        "campanhaId": 7,
+        "sessaoId": 3,
+        "idioma": "pt",
+        "glossario": [
+          {
+            "campanhaId": 7,
+            "termo": "Aragorn"
+          },
+          {
+            "campanhaId": 7,
+            "termo": "Zé"
+          },
+          {
+            "campanhaId": 7,
+            "termo": "zé"
+          }
+        ],
+        "faixas": [
+          {
+            "identificador": "11111111-1111-4111-8111-111111111111",
+            "nomeArquivo": "1-joao.wav",
+            "participante": "João",
+            "identidadeConfirmada": true,
+            "deslocamentoMilissegundos": -250,
+            "silencioInicialMilissegundos": 1200
+          },
+          {
+            "identificador": "11111111-1111-4111-8111-111111111111",
+            "nomeArquivo": "1-joao.wav",
+            "participante": "João",
+            "identidadeConfirmada": true,
+            "deslocamentoMilissegundos": -250,
+            "silencioInicialMilissegundos": 1200
+          }
+        ]
+      },
+      "esperado": {
+        "ok": false,
+        "erros": [
+          "Faixa 2: identificador repetido."
+        ]
+      }
+    },
+    {
+      "entrada": {
+        "campanhaId": 7,
+        "sessaoId": 3,
+        "idioma": "pt",
+        "glossario": [
+          {
+            "campanhaId": 7,
+            "termo": "Aragorn"
+          },
+          {
+            "campanhaId": 7,
+            "termo": "Zé"
+          },
+          {
+            "campanhaId": 7,
+            "termo": "zé"
+          }
+        ],
+        "faixas": [
+          {
+            "identificador": "11111111-1111-4111-8111-111111111111",
+            "nomeArquivo": "1-joao.wav",
+            "participante": "João",
+            "identidadeConfirmada": true,
+            "deslocamentoMilissegundos": -250,
+            "silencioInicialMilissegundos": -1
+          }
+        ]
+      },
+      "esperado": {
+        "ok": false,
+        "erros": [
+          "Faixa 1: silêncio inicial inválido."
+        ]
+      }
+    },
+    {
+      "entrada": {
+        "campanhaId": 7,
+        "sessaoId": 3,
+        "idioma": "pt",
+        "glossario": [
+          {
+            "campanhaId": 7,
+            "termo": "Aragorn"
+          },
+          {
+            "campanhaId": 7,
+            "termo": "Zé"
+          },
+          {
+            "campanhaId": 7,
+            "termo": "zé"
+          }
+        ],
+        "faixas": [
+          {
+            "identificador": "11111111-1111-4111-8111-111111111111",
+            "nomeArquivo": "1-joao.wav",
+            "participante": "  Ana   Maria ",
+            "identidadeConfirmada": true,
+            "deslocamentoMilissegundos": -250,
+            "silencioInicialMilissegundos": null
+          }
+        ]
+      },
+      "esperado": {
+        "ok": true,
+        "pacote": {
+          "campanhaId": 7,
+          "sessaoId": 3,
+          "idioma": "pt",
+          "glossario": [
+            "Aragorn",
+            "Zé"
+          ],
+          "faixas": [
+            {
+              "identificador": "11111111-1111-4111-8111-111111111111",
+              "nomeArquivo": "1-joao.wav",
+              "participante": "Ana Maria",
+              "deslocamentoMilissegundos": -250,
+              "silencioInicialMilissegundos": null
+            }
+          ]
+        }
+      }
+    },
+    {
+      "entrada": {
+        "campanhaId": 0,
+        "sessaoId": 3,
+        "idioma": "pt",
+        "glossario": [
+          {
+            "campanhaId": 7,
+            "termo": "Aragorn"
+          },
+          {
+            "campanhaId": 7,
+            "termo": "Zé"
+          },
+          {
+            "campanhaId": 7,
+            "termo": "zé"
+          }
+        ],
+        "faixas": [
+          {
+            "identificador": "11111111-1111-4111-8111-111111111111",
+            "nomeArquivo": "1-joao.wav",
+            "participante": "João",
+            "identidadeConfirmada": true,
+            "deslocamentoMilissegundos": -250,
+            "silencioInicialMilissegundos": 1200
+          }
+        ]
+      },
+      "esperado": {
+        "ok": false,
+        "erros": [
+          "Campanha inválida.",
+          "Glossário de outra campanha não pode entrar neste pacote."
+        ]
+      }
+    },
+    {
+      "entrada": {
+        "campanhaId": 7,
+        "sessaoId": 3,
+        "idioma": "pt",
+        "glossario": [
+          {
+            "campanhaId": 7,
+            "termo": "linha\nquebra"
+          }
+        ],
+        "faixas": [
+          {
+            "identificador": "11111111-1111-4111-8111-111111111111",
+            "nomeArquivo": "1-joao.wav",
+            "participante": "João",
+            "identidadeConfirmada": true,
+            "deslocamentoMilissegundos": -250,
+            "silencioInicialMilissegundos": 1200
+          }
+        ]
+      },
+      "esperado": {
+        "ok": false,
+        "erros": [
+          "Há termo de glossário inválido."
+        ]
+      }
+    },
+    {
+      "entrada": {
+        "campanhaId": 7,
+        "sessaoId": 3,
+        "idioma": "pt",
+        "glossario": [
+          {
+            "campanhaId": 7,
+            "termo": "Aragorn"
+          },
+          {
+            "campanhaId": 7,
+            "termo": "Zé"
+          },
+          {
+            "campanhaId": 7,
+            "termo": "zé"
+          }
+        ],
+        "faixas": [
+          {
+            "identificador": "11111111-1111-4111-8111-111111111111",
+            "nomeArquivo": "1-joao.wav",
+            "participante": "   ",
+            "identidadeConfirmada": true,
+            "deslocamentoMilissegundos": -250,
+            "silencioInicialMilissegundos": 1200
+          }
+        ]
+      },
+      "esperado": {
+        "ok": false,
+        "erros": [
+          "Faixa 1: participante inválido."
+        ]
+      }
+    }
+  ]
+}

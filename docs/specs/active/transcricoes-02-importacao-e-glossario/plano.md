@@ -88,3 +88,15 @@ Ordem sugerida: **02.0 → 02.1 → (02.2, 02.3 e 02.4 em paralelo, pois não to
   Fixtures sintéticas geradas em memória (`tests/wav_fixtures.py`, nenhum binário versionado): válido mono/estéreo/24/32/8/float, silêncio inicial e atraso conhecidos,
   faixa sem fala e limiar de -60 dBFS, truncado, extensão falsa, cabeçalho incompleto, sem fmt/data, formato não suportado, Unicode, repetido, alterado, grande. 27 testes; desktop 44/44.
   Limite documentado: um `data` com tamanho 0 seguido de outros chunks seria lido como "tamanho indefinido"; é raro e sinalizado por aviso.
+- 2026-10-16 — **02.5 feita (núcleo; a tela é a 02.6).** `importacao.py`: lote de WAVs com erro isolado por faixa, sugestão sem confirmação, confirmação/correção (participante parecido
+  exige `confirmar_parecido`; uma pessoa pode ter várias faixas), offset manual (nunca derivado do silêncio), alertas de duplicidade e de participante sem faixa, registro no servidor
+  **só de metadados** (cria a faixa e confirma; uma faixa já criada não é recriada em nova tentativa; sem rede para e preserva; uma faixa com conflito não derruba as outras),
+  associação reutilizável salva após confirmação, **pacote do motor** (`pacote_trabalho`) que recusa glossário de outra campanha e faixa não confirmada/sincronizada, e persistência local por
+  conta (`<origem>/<namespace da conta>/importacao-<sessão>.json`; arquivo alterado no disco depois da confirmação perde a confirmação; arquivo sumido vira erro isolado).
+  `api.py` ganhou as rotas de importação, consulta só com inteiros positivos, nome de arquivo sem caminho e `ConflitoError` para 409; `Session` ganhou `credencial()` e `pasta_da_conta()`.
+  **Regras puras em dois idiomas sem divergir:** `regras_transcricao.py` espelha `shared/`, e os dois lados testam os MESMOS 225 vetores
+  (`shared/src/validators/transcricao-importacao.vetores.json`, gerado do TypeScript por `shared/tools/gerar-vetores-transcricao.cjs`). Cuidado registrado: `trim`, `\s`, `\d` e `$` diferem entre JS e Python.
+  **Prova de rede:** um servidor fictício registra cada requisição; nem o conteúdo do WAV, nem o caminho absoluto, nem o hash, nem chaves como `caminho`/`hash` aparecem em URL, cabeçalhos ou corpo
+  (e um teste de mutação confirmou que injetar um vazamento faz o teste falhar). Provas: desktop 83/83; shared 55/55 no spec das regras. Isolamento entre contas na mesma origem testado (fecha a parte
+  de código da pendência S1 herdada da 03; a prova com dois usuários do Windows continua exigindo a máquina).
+  Decisão de projeto: a associação reutilizável guarda o nome de origem SEM o prefixo numérico (`3-carlos.wav` → `carlos`), para valer em sessões futuras; a sugestão compara o nome completo e o sem prefixo.
