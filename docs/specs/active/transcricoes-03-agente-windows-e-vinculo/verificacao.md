@@ -354,5 +354,5 @@ Evidência bruta em `.artifacts/transcricoes-03-agente-windows-e-vinculo/sandbox
 | B4 (licenças na instalação) | passou, parcial | as 5 peças de `licencas/` instaladas no Sandbox têm SHA-256 idêntico ao de `desktop/transcriber/licencas/`. Seguem abertos os avisos de terceiros do Qt, o runtime C++ da Microsoft e a revisão jurídica |
 
 **Estado da task:** continuam sem execução S1 (2º usuário do Windows), V8/V9 (navegador real com diálogo de protocolo), U2, U5,
-Tab/Narrador reais, escala real do Windows . Os passos V/S já executados foram feitos com o instalador
+Tab/Narrador reais, escala real do Windows. Os passos V/S já executados foram feitos com o instalador
 da primeira rodada, anterior à correção do P-128 (que só mexe no rótulo da janela e tem teste automatizado).
