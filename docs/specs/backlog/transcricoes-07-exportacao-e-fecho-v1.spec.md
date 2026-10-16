@@ -46,3 +46,11 @@ Entregar TXT, SRT, JSON e ZIP por participante ou em versão consolidada, usando
 
 - Exportação consolidada com fala sobreposta: preservar ambas e não inventar turno de fala.
 - E2E insuficiente por hardware ausente: registrar explicitamente qual GPU/CPU foi realmente testada e manter task aberta se gate obrigatório não foi observado.
+
+## Pendências herdadas da 03
+
+A [03](../done/transcricoes-03-agente-windows-e-vinculo.spec.md) fechou com estes itens por verificar (ver o "Fecho" do anexo `verificacao.md`):
+
+- B4: avisos de terceiros embutidos no Qt (ICU, FreeType, HarfBuzz…), termos do runtime C++ da Microsoft e revisão jurídica da oferta de código-fonte.
+- Assinatura Authenticode e comportamento real do SmartScreen num download sem Mark-of-the-Web ambíguo.
+- Prova de instalação sem administrador num Windows onde o usuário não é administrador (o Sandbox mostra "Administrator").

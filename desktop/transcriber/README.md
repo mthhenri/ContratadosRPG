@@ -45,9 +45,9 @@ Desconectar offline limpa contexto e preserva segredo cifrado para tentar revoga
 quando voltar a conexão. Troca de conta exige concluir a desconexão anterior.
 Desinstalar mantém resultados/credenciais locais; revogue no site antes de desinstalar.
 
-## Gates Windows pendentes
+## Estado da verificação Windows
 
-Build x64/VM limpa; instalação por usuário sem Python; registro/desregistro do protocolo;
-DPAPI real/troca de usuário Windows; browser→app/single-instance; 100/150/200% DPI;
-teclado e erros offline/ocupado. Testes Linux não certificam esses comportamentos.
-A task permanece active até estes gates e os gates web/projeto passarem.
+A task 03 está concluída (`docs/specs/done/transcricoes-03-agente-windows-e-vinculo/verificacao.md`). Build x64, instalação por usuário sem
+Python, protocolo, DPAPI, vínculo/revogação e falha de startup foram verificados em Windows 11 e num Windows Sandbox limpo. Ficaram como
+pendências conscientes (herdadas pelas tasks 02 e 07): segundo usuário do Windows, DPI/teclado/Narrador reais, avisos de terceiros do Qt,
+assinatura Authenticode e SmartScreen. Para repetir a verificação num ambiente limpo, use `packaging/sandbox/verificar-no-sandbox.ps1`.

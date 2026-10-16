@@ -41,9 +41,17 @@ Permitir que o Mestre organize a importação multifaixa do Craig, confirme iden
 
 ## Dependências
 
-- `../done/transcricoes-01-sessoes-e-contratos.spec.md` e `../active/transcricoes-03-agente-windows-e-vinculo.spec.md` em `done/`; design de campanha; arquivo de referência `transcrever.py` do autor.
+- `../done/transcricoes-01-sessoes-e-contratos.spec.md` e `../done/transcricoes-03-agente-windows-e-vinculo.spec.md` em `done/`; design de campanha; arquivo de referência `transcrever.py` do autor.
 
 ## Riscos e Mitigação
 
 - Nomes de arquivos do Craig diferem de nomes no site: associação confirmada prevalece sobre heurística.
 - Craig pode exportar faixas com metadados/durações diferentes; não presumir sincronismo a partir apenas de extensões `.wav`.
+
+## Pendências herdadas da 03
+
+A [03](../done/transcricoes-03-agente-windows-e-vinculo.spec.md) fechou com estes itens por verificar (ver o "Fecho" do anexo `verificacao.md`):
+
+- S1: duas contas do Windows na mesma máquina (a credencial DPAPI de uma não pode servir à outra).
+- V8/V9: protocolo ausente e recusa do navegador, num Edge/Chrome reais.
+- U1 (escala real do Windows 100/150/200%), U2 (reduzir/ampliar a janela), U3 (teclado), U4 (Narrador), U5 (app ocupado) sobre a interface real desta task.

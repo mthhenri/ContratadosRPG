@@ -2,7 +2,7 @@
 
 > **Task 03/09** do guarda-chuva `../backlog/transcricoes.spec.md`. Instalador e vínculo seguro do aplicativo auxiliar.
 
-> **Estado: active; implementação autorizada pelo autor em 2026-10-14.**
+> **Estado: done (2026-10-15), com pendências conscientes aceitas pelo autor — ver `transcricoes-03-agente-windows-e-vinculo/verificacao.md` ("Fecho").** Implementação autorizada em 2026-10-14.
 > Decisões pendentes, matriz de acesso e gates: [revisão](../backlog/transcricoes/revisao.md). Anexos próprios: `transcricoes-03-agente-windows-e-vinculo/` no mesmo estado; evidência bruta em `.artifacts/transcricoes-03-agente-windows-e-vinculo/`.
 
 ## Objetivo

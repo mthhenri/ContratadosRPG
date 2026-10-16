@@ -72,14 +72,14 @@ promover recomendações a decisões de produto.
   papel para UX e autorização verdadeira na API. Não ampliar detalhamento da
   página existente sem responsabilidade delimitada e avaliação de impacto.
 - App Windows: importação, WAVs, inferência, fila e outbox em disco local,
-  separados por conta. Shell PySide6/PyInstaller/Inno Setup e vínculo aprovados em 2026-10-14; [desenho da 03](../../active/transcricoes-03-agente-windows-e-vinculo/design.md). Worker aguarda 04.
+  separados por conta. Shell PySide6/PyInstaller/Inno Setup e vínculo aprovados em 2026-10-14; [desenho da 03](../../done/transcricoes-03-agente-windows-e-vinculo/design.md). Worker aguarda 04.
 - Futuro adaptador cloud/storage privado: responsabilidade exclusiva 08–09;
   compatibilidade de saída na 01 não autoriza implementar nuvem antecipadamente.
 
 ## Decisões pendentes para aprovação
 
 D01 foi aprovada na 01; D02/D03 foram aprovadas em 2026-10-14 conforme o
-[desenho da 03](../../active/transcricoes-03-agente-windows-e-vinculo/design.md).
+[desenho da 03](../../done/transcricoes-03-agente-windows-e-vinculo/design.md).
 As demais opções são **recomendações**, não decisões assumidas. Ao responder,
 registrar escolha/data/consequência no anexo proprietário antes do código dependente.
 Nenhum requisito aprovado do pacote foi retirado para contornar essas pendências.
@@ -141,7 +141,7 @@ notificações públicas, buscas/estatísticas gerais ou logs.
 | Task | Entrega verificável | Predecessoras em done | Decisões antes do recorte | Evidência principal |
 |---|---|---|---|---|
 | [01](../../done/transcricoes-01-sessoes-e-contratos.spec.md) | Modelo/contratos, CRUD mínimo privado e autorização; futura migration/schema/OpenAPI | Nenhuma task do módulo; guarda-chuva é fonte, não predecessor executável | D-01, fundamento D-05 | REST real, SQL/transação/UP-DOWN em banco de testes, pais trocados e matriz |
-| [03](../../active/transcricoes-03-agente-windows-e-vinculo.spec.md) | Shell instalável x64, vínculo e abertura contextual | 01 | D-02/D-03 aprovadas; sem ponte HTTP | Windows limpo, revogação/replay/origem/contas, ausência de credenciais na URI |
+| [03](../../done/transcricoes-03-agente-windows-e-vinculo.spec.md) | Shell instalável x64, vínculo e abertura contextual | 01 | D-02/D-03 aprovadas; sem ponte HTTP | Windows limpo, revogação/replay/origem/contas, ausência de credenciais na URI |
 | [02](../transcricoes-02-importacao-e-glossario.spec.md) | Importação no shell, confirmação de mapeamento, offset/glossário da campanha | 01 e 03 | D-06, contrato D-05 | WAV/corpus, rede sem áudio, confirmação/glossário privado |
 | [04](../transcricoes-04-motor-local-e-fila.spec.md) | Faster-Whisper, automático/avançado, fila persistente por arquivo | 02 e 03 | Configurações base justificadas por corpus; dependências D-02 | Windows físico CPU/GPU, kill/restart/cancel/disco/OOM, baseline |
 | [05](../transcricoes-05-sincronizacao-offline.spec.md) | Outbox, recibo idempotente e proteção editorial | 01, 03 e 04 (02 transitiva) | D-03, identidade da 01 | Resposta perdida pós-commit, concorrência/retry/revogação sem WAV |

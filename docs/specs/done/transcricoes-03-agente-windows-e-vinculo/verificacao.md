@@ -373,3 +373,24 @@ Verificado na máquina de desenvolvimento, rodando o `dist/` novo: testes portá
 o texto da janela é lido pelo UI Automation e a segunda execução com URI válida encerra e entrega a intenção à primeira instância (o pipe
 usa o QtNetwork, que continua no pacote). Não verificado ainda: o instalador novo num Windows limpo (Sandbox) e o fluxo de vínculo contra
 servidor com o pacote reduzido; ambos dependem do autor/de novo stack.
+
+## Fecho (2026-10-15)
+
+Quarta rodada: o instalador reduzido (`9a5dbe93…dce1c`, 26,6 MB) rodou no Windows Sandbox limpo, com o mesmo script: instalação, protocolo
+HKCU, atalho, licenças idênticas às do repositório (5 SHA-256), app aberto sem Python e mensagem nativa de falha de startup no I4
+(`sandbox-evidencias/`, logs das três fases e capturas). Os gates globais já estavam verdes (backend 1142, frontend 278 arquivos/3482 testes,
+lint sem erros, shared 1276; desktop 17/17).
+
+**Fechada por decisão expressa do autor, com pendências conscientes** (a regra do repositório manda manter aberto o que não foi
+verificado; o autor decidiu aceitar o risco e levar cada item para onde ele passa a importar):
+
+| Pendência | Risco aceito / por quê | Para onde vai |
+|---|---|---|
+| S1 — 2º usuário do Windows | credencial protegida por DPAPI sem a flag de máquina (`CryptProtectData` com flags=1, só "UI proibida"); o isolamento por usuário é garantia do Windows. Verificado por leitura de código e documentação da API, não por execução | task 02 (primeiro dia em que o app guarda dados por conta) |
+| V8, V9 — protocolo ausente / recusa no navegador real | mesmo caminho do V7 (que passou): o site espera e cai nas instruções manuais | task 02 |
+| U1 real, U2, U3, U4, U5 — DPI do Windows, redução da janela, teclado, Narrador, ocupado | a janela é um shell que as tasks 02 e 04 vão refazer; UI Automation já expõe nomes e foco por teclado; escala emulada pelo Qt (100/150/200%) ficou legível | task 02 (interface real do app) |
+| B4 — avisos de terceiros do Qt (ICU, FreeType, HarfBuzz…), runtime C++ da Microsoft, revisão jurídica | só importa ao distribuir o instalador, que exige autorização própria | task 07 (fecho da V1/distribuição) |
+| Assinatura Authenticode e reputação no SmartScreen | instalador `NotSigned`; no Sandbox não houve aviso, mas isso não prevê um download real | task 07 |
+| Instalação "sem administrador" provada só pelo log do Inno ("Administrative install mode: No") | no Sandbox o `.cmd` aparece como "Administrator" | task 07 |
+
+Nada foi publicado, assinado ou distribuído; nenhuma credencial ou servidor de produção foi usado.

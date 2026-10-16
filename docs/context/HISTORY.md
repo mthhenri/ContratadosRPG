@@ -1,5 +1,16 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-15 — Transcriber 03 concluída (com pendências conscientes)
+
+A 03 saiu de `active/` para `done/` por decisão expressa do autor, depois de quatro rodadas Windows: build e instalação por usuário, vínculo,
+abertura pelo protocolo, revogação, transferência de Mestre, expiração, falha de startup e, no fim, o instalador reduzido (módulos Qt não
+usados fora do bundle: 13→4 DLLs, 114→93 MB instalado, 32,3→26,6 MB de instalador) validado num Windows Sandbox limpo. Lições: excluir módulos
+no `.spec` não tira as DLLs que voltam pelos plugins do Qt (precisou filtrar `analysis.binaries`); quem testa à mão acha o que o roteiro
+não acha (o código de vínculo "não estava em lugar nenhum"); e uma captura de tela por região pode vazar o que está atrás da janela — apaguei uma.
+A regra manda manter aberto o que não foi verificado; o autor aceitou o risco de S1, V8/V9, U1–U5, B4 jurídico e assinatura, e cada item foi
+levado à task onde passa a importar (02 e 07). Detalhes e tabela em [verificação](../specs/done/transcricoes-03-agente-windows-e-vinculo/verificacao.md).
+Próxima na fila: 02, que continua dependendo de aprovação expressa para começar.
+
 ## 2026-10-15 — Transcriber 03: bateria Windows rodada, P-127 e P-128 corrigidos
 
 Duas rodadas em Windows 11 (máquina de desenvolvimento, não VM limpa; Inno Setup 6.7.3 via winget): build, instalador, instalação por
@@ -11,7 +22,7 @@ incompleto). Achados do uso real: o autor não achou o código de vínculo — o
 depois de "Vincular conta" (P-127); abertura recusada deixava "Sessão: …" na tela — agora limpa o rótulo, com teste (P-128).
 Desktop 17/17 (Qt offscreen), página de transcrição 8/8. Ainda abertos para fechar a 03: VM limpa (I1, I3, I4, B4 jurídico), 2º usuário
 Windows (S1), navegador real (V8/V9), U2, U5, Tab/Narrador e escala real do Windows. Detalhes em
-[verificacao](../specs/active/transcricoes-03-agente-windows-e-vinculo/verificacao.md).
+[verificacao](../specs/done/transcricoes-03-agente-windows-e-vinculo/verificacao.md).
 
 ## 2026-10-15 — Transcriber 01 concluída: gates globais resolvidos, telas alinhadas ao Perfil, roteiro Windows
 
@@ -122,7 +133,7 @@ do job assíncrono. Revisão independente única encontrou dois P2 (pedido pende
 continuava confirmável após desconectar e segredo confirmado podia ser substituído
 antes do refresh): reproduzidos RED e corrigidos GREEN, incluindo corrida real de
 cancelamento/confirmar. Relatório completo e gates em
-[verificação da 03](../specs/active/transcricoes-03-agente-windows-e-vinculo/verificacao.md).
+[verificação da 03](../specs/done/transcricoes-03-agente-windows-e-vinculo/verificacao.md).
 
 Backend completo mantém apenas as duas falhas preexistentes de regra-peca
 (1139 aprovados/59 skips); lint frontend mantém dois erros preexistentes da Oficina;
