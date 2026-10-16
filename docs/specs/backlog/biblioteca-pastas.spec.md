@@ -1,7 +1,7 @@
 # biblioteca-pastas.spec.md
 
 > Spec avulsa, **rascunho** (autor, 2026-10-16; modelo por cargo corrigido pelo autor no mesmo dia).
-> Decisões 1–7 respondidas pelo autor; restam três pontos menores abaixo, resolvíveis ao mover para `active/`.
+> Todas as decisões respondidas pelo autor; permanece no backlog até ele pedir a movimentação.
 
 ## Objetivo
 
@@ -59,14 +59,11 @@ aparece. Documento sem vínculo fica na raiz.
    nunca é bloqueada.
 7. **Documento criado ou importado** (m9-08): sempre nasce na raiz, mesmo com uma pasta aberta.
 
-## Pontos ainda em aberto (autor)
+8. **Espectador**: apenas vê a organização compartilhada; só jogadores a editam.
+9. **Excluir pasta compartilhada**: qualquer jogador pode, sem confirmação.
+10. **Ordem inicial na visão dos jogadores**: ordem de criação (não herda a do mestre).
 
-1. O espectador **edita** a organização compartilhada como o jogador, ou só a vê? (A decisão 3
-   garante só a visão.)
-2. Qualquer jogador pode excluir uma pasta compartilhada sem confirmação, ou há uma confirmação
-   quando ela contém documentos?
-3. A ordem dentro das pastas da visão dos jogadores parte da ordem do mestre e depois é deles, ou
-   começa pela ordem de criação?
+Sem pontos em aberto: a spec fica no backlog até o autor mandar movê-la para `active/`.
 
 ## Critérios de Aceite (provisórios)
 
