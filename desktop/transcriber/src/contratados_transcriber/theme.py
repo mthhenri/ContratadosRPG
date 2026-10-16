@@ -34,6 +34,17 @@ QLabel[papel="rotulo"] { font-family: @mono; font-size: 10px; font-weight: 600; 
 QLabel[papel="dados"] { font-family: @mono; font-size: 12px; color: @text_dim; }
 QLabel[papel="aviso"] { background: @accent_dim; border: 1px solid @accent_border;
   border-radius: @radius_control; padding: 10px 12px; }
+QLabel[papel="aviso"][nivel="erro"] { background: rgba(214, 34, 34, 0.12); border-color: @erro_border; }
+QLabel[papel="nome"] { font-family: @mono; font-size: 13px; font-weight: 600; color: @text; }
+QFrame[papel="faixa"] { background: @surface_2; border: 1px solid @border; border-radius: @radius_control; }
+QFrame[papel="faixa"][estado="erro"] { border: 1px solid @erro_border; }
+QFrame[papel="faixa"] QLineEdit { background: @bg; }
+QLabel[papel="estado"] { font-family: @mono; font-size: 10px; font-weight: 700; color: @text_dim;
+  border: 1px solid @border_strong; border-radius: @radius_compact; padding: 3px 8px; }
+QLabel[papel="estado"][estado="confirmada"], QLabel[papel="estado"][estado="registrada"] {
+  color: @accent; border-color: @accent_border; background: @accent_dim; }
+QLabel[papel="estado"][estado="erro"] { color: @erro; border-color: @erro_border; background: rgba(214, 34, 34, 0.12); }
+QLabel[papel="estado"][estado="vazia"] { color: @text_mute; }
 QLineEdit { background: @surface_2; border: 1px solid @border_strong; border-radius: @radius_control;
   padding: 10px 12px; font-family: @mono; font-size: 14px; selection-background-color: @accent; }
 QLineEdit:focus { border: 1px solid @accent; }
@@ -43,6 +54,7 @@ QPushButton { background: transparent; border: 1px solid @border_strong; border-
 QPushButton:hover { background: @surface_2; }
 QPushButton:focus { border: 1px solid @accent; }
 QPushButton:disabled { color: @text_mute; border-color: @border; background: transparent; }
+QPushButton[variante="compacto"] { padding: 6px 12px; font-size: 11px; min-height: 32px; }
 QPushButton[variante="primario"] { background: @accent; border-color: @accent; color: @accent_text; }
 QPushButton[variante="primario"]:hover { background: @accent_hover; border-color: @accent_hover; }
 QPushButton[variante="primario"]:pressed { background: @accent_press; border-color: @accent_press; }

@@ -4,6 +4,7 @@ import os
 import socket
 import sys
 import webbrowser
+from pathlib import Path
 from PySide6.QtCore import QObject, QRunnable, QThreadPool, Signal, Qt
 from PySide6.QtNetwork import QLocalServer, QLocalSocket
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QLineEdit,
@@ -11,7 +12,9 @@ from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
 from .api import Api
 from .core import Session, parse_uri, validate_origin, CredentialError, OfflineError
 from .windows import store_for, resources
+from .painel_importacao import PainelImportacao
 from .theme import STYLE, rotular
+from .widgets import button, card, label
 
 API_ORIGIN = "https://contratados-rpg-api-35du2tp43q-rj.a.run.app"
 SITE_ORIGIN = "https://contratados-rpg.pages.dev"
@@ -25,29 +28,6 @@ class Job(QRunnable):
     def run(self):
         try: self.signals.success.emit(self.operation())
         except Exception as error: self.signals.failure.emit(error)
-
-def label(text=""):
-    item = QLabel(text); item.setWordWrap(True); item.setTextFormat(Qt.TextFormat.PlainText)
-    item.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-    return item
-
-def card(index, title):
-    """Cartão do site: índice `//`/`01`, título mono em caixa alta e régua hairline."""
-    frame = QFrame(); frame.setProperty("papel", "cartao")
-    layout = QVBoxLayout(frame); layout.setContentsMargins(20, 16, 20, 20); layout.setSpacing(12)
-    head = QHBoxLayout(); head.setSpacing(12)
-    chip = QLabel(index); chip.setProperty("papel", "indice")
-    heading = QLabel(title); heading.setProperty("papel", "titulo"); rotular(heading, 112)
-    rule = QFrame(); rule.setProperty("papel", "regua"); rule.setFixedHeight(1)
-    head.addWidget(chip); head.addWidget(heading); head.addWidget(rule, 1, Qt.AlignmentFlag.AlignVCenter)
-    layout.addLayout(head)
-    return frame, layout
-
-def button(text, variant=None):
-    item = QPushButton(text); rotular(item, 108)
-    if variant: item.setProperty("variante", variant)
-    item.setMinimumHeight(44)
-    return item
 
 class Window(QMainWindow):
     def __init__(self):
@@ -70,15 +50,19 @@ class Window(QMainWindow):
         layout.addWidget(connection)
         resources_card, resources_layout = card("02", "Recursos locais")
         self.local_resources = label(); self.local_resources.setProperty("papel", "dados"); resources_layout.addWidget(self.local_resources); layout.addWidget(resources_card)
+        self.area = area; self.painel = PainelImportacao(self.work); layout.addWidget(self.painel); self.setAcceptDrops(True)
         layout.addStretch(); self.session = None; self.busy = False
         self.refresh_resources()
+    def sem_sessao(self):
+        """Nenhuma sessão autorizada: o cartão de importação some junto com o contexto."""
+        self.context.setText("Nenhuma sessão aberta."); self.painel.fechar()
     def refresh_resources(self):
         try: self.local_resources.setText("\n".join(f"{k}: {v}" for k, v in resources().items()))
         except Exception: self.local_resources.setText("Não foi possível inspecionar todos os recursos locais.")
     def configure(self):
         origin = validate_origin(self.api_origin.text().strip())
         if self.session and self.session.api.origin != origin:
-            self.session.context = None; self.context.setText("Nenhuma sessão aberta.")
+            self.session.context = None; self.sem_sessao()
         if not self.session or self.session.api.origin != origin:
             self.session = Session(Api(origin), store_for(origin))
         return self.session
@@ -95,7 +79,7 @@ class Window(QMainWindow):
             finish()
             if isinstance(error, CredentialError) or clear_context:
                 if self.session: self.session.context = None
-                self.context.setText("Nenhuma sessão aberta.")
+                self.sem_sessao()
             self.status.setText(str(error) if isinstance(error, (ValueError, CredentialError, OfflineError)) else "Falha local. Verifique o vínculo e a proteção Windows; nenhum resultado foi apagado.")
         job = Job(operation); self.current_job = job
         job.signals.success.connect(ok); job.signals.failure.connect(fail)
@@ -116,14 +100,14 @@ class Window(QMainWindow):
         def done(s):
             if s.get("vinculado"): self.status.setText("Vinculado à conta " + str(s.get("login")) + ". Abra uma sessão pelo site.")
             else:
-                self.context.setText("Nenhuma sessão aberta.")
+                self.sem_sessao()
                 if session.store.load().get("revocation_pending"): self.status.setText("Desconectado localmente. Revogação no servidor pendente de internet; resultados preservados.")
                 else: self.status.setText("Vínculo expirado/revogado. Desconecte e vincule novamente." if s.get("expirado") else "Sem vínculo confirmado. Inicie ou confirme no site.")
         self.work(session.refresh, done)
     def disconnect(self):
         try: session = self.configure()
         except Exception as error: self.status.setText(str(error)); return
-        self.context.setText("Nenhuma sessão aberta.")
+        self.sem_sessao()
         def done(_):
             pending = session.store.load().get("revocation_pending")
             self.status.setText("Desconectado localmente. Revogação no servidor pendente de internet." if pending else "Dispositivo desconectado. Resultados locais preservados.")
@@ -133,7 +117,18 @@ class Window(QMainWindow):
         try: intent = parse_uri(uri); session = self.configure()
         except Exception: self.status.setText("Abertura inválida; nenhuma ação executada."); return
         def operation(): session.refresh(); return session.resolve(intent)
-        self.work(operation, lambda c: (self.context.setText(f"Sessão: {c['titulo']}\nCampanha: {c['campanhaId']}"), self.status.setText("Contexto autorizado. Importação e transcrição serão disponibilizadas nas próximas etapas.")), clear_context=True)
+        def autorizado(c):
+            self.context.setText(f"Sessão: {c['titulo']}\nCampanha: {c['campanhaId']}")
+            self.status.setText("Contexto autorizado. Escolha os arquivos WAV no cartão Importação; a transcrição chega na próxima etapa.")
+            self.painel.abrir(session)
+            self.area.ensureWidgetVisible(self.painel)
+        self.work(operation, autorizado, clear_context=True)
+
+    def dragEnterEvent(self, evento):
+        if not self.painel.isHidden() and evento.mimeData().hasUrls(): evento.acceptProposedAction()
+    def dropEvent(self, evento):
+        if not self.painel.isHidden():
+            self.painel.receber([Path(u.toLocalFile()) for u in evento.mimeData().urls() if u.isLocalFile()])
 
 class InstanceServer:
     """User-only local IPC, carrying only opaque URI, never credentials/audio/context."""
