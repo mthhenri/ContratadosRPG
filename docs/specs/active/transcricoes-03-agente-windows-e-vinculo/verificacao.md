@@ -356,3 +356,20 @@ Evidência bruta em `.artifacts/transcricoes-03-agente-windows-e-vinculo/sandbox
 **Estado da task:** continuam sem execução S1 (2º usuário do Windows), V8/V9 (navegador real com diálogo de protocolo), U2, U5,
 Tab/Narrador reais, escala real do Windows. Os passos V/S já executados foram feitos com o instalador
 da primeira rodada, anterior à correção do P-128 (que só mexe no rótulo da janela e tem teste automatizado).
+
+## Módulos Qt não usados fora do bundle (2026-10-15)
+
+Decisão do autor (aprovada em 2026-10-15): tirar do instalador o que o app não usa. O `transcriber.spec` passa a excluir os módulos
+Python de Qml/Quick/Pdf/VirtualKeyboard/Svg/OpenGL **e** a filtrar os binários correspondentes — só excluir os módulos não bastou, porque
+as DLLs voltam pelos plugins do Qt (teclado virtual, ícones SVG, PDF). Resultado medido no build Windows:
+
+| | antes | depois |
+|---|---|---|
+| DLLs `Qt6*` | 13 (Core, Gui, Network, OpenGL, Pdf, Qml, QmlMeta, QmlModels, QmlWorkerScript, Quick, Svg, VirtualKeyboard, Widgets) | 4 (Core, Gui, Network, Widgets) |
+| instalação | 114 MB | 93,3 MB |
+| instalador | 32,3 MB | 26,6 MB (`9a5dbe93…dce1c`) |
+
+Verificado na máquina de desenvolvimento, rodando o `dist/` novo: testes portáveis 17/17 no build; o app abre ("Sem vínculo confirmado…"),
+o texto da janela é lido pelo UI Automation e a segunda execução com URI válida encerra e entrega a intenção à primeira instância (o pipe
+usa o QtNetwork, que continua no pacote). Não verificado ainda: o instalador novo num Windows limpo (Sandbox) e o fluxo de vínculo contra
+servidor com o pacote reduzido; ambos dependem do autor/de novo stack.
