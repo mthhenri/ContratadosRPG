@@ -81,3 +81,10 @@ Ordem sugerida: **02.0 → 02.1 → (02.2, 02.3 e 02.4 em paralelo, pois não to
   Decisão de projeto: a rota do app **não** é limitada a uma sessão da intenção (que é de uso único e só resolve contexto); ela revalida o Mestre ATUAL da campanha do
   recurso a cada chamada, igual à rota web, e só expõe estes endpoints. Se o autor quiser amarrar a credencial a uma sessão aberta, é uma decisão nova.
 - Próximas: 02.4 (WAV no app, só Python) e depois 02.5/02.6 (importação e telas Qt) e 02.7 (glossário no site).
+- 2026-10-15 — **02.4 feita.** `desktop/transcriber/src/contratados_transcriber/wav.py` (só stdlib): percorre os chunks, valida PCM 8/16/24/32 e float32,
+  `WAVE_FORMAT_EXTENSIBLE`, `data` de tamanho indefinido (aviso), mede duração (ms, arredondando ao mais próximo) e o silêncio inicial **sem aplicá-lo a nada**, lendo em blocos
+  (20 s de silêncio localizados com exatidão). Erros isolados por faixa com código (`NAO_RIFF`, `CABECALHO_INCOMPLETO`, `TRUNCADO`, `SEM_FMT`, `SEM_DATA`, `SEM_AMOSTRAS`,
+  `FORMATO_NAO_SUPORTADO`, `PARAMETROS_INVALIDOS`, `ILEGIVEL`) cuja mensagem leva só o nome do arquivo. O hash do conteúdo é função à parte e nunca entra em `InfoWav`.
+  Fixtures sintéticas geradas em memória (`tests/wav_fixtures.py`, nenhum binário versionado): válido mono/estéreo/24/32/8/float, silêncio inicial e atraso conhecidos,
+  faixa sem fala e limiar de -60 dBFS, truncado, extensão falsa, cabeçalho incompleto, sem fmt/data, formato não suportado, Unicode, repetido, alterado, grande. 27 testes; desktop 44/44.
+  Limite documentado: um `data` com tamanho 0 seguido de outros chunks seria lido como "tamanho indefinido"; é raro e sinalizado por aviso.
