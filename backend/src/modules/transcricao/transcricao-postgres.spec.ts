@@ -11,11 +11,15 @@ describe.runIf(process.env.TESTAR_POSTGRES_TRANSCRICAO === "1")("schema transcri
     let conexao: Knex;
     let campanhaId: number;
     const arquivo = resolve(__dirname, "../../database/migrations/0037 - Tabelas de transcricao.sql");
+    const arquivoAjustes = resolve(__dirname,
+        "../../database/migrations/0039 - Glossario identidades e ajuste de faixa da transcricao.sql");
     beforeAll(async () => {
         conexao = knex({ client: "pg", connection: { host: "127.0.0.1", port: 55439,
             database: "transcricao_test", user: "postgres", password: "transcricao_local_test" } });
         const up = readFileSync(arquivo, "utf8").split(/^-- UP$/m)[1].split(/^-- DOWN$/m)[0];
         await conexao.transaction(async (transacao) => { await transacao.raw(up); });
+        const upAjustes = readFileSync(arquivoAjustes, "utf8").split(/^-- UP$/m)[1].split(/^-- DOWN$/m)[0];
+        await conexao.transaction(async (transacao) => { await transacao.raw(upAjustes); });
         const resposta = await conexao.raw<{ rows: { id: number }[] }>(`INSERT INTO campanha
             (nome, descricao, codigo_convite, codigo_convite_espectador, na_base,
              created_date, updated_date, is_deleted)
@@ -25,6 +29,8 @@ describe.runIf(process.env.TESTAR_POSTGRES_TRANSCRICAO === "1")("schema transcri
     });
     afterAll(async () => {
         if (conexao) {
+            const downAjustes = readFileSync(arquivoAjustes, "utf8").split(/^-- DOWN$/m)[1];
+            await conexao.transaction(async (transacao) => { await transacao.raw(downAjustes); });
             const down = readFileSync(arquivo, "utf8").split(/^-- DOWN$/m)[1];
             await conexao.transaction(async (transacao) => { await transacao.raw(down); });
             await conexao.destroy();
@@ -41,8 +47,8 @@ describe.runIf(process.env.TESTAR_POSTGRES_TRANSCRICAO === "1")("schema transcri
             const sessaoId = resposta.rows[0].id;
             const faixa = await transacao.raw<{ rows: { id: number }[] }>(`INSERT INTO faixa_transcricao
                 (identificador, sessao_transcricao_id, nome_arquivo, participante,
-                 deslocamento_milissegundos, created_date, updated_date, is_deleted)
-                SELECT :identificador, :sessaoId, 'a.wav', 'Ana', -2000, NOW(), NOW(), false RETURNING id`,
+                 deslocamento_milissegundos, identidade_confirmada, created_date, updated_date, is_deleted)
+                SELECT :identificador, :sessaoId, 'a.wav', 'Ana', -2000, false, NOW(), NOW(), false RETURNING id`,
             { identificador: randomUUID(), sessaoId });
             const faixaId = faixa.rows[0].id;
             const execucao = await transacao.raw<{ rows: { id: number }[] }>(`INSERT INTO execucao_transcricao
@@ -180,8 +186,8 @@ describe.runIf(process.env.TESTAR_POSTGRES_TRANSCRICAO === "1")("schema transcri
         faixaId, execucaoId) => {
         const outra = await transacao.raw<{ rows: { id: number }[] }>(`INSERT INTO faixa_transcricao
             (identificador, sessao_transcricao_id, nome_arquivo, participante,
-             deslocamento_milissegundos, created_date, updated_date, is_deleted)
-            SELECT :identificador, sessao_transcricao_id, 'b.wav', 'Bruno', 0, NOW(), NOW(), false
+             deslocamento_milissegundos, identidade_confirmada, created_date, updated_date, is_deleted)
+            SELECT :identificador, sessao_transcricao_id, 'b.wav', 'Bruno', 0, false, NOW(), NOW(), false
             FROM faixa_transcricao WHERE id = :faixaId AND is_deleted = false RETURNING id`,
         { identificador: randomUUID(), faixaId });
         await expect(transacao.raw(`UPDATE faixa_transcricao SET execucao_selecionada_id = :execucaoId

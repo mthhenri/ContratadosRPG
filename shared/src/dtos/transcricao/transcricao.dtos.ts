@@ -121,6 +121,8 @@ export interface FaixaTranscricaoCriadaDto {
     readonly nomeArquivo: string;
     readonly participante: string;
     readonly deslocamentoMilissegundos: number;
+    readonly identidadeConfirmada: boolean;
+    readonly silencioInicialMilissegundos: number | null;
     readonly execucaoSelecionadaId: number | null;
     readonly createdDate: string;
     readonly updatedDate: string;
@@ -134,6 +136,8 @@ export interface FaixaTranscricaoResumoDto {
     readonly nomeArquivo: string;
     readonly participante: string;
     readonly deslocamentoMilissegundos: number;
+    readonly identidadeConfirmada: boolean;
+    readonly silencioInicialMilissegundos: number | null;
     readonly execucaoSelecionadaId: number | null;
     readonly createdDate: string;
     readonly updatedDate: string;
@@ -147,6 +151,8 @@ export interface FaixaTranscricaoRecuperadaDto {
     readonly nomeArquivo: string;
     readonly participante: string;
     readonly deslocamentoMilissegundos: number;
+    readonly identidadeConfirmada: boolean;
+    readonly silencioInicialMilissegundos: number | null;
     readonly execucaoSelecionadaId: number | null;
     readonly createdDate: string;
     readonly updatedDate: string;

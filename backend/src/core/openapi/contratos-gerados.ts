@@ -10999,6 +10999,505 @@ export const schemasContratosPublicos = {
         ],
         "additionalProperties": false
     },
+    "TermoGlossarioTranscricaoCriarDto": {
+        "type": "object",
+        "properties": {
+            "campanhaId": {
+                "type": "number"
+            },
+            "termo": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "campanhaId",
+            "termo"
+        ],
+        "additionalProperties": false,
+        "description": "Contrato TermoGlossarioTranscricaoCriarDto: termo por campanha, só dica de reconhecimento."
+    },
+    "TermoGlossarioTranscricaoCriadoDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "campanhaId": {
+                "type": "number"
+            },
+            "termo": {
+                "type": "string"
+            },
+            "parecidoCom": {
+                "type": "string",
+                "description": "Dica não bloqueante: termo existente que só difere no acento (D-06c); `null` quando não há."
+            },
+            "createdDate": {
+                "type": "string"
+            },
+            "updatedDate": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "id",
+            "campanhaId",
+            "termo",
+            "parecidoCom",
+            "createdDate",
+            "updatedDate"
+        ],
+        "additionalProperties": false,
+        "description": "Contrato TermoGlossarioTranscricaoCriadoDto."
+    },
+    "TermoGlossarioTranscricaoAlterarDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "termo": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "id",
+            "termo"
+        ],
+        "additionalProperties": false,
+        "description": "Contrato TermoGlossarioTranscricaoAlterarDto."
+    },
+    "TermoGlossarioTranscricaoAlteradoDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "campanhaId": {
+                "type": "number"
+            },
+            "termo": {
+                "type": "string"
+            },
+            "parecidoCom": {
+                "type": "string",
+                "description": "Dica não bloqueante: termo existente que só difere no acento (D-06c); `null` quando não há."
+            },
+            "createdDate": {
+                "type": "string"
+            },
+            "updatedDate": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "id",
+            "campanhaId",
+            "termo",
+            "parecidoCom",
+            "createdDate",
+            "updatedDate"
+        ],
+        "additionalProperties": false,
+        "description": "Contrato TermoGlossarioTranscricaoAlteradoDto."
+    },
+    "TermoGlossarioTranscricaoExcluirDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "id"
+        ],
+        "additionalProperties": false,
+        "description": "Contrato TermoGlossarioTranscricaoExcluirDto."
+    },
+    "TermoGlossarioTranscricaoListarDto": {
+        "type": "object",
+        "properties": {
+            "campanhaId": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "campanhaId"
+        ],
+        "additionalProperties": false,
+        "description": "Contrato TermoGlossarioTranscricaoListarDto."
+    },
+    "TermoGlossarioTranscricaoResumoDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "campanhaId": {
+                "type": "number"
+            },
+            "termo": {
+                "type": "string"
+            },
+            "createdDate": {
+                "type": "string"
+            },
+            "updatedDate": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "id",
+            "campanhaId",
+            "termo",
+            "createdDate",
+            "updatedDate"
+        ],
+        "additionalProperties": false,
+        "description": "Contrato TermoGlossarioTranscricaoResumoDto."
+    },
+    "TermoGlossarioTranscricaoRecuperarDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "id"
+        ],
+        "additionalProperties": false,
+        "description": "Contrato TermoGlossarioTranscricaoRecuperarDto."
+    },
+    "IdentidadeTranscricaoCriarDto": {
+        "type": "object",
+        "properties": {
+            "campanhaId": {
+                "type": "number"
+            },
+            "nomeOrigem": {
+                "type": "string"
+            },
+            "participante": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "campanhaId",
+            "nomeOrigem",
+            "participante"
+        ],
+        "additionalProperties": false,
+        "description": "Contrato IdentidadeTranscricaoCriarDto: associação reutilizável nome de origem do arquivo → participante, por campanha."
+    },
+    "IdentidadeTranscricaoCriadaDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "campanhaId": {
+                "type": "number"
+            },
+            "nomeOrigem": {
+                "type": "string"
+            },
+            "participante": {
+                "type": "string"
+            },
+            "createdDate": {
+                "type": "string"
+            },
+            "updatedDate": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "id",
+            "campanhaId",
+            "nomeOrigem",
+            "participante",
+            "createdDate",
+            "updatedDate"
+        ],
+        "additionalProperties": false,
+        "description": "Contrato IdentidadeTranscricaoCriadaDto."
+    },
+    "IdentidadeTranscricaoAlterarDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "participante": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "id",
+            "participante"
+        ],
+        "additionalProperties": false,
+        "description": "Contrato IdentidadeTranscricaoAlterarDto."
+    },
+    "IdentidadeTranscricaoAlteradaDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "campanhaId": {
+                "type": "number"
+            },
+            "nomeOrigem": {
+                "type": "string"
+            },
+            "participante": {
+                "type": "string"
+            },
+            "createdDate": {
+                "type": "string"
+            },
+            "updatedDate": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "id",
+            "campanhaId",
+            "nomeOrigem",
+            "participante",
+            "createdDate",
+            "updatedDate"
+        ],
+        "additionalProperties": false,
+        "description": "Contrato IdentidadeTranscricaoAlteradaDto."
+    },
+    "IdentidadeTranscricaoExcluirDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "id"
+        ],
+        "additionalProperties": false,
+        "description": "Contrato IdentidadeTranscricaoExcluirDto."
+    },
+    "IdentidadeTranscricaoListarDto": {
+        "type": "object",
+        "properties": {
+            "campanhaId": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "campanhaId"
+        ],
+        "additionalProperties": false,
+        "description": "Contrato IdentidadeTranscricaoListarDto."
+    },
+    "IdentidadeTranscricaoResumoDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "campanhaId": {
+                "type": "number"
+            },
+            "nomeOrigem": {
+                "type": "string"
+            },
+            "participante": {
+                "type": "string"
+            },
+            "createdDate": {
+                "type": "string"
+            },
+            "updatedDate": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "id",
+            "campanhaId",
+            "nomeOrigem",
+            "participante",
+            "createdDate",
+            "updatedDate"
+        ],
+        "additionalProperties": false,
+        "description": "Contrato IdentidadeTranscricaoResumoDto."
+    },
+    "FaixaTranscricaoAlterarDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "participante": {
+                "type": "string"
+            },
+            "identidadeConfirmada": {
+                "type": "boolean"
+            },
+            "deslocamentoMilissegundos": {
+                "type": "number"
+            },
+            "silencioInicialMilissegundos": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "id",
+            "participante",
+            "identidadeConfirmada",
+            "deslocamentoMilissegundos",
+            "silencioInicialMilissegundos"
+        ],
+        "additionalProperties": false,
+        "description": "Contrato FaixaTranscricaoAlterarDto: confirma/corrige a identidade e ajusta o offset manual da faixa.\n`silencioInicialMilissegundos` é só informativo (medido pelo app, nunca aplicado ao offset)."
+    },
+    "FaixaTranscricaoAlteradaDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "identificador": {
+                "type": "string"
+            },
+            "sessaoId": {
+                "type": "number"
+            },
+            "nomeArquivo": {
+                "type": "string"
+            },
+            "participante": {
+                "type": "string"
+            },
+            "identidadeConfirmada": {
+                "type": "boolean"
+            },
+            "deslocamentoMilissegundos": {
+                "type": "number"
+            },
+            "silencioInicialMilissegundos": {
+                "type": "number"
+            },
+            "execucaoSelecionadaId": {
+                "type": "number"
+            },
+            "createdDate": {
+                "type": "string"
+            },
+            "updatedDate": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "id",
+            "identificador",
+            "sessaoId",
+            "nomeArquivo",
+            "participante",
+            "identidadeConfirmada",
+            "deslocamentoMilissegundos",
+            "silencioInicialMilissegundos",
+            "execucaoSelecionadaId",
+            "createdDate",
+            "updatedDate"
+        ],
+        "additionalProperties": false,
+        "description": "Contrato FaixaTranscricaoAlteradaDto."
+    },
+    "GlossarioEfetivoTranscricaoDto": {
+        "type": "object",
+        "properties": {
+            "versao": {
+                "type": "number"
+            },
+            "termos": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                }
+            }
+        },
+        "required": [
+            "versao",
+            "termos"
+        ],
+        "additionalProperties": false,
+        "description": "Value object GlossarioEfetivoTranscricaoDto: o que foi de fato entregue ao motor; imutável por execução."
+    },
+    "FaixaTrabalhoTranscricaoDto": {
+        "type": "object",
+        "properties": {
+            "identificador": {
+                "type": "string"
+            },
+            "nomeArquivo": {
+                "type": "string"
+            },
+            "participante": {
+                "type": "string"
+            },
+            "deslocamentoMilissegundos": {
+                "type": "number"
+            },
+            "silencioInicialMilissegundos": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "identificador",
+            "nomeArquivo",
+            "participante",
+            "deslocamentoMilissegundos",
+            "silencioInicialMilissegundos"
+        ],
+        "additionalProperties": false,
+        "description": "Value object FaixaTrabalhoTranscricaoDto: uma faixa já confirmada, no contrato do motor."
+    },
+    "PacoteTrabalhoTranscricaoDto": {
+        "type": "object",
+        "properties": {
+            "campanhaId": {
+                "type": "number"
+            },
+            "sessaoId": {
+                "type": "number"
+            },
+            "idioma": {
+                "type": "string"
+            },
+            "glossario": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                }
+            },
+            "faixas": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/FaixaTrabalhoTranscricaoDto"
+                }
+            }
+        },
+        "required": [
+            "campanhaId",
+            "sessaoId",
+            "idioma",
+            "glossario",
+            "faixas"
+        ],
+        "additionalProperties": false,
+        "description": "Value object PacoteTrabalhoTranscricaoDto: seleção, mapeamentos, idioma, glossário e offsets de UMA sessão/campanha."
+    },
     "SessaoTranscricaoCriarDto": {
         "type": "object",
         "properties": {
@@ -11323,6 +11822,12 @@ export const schemasContratosPublicos = {
             "deslocamentoMilissegundos": {
                 "type": "number"
             },
+            "identidadeConfirmada": {
+                "type": "boolean"
+            },
+            "silencioInicialMilissegundos": {
+                "type": "number"
+            },
             "execucaoSelecionadaId": {
                 "type": "number"
             },
@@ -11340,6 +11845,8 @@ export const schemasContratosPublicos = {
             "nomeArquivo",
             "participante",
             "deslocamentoMilissegundos",
+            "identidadeConfirmada",
+            "silencioInicialMilissegundos",
             "execucaoSelecionadaId",
             "createdDate",
             "updatedDate"
@@ -11368,6 +11875,12 @@ export const schemasContratosPublicos = {
             "deslocamentoMilissegundos": {
                 "type": "number"
             },
+            "identidadeConfirmada": {
+                "type": "boolean"
+            },
+            "silencioInicialMilissegundos": {
+                "type": "number"
+            },
             "execucaoSelecionadaId": {
                 "type": "number"
             },
@@ -11385,6 +11898,8 @@ export const schemasContratosPublicos = {
             "nomeArquivo",
             "participante",
             "deslocamentoMilissegundos",
+            "identidadeConfirmada",
+            "silencioInicialMilissegundos",
             "execucaoSelecionadaId",
             "createdDate",
             "updatedDate"
@@ -11413,6 +11928,12 @@ export const schemasContratosPublicos = {
             "deslocamentoMilissegundos": {
                 "type": "number"
             },
+            "identidadeConfirmada": {
+                "type": "boolean"
+            },
+            "silencioInicialMilissegundos": {
+                "type": "number"
+            },
             "execucaoSelecionadaId": {
                 "type": "number"
             },
@@ -11430,6 +11951,8 @@ export const schemasContratosPublicos = {
             "nomeArquivo",
             "participante",
             "deslocamentoMilissegundos",
+            "identidadeConfirmada",
+            "silencioInicialMilissegundos",
             "execucaoSelecionadaId",
             "createdDate",
             "updatedDate"
@@ -13456,6 +13979,40 @@ export const operacoesContratosPublicos = {
         "controller": "AplicativoController",
         "metodo": "delete",
         "caminho": "/transcricao/aplicativo/vinculo",
+        "tag": "Transcrições",
+        "publica": false,
+        "responseSchema": "null"
+    },
+    "GlossarioController_criarTermo": {
+        "controller": "GlossarioController",
+        "metodo": "post",
+        "caminho": "/transcricao/glossario",
+        "tag": "Transcrições",
+        "publica": false,
+        "requestSchema": "TermoGlossarioTranscricaoCriarDto",
+        "responseSchema": "TermoGlossarioTranscricaoCriadoDto"
+    },
+    "GlossarioController_listarTermos": {
+        "controller": "GlossarioController",
+        "metodo": "get",
+        "caminho": "/transcricao/glossario",
+        "tag": "Transcrições",
+        "publica": false,
+        "responseSchema": "TermoGlossarioTranscricaoResumoDto[]"
+    },
+    "GlossarioController_alterarTermo": {
+        "controller": "GlossarioController",
+        "metodo": "put",
+        "caminho": "/transcricao/glossario/:id",
+        "tag": "Transcrições",
+        "publica": false,
+        "requestSchema": "TermoGlossarioTranscricaoAlterarDto",
+        "responseSchema": "TermoGlossarioTranscricaoAlteradoDto"
+    },
+    "GlossarioController_excluirTermo": {
+        "controller": "GlossarioController",
+        "metodo": "delete",
+        "caminho": "/transcricao/glossario/:id",
         "tag": "Transcrições",
         "publica": false,
         "responseSchema": "null"

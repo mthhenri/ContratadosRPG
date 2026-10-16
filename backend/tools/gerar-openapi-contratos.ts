@@ -41,6 +41,7 @@ const TAGS_POR_CONTROLLER: Readonly<Record<string, string>> = {
     CenaController: "Cenas",
     DocumentoController: "Documentos",
     TranscricaoController: "Transcrições",
+    GlossarioController: "Transcrições",
     DispositivoController: "Transcrições",
     VinculoController: "Transcrições",
     AplicativoController: "Transcrições",

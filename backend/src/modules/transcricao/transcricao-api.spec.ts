@@ -2,6 +2,7 @@ import type { OpenAPIObject } from "@nestjs/swagger";
 import type { StandardResponse } from "@contratados-rpg/shared/interfaces";
 import type { CampanhaCriadaDto } from "@contratados-rpg/shared/dtos/campanha";
 import type { SessaoTranscricaoCriadaDto, SessaoTranscricaoAlteradaDto, FaixaTranscricaoCriadaDto, SessaoTranscricaoResumoDto } from "@contratados-rpg/shared/dtos/transcricao";
+import type { TermoGlossarioTranscricaoCriadoDto, TermoGlossarioTranscricaoResumoDto } from "@contratados-rpg/shared/dtos/transcricao";
 import { randomUUID } from "node:crypto";
 import { JwtService } from "@nestjs/jwt";
 import knex, { type Knex } from "knex";
@@ -18,6 +19,7 @@ describe.runIf(process.env.TESTAR_API_TRANSCRICAO === "1")("Transcrição REST +
     let outraCampanhaId: number;
     let sessaoId: number;
     let faixaId: number;
+    let termoId: number;
     const consultar = async <TDados = unknown>(caminho: string, ator: string | null, metodo = "GET", corpo?: unknown) => {
         const resposta = await fetch(`${origem}${caminho}`, { method: metodo,
             headers: { "Content-Type": "application/json", ...(ator ? { Authorization: `Bearer ${tokens[ator]}` } : {}) },
@@ -89,6 +91,52 @@ describe.runIf(process.env.TESTAR_API_TRANSCRICAO === "1")("Transcrição REST +
         expect(documento.paths["/transcricao/sessao"].get?.responses["403"]).toBeUndefined();
         expect(documento.paths["/campanha"].get?.responses["200"]).toBeDefined();
     });
+    it("glossário: Mestre cria, lista e recebe 409 em duplicata de caixa e dica em acento diferente", async () => {
+        const criado = await consultar<TermoGlossarioTranscricaoCriadoDto>("/transcricao/glossario", "mestre", "POST",
+            { campanhaId, termo: "  Zé  " });
+        expect(criado.status).toBe(201);
+        expect(criado.corpo.dados).toMatchObject({ campanhaId, termo: "Zé", parecidoCom: null });
+        termoId = criado.corpo.dados!.id;
+        const duplicado = await consultar("/transcricao/glossario", "mestre", "POST", { campanhaId, termo: "ZÉ" });
+        expect(duplicado.status).toBe(409);
+        const parecido = await consultar<TermoGlossarioTranscricaoCriadoDto>("/transcricao/glossario", "mestre", "POST",
+            { campanhaId, termo: "Ze" });
+        expect(parecido.status).toBe(201);
+        expect(parecido.corpo.dados!.parecidoCom).toBe("Zé");
+        const lista = await consultar<TermoGlossarioTranscricaoResumoDto[]>(`/transcricao/glossario?campanhaId=${campanhaId}`, "mestre");
+        expect(lista.corpo.dados!.map((termo) => termo.termo)).toEqual(["Ze", "Zé"]);
+    });
+    it("glossário: corpo inválido é 400 e não grava", async () => {
+        for (const corpo of [{ campanhaId, termo: "   " }, { campanhaId, termo: "a".repeat(81) }, { campanhaId, termo: "x", extra: 1 },
+            { campanhaId, termo: "quebra\nde linha" }]) {
+            expect((await consultar("/transcricao/glossario", "mestre", "POST", corpo)).status).toBe(400);
+        }
+    });
+    it.each(["jogador", "espectador", "admin", "tester", "alheio"])("glossário: nega %s em leitura e escrita da campanha A", async (ator) => {
+        expect((await consultar(`/transcricao/glossario?campanhaId=${campanhaId}`, ator)).status).toBe(404);
+        expect((await consultar("/transcricao/glossario", ator, "POST", { campanhaId, termo: "Invasor" })).status).toBe(404);
+        expect((await consultar(`/transcricao/glossario/${termoId}`, ator, "PUT", { termo: "Invadido" })).status).toBe(404);
+        expect((await consultar(`/transcricao/glossario/${termoId}`, ator, "DELETE")).status).toBe(404);
+    });
+    it("glossário: visitante sem token recebe 401", async () => {
+        expect((await consultar(`/transcricao/glossario?campanhaId=${campanhaId}`, null)).status).toBe(401);
+    });
+    it("glossário: o Mestre de outra campanha tem o próprio glossário isolado", async () => {
+        const proprio = await consultar<TermoGlossarioTranscricaoCriadoDto>("/transcricao/glossario", "alheio", "POST",
+            { campanhaId: outraCampanhaId, termo: "Zé" });
+        expect(proprio.status).toBe(201);
+        const lista = await consultar<TermoGlossarioTranscricaoResumoDto[]>(`/transcricao/glossario?campanhaId=${outraCampanhaId}`, "alheio");
+        expect(lista.corpo.dados!.map((termo) => termo.termo)).toEqual(["Zé"]);
+        const aindaIntacto = await consultar<TermoGlossarioTranscricaoResumoDto[]>(`/transcricao/glossario?campanhaId=${campanhaId}`, "mestre");
+        expect(aindaIntacto.corpo.dados!.map((termo) => termo.termo)).toEqual(["Ze", "Zé"]);
+    });
+    it("glossário: altera, impede colisão com outro termo, exclui e libera a chave", async () => {
+        expect((await consultar(`/transcricao/glossario/${termoId}`, "mestre", "PUT", { termo: "ZÉ" })).status).toBe(200);
+        expect((await consultar(`/transcricao/glossario/${termoId}`, "mestre", "PUT", { termo: "ze" })).status).toBe(409);
+        expect((await consultar(`/transcricao/glossario/${termoId}`, "mestre", "DELETE")).status).toBe(200);
+        expect((await consultar(`/transcricao/glossario/${termoId}`, "mestre", "DELETE")).status).toBe(404);
+        expect((await consultar("/transcricao/glossario", "mestre", "POST", { campanhaId, termo: "zé" })).status).toBe(201);
+    });
     it("guards negam visitante, token expirado, tokenVersao antigo e conta excluída", async () => {
         const rota = `/transcricao/sessao/${sessaoId}`;
         expect((await consultar(rota, null)).status).toBe(401);
@@ -134,6 +182,11 @@ describe.runIf(process.env.TESTAR_API_TRANSCRICAO === "1")("Transcrição REST +
         });
         expect((await consultar(`/transcricao/sessao/${sessaoId}`, "mestre")).status).toBe(404);
         expect((await consultar(`/transcricao/sessao/${sessaoId}`, "jogador")).status).toBe(200);
+    });
+    it("glossário: depois da transferência o ex-Mestre perde o acesso e o novo Mestre passa a ter", async () => {
+        expect((await consultar(`/transcricao/glossario?campanhaId=${campanhaId}`, "mestre")).status).toBe(404);
+        expect((await consultar("/transcricao/glossario", "mestre", "POST", { campanhaId, termo: "Antigo" })).status).toBe(404);
+        expect((await consultar(`/transcricao/glossario?campanhaId=${campanhaId}`, "jogador")).status).toBe(200);
     });
     it("exclui por soft delete e deixa filhos inacessíveis", async () => {
         expect((await consultar(`/transcricao/sessao/${sessaoId}`, "jogador", "DELETE")).status).toBe(200);

@@ -11,11 +11,12 @@ import type {
 } from "@contratados-rpg/shared/dtos/transcricao";
 import type { CampanhaMembroInternoRecuperarDto } from "@contratados-rpg/shared/dtos/campanha";
 import { TRANSCRICAO_ID_MAXIMO, TRANSCRICAO_NOME_MAXIMO, TRANSCRICAO_TITULO_MAXIMO } from "@contratados-rpg/shared/validators";
-import { BusinessException, ResourceNotFoundException, UnauthorizedAccessException } from "../../core/exceptions";
+import { BusinessException, ResourceNotFoundException } from "../../core/exceptions";
 import { TransacaoService } from "../../database/transacao.service";
 import type { JwtPayload } from "../autenticacao/jwt-payload.interface";
 import { CampanhaRepository } from "../campanha/campanha.repository";
 import { CampanhaService } from "../campanha/campanha.service";
+import { exigirMestreAtual } from "./acesso-mestre.util";
 import { TranscricaoRepository } from "./transcricao.repository";
 
 function validarCorpo(corpo: unknown, campos: readonly string[]): void {
@@ -138,16 +139,7 @@ export class TranscricaoService {
         return faixa;
     }
 
-    private async validarAcessoCampanha(dto: CampanhaMembroInternoRecuperarDto): Promise<void> {
-        try {
-            const membro = await this.campanhaService.validarMembro(dto);
-            if (!this.campanhaService.ehMestre(membro.papel)) throw new ResourceNotFoundException("Transcrição");
-        } catch (erro) {
-            if (erro instanceof UnauthorizedAccessException) throw new ResourceNotFoundException("Transcrição");
-            throw erro;
-        }
-        if (!await this.campanhaRepositorio.recuperarPorId({ id: dto.campanhaId })) {
-            throw new ResourceNotFoundException("Transcrição");
-        }
+    private validarAcessoCampanha(dto: CampanhaMembroInternoRecuperarDto): Promise<void> {
+        return exigirMestreAtual(this.campanhaService, this.campanhaRepositorio, dto);
     }
 }

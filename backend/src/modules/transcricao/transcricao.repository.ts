@@ -20,6 +20,8 @@ const COLUNAS_FAIXA = `faixa_transcricao.id, faixa_transcricao.identificador::te
     faixa_transcricao.sessao_transcricao_id AS "sessaoId", faixa_transcricao.nome_arquivo AS "nomeArquivo",
     faixa_transcricao.participante,
     faixa_transcricao.deslocamento_milissegundos::double precision AS "deslocamentoMilissegundos",
+    faixa_transcricao.identidade_confirmada AS "identidadeConfirmada",
+    faixa_transcricao.silencio_inicial_milissegundos::double precision AS "silencioInicialMilissegundos",
     faixa_transcricao.execucao_selecionada_id AS "execucaoSelecionadaId",
     to_char(faixa_transcricao.created_date AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS "createdDate",
     to_char(faixa_transcricao.updated_date AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS "updatedDate"`;
@@ -98,9 +100,10 @@ export class TranscricaoRepository extends BaseRepository {
     async criarFaixa(dto: FaixaTranscricaoInternoCriarDto): Promise<FaixaTranscricaoRecuperadaDto | null> {
         const [faixa] = await this.executarConsulta<FaixaTranscricaoRecuperadaDto>(
             `INSERT INTO faixa_transcricao (identificador, sessao_transcricao_id, nome_arquivo,
-             participante, deslocamento_milissegundos, created_date, updated_date, is_deleted)
+             participante, deslocamento_milissegundos, identidade_confirmada, silencio_inicial_milissegundos,
+             created_date, updated_date, is_deleted)
              SELECT :identificador, sessao_transcricao.id, :nomeArquivo, :participante,
-              :deslocamentoMilissegundos, NOW(), NOW(), false FROM (
+              :deslocamentoMilissegundos, false, NULL, NOW(), NOW(), false FROM (
                  SELECT sessao_transcricao.id FROM sessao_transcricao
                  WHERE sessao_transcricao.id = :sessaoId AND sessao_transcricao.is_deleted = false
                  FOR UPDATE

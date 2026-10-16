@@ -11,6 +11,8 @@ export interface TermoGlossarioTranscricaoCriadoDto {
     readonly id: number;
     readonly campanhaId: number;
     readonly termo: string;
+    /** Dica não bloqueante: termo existente que só difere no acento (D-06c); `null` quando não há. */
+    readonly parecidoCom: string | null;
     readonly createdDate: string;
     readonly updatedDate: string;
 }
@@ -26,6 +28,8 @@ export interface TermoGlossarioTranscricaoAlteradoDto {
     readonly id: number;
     readonly campanhaId: number;
     readonly termo: string;
+    /** Dica não bloqueante: termo existente que só difere no acento (D-06c); `null` quando não há. */
+    readonly parecidoCom: string | null;
     readonly createdDate: string;
     readonly updatedDate: string;
 }
@@ -47,6 +51,25 @@ export interface TermoGlossarioTranscricaoResumoDto {
     readonly termo: string;
     readonly createdDate: string;
     readonly updatedDate: string;
+}
+
+/** Contrato TermoGlossarioTranscricaoRecuperarDto. */
+export interface TermoGlossarioTranscricaoRecuperarDto {
+    readonly id: number;
+}
+
+/** Contrato TermoGlossarioTranscricaoInternoCriarDto: service → repository, com a chave de unicidade já calculada. */
+export interface TermoGlossarioTranscricaoInternoCriarDto {
+    readonly campanhaId: number;
+    readonly termo: string;
+    readonly chaveTermo: string;
+}
+
+/** Contrato TermoGlossarioTranscricaoInternoAlterarDto. */
+export interface TermoGlossarioTranscricaoInternoAlterarDto {
+    readonly id: number;
+    readonly termo: string;
+    readonly chaveTermo: string;
 }
 
 /** Contrato IdentidadeTranscricaoCriarDto: associação reutilizável nome de origem do arquivo → participante, por campanha. */

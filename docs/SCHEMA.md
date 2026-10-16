@@ -520,10 +520,20 @@ privado do Mestre atual da campanha. Não armazena WAV ou credenciais.
 | Tabela | Conteúdo próprio |
 |---|---|
 | `sessao_transcricao` | `identificador` UUID único inclusive excluídos, `campanha_id`, `titulo` (1–120), `arquivada` |
-| `faixa_transcricao` | UUID único, `sessao_transcricao_id`, `nome_arquivo`, `participante` (sem conta obrigatória), `deslocamento_milissegundos` BIGINT assinado, `execucao_selecionada_id` nullable |
+| `faixa_transcricao` | UUID único, `sessao_transcricao_id`, `nome_arquivo`, `participante` (sem conta obrigatória), `deslocamento_milissegundos` BIGINT assinado, `identidade_confirmada` BOOLEAN (sem confirmação a faixa não vai ao motor), `silencio_inicial_milissegundos` BIGINT ≥0 nullable (só informativo, nunca aplicado ao offset), `execucao_selecionada_id` nullable |
 | `tipo_execucao_transcricao_estado` | `codigo`/`descricao`: PENDENTE, EM_PROCESSAMENTO, CONCLUIDA, FALHA, CANCELADA |
-| `execucao_transcricao` | UUID único, `faixa_transcricao_id`, FK de estado, `motor`, `versao_motor`, `idioma`, `configuracao` JSONB objeto |
+| `execucao_transcricao` | UUID único, `faixa_transcricao_id`, FK de estado, `motor`, `versao_motor`, `idioma`, `configuracao` JSONB objeto, `glossario_efetivo` JSONB nullable (snapshot do que foi entregue ao motor; preenchido pela ingestão da 05) |
 | `segmento_transcricao` | UUID estável único por execução, `execucao_transcricao_id`, início/fim BIGINT em ms, `texto_original`, `texto_corrigido` nullable, `revisao` inteira ≥1 |
+
+Task 02 (migration `0039 - Glossario identidades e ajuste de faixa da transcricao.sql`):
+
+| Tabela | Conteúdo próprio |
+|---|---|
+| `termo_glossario_transcricao` | `campanha_id`, `termo` (1–80 caracteres, como digitado), `chave_termo` (NFC + aparado + espaços colapsados + caixa ignorada, calculada em `shared/`); índice único parcial `(campanha_id, chave_termo) WHERE is_deleted = false` — acento diferente é termo diferente |
+| `identidade_transcricao` | associação reutilizável por campanha: `nome_origem`, `chave_origem`, `participante`; índice único parcial `(campanha_id, chave_origem)` entre ativos; várias origens podem apontar para a mesma pessoa |
+
+Glossário e identidade são do Mestre atual da campanha (404 uniforme para o resto). O glossário
+só guarda dicas de reconhecimento; excluir é soft delete e libera a chave.
 
 Todas têm BaseEntity/trigger de updated_date, sem DEFAULT de negócio. Identidade
 relacional e permissão não ficam no JSONB. Faixa→execução selecionada usa FK
