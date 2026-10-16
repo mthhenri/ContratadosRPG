@@ -1,10 +1,9 @@
 # Plano da task 02 — importação e glossário
 
-Proposta de 2026-10-15, **aguardando aprovação do autor**. Nenhum código, migration ou
-mudança de estado da spec foi feito: a 02 continua em `backlog/` até o autor aprovar as
-decisões da §1 (a spec exige D-06 documentada antes da implementação) e este plano.
+Proposta de 2026-10-15, **aprovada pelo autor no mesmo dia** (decisões da §1 em [design.md](design.md); a spec foi para `active/`).
+O andamento fica no Ledger ao fim deste arquivo.
 Base: `master` com a 03 em `done/`. Spec: [transcricoes-02](../transcricoes-02-importacao-e-glossario.spec.md);
-gates comuns: [revisao.md](../transcricoes/revisao.md#gates-de-implementação).
+gates comuns: [revisao.md](../../backlog/transcricoes/revisao.md#gates-de-implementação).
 
 ## O que já existe (entregue pela 01 e pela 03)
 
@@ -56,3 +55,16 @@ Ordem sugerida: **02.0 → 02.1 → (02.2, 02.3 e 02.4 em paralelo, pois não to
 - Fora de escopo, como na spec: glossário global/por sessão, diarização, reconhecimento mágico de identidades, conversão de formatos, normalizar/regravar originais.
 - Se `shared/ui/` não cobrir uma tela (ex.: tabela editável, seletor de arquivos), eu paro e proponho opções antes de contornar com HTML/CSS local.
 - A 04 (motor) continua separada: a 02 entrega o **contrato** do pacote de trabalho, não o reconhecimento.
+
+## Ledger
+
+- 2026-10-15 — **02.0 feita.** Decisões D-06a/b/c, D-09, D-10 e D-05+ aprovadas e registradas em `design.md`; spec `backlog → active`; ponteiros das
+  outras specs corrigidos. Sem `transcrever.py` e sem amostra Craig: fixtures sintéticas.
+- 2026-10-15 — **02.1 feita.** `shared/src/validators/transcricao-importacao.validators.ts` (normalização, chaves de termo e de "parecido", validação de
+  termo/participante, conflito de termo, sugestão de identidade, duplicidade de arquivos, participantes sem faixa, glossário efetivo, pacote do motor) e
+  `shared/src/dtos/transcricao/importacao.dtos.ts` (glossário, identidade, `FaixaTranscricaoAlterar*`, value objects do motor/snapshot). Testes novos 44/44
+  (diacríticos, Unicode decomposto, emoji por ponto de código, zero-width, ZWNJ legítimo, termo de outra campanha sem vazar texto, faixa sem identidade
+  confirmada, offset fora do intervalo); `shared` 1324/1324, build ok, eslint 0 erros. `npm run impacto`: arquivos novos, 2 consumidores só no próprio shared.
+  Observação de projeto: ZWJ/ZWNJ são aceitos (nomes legítimos); os demais caracteres de controle/formato invisíveis são recusados.
+- Próximas sem dependência entre si: 02.2 (glossário no backend), 02.3 (identidades/faixa) e 02.4 (WAV no app). 02.2 e 02.3 tocam a mesma pasta e o
+  gerador OpenAPI, então vão em sequência; 02.4 é só Python e pode andar em paralelo.

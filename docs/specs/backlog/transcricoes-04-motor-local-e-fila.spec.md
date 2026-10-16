@@ -42,7 +42,7 @@ Transcrever WAVs individuais no computador do Mestre com Faster-Whisper, oferece
 
 ## Dependências
 
-- `transcricoes-02-importacao-e-glossario.spec.md`; `../done/transcricoes-03-agente-windows-e-vinculo.spec.md`; Faster-Whisper e runtime do aplicativo validados em hardware alvo.
+- `../active/transcricoes-02-importacao-e-glossario.spec.md`; `../done/transcricoes-03-agente-windows-e-vinculo.spec.md`; Faster-Whisper e runtime do aplicativo validados em hardware alvo.
 
 ## Riscos e Mitigação
 
