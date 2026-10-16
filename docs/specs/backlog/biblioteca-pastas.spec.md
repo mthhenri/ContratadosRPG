@@ -9,8 +9,9 @@ Permitir organizar a Biblioteca da campanha em **pastas**, com **duas organizaç
 uma por cargo**:
 
 - **Mestre**: tem a sua árvore de pastas, que só ele vê e edita.
-- **Jogadores e espectadores**: compartilham **uma única** organização na campanha. O que um cria,
-  renomeia ou move aparece para todos eles, e todos podem reorganizar como quiserem.
+- **Jogadores e espectadores**: veem **uma única** organização compartilhada na campanha. Os
+  jogadores a editam como quiserem (o que um cria, renomeia ou move aparece para todos); os
+  espectadores apenas a veem.
 
 Cada cargo nunca enxerga a organização do outro. Os documentos continuam sendo um conjunto só da
 campanha (a revelação segue com o mestre); o que muda por cargo é **em que pasta** cada documento
@@ -35,12 +36,14 @@ aparece. Documento sem vínculo fica na raiz.
    vínculo documento↔pasta, no máximo um por documento e por cargo. Documentos nunca ganham coluna
    de pasta.
 2. **Backend**: criar, renomear, reordenar, excluir (soft delete) pasta e mover documento. O cargo do
-   usuário na campanha define qual organização ele lê e escreve; nunca a do outro. Pasta
+   usuário na campanha define qual organização ele lê e escreve; nunca a do outro. Espectador só lê
+   (toda escrita na organização compartilhada é recusada para ele). Pasta
    compartilhada só aceita documento revelado; quando o mestre oculta ou exclui um documento, o
    vínculo some da visão dos jogadores sem vazar título.
 3. **Frontend** nas três visões da Biblioteca (página do mestre, página do jogador/espectador e
    painel flutuante): árvore/lista de pastas, criar/renomear/excluir, mover documento (arrastar no
-   desktop; ação equivalente por menu no toque), pasta recolhível, busca respeitando as pastas.
+   desktop; ação equivalente por menu no toque), pasta recolhível, busca respeitando as pastas. Para o
+   espectador, só a navegação (sem controles de edição).
 4. **Tempo real** (skill `tempo-real`): a organização dos jogadores é compartilhada, então a mutação
    é emitida à sala dos jogadores/espectadores da campanha (nunca ao mestre); a do mestre é emitida só
    às sessões dele. Cuidar de edição simultânea (dois jogadores movendo/renomeando ao mesmo tempo:
@@ -58,7 +61,6 @@ aparece. Documento sem vínculo fica na raiz.
 6. **Excluir pasta com documentos** (e subpastas): tudo volta à raiz do mesmo cargo; a exclusão
    nunca é bloqueada.
 7. **Documento criado ou importado** (m9-08): sempre nasce na raiz, mesmo com uma pasta aberta.
-
 8. **Espectador**: apenas vê a organização compartilhada; só jogadores a editam.
 9. **Excluir pasta compartilhada**: qualquer jogador pode, sem confirmação.
 10. **Ordem inicial na visão dos jogadores**: ordem de criação (não herda a do mestre).
@@ -67,7 +69,7 @@ Sem pontos em aberto: a spec fica no backlog até o autor mandar movê-la para `
 
 ## Critérios de Aceite (provisórios)
 
-- Teste de permissão no backend: o mestre não lê nem altera a organização dos jogadores, e jogador/
+- Teste de permissão no backend: espectador não escreve na organização compartilhada; o mestre não lê nem altera a organização dos jogadores, e jogador/
   espectador não lê nem altera a do mestre; usuário de fora da campanha não acessa nenhuma.
 - Duas sessões de jogadores diferentes veem a mesma organização e se atualizam em tempo real
   (verificar ao vivo com dois usuários, skill `verify`); o mestre não recebe esses eventos.
