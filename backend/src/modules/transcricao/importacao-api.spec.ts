@@ -199,6 +199,29 @@ describe.runIf(process.env.TESTAR_API_IMPORTACAO === "1")("Importação REST (we
         expect(propria.status).toBe(201);
     });
 
+    it("web e app: a própria faixa não esconde um participante parecido de outra pessoa (D-06b)", async () => {
+        const mario = await web<IdentidadeTranscricaoCriadaDto>("/transcricao/identidade", "mestre", "POST",
+            { campanhaId, nomeOrigem: "9-mario", participante: "Mário" });
+        expect(mario.status).toBe(201);
+        const faixa = await web<FaixaTranscricaoCriadaDto>(`/transcricao/sessao/${sessaoId}/faixa`, "mestre", "POST",
+            { nomeArquivo: "9-mario-sem-acento.wav", participante: "Mario", deslocamentoMilissegundos: 0 });
+        const ajuste = { participante: "Mario", identidadeConfirmada: true, deslocamentoMilissegundos: 0, silencioInicialMilissegundos: null };
+        const alvo = `/transcricao/aplicativo/faixa/${faixa.corpo.dados!.id}`;
+        expect((await app(alvo, "app-mestre", "PUT", ajuste)).status).toBe(409);
+        expect((await app(alvo, "app-mestre", "PUT", { ...ajuste, confirmarParecido: true })).status).toBe(200);
+    });
+
+    it("app: corrige a pessoa de uma associação existente; dispositivo alheio não alcança (404)", async () => {
+        const criada = await app<IdentidadeTranscricaoCriadaDto>("/transcricao/aplicativo/identidade", "app-mestre", "POST",
+            { campanhaId, nomeOrigem: "7-pedro", participante: "Pedro" });
+        expect(criada.status).toBe(201);
+        const alvo = `/transcricao/aplicativo/identidade/${criada.corpo.dados!.id}`;
+        expect((await app(alvo, "app-alheio", "PUT", { participante: "Invasor" })).status).toBe(404);
+        const corrigida = await app<IdentidadeTranscricaoCriadaDto>(alvo, "app-mestre", "PUT", { id: 999999, participante: "Paulo" });
+        expect(corrigida.status).toBe(200);
+        expect(corrigida.corpo.dados).toMatchObject({ nomeOrigem: "7-pedro", participante: "Paulo" });
+    });
+
     it("app: dispositivo revogado perde o acesso na hora", async () => {
         await vincular("mestre", "app-descartavel");
         expect((await app(`/transcricao/aplicativo/glossario?campanhaId=${campanhaId}`, "app-descartavel")).status).toBe(200);

@@ -70,6 +70,7 @@ export class IdentidadeRepository extends BaseRepository {
                  JOIN sessao_transcricao ON sessao_transcricao.id = faixa_transcricao.sessao_transcricao_id
                   AND sessao_transcricao.is_deleted = false
                  WHERE sessao_transcricao.campanha_id = :campanhaId AND faixa_transcricao.is_deleted = false
+                   AND faixa_transcricao.id IS DISTINCT FROM CAST(:excluirFaixaId AS INTEGER)
              ) AS participantes_conhecidos
              ORDER BY participantes_conhecidos.participante COLLATE "C"`, { ...dto });
         return linhas.map((linha) => linha.participante);

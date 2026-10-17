@@ -3,7 +3,8 @@ import { ApiBearerAuth } from "@nestjs/swagger";
 import type {
     FaixaTranscricaoAlteradaDto, FaixaTranscricaoAlterarDto, FaixaTranscricaoCriadaDto,
     FaixaTranscricaoCriarDto, FaixaTranscricaoResumoDto, IdentidadeTranscricaoCriadaDto,
-    IdentidadeTranscricaoCriarDto, IdentidadeTranscricaoResumoDto, TermoGlossarioTranscricaoResumoDto,
+    IdentidadeTranscricaoAlteradaDto, IdentidadeTranscricaoAlterarDto, IdentidadeTranscricaoCriarDto,
+    IdentidadeTranscricaoResumoDto, TermoGlossarioTranscricaoResumoDto,
 } from "@contratados-rpg/shared/dtos/transcricao";
 import { ActiveUser } from "../../core/decorators";
 import { Public } from "../../core/decorators/public.decorator";
@@ -49,6 +50,12 @@ export class AplicativoImportacaoController {
     criarIdentidade(@Body() dto: IdentidadeTranscricaoCriarDto,
         @ActiveUser() usuario: DispositivoAutenticado): Promise<IdentidadeTranscricaoCriadaDto> {
         return this.identidades.criarIdentidade(dto, usuario);
+    }
+
+    @Put("identidade/:id")
+    alterarIdentidade(@Param("id", ParseIntPipe) id: number, @Body() dto: IdentidadeTranscricaoAlterarDto,
+        @ActiveUser() usuario: DispositivoAutenticado): Promise<IdentidadeTranscricaoAlteradaDto> {
+        return this.identidades.alterarIdentidade({ ...dto, id }, usuario);
     }
 
     @Get("sessao/:sessaoId/faixa")

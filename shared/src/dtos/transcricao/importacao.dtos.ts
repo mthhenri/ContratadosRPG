@@ -154,6 +154,8 @@ export interface IdentidadeTranscricaoInternoAlterarDto {
 /** Contrato ParticipanteTranscricaoListarDto: participantes já conhecidos da campanha (identidades e faixas). */
 export interface ParticipanteTranscricaoListarDto {
     readonly campanhaId: number;
+    /** Faixa em alteração: o participante dela não conta como "já conhecido" (senão ela se compararia consigo mesma). */
+    readonly excluirFaixaId: number | null;
 }
 
 /** Contrato FaixaTranscricaoInternoAlterarDto. */

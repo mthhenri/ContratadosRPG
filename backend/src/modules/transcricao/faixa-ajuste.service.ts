@@ -38,7 +38,7 @@ export class FaixaAjusteService {
         await exigirMestreAtual(this.campanhaService, this.campanhaRepositorio,
             { campanhaId: sessao.campanhaId, usuarioId: usuario.sub });
         const parecido = localizarParticipanteParecido(participante,
-            await this.identidadeRepositorio.listarParticipantes({ campanhaId: sessao.campanhaId }));
+            await this.identidadeRepositorio.listarParticipantes({ campanhaId: sessao.campanhaId, excluirFaixaId: dto.id }));
         if (parecido !== null && dto.confirmarParecido !== true) {
             throw new ResourceConflictException(
                 `Já existe o participante "${parecido}", parecido com "${participante}". Confirme se são pessoas diferentes`);

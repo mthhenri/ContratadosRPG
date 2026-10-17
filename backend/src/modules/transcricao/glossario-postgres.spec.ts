@@ -139,7 +139,7 @@ describe.runIf(process.env.TESTAR_POSTGRES_GLOSSARIO === "1")("glossário e iden
         await identidades.criarIdentidade({ campanhaId: campanha, nomeOrigem: "o1", chaveOrigem: "o1", participante: "João" });
         await identidades.criarIdentidade({ campanhaId: outra, nomeOrigem: "o1", chaveOrigem: "o1", participante: "Alheio" });
         const sessao = await transcricao.criarSessao({ campanhaId: campanha, titulo: "S", identificador: randomUUID() });
-        await transcricao.criarFaixa({ sessaoId: sessao.id, nomeArquivo: "a.wav", participante: "Maria",
+        const faixaMaria = await transcricao.criarFaixa({ sessaoId: sessao.id, nomeArquivo: "a.wav", participante: "Maria",
             deslocamentoMilissegundos: 0, identificador: randomUUID() });
         await transcricao.criarFaixa({ sessaoId: sessao.id, nomeArquivo: "b.wav", participante: "João",
             deslocamentoMilissegundos: 0, identificador: randomUUID() });
@@ -147,8 +147,10 @@ describe.runIf(process.env.TESTAR_POSTGRES_GLOSSARIO === "1")("glossário e iden
         await transcricao.criarFaixa({ sessaoId: excluida.id, nomeArquivo: "c.wav", participante: "Fantasma",
             deslocamentoMilissegundos: 0, identificador: randomUUID() });
         await transcricao.excluirSessao({ id: excluida.id });
-        expect(await identidades.listarParticipantes({ campanhaId: campanha })).toEqual(["João", "Maria"]);
-        expect(await identidades.listarParticipantes({ campanhaId: outra })).toEqual(["Alheio"]);
+        expect(await identidades.listarParticipantes({ campanhaId: campanha, excluirFaixaId: null })).toEqual(["João", "Maria"]);
+        expect(await identidades.listarParticipantes({ campanhaId: outra, excluirFaixaId: null })).toEqual(["Alheio"]);
+        // a faixa em alteração não conta como "conhecida" (só a dela some; o resto permanece)
+        expect(await identidades.listarParticipantes({ campanhaId: campanha, excluirFaixaId: faixaMaria!.id })).toEqual(["João"]);
     });
 
     it("alterarFaixa grava identidade, offset negativo e silêncio sem tocar no nome do arquivo", async () => {

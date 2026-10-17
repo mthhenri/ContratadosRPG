@@ -113,7 +113,7 @@ export class IdentidadeService {
 
     /** D-06b: "Joao" ao lado de "João" só entra com confirmação explícita; nunca é fundido sozinho. */
     private async verificarParticipante(campanhaId: number, participante: string, confirmado: boolean): Promise<string | null> {
-        const parecido = localizarParticipanteParecido(participante, await this.repositorio.listarParticipantes({ campanhaId }));
+        const parecido = localizarParticipanteParecido(participante, await this.repositorio.listarParticipantes({ campanhaId, excluirFaixaId: null }));
         if (parecido !== null && !confirmado) {
             throw new ResourceConflictException(
                 `Já existe o participante "${parecido}", parecido com "${participante}". Confirme se são pessoas diferentes`);

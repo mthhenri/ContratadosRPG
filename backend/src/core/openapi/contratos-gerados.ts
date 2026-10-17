@@ -11367,10 +11367,15 @@ export const schemasContratosPublicos = {
         "properties": {
             "campanhaId": {
                 "type": "number"
+            },
+            "excluirFaixaId": {
+                "type": "number",
+                "description": "Faixa em alteração: o participante dela não conta como \"já conhecido\" (senão ela se compararia consigo mesma)."
             }
         },
         "required": [
-            "campanhaId"
+            "campanhaId",
+            "excluirFaixaId"
         ],
         "additionalProperties": false,
         "description": "Contrato ParticipanteTranscricaoListarDto: participantes já conhecidos da campanha (identidades e faixas)."
@@ -13968,6 +13973,15 @@ export const operacoesContratosPublicos = {
         "publica": false,
         "requestSchema": "IdentidadeTranscricaoCriarDto",
         "responseSchema": "IdentidadeTranscricaoCriadaDto"
+    },
+    "AplicativoImportacaoController_alterarIdentidade": {
+        "controller": "AplicativoImportacaoController",
+        "metodo": "put",
+        "caminho": "/transcricao/aplicativo/identidade/:id",
+        "tag": "Transcrições",
+        "publica": false,
+        "requestSchema": "IdentidadeTranscricaoAlterarDto",
+        "responseSchema": "IdentidadeTranscricaoAlteradaDto"
     },
     "AplicativoImportacaoController_listarFaixas": {
         "controller": "AplicativoImportacaoController",

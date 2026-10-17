@@ -40,7 +40,7 @@ describe("IdentidadeController e FaixaAjusteController (web)", () => {
 
 describe("AplicativoImportacaoController (credencial de dispositivo)", () => {
     const glossario = { listarTermos: vi.fn() };
-    const identidades = { listarIdentidades: vi.fn(), criarIdentidade: vi.fn() };
+    const identidades = { listarIdentidades: vi.fn(), criarIdentidade: vi.fn(), alterarIdentidade: vi.fn() };
     const faixas = { listarFaixas: vi.fn(), criarFaixa: vi.fn() };
     const ajustes = { alterarFaixa: vi.fn() };
     const controller = new AplicativoImportacaoController(glossario as unknown as GlossarioService,
@@ -55,6 +55,8 @@ describe("AplicativoImportacaoController (credencial de dispositivo)", () => {
         expect(faixas.criarFaixa).toHaveBeenCalledWith({ sessaoId: 11, nomeArquivo: "a.wav", participante: "A", deslocamentoMilissegundos: 0 }, dispositivo);
         await controller.alterarFaixa(3, { id: 999, ...ajuste }, dispositivo);
         expect(ajustes.alterarFaixa).toHaveBeenCalledWith({ id: 3, ...ajuste }, dispositivo);
+        await controller.alterarIdentidade(4, { id: 999, participante: "Paulo" }, dispositivo);
+        expect(identidades.alterarIdentidade).toHaveBeenCalledWith({ id: 4, participante: "Paulo" }, dispositivo);
         await controller.listarGlossario(9, dispositivo);
         expect(glossario.listarTermos).toHaveBeenCalledWith({ campanhaId: 9 }, dispositivo);
         await controller.listarIdentidades(9, dispositivo);

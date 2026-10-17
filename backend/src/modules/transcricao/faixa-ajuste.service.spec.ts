@@ -65,6 +65,11 @@ describe("FaixaAjusteService — confirmação de identidade e offset manual", (
         await expect(service.alterarFaixa({ ...valido, confirmarParecido: true }, usuario))
             .resolves.toMatchObject({ parecidoCom: "Joao" });
     });
+    it("a própria faixa não conta como participante conhecido", async () => {
+        await service.alterarFaixa(valido, usuario);
+        expect(identidades.listarParticipantes).toHaveBeenCalledWith(
+            expect.objectContaining({ excluirFaixaId: valido.id }));
+    });
     it("o mesmo rótulo já conhecido não é conflito", async () => {
         identidades.listarParticipantes.mockResolvedValue(["João"]);
         await expect(service.alterarFaixa(valido, usuario)).resolves.toMatchObject({ parecidoCom: null });
