@@ -47,6 +47,10 @@ class FaixaImportada:
     hash: str | None = None
     parecido_confirmado: bool = False
     avisos: tuple = ()
+    conflito_parecido: bool = False  # o servidor achou outro participante parecido que o app não conhecia
+    participante_servidor: str | None = None  # último participante gravado no servidor para esta faixa
+    desconfirmar: bool = False  # a confirmação foi retirada aqui, mas o servidor ainda a considera confirmada
+    associacao_pendente: bool = False  # a associação do nome de origem não pôde ser atualizada
 
 
 class Importacao:
@@ -108,7 +112,8 @@ class Importacao:
             raise ParecidoError(parecido)
         if faixa.participante != valor:
             faixa.sincronizada = False
-        faixa.participante, faixa.confirmada, faixa.parecido_confirmado = valor, True, parecido is not None
+        faixa.participante, faixa.confirmada, faixa.parecido_confirmado = valor, True, parecido is not None or confirmar_parecido
+        faixa.conflito_parecido, faixa.desconfirmar = False, False
         try:
             faixa.hash = calcular_hash(faixa.caminho)  # só local: detecta arquivo alterado depois
         except WavInvalido:
@@ -116,7 +121,13 @@ class Importacao:
 
     def rejeitar_sugestao(self, indice: int) -> None:
         faixa = self.faixas[indice]
+        faixa.desconfirmar = self._servidor_confirma(faixa)
         faixa.participante, faixa.confirmada, faixa.parecido_confirmado, faixa.sincronizada = None, False, False, False
+        faixa.conflito_parecido = False
+
+    @staticmethod
+    def _servidor_confirma(faixa: FaixaImportada) -> bool:
+        return faixa.faixa_id is not None and faixa.participante_servidor is not None and (faixa.sincronizada or faixa.desconfirmar)
 
     def ajustar_offset(self, indice: int, milissegundos) -> None:
         if isinstance(milissegundos, bool) or not isinstance(milissegundos, int) or not _inteiro_seguro(milissegundos):

@@ -55,6 +55,10 @@ class Api:
         corpo = {"campanhaId": campanha_id, "nomeOrigem": nome_origem, "participante": participante}
         if confirmar_parecido: corpo["confirmarParecido"] = True
         return self.request("/transcricao/aplicativo/identidade", "POST", secret, corpo)
+    def alterar_identidade(self, secret, identidade_id, participante, confirmar_parecido=False):
+        corpo = {"participante": participante}
+        if confirmar_parecido: corpo["confirmarParecido"] = True
+        return self.request(f"/transcricao/aplicativo/identidade/{int(identidade_id)}", "PUT", secret, corpo)
     def faixas(self, secret, sessao_id): return self.request(f"/transcricao/aplicativo/sessao/{int(sessao_id)}/faixa", secret=secret)
     def criar_faixa(self, secret, sessao_id, nome_arquivo, participante, deslocamento_ms):
         if not nome_arquivo or any(c in nome_arquivo for c in "\\/:") or nome_arquivo in (".", ".."):

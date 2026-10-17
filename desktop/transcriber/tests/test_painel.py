@@ -53,6 +53,18 @@ class PainelTests(unittest.TestCase):
         from PySide6.QtWidgets import QLineEdit
         return faixa.findChildren(QLineEdit)
 
+    def test_ordem_de_tab_segue_a_ordem_visual(self):
+        from PySide6.QtWidgets import QPushButton
+        self.painel.receber([self.wav("1-joao.wav"), self.wav("2-maria.wav")])
+        cadeia, atual = [], self.painel.selecionar_botao
+        for _ in range(40):
+            cadeia.append(atual); atual = atual.nextInFocusChain()
+            if atual is self.painel.registrar_botao: cadeia.append(atual); break
+        ultimo_da_lista = max(i for i, w in enumerate(cadeia) if any(f.isAncestorOf(w) for f in self.faixas()))
+        self.assertEqual(cadeia.index(self.painel.idioma), ultimo_da_lista + 1)
+        self.assertIs(cadeia[-1], self.painel.registrar_botao)
+        self.assertTrue(any(isinstance(w, QPushButton) and w.text() == "Confirmar" for w in cadeia))
+
     # --- visibilidade ---------------------------------------------------
     def test_oculto_sem_sessao_e_visivel_com_sessao(self):
         from contratados_transcriber.painel_importacao import PainelImportacao

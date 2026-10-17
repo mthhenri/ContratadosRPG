@@ -271,11 +271,23 @@ class PainelImportacao(QWidget):
                 item.widget().deleteLater()
         for indice, faixa in enumerate(self.importacao.faixas):
             self.lista.addWidget(self._desenhar_faixa(indice, faixa))
+        self._ordenar_tab()
         linhas = linhas_de_alerta(self.importacao)
         self.alertas.setText("\n".join("• " + linha for linha in linhas))
         self.alertas.setVisible(bool(linhas))
         self.registrar_botao.setEnabled(any(f.info is not None and f.confirmada and not f.sincronizada for f in self.importacao.faixas))
         self._atualizar_pacote()
+
+    def _ordenar_tab(self) -> None:
+        """Faixas são criadas depois do idioma e do botão Registrar: sem isto o Tab pula a lista e vai ao fim."""
+        sequencia = [self.selecionar_botao]
+        for posicao in range(self.lista.count()):
+            quadro = self.lista.itemAt(posicao).widget()
+            if quadro is not None:
+                sequencia += [w for w in quadro.findChildren(QWidget) if w.focusPolicy() & Qt.FocusPolicy.TabFocus]
+        sequencia += [self.idioma, self.registrar_botao]
+        for anterior, seguinte in zip(sequencia, sequencia[1:]):
+            QWidget.setTabOrder(anterior, seguinte)
 
     def _atualizar_pacote(self) -> None:
         if self.importacao is not None:
