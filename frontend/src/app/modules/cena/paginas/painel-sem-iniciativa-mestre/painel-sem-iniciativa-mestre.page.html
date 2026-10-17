@@ -2,13 +2,9 @@
      coluna de ações | Rolagens | palco com a grade de agentes da campanha. -->
 <div class="cena-mestre">
     <app-coluna-acoes id="cena-mestre" rotulo="Ações da cena">
-        @if (dados.carregando()) {
-        @for (i of [0, 1, 2]; track i) {
+        @if (dados.carregando()) { @for (i of [0, 1, 2]; track i) {
         <app-esqueleto class="cena-mestre__esqueleto-acao" />
-        }
-        } @else {
-        @if (dados.cena(); as cena) {
-        @if (cena.status !== CenaStatusEnum.ENCERRADA) {
+        } } @else { @if (dados.cena(); as cena) { @if (cena.status !== CenaStatusEnum.ENCERRADA) {
         <div class="coluna-acoes__categoria">Cena</div>
         @if (cena.status === CenaStatusEnum.PLANEJADA) {
         <button
@@ -30,8 +26,7 @@
         >
             Encerrar cena
         </button>
-        }
-        @if (dados.ehInvestigacao()) {
+        } @if (dados.ehInvestigacao()) {
         <button
             app-coluna-acoes-item
             icone="documentos"
@@ -41,8 +36,7 @@
         >
             Anexar documento
         </button>
-        }
-        } }
+        } } }
         <div class="coluna-acoes__categoria">Ferramentas</div>
         <button
             app-coluna-acoes-item
@@ -87,7 +81,10 @@
             </a>
             <span class="cena-mestre__indice">//</span>
             @if (dados.cena(); as cena) {
-            <h1 class="cena-mestre__titulo">{{ rotuloTipoCena(cena.tipo) }} · {{ cena.nome }}</h1>
+            <h1 class="cena-mestre__titulo">
+                <app-icone class="icone--texto" [nome]="iconeTipoCena(cena.tipo)" /> {{
+                rotuloTipoCena(cena.tipo) }} · {{ cena.nome }}
+            </h1>
             @if (dados.campanhaNome()) {
             <span class="cena-mestre__campanha">{{ dados.campanhaNome() }}</span>
             }
@@ -180,9 +177,7 @@
                 />
                 }
             </section>
-            }
-
-            @if (!janelaHistorico.estaAbertaCampanha(dados.campanhaId)) {
+            } @if (!janelaHistorico.estaAbertaCampanha(dados.campanhaId)) {
             <div class="cena-mestre__rolagens">
                 <app-historico-rolagens-sidebar
                     [fixo]="true"
@@ -245,6 +240,7 @@
                         @for (agente of agentes(); track agente.id) {
                         <li>
                             <app-espectador-ficha-card
+                                [mostrarPreviewAvatar]="dados.cena()?.tipo === CenaTipoEnum.INVESTIGACAO"
                                 [ficha]="agente"
                                 [ultimaRolagem]="ultimaRolagemFicha(agente.id)"
                                 [mostrarAcoes]="true"

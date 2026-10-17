@@ -175,19 +175,32 @@ describe('EspectadorFichaCard', () => {
     expect(raiz.querySelector('.espectador-ficha__menu-botao')).not.toBeNull();
   });
 
-  it('emite o hover do avatar para a página mestre controlar a prévia', () => {
-    const raiz = montar(ficha({ imagemUrl: '/uploads/agentes/dev/kane.png' }));
-    const entrou = vi.fn();
-    const saiu = vi.fn();
-    fixture.componentInstance.avatarEntrou.subscribe(entrou);
-    fixture.componentInstance.avatarSaiu.subscribe(saiu);
+  it('amplia a imagem por mouse no próprio card e fecha ao sair', () => {
+    vi.useFakeTimers();
+    try {
+      const raiz = montar(ficha({ imagemUrl: '/uploads/agentes/dev/kane.png' }));
+      const avatar = raiz.querySelector('.espectador-ficha__avatar') as HTMLElement;
+      avatar.dispatchEvent(Object.assign(new Event('pointerenter'), { pointerType: 'mouse' }));
+      vi.advanceTimersByTime(599);
+      expect(document.body.querySelector('div[aria-hidden="true"] > img')).toBeNull();
+      vi.advanceTimersByTime(1);
+      const imagem = document.body.querySelector('div[aria-hidden="true"] > img');
+      expect(imagem?.getAttribute('src')).toBe('/uploads/agentes/dev/kane.png');
+      avatar.dispatchEvent(new Event('pointerleave'));
+      expect(document.body.querySelector('div[aria-hidden="true"] > img')).toBeNull();
+    } finally { vi.useRealTimers(); }
+  });
 
-    const avatar = raiz.querySelector('.espectador-ficha__avatar') as HTMLElement;
-    avatar.dispatchEvent(new MouseEvent('mouseenter'));
-    avatar.dispatchEvent(new MouseEvent('mouseleave'));
-
-    expect(entrou).toHaveBeenCalledTimes(1);
-    expect(saiu).toHaveBeenCalledTimes(1);
+  it('não agenda preview sem imagem', () => {
+    vi.useFakeTimers();
+    try {
+      const raiz = montar(ficha({ imagemUrl: null }));
+      raiz.querySelector('.espectador-ficha__avatar')!.dispatchEvent(
+        Object.assign(new Event('pointerenter'), { pointerType: 'mouse' }),
+      );
+      vi.advanceTimersByTime(1000);
+      expect(document.body.querySelector('div[aria-hidden="true"] > img')).toBeNull();
+    } finally { vi.useRealTimers(); }
   });
 
   it('emite abrirFicha ao clicar no ícone de abrir', () => {

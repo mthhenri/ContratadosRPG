@@ -1,3 +1,4 @@
+import { iconeTipoCena } from "../../../../shared/icone/icones-dominio";
 import { Component, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
@@ -108,6 +109,7 @@ const ATRIBUTOS_NEUTROS: FichaAtributosDto = {
   providers: [FichaRolagemRegistroService, FichaEdicaoService],
 })
 export class PainelEncontroJogador {
+  protected readonly iconeTipoCena = iconeTipoCena;
   protected readonly dados = inject(EncontroPainelDadosService);
   protected readonly janelaHistorico = inject(HistoricoRolagensJanelaService);
   private readonly encontroService = inject(EncontroService);

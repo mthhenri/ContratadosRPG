@@ -98,13 +98,7 @@
                                     [ultimaRolagem]="ultimaRolagem(ficha.id)"
                                     [mostrarAcoes]="true"
                                     [menuAberto]="menuFichaId() === ficha.id"
-                                    (avatarEntrou)="
-                                        avatarEntrou.emit({
-                                            evento: $event,
-                                            imagemUrl: ficha.imagemUrl,
-                                        })
-                                    "
-                                    (avatarSaiu)="avatarSaiu.emit()"
+                                    [mostrarPreviewAvatar]="true"
                                     (abrirFicha)="
                                         abrirFicha.emit({
                                             ficha: alvo(ficha, ficha.donoNome),
@@ -201,13 +195,7 @@
                                     [mostrarAcoes]="true"
                                     [mostrarEnergia]="cartao.mostrarEnergia"
                                     [menuAberto]="menuFichaId() === cartao.ficha.id"
-                                    (avatarEntrou)="
-                                        avatarEntrou.emit({
-                                            evento: $event,
-                                            imagemUrl: cartao.ficha.imagemUrl,
-                                        })
-                                    "
-                                    (avatarSaiu)="avatarSaiu.emit()"
+                                    [mostrarPreviewAvatar]="true"
                                     (abrirFicha)="
                                         abrirFicha.emit({
                                             ficha: alvo(cartao.ficha),

@@ -1,10 +1,11 @@
+import { iconeTipoCena } from "../../../../shared/icone/icones-dominio";
 import { Component, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import type { CenaDocumentoResumoDto } from '@contratados-rpg/shared/dtos/cena';
 import type { DocumentoResumoDto } from '@contratados-rpg/shared/dtos/documento';
 import type { FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
-import { CenaStatusEnum, TipoFichaEnum } from '@contratados-rpg/shared/enums';
+import { CenaStatusEnum, CenaTipoEnum, TipoFichaEnum } from '@contratados-rpg/shared/enums';
 
 import { CalculadoraFlutuante } from '../../../../shared/calculadora-flutuante/calculadora-flutuante.component';
 import { HistoricoRolagensSidebar } from '../../../../shared/historico-rolagens-sidebar/historico-rolagens-sidebar.component';
@@ -77,6 +78,7 @@ import { rotuloStatusCena, rotuloTipoCena } from '../../rotulos-cena';
   providers: [CenaDocumentoLeituraService],
 })
 export class PainelCenaSemIniciativaMestre {
+  protected readonly iconeTipoCena = iconeTipoCena;
   protected readonly leitura = inject(CenaDocumentoLeituraService);
   protected readonly dados = inject(EncontroPainelDadosService);
   protected readonly janelaHistorico = inject(HistoricoRolagensJanelaService);
@@ -96,6 +98,7 @@ export class PainelCenaSemIniciativaMestre {
   protected readonly calculadoraAberta = signal(false);
 
   protected readonly CenaStatusEnum = CenaStatusEnum;
+  protected readonly CenaTipoEnum = CenaTipoEnum;
   protected readonly rotuloTipoCena = rotuloTipoCena;
   protected readonly rotuloStatusCena = rotuloStatusCena;
 

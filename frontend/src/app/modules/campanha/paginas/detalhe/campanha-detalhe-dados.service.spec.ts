@@ -1,3 +1,6 @@
+import type { CenaResumoDto, CenaAlteradaDto } from "@contratados-rpg/shared/dtos/cena";
+import { CenaTipoEnum, CenaStatusEnum } from "@contratados-rpg/shared/enums";
+import { CenaService } from "../../../cena/cena.service";
 import { TestBed } from '@angular/core/testing';
 import { Observable, Subject, of, throwError } from 'rxjs';
 import { ApplicationRef, signal } from '@angular/core';
@@ -96,7 +99,12 @@ describe('CampanhaDetalheDadosService', () => {
     const inventarioAlterado$ = new Subject<{ campanhaId: number }>();
     const reconexao = signal(0);
     const reconexao$ = new Subject<void>();
+    const campanhaIngressada$ = new Subject<number>();
+    const cenaAlterada$ = new Subject<CenaAlteradaDto>();
+    const cenaService = { listarPorCampanha: vi.fn(() => of([] as CenaResumoDto[])) };
     const tempoRealService = {
+      campanhaIngressada$: campanhaIngressada$.asObservable(),
+      cenaAlterada$: cenaAlterada$.asObservable(),
       conectar: vi.fn(),
       entrarSalaCampanha: vi.fn(),
       sairSalaCampanha: vi.fn(),
@@ -119,6 +127,7 @@ describe('CampanhaDetalheDadosService', () => {
     TestBed.configureTestingModule({
       providers: [
         CampanhaDetalheDadosService,
+        { provide: CenaService, useValue: cenaService },
         { provide: CampanhaService, useValue: campanhaService },
         { provide: FichaService, useValue: fichaService },
         { provide: RolagemService, useValue: rolagemService },
@@ -134,6 +143,9 @@ describe('CampanhaDetalheDadosService', () => {
 
     return {
       service,
+      campanhaIngressada$,
+      cenaService,
+      cenaAlterada$,
       campanhaService,
       fichaService,
       rolagemService,
@@ -148,6 +160,33 @@ describe('CampanhaDetalheDadosService', () => {
       reconexao$,
     };
   }
+
+  it('refaz a cena após ingresso confirmado: cobre alteração perdida entre GET inicial e join', () => {
+    const contexto = montar({ usuarioId: 1, membros: membrosCom(1, TipoCampanhaMembroPapelEnum.MESTRE) });
+    const chamadas = contexto.cenaService.listarPorCampanha.mock.calls.length;
+    contexto.campanhaIngressada$.next(CAMPANHA_ID + 1);
+    expect(contexto.cenaService.listarPorCampanha).toHaveBeenCalledTimes(chamadas);
+    contexto.campanhaIngressada$.next(CAMPANHA_ID);
+    expect(contexto.cenaService.listarPorCampanha).toHaveBeenCalledTimes(chamadas + 1);
+  });
+
+  it('consulta a cena ativa após evento e reconexão; ignora resposta antiga cancelada', () => {
+    const contexto = montar({ usuarioId: 1, membros: membrosCom(1, TipoCampanhaMembroPapelEnum.MESTRE) });
+    const cena: CenaResumoDto = { id: 90, nome: 'Pistas', tipo: CenaTipoEnum.INVESTIGACAO, status: CenaStatusEnum.ATIVA, temEncontro: false };
+    const antiga = new Subject<CenaResumoDto[]>();
+    contexto.cenaService.listarPorCampanha.mockReturnValueOnce(antiga);
+    contexto.cenaAlterada$.next({ campanhaId: CAMPANHA_ID, cena });
+    contexto.cenaService.listarPorCampanha.mockReturnValueOnce(of([cena]));
+    contexto.cenaAlterada$.next({ campanhaId: CAMPANHA_ID, cena });
+    expect(contexto.service.cenaAtiva()?.id).toBe(90);
+    antiga.next([]);
+    expect(contexto.service.cenaAtiva()?.id).toBe(90);
+    contexto.reconexao$.next();
+    expect(contexto.service.cenaAtiva()).toBeNull();
+    const chamadas = contexto.cenaService.listarPorCampanha.mock.calls.length;
+    contexto.cenaAlterada$.next({ campanhaId: CAMPANHA_ID + 1, cena });
+    expect(contexto.cenaService.listarPorCampanha.mock.calls.length).toBe(chamadas);
+  });
 
   it('carrega campanha, membros e fichas no boot', () => {
     const { service } = montar({ usuarioId: 1, membros: membrosCom(1, TipoCampanhaMembroPapelEnum.MESTRE) });

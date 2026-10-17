@@ -2,10 +2,11 @@
     <div class="espectador-ficha__cabecalho">
         <span
             class="espectador-ficha__avatar"
-            [class.espectador-ficha__avatar--com-preview]="mostrarAcoes() && ficha().imagemUrl"
+            [class.espectador-ficha__avatar--com-preview]="
+                mostrarPreviewAvatar() && ficha().imagemUrl
+            "
             [style.--cor-ficha]="ficha().cor"
-            (mouseenter)="avatarEntrou.emit($event)"
-            (mouseleave)="avatarSaiu.emit()"
+            [appPreviewAvatar]="mostrarPreviewAvatar() ? ficha().imagemUrl : null"
         >
             @if (ficha().imagemUrl; as urlImagem) {
                 <img class="espectador-ficha__avatar-imagem" [src]="urlImagem" alt="" />
@@ -61,22 +62,42 @@
                 <div class="espectador-ficha__reacoes">
                     @if (ficha().defesa != null) {
                         <span
-                            ><app-icone class="icone--texto icone--defesa" nome="defesa" appTooltip="Defesa" /> Def <strong>{{ ficha().defesa }}</strong></span
+                            ><app-icone
+                                class="icone--texto icone--defesa"
+                                nome="defesa"
+                                appTooltip="Defesa"
+                            />
+                            Def <strong>{{ ficha().defesa }}</strong></span
                         >
                     }
                     @if (ficha().esquiva != null) {
                         <span
-                            ><app-icone class="icone--texto" nome="reacao-esquiva" appTooltip="Esquiva" /> Esq <strong>{{ ficha().esquiva }}</strong></span
+                            ><app-icone
+                                class="icone--texto"
+                                nome="reacao-esquiva"
+                                appTooltip="Esquiva"
+                            />
+                            Esq <strong>{{ ficha().esquiva }}</strong></span
                         >
                     }
                     @if (ficha().bloqueio != null) {
                         <span
-                            ><app-icone class="icone--texto" nome="reacao-bloqueio" appTooltip="Bloqueio" /> Blo <strong>{{ ficha().bloqueio }}</strong></span
+                            ><app-icone
+                                class="icone--texto"
+                                nome="reacao-bloqueio"
+                                appTooltip="Bloqueio"
+                            />
+                            Blo <strong>{{ ficha().bloqueio }}</strong></span
                         >
                     }
                     @if (ficha().contraAtaque != null) {
                         <span
-                            ><app-icone class="icone--texto" nome="reacao-contra-ataque" appTooltip="Contra-ataque" /> Con <strong>{{ ficha().contraAtaque }}</strong></span
+                            ><app-icone
+                                class="icone--texto"
+                                nome="reacao-contra-ataque"
+                                appTooltip="Contra-ataque"
+                            />
+                            Con <strong>{{ ficha().contraAtaque }}</strong></span
                         >
                     }
                 </div>

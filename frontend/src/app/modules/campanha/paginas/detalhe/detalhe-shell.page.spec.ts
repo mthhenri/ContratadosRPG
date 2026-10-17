@@ -1,3 +1,4 @@
+import { CenaService } from "../../../cena/cena.service";
 import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { ActivatedRoute, Router, provideRouter } from '@angular/router';
@@ -43,6 +44,8 @@ describe('CampanhaDetalheShell', () => {
       naBase: true,
     };
     const tempoRealService = {
+      campanhaIngressada$: new Subject<number>().asObservable(),
+      cenaAlterada$: new Subject().asObservable(),
       conectar: vi.fn(),
       entrarSalaCampanha: vi.fn(),
       sairSalaCampanha: vi.fn(),
@@ -74,6 +77,7 @@ describe('CampanhaDetalheShell', () => {
       providers: [
         provideRouter([]),
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => String(CAMPANHA_ID) } } } },
+        { provide: CenaService, useValue: { listarPorCampanha: vi.fn(() => of([])) } },
         { provide: CampanhaService, useValue: { recuperarCampanha: vi.fn(() => of(campanhaBase)), listarMembros: vi.fn(() => membros$), recuperarInventario: vi.fn(() => of({ itens: [] })) } },
         { provide: FichaService, useValue: { listarFichas: vi.fn(() => of([])) } },
         { provide: RolagemService, useValue: { listarPorCampanha: vi.fn(() => of([])) } },

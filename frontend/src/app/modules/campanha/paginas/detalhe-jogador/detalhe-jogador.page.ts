@@ -1,3 +1,5 @@
+import { iconeTipoCena } from "../../../../shared/icone/icones-dominio";
+import { rotuloNavegacaoCena } from "../../../cena/rotulos-cena";
 import { CampanhaFichasEspeciais } from "../../componentes/campanha-fichas-especiais/campanha-fichas-especiais.component";
 import {
   Component,
@@ -28,6 +30,7 @@ import { HistoricoRolagensJanelaService } from '../../../../shared/historico-rol
 import { InventarioEsquadrao } from '../../componentes/inventario-esquadrao/inventario-esquadrao.component';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
+import { PreviewAvatar } from '../../../../shared/preview-avatar/preview-avatar.directive';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { CampanhaDetalheDadosService } from '../detalhe/campanha-detalhe-dados.service';
@@ -60,12 +63,6 @@ import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.com
 import { Modal } from '../../../../shared/ui/modal/modal.component';
 import { Segmentado } from '../../../../shared/ui/segmentado/segmentado.component';
 import { SegmentadoItem } from '../../../../shared/ui/segmentado/segmentado-item.component';
-
-/** Hover sustentado antes do preview ampliado do avatar de um colega abrir ("um segundinho"). */
-const MS_PREVIEW_AVATAR = 600;
-
-/** Tamanho do preview ampliado do avatar (px, quadrado) — `object-fit: contain`, sem recorte. */
-const PX_PREVIEW_AVATAR = 300;
 
 /**
  * Visão do JOGADOR em `/campanhas/:id` — reprodução byte a byte do antigo ramo `@else` de
@@ -100,6 +97,7 @@ const PX_PREVIEW_AVATAR = 300;
     FichaRolagensPainel,
     CartaoRolagem,
     Tooltip,
+    PreviewAvatar,
     Botao,
     BotaoIcone,
     Cartao,
@@ -116,6 +114,8 @@ const PX_PREVIEW_AVATAR = 300;
   styleUrl: './detalhe-jogador.page.scss',
 })
 export class CampanhaDetalheJogador {
+  protected readonly iconeTipoCena = iconeTipoCena;
+  protected readonly rotuloNavegacaoCena = rotuloNavegacaoCena;
   protected readonly dados = inject(CampanhaDetalheDadosService);
   protected readonly janelaHistorico = inject(HistoricoRolagensJanelaService);
   private readonly confirmacaoService = inject(ConfirmacaoService);
@@ -541,9 +541,6 @@ export class CampanhaDetalheJogador {
       .pipe(takeUntilDestroyed())
       .subscribe({ next: () => this.recarregarFichaExibidaAoReconectar() });
 
-    // Cancela o agendamento do preview ampliado do avatar ao sair da página — senão um
-    // `setTimeout` de hover sustentado ainda dispararia depois do destroy.
-    this.destroyRef.onDestroy(() => this.cancelarPreviewAvatar());
   }
 
   /** Fichas com Vida ≤ 0 visíveis (banner do topo — não é gated por papel, aparece pro jogador também). */
@@ -557,40 +554,6 @@ export class CampanhaDetalheJogador {
   /** Autor + origem (ficha, combatente avulso ou "Mestre") — ver `montarAutoriaRolagem`. */
   protected autorRolagem(rolagem: RolagemResumoDto): string {
     return montarAutoriaRolagem(rolagem);
-  }
-
-  /** Preview ampliado do avatar de um colega na Equipe, sem recorte (mesmo padrão do Esquadrão do mestre). */
-  protected readonly previewAvatar = signal<{ url: string; top: number; left: number } | null>(null);
-  private temporizadorPreviewAvatar: ReturnType<typeof setTimeout> | null = null;
-
-  protected agendarPreviewAvatar(evento: MouseEvent, imagemUrl: string | null): void {
-    this.cancelarPreviewAvatar();
-    if (!imagemUrl) {
-      return;
-    }
-    const retangulo = (evento.currentTarget as HTMLElement).getBoundingClientRect();
-    this.temporizadorPreviewAvatar = setTimeout(() => {
-      const folga = 8;
-      const centroVertical = retangulo.top + retangulo.height / 2 - PX_PREVIEW_AVATAR / 2;
-      const top = Math.min(
-        Math.max(centroVertical, folga),
-        window.innerHeight - PX_PREVIEW_AVATAR - folga,
-      );
-      const espacoDireita = window.innerWidth - retangulo.right;
-      const left =
-        espacoDireita >= PX_PREVIEW_AVATAR + folga
-          ? retangulo.right + folga
-          : Math.max(retangulo.left - PX_PREVIEW_AVATAR - folga, folga);
-      this.previewAvatar.set({ url: imagemUrl, top, left });
-    }, MS_PREVIEW_AVATAR);
-  }
-
-  protected cancelarPreviewAvatar(): void {
-    if (this.temporizadorPreviewAvatar !== null) {
-      clearTimeout(this.temporizadorPreviewAvatar);
-      this.temporizadorPreviewAvatar = null;
-    }
-    this.previewAvatar.set(null);
   }
 
   /** Menu "⋯" de ações de ficha do cabeçalho (Criar/Vincular/Acesso/Remover/Excluir). */

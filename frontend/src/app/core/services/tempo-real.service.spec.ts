@@ -10,6 +10,7 @@ import { SOCKET_FACTORY, TempoRealService } from './tempo-real.service';
 class SocketFake {
   readonly handlers = new Map<string, (payload?: unknown) => void>();
   readonly emitidos: Array<{ evento: string; payload: unknown }> = [];
+  readonly confirmacoes: Array<(resultado: { sucesso: boolean }) => void> = [];
   desconectado = false;
 
   on(evento: string, handler: (payload?: unknown) => void): this {
@@ -17,8 +18,9 @@ class SocketFake {
     return this;
   }
 
-  emit(evento: string, payload: unknown): this {
+  emit(evento: string, payload: unknown, confirmar?: (resultado: { sucesso: boolean }) => void): this {
     this.emitidos.push({ evento, payload });
+    if (confirmar) this.confirmacoes.push(confirmar);
     return this;
   }
 
@@ -58,6 +60,32 @@ describe('TempoRealService', () => {
   beforeEach(() => {
     socketFake = new SocketFake();
     ioMock = vi.fn(() => socketFake);
+  });
+
+  it('confirma ingresso somente após autorização, inclusive no primeiro connect e na reconexão', () => {
+    const { servico } = criar(() => 'jwt');
+    const ingressos: number[] = [];
+    servico.campanhaIngressada$.subscribe(id => ingressos.push(id));
+    servico.conectar();
+    servico.entrarSalaCampanha(9);
+    socketFake.disparar('connect');
+    expect(ingressos).toEqual([]);
+    socketFake.confirmacoes[0]({ sucesso: true });
+    expect(ingressos).toEqual([9]);
+    socketFake.disparar('disconnect');
+    socketFake.disparar('connect');
+    socketFake.confirmacoes[1]({ sucesso: false });
+    expect(ingressos).toEqual([9]);
+    socketFake.disparar('connect');
+    socketFake.confirmacoes[2]({ sucesso: true });
+    expect(ingressos).toEqual([9, 9]);
+    servico.sairSalaCampanha(9);
+    socketFake.confirmacoes[2]({ sucesso: true });
+    expect(ingressos).toEqual([9, 9]);
+    servico.entrarSalaCampanha(9);
+    servico.desconectar();
+    socketFake.confirmacoes[3]({ sucesso: true });
+    expect(ingressos).toEqual([9, 9]);
   });
 
   it('não conecta sem sessão (o handshake do gateway exige o token)', () => {

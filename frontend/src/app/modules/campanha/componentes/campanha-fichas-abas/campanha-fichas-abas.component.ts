@@ -73,8 +73,6 @@ export class CampanhaFichasAbas {
 
   readonly abrirFicha = output<{ ficha: AlvoFicha; tipo: TipoFichaEnum }>();
   readonly alternarMenu = output<{ ficha: AlvoFicha; tipo: TipoFichaEnum; evento: MouseEvent }>();
-  readonly avatarEntrou = output<{ evento: MouseEvent; imagemUrl: string | null }>();
-  readonly avatarSaiu = output<void>();
   readonly criarAgente = output<void>();
 
   protected readonly TipoFichaEnum = TipoFichaEnum;

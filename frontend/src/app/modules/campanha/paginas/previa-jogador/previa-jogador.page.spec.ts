@@ -1,3 +1,4 @@
+import { CenaService } from "../../../cena/cena.service";
 import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { ActivatedRoute, provideRouter } from '@angular/router';
@@ -168,6 +169,7 @@ describe('CampanhaPreviaJogador', () => {
     const estadoAlterado$ = new Subject<{ id: number; naBase: boolean }>();
 
     const campanhaProjecaoService = {
+      recuperarCenaAtivaPainelEspectador: vi.fn(() => of(null)),
       recuperarPreviaJogador: vi.fn(() => of(opts.previaResposta ?? previa())),
       recuperarEncontroAtivoPreviaJogador: vi.fn(() => of(null as EncontroRecuperadoDto | null)),
       recuperarFichaPreviaJogador: vi.fn(
@@ -193,6 +195,8 @@ describe('CampanhaPreviaJogador', () => {
     const rolagemService = { listarPorCampanha: vi.fn() };
     const reconexao$ = new Subject<void>();
     const tempoRealService = {
+      campanhaIngressada$: new Subject<number>().asObservable(),
+      cenaAlterada$: new Subject().asObservable(),
       conectar: vi.fn(),
       entrarSalaCampanha: vi.fn(),
       sairSalaCampanha: vi.fn(),
@@ -229,6 +233,7 @@ describe('CampanhaPreviaJogador', () => {
           },
         },
         { provide: CampanhaProjecaoService, useValue: campanhaProjecaoService },
+        { provide: CenaService, useValue: { listarPorCampanha: vi.fn(() => of([])) } },
         { provide: CampanhaService, useValue: campanhaService },
         { provide: FichaService, useValue: fichaService },
         { provide: RolagemService, useValue: rolagemService },

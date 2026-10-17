@@ -1,4 +1,6 @@
-import { Component, DestroyRef, computed, effect, inject, signal, viewChild } from '@angular/core';
+import { iconeTipoCena } from "../../../../shared/icone/icones-dominio";
+import { rotuloNavegacaoCena } from "../../../cena/rotulos-cena";
+import { Component, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -39,12 +41,6 @@ import { RolagemService } from '../../../ficha/rolagem.service';
 import type { RolagemRealizadaDto } from '../../../ficha/rolagem-realizada';
 import { RolagemRapida } from '../../../ficha/componentes/rolagem-rapida/rolagem-rapida.component';
 import { HistoricoRolagensJanelaService } from '../../../../shared/historico-rolagens-sidebar/historico-rolagens-janela.service';
-
-/** Hover sustentado antes de abrir a prévia ampliada de um avatar. */
-const MS_PREVIEW_AVATAR = 600;
-
-/** Lado do preview ampliado do avatar em pixels, sem recorte. */
-const PX_PREVIEW_AVATAR = 300;
 
 /** Tipos de ficha com cartão e menu ⋯ na campanha do mestre. */
 type TipoFichaMenu = typeof TipoFichaEnum.JOGADOR | typeof TipoFichaEnum.CRIATURA | typeof TipoFichaEnum.NPC;
@@ -89,6 +85,8 @@ const ATRIBUTOS_NEUTROS: FichaAtributosDto = { destreza: 0, forca: 0, luta: 0, p
   styleUrl: './detalhe-mestre.page.scss',
 })
 export class CampanhaDetalheMestre {
+  protected readonly iconeTipoCena = iconeTipoCena;
+  protected readonly rotuloNavegacaoCena = rotuloNavegacaoCena;
   protected readonly dados = inject(CampanhaDetalheDadosService);
   protected readonly janelaHistorico = inject(HistoricoRolagensJanelaService);
   private readonly campanhaService = inject(CampanhaService);
@@ -97,7 +95,6 @@ export class CampanhaDetalheMestre {
   private readonly confirmacaoService = inject(ConfirmacaoService);
   private readonly formBuilder = inject(FormBuilder);
   private readonly router = inject(Router);
-  private readonly destroyRef = inject(DestroyRef);
 
   protected readonly TipoFichaEnum = TipoFichaEnum;
   protected readonly TipoCampanhaMembroPapelEnum = TipoCampanhaMembroPapelEnum;
@@ -149,44 +146,6 @@ export class CampanhaDetalheMestre {
   private readonly fichasAbasRef = viewChild(CampanhaFichasAbas);
 
   protected readonly calculadoraAberta = signal(false);
-
-  /** Prévia ampliada do avatar de uma ficha no Esquadrão do mestre. */
-  protected readonly previewAvatar = signal<{ url: string; top: number; left: number } | null>(null);
-  private temporizadorPreviewAvatar: ReturnType<typeof setTimeout> | null = null;
-
-  constructor() {
-    this.destroyRef.onDestroy(() => this.cancelarPreviewAvatar());
-  }
-
-  protected agendarPreviewAvatar(evento: MouseEvent, imagemUrl: string | null): void {
-    this.cancelarPreviewAvatar();
-    if (!imagemUrl) {
-      return;
-    }
-    const retangulo = (evento.currentTarget as HTMLElement).getBoundingClientRect();
-    this.temporizadorPreviewAvatar = setTimeout(() => {
-      const folga = 8;
-      const centroVertical = retangulo.top + retangulo.height / 2 - PX_PREVIEW_AVATAR / 2;
-      const top = Math.min(
-        Math.max(centroVertical, folga),
-        window.innerHeight - PX_PREVIEW_AVATAR - folga,
-      );
-      const espacoDireita = window.innerWidth - retangulo.right;
-      const left =
-        espacoDireita >= PX_PREVIEW_AVATAR + folga
-          ? retangulo.right + folga
-          : Math.max(retangulo.left - PX_PREVIEW_AVATAR - folga, folga);
-      this.previewAvatar.set({ url: imagemUrl, top, left });
-    }, MS_PREVIEW_AVATAR);
-  }
-
-  protected cancelarPreviewAvatar(): void {
-    if (this.temporizadorPreviewAvatar !== null) {
-      clearTimeout(this.temporizadorPreviewAvatar);
-      this.temporizadorPreviewAvatar = null;
-    }
-    this.previewAvatar.set(null);
-  }
 
   /**
    * Alterna a janela da calculadora via o método do próprio componente, não `calculadoraAberta.

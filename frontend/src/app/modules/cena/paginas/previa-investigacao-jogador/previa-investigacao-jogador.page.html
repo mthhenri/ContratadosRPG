@@ -11,6 +11,7 @@
         </a>
         <span class="previa-investigacao__indice">//</span>
         <h1 class="previa-investigacao__titulo">
+            <app-icone class="icone--texto" [nome]="iconeTipoCena(cena()?.tipo)" />
             Investigação · {{ cena()?.nome ?? 'Cena atual' }}
         </h1>
         @if (cena(); as cenaAtual) {

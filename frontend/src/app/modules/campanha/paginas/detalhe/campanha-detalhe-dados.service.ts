@@ -1,7 +1,9 @@
 import { DestroyRef, Injectable, Injector, computed, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { bufferTime, filter, finalize, forkJoin, merge, Subject, type Observable } from 'rxjs';
-import { TipoCampanhaMembroPapelEnum, TipoFichaEnum } from '@contratados-rpg/shared/enums';
+import { bufferTime, catchError, filter, finalize, forkJoin, map, merge, of, Subject, switchMap, type Observable } from 'rxjs';
+import { CenaStatusEnum, TipoCampanhaMembroPapelEnum, TipoFichaEnum } from '@contratados-rpg/shared/enums';
+import type { CenaResumoDto } from '@contratados-rpg/shared/dtos/cena';
+import { CenaService } from '../../../cena/cena.service';
 import {
   CampanhaInventarioItemDto,
   CampanhaMembroResumoDto,
@@ -54,6 +56,7 @@ export class CampanhaDetalheDadosService {
   protected readonly campanhaService = inject(CampanhaService);
   private readonly fichaService = inject(FichaService);
   private readonly rolagemService = inject(RolagemService);
+  private readonly cenaService = inject(CenaService);
   private readonly sessaoService = inject(SessaoService);
   protected readonly tempoRealService = inject(TempoRealService);
   protected readonly topbarContexto = inject(TopbarContextoService);
@@ -74,6 +77,7 @@ export class CampanhaDetalheDadosService {
   readonly previa = signal<CampanhaDetalhePreviaContexto | null>(null);
 
   readonly campanha = signal<CampanhaRecuperadaDto | null>(null);
+  readonly cenaAtiva = signal<CenaResumoDto | null>(null);
   readonly inventarioEsquadrao = signal<readonly CampanhaInventarioItemDto[]>([]);
   readonly estadoInventario = signal<EstadoInventario>('NAO_CARREGADO');
   readonly membros = signal<CampanhaMembroResumoDto[]>([]);
@@ -85,6 +89,19 @@ export class CampanhaDetalheDadosService {
   protected readonly ultimaAtualizacaoEm = signal<number | null>(null);
   protected readonly agoraInterno = signal(Date.now());
   readonly agora = this.agoraInterno.asReadonly();
+
+  /** Mantém a cena atual por leitura autorizada; eventos apenas invalidam essa leitura. */
+  protected observarCenaAtiva(buscar: () => Observable<CenaResumoDto | null>): void {
+    merge(
+      of(undefined),
+      this.tempoRealService.cenaAlterada$.pipe(filter(evento => evento.campanhaId === this.idInterno)),
+      this.tempoRealService.reconexao$,
+      this.tempoRealService.campanhaIngressada$.pipe(filter(id => id === this.idInterno)),
+    ).pipe(
+      switchMap(() => buscar().pipe(catchError(() => of(null)))),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe(cena => this.cenaAtiva.set(cena));
+  }
 
   /** "Atualizado agora/há Xs/há X min" — `null` antes do primeiro fetch completar. */
   readonly textoAtualizacao = computed<string | null>(() => {
@@ -192,6 +209,10 @@ export class CampanhaDetalheDadosService {
   /** Chamado uma vez por `CampanhaDetalheShell` com o `id` resolvido do parâmetro de rota. */
   inicializar(id: number): void {
     this.idInterno = id;
+
+    this.observarCenaAtiva(() => this.cenaService.listarPorCampanha(id).pipe(
+      map(cenas => cenas.find(cena => cena.status === CenaStatusEnum.ATIVA) ?? null),
+    ));
 
     // Slot de contexto da topbar (ui-21): nome da campanha, sempre que `campanha()` mudar
     // (carregamento inicial, rename) — some ao sair da tela.

@@ -1,3 +1,4 @@
+import { iconeTipoCena } from "../../../../shared/icone/icones-dominio";
 import { Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -66,6 +67,7 @@ import { agruparFichasPorMembro, ordenarMembros } from "../../../campanha/campan
   styleUrl: './painel-espectador.page.scss',
 })
 export class PainelEncontroEspectador {
+  protected readonly iconeTipoCena = iconeTipoCena;
   protected readonly janelaHistorico = inject(HistoricoRolagensJanelaService);
   private readonly rotaAtiva = inject(ActivatedRoute);
   private readonly campanhaProjecaoService = inject(CampanhaProjecaoService);

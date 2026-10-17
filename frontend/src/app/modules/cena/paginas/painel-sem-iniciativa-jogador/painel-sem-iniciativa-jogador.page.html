@@ -81,7 +81,10 @@
                 </button>
             </div>
             @if (dados.cena(); as cena) {
-            <h1 class="cena-jogador__titulo">{{ rotuloTipoCena(cena.tipo) }} · {{ cena.nome }}</h1>
+            <h1 class="cena-jogador__titulo">
+                <app-icone class="icone--texto" [nome]="iconeTipoCena(cena.tipo)" /> {{
+                rotuloTipoCena(cena.tipo) }} · {{ cena.nome }}
+            </h1>
             @if (dados.campanhaNome()) {
             <span class="cena-jogador__campanha">{{ dados.campanhaNome() }}</span>
             }

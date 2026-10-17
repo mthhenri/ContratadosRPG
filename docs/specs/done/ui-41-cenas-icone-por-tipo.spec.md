@@ -51,7 +51,14 @@
 
 Mudar o botão do mestre (salvo decisão no entregável 5), redesenhar o hub de cenas, novo tipo de cena.
 
-## Decisões em aberto
+## Decisões do autor — 2026-10-17
 
-- Ícones de cada tipo e o genérico (prancha).
-- Se o ícone por tipo também aparece para o mestre e nas demais telas de cena.
+- Investigação: B — Pista no dossiê; Combate: A — Lâminas cruzadas;
+  Perseguição: B — Trajetória; Resistência: B — Pilar; Cenas genérico: B — Claquete.
+- Furtiva: desenho próprio de **homem encapuzado**, pedido expressamente pelo autor
+  em resposta à escolha pendente; substitui as duas propostas iniciais da prancha.
+- Aplicar também no hub, nos cabeçalhos e no seletor de nova cena, incluindo as
+  respectivas visões de mestre. No seletor nativo, o primitivo `Campo` apresenta
+  o ícone do tipo selecionado, sem criar um dropdown próprio.
+- Preservar o glifo legado `combate` nos usos que não representam navegação/tipo
+  de cena. Usar nomes próprios e um mapa único para os novos desenhos.

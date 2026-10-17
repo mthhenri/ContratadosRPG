@@ -1,5 +1,66 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-17 — UI-41: ícones de cena aprovados e sincronizados
+
+Após os votos, aplicados Pista no dossiê, Lâminas cruzadas, Trajetória, Pilar e
+Claquete; Furtiva recebeu o homem encapuzado solicitado pelo autor. Mapa único
+cobre os cinco tipos. Coluna e menu mobile do jogador mostram o tipo ATIVO,
+com tooltip, e voltam ao genérico após encerramento. A prévia mantém leitura
+segura. O autor aprovou também mestre, hub, cabeçalhos e seletor de nova cena.
+Glifo legado combate preservado; nenhum primitivo ou contrato compartilhado ampliado.
+
+Subagente Codex (modelo herdado) produziu os glifos e revisou o estado/tempo real
+independentemente. Encontrou a janela entre GET inicial e entrada na sala: corrigida
+com nova confirmação local do ack autorizado, sem mudar reconexao$ dos consumidores
+existentes. switchMap impede resposta antiga de restaurar o tipo errado. Testes
+cobrem ingresso inicial, recusa, reconexão e descarte após saída/logout.
+
+Suíte completa: 3.506 testes frontend em 279 arquivos mais 89 de regras de texto,
+todos passaram. Lint zero erros, com avisos de convenções no workspace; build passou
+com aviso de orçamento inicial conhecido (598,45 kB para 450 kB). Sem mudanças em
+backend/shared. Passe de convenções e whitespace conferidos.
+
+Verify ao vivo em 1920×1080 e 360×800, com mestre/jogador: cinco tipos abertos e
+encerrados sem recarga, prévia sincronizada, menu, hub, seletor e cabeçalhos. Backend
+próprio interrompido, cena alterada no Postgres enquanto offline e reconexão convergiu
+para Resistência. O principal inspecionou pessoalmente a UI renderizada e corrigiu
+a sobreposição do ícone no seletor usando campo__controle; reinspeção aprovada.
+Dados temporários removidos pelos endpoints de soft delete. UI-40 a UI-42 em done.
+[Relatório UI-41](../specs/done/ui-41-cenas-icone-por-tipo/verificacao.md).
+Sem novo commit, push ou deploy nesta rodada.
+
+## 2026-10-17 — UI-40/42 concluídas; UI-41 aguarda votação dos ícones
+
+UI-40: o preview ampliado passou para a diretiva reutilizável no próprio card e nos
+avatares da equipe do jogador. Removidos outputs de hover, estados, temporizadores,
+cálculos de posição e overlays duplicados nas páginas. Investigação do mestre ganha
+preview; Resistência preserva o comportamento anterior. O autor aprovou explicitamente
+o preview também nas duas telas do espectador. Acervo não foi alterado.
+
+UI-42: o card de criatura ganhou o glifo Defesa com a mesma receita do card de agente,
+sem alterar VD/Tenacidade ou acrescentar reações. Ficha completa, flutuante e encontro
+já tinham o glifo; nenhuma extensão extra foi necessária. A ausência de nome acessível
+nas abas inativas mobile é preexistente e foi registrada em PROBLEMS como P-129.
+
+Gates: 76 testes focados passaram; suíte frontend com 3.494 testes em 279 arquivos,
+mais 89 do normalizador; build aprovado (aviso de orçamento existente), lint sem erros
+com avisos antigos. Corrigido um local sem uso no teste migrado. Shared/backend não
+foram alterados nem retestados. Organização/espelhos e whitespace conferidos.
+
+Aplicação real por verify: PostgreSQL + NestJS 3101 + Angular 4301, mestre/jogador/
+espectador, 1920×1080 e 360×800. Observados preview de 300px, bordas da janela,
+fechamento ao sair/rolar/redimensionar, ausência por toque, Acervo sem regressão,
+Defesa alinhada ao análogo. Cenários e capturas são locais, dados temporários removidos
+por REST. O agente principal inspecionou pessoalmente as capturas.
+[UI-40](../specs/done/ui-40-preview-avatar-investigacao-mestre/verificacao.md) e
+[UI-42](../specs/done/ui-42-criatura-card-icone-defesa/verificacao.md).
+
+UI-41 em active, sem aplicar glifos antes do voto: prancha com 13 opções, seis grupos,
+16/24/40px e contexto da coluna. Subagente Codex (modelo herdado), dedicado só à prancha,
+produziu o HTML e checou seleção/persistência/resumo; o principal inspecionou a renderização
+nos dois viewports. Escolhas dos ícones e alcance adicional foram perguntados ao autor
+sem resposta ainda. Sem commit ou deploy nesta rodada.
+
 ## 2026-10-17 — transcricoes-desativacao: integração abandonada por decisão do autor
 
 O fluxo Python pessoal já atende ao autor, que decidiu encerrar o investimento na

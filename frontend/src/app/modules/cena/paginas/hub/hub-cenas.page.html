@@ -46,7 +46,7 @@
         } @else if (!ehMestre()) {
         <!-- Jogador sem cena ativa — mesma receita do "Nenhum combate em andamento." da Iniciativa. -->
         <app-estado-vazio
-            icone="combate"
+            icone="cenas"
             titulo="Nenhuma cena no momento."
             linhaApoio="Quando o mestre abrir uma cena, esta tela leva você até ela."
         />
@@ -82,7 +82,7 @@
             } @else {
             <app-estado-vazio
                 tamanho="compacto"
-                icone="combate"
+                icone="cenas"
                 titulo="Nenhuma cena em andamento."
                 linhaApoio="Abra uma cena planejada ou crie uma nova."
             />
@@ -179,7 +179,10 @@
 <ng-template #conteudoCartao let-cena>
     <span class="cena-cartao__texto">
         <span class="cena-cartao__nome">{{ cena.nome }}</span>
-        <app-chip variante="sutil">{{ rotuloTipoCena(cena.tipo) }}</app-chip>
+        <app-chip variante="sutil"
+            ><app-icone class="icone--texto" [nome]="iconeTipoCena(cena.tipo)" /> {{
+            rotuloTipoCena(cena.tipo) }}</app-chip
+        >
     </span>
     <app-icone nome="chevron" class="cena-cartao__seta" />
 </ng-template>

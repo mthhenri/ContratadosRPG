@@ -6,6 +6,7 @@ import {
   filter,
   finalize,
   merge,
+  map,
   type Observable,
   Subject,
   switchMap,
@@ -52,6 +53,13 @@ export class CampanhaPreviaJogadorDadosService extends CampanhaDetalheDadosServi
   ): void {
     this.idInterno = id;
     this.usuarioAlvoId = usuarioAlvoId;
+    // A tela de Investigação da própria prévia já usa este recorte seguro da cena atual.
+    this.observarCenaAtiva(() => this.campanhaProjecaoService
+      .recuperarCenaAtivaPainelEspectador(id).pipe(map(cena => cena ? {
+        id: cena.id, nome: cena.nome, tipo: cena.tipo, status: cena.status,
+        temEncontro: cena.encontro !== null,
+      } : null)));
+
     // Contexto antes de qualquer dado: `usuarioAtivoId` já aponta para o alvo quando as fichas
     // chegarem, então a tela nunca semeia a "própria ficha" com a do mestre.
     this.previa.set({
@@ -153,6 +161,9 @@ export class CampanhaPreviaJogadorDadosService extends CampanhaDetalheDadosServi
   }
 
   private assinarTempoReal(id: number): void {
+    this.tempoRealService.cenaAlterada$
+      .pipe(filter(evento => evento.campanhaId === id), takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.invalidacoes.next('projecao'));
     this.tempoRealService.rolagemRegistrada$
       .pipe(
         filter((rolagem) => this.rolagemVisivelAoAlvo(rolagem)),

@@ -29,6 +29,18 @@
 
 ## Ativos
 
+### P-129 — Abas não selecionadas da campanha sem nome acessível no celular · `ABERTO` · frontend/acessibilidade
+
+- **Sintoma:** em 360×800, a aba Criaturas não selecionada não é encontrada por papel
+  `tab` e nome "Criaturas"; o desenho aparece, mas falta nome acessível.
+- **Causa:** `shared/ui/abas/aba.component.scss` oculta `.abas__rotulo` com `display: none`
+  no mobile, salvo no item ativo; os ícones são decorativos e os botões de
+  `campanha-fichas-abas.component.html` não têm rótulo acessível alternativo.
+- **Contorno:** para verificação automatizada, selecionar pelo atributo estável `valor`.
+- **Correção:** preservar o nome acessível das abas compactas sem reexibir seu texto
+  visual; medir os consumidores do primitivo antes de alterar.
+- **Desde:** preexistente, confirmado no gate visual da UI-42 em 2026-10-17.
+
 ### P-126 — Sem gate que compare `docs/design/tema/` e `frontend/src/styles/tema/` · `ABERTO` · design/tema
 
 - **Sintoma:** as duas pastas são "espelhadas 1:1", mas nada impede nova divergência. Em 2026-10-13

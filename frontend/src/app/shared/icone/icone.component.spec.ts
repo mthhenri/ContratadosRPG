@@ -212,7 +212,38 @@ describe('Icone', () => {
         ],
     ];
 
-    it.each(identidade)("renderiza %s com o desenho de identidade aprovado", (nome, desenho) => {
+    // UI-41: escolhas da prancha + homem encapuzado pedido pelo autor para Furtiva.
+    const cenas: ReadonlyArray<readonly [IconeNome, string]> = [
+        [
+            "cena-investigacao",
+            '<path d="M12 21H5V3h10l4 4v4M15 3v5h4M8 7h3M8 11h3"/>' +
+            '<circle cx="16" cy="16" r="3"/>' +
+            '<path d="m18.2 18.2 2.8 2.8"/>',
+        ],
+        [
+            "cena-combate",
+            '<path d="M4 3h3l12 15-2 2L4 6zM20 3h-3l-5 6M20 6l-6 7M6 14l4 4M14 16l4-4M7 17l-3 4M17 17l3 4"/>',
+        ],
+        [
+            "cena-furtiva",
+            '<path d="M3 21l2-9c1-4 4-7 7-9 3 2 6 5 7 9l2 9z"/>' +
+            '<path d="M8 12c1-1 3-2 4-4 1 2 3 3 4 4v2a4 4 0 0 1-8 0z"/>',
+        ],
+        [
+            "cena-perseguicao",
+            '<path d="M3 6h8M3 11h5M3 16h4M9 20l10-10M12 10h7v7"/>',
+        ],
+        [
+            "cena-resistencia",
+            '<path d="M4 4h16v4H4zM8 8v12M16 8v12M5 20h14M12 11v6M2 12h3M19 12h3"/>',
+        ],
+        [
+            "cenas",
+            '<path d="M4 9h16v11H4zM4 9 3 5l16-3 1 4zM8 4l3 3M14 3l3 3M8 13h8"/>',
+        ],
+    ];
+
+    it.each([...identidade, ...cenas])("renderiza %s com o desenho aprovado", (nome, desenho) => {
         const svg = montar(nome).querySelector("svg")!;
         expect(svg.getAttribute("viewBox")).toBe("0 0 24 24");
         expect(svg.getAttribute("fill")).toBe("none");
@@ -244,6 +275,15 @@ describe('Icone', () => {
         const nomes: IconeNome[] = [
             ...identidade.map(([nome]) => nome),
             "agente", "dt", "corpo-a-corpo", "protecoes", "patente", "documentos",
+        ];
+        const formas = nomes.map(assinatura);
+        expect(formas.every((forma) => forma !== "")).toBe(true);
+        expect(new Set(formas).size).toBe(nomes.length);
+    });
+
+    it("distingue os glifos de cena dos ícones existentes de combate, busca e defesa", () => {
+        const nomes: IconeNome[] = [
+            ...cenas.map(([nome]) => nome), "combate", "busca", "defesa",
         ];
         const formas = nomes.map(assinatura);
         expect(formas.every((forma) => forma !== "")).toBe(true);

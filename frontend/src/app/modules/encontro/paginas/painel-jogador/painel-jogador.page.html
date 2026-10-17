@@ -83,6 +83,7 @@
                 </button>
             </div>
             <h1 class="iniciativa-jogador__titulo">
+                <app-icone class="icone--texto" [nome]="iconeTipoCena(dados.cena()?.tipo)" />
                 {{ dados.encontro() ? 'Iniciativa · ' + dados.encontro()!.nome : 'Iniciativa' }}
             </h1>
             @if (dados.campanhaNome()) {

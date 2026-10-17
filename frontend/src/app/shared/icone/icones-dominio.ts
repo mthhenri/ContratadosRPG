@@ -1,6 +1,22 @@
-import { HabilidadeCategoriaEnum, TipoDanoEnum } from '@contratados-rpg/shared/enums';
+import { CenaTipoEnum, HabilidadeCategoriaEnum, TipoDanoEnum } from '@contratados-rpg/shared/enums';
 
 import type { IconeNome } from './icone.component';
+
+/** Desenhos escolhidos pelo autor na UI-41; o genérico identifica Cenas sem tipo ativo. */
+export const ICONE_CENAS: IconeNome = "cenas";
+
+export const ICONE_TIPO_CENA: Readonly<Record<CenaTipoEnum, IconeNome>> = {
+    [CenaTipoEnum.INVESTIGACAO]: "cena-investigacao",
+    [CenaTipoEnum.COMBATE]: "cena-combate",
+    [CenaTipoEnum.FURTIVA]: "cena-furtiva",
+    [CenaTipoEnum.PERSEGUICAO]: "cena-perseguicao",
+    [CenaTipoEnum.RESISTENCIA]: "cena-resistencia",
+};
+
+/** Ícone do tipo de cena, ou o genérico quando não há cena selecionada/ativa. */
+export function iconeTipoCena(tipo: CenaTipoEnum | null | undefined): IconeNome {
+    return tipo ? ICONE_TIPO_CENA[tipo] : ICONE_CENAS;
+}
 
 /**
  * Qual ícone acompanha cada conceito do sistema (`icones-dano-habilidade-fragmento-reacao`).

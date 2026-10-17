@@ -179,6 +179,7 @@
             </a>
             <span class="iniciativa-mestre__indice">//</span>
             <h1 class="iniciativa-mestre__titulo">
+                <app-icone class="icone--texto" [nome]="iconeTipoCena(dados.cena()?.tipo)" />
                 {{ dados.encontro() ? 'Iniciativa · ' + dados.encontro()!.nome : 'Iniciativa' }}
             </h1>
             @if (dados.campanhaNome()) {

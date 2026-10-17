@@ -17,11 +17,11 @@
                 required
             />
         </app-campo>
-        <app-campo rotulo="Tipo" tamanho="amplo">
-            <select class="nova-cena__entrada" formControlName="tipo" required>
+        <app-campo rotulo="Tipo" tamanho="amplo" [icone]="iconeTipoCena(tipoSelecionado())">
+            <select class="campo__controle" formControlName="tipo" required>
                 <option [ngValue]="null" disabled>Escolha o tipo…</option>
                 @for (tipo of tipos; track tipo) {
-                <option [ngValue]="tipo">{{ rotuloTipoCena(tipo) }}</option>
+                    <option [ngValue]="tipo">{{ rotuloTipoCena(tipo) }}</option>
                 }
             </select>
         </app-campo>

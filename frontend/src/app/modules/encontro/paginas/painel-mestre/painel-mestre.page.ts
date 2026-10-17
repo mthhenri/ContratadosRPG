@@ -1,3 +1,4 @@
+import { iconeTipoCena } from "../../../../shared/icone/icones-dominio";
 import { IMAGEM_MIMES_ACCEPT, IMAGEM_MIMES_PERMITIDOS } from '@contratados-rpg/shared/validators';
 import {
   Component,
@@ -131,6 +132,7 @@ const ATRIBUTOS_NEUTROS: FichaAtributosDto = {
   host: { '(document:keydown.escape)': 'fecharHistoricoPeloTeclado()' },
 })
 export class PainelEncontroMestre {
+  protected readonly iconeTipoCena = iconeTipoCena;
   protected readonly tiposImagemAceitos = IMAGEM_MIMES_ACCEPT;
   protected readonly dados = inject(EncontroPainelDadosService);
   protected readonly janelaHistorico = inject(HistoricoRolagensJanelaService);

@@ -86,6 +86,10 @@ describe('CriaturaEsquadraoCard', () => {
     expect(reacoes).toContain('10');
     expect(reacoes).not.toContain('Esq');
     expect(reacoes).not.toContain('Con');
+    const icone = raiz.querySelector('.criatura-card__reacoes app-icone');
+    expect(icone?.getAttribute('nome')).toBe('defesa');
+    expect(icone?.classList.contains('icone--texto')).toBe(true);
+    expect(icone?.classList.contains('icone--defesa')).toBe(true);
   });
 
   it('omite a linha de reação quando a criatura não tem Defesa salva', () => {

@@ -1,3 +1,4 @@
+import { iconeTipoCena } from "../../../../shared/icone/icones-dominio";
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -39,6 +40,7 @@ import { rotuloStatusCena, rotuloTipoCena } from '../../rotulos-cena';
   providers: [FichaRolagemRegistroService],
 })
 export class PreviaInvestigacaoJogador {
+  protected readonly iconeTipoCena = iconeTipoCena;
   private readonly rota = inject(ActivatedRoute);
   private readonly projecao = inject(CampanhaProjecaoService);
   private readonly tempoReal = inject(TempoRealService);

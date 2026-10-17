@@ -1,3 +1,6 @@
+import { Icone } from "../../../../shared/icone/icone.component";
+import { CenaTipoEnum, CenaStatusEnum } from "@contratados-rpg/shared/enums";
+import { CenaService } from "../../../cena/cena.service";
 import { ApplicationRef } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
@@ -247,6 +250,8 @@ describe('CampanhaDetalheJogador', () => {
     const reconexao$ = new Subject<void>();
     const acessoRevogado$ = new Subject<{ fichaId: number; usuarioId: number }>();
     const tempoRealService = {
+      campanhaIngressada$: new Subject<number>().asObservable(),
+      cenaAlterada$: new Subject().asObservable(),
       conectar: vi.fn(),
       entrarSalaCampanha: vi.fn(),
       sairSalaCampanha: vi.fn(),
@@ -279,6 +284,7 @@ describe('CampanhaDetalheJogador', () => {
         provideRouter([]),
         CampanhaDetalheDadosService,
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => String(CAMPANHA_ID) } } } },
+        { provide: CenaService, useValue: { listarPorCampanha: vi.fn(() => of([])) } },
         { provide: CampanhaService, useValue: campanhaService },
         { provide: FichaService, useValue: fichaService },
         { provide: RolagemService, useValue: rolagemService },
@@ -327,6 +333,18 @@ describe('CampanhaDetalheJogador', () => {
     }
     return item;
   }
+
+
+  it('o botão Cenas reflete o tipo ativo e volta ao genérico sem cena', () => {
+    const { fixture, dados } = montar({ usuarioId: 2, membros: [{ usuarioId: 2, nome: "Jogador", papel: TipoCampanhaMembroPapelEnum.JOGADOR, fichas: [] }] });
+    dados.cenaAtiva.set({ id: 91, nome: 'Pistas', tipo: CenaTipoEnum.INVESTIGACAO, status: CenaStatusEnum.ATIVA, temEncontro: false });
+    fixture.detectChanges();
+    const icone = fixture.debugElement.query(By.css('app-coluna-acoes a[href$="/cenas"]')).query(By.directive(Icone)).componentInstance as Icone;
+    expect(icone.nome()).toBe('cena-investigacao');
+    dados.cenaAtiva.set(null);
+    fixture.detectChanges();
+    expect(icone.nome()).toBe('cenas');
+  });
 
   it('esconde o texto da missão e o alterna pelo botão "i" do cabeçalho', () => {
     const { fixture, raiz } = montar({

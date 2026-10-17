@@ -3633,8 +3633,17 @@ Origem completa, habilidade Base materializada, inventário de itens do catálog
 `backend/tools/database/assets/agentes/`, copiado para `backend/uploads/agentes/dev/` a cada seed;
 cada usuário possui uma ficha diferente em cada campanha. O seed transacional isolado é
 `npm run db:seed:dev`; cenário e credenciais estão em `docs/DEVELOPMENT.md`. Na visão do mestre,
-os cartões de agente do **Esquadrão** abrem a mesma prévia integral de 300 px do avatar que a
-visão de jogador usa, após hover sustentado de 600 ms e apenas sobre fichas de agente.
+os cartões do **Esquadrão** e a equipe do jogador usam `PreviewAvatar` para ampliar a
+foto inteira em 300 px após 600 ms de hover de mouse, sem estado duplicado nas páginas.
+A Investigação do mestre e as duas telas do espectador também têm o preview (UI-40;
+espectadores aprovados pelo autor); Resistência do mestre fica sem ele. O card de
+criatura da campanha usa o ícone canônico de Defesa (UI-42). Os cinco tipos de cena
+possuem glifos próprios em `ICONE_TIPO_CENA`; sem cena ativa, Cenas usa a claquete.
+Coluna/menu do jogador e prévia acompanham abertura, encerramento e reconexão por
+leitura autorizada, incluindo confirmação de ingresso na sala. O autor aprovou
+estender os ícones ao mestre, hub, cabeçalhos e tipo selecionado de Nova cena
+([UI-41 concluída](../specs/done/ui-41-cenas-icone-por-tipo/verificacao.md)); Furtiva
+usa o homem encapuzado. O antigo glifo `combate` permanece nos demais usos.
 `npm run lint --workspace=backend` também roda `tsc --noEmit -p tsconfig.json` (specs e `tools/`
 incluídos, que o build exclui): checagem de tipos completa faz parte do gate do backend.
 Orquestração multiagente: o agente principal (Claude Code ou Codex) delega por conta própria a

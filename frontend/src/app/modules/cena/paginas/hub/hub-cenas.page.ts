@@ -1,3 +1,4 @@
+import { iconeTipoCena } from "../../../../shared/icone/icones-dominio";
 import { Component, DestroyRef, computed, effect, inject, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NgTemplateOutlet } from '@angular/common';
@@ -62,6 +63,7 @@ import { rotuloTipoCena } from '../../rotulos-cena';
   styleUrl: './hub-cenas.page.scss',
 })
 export class HubCenas {
+  protected readonly iconeTipoCena = iconeTipoCena;
   private readonly cenaService = inject(CenaService);
   private readonly campanhaService = inject(CampanhaService);
   private readonly sessaoService = inject(SessaoService);

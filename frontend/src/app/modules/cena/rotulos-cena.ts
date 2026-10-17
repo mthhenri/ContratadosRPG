@@ -32,3 +32,8 @@ export const TIPOS_DE_CENA: readonly CenaTipoEnum[] = [
   CenaTipoEnum.PERSEGUICAO,
   CenaTipoEnum.RESISTENCIA,
 ];
+
+/** Rótulo da navegação para a cena atual, preservando o nome Cenas. */
+export function rotuloNavegacaoCena(tipo: CenaTipoEnum | null | undefined): string {
+    return tipo ? `Cenas — ${rotuloTipoCena(tipo)} em andamento` : "Cenas";
+}

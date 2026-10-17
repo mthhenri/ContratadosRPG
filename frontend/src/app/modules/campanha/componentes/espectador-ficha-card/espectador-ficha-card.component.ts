@@ -5,6 +5,7 @@ import { BarraRecurso } from '../../../../shared/ui/barra-recurso/barra-recurso.
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
+import { PreviewAvatar } from '../../../../shared/preview-avatar/preview-avatar.directive';
 import type { ItemFicha } from '../../campanha-equipe.util';
 
 /**
@@ -54,7 +55,7 @@ export type EspectadorFichaCardDados = Pick<
  */
 @Component({
   selector: 'app-espectador-ficha-card',
-  imports: [BarraRecurso, BotaoIcone, Icone, Tooltip],
+  imports: [BarraRecurso, BotaoIcone, Icone, Tooltip, PreviewAvatar],
   templateUrl: './espectador-ficha-card.component.html',
   styleUrl: './espectador-ficha-card.component.scss',
 })
@@ -76,10 +77,9 @@ export class EspectadorFichaCard {
   readonly mostrarEnergia = input(true);
   /** Se o menu "⋯" DESTE cartão está aberto — controlado pelo pai, como o antigo `menuFichaAberto`. */
   readonly menuAberto = input(false);
+  /** Ampliação por mouse, inclusive para espectadores (decisão do autor na UI-40). */
+  readonly mostrarPreviewAvatar = input(true);
 
   readonly abrirFicha = output<void>();
   readonly alternarMenu = output<MouseEvent>();
-  /** O mestre abre a prévia fora do grid, que recortaria um overlay filho. */
-  readonly avatarEntrou = output<MouseEvent>();
-  readonly avatarSaiu = output<void>();
 }

@@ -16,8 +16,8 @@
         color: var(--text-dim);
     }
 
-    // O controle segue a receita de input do login — o `<select>` usa a mesma, para os dois campos
-    // do dialog terem uma altura e uma borda só.
+    // O nome segue a receita de input do login; o tipo usa `campo__controle` do primitivo,
+    // inclusive o recuo canônico para o ícone.
     &__entrada {
         width: 100%;
         padding: 10px 12px;

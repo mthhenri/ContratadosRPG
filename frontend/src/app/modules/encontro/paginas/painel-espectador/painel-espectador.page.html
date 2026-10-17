@@ -16,6 +16,7 @@
             </a>
             <span class="iniciativa-espectador__indice">//</span>
             <h1 class="iniciativa-espectador__titulo">
+                <app-icone class="icone--texto" [nome]="iconeTipoCena(cena()?.tipo)" />
                 {{ cena() ? rotuloTipoCena(cena()!.tipo) + " · " + cena()!.nome : "Cena atual" }}
             </h1>
             @if (campanhaNome()) {
@@ -27,7 +28,7 @@
             }
             <span class="iniciativa-espectador__regua"></span>
             @if (cena() && !temIniciativa()) {
-                <app-chip variante="sutil">{{ rotuloStatusCena(cena()!.status) }}</app-chip>
+            <app-chip variante="sutil">{{ rotuloStatusCena(cena()!.status) }}</app-chip>
             }
         </header>
 

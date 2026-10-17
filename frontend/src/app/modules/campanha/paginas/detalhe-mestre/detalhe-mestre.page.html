@@ -50,8 +50,8 @@
     </button>
     <a
         app-coluna-acoes-item
-        icone="combate"
-        appTooltip="Cenas"
+        [icone]="iconeTipoCena(dados.cenaAtiva()?.tipo)"
+        [appTooltip]="rotuloNavegacaoCena(dados.cenaAtiva()?.tipo)"
         [routerLink]="['/campanhas', campanhaAtual.id, 'cenas']"
     >
         Cenas
@@ -157,8 +157,6 @@
                 [menuFichaId]="menuFichaAberto()?.id ?? null"
                 (abrirFicha)="abrirFichaDoCartao($event)"
                 (alternarMenu)="alternarMenuDoCartao($event)"
-                (avatarEntrou)="agendarPreviewAvatar($event.evento, $event.imagemUrl)"
-                (avatarSaiu)="cancelarPreviewAvatar()"
                 (criarAgente)="abrirCriarFicha()"
             />
         </section>
@@ -225,8 +223,9 @@
                         (click)="janelaHistorico.abrirCampanha(campanhaAtual.id)"
                         aria-label="Abrir em janela"
                         [appTooltip]="'Abrir em janela'"
-                        ><app-icone nome="abrir-externo"
-                    /></button>
+                    >
+                        <app-icone nome="abrir-externo" />
+                    </button>
                 </header>
                 @if (dados.carregandoRolagens()) {
                 <div
@@ -247,15 +246,10 @@
                 } @else {
                 <ul class="detalhe-mestre__rolagens-lista">
                     @for (item of dados.rolagensFeed(); track item.id) {
-                    <li
-                        app-cartao-rolagem
-                        [rolagem]="item"
-                        [autor]="autorRolagem(item)"
-                    ></li>
+                    <li app-cartao-rolagem [rolagem]="item" [autor]="autorRolagem(item)"></li>
                     }
                 </ul>
-                }
-                }
+                } }
             </div>
 
             <div
@@ -681,13 +675,4 @@
         } }
     </div>
 </ng-template>
-} @if (previewAvatar(); as preview) {
-<div
-    class="detalhe-mestre__avatar-preview"
-    [style.top.px]="preview.top"
-    [style.left.px]="preview.left"
-    aria-hidden="true"
->
-    <img class="detalhe-mestre__avatar-preview-imagem" [src]="preview.url" alt="" />
-</div>
 }

@@ -101,6 +101,9 @@ export class TempoRealService {
   private readonly reconexaoSubject = new Subject<void>();
   /** Emite uma vez por **reconexão real** — mecanismo comum de ressincronização (P-083, nota acima). */
   readonly reconexao$: Observable<void> = this.reconexaoSubject.asObservable();
+  private readonly campanhaIngressadaSubject = new Subject<number>();
+  /** Confirma o ingresso autorizado na sala, inclusive no primeiro connect e após reconexão. */
+  readonly campanhaIngressada$: Observable<number> = this.campanhaIngressadaSubject.asObservable();
 
   private readonly fichaAlteradaSubject = new Subject<FichaAlteradaDto>();
   private readonly fichaCriadaSubject = new Subject<FichaResumoDto>();
@@ -354,7 +357,7 @@ export class TempoRealService {
   /** Ingressa na sala `campanha:<id>` (só membros — checado pelo gateway). Ver `entrarSalaFicha`. */
   entrarSalaCampanha(campanhaId: number): void {
     if (this.incrementarReferencia(this.referenciasSalasCampanha, campanhaId) && this.conectado()) {
-      this.socket?.emit('campanha:entrar', { id: campanhaId });
+      this.ingressarSalaCampanha(campanhaId);
     }
   }
 
@@ -415,8 +418,18 @@ export class TempoRealService {
       this.socket?.emit('ficha:entrar', { id: fichaId });
     }
     for (const campanhaId of this.referenciasSalasCampanha.keys()) {
-      this.socket?.emit('campanha:entrar', { id: campanhaId });
+      this.ingressarSalaCampanha(campanhaId);
     }
+  }
+
+  private ingressarSalaCampanha(campanhaId: number): void {
+    const socket = this.socket;
+    socket?.emit('campanha:entrar', { id: campanhaId }, (resultado: { sucesso: boolean }) => {
+      if (resultado?.sucesso && socket === this.socket && this.conectado()
+        && this.referenciasSalasCampanha.has(campanhaId)) {
+        this.campanhaIngressadaSubject.next(campanhaId);
+      }
+    });
   }
 
   private incrementarReferencia(referencias: Map<number, number>, id: number): boolean {

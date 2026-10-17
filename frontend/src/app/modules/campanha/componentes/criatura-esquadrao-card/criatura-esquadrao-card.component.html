@@ -40,7 +40,12 @@
             @if (criatura().defesa != null) {
                 <div class="criatura-card__reacoes">
                     <span
-                        >Def <strong>{{ criatura().defesa }}</strong></span
+                        ><app-icone
+                            class="icone--texto icone--defesa"
+                            nome="defesa"
+                            appTooltip="Defesa"
+                        />
+                        Def <strong>{{ criatura().defesa }}</strong></span
                     >
                 </div>
             }

@@ -1,3 +1,5 @@
+import { toSignal } from "@angular/core/rxjs-interop";
+import { iconeTipoCena } from "../../../../shared/icone/icones-dominio";
 import { Component, inject, input, output, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { finalize } from 'rxjs';
@@ -41,6 +43,7 @@ export class CenaCriarDialog {
   readonly criada = output<CenaCriadaDto>();
   readonly fechou = output<void>();
 
+  protected readonly iconeTipoCena = iconeTipoCena;
   protected readonly tipos = TIPOS_DE_CENA;
   protected readonly rotuloTipoCena = rotuloTipoCena;
 
@@ -54,6 +57,8 @@ export class CenaCriarDialog {
     ]),
     tipo: this.formBuilder.control<CenaTipoEnum | null>(null, Validators.required),
   });
+
+  protected readonly tipoSelecionado = toSignal(this.formulario.controls.tipo.valueChanges, { initialValue: null });
 
   /** Enter no nome equivale ao botão principal, "Abrir agora" (como o "Abrir combate" de antes). */
   protected enviar(): void {

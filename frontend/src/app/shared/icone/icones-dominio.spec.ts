@@ -1,14 +1,25 @@
-import { HabilidadeCategoriaEnum, TipoDanoEnum } from '@contratados-rpg/shared/enums';
+import { CenaTipoEnum, HabilidadeCategoriaEnum, TipoDanoEnum } from '@contratados-rpg/shared/enums';
 
 import {
   ICONE_CATEGORIA_HABILIDADE,
   ICONE_REACAO,
   ICONE_TIPO_DANO,
+  ICONE_TIPO_CENA,
+  ICONE_CENAS,
+  iconeTipoCena,
   iconeDefesa,
   iconeTipoDano,
 } from './icones-dominio';
 
 describe('icones-dominio', () => {
+  it('cobre cada tipo de cena com um desenho distinto e reserva o genérico', () => {
+    const desenhos = Object.values(CenaTipoEnum).map(tipo => iconeTipoCena(tipo));
+    expect(desenhos).toEqual(Object.values(CenaTipoEnum).map(tipo => ICONE_TIPO_CENA[tipo]));
+    expect(desenhos.every(nome => nome.startsWith('cena-'))).toBe(true);
+    expect(new Set([...desenhos, ICONE_CENAS]).size).toBe(desenhos.length + 1);
+    expect(iconeTipoCena(null)).toBe('cenas');
+    expect(iconeTipoCena(undefined)).toBe('cenas');
+  });
   it('cobre todos os tipos de dano e todas as categorias de habilidade', () => {
     for (const tipo of Object.values(TipoDanoEnum)) {
       expect(ICONE_TIPO_DANO[tipo]).toMatch(/^dano-/);

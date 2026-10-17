@@ -1,3 +1,4 @@
+import { iconeTipoCena } from "../../../../shared/icone/icones-dominio";
 import { Component, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
@@ -81,6 +82,7 @@ import { EsquadraoCenaJogador } from '../../componentes/esquadrao-cena-jogador/e
   providers: [FichaRolagemRegistroService, FichaEdicaoService, CenaDocumentoLeituraService],
 })
 export class PainelCenaSemIniciativaJogador {
+  protected readonly iconeTipoCena = iconeTipoCena;
   protected readonly leitura = inject(CenaDocumentoLeituraService);
   protected readonly dados = inject(EncontroPainelDadosService);
   protected readonly janelaHistorico = inject(HistoricoRolagensJanelaService);

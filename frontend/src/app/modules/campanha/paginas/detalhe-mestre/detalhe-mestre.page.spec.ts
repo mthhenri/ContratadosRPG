@@ -1,3 +1,4 @@
+import { CenaService } from "../../../cena/cena.service";
 import { ApplicationRef } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
@@ -241,6 +242,8 @@ describe('CampanhaDetalheMestre', () => {
     const estadoAlterado$ = new Subject<{ id: number; naBase: boolean }>();
     const reconexao$ = new Subject<void>();
     const tempoRealService = {
+      campanhaIngressada$: new Subject<number>().asObservable(),
+      cenaAlterada$: new Subject().asObservable(),
       conectar: vi.fn(),
       entrarSalaCampanha: vi.fn(),
       sairSalaCampanha: vi.fn(),
@@ -273,6 +276,7 @@ describe('CampanhaDetalheMestre', () => {
         provideRouter([]),
         CampanhaDetalheDadosService,
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => String(CAMPANHA_ID) } } } },
+        { provide: CenaService, useValue: { listarPorCampanha: vi.fn(() => of([])) } },
         { provide: CampanhaService, useValue: campanhaService },
         { provide: FichaService, useValue: fichaService },
         { provide: RolagemService, useValue: rolagemService },
@@ -754,23 +758,23 @@ describe('CampanhaDetalheMestre', () => {
     it('abre a prévia completa depois do hover sustentado no avatar do Esquadrão e fecha ao sair', () => {
       vi.useFakeTimers();
       try {
-        const { raiz, fixture } = montar();
+        const { fixture } = montar();
         const cartao = fixture.debugElement.query(By.directive(EspectadorFichaCard));
         const avatar = cartao.nativeElement.querySelector('.espectador-ficha__avatar') as HTMLElement;
 
-        avatar.dispatchEvent(new MouseEvent('mouseenter'));
+        avatar.dispatchEvent(Object.assign(new Event('pointerenter'), { pointerType: 'mouse' }));
         vi.advanceTimersByTime(599);
         fixture.detectChanges();
-        expect(raiz.querySelector('.detalhe-mestre__avatar-preview')).toBeNull();
+        expect(document.body.querySelector('div[aria-hidden="true"] > img')).toBeNull();
 
         vi.advanceTimersByTime(1);
         fixture.detectChanges();
-        const preview = raiz.querySelector('.detalhe-mestre__avatar-preview img') as HTMLImageElement;
+        const preview = document.body.querySelector('div[aria-hidden="true"] > img') as HTMLImageElement;
         expect(preview.src).toContain('/uploads/agentes/dev/vera.png');
 
-        avatar.dispatchEvent(new MouseEvent('mouseleave'));
+        avatar.dispatchEvent(new Event('pointerleave'));
         fixture.detectChanges();
-        expect(raiz.querySelector('.detalhe-mestre__avatar-preview')).toBeNull();
+        expect(document.body.querySelector('div[aria-hidden="true"] > img')).toBeNull();
       } finally {
         vi.useRealTimers();
       }

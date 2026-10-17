@@ -72,8 +72,8 @@
     <!-- A Investigação da prévia usa a projeção do jogador-alvo. -->
     <a
         app-coluna-acoes-item
-        icone="combate"
-        appTooltip="Investigação na prévia"
+        [icone]="iconeTipoCena(dados.cenaAtiva()?.tipo)"
+        [appTooltip]="rotuloNavegacaoCena(dados.cenaAtiva()?.tipo)"
         [routerLink]="['/campanhas', campanhaAtual.id, 'previa', dados.previa()?.usuarioAlvoId, 'investigacao']"
     >
         Cenas
@@ -89,8 +89,8 @@
     } @else {
     <a
         app-coluna-acoes-item
-        icone="combate"
-        appTooltip="Cenas"
+        [icone]="iconeTipoCena(dados.cenaAtiva()?.tipo)"
+        [appTooltip]="rotuloNavegacaoCena(dados.cenaAtiva()?.tipo)"
         [routerLink]="['/campanhas', campanhaAtual.id, 'cenas']"
     >
         Cenas
@@ -295,8 +295,9 @@
                             role="menuitem"
                             [routerLink]="['/campanhas', campanhaAtual.id, 'previa', dados.previa()?.usuarioAlvoId, 'investigacao']"
                             (click)="fecharMenu()"
+                            [appTooltip]="rotuloNavegacaoCena(dados.cenaAtiva()?.tipo)"
                         >
-                            <app-icone nome="combate" />
+                            <app-icone [nome]="iconeTipoCena(dados.cenaAtiva()?.tipo)" />
                             <span>Cenas</span>
                         </a>
                         <button
@@ -316,8 +317,9 @@
                             role="menuitem"
                             [routerLink]="['/campanhas', campanhaAtual.id, 'cenas']"
                             (click)="fecharMenu()"
+                            [appTooltip]="rotuloNavegacaoCena(dados.cenaAtiva()?.tipo)"
                         >
-                            <app-icone nome="combate" />
+                            <app-icone [nome]="iconeTipoCena(dados.cenaAtiva()?.tipo)" />
                             <span>Cenas</span>
                         </a>
                         <button
@@ -748,8 +750,7 @@
                                             class="detalhe__equipe-ficha-avatar"
                                             aria-hidden="true"
                                             [style.--cor-ficha]="ficha.cor"
-                                            (mouseenter)="agendarPreviewAvatar($event, ficha.imagemUrl)"
-                                            (mouseleave)="cancelarPreviewAvatar()"
+                                            [appPreviewAvatar]="ficha.imagemUrl"
                                         >
                                             @if (ficha.imagemUrl; as urlImagem) {
                                             <img
@@ -795,8 +796,7 @@
                                             class="detalhe__equipe-ficha-avatar"
                                             aria-hidden="true"
                                             [style.--cor-ficha]="ficha.cor"
-                                            (mouseenter)="agendarPreviewAvatar($event, ficha.imagemUrl)"
-                                            (mouseleave)="cancelarPreviewAvatar()"
+                                            [appPreviewAvatar]="ficha.imagemUrl"
                                         >
                                             @if (ficha.imagemUrl; as urlImagem) {
                                             <img
@@ -922,23 +922,6 @@
         Cancelar
     </button>
 </app-modal>
-}
-
-<!--
-  Preview ampliado do avatar de um colega na Equipe — portal na raiz do template: a lista
-  `.detalhe__equipe-lista` tem `overflow-y: auto` + `mask-image` (`appOverflowFade`), que recorta
-  um `position: fixed` filho na pintura mesmo sendo `fixed` (mesma armadilha documentada no
-  Esquadrão do mestre).
--->
-@if (previewAvatar(); as preview) {
-<div
-    class="detalhe__avatar-preview"
-    [style.top.px]="preview.top"
-    [style.left.px]="preview.left"
-    aria-hidden="true"
->
-    <img class="detalhe__avatar-preview-imagem" [src]="preview.url" alt="" />
-</div>
 } @if (dialogAcessoFicha()) {
 <app-modal [aberto]="true" titulo="Acesso de visualização" (fechou)="fecharAcessoFicha()">
     <span modalIcone class="dialogo__icone"><app-icone nome="olho" /></span>

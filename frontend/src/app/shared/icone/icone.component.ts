@@ -57,6 +57,9 @@ import { Component, computed, input } from "@angular/core";
  * `fragmento-construtor`/`fragmento-potencializador` trocaram de desenho (Prisma e Cristal radiante).
  * Marcas preenchidas (m10-04): `scp`/`criatura` são o logo oficial, `contratados` é a marca
  * SCP + D20. Geometria e crédito aprovados em `docs/design/MARCAS.md`.
+ * Cenas (UI-41): `cena-*` identifica cada tipo e `cenas` é o genérico (claquete).
+ * Desenhos originais Codex (OpenAI), aprovados pelo autor na prancha da UI-41;
+ * Furtiva segue o pedido expresso de homem encapuzado. O glifo `combate` é preservado.
  */
 export type IconeNome =
   | 'agente'
@@ -104,6 +107,12 @@ export type IconeNome =
   | 'tema'
   | 'visao-geral'
   | 'combate'
+  | 'cena-investigacao'
+  | 'cena-combate'
+  | 'cena-furtiva'
+  | 'cena-perseguicao'
+  | 'cena-resistencia'
+  | 'cenas'
   | 'inventario'
   | 'habilidades'
   | 'sanidade'
