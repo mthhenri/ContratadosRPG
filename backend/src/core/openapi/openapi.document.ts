@@ -26,7 +26,6 @@ const DESCRICOES_TAG: Readonly<Record<string, string>> = {
     "Caderno": "Páginas privadas, caderno do esquadrão e busca de campanha.",
     "Encontros": "Encontros de combate, combatentes, turnos, recursos e condições.",
     "Cenas": "Cenas da campanha: criação tipada, preparo, abertura, encerramento e ordem.",
-    "Transcrições": "Metadados de gravações privados do Mestre da campanha, sem upload de WAV.",
     "Documentos": "Biblioteca de documentos da campanha: texto e imagem, ordem e revelação à mesa.",
     "Patchnotes": "Notas de versão públicas do sistema, lidas do armazenamento (sem login).",
 };

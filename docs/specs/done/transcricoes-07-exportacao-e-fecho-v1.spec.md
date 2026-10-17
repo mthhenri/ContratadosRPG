@@ -1,5 +1,10 @@
 # transcricoes-07-exportacao-e-fecho-v1.spec.md
 
+> **ABANDONADA em 2026-10-17 por decisão expressa do autor.** Integração desativada;
+> arquivamento não significa entrega concluída. O fluxo Python pessoal permanece local.
+> Este aviso substitui os estados e autorizações anteriores preservados abaixo.
+> Ver [desativação](transcricoes-desativacao.spec.md).
+
 > **Task 07/09** do guarda-chuva `transcricoes.spec.md`. Exportação e gate integrado da V1 local.
 
 > **Estado: backlog; preparação documental. Implementação depende de aprovação expressa do autor.**

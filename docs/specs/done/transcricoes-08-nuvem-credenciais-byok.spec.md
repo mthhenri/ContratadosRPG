@@ -1,5 +1,10 @@
 # transcricoes-08-nuvem-credenciais-byok.spec.md
 
+> **ABANDONADA em 2026-10-17 por decisão expressa do autor.** Integração desativada;
+> arquivamento não significa entrega concluída. O fluxo Python pessoal permanece local.
+> Este aviso substitui os estados e autorizações anteriores preservados abaixo.
+> Ver [desativação](transcricoes-desativacao.spec.md).
+
 > **Task 08/09** do guarda-chuva `transcricoes.spec.md`. **Etapa posterior à V1 local; não implementar no primeiro ciclo sem nova autorização.**
 
 > **Estado: backlog BLOQUEADO; nuvem exige nova autorização mesmo após a V1 local.**

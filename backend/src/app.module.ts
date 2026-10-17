@@ -19,7 +19,6 @@ import { RolagemModule } from './modules/rolagem/rolagem.module';
 import { PaginaCadernoModule } from './modules/pagina-caderno/pagina-caderno.module';
 import { DocumentoModule } from './modules/documento/documento.module';
 import { PatchnoteModule } from './modules/patchnote/patchnote.module';
-import { TranscricaoModule } from "./modules/transcricao/transcricao.module";
 import { LivroModule } from './modules/livro/livro.module';
 
 /**
@@ -48,7 +47,6 @@ import { LivroModule } from './modules/livro/livro.module';
     DocumentoModule,
     PatchnoteModule,
     LivroModule,
-    TranscricaoModule,
     GatewayModule,
   ],
   controllers: [HealthController],

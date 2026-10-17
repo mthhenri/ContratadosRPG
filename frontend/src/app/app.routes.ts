@@ -9,22 +9,6 @@ import { redirecionarEncontroParaCena } from './modules/cena/redirecionar-encont
 
 export const routes: Routes = [
   {
-    path: 'transcricoes/vinculo/:identificador', canActivate: [autenticacaoGuard],
-    loadComponent: () => import('./modules/transcricao/transcricao.page').then(m => m.Transcricoes),
-  },
-  {
-    path: 'transcricoes/dispositivos', canActivate: [autenticacaoGuard],
-    loadComponent: () => import('./modules/transcricao/transcricao.page').then(m => m.Transcricoes),
-  },
-  {
-    path: 'campanhas/:campanhaId/transcricoes', canActivate: [autenticacaoGuard, mestreCampanhaGuard],
-    loadComponent: () => import('./modules/transcricao/transcricao.page').then(m => m.Transcricoes),
-  },
-  {
-    path: 'campanhas/:campanhaId/transcricoes/glossario', canActivate: [autenticacaoGuard, mestreCampanhaGuard],
-    loadComponent: () => import('./modules/transcricao/glossario.page').then(m => m.GlossarioTranscricao),
-  },
-  {
     path: "regras",
     loadChildren: () => import("./modules/regras/regras.routes")
       .then((modulo) => modulo.regrasRoutes),

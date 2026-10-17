@@ -1,9 +1,9 @@
 # transcricoes-03-agente-windows-e-vinculo.spec.md
 
-> **Task 03/09** do guarda-chuva `../backlog/transcricoes.spec.md`. Instalador e vínculo seguro do aplicativo auxiliar.
+> **Task 03/09** do guarda-chuva `../done/transcricoes.spec.md`. Instalador e vínculo seguro do aplicativo auxiliar.
 
 > **Estado: done (2026-10-15), com pendências conscientes aceitas pelo autor — ver `transcricoes-03-agente-windows-e-vinculo/verificacao.md` ("Fecho").** Implementação autorizada em 2026-10-14.
-> Decisões pendentes, matriz de acesso e gates: [revisão](../backlog/transcricoes/revisao.md). Anexos próprios: `transcricoes-03-agente-windows-e-vinculo/` no mesmo estado; evidência bruta em `.artifacts/transcricoes-03-agente-windows-e-vinculo/`.
+> Decisões pendentes, matriz de acesso e gates: [revisão](../done/transcricoes/revisao.md). Anexos próprios: `transcricoes-03-agente-windows-e-vinculo/` no mesmo estado; evidência bruta em `.artifacts/transcricoes-03-agente-windows-e-vinculo/`.
 
 ## Objetivo
 
@@ -32,7 +32,7 @@ Disponibilizar um aplicativo Windows instalável que possa ser vinculado à cont
 - Testar replay/alteração da intenção, origem não permitida, duas contas no mesmo Windows e credencial de dispositivo revogada; antigo Mestre não resolve contexto após transferência de papel.
 - Verificar app ausente, app ocupado/não responsivo, protocolo não registrado e recusa do navegador. UI mantém instalação/abertura manual disponível; não depender somente de temporizador de foco.
 - Instalar/desinstalar sem Python manual em Windows x64 limpo; registrar versões, artefato, assinatura ou ausência e limitações. Proteger downloads/atualização de binários/modelos contra execução de origem adulterada. Distribuição/publicação só mediante autorização própria; nenhum deploy nesta revisão.
-- Aplicar os [gates comuns](../backlog/transcricoes/revisao.md#gates-de-implementação) ao recorte desta task e registrar comandos, resultados e limites no anexo proprietário. Resultados e gates ainda abertos estão no anexo `verificacao.md`.
+- Aplicar os [gates comuns](../done/transcricoes/revisao.md#gates-de-implementação) ao recorte desta task e registrar comandos, resultados e limites no anexo proprietário. Resultados e gates ainda abertos estão no anexo `verificacao.md`.
 
 ## Fora de Escopo
 

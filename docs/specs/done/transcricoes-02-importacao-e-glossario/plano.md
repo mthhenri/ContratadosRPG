@@ -3,7 +3,7 @@
 Proposta de 2026-10-15, **aprovada pelo autor no mesmo dia** (decisões da §1 em [design.md](design.md); a spec foi para `active/`).
 O andamento fica no Ledger ao fim deste arquivo.
 Base: `master` com a 03 em `done/`. Spec: [transcricoes-02](../transcricoes-02-importacao-e-glossario.spec.md);
-gates comuns: [revisao.md](../../backlog/transcricoes/revisao.md#gates-de-implementação).
+gates comuns: [revisao.md](../../done/transcricoes/revisao.md#gates-de-implementação).
 
 ## O que já existe (entregue pela 01 e pela 03)
 

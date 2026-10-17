@@ -1,5 +1,10 @@
 # transcricoes.spec.md
 
+> **ABANDONADA em 2026-10-17 por decisão expressa do autor.** Integração desativada;
+> arquivamento não significa entrega concluída. O fluxo Python pessoal permanece local.
+> Este aviso substitui os estados e autorizações anteriores preservados abaixo.
+> Ver [desativação](transcricoes-desativacao.spec.md).
+
 > **Guarda-chuva — Contratados Transcriber.** Decisões do autor consolidadas em 2026-10-14. **Não implementar diretamente:** dividir pelas tasks `transcricoes-01` a `transcricoes-09` abaixo, cada uma com spec própria. A numeração identifica a sequência do módulo, não uma prioridade concorrente aos milestones existentes.
 
 > **Estado: proposta em backlog.** Aprovar documentação não autoriza implementação. Tasks 01–07 formam a primeira entrega local; 08–09 ficam bloqueadas até nova autorização.

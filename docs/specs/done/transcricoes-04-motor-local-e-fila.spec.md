@@ -1,5 +1,10 @@
 # transcricoes-04-motor-local-e-fila.spec.md
 
+> **ABANDONADA em 2026-10-17 por decisão expressa do autor.** Integração desativada;
+> arquivamento não significa entrega concluída. O fluxo Python pessoal permanece local.
+> Este aviso substitui os estados e autorizações anteriores preservados abaixo.
+> Ver [desativação](transcricoes-desativacao.spec.md).
+
 > **Task 04/09** do guarda-chuva `transcricoes.spec.md`. Inferência local e processamento resiliente.
 
 > **Estado: backlog; preparação documental. Implementação depende de aprovação expressa do autor.**
@@ -42,7 +47,7 @@ Transcrever WAVs individuais no computador do Mestre com Faster-Whisper, oferece
 
 ## Dependências
 
-- `../active/transcricoes-02-importacao-e-glossario.spec.md`; `../done/transcricoes-03-agente-windows-e-vinculo.spec.md`; Faster-Whisper e runtime do aplicativo validados em hardware alvo.
+- `../done/transcricoes-02-importacao-e-glossario.spec.md`; `../done/transcricoes-03-agente-windows-e-vinculo.spec.md`; Faster-Whisper e runtime do aplicativo validados em hardware alvo.
 
 ## Riscos e Mitigação
 

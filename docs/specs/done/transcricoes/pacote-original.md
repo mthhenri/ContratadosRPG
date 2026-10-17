@@ -4,8 +4,8 @@ Preparado em 2026-10-14 a partir das decisões do autor e das convenções do re
 
 ## Conteúdo
 
-- `docs/specs/backlog/transcricoes.spec.md`: guarda-chuva, escopo aprovado e sequenciamento.
-- `docs/specs/backlog/transcricoes-01-...` até `transcricoes-09-...`: nove specs executáveis; **01–07** constituem a V1 local, **08–09** são nuvem posterior.
+- `docs/specs/done/transcricoes.spec.md`: guarda-chuva, escopo aprovado e sequenciamento.
+- `docs/specs/done/transcricoes-01-...` até `transcricoes-09-...`: nove specs executáveis; **01–07** constituem a V1 local, **08–09** são nuvem posterior.
 - `DECISOES-E-PENDENCIAS.md`: decisões aprovadas x opções técnicas a investigar.
 - `pedidos/01-work-revisar-e-propor-pr.md`: pedido para o Work conferir repo e propor PR **somente documental**.
 - `pedidos/02-work-implementar-v1-apos-aprovacao.md`: pedido separado para implementar depois da aprovação, sem cloud.

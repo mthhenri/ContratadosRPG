@@ -1,5 +1,10 @@
 # transcricoes-05-sincronizacao-offline.spec.md
 
+> **ABANDONADA em 2026-10-17 por decisão expressa do autor.** Integração desativada;
+> arquivamento não significa entrega concluída. O fluxo Python pessoal permanece local.
+> Este aviso substitui os estados e autorizações anteriores preservados abaixo.
+> Ver [desativação](transcricoes-desativacao.spec.md).
+
 > **Task 05/09** do guarda-chuva `transcricoes.spec.md`. Entrega de resultados, offline e segurança de edição.
 
 > **Estado: backlog; preparação documental. Implementação depende de aprovação expressa do autor.**

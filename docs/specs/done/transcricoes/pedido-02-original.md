@@ -2,7 +2,7 @@
 
 **PRÉ-CONDIÇÃO:** o autor aprovou as specs revisadas do módulo Contratados Transcriber e autorizou expressamente a implementação. Se essa condição não estiver atendida, **não implemente**; retorne ao pedido de validação.
 
-Trabalhe no repositório https://github.com/mthhenri/ContratadosRPG e implemente **somente a V1 local** do Contratados Transcriber, conforme specs aprovadas em `docs/specs/backlog/transcricoes.spec.md` e tasks **01–07**, obedecendo às dependências.
+Trabalhe no repositório https://github.com/mthhenri/ContratadosRPG e implemente **somente a V1 local** do Contratados Transcriber, conforme specs aprovadas em `docs/specs/done/transcricoes.spec.md` e tasks **01–07**, obedecendo às dependências.
 
 1. Leia integralmente `AGENTS.md`/`CLAUDE.md`, `docs/SYSTEM.SPEC.md`, `docs/CONVENTIONS.md`, `docs/SCHEMA.md`, `docs/design/DESIGN.md`, `.agents/skills/task-flow/SKILL.md`, `docs/specs/TEMPLATE.spec.md`, specs aprovadas e código relevante. Detecte alterações desde a revisão anterior e reporte conflitos antes de modificar.
 2. Para cada task, mova-a de `backlog` para `active`, planeje somente no anexo proprietário `docs/specs/active/<tarefa>/`, implemente o escopo exato e verifique com testes específicos. Não execute uma spec guarda-chuva diretamente. Não misture código das tasks 08–09, que são etapa nuvem futura.

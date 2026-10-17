@@ -28,7 +28,7 @@ Nenhum código, migration, credencial, workflow ou configuração de deploy alte
 
 ## Validação
 
-Resultados auditáveis e limites: `docs/specs/backlog/transcricoes/verificacao.md`.
+Resultados auditáveis e limites: `docs/specs/done/transcricoes/verificacao.md`.
 repo:test 14/14 e repo:verificar (árvore/índice) aprovados na preparação local.
 Verificar integridade dos quatro auxiliares originais, requisitos das dez specs,
 links e grafo sem ciclo. Gates funcionais/visuais/Windows são futuros e não foram

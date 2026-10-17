@@ -513,6 +513,11 @@ completo na migration `0036 - Tabelas do livro e das pecas de regra.sql`; o cont
 
 ## Transcrições de gravação — task 01
 
+> **Integração abandonada em 2026-10-17.** Tabelas e migrations preservadas para
+> manter dados e compatibilidade do histórico; nenhum endpoint de transcrição é
+> registrado na aplicação. Os contratos abaixo descrevem a estrutura persistida,
+> não uma funcionalidade disponível. Ver `transcricoes-desativacao`.
+
 Migration `0037 - Tabelas de transcricao.sql`; contrato readonly em
 `shared/src/dtos/transcricao/`. Domínio independente de cena/login/Biblioteca,
 privado do Mestre atual da campanha. Não armazena WAV ou credenciais.

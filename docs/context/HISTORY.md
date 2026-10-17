@@ -1,5 +1,32 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-17 — transcricoes-desativacao: integração abandonada por decisão do autor
+
+O fluxo Python pessoal já atende ao autor, que decidiu encerrar o investimento na
+transcrição integrada. O módulo NestJS foi desconectado, retirando todos os endpoints,
+inclusive vínculo/dispositivos/aplicativo; quatro rotas Angular, atalho da campanha,
+proxy exclusivo e categoria Swagger também saíram. Código inativo, contratos,
+migrations e dados foram preservados; nenhum Python foi alterado. O README do
+aplicativo avisa que a integração não está disponível.
+
+Guarda-chuva e tasks 02/04–09 saíram de active/backlog para done com estado explícito
+ABANDONADA, sem afirmar entrega. Anexos acompanharam as specs e os links foram corrigidos;
+01/03 preservam o histórico, com apenas realocação mecânica de ponteiros. SYSTEM.SPEC,
+SCHEMA, CONTEXT e MEMORY refletem a decisão, sem retomada planejada.
+
+Builds backend/frontend, lint dos três workspaces e organização/espelhos passaram.
+Shared: 1.335 testes; backend: 1.220 passaram e 99 condicionais ignorados;
+frontend: 3.493 mais 89 do normalizador passaram. Restrições iniciais de leitura do
+compilador no sandbox foram contornadas com acesso concedido; o frontend conserva
+aviso de orçamento inicial e o lint conserva avisos antigos, sem erros.
+
+Verificação real com PostgreSQL/NestJS/Angular: 36 operações antigas chamadas sem e
+com JWT resultaram em 72 respostas 404; OpenAPI sem endpoints de transcrição. Inspeção
+pessoal da campanha em 1920×1080 e 360×800 confirmou ausência do atalho, coluna e modal
+Membros canônicos, sem overflow. Análogo: o próprio Detalhe do Mestre. Nenhum deploy.
+[Spec](../specs/done/transcricoes-desativacao.spec.md) e
+[relatório](../specs/done/transcricoes-desativacao/verificacao.md).
+
 ## 2026-10-15 — Transcriber 03 concluída (com pendências conscientes)
 
 A 03 saiu de `active/` para `done/` por decisão expressa do autor, depois de quatro rodadas Windows: build e instalação por usuário, vínculo,
@@ -178,12 +205,12 @@ D-01…D-08 são recomendações pendentes, não decisões de produto assumidas.
 Validação documental: repo:test 14/14 e repo:verificar aprovados após contornar restrição
 ambiental de subprocesso git EPERM, sem mudar scripts. Conferência local: dez specs com
 seções/numeração, 20 decisões integrais, quatro auxiliares byte a byte, links e grafo sem ciclo.
-Gate do índice/whitespace e limites registrados na [verificação](../specs/backlog/transcricoes/verificacao.md).
+Gate do índice/whitespace e limites registrados na [verificação](../specs/done/transcricoes/verificacao.md).
 Sem testes funcionais, migrations, UI real, hardware Windows ou deploy; produto permanece aberto.
 O autor confirmou “Não sei; prepare branch local e patch” quanto a previews automáticos:
 branch/commit locais e patch, sem push/PR remoto/merge. Texto de PR pronto para futura autorização.
-[Revisão e mapa](../specs/backlog/transcricoes/revisao.md) ·
-[guarda-chuva](../specs/backlog/transcricoes.spec.md).
+[Revisão e mapa](../specs/done/transcricoes/revisao.md) ·
+[guarda-chuva](../specs/done/transcricoes.spec.md).
 
 ## 2026-10-14 — oito specs de backlog a partir de uma rodada de pedidos do autor
 

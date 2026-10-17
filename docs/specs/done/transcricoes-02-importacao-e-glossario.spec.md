@@ -1,9 +1,14 @@
 # transcricoes-02-importacao-e-glossario.spec.md
 
+> **ABANDONADA em 2026-10-17 por decisão expressa do autor.** Integração desativada;
+> arquivamento não significa entrega concluída. O fluxo Python pessoal permanece local.
+> Este aviso substitui os estados e autorizações anteriores preservados abaixo.
+> Ver [desativação](transcricoes-desativacao.spec.md).
+
 > **Task 02/09** do guarda-chuva `transcricoes.spec.md`. Preparação das faixas e vocabulário por campanha.
 
 > **Estado: active; implementação autorizada pelo autor em 2026-10-15** (decisões D-06/D-09/D-10/D-05+ aprovadas: [design](transcricoes-02-importacao-e-glossario/design.md); plano de tarefas 02.0–02.8: [plano](transcricoes-02-importacao-e-glossario/plano.md)).
-> Decisões pendentes, matriz de acesso e gates: [revisão](../backlog/transcricoes/revisao.md). Anexos próprios: `transcricoes-02-importacao-e-glossario/` no mesmo estado; evidência bruta em `.artifacts/transcricoes-02-importacao-e-glossario/`.
+> Decisões pendentes, matriz de acesso e gates: [revisão](../done/transcricoes/revisao.md). Anexos próprios: `transcricoes-02-importacao-e-glossario/` no mesmo estado; evidência bruta em `.artifacts/transcricoes-02-importacao-e-glossario/`.
 
 ## Objetivo
 
@@ -32,7 +37,7 @@ Permitir que o Mestre organize a importação multifaixa do Craig, confirme iden
 - Testar WAV truncado/cabeçalho incompatível, extensão falsa, faixa sem fala e arquivo renomeado/alterado. Erro isolado informa a faixa e não inicia reconhecimento sem associação confirmada.
 - Identidades/termos com acentos e caixa diferente não se fundem silenciosamente; regras de duplicidade são as aprovadas em D-06. Conferir não vazamento de glossário/metadados para campanhas alheias.
 - Usar fixtures sintéticas para provar cálculo temporal, sem afirmar semântica Craig real quando não houver amostra autorizada. Cobrir UI de sugestão, confirmação, erro, offset e glossário nos quatro viewports web quando aplicável; app em Windows real.
-- Aplicar os [gates comuns](../backlog/transcricoes/revisao.md#gates-de-implementação) ao recorte desta task e registrar comandos, resultados e limites no anexo proprietário. Critérios são futuros: esta revisão documental não os executou.
+- Aplicar os [gates comuns](../done/transcricoes/revisao.md#gates-de-implementação) ao recorte desta task e registrar comandos, resultados e limites no anexo proprietário. Critérios são futuros: esta revisão documental não os executou.
 
 ## Fora de Escopo
 

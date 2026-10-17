@@ -1,5 +1,12 @@
 # Contratados Transcriber — task 03
 
+> **Integração abandonada em 2026-10-17 por decisão do autor.** O fluxo Python
+> pessoal local já atende à necessidade. O site não oferece mais telas, endpoints,
+> vínculo nem abertura de sessões pelo aplicativo. Este diretório fica preservado
+> como código histórico inativo; os procedimentos abaixo documentam a implementação
+> anterior e não representam uma integração disponível ou uma entrega planejada.
+> Ver [desativação](../../docs/specs/done/transcricoes-desativacao.spec.md).
+
 Shell Windows x64 em Python 3.12/PySide6. Nenhum Whisper, upload, importação, fila ou
 credencial cloud. Usuário final abre pelo menu Iniciar; não precisa Python ou terminal.
 

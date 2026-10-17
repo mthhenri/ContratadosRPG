@@ -551,7 +551,6 @@ forma do documento (`@IsEnum`, `@IsInt`, ranges).
 | `autenticacao` | Registro, login e geração de JWT |
 | `usuario` | Perfil e troca de senha |
 | `campanha` | CRUD de campanhas, convite por código, membros e papéis |
-| `transcricao` | Metadados privados do Mestre (01 ativa) e vínculo restrito Windows (03 ativa); sem WAV/inferência/cloud |
 | `ficha` | CRUD de fichas (jogador/criatura/NPC), JSONB `dados`, concessões de visualização, validação via motor de regras, emissão de eventos WS |
 
 | Módulo (frontend) | Responsabilidade |
@@ -656,6 +655,10 @@ implementação. M2+ recebem design detalhado quando chegar a vez.
 
 ### Fora de escopo / decisões adiadas
 
+- **Transcrição integrada abandonada em 2026-10-17** — o fluxo Python pessoal local
+  já atende ao autor. Sem módulo registrado na API, rotas web ou atalho na campanha.
+  Código, contratos e migrations preservados como histórico inativo; tasks pendentes
+  arquivadas como abandonadas, sem compromisso de retomada. Ver `transcricoes-desativacao`.
 - **Troca de tema em runtime** — presets + color picker com trava de contraste são M1; a
   identidade visual em si já está **definida** em `docs/design/` (tema "Terminal de Contenção")
 - **Escrita via WebSocket** — v1 é broadcast-only

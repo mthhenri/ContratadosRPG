@@ -1,5 +1,10 @@
 # transcricoes-06-revisao-e-linha-do-tempo.spec.md
 
+> **ABANDONADA em 2026-10-17 por decisão expressa do autor.** Integração desativada;
+> arquivamento não significa entrega concluída. O fluxo Python pessoal permanece local.
+> Este aviso substitui os estados e autorizações anteriores preservados abaixo.
+> Ver [desativação](transcricoes-desativacao.spec.md).
+
 > **Task 06/09** do guarda-chuva `transcricoes.spec.md`. Leitura, edição manual e reprodução por timestamp.
 
 > **Estado: backlog; preparação documental. Implementação depende de aprovação expressa do autor.**
@@ -43,7 +48,7 @@ Fornecer ao Mestre um editor de transcrição com visualizações individual e c
 
 ## Dependências
 
-- `../done/transcricoes-01-sessoes-e-contratos.spec.md`, `../active/transcricoes-02-importacao-e-glossario.spec.md`, `transcricoes-05-sincronizacao-offline.spec.md`, `docs/design/DESIGN.md`.
+- `../done/transcricoes-01-sessoes-e-contratos.spec.md`, `../done/transcricoes-02-importacao-e-glossario.spec.md`, `transcricoes-05-sincronizacao-offline.spec.md`, `docs/design/DESIGN.md`.
 
 ## Riscos e Mitigação
 
