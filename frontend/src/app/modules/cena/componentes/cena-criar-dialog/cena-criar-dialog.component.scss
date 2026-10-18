@@ -16,8 +16,7 @@
         color: var(--text-dim);
     }
 
-    // O nome segue a receita de input do login; o tipo usa `campo__controle` do primitivo,
-    // inclusive o recuo canônico para o ícone.
+    // O nome segue a receita de input do login; o tipo usa o primitivo Seletor.
     &__entrada {
         width: 100%;
         padding: 10px 12px;

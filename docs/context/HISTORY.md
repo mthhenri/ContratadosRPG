@@ -1,5 +1,26 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-17 — UI-41: ícones também nas opções do seletor
+
+O autor apontou a ausência dos ícones na lista aberta e aprovou criar um primitivo
+reutilizável. Seletor foi criado com CVA, combobox/listbox, opções com ícone,
+estados disabled/touched, teclado e localização por letras. Popover nativo escapa
+do recorte do modal sem mover o foco; Escape fecha somente a lista. Nova cena é
+o único consumidor migrado, preservando os cinco tipos e o fluxo de criação.
+O asterisco obrigatório ganhou regra restrita ao novo controle, no tema e handoff.
+
+18 testes focados passaram; suíte completa com 3.512 testes em 280 arquivos e
+89 de regras de texto passou. Build aprovado com aviso conhecido de orçamento
+(598,59 kB para 450 kB); lint sem erros. Revisão independente Codex (modelo herdado)
+sem achados. Organização/espelhos e whitespace conferidos.
+
+Verify em 1920×1080, 360×800, 960×1080 e 1366×768: cinco SVGs, vazio/selecionado,
+foco, teclado, Escape, Tab, clique fora, toque e persistência via REST. O principal
+inspecionou pessoalmente a UI e corrigiu rotação da seta e altura da lista. Controle
+desabilitado durante envio real também observado. Dados temporários removidos por
+soft delete. [Relatório](../specs/done/ui-41-seletor-opcoes-com-icones/verificacao.md).
+A spec histórica UI-41 permanece intacta; correção em spec separada. Sem novo commit.
+
 ## 2026-10-17 — UI-41: ícones de cena aprovados e sincronizados
 
 Após os votos, aplicados Pista no dossiê, Lâminas cruzadas, Trajetória, Pilar e

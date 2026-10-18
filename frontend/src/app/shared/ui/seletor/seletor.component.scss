@@ -1,0 +1,82 @@
+// Análogos: Campo (controle) e MenuAcoes (lista). Popover no top layer do dialog nativo.
+:host {
+    display: block;
+    min-width: 0;
+}
+
+.seletor__controle {
+    display: flex;
+    align-items: center;
+    gap: var(--space-8);
+    width: 100%;
+    min-height: 44px;
+    padding: var(--space-8) var(--space-12);
+    background: var(--surface-2);
+    border-color: var(--border-strong);
+    color: var(--text);
+    font: 13px var(--font-sans);
+    text-transform: none;
+    letter-spacing: normal;
+    text-align: left;
+
+    &:focus-visible {
+        outline: 2px solid var(--accent-border);
+        outline-offset: 2px;
+    }
+    &[aria-expanded="true"] {
+        border-color: var(--accent);
+    }
+}
+
+.seletor__valor {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    &--vazio {
+        color: var(--text-mute);
+    }
+}
+
+.seletor__controle[aria-expanded="true"] .seletor__seta {
+    transform: rotate(180deg);
+}
+
+.seletor__lista {
+    position: fixed;
+    inset: auto;
+    margin: 0;
+    box-sizing: border-box;
+    padding: var(--space-4);
+    overflow-y: auto;
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-card);
+}
+
+.seletor__opcao {
+    display: flex;
+    align-items: center;
+    gap: var(--space-8);
+    min-height: 44px;
+    padding: var(--space-8);
+    border: 1px solid transparent;
+    border-radius: var(--radius-control);
+    font: 13px var(--font-sans);
+    cursor: pointer;
+    overflow-wrap: anywhere;
+    &--ativa,
+    &:not(&--desabilitada):hover {
+        background: var(--surface-2);
+        border-color: var(--accent-border);
+    }
+    &[aria-selected="true"] {
+        color: var(--accent);
+    }
+    &--desabilitada {
+        opacity: 0.55;
+        cursor: default;
+    }
+}

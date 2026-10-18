@@ -57,11 +57,10 @@ describe('CenaCriarDialog', () => {
     campo.value = nome;
     campo.dispatchEvent(new Event('input'));
     if (tipo !== null) {
-      const seletor = contexto.raiz.querySelector<HTMLSelectElement>('select')!;
-      seletor.selectedIndex = Array.from(seletor.options).findIndex(
-        (opcao) => opcao.textContent?.trim() === rotulos[tipo],
-      );
-      seletor.dispatchEvent(new Event('change'));
+      contexto.raiz.querySelector<HTMLButtonElement>('[role="combobox"]')!.click();
+      contexto.fixture.detectChanges();
+      Array.from(contexto.raiz.querySelectorAll<HTMLElement>('[role="option"]'))
+        .find(opcao => texto(opcao) === rotulos[tipo])!.click();
     }
     contexto.fixture.detectChanges();
   }
@@ -84,16 +83,13 @@ describe('CenaCriarDialog', () => {
     const { raiz } = montar();
 
     expect(texto(raiz.querySelector('app-modal .modal__titulo'))).toBe('Nova cena');
-    const opcoes = Array.from(raiz.querySelectorAll('select option')).map((opcao) => texto(opcao));
-    expect(opcoes).toEqual([
-      'Escolha o tipo…',
-      'Investigação',
-      'Combate',
-      'Furtiva',
-      'Perseguição',
-      'Resistência',
-    ]);
-    expect(raiz.querySelector<HTMLSelectElement>('select')!.selectedIndex).toBe(0);
+    expect(texto(raiz.querySelector('[role="combobox"]'))).toBe('Escolha o tipo…');
+    raiz.querySelector<HTMLButtonElement>('[role="combobox"]')!.click();
+    TestBed.tick();
+    const opcoes = Array.from(raiz.querySelectorAll('[role="option"]'));
+    expect(opcoes.map(opcao => texto(opcao))).toEqual(Object.values(rotulos));
+    expect(opcoes.every(opcao => opcao.querySelector('app-icone svg'))).toBe(true);
+    expect(opcoes.every(opcao => opcao.getAttribute('aria-selected') === 'false')).toBe(true);
   });
 
   it('exige nome e tipo — só o nome não libera nenhuma das duas ações', () => {

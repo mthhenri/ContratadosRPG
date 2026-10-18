@@ -1,0 +1,63 @@
+<button
+    #gatilho
+    app-botao
+    variante="secundario"
+    estilo="contorno"
+    tamanho="medio"
+    class="seletor__controle"
+    type="button"
+    role="combobox"
+    aria-haspopup="listbox"
+    [disabled]="indisponivel()"
+    [attr.aria-label]="rotulo()"
+    [attr.aria-required]="obrigatorio()"
+    [attr.aria-expanded]="aberto()"
+    [attr.aria-controls]="aberto() ? listaId : null"
+    [attr.aria-activedescendant]="aberto() ? idOpcao(indiceAtivo()) : null"
+    (click)="alternar()"
+    (keydown)="aoTeclar($event)"
+    (blur)="aoSairDoFoco()"
+>
+    @if (selecionada()?.icone; as icone) {
+        <app-icone [nome]="icone" />
+    }
+    <span class="seletor__valor" [class.seletor__valor--vazio]="!selecionada()">
+        {{ selecionada()?.rotulo ?? placeholder() }}
+    </span>
+    <app-icone class="seletor__seta" nome="chevron" />
+</button>
+@if (aberto()) {
+    <div
+        #lista
+        popover="manual"
+        class="seletor__lista"
+        role="listbox"
+        [id]="listaId"
+        [attr.aria-label]="rotulo()"
+        [style.left.px]="posicao().esquerda"
+        [style.top.px]="posicao().topo"
+        [style.width.px]="posicao().largura"
+        [style.max-height.px]="posicao().altura"
+    >
+        @for (opcao of opcoes(); track opcao.valor; let indice = $index) {
+            <div
+                class="seletor__opcao"
+                role="option"
+                tabindex="-1"
+                [id]="idOpcao(indice)"
+                [attr.aria-selected]="opcao.valor === valor()"
+                [attr.aria-disabled]="!!opcao.desabilitada"
+                [class.seletor__opcao--ativa]="indice === indiceAtivo()"
+                [class.seletor__opcao--desabilitada]="opcao.desabilitada"
+                (pointerdown)="$event.preventDefault()"
+                (click)="escolher(indice, $event)"
+                (keydown.enter)="escolher(indice, $event)"
+            >
+                @if (opcao.icone; as icone) {
+                    <app-icone [nome]="icone" />
+                }
+                <span>{{ opcao.rotulo }}</span>
+            </div>
+        }
+    </div>
+}

@@ -108,7 +108,8 @@ button:focus-visible {
 // 2) <label for="id">Rótulo</label><input id="id" required /> — controle é irmão adjacente.
 label:has(> input:required),
 label:has(> select:required),
-label:has(> textarea:required) {
+label:has(> textarea:required),
+label:has(> app-seletor[data-obrigatorio="true"]) {
   > span:first-child::after,
   > small:first-child::after {
     content: ' *';

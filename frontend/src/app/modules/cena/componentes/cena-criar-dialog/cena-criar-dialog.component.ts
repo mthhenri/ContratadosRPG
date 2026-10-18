@@ -1,4 +1,3 @@
-import { toSignal } from "@angular/core/rxjs-interop";
 import { iconeTipoCena } from "../../../../shared/icone/icones-dominio";
 import { Component, inject, input, output, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -11,13 +10,14 @@ import { AutoFocus } from '../../../../shared/auto-focus/auto-focus.directive';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { Campo } from '../../../../shared/ui/campo/campo.component';
 import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
+import { Seletor, type SeletorOpcao } from "../../../../shared/ui/seletor/seletor.component";
 import { Modal } from '../../../../shared/ui/modal/modal.component';
 import { CenaService } from '../../cena.service';
 import { TIPOS_DE_CENA, rotuloTipoCena } from '../../rotulos-cena';
 
 /**
  * Dialog "Nova cena" (m7-23) — sucessor do "Novo combate" (`ui-38`): o mesmo `app-modal` e o mesmo
- * campo de nome, mais o `<select>` do tipo, que é **obrigatório** (a cena nasce tipada). Duas saídas:
+ * campo de nome, mais o seletor do tipo, que é **obrigatório** (a cena nasce tipada). Duas saídas:
  * "Planejar" (a cena nasce `PLANEJADA`, invisível aos jogadores) e "Abrir agora" (nasce `ATIVA`).
  *
  * Havendo cena ativa, "Abrir agora" encerra a atual no backend (m7-22) — por isso pede confirmação
@@ -26,7 +26,7 @@ import { TIPOS_DE_CENA, rotuloTipoCena } from '../../rotulos-cena';
  */
 @Component({
   selector: 'app-cena-criar-dialog',
-  imports: [ReactiveFormsModule, AutoFocus, Botao, Campo, Modal],
+  imports: [ReactiveFormsModule, AutoFocus, Botao, Campo, Modal, Seletor],
   templateUrl: './cena-criar-dialog.component.html',
   styleUrl: './cena-criar-dialog.component.scss',
 })
@@ -43,9 +43,9 @@ export class CenaCriarDialog {
   readonly criada = output<CenaCriadaDto>();
   readonly fechou = output<void>();
 
-  protected readonly iconeTipoCena = iconeTipoCena;
-  protected readonly tipos = TIPOS_DE_CENA;
-  protected readonly rotuloTipoCena = rotuloTipoCena;
+  protected readonly opcoesTipo: readonly SeletorOpcao[] = TIPOS_DE_CENA.map(tipo => ({
+    valor: tipo, rotulo: rotuloTipoCena(tipo), icone: iconeTipoCena(tipo),
+  }));
 
   /** Uma criação em voo — trava os dois botões para não criar duas cenas. */
   protected readonly enviando = signal(false);
@@ -57,8 +57,6 @@ export class CenaCriarDialog {
     ]),
     tipo: this.formBuilder.control<CenaTipoEnum | null>(null, Validators.required),
   });
-
-  protected readonly tipoSelecionado = toSignal(this.formulario.controls.tipo.valueChanges, { initialValue: null });
 
   /** Enter no nome equivale ao botão principal, "Abrir agora" (como o "Abrir combate" de antes). */
   protected enviar(): void {

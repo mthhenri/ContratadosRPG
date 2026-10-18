@@ -3644,6 +3644,10 @@ leitura autorizada, incluindo confirmação de ingresso na sala. O autor aprovou
 estender os ícones ao mestre, hub, cabeçalhos e tipo selecionado de Nova cena
 ([UI-41 concluída](../specs/done/ui-41-cenas-icone-por-tipo/verificacao.md)); Furtiva
 usa o homem encapuzado. O antigo glifo `combate` permanece nos demais usos.
+Nova cena usa o primitivo reutilizável `shared/ui/seletor` para mostrar os ícones
+também nas opções abertas, com formulário reativo, teclado e toque; o controle
+anterior nativo foi substituído somente nesse local
+([correção](../specs/done/ui-41-seletor-opcoes-com-icones/verificacao.md)).
 `npm run lint --workspace=backend` também roda `tsc --noEmit -p tsconfig.json` (specs e `tools/`
 incluídos, que o build exclui): checagem de tipos completa faz parte do gate do backend.
 Orquestração multiagente: o agente principal (Claude Code ou Codex) delega por conta própria a
