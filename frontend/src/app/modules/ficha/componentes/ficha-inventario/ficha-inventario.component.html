@@ -641,7 +641,15 @@
                                             ><app-icone
                                                 class="icone--texto"
                                                 nome="energia"
-                                                appTooltip="Energia"
+                                                tabindex="0"
+                                                [attr.aria-label]="
+                                                    cartao.custoAcoplarPotencializadorReduzido +
+                                                    ' de Energia'
+                                                "
+                                                [appTooltip]="
+                                                    cartao.custoAcoplarPotencializadorReduzido +
+                                                    ' de Energia'
+                                                "
                                             />{{
                                                 cartao.custoAcoplarPotencializadorReduzido
                                             }}
@@ -665,7 +673,13 @@
                                             ><app-icone
                                                 class="icone--texto"
                                                 nome="energia"
-                                                appTooltip="Energia"
+                                                tabindex="0"
+                                                [attr.aria-label]="
+                                                    cartao.custoConstrutorReduzido + ' de Energia'
+                                                "
+                                                [appTooltip]="
+                                                    cartao.custoConstrutorReduzido + ' de Energia'
+                                                "
                                             />{{ cartao.custoConstrutorReduzido }} Energia</span
                                         >
                                     </span>
@@ -795,9 +809,7 @@
                                     }
                                 </div>
                                 @if (amp.empilhamentosAtuais > 0) {
-                                    <div class="ficha-inv__cartao-ativo">
-                                        Ativo
-                                    </div>
+                                    <div class="ficha-inv__cartao-ativo">Ativo</div>
                                 }
                                 <div class="ficha-inv__cartao-acoes">
                                     @if (amp.empilhamentosAtuais > 0) {

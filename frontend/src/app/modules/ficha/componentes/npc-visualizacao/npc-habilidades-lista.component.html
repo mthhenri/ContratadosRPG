@@ -150,7 +150,13 @@
                                     <app-icone
                                         class="icone--texto"
                                         nome="energia"
-                                        appTooltip="Energia"
+                                        tabindex="0"
+                                        [attr.aria-label]="
+                                            (habilidade.custoEnergia ?? 0) + ' de Energia'
+                                        "
+                                        [appTooltip]="
+                                            (habilidade.custoEnergia ?? 0) + ' de Energia'
+                                        "
                                     />
                                     Energia
                                 </span>
@@ -250,7 +256,15 @@
                                                 <app-icone
                                                     class="icone--texto"
                                                     nome="energia"
-                                                    appTooltip="Energia"
+                                                    tabindex="0"
+                                                    [attr.aria-label]="
+                                                        modelo.habilidade.custoEnergia +
+                                                        ' de Energia'
+                                                    "
+                                                    [appTooltip]="
+                                                        modelo.habilidade.custoEnergia +
+                                                        ' de Energia'
+                                                    "
                                                 />
                                                 Energia
                                             </span>

@@ -2505,6 +2505,18 @@ describe('FichaInventario', () => {
         c.querySelector('.ficha-inv__cartao-nome')?.textContent?.trim().startsWith('Módulo V'),
       )!;
       expect(cartaoV.textContent).toContain('3 Energia');
+      const iconesCusto = fixture.debugElement.queryAll(By.css('.ficha-inv__cartao--fragmento app-icone[nome="energia"]'))
+        .slice(0, 2);
+      const dicas = iconesCusto.map((elemento) => elemento.injector.get(Tooltip).appTooltip());
+      for (const icone of iconesCusto) {
+        const host = icone.nativeElement as HTMLElement;
+        expect(host.tabIndex).toBe(0);
+        expect(host.getAttribute('aria-label')).toBe(icone.injector.get(Tooltip).appTooltip());
+        expect(host.getAttribute('aria-hidden')).not.toBe('true');
+        host.focus();
+        expect(document.activeElement).toBe(host);
+      }
+      expect(dicas).toEqual(['3 de Energia', '6 de Energia']);
     });
 
     it('catálogo de Fragmentos: Afinidade alta (30, acima de 6× módulo I) mostra o reduzido em destaque e o bruto riscado', () => {
@@ -2528,6 +2540,18 @@ describe('FichaInventario', () => {
       expect(linhaPotencializador.textContent).toContain('1 Energia');
       expect(linhaConstrutor.querySelector('.ficha-inv__custo--bruto')?.textContent?.trim()).toBe('6');
       expect(linhaConstrutor.textContent).toContain('1 Energia');
+      const iconesCusto = fixture.debugElement.queryAll(By.css('.ficha-inv__cartao--fragmento app-icone[nome="energia"]'))
+        .slice(0, 2);
+      const dicas = iconesCusto.map((elemento) => elemento.injector.get(Tooltip).appTooltip());
+      for (const icone of iconesCusto) {
+        const host = icone.nativeElement as HTMLElement;
+        expect(host.tabIndex).toBe(0);
+        expect(host.getAttribute('aria-label')).toBe(icone.injector.get(Tooltip).appTooltip());
+        expect(host.getAttribute('aria-hidden')).not.toBe('true');
+        host.focus();
+        expect(document.activeElement).toBe(host);
+      }
+      expect(dicas).toEqual(['1 de Energia', '1 de Energia']);
     });
 
     it('painel "Aplicar em...": mostra o custo de Energia (e a Energia Máxima líquida) antes de confirmar', () => {

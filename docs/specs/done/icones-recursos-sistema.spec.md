@@ -3,7 +3,7 @@
 > **Rodada arquivada por decisão do autor em 09/10/2026:** ícones e adoção entregues,
 > votação implementada em task própria. Glifos, conceitos sem ícone e divergências
 > remanescentes continuam abertos em
-> [icones-recursos-glifos-e-pendencias](../backlog/icones-recursos-glifos-e-pendencias.spec.md).
+> [icones-recursos-glifos-e-pendencias](../active/icones-recursos-glifos-e-pendencias.spec.md).
 > O arquivo abaixo preserva o contrato e os limites da rodada; o arquivamento não
 > certifica os critérios ainda sem cobertura. [Fecho](icones-recursos-sistema/fecho-documental.md).
 

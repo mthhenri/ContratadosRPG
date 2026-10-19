@@ -58,8 +58,14 @@
                                     <span class="resultado-rolagem__desvantagem">desvantagem</span>
                                 }
                                 @if (dado.criticos) {
-                                    <span class="resultado-rolagem__critico"
-                                        >◆ {{ dado.criticos }}</span
+                                    <span
+                                        class="resultado-rolagem__critico"
+                                        [attr.aria-label]="
+                                            dado.criticos +
+                                            (dado.criticos === 1 ? ' crítico' : ' críticos')
+                                        "
+                                        ><app-icone class="icone--texto" nome="critico" />
+                                        {{ dado.criticos }}</span
                                     >
                                 }
                             </span>
@@ -70,7 +76,10 @@
                     <div class="resultado-rolagem__grupos">
                         @for (grupo of grupos; track grupo.tipoDano) {
                             <span [class]="classeGrupo(grupo.tipoDano)"
-                                ><app-icone class="icone--texto" [nome]="ICONE_TIPO_DANO[grupo.tipoDano]" />
+                                ><app-icone
+                                    class="icone--texto"
+                                    [nome]="ICONE_TIPO_DANO[grupo.tipoDano]"
+                                />
                                 {{ grupo.tipoDano }} {{ grupo.total }}</span
                             >
                         }

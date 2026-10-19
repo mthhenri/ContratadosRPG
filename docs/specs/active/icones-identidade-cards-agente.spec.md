@@ -53,3 +53,10 @@ Redesenhar os glifos de m10-03, ícones de criatura/NPC (ver `icones-criatura-vd
 ## Dependências
 
 `docs/specs/done/m10-03-icones-identidade.spec.md`; skill `gerenciamento-de-impacto`.
+
+## Decisão do autor — 2026-10-18
+
+Sem ícone extra de tipo: adotar classe base + arquétipo/subclasse; Civil sozinho.
+Alcance dos consumidores além dos cards continua aguardando a resposta à consulta.
+Proposta concreta em [adocao-proposta.md](icones-identidade-cards-agente/adocao-proposta.md)
+e [amostra visual](icones-identidade-cards-agente/proposta-visual.html).

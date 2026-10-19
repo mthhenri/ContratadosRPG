@@ -2616,6 +2616,12 @@
     // Box do atributo com Maestria: borda accent discreta.
     &--maestria {
         border-color: var(--accent-border);
+
+        // As duas coroas ocupam a linha da sigla; o dado usa o canto inferior livre.
+        .ficha-atributo__rolar {
+            top: auto;
+            bottom: 4px;
+        }
     }
 
     // Box lesionado (efetivo < base): leve tinta accent para sinalizar a penalidade em jogo.
@@ -2683,43 +2689,24 @@
         }
     }
 
-    // Estrelas de Maestria flanqueando a abreviação do atributo (★ PON ★).
+    // Glifos de Maestria flanqueando a abreviação do atributo.
     &__estrela {
-        font-size: 10px;
+        display: inline-flex;
+        font-size: 12px;
         line-height: 1;
         color: var(--accent);
     }
 
-    // Alvo de Maestria (edição): estrela togglável, só habilitada com 6+.
+    // Alvo de Maestria (edição): glifo alternável, só habilitada com 6+.
     &__maestria {
-        font-family: var(--font-mono);
-        font-size: 13px;
-        line-height: 1;
-        padding: 2px 6px;
-        color: var(--text-mute);
-        background: transparent;
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
-        cursor: pointer;
-        transition:
-            color 0.15s ease,
-            border-color 0.15s ease,
-            background-color 0.15s ease;
+        width: 26px;
+        height: 22px;
+        font-size: 16px;
 
-        &:hover:not(:disabled) {
-            color: var(--accent);
-            border-color: var(--accent-border);
-        }
-
-        &--ativa {
-            color: var(--accent);
-            border-color: var(--accent);
-            background: var(--accent-dim);
-        }
-
-        &:disabled {
-            opacity: 0.3;
-            cursor: default;
+        // O alvo mobile já era expandido sem alterar a densidade do atributo.
+        @include bp.mobile {
+            min-width: 26px;
+            min-height: 22px;
         }
     }
 }
@@ -2736,7 +2723,7 @@
 // ui-30 os migrou para `app-botao-icone[tamanho="mini"]`, que já garante o piso de toque mobile
 // sozinho — os dois saem da lista de `alvo-de-toque` manual.
 
-// Estrela de Maestria — ~21×26.
+// Glifo de Maestria — ~21×26.
 .ficha-atributo__maestria {
     @include alvo-de-toque;
 }

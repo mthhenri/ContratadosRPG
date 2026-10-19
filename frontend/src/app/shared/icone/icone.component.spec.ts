@@ -7,6 +7,18 @@ import { Icone, IconeNome } from './icone.component';
  * `currentColor`, sem emoji) e desenha formas diferentes conforme o `nome`.
  */
 describe('Icone', () => {
+    it('mantém Maestria e Crítico como glifos próprios de contorno, distintos dos vizinhos', () => {
+        const nomes: IconeNome[] = ['maestria', 'critico', 'habilidade-geral', 'patente', 'd20'];
+        const formas = nomes.map(assinatura);
+        expect(formas.every(Boolean)).toBe(true);
+        expect(new Set(formas).size).toBe(nomes.length);
+        for (const nome of ['maestria', 'critico'] as const) {
+            const svg = montar(nome).querySelector('svg')!;
+            expect(svg.getAttribute('fill')).toBe('none');
+            expect(svg.getAttribute('stroke')).toBe('currentColor');
+            expect(svg.getAttribute('aria-hidden')).toBe('true');
+        }
+    });
     it("incorpora o trio preenchido aprovado, sem confundir Vida com Machucado", () => {
         for (const nome of ["vida", "energia", "defesa"] as const) {
             const svg = montar(nome).querySelector("svg")!;

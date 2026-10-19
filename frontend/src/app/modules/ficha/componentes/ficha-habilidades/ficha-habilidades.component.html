@@ -195,7 +195,7 @@
                                     (pointerdown)="aoPressionarUtilizar(idx, habilidade, $event)"
                                     (click)="aoClicarUtilizar(idx, habilidade, $event)"
                                 >
-                                    ⚡ Utilizar
+                                    <app-icone class="icone--texto" nome="energia" /> Utilizar
                                     @if (gastoRecente()?.indice === idx) {
                                         <span class="habilidades__gasto-flash" aria-hidden="true">
                                             −{{ gastoRecente()!.valor }} E

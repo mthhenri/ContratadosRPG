@@ -503,9 +503,12 @@
                         [class.atributo--desvantagem]="estado().atributos[campo.chave] === 0"
                     >
                         <button
+                            app-botao-icone
+                            tamanho="compacto"
                             class="atributo__maestria"
                             type="button"
-                            [class.atributo__maestria--ativa]="estado().maestria === campo.chave"
+                            [ativo]="estado().maestria === campo.chave"
+                            [attr.aria-pressed]="estado().maestria === campo.chave"
                             [disabled]="!maestriaHabilitada(campo.chave)"
                             [attr.aria-label]="'Maestria em ' + campo.nome"
                             [appTooltip]="
@@ -513,7 +516,7 @@
                       "
                             (click)="alternarMaestria(campo.chave)"
                         >
-                            ★
+                            <app-icone nome="maestria" />
                         </button>
                         <div class="atributo__identidade">
                             <span>{{ campo.nome }}</span>

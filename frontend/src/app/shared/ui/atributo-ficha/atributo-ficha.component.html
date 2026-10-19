@@ -2,15 +2,18 @@
     <div class="ficha-atributo__identidade">
         @if (mostrarMaestria()) {
             <button
+                app-botao-icone
+                tamanho="compacto"
                 class="ficha-atributo__maestria"
                 type="button"
-                [class.ficha-atributo__maestria--ativa]="maestria()"
+                [ativo]="maestria()"
+                [attr.aria-pressed]="maestria()"
                 [disabled]="!maestriaHabilitada()"
                 [attr.aria-label]="'Maestria em ' + nome()"
                 [appTooltip]="dicaMaestria()"
                 (click)="maestriaAlternada.emit()"
             >
-                ★
+                <app-icone nome="maestria" />
             </button>
         }
         @if (mostrarCompetencia()) {
@@ -70,11 +73,15 @@
         [attr.aria-label]="descricao()"
     >
         @if (mostrarMaestria() && maestria()) {
-            <span class="ficha-atributo__estrela" aria-hidden="true">★</span>
+            <span class="ficha-atributo__estrela" aria-hidden="true"
+                ><app-icone nome="maestria"
+            /></span>
         }
         {{ sigla() }}
         @if (mostrarMaestria() && maestria()) {
-            <span class="ficha-atributo__estrela" aria-hidden="true">★</span>
+            <span class="ficha-atributo__estrela" aria-hidden="true"
+                ><app-icone nome="maestria"
+            /></span>
         }
     </span>
     <span class="ficha-atributo__valor">

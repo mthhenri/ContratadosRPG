@@ -1576,29 +1576,9 @@
         border-color: color-mix(in srgb, var(--warning) 35%, transparent);
     }
     &__maestria {
-        flex: none;
-        padding: 2px 6px;
-        font: 13px var(--font-mono);
-        line-height: 1;
-        color: var(--text-mute);
-        background: transparent;
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
-        cursor: pointer;
-        transition: 0.15s ease;
-        &:hover:not(:disabled) {
-            color: var(--accent);
-            border-color: var(--accent-border);
-        }
-        &--ativa {
-            color: var(--accent);
-            border-color: var(--accent);
-            background: var(--accent-dim);
-        }
-        &:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-        }
+        width: 26px;
+        height: 26px;
+        font-size: 16px;
     }
 }
 @include bp.tablet {

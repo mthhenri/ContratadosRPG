@@ -1,0 +1,582 @@
+<!doctype html>
+<html lang="pt-BR">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Criatura — votação de VD e Tenacidade</title>
+        <style>
+            /* Anexo offline de proposta, não componente do produto. Valores de identidade
+       congelados de docs/design/tema/_tokens.scss; grade e voto herdados da UI-41 e da
+       prancha de icones-recursos-sistema. Nenhum recurso remoto é carregado. */
+            :root {
+                color-scheme: dark;
+                --bg: #0a0c0f;
+                --surface: #13161b;
+                --surface-2: #1a1e24;
+                --border: rgba(255, 255, 255, 0.07);
+                --border-strong: rgba(255, 255, 255, 0.12);
+                --text: #e6e8eb;
+                --text-dim: #969ba3;
+                --accent: #d53030;
+                --accent-dim: color-mix(in srgb, var(--accent) 12%, transparent);
+                --radius-card: 6px;
+                --radius-control: 4px;
+                --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+                --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+            }
+            * {
+                box-sizing: border-box;
+            }
+            body {
+                margin: 0;
+                background: var(--bg);
+                color: var(--text);
+                font: 14px/1.55 var(--font-sans);
+            }
+            main {
+                max-width: 1240px;
+                margin: auto;
+                padding: 24px 16px 64px;
+            }
+            h1 {
+                margin: 0 0 8px;
+                font: 600 21px/1.4 var(--font-mono);
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+            }
+            h2 {
+                margin: 28px 0 4px;
+                padding-bottom: 8px;
+                border-bottom: 1px solid var(--border-strong);
+                font: 600 13px var(--font-mono);
+                text-transform: uppercase;
+                letter-spacing: 0.12em;
+            }
+            p {
+                margin: 8px 0;
+            }
+            .lead,
+            .nota,
+            .descricao,
+            .origem {
+                color: var(--text-dim);
+            }
+            .lead {
+                max-width: 96ch;
+            }
+            .nota {
+                border: 1px dashed var(--border-strong);
+                border-radius: var(--radius-card);
+                padding: 12px 16px;
+                margin: 16px 0;
+            }
+            .nota strong {
+                color: var(--text);
+            }
+            .barra {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                gap: 12px;
+                margin: 16px 0;
+            }
+            button {
+                font: inherit;
+                color: inherit;
+                cursor: pointer;
+            }
+            .btn {
+                min-height: 44px;
+                padding: 8px 12px;
+                border: 1px solid var(--border-strong);
+                border-radius: var(--radius-control);
+                background: var(--surface);
+                font: 600 11px var(--font-mono);
+                text-transform: uppercase;
+                letter-spacing: 0.06em;
+            }
+            .btn:hover {
+                border-color: var(--accent);
+            }
+            button:focus-visible,
+            textarea:focus-visible {
+                outline: 2px solid var(--text);
+                outline-offset: 3px;
+            }
+            .opcoes {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 12px;
+                margin-top: 12px;
+            }
+            .opcao {
+                position: relative;
+                min-width: 0;
+                padding: 16px;
+                display: grid;
+                gap: 12px;
+                text-align: left;
+                border: 1px solid var(--border-strong);
+                border-radius: var(--radius-card);
+                background: var(--surface);
+            }
+            .opcao:hover {
+                background: var(--surface-2);
+            }
+            .opcao[aria-pressed="true"] {
+                border-color: var(--accent);
+                box-shadow: inset 0 0 0 1px var(--accent);
+                background: var(--accent-dim);
+            }
+            .opcao__titulo {
+                display: flex;
+                justify-content: space-between;
+                align-items: start;
+                gap: 8px;
+                font: 600 13px var(--font-mono);
+            }
+            .estado {
+                font: 11px var(--font-mono);
+                color: var(--text-dim);
+                white-space: nowrap;
+            }
+            .opcao[aria-pressed="true"] .estado {
+                color: var(--text);
+            }
+            .tamanhos {
+                display: flex;
+                align-items: flex-end;
+                gap: 24px;
+            }
+            .amostra {
+                display: grid;
+                justify-items: center;
+                gap: 8px;
+                font: 10px var(--font-mono);
+                color: var(--text-dim);
+            }
+            svg {
+                fill: none;
+                stroke: currentColor;
+                stroke-width: 1.75;
+                stroke-linecap: round;
+                stroke-linejoin: round;
+                flex: none;
+            }
+            .amostra svg {
+                color: var(--text);
+            }
+            .icone-16 {
+                width: 16px;
+                height: 16px;
+            }
+            .icone-24 {
+                width: 24px;
+                height: 24px;
+            }
+            .icone-40 {
+                width: 40px;
+                height: 40px;
+            }
+            .descricao {
+                font-size: 13px;
+            }
+            .origem {
+                font-size: 11px;
+            }
+            .contexto {
+                display: flex;
+                gap: 12px;
+                align-items: center;
+                padding-top: 12px;
+                border-top: 1px solid var(--border-strong);
+            }
+            .coluna {
+                display: grid;
+                place-items: center;
+                width: 48px;
+                min-height: 48px;
+                background: var(--bg);
+                border: 1px solid var(--border-strong);
+                border-radius: var(--radius-control);
+            }
+            .expandida {
+                display: flex;
+                gap: 12px;
+                align-items: center;
+                min-height: 44px;
+                padding: 12px;
+                font: 12px var(--font-mono);
+                color: var(--text-dim);
+            }
+            .contexto-legenda {
+                font: 10px var(--font-mono);
+                color: var(--text-dim);
+            }
+            textarea {
+                display: block;
+                width: 100%;
+                min-height: 214px;
+                resize: vertical;
+                padding: 12px;
+                border: 1px solid var(--border-strong);
+                border-radius: var(--radius-control);
+                background: var(--surface);
+                color: var(--text);
+                font: 12px/1.7 var(--font-mono);
+            }
+            .rodape {
+                font-size: 12px;
+                color: var(--text-dim);
+                margin-top: 24px;
+            }
+            @media (max-width: 620px) {
+                main {
+                    padding: 20px 12px 48px;
+                }
+                h1 {
+                    font-size: 18px;
+                }
+                .opcoes {
+                    grid-template-columns: 1fr;
+                }
+                .opcao {
+                    padding: 12px;
+                }
+                .opcao__titulo {
+                    flex-wrap: wrap;
+                }
+            }
+            .bases {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 8px;
+            }
+            .base {
+                min-width: 0;
+                display: grid;
+                gap: 12px;
+                padding: 12px;
+                background: var(--surface-2);
+                color: var(--text);
+                border: 1px solid var(--border-strong);
+                border-radius: var(--radius-control);
+            }
+            .base--clara {
+                color-scheme: light;
+                --surface: #ffffff;
+                --surface-2: #e7eaee;
+                --text: #12151a;
+                --text-dim: #4a4f57;
+                --border-strong: rgba(0, 0, 0, 0.16);
+            }
+            .base__nome {
+                font: 10px var(--font-mono);
+                color: var(--text-dim);
+            }
+            .linha {
+                display: flex;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 8px;
+                font: 12px var(--font-mono);
+            }
+            .vizinhos {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 16px;
+            }
+            .vizinho {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font: 11px var(--font-mono);
+            }
+            .comparacao {
+                padding: 16px;
+                background: var(--surface);
+                border: 1px solid var(--border-strong);
+                border-radius: var(--radius-card);
+            }
+            .tamanhos {
+                gap: 16px;
+            }
+            .estado {
+                white-space: normal;
+            }
+            code {
+                overflow-wrap: anywhere;
+            }
+            @media (max-width: 1000px) {
+                .bases {
+                    grid-template-columns: 1fr;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <main>
+            <h1>Criatura // VD e Tenacidade</h1>
+            <p class="lead">
+                Escolha um desenho por conceito. Grade 24×24, contorno 1,75, sem preenchimento e cor
+                herdada: a mesma família de app-icone. Cada opção aparece em 16, 24 e 40px nas duas
+                bases e em 16px junto do texto.
+            </p>
+            <div class="nota">
+                <strong>Proposta para voto.</strong> Nenhuma opção começa marcada. Clique novamente
+                para retirar o voto. A seleção fica neste navegador e não aprova nem altera o
+                produto; comunique o resumo para registrar sua decisão explícita.
+            </div>
+            <p class="lead">
+                VD é a meta de confronto orientada pelo grupo. Tenacidade é o perfil de resistência
+                que multiplica o VD para compor a Vida. Não são Patente, DT, Defesa, Vida, Porte ou
+                Cadência. Os números abaixo são só amostras estáticas.
+            </p>
+            <div class="barra">
+                <button class="btn" id="limpar" type="button">Limpar votos</button>
+                <button class="btn" id="copiar" type="button">Copiar resumo</button>
+                <span id="mensagem" role="status" aria-live="polite"></span>
+            </div>
+            <noscript
+                ><p>Ative JavaScript para visualizar as opções e registrar votos.</p></noscript
+            >
+            <div id="raiz"></div>
+            <h2>Glifos existentes // comparação de colisão</h2>
+            <p class="lead">
+                Geometrias reais do repositório, preservadas. Compare cada candidato com estes
+                vizinhos em ambas as bases, inclusive cena-perseguicao e cena-resistencia; nenhum
+                deles é uma opção nova. SCP usa aqui o mesmo modo de contorno padrão de app-icone.
+            </p>
+            <div id="comparacao" class="bases"></div>
+            <h2>Resumo da escolha</h2>
+            <p class="lead">
+                Copie o resumo para comunicar o voto. A lista de locais de aplicação e a possível
+                inclusão no card do mestre exigem decisão separada.
+            </p>
+            <textarea id="resumo" readonly aria-label="Resumo copiável dos votos"></textarea>
+            <div class="rodape">
+                <p>
+                    <strong>Recomendação para avaliar:</strong> VD A (escala de confronto) e
+                    Tenacidade A (núcleo sob pressão) têm silhuetas distintas dos cinco vizinhos
+                    originais. VD A pode lembrar a trajetória de cena-perseguicao; Tenacidade B pode
+                    lembrar o pilar de cena-resistencia. Os dois vizinhos adicionais aparecem na
+                    comparação para informar o voto. Recomendação não é seleção: nenhuma opção é
+                    marcada automaticamente. B e C exploram alternativas mais narrativas ou
+                    estruturais, com seus limites descritos nos cartões.
+                </p>
+                <p>
+                    <strong>Autoria.</strong> Os seis desenhos candidatos foram elaborados por Codex
+                    (OpenAI), com geometria original nesta tarefa, sem importar ou traçar assets
+                    externos. Os sete glifos de comparação são cópias fiéis do app-icone existente;
+                    preservam a procedência e os créditos do repositório. Não se atribui nova
+                    licença aos desenhos existentes. O comentário de crédito/licença dos candidatos
+                    será registrado na adoção aprovada.
+                </p>
+                <p>
+                    <strong>Análogo e limites.</strong> Votação, cartões, escala, foco e resumo:
+                    UI-41, em docs/specs/done/ui-41-cenas-icone-por-tipo/prancha-icones.html.
+                    Contexto: fileira VD / Defesa / Tenacidade de criatura-visualizacao. Tokens
+                    escuros de docs/design/tema/_tokens.scss e claros de TOKENS_CLARO em
+                    tema.service.ts, congelados para este anexo offline. Nenhum recurso remoto é
+                    carregado; IBM Plex usa fallback quando não está instalada. Este anexo de
+                    decisão usa os mesmos controles HTML da prancha análoga; não é uma tela Angular
+                    do produto.
+                </p>
+                <p>
+                    <strong>Depois do voto:</strong> aprovar os consumidores em adocao-proposta.md,
+                    implementar os nomes e os tooltips canônicos e verificar a aplicação real em
+                    desktop/mobile e claro/escuro. A votação local não executa essas etapas.
+                </p>
+            </div>
+        </main>
+        <script>
+            "use strict";
+            // Seis propostas geométricas originais — Codex (OpenAI), icones-criatura-vd-tenacidade.
+            const grupos = [
+                {
+                    chave: "vd",
+                    nome: "Valor de Desafio",
+                    nota: "Meta mecânica do confronto; evitar medalha, mira e símbolo de classificação SCP.",
+                    opcoes: [
+                        [
+                            "Escala de confronto",
+                            "Degraus ascendentes com referência superior: indica uma meta graduada. Poucos segmentos favorecem 16px; pode lembrar um indicador de progressão genérico.",
+                            '<path d="M3 20h5v-5h5v-5h5V4h3M3 4h10"/>',
+                        ],
+                        [
+                            "Grupo convergente",
+                            "Três posições do grupo convergem para uma meta comum. Reforça o vínculo do VD com o grupo, mas o detalhe exige atenção em 16px.",
+                            '<rect x="3" y="3" width="4" height="4" rx="1"/><rect x="3" y="10" width="4" height="4" rx="1"/><rect x="3" y="17" width="4" height="4" rx="1"/><path d="M10 5h3l4 7-4 7h-3M10 12h7l4-4v8l-4-4"/>',
+                        ],
+                        [
+                            "Equilíbrio de confronto",
+                            "Duas forças comparadas em torno de uma base. Metáfora de adequação ao grupo, com risco de sugerir peso ou balança.",
+                            '<path d="M12 3v17M8 21h8M5 7h14M5 7l-3 7h6L5 7M19 7l-3 7h6l-3-7"/>',
+                        ],
+                    ],
+                },
+                {
+                    chave: "tenacidade",
+                    nome: "Tenacidade",
+                    nota: "Perfil de resistência à pressão prolongada; evitar escudo, coração e qualquer indicação de porte.",
+                    opcoes: [
+                        [
+                            "Núcleo sob pressão",
+                            "Um núcleo vertical mantém a forma entre duas forças. Sem escudo ou coração; bom contraste de silhueta. As setas sugerem pressão, não um valor de Defesa.",
+                            '<rect x="9" y="4" width="6" height="16" rx="1"/><path d="M2 12h4M4 9l3 3-3 3M22 12h-4M20 9l-3 3 3 3"/>',
+                        ],
+                        [
+                            "Arco sustentado",
+                            "Uma estrutura permanece de pé sob carga. Silhueta aberta e simples; metáfora estrutural, menos diretamente biológica.",
+                            '<path d="M3 5h18M12 2v3M5 21V13a7 7 0 0 1 14 0v8M9 21v-8a3 3 0 0 1 6 0v8M3 21h8M13 21h8"/>',
+                        ],
+                        [
+                            "Trama resistente",
+                            "Duas linhas dobradas atravessam uma trama central. Sugere coesão e persistência; mais abstrata e com maior densidade em 16px.",
+                            '<path d="M3 6h7l4 12h7M3 18h7l4-12h7M6 3v5M18 3v5M6 16v5M18 16v5"/>',
+                        ],
+                    ],
+                },
+            ];
+            const vizinhos = [
+                [
+                    "patente",
+                    '<circle cx="12" cy="9" r="5" />\n            <path d="M8.5 13 7 21l5-2.5L17 21l-1.5-8" />',
+                ],
+                [
+                    "dt",
+                    '<circle cx="12" cy="12" r="7" />\n            <circle cx="12" cy="12" r="2.5" />\n            <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />',
+                ],
+                [
+                    "defesa",
+                    '<path d="M12 2.5 4.5 5.5v6c0 4.6 3.2 8.4 7.5 10 4.3-1.6 7.5-5.4 7.5-10v-6z" />',
+                ],
+                [
+                    "vida",
+                    '<path\n                d="M12 21s-7.5-4.6-9.6-9.3C.9 8.2 3.1 4.5 6.7 4.5c2.1 0 3.6 1.2 5.3 3.1 1.7-1.9 3.2-3.1 5.3-3.1 3.6 0 5.8 3.7 4.3 7.2C19.5 16.4 12 21 12 21z"\n            />',
+                ],
+                [
+                    "scp",
+                    '<path\n                fill-rule="evenodd"\n                d="M8.9006 1.6935L9.2545 1.5822L14.8194 1.5822L14.9858 1.6005L15.3127 1.8372L15.3878 2.0162L15.9143 3.9713L15.8043 3.7847L15.6386 3.6605L16.4089 4.0057L17.1047 4.3891L17.7671 4.8279L18.4139 5.3387L19.015 5.9022L19.5476 6.492L20.0471 7.1475L20.4893 7.8424L20.8714 8.5727L21.0388 8.9491L21.2004 9.36L21.3432 9.7779L21.4593 10.1732L21.6407 10.977L21.7212 11.5005L21.771 11.9983L21.7954 12.4979L21.7942 12.9983L21.7626 13.5566L21.6969 14.1335L21.6978 14.0911L21.641 13.87L21.5649 13.7591L23.0012 15.1954L23.1413 15.4L23.141 15.7989L23.0886 15.9054L20.3226 20.7022L20.1866 20.8708L19.8043 20.9981L19.6598 20.9731L17.7249 20.4537L17.9618 20.44L18.1137 20.3682L17.5012 20.8143L16.9008 21.1866L16.4336 21.4367L15.9807 21.6492L15.4898 21.8485L14.9892 22.0209L14.4228 22.1805L13.8477 22.3058L13.2373 22.3998L12.6511 22.4535L12.0628 22.4718L11.4744 22.4546L10.8883 22.4019L10.3063 22.3139L9.7307 22.191L9.1636 22.0337L8.5797 21.8324L8.0363 21.6068L7.5073 21.3492L6.9947 21.0604L6.4762 20.7252L6.0065 20.3795L6.224 20.4563L6.3981 20.449L4.4364 20.9756L4.1657 20.9905L3.8322 20.7779L3.7781 20.6939L1.0121 15.8971L0.931 15.6726L1.0281 15.2845L1.111 15.1886L2.5426 13.757L2.4358 13.9458L2.411 14.1516L2.3268 13.3409L2.3096 12.5172L2.3617 11.6952L2.4772 10.9092L2.6642 10.1068L2.9082 9.3505L3.2129 8.6168L3.5909 7.8846L3.8028 7.5313L4.0462 7.1629L4.5441 6.5063L4.8332 6.1726L5.1165 5.8733L5.4123 5.5862L5.7424 5.2929L6.1323 4.9789L6.562 4.669L6.983 4.3982L7.4173 4.1495L7.917 3.8985L8.4491 3.6678L8.2529 3.843L8.1904 3.973L8.7036 2.0077L8.9006 1.6935ZM9.5527 2.5376L9.2545 2.6489L14.8194 2.6489L14.7087 2.6306L14.4185 2.4187L14.3578 2.2935L14.8877 4.2611L15.0133 4.5004L15.2304 4.6459L15.9092 4.9485L16.5524 5.3016L17.1423 5.6924L17.6782 6.113L18.2163 6.6114L18.7273 7.1739L19.172 7.7574L19.566 8.3767L19.9061 9.0266L20.1901 9.7034L20.4158 10.4013L20.5817 11.1162L20.6783 11.7643L20.7259 12.4179L20.7307 12.8375L20.7167 13.2304L20.6311 14.0918L20.6952 14.3631L20.8107 14.5134L22.247 15.9496L22.1462 15.7844L22.1399 15.4309L22.1645 15.3726L19.3985 20.1693L19.5067 20.0489L19.8456 19.9323L19.9363 19.9429L17.9352 19.4073L17.6589 19.4173L17.4629 19.5231L17.1004 19.7947L16.731 20.0436L16.1423 20.3868L15.7911 20.5633L15.4322 20.7238L15.0664 20.868L14.6692 21.0034L14.1645 21.1456L13.6263 21.2619L13.082 21.3441L12.5598 21.3904L12.0094 21.405L11.4857 21.3865L10.9377 21.3331L10.4202 21.25L9.9338 21.1423L9.4294 20.9992L8.9344 20.826L8.4507 20.6235L8.0495 20.4289L7.6587 20.2141L7.1265 19.8777L6.6064 19.4967L6.3494 19.397L6.1216 19.4188L4.1598 19.9454L4.3767 19.9449L4.6758 20.1252L4.7021 20.161L1.9361 15.3643L1.9894 15.5406L1.9088 15.8864L1.8652 15.9429L3.3062 14.5019L3.4509 14.2732L3.4685 14.0123L3.3914 13.2736L3.376 12.5399L3.4197 11.8333L3.5158 11.1587L3.678 10.4431L3.9001 9.7437L4.1805 9.0657L4.5302 8.3909L4.9226 7.7709L5.3659 7.1863L5.8571 6.6414L6.3927 6.1402L6.9053 5.7325L7.4475 5.3649L7.7855 5.1644L8.1559 4.9677L8.9393 4.6153L9.1459 4.4264L9.2224 4.2425L9.7357 2.2772L9.5527 2.5376Z"\n            />\n            <path\n                fill-rule="evenodd"\n                d="M5.6356 12.7111a6.4 6.4 0 1 0 12.8 0a6.4 6.4 0 1 0 -12.8 0ZM6.7023 12.7111a5.3333 5.3333 0 1 0 10.6666 0a5.3333 5.3333 0 1 0 -10.6666 0Z"\n            />\n            <path\n                transform="rotate(0 12.0356 12.7111)"\n                d="M11.5022 5.44L11.5022 9.7067L10.5991 9.7067L12.0356 12.1956L13.472 9.7067L12.5689 9.7067L12.5689 5.44Z"\n            />\n            <path\n                transform="rotate(120 12.0356 12.7111)"\n                d="M11.5022 5.44L11.5022 9.7067L10.5991 9.7067L12.0356 12.1956L13.472 9.7067L12.5689 9.7067L12.5689 5.44Z"\n            />\n            <path\n                transform="rotate(240 12.0356 12.7111)"\n                d="M11.5022 5.44L11.5022 9.7067L10.5991 9.7067L12.0356 12.1956L13.472 9.7067L12.5689 9.7067L12.5689 5.44Z"\n            />',
+                ],
+                ["cena-perseguicao", '<path d="M3 6h8M3 11h5M3 16h4M9 20l10-10M12 10h7v7" />'],
+                [
+                    "cena-resistencia",
+                    '<path d="M4 4h16v4H4zM8 8v12M16 8v12M5 20h14M12 11v6M2 12h3M19 12h3" />',
+                ],
+            ];
+            const chaveArmazenamento = "criatura-vd-tenacidade-votos-v1";
+            let votos = {};
+            try {
+                const guardados = JSON.parse(localStorage.getItem(chaveArmazenamento) || "{}");
+                for (const grupo of grupos) {
+                    const voto = guardados?.[grupo.chave];
+                    if (Number.isInteger(voto) && voto >= 0 && voto < grupo.opcoes.length)
+                        votos[grupo.chave] = voto;
+                }
+            } catch {
+                /* Navegação privada/arquivo local: votação permanece disponível em memória. */
+            }
+            const selecionar = (seletor) => document.querySelector(seletor);
+            const desenhar = (geometria, tamanho) =>
+                `<svg class="icone-${tamanho}" viewBox="0 0 24 24" aria-hidden="true">${geometria}</svg>`;
+            const bases = [
+                { classe: "", nome: "Base escura" },
+                { classe: "base--clara", nome: "Base clara" },
+            ];
+            selecionar("#raiz").innerHTML = grupos
+                .map(
+                    (grupo) => `
+  <section aria-labelledby="titulo-${grupo.chave}">
+    <h2 id="titulo-${grupo.chave}">${grupo.nome}</h2>
+    <p class="lead">${grupo.nota}</p>
+    <div class="opcoes">${grupo.opcoes
+        .map(
+            ([nome, nota, geometria], indice) => `
+      <button type="button" class="opcao" data-grupo="${grupo.chave}" data-indice="${indice}" aria-label="${grupo.nome}, opção ${String.fromCharCode(65 + indice)}: ${nome}" aria-pressed="false">
+        <span class="opcao__titulo"><span>${String.fromCharCode(65 + indice)} — ${nome}</span><span class="estado">Escolher</span></span>
+        <span class="descricao">${nota}</span>
+        <span class="bases">${bases
+            .map(
+                (base) => `
+          <span class="base ${base.classe}">
+            <span class="base__nome">${base.nome}</span>
+            <span class="tamanhos">${[16, 24, 40].map((tamanho) => `<span class="amostra">${desenhar(geometria, tamanho)}<span>${tamanho}px</span></span>`).join("")}</span>
+            <span class="linha">${desenhar(geometria, 16)}<span>${grupo.chave === "vd" ? "VD 40" : "Tenacidade Robusta"}</span></span>
+            <span class="linha">${desenhar(vizinhos.find(([nomeVizinho]) => nomeVizinho === "defesa")[1], 16)}<span>Defesa 35</span></span>
+            <span class="linha">${desenhar(vizinhos.find(([nomeVizinho]) => nomeVizinho === "vida")[1], 16)}<span>Vida 2200</span></span>
+          </span>`,
+            )
+            .join("")}</span>
+        <span class="origem">Desenho original · Codex · voto ${grupo.chave.toUpperCase()} ${String.fromCharCode(65 + indice)}</span>
+      </button>`,
+        )
+        .join("")}</div>
+  </section>`,
+                )
+                .join("");
+            selecionar("#comparacao").innerHTML = bases
+                .map(
+                    (base) => `
+  <div class="base comparacao ${base.classe}">
+    <span class="base__nome">${base.nome} · vizinhos existentes em 16 / 24 / 40px</span>
+    <div class="vizinhos">${vizinhos.map(([nome, geometria]) => `<div class="vizinho">${[16, 24, 40].map((tamanho) => desenhar(geometria, tamanho)).join("")}<span>${nome}</span></div>`).join("")}</div>
+  </div>`,
+                )
+                .join("");
+            function refletirVotos() {
+                document.querySelectorAll(".opcao").forEach((botao) => {
+                    const escolhido = votos[botao.dataset.grupo] === Number(botao.dataset.indice);
+                    botao.setAttribute("aria-pressed", String(escolhido));
+                    botao.querySelector(".estado").textContent = escolhido
+                        ? "✓ Votado"
+                        : "Escolher";
+                });
+                selecionar("#resumo").value =
+                    "Criatura — voto de VD e Tenacidade\n" +
+                    grupos
+                        .map((grupo) => {
+                            const indice = votos[grupo.chave];
+                            return `${grupo.nome}: ${indice === undefined ? "— sem voto" : String.fromCharCode(65 + indice) + " — " + grupo.opcoes[indice][0]}`;
+                        })
+                        .join("\n") +
+                    "\n\nAdoção nas telas: pendente de aprovação de adocao-proposta.md.\nCard do mestre: decisão separada pendente.";
+            }
+            function salvar() {
+                try {
+                    localStorage.setItem(chaveArmazenamento, JSON.stringify(votos));
+                } catch {
+                    selecionar("#mensagem").textContent =
+                        "Votos somente em memória. Copie o resumo antes de fechar.";
+                }
+                refletirVotos();
+            }
+            selecionar("#raiz").addEventListener("click", (evento) => {
+                const botao = evento.target.closest(".opcao");
+                if (!botao) return;
+                const chave = botao.dataset.grupo;
+                const indice = Number(botao.dataset.indice);
+                if (votos[chave] === indice) delete votos[chave];
+                else votos[chave] = indice;
+                salvar();
+            });
+            selecionar("#limpar").addEventListener("click", () => {
+                votos = {};
+                selecionar("#mensagem").textContent = "Votos removidos.";
+                salvar();
+            });
+            selecionar("#copiar").addEventListener("click", async () => {
+                try {
+                    await navigator.clipboard.writeText(selecionar("#resumo").value);
+                    selecionar("#mensagem").textContent = "Resumo copiado.";
+                } catch {
+                    selecionar("#resumo").focus();
+                    selecionar("#resumo").select();
+                    selecionar("#mensagem").textContent =
+                        "Resumo selecionado. Use Ctrl+C ou o comando Copiar do navegador.";
+                }
+            });
+            refletirVotos();
+        </script>
+    </body>
+</html>

@@ -122,7 +122,7 @@
 > `icones-recursos-sistema` arquivada em `done/` por decisão do autor: entrega 1 concluída;
 > entrega 2 (ícone ao lado do texto) com verificação ao vivo registrada em 09/10 e três defeitos corrigidos
 > ([relato](../specs/done/icones-recursos-sistema/entrega-2-verificacao.md)). Glifos, tooltip por extenso e limites
-> restantes ficam no [backlog de continuação](../specs/backlog/icones-recursos-glifos-e-pendencias.spec.md);
+> restantes ficam na [continuação ativa](../specs/active/icones-recursos-glifos-e-pendencias.spec.md);
 > votação da prancha da entrega 3 concluída (21 itens). `icones-dano-habilidade-fragmento-reacao` concluída:
 > 19 ícones novos + 2 fragmentos redesenhados no `app-icone`, ponte `shared/icone/icones-dominio.ts`,
 > adoção nas telas ([verificação](../specs/done/icones-dano-habilidade-fragmento-reacao/verificacao.md)).
@@ -2186,7 +2186,17 @@ incluindo todos os ajustes avulsos de pós-milestone.
 
 Spec avulsa ativa: `montador-rolagem-experimento`, mantida em experimentação pelo autor.
 `icones-recursos-sistema` arquivada em `done/`; sua continuação
-`icones-recursos-glifos-e-pendencias` e as duas avaliações de usabilidade estão no backlog.
+`icones-recursos-glifos-e-pendencias` foi retomada em `active/`, junto de
+`icones-criatura-vd-tenacidade` e `icones-identidade-cards-agente`. Pranchas e mapas
+estão nos anexos respectivos. Criatura: VD A e Tenacidade B da rodada 2 aprovados,
+assim como todos os locais propostos; card do mestre permanece como está. Recursos:
+Maestria B, Crítico A com estrelinhas, Energia em Utilizar e T3 implementados após
+autorização posterior expressa; quatro specs em done, com relatórios nos anexos.
+T3 mantém nome em barras/fichas/cards/resumos e “N de Energia” só nos custos avulsos
+do inventário e das habilidades de NPC; leitor de regras fora. Quatro viewports,
+duas bases, teclado e toque emulado verificados; ações genéricas aguardam votos. Identidade: sem ícone
+extra de tipo; alcance da adoção continua aguardando decisão.
+As duas avaliações de usabilidade permanecem no backlog.
 
 Milestones ainda não abertos: `m5-guia-missao`. M10 `m10-regras` implementada: `m10-01`…`m10-11`
 concluídas; revisão de formatação da exportação permanece aberta em P-108. O M8 `m8-espectadores-campanha` está **concluído**

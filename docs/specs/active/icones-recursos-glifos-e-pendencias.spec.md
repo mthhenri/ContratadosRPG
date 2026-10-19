@@ -43,3 +43,22 @@ implementar conceitos ou ampliar primitivos sem decisão do autor.
 `docs/SYSTEM.SPEC.md`, `docs/CONVENTIONS.md`, `docs/design/DESIGN.md`, `docs/core/`,
 `docs/specs/done/icones-recursos-sistema/` e
 `docs/specs/done/icones-dano-habilidade-fragmento-reacao.spec.md`.
+
+## Decisões do autor — 2026-10-18
+
+- Maestria B — Atributo coroado.
+- Crítico A — Dado excepcional, com estrelinhas no lugar dos riscos.
+- Energia em Utilizar: aprovado o ícone `energia` existente.
+- Tooltip T3 — recorte misto aprovado: somente nome em barras, fichas, cards e
+  resumos (Vida/Energia/Defesa); por extenso somente nos custos avulsos de Energia
+  do inventário e das habilidades de NPC (“3 de Energia”). Leitor de regras fora.
+- Aprovações geram task própria e **não autorizam implementação nesta rodada**.
+  Criadas no backlog `icones-maestria-adocao`, `icones-critico-adocao` e
+  `icones-energia-utilizar` e `icones-tooltips-recursos-t3`; sem trocas no produto
+  nesta etapa.
+- Ações genéricas continuam aguardando votos/alcance. Registro completo e refino
+  no [anexo de decisões](icones-recursos-glifos-e-pendencias/decisoes.md).
+
+## Execução posterior autorizada — 18/10/2026
+
+Autor autorizou executar as quatro specs próprias. Maestria, Crítico, Energia em Utilizar e T3 concluídas, com specs e verificação em done. Ações genéricas continuam abertas. A aprovação inicial dos desenhos não foi usada como autorização implícita.

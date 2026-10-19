@@ -6,7 +6,7 @@ Data: 2026-10-09. [Spec da rodada](../icones-recursos-sistema.spec.md).
 
 O autor autorizou arquivar esta rodada de ícones em `done/`, mantendo o levantamento
 de glifos aberto. A continuação é
-[icones-recursos-glifos-e-pendencias](../../backlog/icones-recursos-glifos-e-pendencias.spec.md).
+[icones-recursos-glifos-e-pendencias](../../active/icones-recursos-glifos-e-pendencias.spec.md).
 Ela preserva glifos/conceitos sem ícone, decisão sobre tooltip por extenso e cobertura
 restante de tema claro/toque. Na etapa de organização, as três correções locais descritas
 na entrega 2 ainda aguardavam commit; a conferência posterior está registrada abaixo.

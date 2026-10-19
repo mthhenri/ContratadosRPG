@@ -10,6 +10,19 @@ import { ResultadoRolagem } from './resultado-rolagem.component';
  * faltava numa fórmula com vários tipos misturados (`4d6[F] + 4d6[Q]`).
  */
 describe('ResultadoRolagem', () => {
+  it.each([0, 1, 3])('apresenta %i críticos com ícone próprio e quantidade acessível, preservando o total', (criticos) => {
+    const resultado = resultadoBase([{ sinal: 1, faces: 6, valores: [6, 6, 2], subtotal: 14, criticos }]);
+    const raiz = montar(resultado);
+    const indicador = raiz.querySelector('.resultado-rolagem__critico');
+    if (criticos === 0) {
+      expect(indicador).toBeNull();
+    } else {
+      expect(indicador?.querySelector('app-icone[nome="critico"] svg')).not.toBeNull();
+      expect(indicador?.textContent?.trim()).toBe(String(criticos));
+      expect(indicador?.getAttribute('aria-label')).toBe(`${criticos} ${criticos === 1 ? 'crítico' : 'críticos'}`);
+    }
+    expect(raiz.querySelector('.resultado-rolagem__total')?.textContent?.trim()).toBe('14');
+  });
   function montar(resultado: ResultadoRolagemDto) {
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({ imports: [ResultadoRolagem] });

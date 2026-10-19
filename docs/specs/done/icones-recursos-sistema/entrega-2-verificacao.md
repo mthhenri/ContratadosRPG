@@ -1,7 +1,7 @@
 # Recursos — entrega 2 (adoção no site)
 
 > **Estado após repriorização de 09/10/2026:** rodada arquivada por decisão do autor.
-> Pendências preservadas na [continuação em backlog](../../backlog/icones-recursos-glifos-e-pendencias.spec.md).
+> Pendências preservadas na [continuação em backlog](../../active/icones-recursos-glifos-e-pendencias.spec.md).
 > O relato abaixo registra a rodada anterior e conserva seus limites.
 
 09/10/2026. **Verificação ao vivo fechada na segunda rodada (abaixo); a spec segue ativa pelo

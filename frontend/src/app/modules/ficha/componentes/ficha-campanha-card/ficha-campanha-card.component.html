@@ -1045,9 +1045,15 @@
                                                             class="ficha-atributo-linha__principal"
                                                         >
                                                             <button
+                                                                app-botao-icone
+                                                                tamanho="compacto"
                                                                 class="ficha-atributo__maestria"
                                                                 type="button"
-                                                                [class.ficha-atributo__maestria--ativa]="
+                                                                [ativo]="
+                                                                    rascunhoMaestria() ===
+                                                                    campo.chave
+                                                                "
+                                                                [attr.aria-pressed]="
                                                                     rascunhoMaestria() ===
                                                                     campo.chave
                                                                 "
@@ -1068,7 +1074,7 @@
                                                                     alternarMaestria(campo.chave)
                                                                 "
                                                             >
-                                                                ★
+                                                                <app-icone nome="maestria" />
                                                             </button>
                                                             <span
                                                                 class="ficha-atributo-linha__nome"
@@ -1241,16 +1247,16 @@
                                                                 <span
                                                                     class="ficha-atributo__estrela"
                                                                     aria-hidden="true"
-                                                                    >★</span
-                                                                >
+                                                                    ><app-icone nome="maestria"
+                                                                /></span>
                                                             }
                                                             {{ campo.abrev }}
                                                             @if (maestriaAtual() === campo.chave) {
                                                                 <span
                                                                     class="ficha-atributo__estrela"
                                                                     aria-hidden="true"
-                                                                    >★</span
-                                                                >
+                                                                    ><app-icone nome="maestria"
+                                                                /></span>
                                                             }
                                                         </span>
                                                         <span class="ficha-atributo__valor">

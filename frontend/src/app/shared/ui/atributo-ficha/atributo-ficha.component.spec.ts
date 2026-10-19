@@ -14,6 +14,16 @@ import { AtributoFicha } from "./atributo-ficha.component";
 class HospedeiroEdicao {}
 
 describe("AtributoFicha", () => {
+    it("Maestria usa o glifo próprio na leitura e mantém invisibilidade do NPC", () => {
+        const { fixture, raiz } = montar();
+        expect(raiz.querySelectorAll('app-icone[nome="maestria"] svg')).toHaveLength(2);
+        fixture.componentRef.setInput("mostrarMaestria", false);
+        fixture.detectChanges();
+        expect(raiz.querySelector('app-icone[nome="maestria"]')).toBeNull();
+        fixture.componentRef.setInput("editando", true);
+        fixture.detectChanges();
+        expect(raiz.querySelector('.ficha-atributo__maestria')).toBeNull();
+    });
     function montar(entradas: Record<string, unknown> = {}) {
         const fixture = TestBed.createComponent(AtributoFicha);
         for (const [nome, valor] of Object.entries({ sigla: "DES", nome: "Destreza", valor: 0,
@@ -64,6 +74,8 @@ describe("AtributoFicha", () => {
         const { fixture, raiz, componente } = montar({ editando: true });
         const alternar = vi.fn(); componente.maestriaAlternada.subscribe(alternar);
         const botao = raiz.querySelector<HTMLButtonElement>(".ficha-atributo__maestria")!;
+        expect(botao.getAttribute("aria-pressed")).toBe("true");
+        expect(botao.querySelector('app-icone[nome="maestria"] svg')).not.toBeNull();
         botao.click(); expect(alternar).toHaveBeenCalledTimes(1);
         fixture.componentRef.setInput("maestriaHabilitada", false); fixture.detectChanges();
         expect(botao.disabled).toBe(true);

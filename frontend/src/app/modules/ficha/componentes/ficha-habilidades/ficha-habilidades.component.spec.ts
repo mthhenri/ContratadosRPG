@@ -255,6 +255,8 @@ describe('FichaHabilidades', () => {
     ) as HTMLButtonElement[];
     expect(botoes[0].disabled).toBe(true); // 0 E
     expect(botoes[1].disabled).toBe(false); // 3 E
+    expect(botoes.every((botao) => botao.querySelector('app-icone[nome="energia"]'))).toBe(true);
+    expect(botoes.every((botao) => !botao.textContent?.includes('⚡'))).toBe(true);
 
     // O atributo `disabled` só barra o `click`; o `pointerdown` ainda chega — o guard do handler
     // é que impede o gasto. Dispara direto no elemento e prova que nada foi gasto.

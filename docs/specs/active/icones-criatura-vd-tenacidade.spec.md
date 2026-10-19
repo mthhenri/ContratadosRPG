@@ -37,3 +37,13 @@ aparecem.
 
 Mudar regra de VD/Tenacidade; ícones de outros conceitos de criatura (Porte, Cadência, Nível de Ameaça) —
 listar como candidatos em `icones-recursos-glifos-e-pendencias` se surgirem.
+
+## Decisões e direção do autor — 2026-10-18
+
+- Aplicar nos campos/resumos de criação, ficha completa, flutuante, Acervo e
+  seletor de combatentes; manter o card do mestre sem acrescentar VD/Tenacidade.
+- Primeira rodada não escolhida. Nova direção: VD parecido com indicador de nível;
+  Tenacidade relacionada à Vida, como coração rígido/reforçado. Manter distinção
+  visual entre os conceitos sem proibir a metáfora de coração pedida pelo autor.
+- Voto recebido: **VD A — Patamares de nível** e **Tenacidade B — Coração reforçado**, da rodada 2.
+- Autor reafirmou todos os locais propostos, incluindo seletor e flutuante; manter card do mestre como está. Adoção e gates de produto permanecem abertos.

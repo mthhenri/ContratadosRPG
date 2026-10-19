@@ -220,6 +220,9 @@
 
     // Contagem de crítico (margem `cm`) de um termo (m3-29; realçada em m3-30 — maior + glow).
     &__critico {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
         font-family: var(--font-mono);
         font-size: 14px;
         font-weight: 700;

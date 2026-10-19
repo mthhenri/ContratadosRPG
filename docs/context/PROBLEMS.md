@@ -29,7 +29,7 @@
 
 ## Ativos
 
-### P-129 — Abas não selecionadas da campanha sem nome acessível no celular · `ABERTO` · frontend/acessibilidade
+### P-129 — Abas não selecionadas da campanha/NPC sem nome acessível no celular · `ABERTO` · frontend/acessibilidade
 
 - **Sintoma:** em 360×800, a aba Criaturas não selecionada não é encontrada por papel
   `tab` e nome "Criaturas"; o desenho aparece, mas falta nome acessível.
@@ -39,7 +39,7 @@
 - **Contorno:** para verificação automatizada, selecionar pelo atributo estável `valor`.
 - **Correção:** preservar o nome acessível das abas compactas sem reexibir seu texto
   visual; medir os consumidores do primitivo antes de alterar.
-- **Desde:** preexistente, confirmado no gate visual da UI-42 em 2026-10-17.
+- **Desde:** preexistente, confirmado no gate visual da UI-42 em 2026-10-17. Em 18/10, a mesma ausência foi observada em Habilidades do NPC a 360×800; inspeção usou `#npc-aba-habilidades`, sem alterar o primitivo nesta task.
 
 ### P-126 — Sem gate que compare `docs/design/tema/` e `frontend/src/styles/tema/` · `ABERTO` · design/tema
 

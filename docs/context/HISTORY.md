@@ -1,5 +1,74 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-18 — Quatro specs de ícones concluídas após autorização
+
+Adotados Atributo coroado em Maestria, Dado excepcional com estrelinhas nos críticos
+e Energia canônica em Utilizar. T3 preserva nome nos recursos e usa “N de Energia”
+só nos custos avulsos inventário/NPC. Sem regra nova. Specs/anexos movidos para done;
+ações genéricas seguem abertas, assim como as adoções de criatura e identidade.
+
+Skill verify exercitada no app real, quatro viewports, duas bases, hover, teclado
+e toque emulado. Zero/um/vários críticos nos três consumidores, Maestria em
+leitura/edição/criação e NPC sem marca; custo positivo/zero e gasto real; custos
+reduzidos 1/1, NPC 4/0 e biblioteca. Inspeção encontrou colisão da coroa com o dado
+na janela móvel: dado movido ao canto inferior livre apenas com Maestria, matriz
+repetida. Card preserva edição ampla desativada. Sem aparelho físico. P-129 também
+observado no NPC, sem correção oportunista do primitivo.
+
+Frontend 3.526 testes; recortes 89/229 e confirmação de foco 187; shared 1.335;
+backend 1.220, com 99 ignorados existentes. Lint dos três sem erros, com avisos;
+build final aprovado, alerta de bundle P-004 preservado. Diff/Prettier e organização
+conferidos. Relatórios registram consumidores, análogos, evidências e limites;
+logs/capturas em .artifacts. Commit autorizado pelo autor em 19/10/2026; sem publicação.
+
+## 2026-10-18 — Tooltips de recursos: recorte T3 aprovado
+
+Autor aprovou manter apenas Vida/Energia/Defesa em barras, fichas, cards e
+resumos, e usar “N de Energia” somente nos custos avulsos do inventário e das
+habilidades de NPC. Ícones do leitor de regras ficam fora. Decisão registrada
+na spec ativa e anexo; criada `icones-tooltips-recursos-t3` no backlog, respeitando
+a determinação de não implementar nesta rodada. Nenhum código alterado neste
+recorte documental. Organização/espelhos e whitespace conferidos; gates do
+produto ficam para execução da task. Sem commit.
+
+## 2026-10-18 — Ícones: três demandas retomadas, propostas aguardam escolhas
+
+Retomadas em active as specs de criatura VD/Tenacidade, identidade nos cards e
+glifos/pendências de recursos, com anexos e ponteiros realocados. Sem adoção de
+novos desenhos no produto antes dos votos.
+
+Identidade: autor escolheu classe base + arquétipo/subclasse, sem ícone extra de
+tipo. Alcance segue em decisão. Preparados mapas por enum e delegação do adaptador
+do leitor, preservando seus 20 nomes/aliases. 10 testes focados em 3 arquivos e 89 de
+regras de texto passaram; lint focado sem erros. Amostra estática inspecionada em
+1920×1080/360×800, escuro/claro; não é aceite da aplicação real.
+
+Criatura: rodada 1 apresentou 3 opções por conceito, ambas as bases e vizinhos
+reais, inspecionada pelo principal em desktop/mobile. Autor pediu nova direção:
+VD semelhante a nível, Tenacidade como coração rígido. Rodada 2 preserva a anterior
+com 3 níveis e 3 corações reforçados, inspecionada no navegador interno. Alcance
+aprovado em criação, ficha completa, flutuante, Acervo e seletor; mestre-card fica
+como está. Em seguida, autor escolheu VD A — Patamares de nível e Tenacidade B —
+Coração reforçado, da rodada 2. Adoção/gates de produto permanecem pendentes.
+
+Recursos: inventário de 261 ocorrências de 37 caracteres em 68 arquivos, distinguindo
+texto autoral/matemática e ícones de interface. Pranchas de Maestria/Crítico e 14
+conceitos genéricos com 28 alternativas; antes/depois dos equivalentes existentes.
+Principal inspecionou Maestria/Crítico em desktop/mobile e os 14 grupos no navegador.
+Corrigida colisão perceptiva entre Maximizar B e Restaurar B antes de votação.
+Autor escolheu Maestria B — Atributo coroado, Crítico A com estrelinhas no lugar
+dos riscos, Energia existente em Utilizar e tooltip T3 misto (recorte pendente).
+Determinou tasks próprias sem implementação nesta rodada; criadas três specs no
+backlog. Refino do dado em cópia separada, preservando a prancha original.
+Usuário não localizou Maestria/Crítico; prancha reaberta em aba visível, sem votos
+presumidos. Limites de toque físico e da aplicação real permanecem explícitos.
+
+Subagentes Codex (modelo herdado) fizeram prancha/mapa de criatura e inventário/
+pranchas de recursos em recortes independentes, sem produto/commit. Principal
+inspecionou renderização, consolidou mapas e decisões. Evidências ficam em
+.artifacts das três tasks; relatórios/propostas junto das specs. Nenhuma das três
+tarefas está concluída. Sem novo commit, push ou deploy.
+
 ## 2026-10-17 — UI-41: ícones também nas opções do seletor
 
 O autor apontou a ausência dos ícones na lista aberta e aprovou criar um primitivo

@@ -313,11 +313,24 @@ Comparação pessoal com exemplão e app real, quatro tamanhos e duas bases:
 
 `vida`, `energia` e `defesa` são a exceção preenchida do `app-icone`: coração cheio
 sem pulso (opção A confirmada pelo autor em 08/10/2026), raio e escudo do exemplão.
-Herdam `currentColor`, sem stroke; valores têm rótulo acessível e `appTooltip` por
-extenso. Conferidos em 14/16/24px, claro/escuro. A adoção nas telas está registrada na
-[rodada arquivada](../specs/done/icones-recursos-sistema.spec.md); glifos e pendências,
-inclusive a divergência do tooltip por extenso, seguem na
-[continuação no backlog](../specs/backlog/icones-recursos-glifos-e-pendencias.spec.md).
+Herdam `currentColor`, sem stroke. O contrato T3 aprovado em 18/10/2026 mantém
+`appTooltip` somente com o nome em barras, fichas, cards e resumos; custos avulsos de
+Energia no inventário e nas habilidades de NPC usam “N de Energia”, com o mesmo
+custo apresentado (inclusive reduzido ou zero). Não concatenar valores no Stat ou
+BarraRecurso. Ícones do leitor de regras ficam fora desse recorte.
+[Matriz e verificação T3](../specs/done/icones-tooltips-recursos-t3/verificacao.md).
+Trio conferido em 14/16/24px, claro/escuro; adoção original na
+[rodada arquivada](../specs/done/icones-recursos-sistema.spec.md).
+
+`maestria` (Atributo coroado) e `critico` (Dado excepcional com estrelinhas) usam a
+família de contorno, `currentColor` e SVG decorativo. A coroa substitui as marcas de
+Maestria, preservando duas marcas ao redor da sigla na leitura; o dado acompanha a
+quantidade de críticos, sem substituir o d20 ou o badge textual.
+[Maestria](../specs/done/icones-maestria-adocao/verificacao.md),
+[Crítico](../specs/done/icones-critico-adocao/verificacao.md) e
+[Energia em Utilizar](../specs/done/icones-energia-utilizar/verificacao.md)
+conferidos nos quatro viewports e nas duas bases. Ações genéricas permanecem na
+[continuação ativa](../specs/active/icones-recursos-glifos-e-pendencias.spec.md).
 
 ### Dano, categoria de habilidade, fragmento e reação (`icones-dano-habilidade-fragmento-reacao`)
 
