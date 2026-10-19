@@ -52,6 +52,7 @@ export class HistoricoRolagensJanela {
         );
     ficha$.pipe(takeUntilDestroyed()).subscribe({
       next: (ficha) => {
+        if (this.acessoNegado()) return;
         this.contexto.set(`Ficha de ${ficha.nome}`);
         this.tempoRealService.conectar();
         this.tempoRealService.entrarSalaFicha(this.fichaId);
@@ -63,14 +64,11 @@ export class HistoricoRolagensJanela {
         }
         this.carregarPagina(1);
       },
-      error: () => {
-        this.acessoNegado.set(true);
-        this.carregando.set(false);
-      },
+      error: () => this.negarAcesso(),
     });
 
     this.tempoRealService.rolagemRegistrada$
-      .pipe(filter((rolagem) => rolagem.fichaId === this.fichaId), takeUntilDestroyed())
+      .pipe(filter((rolagem) => !this.acessoNegado() && rolagem.fichaId === this.fichaId), takeUntilDestroyed())
       .subscribe({
         next: (rolagem) =>
           this.itens.update((atuais) =>
@@ -95,18 +93,24 @@ export class HistoricoRolagensJanela {
         takeUntilDestroyed(),
       )
       .subscribe({
-        next: () => {
-          this.acessoNegado.set(true);
-          this.contexto.set("Ficha");
-          this.itens.set([]);
-          this.temMais.set(false);
-        },
+        next: () => this.negarAcesso(),
       });
     // `reconexao$` (P-083): só reconexões futuras à montagem, nunca uma já ocorrida antes de
     // abrir a janela.
     this.tempoRealService.reconexao$
       .pipe(takeUntilDestroyed())
       .subscribe({ next: () => { if (!this.acessoNegado()) this.carregarPagina(1); } });
+  }
+
+  /** Toda negação retira também a identidade e impede callbacks antigos de restaurá-la. */
+  private negarAcesso(): void {
+    this.acessoNegado.set(true);
+    this.contexto.set("Ficha");
+    this.itens.set([]);
+    this.pagina.set(0);
+    this.temMais.set(false);
+    this.carregando.set(false);
+    this.carregandoMais.set(false);
   }
 
   private carregarPagina(pagina: number): void {
@@ -128,10 +132,7 @@ export class HistoricoRolagensJanela {
           this.temMais.set(resultado.paginaAtual < resultado.totalPaginas);
           carregamento.set(false);
         },
-        error: () => {
-          this.acessoNegado.set(true);
-          carregamento.set(false);
-        },
+        error: () => this.negarAcesso(),
       });
   }
 

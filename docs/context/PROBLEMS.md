@@ -42,18 +42,6 @@
 - **Desde:** confirmado na retomada de 19/10/2026;
   [método e limites](../specs/done/auditoria-ficha-oculta-retomada-cobertura/verificacao.md).
 
-### P-131 — GET inicial atrasado conserva nome no histórico negado · `ABERTO` · frontend/ficha
-
-- **Sintoma:** a janela de histórico recebe a primeira ficha depois de ela ser ocultada;
-  histórico nega, mas cabeçalho ainda identifica a ficha alheia.
-- **Causa:** ingresso na sala ocorre só após o GET inicial, perdendo a revogação em voo;
-  erro da primeira página não neutraliza `contexto`.
-- **Contorno:** fechar a janela; não evita a exposição enquanto ela fica aberta.
-- **Correção:** [histórico e resposta atrasada](../specs/backlog/fix-ficha-oculta-historico-resposta-atrasada.spec.md),
-  coordenada com P-130 no tratamento do estado negado.
-- **Desde:** confirmado em 19/10/2026 com resposta REST real retida;
-  [evidências](../specs/done/auditoria-ficha-oculta-retomada-cobertura/verificacao.md).
-
 ### P-130 — Leitores mantêm ficha/identidade após perda de acesso durante queda · `ABERTO` · frontend/tempo-real
 
 - **Sintoma:** ocultação durante queda da API, sem broadcast: ao reconectar, grade do combate

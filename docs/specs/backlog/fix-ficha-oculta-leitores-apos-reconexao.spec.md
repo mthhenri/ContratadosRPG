@@ -49,5 +49,5 @@ médias, revelação de NPC/criatura ou censurar conteúdo já recebido fora do 
 - [Evidência P-130](../done/auditoria-ficha-oculta-retomada-cobertura/verificacao.md).
 - `docs/SYSTEM.SPEC.md` §9/14, `docs/design/DESIGN.md`; skills `verify`,
   `tempo-real`, `gerenciamento-de-impacto` e `design-fidelity` quando aplicável.
-- [Histórico inicial atrasado](fix-ficha-oculta-historico-resposta-atrasada.spec.md)
+- [Histórico inicial atrasado](../done/fix-ficha-oculta-historico-resposta-atrasada.spec.md)
   compartilha arquivo; coordenar sem duplicar a responsabilidade de estado negado.

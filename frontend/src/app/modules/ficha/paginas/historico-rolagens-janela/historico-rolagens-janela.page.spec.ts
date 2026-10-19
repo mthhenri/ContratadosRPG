@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
-import { Subject, of } from 'rxjs';
+import { Subject, of, throwError } from 'rxjs';
 
 import type { FichaAcessoRevogadoDto } from '@contratados-rpg/shared/dtos/ficha';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
@@ -38,7 +38,10 @@ describe('HistoricoRolagensJanela', () => {
     };
   }
 
-  function montar() {
+  function montar(configurar?: (servicos: {
+    fichaService: { recuperarFicha: ReturnType<typeof vi.fn> };
+    rolagemService: { listarPorFicha: ReturnType<typeof vi.fn> };
+  }) => void) {
     const reconexao$ = new Subject<void>();
     const rolagemRegistrada$ = new Subject<RolagemResumoDto>();
     const acessoRevogado$ = new Subject<FichaAcessoRevogadoDto>();
@@ -51,6 +54,7 @@ describe('HistoricoRolagensJanela', () => {
       recuperarFicha: vi.fn(() => of({ id: FICHA_ID, nome: 'Kane', campanhaId: 9 })),
       recuperarFichaCriatura: vi.fn(() => of({ id: FICHA_ID, nome: 'A Estátua', campanhaId: 9 })),
     };
+    configurar?.({ fichaService, rolagemService });
     const tempoReal = {
       conectar: vi.fn(),
       entrarSalaFicha: vi.fn(),
@@ -89,8 +93,59 @@ describe('HistoricoRolagensJanela', () => {
       rolagemService,
       reconexao$,
       acessoRevogado$,
+      fichaService,
+      rolagemRegistrada$,
     };
   }
+
+  it('primeiro GET atrasado seguido de histórico 403 neutraliza toda identidade (P-131)', () => {
+    const ficha$ = new Subject<{ id: number; nome: string; campanhaId: number }>();
+    const { fixture, raiz } = montar(({ fichaService, rolagemService }) => {
+      fichaService.recuperarFicha.mockReturnValue(ficha$);
+      rolagemService.listarPorFicha.mockReturnValue(throwError(() => ({ status: 403 })));
+    });
+    ficha$.next({ id: FICHA_ID, nome: 'Nome que ficou oculto', campanhaId: 9 });
+    fixture.detectChanges();
+    expect(raiz.textContent).not.toContain('Nome que ficou oculto');
+    expect(fixture.componentInstance['contexto']()).toBe('Ficha');
+    expect(fixture.componentInstance['itens']()).toEqual([]);
+    expect(fixture.componentInstance['carregando']()).toBe(false);
+  });
+
+  it('revogação antes do primeiro GET impede resposta e evento posteriores de repovoar', () => {
+    const ficha$ = new Subject<{ id: number; nome: string; campanhaId: number }>();
+    const { fixture, acessoRevogado$, rolagemRegistrada$, rolagemService } = montar(({ fichaService }) => {
+      fichaService.recuperarFicha.mockReturnValue(ficha$);
+    });
+    acessoRevogado$.next({ fichaId: FICHA_ID, usuarioId: USUARIO_ID });
+    ficha$.next({ id: FICHA_ID, nome: 'Nome revogado', campanhaId: 9 });
+    rolagemRegistrada$.next(rolagem(2));
+    fixture.detectChanges();
+    expect(fixture.componentInstance['contexto']()).toBe('Ficha');
+    expect(fixture.componentInstance['itens']()).toEqual([]);
+    expect(rolagemService.listarPorFicha).not.toHaveBeenCalled();
+  });
+
+  it('negação durante paginação limpa itens, nome e paginação anterior', () => {
+    const { fixture, rolagemService, reconexao$ } = montar();
+    rolagemService.listarPorFicha.mockReturnValue(throwError(() => ({ status: 403 })));
+    reconexao$.next();
+    fixture.detectChanges();
+    expect(fixture.componentInstance['contexto']()).toBe('Ficha');
+    expect(fixture.componentInstance['itens']()).toEqual([]);
+    expect(fixture.componentInstance['pagina']()).toBe(0);
+    expect(fixture.componentInstance['temMais']()).toBe(false);
+  });
+
+  it('destruir a janela cancela o primeiro GET e impede carregar histórico depois', () => {
+    const ficha$ = new Subject<{ id: number; nome: string; campanhaId: number }>();
+    const { fixture, rolagemService } = montar(({ fichaService }) => {
+      fichaService.recuperarFicha.mockReturnValue(ficha$);
+    });
+    fixture.destroy();
+    ficha$.next({ id: FICHA_ID, nome: 'Depois de destruir', campanhaId: 9 });
+    expect(rolagemService.listarPorFicha).not.toHaveBeenCalled();
+  });
 
   it('acesso revogado ou suspenso por ocultação esvazia a janela e ignora a página em voo', () => {
     const { fixture, raiz, rolagemService, reconexao$, acessoRevogado$ } = montar();

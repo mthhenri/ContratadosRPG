@@ -122,7 +122,7 @@ ser recebida como revogação. A chamada posterior de `listarPorFicha` nega a
 leitura; o erro não neutraliza o cabeçalho. O guard existente nas páginas de
 histórico em voo protege `itens`, mas não cobre essa carga inicial de identidade.
 
-Destino: [histórico e resposta atrasada](../../backlog/fix-ficha-oculta-historico-resposta-atrasada.spec.md).
+Destino: [histórico e resposta atrasada](../../done/fix-ficha-oculta-historico-resposta-atrasada.spec.md).
 
 ### P-132 — Objeto de avatar acessível fora da autorização da ficha
 

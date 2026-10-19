@@ -36,5 +36,5 @@ autorizados, reformular histórico ou a política de publicação de rolagens.
 ## Dependências
 
 - [Evidência P-131](../done/auditoria-ficha-oculta-retomada-cobertura/verificacao.md).
-- [P-130](fix-ficha-oculta-leitores-apos-reconexao.spec.md), coordenação no
+- [P-130](../backlog/fix-ficha-oculta-leitores-apos-reconexao.spec.md), coordenação no
   arquivo compartilhado; `docs/SYSTEM.SPEC.md` §9/14 e `docs/design/DESIGN.md`.

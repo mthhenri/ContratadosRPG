@@ -1,5 +1,23 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-19 — fix-ficha-oculta-historico-resposta-atrasada: P-131 corrigido
+
+Uma transição única de negação agora limpa cabeçalho, itens, paginação e carga
+da janela de histórico. Primeira resposta entregue após revogação e eventos
+posteriores não repovoam a janela; destruição cancela a carga inicial. Sem nova
+UI, estilo, contrato ou regra de permissão. P-130 reutiliza essa limpeza depois.
+
+TDD: 3 falhas reproduzidas antes, 8 testes focados aprovados depois. Gate completo:
+shared 1335 testes; backend 1220 aprovados/99 ignorados; frontend 3552 testes e
+89 testes do normalizador aprovados. Lint dos três workspaces sem erros, com
+avisos preexistentes; build frontend aprovado, aviso de bundle 599,02 kB preservado.
+`verify` com GET real retido até depois da ocultação: cabeçalho neutro nos quatro
+viewports, sem reload/overflow; controles autorizados de dono/mestre preservados.
+Inspeção pessoal desktop/mobile comparada ao shell canônico da própria janela e
+das Anotações. [Verificação e limites](../specs/done/fix-ficha-oculta-historico-resposta-atrasada/verificacao.md).
+Dados sintéticos mantidos temporariamente no ambiente isolado para a sequência
+autorizada das outras specs; alterações concorrentes de ícones fora desta task.
+
 ## 2026-10-19 — auditoria-ficha-oculta-retomada-cobertura: leitores, avatar e decisões
 
 Retomada executada sem alterar aplicação ou reescrever a rodada histórica de 29/09.
