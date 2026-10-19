@@ -6,22 +6,31 @@
 > e ignorada; `repo:verificar` e CI conferem destinos e espelhos. As duas avaliações de usabilidade
 > voltaram ao backlog por decisão do autor; a [conferência dos quatro recortes legados](../specs/done/legado-superpowers-conferir-fecho.spec.md)
 > está encerrada documentalmente, com os anexos preservados e a identidade do Caderno concluída.
-> A [retomada da cobertura de ficha oculta](../specs/backlog/auditoria-ficha-oculta-retomada-cobertura.spec.md)
-> permanece no backlog. Estado da M10 preservado.
+> A [retomada investigativa de ficha oculta](../specs/done/auditoria-ficha-oculta-retomada-cobertura.spec.md)
+> foi executada; correções e decisões implementáveis estão em specs próprias no backlog.
+> Estado da M10 preservado.
 > [Inventário, destinos e gates desta organização](../specs/done/organizacao-documentacao-e-artefatos/verificacao.md).
 
 > **Caderno — identidade concluída em 2026-10-09:** a inicial, o cursor e a seleção de cada
 > colaborador usam a cor da sua ficha alterada mais recentemente na campanha, com atualização
 > durante a edição e após reconexão. [Spec e evidências](../specs/done/caderno-cor-identidade-colaborador.spec.md).
 
-> **Auditoria de ficha oculta — cobertura ainda parcial:** [matriz e evidências](../specs/done/auditoria-ficha-oculta-todos-consumidores/ficha-oculta-todos-consumidores.md).
+> **Auditoria de ficha oculta — retomada investigativa de 19/10 concluída:**
+> [cobertura por consumidor, decisões e limites](../specs/done/auditoria-ficha-oculta-retomada-cobertura/verificacao.md).
+> [Matriz histórica](../specs/done/auditoria-ficha-oculta-todos-consumidores/ficha-oculta-todos-consumidores.md).
 > [Spec investigativa arquivada em `done/`](../specs/done/auditoria-ficha-oculta-todos-consumidores.spec.md);
 > o relatório não comprova fecho integral. As três divergências confirmadas (eventos FO-02,
 > concessão/leitura FO-03, identidade no encontro FO-01) estão corrigidas. Regras decididas
 > (SYSTEM.SPEC §14): ocultar ficha de jogador **suspende** a concessão; no encontro, o agente
 > oculto some do recorte de terceiros e, durante o turno dele, a vez aparece no próximo visível.
-> Seguem abertas as decisões de rolagem pública (D-01) e médias (D-02) e a hipótese de URL de
-> avatar já conhecida (H-02); H-01 tem recortes verificados, com demais consumidores pendentes.
+> H-01 confirmou resíduos em leitores após reconexão (P-130) e no histórico inicial
+> atrasado (P-131); detalhe/Investigação/prévias limparam a ficha alheia nos cenários observados.
+> H-02 confirmou leitura anônima de avatar por URL conhecida no provedor local (P-132),
+> sem teste de produção. Autor decidiu: novas leituras exigem permissão atual;
+> rolagens públicas ocultam identidade da ficha para terceiros, inclusive histórico (D-01);
+> médias usam fichas visíveis **por observador**, preservando recortes de dono/mestre (D-02).
+> Cinco specs no backlog; comportamento do site ainda não alterado. D-02 depende de
+> alinhamento do livro publicado pela Oficina antes da implementação.
 
 > **Requests — revisão de 2026-09-26 fechada:** as seis tasks do guarda-chuva
 > [requests-correcoes](../specs/done/requests-correcoes.spec.md) (`p-082`…`p-086` +

@@ -29,6 +29,43 @@
 
 ## Ativos
 
+### P-132 — URL conhecida de avatar ignora a permissão atual da ficha · `ABERTO` · backend/armazenamento
+
+- **Sintoma:** ficha de jogador oculta nega GET a B (403), mas nova leitura anônima da URL
+  conhecida do avatar retorna 200 e os mesmos bytes, com cache desabilitado.
+- **Causa:** `/uploads` é servido estaticamente; o provedor local devolve caminho público e
+  R2 devolve URL pública, sem passar pelo árbitro de leitura da ficha.
+- **Contorno:** nenhum para novas leituras do objeto público. Não é possível recolher cópias
+  já baixadas. Produção/R2/CDN não foram testados; confirmação dinâmica é do provedor local.
+- **Correção:** autor decidiu exigir permissão atual inclusive por URL conhecida;
+  [spec de avatar autorizado](../specs/backlog/ficha-avatar-leitura-autorizada.spec.md).
+- **Desde:** confirmado na retomada de 19/10/2026;
+  [método e limites](../specs/done/auditoria-ficha-oculta-retomada-cobertura/verificacao.md).
+
+### P-131 — GET inicial atrasado conserva nome no histórico negado · `ABERTO` · frontend/ficha
+
+- **Sintoma:** a janela de histórico recebe a primeira ficha depois de ela ser ocultada;
+  histórico nega, mas cabeçalho ainda identifica a ficha alheia.
+- **Causa:** ingresso na sala ocorre só após o GET inicial, perdendo a revogação em voo;
+  erro da primeira página não neutraliza `contexto`.
+- **Contorno:** fechar a janela; não evita a exposição enquanto ela fica aberta.
+- **Correção:** [histórico e resposta atrasada](../specs/backlog/fix-ficha-oculta-historico-resposta-atrasada.spec.md),
+  coordenada com P-130 no tratamento do estado negado.
+- **Desde:** confirmado em 19/10/2026 com resposta REST real retida;
+  [evidências](../specs/done/auditoria-ficha-oculta-retomada-cobertura/verificacao.md).
+
+### P-130 — Leitores mantêm ficha/identidade após perda de acesso durante queda · `ABERTO` · frontend/tempo-real
+
+- **Sintoma:** ocultação durante queda da API, sem broadcast: ao reconectar, grade do combate
+  remove o agente, mas ficha flutuante/página completa conservam snapshot. Histórico nega o
+  corpo, porém mantém o nome no cabeçalho. Detalhe, Investigação e prévias limparam o estado.
+- **Causa:** flutuante não revalida documento na reconexão; página completa trata só sucesso
+  do refetch; erro de histórico não limpa identidade.
+- **Contorno:** fechar/reabrir ou recarregar o leitor força o GET negado.
+- **Correção:** [leitores após reconexão](../specs/backlog/fix-ficha-oculta-leitores-apos-reconexao.spec.md).
+- **Desde:** confirmado em 19/10/2026 com API isolada e ficha sintética;
+  [evidências e limites](../specs/done/auditoria-ficha-oculta-retomada-cobertura/verificacao.md).
+
 ### P-129 — Abas não selecionadas da campanha/NPC sem nome acessível no celular · `ABERTO` · frontend/acessibilidade
 
 - **Sintoma:** em 360×800, a aba Criaturas não selecionada não é encontrada por papel

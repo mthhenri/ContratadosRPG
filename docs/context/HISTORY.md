@@ -1,5 +1,45 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-19 — auditoria-ficha-oculta-retomada-cobertura: leitores, avatar e decisões
+
+Retomada executada sem alterar aplicação ou reescrever a rodada histórica de 29/09.
+API/SPA exclusivas em 3101/4301, banco local e quatro contas sintéticas M/A/B/S;
+campanha 127, fichas 471/472. Sessões concorrentes e alterações locais preexistentes
+preservadas. FO-01/02/03 não reabertas. [Relatório por consumidor](../specs/done/auditoria-ficha-oculta-retomada-cobertura/verificacao.md).
+
+H-01: ocultar/revogar online fechou a ficha flutuante. Com ocultação durante queda
+real da API exclusiva, sem evento, a grade do combate atualizou, mas flutuante e
+página completa conservaram o documento; histórico negou corpo mantendo nome (P-130).
+Uma primeira resposta de ficha retida até depois da ocultação também deixou o nome
+no cabeçalho do histórico negado (P-131). Detalhe de campanha, Investigação e prévias
+M→B limparam seleção/modal após reconexão; prévia descartou GET atrasado. Encerrar
+cena destruiu a janela; anotação ficou restrita a dono/mestre. Sentinelas no browser
+comprovaram ausência de reload. Testes existentes não cobriam os defeitos reproduzidos.
+
+H-02: upload PNG real; leitura anônima nova, sem cache e pela URL conhecida, continuou
+200 após ocultar, com bytes idênticos, enquanto REST da ficha por B era 403 (P-132).
+Confirmado no provedor local; R2 foi inspecionado no código, não em produção. Autor
+decidiu exigir permissão atual em novas leituras, inclusive pela URL conhecida; sem
+promessa de recolher cópias baixadas. Rolagens públicas antiga/nova chegaram a B/S
+por REST/WS com identidade de ficha; D-01 decidido: preservar publicação e retirar
+identidade para terceiros, inclusive histórico já publicado. D-02 decidido: usar
+o recorte visível **de cada observador**, não filtro global de ocultas; exemplo B
+vê nível 2 mas recebe média 6/quantidade 2 atualmente. Alterar o conjunto da regra
+de Novo Agente exige alinhar o livro pela Oficina/publicação/exportação antes do código.
+
+Cinco specs próprias no backlog: leitores após reconexão, histórico inicial atrasado,
+avatar autorizado, rolagem pública sem identidade e médias por observador. Auditoria
+não autoriza sua implementação automática e não certifica privacidade integral.
+Verificação pessoal em 1920×1080/360×800 nos papéis/prévias e também 960×1080/1366×768
+na Investigação. Sem nova UI a entregar. Backend: 5 arquivos/256 testes; frontend:
+5 arquivos/74 testes aprovados. Tentativas iniciais EPERM de cache no sandbox não
+executaram testes; repetição autorizada passou. Evidência bruta/sessões somente em
+`.artifacts/auditoria-ficha-oculta-retomada-cobertura/`, local e ignorada.
+`repo:test`: 14 testes aprovados após contornar a restrição de `git init` da
+fixture temporária no sandbox; `repo:verificar` e `git diff --check` aprovados.
+Cenário sintético limpo por REST/soft delete, avatar removido pelo endpoint
+próprio e servidores exclusivos encerrados, preservando frontend original em 4300.
+
 ## 2026-10-19 — caderno-vincular-trecho-biblioteca: trechos ligados a documentos por ID
 
 Autor fechou as decisões do rascunho: vínculo de ida para documento, persistido no Markdown,

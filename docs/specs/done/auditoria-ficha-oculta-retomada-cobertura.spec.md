@@ -1,6 +1,8 @@
 # auditoria-ficha-oculta-retomada-cobertura.spec.md
 
-> Registro da cobertura restante em 2026-10-08; nenhuma retomada executada nesta organização.
+> Retomada investigativa executada em 2026-10-19; correções separadas no backlog.
+
+[Relatório, matriz por consumidor, decisões e limites](auditoria-ficha-oculta-retomada-cobertura/verificacao.md).
 
 ## Objetivo
 
