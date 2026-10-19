@@ -1,6 +1,6 @@
 import { By } from '@angular/platform-browser';
 import { TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { Subject, of, throwError } from 'rxjs';
 
 import {
   CadenciaEnum,
@@ -19,6 +19,7 @@ import { SessaoService } from '../../../../core/services/sessao.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { FichaCampanhaCard } from '../ficha-campanha-card/ficha-campanha-card.component';
 import { FichaService } from '../../ficha.service';
+import { FichaEdicaoService } from '../../ficha-edicao.service';
 import { FichaFlutuanteConteudo } from './ficha-flutuante-conteudo.component';
 
 /**
@@ -103,7 +104,11 @@ describe('FichaFlutuanteConteudo', () => {
   ) {
     const recuperarFicha = vi.fn(() => of(fichaJogador));
     const recuperarFichaCriatura = vi.fn(() => of(fichaCriatura));
-    const tempoReal = { conectar: vi.fn(), entrarSalaFicha: vi.fn(), sairSalaFicha: vi.fn() };
+    const reconexao$ = new Subject<void>();
+    const tempoReal = {
+      conectar: vi.fn(), entrarSalaFicha: vi.fn(), sairSalaFicha: vi.fn(),
+      reconexao$: reconexao$.asObservable(),
+    };
     TestBed.configureTestingModule({
       providers: [
         {
@@ -119,7 +124,7 @@ describe('FichaFlutuanteConteudo', () => {
     fixture.componentRef.setInput('alvo', alvo);
     fixture.componentRef.setInput('ehMestre', ehMestre);
     fixture.detectChanges();
-    return { fixture, recuperarFicha, recuperarFichaCriatura, tempoReal };
+    return { fixture, recuperarFicha, recuperarFichaCriatura, tempoReal, reconexao$ };
   }
 
   it('ocupa a sala `ficha:<id>` da ficha aberta enquanto vive (revogação chega mesmo sem o hospedeiro assinar)', () => {
@@ -130,6 +135,53 @@ describe('FichaFlutuanteConteudo', () => {
     fixture.destroy();
 
     expect(tempoReal.sairSalaFicha).toHaveBeenCalledWith(10);
+  });
+
+  it('reconexão negada limpa nome e documento da flutuante (P-130)', () => {
+    const { fixture, recuperarFicha, reconexao$ } = montar(
+      { fichaId: 10, tipo: TipoFichaEnum.JOGADOR, usuarioIdDono: 3 }, false,
+    );
+    recuperarFicha.mockReturnValue(throwError(() => ({ status: 403 })));
+    reconexao$.next();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.nome()).toBeNull();
+    expect(fixture.nativeElement.querySelector('app-ficha-campanha-card')).toBeNull();
+  });
+
+  it('falha transitória preserva documento e uma reconexão seguinte renova a ficha', () => {
+    const { fixture, recuperarFicha, reconexao$ } = montar(
+      { fichaId: 10, tipo: TipoFichaEnum.JOGADOR, usuarioIdDono: 7 }, false,
+    );
+    recuperarFicha.mockReturnValueOnce(throwError(() => ({ status: 500 })));
+    reconexao$.next();
+    expect(fixture.componentInstance.nome()).toBe('K. Amaral');
+    recuperarFicha.mockReturnValue(of({ ...fichaJogador, nome: 'Nome remoto' }));
+    reconexao$.next();
+    expect(fixture.componentInstance.nome()).toBe('Nome remoto');
+  });
+
+  it('concessão de criatura revogada durante queda também retira o documento', () => {
+    const { fixture, recuperarFichaCriatura, reconexao$ } = montar(
+      { fichaId: 20, tipo: TipoFichaEnum.CRIATURA, usuarioIdDono: 1 }, false,
+    );
+    recuperarFichaCriatura.mockReturnValue(throwError(() => ({ status: 404 })));
+    reconexao$.next();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.nome()).toBeNull();
+    expect(fixture.nativeElement.querySelector('app-criatura-visualizacao')).toBeNull();
+  });
+
+  it('ressincroniza sem descartar a edição local pendente do dono', () => {
+    const { fixture, recuperarFicha, reconexao$ } = montar(
+      { fichaId: 10, tipo: TipoFichaEnum.JOGADOR, usuarioIdDono: 7 }, false,
+    );
+    const edicao = fixture.debugElement.injector.get(FichaEdicaoService);
+    fixture.componentInstance['fichaJogador'].set({ ...fichaJogador, nome: 'Edição local' });
+    edicao.edicaoPendente.set(true);
+    recuperarFicha.mockReturnValue(of({ ...fichaJogador, cor: '#22c55e' }));
+    reconexao$.next();
+    expect(fixture.componentInstance['fichaJogador']()?.nome).toBe('Edição local');
+    expect(fixture.componentInstance['fichaJogador']()?.cor).toBe('#22c55e');
   });
 
   it('busca `recuperarFicha` e desenha `app-ficha-campanha-card` pro alvo JOGADOR', () => {

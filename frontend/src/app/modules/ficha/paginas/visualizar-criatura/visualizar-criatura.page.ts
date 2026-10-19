@@ -29,6 +29,7 @@ import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { TopbarContextoService } from '../../../../core/services/topbar-contexto.service';
 import { CampanhaService } from '../../../campanha/campanha.service';
 import { FichaService } from '../../ficha.service';
+import { revalidarLeituraFicha } from "../../ficha-leitura-revalidar";
 import { FichaEdicaoCriaturaService } from '../../ficha-edicao-criatura.service';
 import { FichaRolagemRegistroService } from '../../ficha-rolagem-registro.service';
 import { lerParamRota } from '../../ler-param-rota';
@@ -76,6 +77,7 @@ const ITENS_POR_PAGINA_HISTORICO = 20;
   styleUrl: './visualizar-criatura.page.scss',
 })
 export class CriaturaVisualizar {
+  private leituraNegada = false;
   protected readonly janelaHistorico = inject(HistoricoRolagensJanelaService);
   protected readonly janelaAnotacoes = inject(AnotacoesJanelaService);
   private readonly cadernoRef = viewChild(CadernoFlutuante);
@@ -224,9 +226,11 @@ export class CriaturaVisualizar {
           return membros$.pipe(map((membros) => ({ ficha, membros })));
         }),
         finalize(() => this.carregando.set(false)),
+        takeUntilDestroyed(this.destroyRef),
       )
       .subscribe({
         next: ({ ficha, membros }) => {
+          if (this.leituraNegada) return;
           this.ficha.set(ficha);
           this.fichaEdicao.definirBase(ficha);
           this.membros.set(membros);
@@ -323,12 +327,13 @@ export class CriaturaVisualizar {
 
     // `reconexao$` (P-083): só reconexões futuras à montagem, nunca uma já ocorrida antes de
     // abrir a ficha.
-    this.tempoRealService.reconexao$.pipe(takeUntilDestroyed()).subscribe({
-      next: () =>
-        this.fichaService
-          .recuperarFichaCriatura(this.fichaId)
-          .subscribe({ next: (ficha) => this.absorverRemoto(ficha) }),
-    });
+    this.tempoRealService.reconexao$.pipe(
+      revalidarLeituraFicha(
+        () => this.fichaService.recuperarFichaCriatura(this.fichaId),
+        () => this.expulsar(),
+      ),
+      takeUntilDestroyed(),
+    ).subscribe({ next: (ficha) => this.absorverRemoto(ficha) });
   }
 
   /**
@@ -337,6 +342,7 @@ export class CriaturaVisualizar {
    * (`mesclarDocumento`) — mesmo racional de `FichaVisualizar.absorverRemoto` (m3-17).
    */
   private absorverRemoto(remoto: FichaCriaturaRecuperadaDto): void {
+    if (this.leituraNegada) return;
     const base = this.fichaEdicao.fichaBase();
     const local = this.ficha();
 
@@ -350,6 +356,12 @@ export class CriaturaVisualizar {
 
   /** Redireciona pra fora da tela após a revogação do próprio acesso, com um toast avisando o motivo. */
   private expulsar(): void {
+    if (this.leituraNegada) return;
+    this.leituraNegada = true;
+    this.ficha.set(null);
+    this.fichaEdicao.definirBase(null);
+    this.historicoRolagens.set([]);
+    this.topbarContexto.limpar();
     this.notificacaoService.notificar({
       severidade: 'aviso',
       resumo: 'Acesso revogado',
@@ -470,6 +482,7 @@ export class CriaturaVisualizar {
       .listarPorFicha(this.fichaId, pagina, ITENS_POR_PAGINA_HISTORICO)
       .subscribe({
         next: (paginado) => {
+          if (this.leituraNegada) return;
           this.historicoRolagens.update((atuais) =>
             pagina === 1 ? paginado.itens : [...atuais, ...paginado.itens],
           );
@@ -491,6 +504,7 @@ export class CriaturaVisualizar {
 
   /** Prepend local — uma rolagem feita nesta tela aparece na hora no topo da barra lateral. */
   private onRolagemRegistrada(rolagem: RolagemResumoDto): void {
+    if (this.leituraNegada) return;
     this.historicoRolagens.update((atuais) =>
       atuais[0]?.id === rolagem.id ? atuais : [rolagem, ...atuais],
     );
@@ -504,6 +518,7 @@ export class CriaturaVisualizar {
    * HTTP, confirmado ao vivo).
    */
   private onRolagemRemota(rolagem: RolagemResumoDto): void {
+    if (this.leituraNegada) return;
     const jaConhecida = this.historicoRolagens().some((existente) => existente.id === rolagem.id);
     const provavelmenteMinha = this.rolagensLocaisEmVoo > 0;
     this.onRolagemRegistrada(rolagem);

@@ -219,6 +219,37 @@ describe('FichaVisualizar', () => {
     };
   }
 
+  it('reconexão 403 limpa documento e sai pelo fluxo canônico (P-130)', () => {
+    const { fixture, fichaService, reconexao$, navegarEspiao } = montar({ usuarioLogadoId: 11 });
+    fichaService.recuperarFicha.mockReturnValue(throwError(() => ({ status: 403 })));
+    reconexao$.next();
+    expect(fixture.componentInstance['ficha']()).toBeNull();
+    expect(navegarEspiao).toHaveBeenCalled();
+  });
+
+  it('resposta anterior de reconexão não restaura ficha após revogação online', () => {
+    const { fixture, fichaService, reconexao$, acessoRevogado$ } = montar({ usuarioLogadoId: 11 });
+    const antiga = fixture.componentInstance['ficha']()!;
+    const resposta$ = new Subject<FichaRecuperadaDto>();
+    fichaService.recuperarFicha.mockReturnValue(resposta$);
+    reconexao$.next();
+    acessoRevogado$.next({ fichaId: 42, usuarioId: 11 });
+    resposta$.next(antiga);
+    expect(fixture.componentInstance['ficha']()).toBeNull();
+  });
+
+  it('falha transitória na reconexão não revoga o documento e permite retentar', () => {
+    const { fixture, fichaService, reconexao$, navegarEspiao } = montar({ usuarioLogadoId: 11 });
+    const antiga = fixture.componentInstance['ficha']()!;
+    fichaService.recuperarFicha.mockReturnValueOnce(throwError(() => ({ status: 500 })));
+    reconexao$.next();
+    expect(fixture.componentInstance['ficha']()).toEqual(antiga);
+    expect(navegarEspiao).not.toHaveBeenCalled();
+    fichaService.recuperarFicha.mockReturnValue(of({ ...antiga, nome: 'Restabelecida' }));
+    reconexao$.next();
+    expect(fixture.componentInstance['ficha']()?.nome).toBe('Restabelecida');
+  });
+
   it('exibe a ficha para um membro comum sem edição inline nem painel de acesso', () => {
     // Usuário 11 não é dono (dono é 7) nem mestre (mestre é 99): só vê (ajustavel = false).
     const { raiz, fixture, fichaService } = montar({ usuarioLogadoId: 11 });
@@ -1221,6 +1252,16 @@ describe('FichaVisualizar', () => {
   });
 
   describe('tempo real de rolagem (m3-77)', () => {
+    it("não repovoa histórico nem bandeja após a leitura ser retirada", () => {
+      const { fixture, acessoRevogado$, rolagemRegistrada$ } = montar({ usuarioLogadoId: 11 });
+      const bandeja = TestBed.inject(BandejaDadosService);
+      const mostrar = vi.spyOn(bandeja, "mostrar");
+      acessoRevogado$.next({ fichaId: 42, usuarioId: 11 });
+      rolagemRegistrada$.next(rolagemRemota());
+      expect(fixture.componentInstance["historicoRolagens"]()).toEqual([]);
+      expect(mostrar).not.toHaveBeenCalled();
+    });
+
     function rolagemRemota(sobrescrever: Partial<RolagemResumoDto> = {}): RolagemResumoDto {
       return {
         id: 501,

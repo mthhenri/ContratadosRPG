@@ -23,14 +23,15 @@
 > concessão/leitura FO-03, identidade no encontro FO-01) estão corrigidas. Regras decididas
 > (SYSTEM.SPEC §14): ocultar ficha de jogador **suspende** a concessão; no encontro, o agente
 > oculto some do recorte de terceiros e, durante o turno dele, a vez aparece no próximo visível.
-> H-01 confirmou resíduos em leitores após reconexão (P-130, aberto). O histórico
-> inicial atrasado foi corrigido em P-131: negação limpa identidade/itens e callbacks
-> anteriores não restauram a janela. Detalhe/Investigação/prévias limparam a ficha alheia.
+> P-130/P-131 corrigidos: flutuante e páginas completas revalidam leitura após
+> reconexão; negação limpa documento/identidade e callbacks anteriores não restauram
+> a janela ou histórico. Erro transitório permite nova tentativa; dono/mestre
+> conservam leitura. Detalhe/Investigação/prévias já limpavam a ficha alheia.
 > H-02 confirmou leitura anônima de avatar por URL conhecida no provedor local (P-132),
 > sem teste de produção. Autor decidiu: novas leituras exigem permissão atual;
 > rolagens públicas ocultam identidade da ficha para terceiros, inclusive histórico (D-01);
 > médias usam fichas visíveis **por observador**, preservando recortes de dono/mestre (D-02).
-> P-131 entregue; quatro specs restantes no backlog. D-02 depende de
+> P-130/P-131 entregues; três specs restantes no backlog. D-02 depende de
 > alinhamento do livro publicado pela Oficina antes da implementação.
 
 > **Requests — revisão de 2026-09-26 fechada:** as seis tasks do guarda-chuva

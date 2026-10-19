@@ -11,6 +11,7 @@ import { HistoricoRolagensSidebar } from "../../../../shared/historico-rolagens-
 import { JanelaExternaCabecalho } from "../../../../shared/ui/janela-externa-cabecalho/janela-externa-cabecalho.component";
 import { FichaService } from "../../ficha.service";
 import { RolagemService } from "../../rolagem.service";
+import { acessoFichaFoiNegado } from "../../ficha-leitura-revalidar";
 
 const ITENS_POR_PAGINA = 20;
 
@@ -64,7 +65,7 @@ export class HistoricoRolagensJanela {
         }
         this.carregarPagina(1);
       },
-      error: () => this.negarAcesso(),
+      error: (erro: unknown) => this.tratarFalhaLeitura(erro),
     });
 
     this.tempoRealService.rolagemRegistrada$
@@ -113,6 +114,12 @@ export class HistoricoRolagensJanela {
     this.carregandoMais.set(false);
   }
 
+  private tratarFalhaLeitura(erro: unknown): void {
+    if (acessoFichaFoiNegado(erro)) this.negarAcesso();
+    this.carregando.set(false);
+    this.carregandoMais.set(false);
+  }
+
   private carregarPagina(pagina: number): void {
     const carregamento = pagina === 1 ? this.carregando : this.carregandoMais;
     carregamento.set(true);
@@ -132,7 +139,7 @@ export class HistoricoRolagensJanela {
           this.temMais.set(resultado.paginaAtual < resultado.totalPaginas);
           carregamento.set(false);
         },
-        error: () => this.negarAcesso(),
+        error: (erro: unknown) => this.tratarFalhaLeitura(erro),
       });
   }
 

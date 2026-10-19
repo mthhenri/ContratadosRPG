@@ -60,6 +60,7 @@ describe('FichaFlutuante', () => {
             entrarSalaFicha: vi.fn(),
             sairSalaFicha: vi.fn(),
             acessoRevogado$: acessoRevogado$.asObservable(),
+            reconexao$: new Subject<void>().asObservable(),
           },
         },
         { provide: NotificacaoService, useValue: { notificar } },

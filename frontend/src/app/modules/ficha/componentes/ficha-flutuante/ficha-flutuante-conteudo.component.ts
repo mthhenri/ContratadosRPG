@@ -1,4 +1,6 @@
-import { Component, DestroyRef, computed, effect, inject, input, signal } from '@angular/core';
+import { Component, DestroyRef, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { type Observable, merge, of } from 'rxjs';
 
 import { TipoFichaEnum } from '@contratados-rpg/shared/enums';
 import type { FichaCriaturaRecuperadaDto, FichaRecuperadaDto } from '@contratados-rpg/shared/dtos/ficha';
@@ -11,6 +13,8 @@ import { FichaEdicaoCriaturaService } from '../../ficha-edicao-criatura.service'
 import { FichaEdicaoService } from '../../ficha-edicao.service';
 import { FichaRolagemRegistroService } from '../../ficha-rolagem-registro.service';
 import { FichaService } from '../../ficha.service';
+import { revalidarLeituraFicha } from '../../ficha-leitura-revalidar';
+import { mesclarDocumento, mesclarFicha } from '../../mesclar-ficha';
 import type { FichaFlutuanteAlvo } from './ficha-flutuante.model';
 
 /**
@@ -44,6 +48,7 @@ export class FichaFlutuanteConteudo {
 
   readonly alvo = input.required<FichaFlutuanteAlvo>();
   readonly ehMestre = input.required<boolean>();
+  readonly leituraNegada = output<number>();
 
   protected readonly TipoFichaEnum = TipoFichaEnum;
   protected readonly carregando = signal(true);
@@ -79,23 +84,41 @@ export class FichaFlutuanteConteudo {
 
       if (alvoAtual.tipo === TipoFichaEnum.JOGADOR) {
         this.fichaEdicao.inicializar(this.fichaJogador, () => alvoAtual.fichaId);
-        this.fichaService.recuperarFicha(alvoAtual.fichaId).subscribe({
-          next: (ficha) => {
-            this.fichaJogador.set(ficha);
-            this.fichaEdicao.definirBase(ficha);
-            this.carregando.set(false);
-          },
-        });
       } else {
         this.fichaEdicaoCriatura.inicializar(this.fichaCriatura, () => alvoAtual.fichaId);
-        this.fichaService.recuperarFichaCriatura(alvoAtual.fichaId).subscribe({
-          next: (ficha) => {
-            this.fichaCriatura.set(ficha);
-            this.fichaEdicaoCriatura.definirBase(ficha);
-            this.carregando.set(false);
-          },
-        });
       }
+      const recuperar = (): Observable<FichaRecuperadaDto | FichaCriaturaRecuperadaDto> =>
+        alvoAtual.tipo === TipoFichaEnum.JOGADOR
+          ? this.fichaService.recuperarFicha(alvoAtual.fichaId)
+          : this.fichaService.recuperarFichaCriatura(alvoAtual.fichaId);
+      merge(of(undefined), this.tempoRealService.reconexao$).pipe(
+        revalidarLeituraFicha(recuperar, () => {
+          this.fichaJogador.set(null);
+          this.fichaCriatura.set(null);
+          this.fichaEdicao.definirBase(null);
+          this.fichaEdicaoCriatura.definirBase(null);
+          this.carregando.set(false);
+          this.leituraNegada.emit(alvoAtual.fichaId);
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      ).subscribe((ficha) => untracked(() => {
+        if (alvoAtual.tipo === TipoFichaEnum.JOGADOR) {
+          const jogador = ficha as FichaRecuperadaDto;
+          const base = this.fichaEdicao.fichaBase();
+          const local = this.fichaJogador();
+          this.fichaJogador.set(this.fichaEdicao.edicaoPendente() && base && local
+            ? mesclarFicha(base, local, jogador) : jogador);
+          this.fichaEdicao.definirBase(jogador);
+        } else {
+          const criatura = ficha as FichaCriaturaRecuperadaDto;
+          const base = this.fichaEdicaoCriatura.fichaBase();
+          const local = this.fichaCriatura();
+          this.fichaCriatura.set(this.fichaEdicaoCriatura.edicaoPendente() && base && local
+            ? mesclarDocumento(base, local, criatura) : criatura);
+          this.fichaEdicaoCriatura.definirBase(criatura);
+        }
+        this.carregando.set(false);
+      }));
     });
   }
 }

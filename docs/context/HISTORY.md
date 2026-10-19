@@ -1,5 +1,25 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-19 — fix-ficha-oculta-leitores-apos-reconexao: P-130 corrigido
+
+Flutuante passou a revalidar o próprio documento, sem depender do hospedeiro;
+negação autoritativa fecha o alvo e limpa nome/base. Páginas completas de jogador
+e criatura limpam e saem pela rota canônica. Operador RxJS local cancela consultas
+superadas, mantém erro transitório retentável e não duplica permissão do backend.
+Histórico reutiliza a limpeza P-131; callbacks tardios não restauram documento,
+histórico nem bandeja. Merge de três vias preserva edições pendentes na flutuante.
+
+Sete regressões falharam antes; versão integrada aprovou 183 testes focados.
+Uma regressão adicional de evento posterior à revogação falhou antes do guard;
+suíte final do frontend: 284 arquivos/3564 testes aprovados. Build e lint do
+workspace passaram, com os avisos preexistentes de estilo e bundle 599,02 kB.
+API exclusiva foi derrubada e ficha sintética ocultada/concessão de criatura
+revogada no banco, sem evento. Nas sete páginas abertas, reconexão fechou as
+flutuantes, retirou as páginas completas e neutralizou histórico, sem reload;
+dono/mestre mantidos e reabertura após exibir confirmada na mesma página.
+Quatro viewports observados; inspeção pessoal desktop/mobile. Cenário local
+permanece para a sequência autorizada. [Evidência e limites](../specs/done/fix-ficha-oculta-leitores-apos-reconexao/verificacao.md).
+
 ## 2026-10-19 — fix-ficha-oculta-historico-resposta-atrasada: P-131 corrigido
 
 Uma transição única de negação agora limpa cabeçalho, itens, paginação e carga

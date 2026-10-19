@@ -51,7 +51,11 @@
 
     <div class="ficha-flutuante__corpo">
         @if (alvo(); as alvoAtual) {
-            <app-ficha-flutuante-conteudo [alvo]="alvoAtual" [ehMestre]="ehMestre()" />
+            <app-ficha-flutuante-conteudo
+                [alvo]="alvoAtual"
+                [ehMestre]="ehMestre()"
+                (leituraNegada)="fecharSeAlvo($event)"
+            />
         }
     </div>
 

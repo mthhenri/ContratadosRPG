@@ -1,7 +1,7 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, provideRouter } from '@angular/router';
-import { Subject, of } from 'rxjs';
+import { Subject, of, throwError } from 'rxjs';
 import {
   CadenciaEnum,
   ComportamentoCriaturaEnum,
@@ -165,6 +165,14 @@ describe('CriaturaVisualizar', () => {
       navegarEspiao,
     };
   }
+
+  it('reconexão negada retira a criatura concedida e usa a saída canônica (P-130)', () => {
+    const { fixture, fichaService, reconexao$, navegarEspiao } = montar({ usuarioLogadoId: 11 });
+    fichaService.recuperarFichaCriatura.mockReturnValue(throwError(() => ({ status: 403 })));
+    reconexao$.next();
+    expect(fixture.componentInstance['ficha']()).toBeNull();
+    expect(navegarEspiao).toHaveBeenCalled();
+  });
 
   it('carrega a ficha de criatura pelo id da rota e a repassa ao CriaturaVisualizacao', () => {
     const { raiz, fichaService } = montar({ usuarioLogadoId: 7 });

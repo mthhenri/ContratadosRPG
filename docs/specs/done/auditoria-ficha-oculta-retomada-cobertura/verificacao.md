@@ -112,7 +112,7 @@ negação não apaga o snapshot nem chama `expulsar`. O histórico trata erro co
 `acessoNegado`, porém não neutraliza `contexto` naquele caminho. Não é falha do
 árbitro REST nem justificativa para reenviar o documento a quem perdeu leitura.
 
-Destino: [leitores após reconexão](../../backlog/fix-ficha-oculta-leitores-apos-reconexao.spec.md).
+Destino: [leitores após reconexão](../../done/fix-ficha-oculta-leitores-apos-reconexao.spec.md).
 
 ### P-131 — Cabeçalho do histórico após carga inicial atrasada
 

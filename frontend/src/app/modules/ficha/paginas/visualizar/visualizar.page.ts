@@ -32,6 +32,7 @@ import { CampanhaService } from '../../../campanha/campanha.service';
 import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
 import { confirmarRemocaoDaCampanha } from '../../ficha-confirmacoes';
 import { FichaService } from '../../ficha.service';
+import { revalidarLeituraFicha } from "../../ficha-leitura-revalidar";
 import { FichaEdicaoService } from '../../ficha-edicao.service';
 import { FichaRolagemRegistroService } from '../../ficha-rolagem-registro.service';
 import { lerParamRota } from '../../ler-param-rota';
@@ -103,6 +104,7 @@ const ITENS_POR_PAGINA_HISTORICO = 20;
   styleUrl: './visualizar.page.scss',
 })
 export class FichaVisualizar {
+  private leituraNegada = false;
   protected readonly janelaHistorico = inject(HistoricoRolagensJanelaService);
   protected readonly janelaAnotacoes = inject(AnotacoesJanelaService);
   private readonly fichaVisualizacao = viewChild(FichaVisualizacao);
@@ -320,9 +322,11 @@ export class FichaVisualizar {
           return membros$.pipe(map((membros) => ({ ficha, membros })));
         }),
         finalize(() => this.carregando.set(false)),
+        takeUntilDestroyed(this.destroyRef),
       )
       .subscribe({
         next: ({ ficha, membros }) => {
+          if (this.leituraNegada) return;
           const normalizada = this.normalizarRolagens(ficha);
           this.ficha.set(normalizada);
           this.fichaEdicao.definirBase(normalizada);
@@ -437,12 +441,13 @@ export class FichaVisualizar {
     // ficha aberta. O documento buscado entra pelo mesmo merge, então uma edição local pendente
     // sobrevive ao refetch em vez de bloqueá-lo. `reconexao$` (P-083): só reconexões futuras à
     // montagem, nunca uma já ocorrida antes de abrir a ficha.
-    this.tempoRealService.reconexao$.pipe(takeUntilDestroyed()).subscribe({
-      next: () =>
-        this.fichaService
-          .recuperarFicha(this.fichaId)
-          .subscribe({ next: (ficha) => this.absorverRemoto(ficha) }),
-    });
+    this.tempoRealService.reconexao$.pipe(
+      revalidarLeituraFicha(
+        () => this.fichaService.recuperarFicha(this.fichaId),
+        () => this.expulsar(),
+      ),
+      takeUntilDestroyed(),
+    ).subscribe({ next: (ficha) => this.absorverRemoto(ficha) });
   }
 
   /**
@@ -454,6 +459,7 @@ export class FichaVisualizar {
    * edição concorrente de outro usuário (m3-17). Descartar o remoto, como se fazia antes, apagava-a.
    */
   private absorverRemoto(remotoBruto: FichaRecuperadaDto): void {
+    if (this.leituraNegada) return;
     const remoto = this.normalizarRolagens(remotoBruto);
     const base = this.fichaEdicao.fichaBase();
     const local = this.ficha();
@@ -488,6 +494,12 @@ export class FichaVisualizar {
    * vendo o último estado carregado sem isso).
    */
   private expulsar(): void {
+    if (this.leituraNegada) return;
+    this.leituraNegada = true;
+    this.ficha.set(null);
+    this.fichaEdicao.definirBase(null);
+    this.historicoRolagens.set([]);
+    this.topbarContexto.limpar();
     this.notificacaoService.notificar({
       severidade: 'aviso',
       resumo: 'Acesso revogado',
@@ -649,6 +661,7 @@ export class FichaVisualizar {
       .listarPorFicha(this.fichaId, pagina, ITENS_POR_PAGINA_HISTORICO)
       .subscribe({
         next: (paginado) => {
+          if (this.leituraNegada) return;
           this.historicoRolagens.update((atuais) =>
             pagina === 1 ? paginado.itens : [...atuais, ...paginado.itens],
           );
@@ -674,6 +687,7 @@ export class FichaVisualizar {
    * hora no topo da barra lateral, sem esperar reabri-la. Guarda contra duplicata do mesmo id.
    */
   private onRolagemRegistrada(rolagem: RolagemResumoDto): void {
+    if (this.leituraNegada) return;
     this.historicoRolagens.update((atuais) =>
       atuais[0]?.id === rolagem.id ? atuais : [rolagem, ...atuais],
     );
@@ -691,6 +705,7 @@ export class FichaVisualizar {
    * rolar.
    */
   private onRolagemRemota(rolagem: RolagemResumoDto): void {
+    if (this.leituraNegada) return;
     const jaConhecida = this.historicoRolagens().some((existente) => existente.id === rolagem.id);
     const provavelmenteMinha = this.rolagensLocaisEmVoo > 0;
     this.onRolagemRegistrada(rolagem);

@@ -170,6 +170,15 @@ describe('HistoricoRolagensJanela', () => {
     expect(fixture.componentInstance['contexto']()).toBe('Ficha');
   });
 
+  it('erro 500 na reconexão não se torna negação e permite buscar novamente', () => {
+    const { fixture, rolagemService, reconexao$ } = montar();
+    rolagemService.listarPorFicha.mockReturnValueOnce(throwError(() => ({ status: 500 })));
+    reconexao$.next();
+    expect(fixture.componentInstance['acessoNegado']()).toBe(false);
+    reconexao$.next();
+    expect(rolagemService.listarPorFicha).toHaveBeenCalledTimes(3);
+  });
+
   it('carrega a 1ª página no boot', () => {
     const { rolagemService } = montar();
     expect(rolagemService.listarPorFicha).toHaveBeenCalledWith(FICHA_ID, 1, 20);

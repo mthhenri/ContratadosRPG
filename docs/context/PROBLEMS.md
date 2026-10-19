@@ -42,18 +42,6 @@
 - **Desde:** confirmado na retomada de 19/10/2026;
   [método e limites](../specs/done/auditoria-ficha-oculta-retomada-cobertura/verificacao.md).
 
-### P-130 — Leitores mantêm ficha/identidade após perda de acesso durante queda · `ABERTO` · frontend/tempo-real
-
-- **Sintoma:** ocultação durante queda da API, sem broadcast: ao reconectar, grade do combate
-  remove o agente, mas ficha flutuante/página completa conservam snapshot. Histórico nega o
-  corpo, porém mantém o nome no cabeçalho. Detalhe, Investigação e prévias limparam o estado.
-- **Causa:** flutuante não revalida documento na reconexão; página completa trata só sucesso
-  do refetch; erro de histórico não limpa identidade.
-- **Contorno:** fechar/reabrir ou recarregar o leitor força o GET negado.
-- **Correção:** [leitores após reconexão](../specs/backlog/fix-ficha-oculta-leitores-apos-reconexao.spec.md).
-- **Desde:** confirmado em 19/10/2026 com API isolada e ficha sintética;
-  [evidências e limites](../specs/done/auditoria-ficha-oculta-retomada-cobertura/verificacao.md).
-
 ### P-129 — Abas não selecionadas da campanha/NPC sem nome acessível no celular · `ABERTO` · frontend/acessibilidade
 
 - **Sintoma:** em 360×800, a aba Criaturas não selecionada não é encontrada por papel
