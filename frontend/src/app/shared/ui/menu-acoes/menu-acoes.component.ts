@@ -50,6 +50,18 @@ export class MenuAcoes {
   readonly tamanho = input<BotaoTamanho>('pequeno');
   readonly desabilitado = input(false);
   readonly escolheu = output<string>();
+  /** Sem gatilho visual, aberto explicitamente por abrirContextual(). */
+  readonly contextual = input(false);
+  readonly fechou = output<void>();
+  private pontoContextual: { x: number; y: number } | null = null;
+  private focoAnterior: HTMLElement | null = null;
+
+  abrirContextual(x: number, y: number): void {
+    if (!this.contextual()) return;
+    this.pontoContextual = { x, y };
+    this.focoAnterior = document.activeElement as HTMLElement | null;
+    this.abrir(0);
+  }
 
   protected readonly aberto = signal(false);
   protected readonly indiceAtivo = signal(-1);
@@ -67,7 +79,7 @@ export class MenuAcoes {
   private readonly aoClicarFora = (evento: Event): void => {
     const alvo = evento.target as Node | null;
     if (!alvo || this.painel()?.nativeElement.contains(alvo) || this.gatilho()?.nativeElement.contains(alvo)) return;
-    this.aberto.set(false);
+    this.fechar(false);
   };
 
   constructor() {
@@ -102,16 +114,27 @@ export class MenuAcoes {
     this.aberto.set(true);
     afterNextRender(() => {
       this.reposicionar();
-      this.painel()?.nativeElement.focus();
+      const painel = this.painel()?.nativeElement;
+      if (this.contextual()) painel?.showPopover?.();
+      painel?.focus();
     }, { injector: this.injector });
   }
 
   private fechar(devolverFoco: boolean): void {
     this.aberto.set(false);
+    this.fechou.emit();
+    if (devolverFoco && this.contextual()) this.focoAnterior?.focus();
     if (devolverFoco) this.gatilho()?.nativeElement.querySelector('button')?.focus();
   }
 
   private reposicionar(): void {
+    if (this.pontoContextual && this.contextual()) {
+      const largura = Math.min(LARGURA_MINIMA, window.innerWidth - 2 * MARGEM);
+      const esquerda = Math.max(MARGEM, Math.min(this.pontoContextual.x, window.innerWidth - largura - MARGEM));
+      const topo = Math.max(MARGEM, Math.min(this.pontoContextual.y, window.innerHeight - 160 - MARGEM));
+      this.posicao.set({ direita: window.innerWidth - esquerda - largura, largura, topo, base: null });
+      return;
+    }
     const botao = this.gatilho()?.nativeElement;
     if (!botao) return;
     const retangulo = botao.getBoundingClientRect();
@@ -176,7 +199,12 @@ export class MenuAcoes {
 
   protected escolher(item: MenuAcoesItem | undefined): void {
     if (!item || item.desabilitado) return;
-    this.fechar(true);
-    this.escolheu.emit(item.id);
+    if (this.contextual()) {
+      this.escolheu.emit(item.id);
+      this.fechar(false);
+    } else {
+      this.fechar(true);
+      this.escolheu.emit(item.id);
+    }
   }
 }

@@ -11,7 +11,7 @@ import { DocumentoAlteracaoEnum, TipoDocumentoEnum } from '@contratados-rpg/shar
 
 import { TempoRealService } from '../../core/services/tempo-real.service';
 import { NotificacaoService } from '../../shared/ui/notificacao/notificacao.service';
-import { BibliotecaLeituraStore } from './biblioteca-leitura.store';
+import { BibliotecaLeituraStore, type BibliotecaLeituraOpcoes } from './biblioteca-leitura.store';
 import { DocumentoService } from './documento.service';
 
 /**
@@ -39,7 +39,7 @@ describe('BibliotecaLeituraStore — presença de leitura (m9-09)', () => {
     createdDate: V1,
   });
 
-  function montar() {
+  function montar(opcoes: BibliotecaLeituraOpcoes = {}) {
     const reconexao$ = new Subject<void>();
     const documentoAlterado$ = new Subject<DocumentoBibliotecaAlteradaDto>();
     const tempoReal = {
@@ -66,7 +66,7 @@ describe('BibliotecaLeituraStore — presença de leitura (m9-09)', () => {
       ],
     });
     const store = TestBed.inject(BibliotecaLeituraStore);
-    store.iniciar(CAMPANHA_ID);
+    store.iniciar(CAMPANHA_ID, opcoes);
     return { store, tempoReal, reconexao$, documentoAlterado$ };
   }
 
@@ -74,6 +74,16 @@ describe('BibliotecaLeituraStore — presença de leitura (m9-09)', () => {
     const { tempoReal } = montar();
 
     expect(tempoReal.informarLeitura).not.toHaveBeenCalled();
+  });
+
+  it('leitor auxiliar não substitui nem apaga presença da Biblioteca existente', () => {
+    const { store, tempoReal, reconexao$ } = montar({ informarPresenca: false });
+    store.abrirDocumento(1);
+    reconexao$.next();
+    store.fecharDocumento();
+    TestBed.resetTestingModule();
+    expect(tempoReal.informarLeitura).not.toHaveBeenCalled();
+    expect(tempoReal.sairSalaCampanha).toHaveBeenCalledWith(CAMPANHA_ID);
   });
 
   it('informa ao abrir e ao trocar de documento', () => {

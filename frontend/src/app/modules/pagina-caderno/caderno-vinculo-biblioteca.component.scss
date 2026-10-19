@@ -1,0 +1,32 @@
+:host {
+    display: contents;
+}
+
+.vinculo-biblioteca {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-12);
+    min-width: 0;
+
+    &__ajuda {
+        margin: 0;
+        color: var(--text-dim);
+    }
+    &__trecho {
+        margin: 0;
+        padding-left: var(--space-12);
+        border-left: 2px solid var(--accent-border);
+        color: var(--text);
+        overflow-wrap: anywhere;
+        max-height: 96px;
+        overflow-y: auto;
+    }
+    &__aviso {
+        margin: 0;
+        color: var(--warning-texto);
+    }
+    &__acoes {
+        display: flex;
+        justify-content: flex-end;
+    }
+}

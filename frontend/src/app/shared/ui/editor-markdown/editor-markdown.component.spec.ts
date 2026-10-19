@@ -447,3 +447,37 @@ describe('EditorMarkdown como ControlValueAccessor', () => {
     expect(editor.getAttribute('aria-label')).toBe('Conteúdo Markdown somente leitura');
   });
 });
+
+
+describe('EditorMarkdown — links opcionais', () => {
+  it('só intercepta clique e Enter para o prefixo habilitado', async () => {
+    await TestBed.configureTestingModule({ imports: [EditorMarkdown], providers: [{
+      provide: EDITOR_MARKDOWN_FACTORY, useValue: () => ({
+        criar: async () => undefined, destruir: () => undefined,
+        obterMarkdown: () => '', definirMarkdown: () => undefined,
+        definirSomenteLeitura: () => undefined,
+      }),
+    }] }).compileComponents();
+    const fixture = TestBed.createComponent(EditorMarkdown);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const superficie = fixture.nativeElement.querySelector('.editor-markdown__superficie') as HTMLElement;
+    const link = document.createElement('a');
+    link.setAttribute('href', '#biblioteca-documento-7');
+    link.textContent = 'trecho'; superficie.append(link);
+    const abriu: string[] = [];
+    fixture.componentInstance.linkInternoAtivado.subscribe((href) => abriu.push(href));
+    const clicar = () => {
+      const evento = new MouseEvent('click', { bubbles: true, cancelable: true });
+      link.dispatchEvent(evento); return evento;
+    };
+    expect(clicar().defaultPrevented).toBe(false);
+    fixture.componentRef.setInput('prefixoLinkInterno', '#biblioteca-documento-');
+    fixture.detectChanges();
+    expect(clicar().defaultPrevented).toBe(true);
+    link.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+    expect(abriu).toEqual(['#biblioteca-documento-7', '#biblioteca-documento-7']);
+    link.setAttribute('href', 'https://example.test');
+    expect(clicar().defaultPrevented).toBe(false);
+  });
+});

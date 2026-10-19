@@ -46,6 +46,8 @@ import {
   tabelaAdmiteSoCabecalho,
 } from './editor-markdown-tabela';
 
+import { EditorMarkdownSelecoes, selecaoAdmiteLink, type EditorMarkdownSelecao } from './editor-markdown-selecao';
+
 export const LIMITE_MARKDOWN = 100_000;
 /** Folga padrão do ProseMirror ao rolar até o cursor (`scrollMargin`), em px. */
 const MARGEM_ROLAGEM = 5;
@@ -59,10 +61,15 @@ export interface EditorMarkdownOpcoes {
   readonly aoAlterar: (markdown: string) => void;
   /** A cada atualização do ProseMirror (seleção, digitação, eco remoto). */
   readonly aoAlterarEstado: (estado: EstadoEditorMarkdown) => void;
+  readonly aoAlterarSelecao?: (valida: boolean) => void;
+  /** Sem debounce para consumidores que persistem o Markdown junto da transação Yjs. */
+  readonly propagarImediatamente?: boolean;
 }
 
 export interface EditorMarkdownInstancia {
   criar(): Promise<void>;
+  capturarSelecao?(): EditorMarkdownSelecao | null;
+  obterLinkNaSelecao?(): string | null;
   destruir(): void;
   obterMarkdown(): string;
   definirMarkdown(markdown: string): void;
@@ -89,8 +96,11 @@ function criarEditorMarkdown({
   awareness,
   aoAlterar,
   aoAlterarEstado,
+  aoAlterarSelecao,
+  propagarImediatamente = false,
 }: EditorMarkdownOpcoes): EditorMarkdownInstancia {
   let editor: Editor | null = null;
+  const selecoes = new EditorMarkdownSelecoes();
   const colaborativo = documentoColaborativo !== null;
 
   const executar = (comando: Command): boolean =>
@@ -151,14 +161,35 @@ function criarEditorMarkdown({
   const estadoBarra = $prose(
     () =>
       new Plugin({
+        state: {
+          init: () => null,
+          apply: (transacao) => { selecoes.remapear(transacao); return null; },
+        },
         view: (view) => {
           aoAlterarEstado(lerEstado(view.state));
-          return { update: (atualizada) => aoAlterarEstado(lerEstado(atualizada.state)) };
+          aoAlterarSelecao?.(selecaoAdmiteLink(view.state));
+          return { update: (atualizada, anterior) => {
+            aoAlterarEstado(lerEstado(atualizada.state));
+            aoAlterarSelecao?.(selecaoAdmiteLink(atualizada.state));
+            if (propagarImediatamente && editor &&
+              !atualizada.state.doc.eq(anterior.doc)) {
+              const markdown = editor.action(getMarkdown());
+              if (markdown.length <= LIMITE_MARKDOWN) aoAlterar(markdown);
+            }
+          } };
         },
       }),
   );
 
   return {
+    obterLinkNaSelecao: () => editor?.action((contexto) => {
+      const selecao = contexto.get(editorViewCtx).state.selection;
+      if (!selecao.empty) return null;
+      return selecao.$from.marks().find((marca) => marca.type.name === 'link')?.attrs['href'] ?? null;
+    }) ?? null,
+    capturarSelecao: () => editor?.action((contexto) => selecoes.capturar(
+      contexto.get(editorViewCtx), fecharPassoDoHistorico, fecharPassoDoHistorico,
+    )) ?? null,
     criar: async () => {
       const construtor = Editor.make()
         .config((contexto) => {
@@ -170,7 +201,9 @@ function criarEditorMarkdown({
               editor?.action(replaceAll(markdown.slice(0, LIMITE_MARKDOWN)));
               return;
             }
-            aoAlterar(markdown);
+            // Neste modo o snapshot já foi emitido pelo update síncrono da view. O listener
+            // continua responsável pelo limite, sem devolver um snapshot atrasado ao consumidor.
+            if (!propagarImediatamente) aoAlterar(markdown);
           });
         })
         .use(commonmark)
@@ -201,15 +234,18 @@ function criarEditorMarkdown({
       }
     },
     destruir: () => {
+      selecoes.cancelar();
       editor?.destroy();
     },
     obterMarkdown: () => editor?.action(getMarkdown()) ?? valorInicial,
     // `flush` recria o EditorState: troca de página/`writeValue` zera o histórico, senão o
     // Ctrl+Z logo depois traria de volta o texto da página anterior.
     definirMarkdown: (markdown) => {
+      selecoes.cancelar();
       editor?.action(replaceAll(markdown, true));
     },
     definirSomenteLeitura: (somenteLeitura) => {
+      if (somenteLeitura) selecoes.cancelar();
       editor?.action((contexto) =>
         contexto.get(editorViewCtx).setProps({ editable: () => !somenteLeitura }),
       );

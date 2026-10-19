@@ -109,3 +109,30 @@ describe('MenuAcoes', () => {
     expect(painel()).toBeNull();
   });
 });
+
+
+describe('MenuAcoes contextual (opt-in)', () => {
+  it('não altera o modo padrão e abre no ponto solicitado com seleção de teclado', () => {
+    const fixture = TestBed.createComponent(MenuAcoes);
+    fixture.componentRef.setInput('rotulo', 'Vincular à Biblioteca…');
+    fixture.componentRef.setInput('itens', [{ id: 'vincular', rotulo: 'Vincular à Biblioteca…' }]);
+    fixture.detectChanges();
+    fixture.componentInstance.abrirContextual(20, 40);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[role="menu"]')).toBeNull();
+    fixture.componentRef.setInput('contextual', true);
+    fixture.detectChanges();
+    const escolhidos: string[] = [];
+    fixture.componentInstance.escolheu.subscribe((id) => escolhidos.push(id));
+    fixture.componentInstance.abrirContextual(9999, 9999);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('button')).toBeNull();
+    const painel = fixture.nativeElement.querySelector('[role="menu"]') as HTMLElement;
+    expect(painel).not.toBeNull();
+    expect(Number.parseFloat(painel.style.right)).toBeGreaterThanOrEqual(8);
+    painel.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    fixture.detectChanges();
+    expect(escolhidos).toEqual(['vincular']);
+    expect(fixture.nativeElement.querySelector('[role="menu"]')).toBeNull();
+  });
+});

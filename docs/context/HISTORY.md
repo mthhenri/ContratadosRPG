@@ -1,5 +1,47 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-19 — caderno-vincular-trecho-biblioteca: trechos ligados a documentos por ID
+
+Autor fechou as decisões do rascunho: vínculo de ida para documento, persistido no Markdown,
+visibilidade da página e abertura sempre autorizada para cada leitor; somente Biblioteca.
+Também aprovou ampliar opcionalmente editor e menu. O Caderno agora oferece a ação pelo
+botão direito e pela barra (toque/teclado), busca entre os documentos acessíveis e abre o
+leitor em modal. O texto autoral permanece quando o alvo é ocultado/excluído, sem copiar
+título/conteúdo do documento para o vínculo. Sem migration ou mudança de permissões.
+
+Seleção é remapeada por transações ProseMirror e posições relativas Yjs; substituição/remoção
+do trecho invalida a operação. A responsabilidade de Biblioteca saiu para
+`CadernoVinculoBiblioteca`, mantendo o editor genérico. O modo contextual do `MenuAcoes`
+usa top layer para funcionar dentro do painel flutuante. Defaults dos demais consumidores
+preservados. Revisão independente encontrou disputa de presença entre a store auxiliar e a
+Biblioteca existente: `informarPresenca: false` no auxiliar corrigiu, com teste de regressão.
+
+O teste com dois jogadores encontrou a projeção Markdown atrasada em relação ao CRDT
+(sincronização em 180ms antes do listener debounced ~200ms). Emissão síncrona opcional do
+editor, ligada só no Caderno colaborativo, alinhou o snapshot; GET e recarga confirmaram.
+Links habilitados no Caderno ficaram sublinhados com texto principal para legibilidade.
+
+Gates: shared 1.335 testes; backend 1.220 aprovados e 99 pulados; frontend final 3.548
+aprovados em 283 arquivos, além dos 89 testes dos scripts de regras na rodada ampla.
+Lint dos três workspaces sem erros (avisos existentes); TypeScript aprovado. Build habitual
+reproduziu P-111 (`3221225477`); o contorno documentado `CI=true`, com dois workers, aprovou
+produção em 20,387s, mantendo aviso de 599,02 kB iniciais. Nenhum cache/configuração removido
+ou alterado. `repo:verificar` aprovou organização e espelhos.
+
+Skill `verify` no stack real local (3101/4301), com três usuários descartáveis; inspeção
+pessoal em 1920×1080, 360×800, 960×1080 e 1366×768. Comparados Caderno e Biblioteca reais;
+botão direito, tap, teclado, erro/retry/vazio da busca, leitura, ocultação/exclusão, persistência,
+colaboração e trecho removido observados. Sem overflow; botão mobile de vínculo com 51px.
+Toque emulado, sem aparelho físico/teclado virtual. Implementação dos primitivos e revisão
+delegadas a subagentes Codex com modelo herdado; inspeção visual feita pelo principal.
+
+[Spec concluída](../specs/done/caderno-vincular-trecho-biblioteca.spec.md) e
+[verificação](../specs/done/caderno-vincular-trecho-biblioteca/verificacao.md).
+Alterações preexistentes em ícones/regras e `.claude/launch.json` preservadas. Commit local
+autorizado pelo autor após a entrega; sem push, deploy ou dados de produção.
+Capturas/logs locais ignorados pelo Git.
+Cenário de verificação removido por soft delete e servidores auxiliares encerrados.
+
 ## 2026-10-18 — Quatro specs de ícones concluídas após autorização
 
 Adotados Atributo coroado em Maestria, Dado excepcional com estrelinhas nos críticos

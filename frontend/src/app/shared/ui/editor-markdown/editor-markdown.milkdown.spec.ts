@@ -4,6 +4,13 @@ import { gfm } from '@milkdown/kit/preset/gfm';
 import { commonmark } from '@milkdown/kit/preset/commonmark';
 import { type Command, TextSelection } from '@milkdown/kit/prose/state';
 import type { EditorView } from '@milkdown/kit/prose/view';
+import { history } from '@milkdown/kit/plugin/history';
+import { undo, closeHistory } from '@milkdown/kit/prose/history';
+import { Plugin } from '@milkdown/kit/prose/state';
+import { $prose } from '@milkdown/kit/utils';
+import { collab, collabServiceCtx } from '@milkdown/plugin-collab';
+import * as Y from 'yjs';
+import { EditorMarkdownSelecoes } from './editor-markdown-selecao';
 import { getMarkdown } from '@milkdown/kit/utils';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 
@@ -370,6 +377,41 @@ describe('EDITOR_MARKDOWN_FACTORY — histórico (Milkdown real)', () => {
 });
 
 describe('EDITOR_MARKDOWN_FACTORY — leitura síncrona (Milkdown real, P-081)', () => {
+  it('emite snapshot Markdown síncrono para marca recebida pelo Yjs quando habilitado', async () => {
+    const documento = new Y.Doc();
+    const paragrafo = new Y.XmlElement('paragraph');
+    const texto = new Y.XmlText();
+    documento.getXmlFragment('prosemirror').insert(0, [paragrafo]);
+    paragrafo.insert(0, [texto]);
+    texto.insert(0, 'trecho');
+    const emitidos: string[] = [];
+    const instancia = TestBed.inject(EDITOR_MARKDOWN_FACTORY)({
+      raiz: criarRaiz(), valorInicial: '', documentoColaborativo: documento, awareness: null,
+      propagarImediatamente: true,
+      aoAlterar: (markdown) => emitidos.push(markdown),
+      aoAlterarEstado: () => undefined,
+    });
+    await instancia.criar();
+    const remoto = new Y.Doc();
+    try {
+      Y.applyUpdate(remoto, Y.encodeStateAsUpdate(documento));
+      const paragrafoRemoto = remoto.getXmlFragment('prosemirror').get(0) as Y.XmlElement;
+      const textoRemoto = paragrafoRemoto.get(0) as Y.XmlText;
+      emitidos.length = 0;
+      textoRemoto.format(0, 6, { link: { href: '#biblioteca-documento-12', title: null } });
+      Y.applyUpdate(documento, Y.encodeStateAsUpdate(remoto));
+      // Nenhum timer ou espera: o consumidor recebe o snapshot no mesmo update do Yjs.
+      expect(emitidos.at(-1)).toContain('[trecho](#biblioteca-documento-12)');
+      expect(emitidos.at(-1)).toBe(instancia.obterMarkdown());
+      emitidos.length = 0;
+      instancia.aplicarAcao('TABELA');
+      expect(emitidos.at(-1)).toContain('|');
+      expect(emitidos.at(-1)).toBe(instancia.obterMarkdown());
+    } finally {
+      instancia.destruir(); documento.destroy(); remoto.destroy();
+    }
+  });
+
   it('obterMarkdown já traz a edição que o listener debounced ainda não emitiu', async () => {
     const emitidos: string[] = [];
     const instancia = TestBed.inject(EDITOR_MARKDOWN_FACTORY)({
@@ -389,5 +431,98 @@ describe('EDITOR_MARKDOWN_FACTORY — leitura síncrona (Milkdown real, P-081)',
     } finally {
       instancia.destruir();
     }
+  });
+});
+
+
+describe('seleção vinculada — Milkdown/ProseMirror reais', () => {
+  async function montar(markdown = 'Antes **trecho** depois', documento?: Y.Doc) {
+    const selecoes = new EditorMarkdownSelecoes();
+    const editor = await Editor.make().config((contexto) => {
+      contexto.set(rootCtx, criarRaiz());
+      contexto.set(defaultValueCtx, markdown);
+    }).use(commonmark).use(gfm).use($prose(() => new Plugin({
+      state: { init: () => null, apply: (transacao) => { selecoes.remapear(transacao); return null; } },
+    }))).use(documento ? collab : history).create();
+    editores.push(editor);
+    if (documento) editor.action((contexto) => contexto.get(collabServiceCtx)
+      .bindDoc(documento).bindXmlFragment(documento.getXmlFragment('prosemirror')).applyTemplate(markdown).connect());
+    const view = editor.action((contexto) => contexto.get(editorViewCtx));
+    let inicio = 0;
+    view.state.doc.descendants((no, posicao) => { if (no.isText && no.text === 'trecho') inicio = posicao; });
+    const selecionar = () => view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, inicio, inicio + 6)));
+    const capturar = () => selecoes.capturar(view,
+      () => view.dispatch(closeHistory(view.state.tr)),
+      () => view.dispatch(closeHistory(view.state.tr)));
+    selecionar();
+    return { editor, view, selecoes, capturar, selecionar };
+  }
+
+  it('marca o trecho, preserva negrito, serializa link sem título e desfaz', async () => {
+    const { editor, view, capturar } = await montar();
+    expect(capturar()!.aplicarLink('#biblioteca-documento-12')).toBe(true);
+    const markdown = editor.action(getMarkdown());
+    expect(markdown).toContain('#biblioteca-documento-12');
+    expect(markdown).toContain('**[trecho](#biblioteca-documento-12)**');
+    expect(view.state.doc.textContent).toBe('Antes trecho depois');
+    const marcas = view.state.doc.resolve(8).marks();
+    expect(marcas.map((marca) => marca.type.name)).toEqual(expect.arrayContaining(['strong', 'link']));
+    expect(marcas.find((marca) => marca.type.name === 'link')!.attrs['title']).toBeNull();
+    expect(undo(view.state, view.dispatch)).toBe(true);
+    expect(editor.action(getMarkdown())).not.toContain('#biblioteca');
+  });
+
+  it('remapeia inserção anterior e não usa a seleção atual após abrir o seletor', async () => {
+    const { view, capturar } = await montar();
+    const selecao = capturar()!;
+    view.dispatch(view.state.tr.insertText('Novo ', 1));
+    view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, 1)));
+    expect(selecao.aplicarLink('#destino')).toBe(true);
+    expect(view.state.doc.textContent).toBe('Novo Antes trecho depois');
+    expect(view.state.doc.resolve(13).marks().some((marca) => marca.type.name === 'link')).toBe(true);
+  });
+
+  it('rejeita trecho removido ou substituído, mesmo pelo mesmo texto', async () => {
+    for (const texto of ['', 'trecho']) {
+      const { view, capturar } = await montar();
+      const selecao = capturar()!;
+      view.dispatch(view.state.tr.insertText(texto, 7, 13));
+      expect(selecao.aplicarLink('#destino')).toBe(false);
+    }
+  });
+
+  it('invalida handle anterior, cancelado, somente leitura e seleção em código', async () => {
+    const { view, capturar } = await montar();
+    const anterior = capturar()!;
+    const atual = capturar()!;
+    expect(anterior.aplicarLink('#destino')).toBe(false);
+    atual.cancelar();
+    expect(atual.aplicarLink('#destino')).toBe(false);
+    const leitura = capturar()!;
+    view.setProps({ editable: () => false });
+    expect(leitura.aplicarLink('#destino')).toBe(false);
+    expect(capturar()).toBeNull();
+    const codigo = await montar('Antes `trecho` depois');
+    expect(codigo.capturar()).toBeNull();
+  });
+
+  it('resolve posições relativas após edição remota do Yjs e rejeita remoção remota', async () => {
+    const documento = new Y.Doc();
+    const { view, capturar } = await montar('Antes **trecho** depois', documento);
+    const remoto = new Y.Doc();
+    Y.applyUpdate(remoto, Y.encodeStateAsUpdate(documento));
+    const selecao = capturar()!;
+    const paragrafo = remoto.getXmlFragment('prosemirror').get(0) as Y.XmlElement;
+    const texto = paragrafo.get(0) as Y.XmlText;
+    texto.insert(0, 'Novo ');
+    Y.applyUpdate(documento, Y.encodeStateAsUpdate(remoto));
+    expect(selecao.aplicarLink('#destino')).toBe(true);
+    view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, 12, 18)));
+    const removida = capturar()!;
+    Y.applyUpdate(remoto, Y.encodeStateAsUpdate(documento));
+    texto.delete(11, 6);
+    Y.applyUpdate(documento, Y.encodeStateAsUpdate(remoto));
+    expect(removida.aplicarLink('#destino')).toBe(false);
+    documento.destroy(); remoto.destroy();
   });
 });

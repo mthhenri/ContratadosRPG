@@ -54,6 +54,18 @@
             aria-label="Formatação Markdown"
             (scroll)="atualizarIndicadoresRolagem()"
         >
+            @if (rotuloVincular()) {
+                <button
+                    app-botao
+                    type="button"
+                    variante="secundario"
+                    tamanho="pequeno"
+                    [disabled]="!selecaoValida()"
+                    (click)="solicitarVinculo()"
+                >
+                    {{ rotuloVincular() }}
+                </button>
+            }
             @for (grupo of gruposBarra; track $index) {
                 <div class="editor-markdown__grupo" role="group">
                     @for (botao of grupo; track botao.acao) {
@@ -89,7 +101,6 @@
                 </div>
             }
         </div>
-
         @if (estado().emTabela) {
             <div
                 #faixa
@@ -139,4 +150,14 @@
     >
         <app-icone nome="teto" />
     </button>
+}
+@if (rotuloVincular()) {
+    <app-menu-acoes
+        #menuSelecao
+        [contextual]="true"
+        [rotulo]="rotuloVincular()"
+        [itens]="itensVincular()"
+        (escolheu)="solicitarVinculo()"
+        (fechou)="cancelarMenuSelecao()"
+    />
 }

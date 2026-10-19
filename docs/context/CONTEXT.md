@@ -2618,6 +2618,15 @@ sem recriar o documento ao abrir, editar fichas próprias, reler membros e recon
 criar uma nova no modo Esquadrão agora troca a vista de lista para o editor, como já acontecia no
 caderno privado. A spec fechou (`docs/specs/done/`).
 
+**Vínculos à Biblioteca:** no Caderno pessoal e no Esquadrão, selecionar um trecho permite
+“Vincular à Biblioteca…” pelo botão direito ou botão da barra (toque/teclado). O vínculo
+Markdown guarda apenas ID e texto autoral; abre o leitor no modal, respeitando o recorte da
+campanha e as permissões da API. Ocultação/exclusão retiram metadados do leitor sem apagar o
+trecho. `CadernoVinculoBiblioteca` reaproveita busca/cartões/leitor e desliga presença na store
+auxiliar para preservar a Biblioteca já aberta. O editor colaborativo propaga Markdown
+sincronamente para manter a projeção persistida alinhada ao Y.Doc. Painel e janela externa
+compartilham o fluxo. [Spec e evidências](../specs/done/caderno-vincular-trecho-biblioteca.spec.md).
+
 **Papel ESPECTADOR (M8, `m8-01`…`m8-06` concluídas — módulo fechado).** Terceiro papel de campanha, independente de
 `TipoUsuarioEnum`: entra por um convite próprio (`codigoConviteEspectador`, gerado junto do de
 jogador e regenerado independentemente pelo mestre) e acompanha, em tempo real, só as rolagens

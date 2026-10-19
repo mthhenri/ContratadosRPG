@@ -1,0 +1,83 @@
+<app-modal
+    [aberto]="true"
+    [titulo]="
+        selecao()
+            ? 'Vincular à Biblioteca'
+            : (biblioteca.aberto()?.titulo ?? 'Documento da Biblioteca')
+    "
+    largura="680px"
+    posicao="inferior"
+    (fechou)="fechar()"
+>
+    <div class="vinculo-biblioteca">
+        @if (selecao(); as trecho) {
+            <p class="vinculo-biblioteca__ajuda">Escolha o documento para vincular ao trecho:</p>
+            <blockquote class="vinculo-biblioteca__trecho">{{ trecho.texto }}</blockquote>
+            @if (aviso()) {
+                <p class="vinculo-biblioteca__aviso" role="alert">{{ aviso() }}</p>
+            }
+            @if (validando()) {
+                <p class="vinculo-biblioteca__ajuda" role="status">
+                    Verificando acesso ao documento…
+                </p>
+            }
+            @if (biblioteca.erroLista()) {
+                <app-estado-vazio
+                    tamanho="compacto"
+                    titulo="Não foi possível carregar a Biblioteca."
+                    linhaApoio="Verifique a conexão e tente novamente."
+                >
+                    <button
+                        estadoVazioAcao
+                        app-botao
+                        type="button"
+                        variante="secundario"
+                        estilo="contorno"
+                        tamanho="pequeno"
+                        (click)="biblioteca.tentarNovamente()"
+                    >
+                        Tentar novamente
+                    </button>
+                </app-estado-vazio>
+            } @else {
+                <app-busca-documentos
+                    [campanhaId]="campanhaId()"
+                    [mostrarEstado]="ehMestre()"
+                    (ativaChange)="buscaAtiva.set($event)"
+                    (selecionar)="escolher($event)"
+                />
+                @if (!buscaAtiva()) {
+                    <app-lista-documentos
+                        [documentos]="biblioteca.documentos()"
+                        [carregando]="biblioteca.carregandoLista()"
+                        [mostrarEstado]="ehMestre()"
+                        vazioTitulo="Nenhum documento disponível."
+                        vazioApoio="Os documentos revelados pelo mestre aparecerão aqui."
+                        (selecionar)="escolher($event)"
+                    />
+                }
+            }
+            <div class="vinculo-biblioteca__acoes">
+                <button
+                    app-botao
+                    type="button"
+                    variante="secundario"
+                    tamanho="medio"
+                    (click)="fechar()"
+                >
+                    Cancelar
+                </button>
+            </div>
+        } @else if (biblioteca.aberto(); as documento) {
+            <app-leitor-documento [documento]="documento" />
+        } @else if (biblioteca.carregandoLista() || biblioteca.abertoId() !== null) {
+            <div role="status" aria-label="Carregando documento"><app-esqueleto /></div>
+        } @else {
+            <app-estado-vazio
+                tamanho="compacto"
+                titulo="Documento indisponível"
+                linhaApoio="O documento não está disponível nesta campanha. O trecho permanece no Caderno."
+            />
+        }
+    </div>
+</app-modal>

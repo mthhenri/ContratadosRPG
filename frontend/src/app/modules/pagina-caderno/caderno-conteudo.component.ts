@@ -42,6 +42,8 @@ import {
   validarArquivoMarkdown,
 } from '../../shared/markdown/importar-markdown';
 import { derivarTituloDeArquivo } from './importar-markdown';
+import type { EditorMarkdownSelecao } from '../../shared/ui/editor-markdown/editor-markdown.component';
+import { CadernoVinculoBiblioteca, PREFIXO_DOCUMENTO_CADERNO, lerDocumentoDoVinculo } from './caderno-vinculo-biblioteca.component';
 
 type ModoCaderno = 'MEU' | 'ESQUADRAO' | 'JOGADORES';
 
@@ -70,6 +72,7 @@ interface TrocaPaginaPendente {
     Segmentado,
     SegmentadoItem,
     Tooltip,
+    CadernoVinculoBiblioteca,
   ],
   templateUrl: './caderno-conteudo.component.html',
   styleUrl: './caderno-conteudo.component.scss',
@@ -108,6 +111,12 @@ export class CadernoConteudo {
   private readonly termoBuscaAtual = signal('');
   /** Foco dentro do editor da página (texto ou barra de formatação). */
   protected readonly editorFocado = signal(false);
+  protected readonly prefixoDocumentoCaderno = PREFIXO_DOCUMENTO_CADERNO;
+  protected readonly selecaoBiblioteca = signal<EditorMarkdownSelecao | null>(null);
+  protected readonly documentoBibliotecaId = signal<number | null>(null);
+  private readonly contextoBiblioteca = computed(() =>
+    `${this.campanhaId()}:${this.modoCaderno()}:${this.store.paginaAtiva()?.id ?? 'nova'}:${this.store.estado().aberto}:${this.recolhido()}`,
+  );
   /**
    * Escrevendo no celular: abas de escopo, busca e filtros saem da frente — com o teclado aberto
    * eles ocupavam ~290px e sobravam ~94px para o texto (medido em 360×470). Só com texto editável:
@@ -154,6 +163,24 @@ export class CadernoConteudo {
   protected readonly buscaAtiva = computed(() => this.termoBuscaAtual().trim().length > 0);
 
   private jaRecolhido = false;
+
+  protected vincularBiblioteca(selecao: EditorMarkdownSelecao): void {
+    this.fecharBiblioteca();
+    this.selecaoBiblioteca.set(selecao);
+  }
+
+  protected abrirVinculoBiblioteca(href: string): void {
+    const documentoId = lerDocumentoDoVinculo(href);
+    if (documentoId === null) return;
+    this.fecharBiblioteca();
+    this.documentoBibliotecaId.set(documentoId);
+  }
+
+  protected fecharBiblioteca(): void {
+    this.selecaoBiblioteca()?.cancelar();
+    this.selecaoBiblioteca.set(null);
+    this.documentoBibliotecaId.set(null);
+  }
   private readonly buscaSolicitada = new Subject<{
     readonly termo: string;
     readonly fontes: readonly BuscaCampanhaFonteEnum[];
@@ -161,6 +188,11 @@ export class CadernoConteudo {
   }>();
 
   constructor() {
+    effect(() => {
+      // Trocar página/escopo/campanha ou recolher invalida a seleção anterior.
+      this.contextoBiblioteca();
+      untracked(() => this.fecharBiblioteca());
+    });
     effect(() => {
       const membros = this.membros();
       untracked(() => this.colaboracaoEsquadrao.definirMembros(membros));

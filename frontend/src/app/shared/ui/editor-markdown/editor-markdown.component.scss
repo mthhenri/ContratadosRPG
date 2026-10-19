@@ -225,6 +225,21 @@
     color: var(--accent);
 }
 
+// Recurso opcional: texto legível em qualquer preset e sublinhado que não depende só da cor.
+// Os consumidores sem links internos conservam a apresentação anterior.
+:host(.editor-markdown--links-internos) ::ng-deep .milkdown .editor a {
+    color: var(--text);
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+    text-underline-offset: 0.15em;
+    cursor: pointer;
+
+    &:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+    }
+}
+
 // P-072: sem isto, blockquote (`>`) cai no estilo padrão do navegador e não se distingue do
 // resto do parágrafo dentro do reset do editor.
 :host ::ng-deep .milkdown .editor blockquote {

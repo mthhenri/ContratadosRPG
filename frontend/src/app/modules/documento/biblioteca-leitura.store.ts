@@ -22,6 +22,8 @@ export interface BibliotecaLeituraOpcoes {
    * ocultado — só `REMOVIDO` fecha com o aviso — e Revelar/Ocultar fica disponível.
    */
   readonly mestre?: boolean;
+  /** Leitor auxiliar do Caderno: não compete pela presença da Biblioteca no mesmo socket. */
+  readonly informarPresenca?: boolean;
 }
 
 /**
@@ -85,6 +87,7 @@ export class BibliotecaLeituraStore {
   /** A campanha desta página — `null` até `iniciar`; a presença só é informada depois dele. */
   private campanhaId: number | null = null;
   private mestre = false;
+  private informarPresenca = true;
   /** `false` com o painel fechado: a presença informa `null` sem esquecer o aberto. */
   private leituraAtiva = true;
 
@@ -92,10 +95,11 @@ export class BibliotecaLeituraStore {
   iniciar(campanhaId: number, opcoes: BibliotecaLeituraOpcoes = {}): void {
     this.campanhaId = campanhaId;
     this.mestre = opcoes.mestre ?? false;
+    this.informarPresenca = opcoes.informarPresenca ?? true;
     this.tempoRealService.conectar();
     this.tempoRealService.entrarSalaCampanha(campanhaId);
     this.destroyRef.onDestroy(() => {
-      this.tempoRealService.informarLeitura(campanhaId, null);
+      this.informarLeitura(null);
       this.tempoRealService.sairSalaCampanha(campanhaId);
     });
 
@@ -346,7 +350,7 @@ export class BibliotecaLeituraStore {
   }
 
   private informarLeitura(documentoId: number | null): void {
-    if (this.campanhaId !== null) {
+    if (this.campanhaId !== null && this.informarPresenca) {
       this.tempoRealService.informarLeitura(
         this.campanhaId,
         this.leituraAtiva ? documentoId : null,

@@ -20,6 +20,10 @@ import type { Doc } from 'yjs';
 
 import { Icone, type IconeNome } from '../../icone/icone.component';
 import { Tooltip } from '../../tooltip/tooltip.directive';
+import { MenuAcoes } from '../menu-acoes/menu-acoes.component';
+import type { EditorMarkdownSelecao } from './editor-markdown-selecao';
+export type { EditorMarkdownSelecao } from './editor-markdown-selecao';
+
 import { Botao } from '../botao/botao.component';
 import { BotaoIcone } from '../botao-icone/botao-icone.component';
 import {
@@ -141,7 +145,7 @@ const GRUPOS_TABELA: readonly GrupoTabelaMarkdown[] = [
 @Component({
   selector: 'app-editor-markdown',
   standalone: true,
-  imports: [Botao, BotaoIcone, Icone, Tooltip],
+  imports: [Botao, BotaoIcone, Icone, Tooltip, MenuAcoes],
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
@@ -157,7 +161,9 @@ const GRUPOS_TABELA: readonly GrupoTabelaMarkdown[] = [
     '[class.editor-markdown--somente-leitura]': 'somenteLeituraEfetiva()',
     '[class.editor-markdown--compacto]': 'compacto()',
     '[class.editor-markdown--focado]': 'focado()',
+    '[class.editor-markdown--links-internos]': '!!prefixoLinkInterno()',
     '[attr.aria-label]': 'rotuloAria()',
+    '(contextmenu)': 'abrirMenuSelecao($event)',
     '(scroll)': 'alterarPosicaoRolagem()',
     '(focusin)': 'aoFocar()',
     '(focusout)': 'aoDesfocar($event)',
@@ -165,6 +171,15 @@ const GRUPOS_TABELA: readonly GrupoTabelaMarkdown[] = [
 })
 export class EditorMarkdown implements AfterViewInit, OnDestroy, ControlValueAccessor {
   readonly valor = input('');
+  readonly rotuloVincular = input('');
+  readonly prefixoLinkInterno = input('');
+  readonly propagarImediatamente = input(false);
+  readonly vincularSelecao = output<EditorMarkdownSelecao>();
+  readonly linkInternoAtivado = output<string>();
+  protected readonly selecaoValida = signal(false);
+  protected readonly itensVincular = computed(() => [{ id: 'vincular', rotulo: this.rotuloVincular() }]);
+  private readonly menuSelecao = viewChild<MenuAcoes>('menuSelecao');
+  private selecaoContextual: EditorMarkdownSelecao | null = null;
   /** Documento Yjs da página do esquadrão; ausente no caderno privado. */
   readonly documentoColaborativo = input<Doc | null>(null);
   /** Presença Yjs (cursor/seleção remotos, P-039) da mesma página; ausente no caderno privado. */
@@ -218,6 +233,9 @@ export class EditorMarkdown implements AfterViewInit, OnDestroy, ControlValueAcc
   private ancorada = false;
   private alturaAncorada = 0;
   private readonly aoMudarViewport = (): void => this.atualizarAncoragem();
+  // Captura antes do keymap PM: Enter em link interno não deve inserir um parágrafo.
+  private readonly capturarTeclaLink = (evento: KeyboardEvent): void => this.aoTeclarLink(evento);
+  private readonly capturarCliqueLink = (evento: MouseEvent): void => this.ativarLinkInterno(evento);
 
   /**
    * `writeValue`/`registerOnChange` (Reactive Forms — `formControlName="efeito"` em Ataque/
@@ -277,11 +295,15 @@ export class EditorMarkdown implements AfterViewInit, OnDestroy, ControlValueAcc
   }
 
   async ngAfterViewInit(): Promise<void> {
+    this.host.nativeElement.addEventListener('keydown', this.capturarTeclaLink, true);
+    this.host.nativeElement.addEventListener('click', this.capturarCliqueLink, true);
     const instancia = this.criarEditor({
       raiz: this.raiz().nativeElement,
       valorInicial: this.valorEfetivo(),
       documentoColaborativo: this.documentoColaborativo(),
       awareness: this.awareness(),
+      propagarImediatamente: this.propagarImediatamente(),
+      aoAlterarSelecao: (valida) => this.selecaoValida.set(valida),
       aoAlterar: (markdown) => this.propagarMarkdown(markdown),
       aoAlterarEstado: (estado) => {
         if (!estado.emTabela) this.faixaEmTabela.set('TABELA');
@@ -306,6 +328,8 @@ export class EditorMarkdown implements AfterViewInit, OnDestroy, ControlValueAcc
   }
 
   ngOnDestroy(): void {
+    this.host.nativeElement.removeEventListener('keydown', this.capturarTeclaLink, true);
+    this.host.nativeElement.removeEventListener('click', this.capturarCliqueLink, true);
     this.destruido = true;
     this.pararDeObservarViewport();
     this.instancia?.destruir();
@@ -343,6 +367,55 @@ export class EditorMarkdown implements AfterViewInit, OnDestroy, ControlValueAcc
     if (markdown.length > LIMITE_MARKDOWN) return markdown.slice(0, LIMITE_MARKDOWN);
     this.propagarMarkdown(markdown);
     return markdown;
+  }
+
+  protected solicitarVinculo(): void {
+    if (this.somenteLeituraEfetiva() || !this.rotuloVincular()) return;
+    const selecao = this.selecaoContextual ?? this.instancia?.capturarSelecao?.();
+    this.selecaoContextual = null;
+    if (selecao) this.vincularSelecao.emit(selecao);
+  }
+
+  protected cancelarMenuSelecao(): void {
+    this.selecaoContextual?.cancelar();
+    this.selecaoContextual = null;
+  }
+
+  protected abrirMenuSelecao(evento: MouseEvent): void {
+    if (!this.rotuloVincular() || this.somenteLeituraEfetiva() ||
+      !this.raiz().nativeElement.contains(evento.target as Node)) return;
+    const selecao = this.instancia?.capturarSelecao?.();
+    if (!selecao) return;
+    this.selecaoContextual = selecao;
+    evento.preventDefault();
+    this.menuSelecao()?.abrirContextual(evento.clientX, evento.clientY);
+  }
+
+  protected ativarLinkInterno(evento: Event): void {
+    const prefixo = this.prefixoLinkInterno();
+    const alvo = evento.target;
+    const ancora = alvo instanceof Element ? alvo.closest('a') : null;
+    const href = ancora?.getAttribute('href');
+    if (!prefixo || !href?.startsWith(prefixo) || !this.raiz().nativeElement.contains(ancora)) return;
+    evento.preventDefault();
+    evento.stopPropagation();
+    this.linkInternoAtivado.emit(href);
+  }
+
+  protected aoTeclarLink(evento: KeyboardEvent): void {
+    if (evento.key !== 'Enter') return;
+    const alvo = evento.target;
+    if (alvo instanceof Element && alvo.closest('a')) {
+      this.ativarLinkInterno(evento);
+      return;
+    }
+    const prefixo = this.prefixoLinkInterno();
+    const href = this.instancia?.obterLinkNaSelecao?.();
+    if (prefixo && href?.startsWith(prefixo) && this.raiz().nativeElement.contains(alvo as Node)) {
+      evento.preventDefault();
+      evento.stopPropagation();
+      this.linkInternoAtivado.emit(href);
+    }
   }
 
   protected aplicarAcao(acao: AcaoMarkdown): void {

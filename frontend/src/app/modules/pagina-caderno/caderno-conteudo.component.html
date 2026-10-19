@@ -85,10 +85,7 @@
         } @else if (erroBusca()) {
             <div class="caderno__estado caderno__estado--erro">
                 Não foi possível buscar agora.
-                <button
-                    type="button"
-                    (click)="solicitarBusca(store.resultadosBusca().paginaAtual)"
-                >
+                <button type="button" (click)="solicitarBusca(store.resultadosBusca().paginaAtual)">
                     Tentar novamente
                 </button>
             </div>
@@ -245,18 +242,14 @@
                         <button
                             type="button"
                             [attr.data-pagina-id]="pagina.id"
-                            [class.caderno__pagina--ativa]="
-                                store.paginaAtiva()?.id === pagina.id
-                            "
+                            [class.caderno__pagina--ativa]="store.paginaAtiva()?.id === pagina.id"
                             (click)="selecionarPagina(pagina.id)"
                         >
                             <strong>{{ pagina.titulo }}</strong>
                             <span
                                 >{{
                                     pagina.autorNome ??
-                                        (modoCaderno() === "ESQUADRAO"
-                                            ? "Esquadrão"
-                                            : "Caderno")
+                                        (modoCaderno() === "ESQUADRAO" ? "Esquadrão" : "Caderno")
                                 }}
                                 · {{ pagina.updatedDate | date: "dd/MM/yy HH:mm" }}</span
                             >
@@ -351,8 +344,13 @@
                     as documento
                 ) {
                     <app-editor-markdown
+                        rotuloVincular="Vincular à Biblioteca…"
+                        [prefixoLinkInterno]="prefixoDocumentoCaderno"
+                        (vincularSelecao)="vincularBiblioteca($event)"
+                        (linkInternoAtivado)="abrirVinculoBiblioteca($event)"
                         [valor]="store.rascunho().conteudoMarkdown"
                         [documentoColaborativo]="documento"
+                        [propagarImediatamente]="true"
                         [awareness]="colaboracaoEsquadrao.awareness()"
                         [somenteLeitura]="false"
                         (valorChange)="alterarConteudoMarkdown($event)"
@@ -360,6 +358,10 @@
                     />
                 } @else {
                     <app-editor-markdown
+                        rotuloVincular="Vincular à Biblioteca…"
+                        [prefixoLinkInterno]="prefixoDocumentoCaderno"
+                        (vincularSelecao)="vincularBiblioteca($event)"
+                        (linkInternoAtivado)="abrirVinculoBiblioteca($event)"
                         [valor]="store.rascunho().conteudoMarkdown"
                         [somenteLeitura]="somenteLeitura()"
                         (valorChange)="alterarConteudoMarkdown($event)"
@@ -369,9 +371,7 @@
 
                 @if (!somenteLeitura()) {
                     <footer class="caderno__editor-acoes">
-                        @if (
-                            store.paginaAtiva() && (modoCaderno() !== "ESQUADRAO" || ehMestre())
-                        ) {
+                        @if (store.paginaAtiva() && (modoCaderno() !== "ESQUADRAO" || ehMestre())) {
                             <button
                                 app-botao
                                 variante="perigo"
@@ -488,4 +488,14 @@
             }
         </main>
     </div>
+}
+
+@if (selecaoBiblioteca() || documentoBibliotecaId() !== null) {
+    <app-caderno-vinculo-biblioteca
+        [campanhaId]="campanhaId()"
+        [ehMestre]="ehMestre()"
+        [selecao]="selecaoBiblioteca()"
+        [documentoId]="documentoBibliotecaId()"
+        (fechou)="fecharBiblioteca()"
+    />
 }

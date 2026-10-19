@@ -88,6 +88,10 @@
   corrigir; mantido como contornado até a próxima ocorrência, que deve registrar o que rodava em paralelo.
 - **Contorno:** `CI=true npm run build --workspace=frontend` passou, desabilitando o cache
   só nessa execução. Não muda `frontend/angular.json` nem remove o cache existente.
+- **Recorrência (19/10/2026):** no gate de `caderno-vincular-trecho-biblioteca`, builds separados
+  repetiram `3221225477` com o `ng serve` do autor e um servidor isolado abertos. Menos workers,
+  outro runtime e saída isolada não resolveram. `CI=true`, com dois workers, aprovou produção
+  em 20,387s; cache/configuração preservados. Evidências na verificação da task concluída.
 - **Correção:** investigar recorrência a partir do diagnóstico de P-104 e dos limites
   da [verificação do sumário](../specs/done/regras-sumario-classes-subclasses/verificacao.md).
 - **Desde:** gate de `regras-sumario-classes-subclasses`, 09/10/2026.
