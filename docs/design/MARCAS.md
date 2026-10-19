@@ -37,7 +37,7 @@ ou enquadramento exige nova versão para aprovação do autor.
 
 Fonte única: `docs/design/tema/_tokens.scss`, com valores equivalentes em
 `frontend/src/styles/tema/_tokens.scss`. `--ameaca-<chave>` guarda as oito cores
-extraídas das imagens `image1`…`image8` de `docs/core/sistema-v4.1.4.md`.
+extraídas das imagens `image1`…`image8` de `docs/core/sistema-v4.1.5.md`.
 Valores permanecem iguais em claro/escuro: não dependem do accent nem da conta.
 Método/originais em `m10-04-svg-scp-definitivo/proposta/paleta.json`, junto da spec.
 

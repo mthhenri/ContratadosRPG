@@ -1,5 +1,5 @@
 // Gerado por `npm run regras:exportar` a partir do livro publicado. Não editar manualmente.
-// Fonte: livro sistema v4.1.4 — Condições.
+// Fonte: livro sistema v4.1.5 — Condições.
 export const DESCRICOES_CONDICOES = [
     {
         "nome": "Abalado",

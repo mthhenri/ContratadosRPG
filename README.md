@@ -86,7 +86,7 @@ A fonte da verdade das regras é o **banco**, editado na Oficina das Regras. Os 
 `docs/core/` são a **cópia gerada** da versão publicada (`npm run regras:exportar`) — leia-os, mas
 não os edite à mão:
 
-- [docs/core/sistema-v4.1.4.md](docs/core/sistema-v4.1.4.md) — regras do jogo;
+- [docs/core/sistema-v4.1.5.md](docs/core/sistema-v4.1.5.md) — regras do jogo;
 - [docs/core/guia_de_mestre-v4.2.0.md](docs/core/guia_de_mestre-v4.2.0.md) — criação de ameaças.
 
 ## Documentação

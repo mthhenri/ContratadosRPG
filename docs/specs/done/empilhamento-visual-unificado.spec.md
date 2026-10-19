@@ -121,7 +121,7 @@ custo e peso.
 
 ## Dependências
 
-`docs/core/sistema-v4.1.4.md` (Modificações, Empilhamento, tabelas `⬥ Modificações` por
+`docs/core/sistema-v4.1.5.md` (Modificações, Empilhamento, tabelas `⬥ Modificações` por
 categoria, Amplificadores); `shared/src/regras/compras/`; `docs/design/DESIGN.md` e
 `docs/design/tema/`; `tema.service.ts` (bases e accent em runtime).
 

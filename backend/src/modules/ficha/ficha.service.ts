@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { IMAGEM_EXTENSAO_POR_MIME } from '@contratados-rpg/shared/validators';
+import { calcularMediasEsquadrao } from '@contratados-rpg/shared/regras/novo-agente';
 import type { CampanhaInventarioItemDto } from '@contratados-rpg/shared/dtos/campanha';
 import type {
   FichaAcervoListarDto,
@@ -330,26 +331,18 @@ export class FichaService {
   }
 
   /**
-   * Média de Nível/Prestígio dos agentes ativos de uma campanha — agregado calculado no banco
-   * (`FichaRepository.calcularMediasEsquadrao`), usado pelo guia de criação para "Iniciando um
-   * Novo Agente" (`docs/core/sistema-v4.1.3.md`). Só exige que o autor seja membro da campanha,
-   * a mesma checagem de `listarFichas` — mas **não** ramifica por papel: diferente de
-   * `listarFichas`, o agregado não expõe nenhuma ficha individual, então a matriz de visibilidade
-   * por ficha (§14) não se aplica aqui, e um jogador comum consulta a mesma média que o mestre.
+   * Agrega apenas os agentes autorizados por `listarFichas`, preservando dono, mestre e
+   * concessão suspensa. O motor puro calcula médias sem arredondamento antecipado.
+   * Fonte: sistema-v4.1.5.md, “Iniciando um Novo Agente”.
    */
   async calcularMediasEsquadrao(
     dto: FichaListarDto,
     usuarioAtivo: JwtPayload,
   ): Promise<FichaMediasEsquadraoDto> {
-    const membroEncontrado = await this.campanhaRepositorio.recuperarMembro({
-      campanhaId: dto.campanhaId,
-      usuarioId: usuarioAtivo.sub,
+    const fichas = await this.listarFichas(dto, usuarioAtivo);
+    return calcularMediasEsquadrao({
+      fichas: fichas.filter(ficha => (ficha.tipo ?? TipoFichaEnum.JOGADOR) === TipoFichaEnum.JOGADOR),
     });
-    if (!membroEncontrado || this.campanhaService.ehEspectador(membroEncontrado.papel)) {
-      throw new UnauthorizedAccessException();
-    }
-
-    return this.fichaRepositorio.calcularMediasEsquadrao(dto);
   }
 
   /**

@@ -11,7 +11,7 @@ Sistema → Combatente em 360×800: três abas com aproximadamente 83px cada e f
 
 `regras-arquetipos.component.*`; APIs de Abas/Aba em `shared/ui/`; três classes e nove arquétipos do Sistema.
 
-Regras e textos vêm de [Sistema](../../core/sistema-v4.1.4.md) e [Guia](../../core/guia_de_mestre-v4.2.0.md). Constituição, convenções e [design](../../design/DESIGN.md) prevalecem. A mudança é de apresentação; não alterar efeitos, custos, fórmulas ou permissões. Normalização/modelos de leitura pertencem ao frontend; nenhuma regra de domínio deve ser duplicada no renderer.
+Regras e textos vêm de [Sistema](../../core/sistema-v4.1.5.md) e [Guia](../../core/guia_de_mestre-v4.2.0.md). Constituição, convenções e [design](../../design/DESIGN.md) prevalecem. A mudança é de apresentação; não alterar efeitos, custos, fórmulas ou permissões. Normalização/modelos de leitura pertencem ao frontend; nenhuma regra de domínio deve ser duplicada no renderer.
 
 ## Entregáveis e aceite
 

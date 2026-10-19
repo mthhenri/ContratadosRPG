@@ -1,4 +1,4 @@
-<!-- GERADO por "npm run regras:exportar" a partir do banco (Oficina das Regras). NÃO EDITE À MÃO: altere o livro pela Oficina, publique e exporte de novo. livro: sistema; versão: 4.1.4; sha256 do corpo: 736eab472ff50c28763b01d85e00a0d356426dbd2969cfcdd1d4ec85d5e5f478 -->
+<!-- GERADO por "npm run regras:exportar" a partir do banco (Oficina das Regras). NÃO EDITE À MÃO: altere o livro pela Oficina, publique e exporte de novo. livro: sistema; versão: 4.1.5; sha256 do corpo: 1decb1055c28e456b74bdb99ce2908f320ee53123c09c4c6ce1bba7be4fad04b -->
 
 # Sistema
 
@@ -1179,7 +1179,7 @@ Na construção de sua ficha, você poderá escolher qualquer equipamento na loj
 
 ### ⬡ Iniciando um Novo Agente {#iniciando-um-novo-agente}
 
-Sempre que um **novo agente entrar no esquadrão**, seja pela morte de um personagem, pela aposentadoria de um agente ou pela chegada de um jogador em uma campanha em andamento, deve-se aplicar esta seção para determinar seu **Nível e Prestígio iniciais**.
+Sempre que um **novo agente entrar no esquadrão**, seja pela morte de um personagem, pela aposentadoria de um agente ou pela chegada de um jogador em uma campanha em andamento, deve-se aplicar esta seção para determinar seu **Nível e Prestígio iniciais**. Para estas médias e para a quantidade de agentes considerada, use somente as fichas de agentes que quem consulta pode visualizar. A própria ficha oculta continua no cálculo de seu dono; o mestre considera todas as fichas de agentes da campanha. Fichas ocultas de outros jogadores não entram, mesmo quando existe uma concessão de acesso suspensa. Criaturas e NPCs não entram nessas médias. Se não houver agente visível, siga os valores de primeiro agente: Nível 0 e Prestígio 0. As demais fórmulas, reduções e regras de arredondamento permanecem iguais.
 
 #### ⬥ Nível Inicial {#nivel-inicial}
 

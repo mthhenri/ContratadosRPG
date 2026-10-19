@@ -66,5 +66,5 @@ do sandbox voltou a falhar com código nativo `3221225477`; `CI=true`, que desab
 somente nessa execução, passou. Recorrência registrada em P-111, sem investigar ou alterar
 a configuração de cache nesta tarefa. O servidor do autor foi preservado.
 
-A alteração preexistente em `docs/core/sistema-v4.1.4.md` foi preservada integralmente;
+A alteração preexistente em `docs/core/sistema-v4.1.5.md` foi preservada integralmente;
 os assets de teste/build refletem a fonte atual. Nenhum commit ou push realizado.

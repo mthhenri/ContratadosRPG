@@ -3884,6 +3884,38 @@ export const schemasContratosPublicos = {
         "additionalProperties": false,
         "description": "Uma habilidade especial da criatura — propriedade da própria criatura, não selecionada de\num catálogo (diferente das habilidades de jogador). `restricao` é a frequência/condição\nde uso quando aplicável (ex.: \"uma vez por cena\", \"recarga de 3 turnos\")."
     },
+    "FichaMediaReferenciaDto": {
+        "type": "object",
+        "properties": {
+            "nivel": {
+                "type": "number"
+            },
+            "prestigio": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "nivel"
+        ],
+        "additionalProperties": false,
+        "description": "Valores de um agente já autorizado; a seleção do observador pertence à service."
+    },
+    "FichaMediasEsquadraoCalcularDto": {
+        "type": "object",
+        "properties": {
+            "fichas": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/FichaMediaReferenciaDto"
+                }
+            }
+        },
+        "required": [
+            "fichas"
+        ],
+        "additionalProperties": false,
+        "description": "Entrada do agregado puro, sem identidade ou regras de permissão no motor."
+    },
     "NpcCompetenciasDto": {
         "type": "object",
         "properties": {
@@ -4991,7 +5023,7 @@ export const schemasContratosPublicos = {
             "quantidade"
         ],
         "additionalProperties": false,
-        "description": "Saída da média de Nível/Prestígio dos agentes (`JOGADOR`) ativos de uma campanha — recorte\ncalculado (`Entidade + Recorte + Dto`, sem verbo), consumido pelo guia de criação ao aplicar\n\"Iniciando um Novo Agente\" (`docs/core/sistema-v4.1.3.md`). É um **agregado**: nunca expõe\nfichas individuais, então **não** passa pela matriz de visibilidade por ficha (§14) que\n`listarFichas` aplica — qualquer membro da campanha pode consultar, mestre ou jogador comum,\nmesmo sem `usuario_ficha_acesso` sobre as fichas alheias somadas na média. Reusa `FichaListarDto`\ncomo entrada (mesmo `campanhaId`). `quantidade` é o total de agentes considerados — `0` quando a\ncampanha ainda não tem nenhum, caso em que `mediaNivel`/`mediaPrestigio` saem `0`."
+        "description": "Saída da média de Nível/Prestígio dos agentes (`JOGADOR`) ativos de uma campanha — recorte\ncalculado (`Entidade + Recorte + Dto`, sem verbo), consumido pelo guia de criação ao aplicar\n\"Iniciando um Novo Agente\" (`docs/core/sistema-v4.1.5.md`). Considera somente os agentes que\no observador pode visualizar, pelo mesmo árbitro de `listarFichas`: dono inclui a própria\noculta, mestre inclui todas; concessão suspensa não inclui a oculta alheia. Criaturas/NPCs\nnão entram. Reusa `FichaListarDto` como entrada; `quantidade = 0` significa nenhum agente\nautorizado no recorte, com médias `0`, sem inferir o conjunto oculto da campanha."
     },
     "FichaResumoDto": {
         "type": "object",

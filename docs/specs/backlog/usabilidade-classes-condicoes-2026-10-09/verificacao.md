@@ -8,7 +8,7 @@ recorte descrito; a cobertura universal e os gates de interação ainda não est
 
 ## Fontes e arquitetura
 
-Fonte: `docs/core/sistema-v4.1.4.md`, capítulo Condições (28 verbetes); o Guia aplica Morrendo
+Fonte: `docs/core/sistema-v4.1.5.md`, capítulo Condições (28 verbetes); o Guia aplica Morrendo
 a NPCs como aos agentes. `regras-condicoes.mjs` extrai o texto completo da árvore normalizada.
 `normalizar-regras.mjs` gera `src/app/shared/condicoes/condicoes.dados.ts` no preparo real das
 Regras; chamadas de teste com destinos temporários não escrevem esse arquivo por padrão.

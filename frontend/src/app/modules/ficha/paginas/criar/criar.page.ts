@@ -450,7 +450,7 @@ export class FichaCriar {
       membros: campanhaId !== null ? this.campanhaService.listarMembros(campanhaId) : of([]),
       medias: campanhaId !== null ? this.fichaService.calcularMediasEsquadrao(campanhaId) : of(null),
     })
-      .pipe(finalize(() => this.carregando.set(false))).subscribe(({ membros, medias }) => { this.membros.set(membros); this.mediasEsquadrao.set(medias); if (!medias?.quantidade) return; this.alterar({ mediaNivel: medias.mediaNivel, mediaPrestigio: medias.mediaPrestigio }); });
+      .pipe(finalize(() => this.carregando.set(false))).subscribe(({ membros, medias }) => { this.membros.set(membros); this.mediasEsquadrao.set(medias); if (!medias) return; this.alterar({ mediaNivel: medias.mediaNivel, mediaPrestigio: medias.mediaPrestigio }); });
     // `!this.temRascunho()` evita sobrescrever o rascunho salvo antes do jogador decidir "Retomar"
     // ou "Começar do zero": sem essa trava, este efeito salvava o estado inicial (vazio) assim que
     // `carregando()` virava `false` — antes de qualquer clique — apagando o rascunho que o banner
@@ -469,7 +469,18 @@ export class FichaCriar {
       if (this.confirmandoSaida()) { if (!dialog.open) dialog.showModal(); } else { dialog.close(); }
     });
   }
-  protected retomar(): void { const salvo = this.rascunhos.recuperar<EstadoGuiaCriacao>(this.campanhaId, 'agente'); if (salvo) { const normalizado = normalizarEstado(salvo); this.estado.set(normalizado); this.visitado.set(normalizado.passo); } this.temRascunho.set(false); }
+  protected retomar(): void {
+    const salvo = this.rascunhos.recuperar<EstadoGuiaCriacao>(this.campanhaId, 'agente');
+    if (salvo) {
+      const normalizado = normalizarEstado(salvo);
+      const medias = this.mediasEsquadrao();
+      this.estado.set(medias ? {
+        ...normalizado, mediaNivel: medias.mediaNivel, mediaPrestigio: medias.mediaPrestigio,
+      } : normalizado);
+      this.visitado.set(normalizado.passo);
+    }
+    this.temRascunho.set(false);
+  }
   protected recomecar(): void { this.rascunhos.limpar(this.campanhaId, 'agente'); this.temRascunho.set(false); }
   protected alterar(parcial: Partial<EstadoGuiaCriacao>): void { this.estado.update((atual) => ({ ...atual, ...parcial })); }
   protected valor(evento: Event): string { return (evento.target as HTMLInputElement).value; }

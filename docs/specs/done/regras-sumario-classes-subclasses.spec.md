@@ -30,11 +30,11 @@ na página pública e no leitor flutuante, inclusive pela gaveta mobile.
 ## Fora de Escopo
 
 Alterar conteúdo/regras dos livros, incluir arquétipos ou habilidades no menu, reformular
-o sumário, revisar PDF ou interferir na alteração preexistente de `docs/core/sistema-v4.1.4.md`.
+o sumário, revisar PDF ou interferir na alteração preexistente de `docs/core/sistema-v4.1.5.md`.
 
 ## Dependências
 
-Leitor e normalizador M10; `docs/core/sistema-v4.1.4.md`, `docs/design/DESIGN.md` e
+Leitor e normalizador M10; `docs/core/sistema-v4.1.5.md`, `docs/design/DESIGN.md` e
 `docs/design/tema/` como fontes de conteúdo e identidade.
 
 ## Fecho — 09/10/2026

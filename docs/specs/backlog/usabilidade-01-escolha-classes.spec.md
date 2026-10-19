@@ -41,5 +41,5 @@ de arquétipos (task 02). Não pressupor que a revisão original cobriu telas au
 ## Dependências
 
 `docs/SYSTEM.SPEC.md`, `docs/CONVENTIONS.md`, `docs/design/DESIGN.md` e handoff de tema;
-`docs/core/sistema-v4.1.4.md`, Classes e Arquétipos/Subclasse/Civil; implementação vigente da
+`docs/core/sistema-v4.1.5.md`, Classes e Arquétipos/Subclasse/Civil; implementação vigente da
 calculadora e `shared/regras`. A task 02 não bloqueia esta implementação.

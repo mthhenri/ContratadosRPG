@@ -30,7 +30,7 @@ no mesmo commit da mudança de código que ela motivar.
 
 | Documento (cópia gerada) | Escopo |
 |---|---|
-| `docs/core/sistema-v4.1.4.md` | Regras de jogador: atributos, classes, progressão, equipamentos, patentes, descanso, compras |
+| `docs/core/sistema-v4.1.5.md` | Regras de jogador: atributos, classes, progressão, equipamentos, patentes, descanso, compras |
 | `docs/core/guia_de_mestre-v4.2.0.md` | Criação de ameaças: identidade, atributos, modificadores, saúde, defesa, resistências, porte, ações |
 
 O número no nome do arquivo segue a versão publicada (o comando remove o arquivo da versão
@@ -139,7 +139,7 @@ contratados-rpg/
       tema/                     → _tokens/_base/_componentes.scss
       examples/                 → protótipos aprovados (fidelidade visual 1:1)
     core/
-      sistema-v4.1.4.md         → fonte da verdade do jogo (jogador)
+      sistema-v4.1.5.md         → fonte da verdade do jogo (jogador)
       guia_de_mestre-v4.2.0.md  → fonte da verdade do jogo (ameaças)
     specs/
       backlog/                  → tasks a implementar
@@ -277,7 +277,7 @@ autoritativamente o que é salvo. Mesmo racional dos validators de fonte única.
 1. Somente **funções puras e dados tipados** — sem estado, sem I/O, sem Date.now/random
    fora de utilidades de rolagem explícitas
 2. **Zero dependências** externas (nem class-validator, nem NestJS, nem Angular)
-3. Toda fórmula tem **teste unitário** validado contra `docs/core/sistema-v4.1.4.md` /
+3. Toda fórmula tem **teste unitário** validado contra `docs/core/sistema-v4.1.5.md` /
    `docs/core/guia_de_mestre-v4.2.0.md`
 4. Permissões e persistência **nunca** entram aqui — isso é service do backend
 
@@ -520,7 +520,7 @@ forma do documento (`@IsEnum`, `@IsInt`, ranges).
 - Login duplicado → `BusinessException('Login já está em uso')`
 - Sem permissão na ficha/campanha → `UnauthorizedAccessException()`
 - **Maestria inválida** na ficha de jogador (atributo inexistente ou com menos de 6 pontos) →
-  `BusinessException` (`m3-10`; segue `sistema-v4.1.4.md`).
+  `BusinessException` (`m3-10`; segue `sistema-v4.1.5.md`).
 
 > **Revisto em `m3-10`:** o backend **não trava mais faixas do estado salvo** da ficha de jogador —
 > **cai** a coerência "HP atual ≤ máximo calculado" e "atributo/nível dentro do limite da classe":
@@ -607,6 +607,11 @@ usuario_ficha_acesso        ficha_id FK, usuario_id FK
   valer sozinha quando a ficha é exibida de novo, e uma concessão feita durante a ocultação só
   passa a valer depois dela. Dono e mestre mantêm leitura e gestão. Não se aplica a criatura/NPC
   (nelas a concessão é a própria revelação) nem a ficha solta, sem campanha.
+- **Novo Agente usa o conjunto visível de quem consulta:** quantidade e médias consideram
+  somente fichas de jogador retornadas pela listagem autorizada da campanha. Dono inclui
+  sua própria oculta; mestre inclui todas; terceiro não inclui concessão suspensa. Criatura
+  e NPC ficam fora; espectador não consulta esse agregado. Conjunto visível vazio usa o
+  tratamento de primeiro agente. Reduções e arredondamentos do livro permanecem iguais.
 - **Rolagem pública de agente oculto preserva o resultado:** a autorização atual recorta a
   identidade estruturada da ficha também no histórico anterior, nas projeções e nos eventos.
   Terceiros recebem `fichaId`, vínculo de combatente, nome e cor nulos, com origem reservada;
@@ -708,7 +713,7 @@ Inegociáveis independente do contexto:
 | 24 | **Nunca representar enum de coluna** como `VARCHAR + CHECK` ou ENUM nativo — tabela `tipo_*` (exceção: enums de conteúdo de jogo dentro do JSONB — §10.3) |
 | 25 | **Nunca aceitar mutação via WebSocket** — escrita entra só por REST; gateway é broadcast-only |
 | 26 | **Nunca colocar I/O, estado ou dependências** em `shared/src/regras/` — só funções puras e dados tipados |
-| 27 | **Nunca alterar fórmula de jogo** sem consultar `docs/core/sistema-v4.1.4.md` / `docs/core/guia_de_mestre-v4.2.0.md` e atualizar os testes — o documento vence o código |
+| 27 | **Nunca alterar fórmula de jogo** sem consultar `docs/core/sistema-v4.1.5.md` / `docs/core/guia_de_mestre-v4.2.0.md` e atualizar os testes — o documento vence o código |
 | 28 | **Nunca duplicar regra de permissão** — a service do módulo dono é o único árbitro; REST e WS consomem a mesma verificação |
 | 29 | **Nunca hardcodar** cor, fonte ou raio em SCSS/template — todo estilo consome os tokens do tema em `docs/design/tema/` (`var(--surface)`, `var(--accent)`, `var(--font-mono)`…); leia `docs/design/DESIGN.md` antes de qualquer UI |
 | 30 | **Nunca usar o atributo `title` nativo do HTML** para tooltip — sempre a diretiva `appTooltip` (`frontend/src/app/shared/tooltip/tooltip.directive.ts`), que já resolve hover/toque/teclado e usa os tokens do tema |

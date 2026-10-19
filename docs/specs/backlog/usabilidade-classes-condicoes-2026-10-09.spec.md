@@ -26,4 +26,4 @@ Redesenhar classes ou implementar outras recomendações sem decisão do autor; 
 
 ## Dependências
 
-`docs/SYSTEM.SPEC.md`, `docs/CONVENTIONS.md`, `docs/design/DESIGN.md`, handoff de tema e `docs/core/sistema-v4.1.4.md` (Condições). Avaliação legada em `docs/specs/backlog/usabilidade-2026-09-13/` somente como contexto, não evidência atual.
+`docs/SYSTEM.SPEC.md`, `docs/CONVENTIONS.md`, `docs/design/DESIGN.md`, handoff de tema e `docs/core/sistema-v4.1.5.md` (Condições). Avaliação legada em `docs/specs/backlog/usabilidade-2026-09-13/` somente como contexto, não evidência atual.

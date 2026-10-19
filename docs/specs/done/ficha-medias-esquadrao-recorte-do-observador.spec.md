@@ -48,7 +48,7 @@ globalmente ocultas inclusive para dono/mestre.
 
 - [D-02 e evidência da média atual](../done/auditoria-ficha-oculta-retomada-cobertura/verificacao.md).
 - Livro publicado, **Iniciando um Novo Agente**, cópia atual em
-  `docs/core/sistema-v4.1.4.md`; `docs/SYSTEM.SPEC.md` §1.1/14.
+  `docs/core/sistema-v4.1.5.md`; `docs/SYSTEM.SPEC.md` §1.1/14.
 - Alinhamento/publicação do livro é pré-requisito de implementação, não
   autorização para editar dados de produção durante esta auditoria.
 - Skills `regras-do-jogo`, `gerenciamento-de-impacto`, `sql-migrations` se

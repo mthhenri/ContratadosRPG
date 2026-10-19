@@ -11,7 +11,7 @@ Em 360×800, consultar Formação, Níveis e Melhorias de Agente, Corpo e Pontua
 
 Sistema: tabelas Grupo/Bônus/Grupo/Bônus, Nível/Bônus/Nível/Bônus, Pontuação/Dano/Pontuação/Dano e Treinamento/Bônus/Treinamento/Bônus. Renderização em `regras-tabela.component.*` e classificação no normalizador.
 
-Regras e textos vêm de [Sistema](../../core/sistema-v4.1.4.md) e [Guia](../../core/guia_de_mestre-v4.2.0.md). Constituição, convenções e [design](../../design/DESIGN.md) prevalecem. A mudança é de apresentação; não alterar efeitos, custos, fórmulas ou permissões. Normalização/modelos de leitura pertencem ao frontend; nenhuma regra de domínio deve ser duplicada no renderer.
+Regras e textos vêm de [Sistema](../../core/sistema-v4.1.5.md) e [Guia](../../core/guia_de_mestre-v4.2.0.md). Constituição, convenções e [design](../../design/DESIGN.md) prevalecem. A mudança é de apresentação; não alterar efeitos, custos, fórmulas ou permissões. Normalização/modelos de leitura pertencem ao frontend; nenhuma regra de domínio deve ser duplicada no renderer.
 
 ## Entregáveis e aceite
 

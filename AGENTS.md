@@ -64,7 +64,7 @@ tela sobre um tema PrimeNG vazio ou padrão.
 ## Fontes da verdade
 
 A fonte da verdade das regras do jogo é o **banco**, editado na Oficina das Regras
-do site. `docs/core/sistema-v4.1.4.md` e `docs/core/guia_de_mestre-v4.2.0.md` são a
+do site. `docs/core/sistema-v4.1.5.md` e `docs/core/guia_de_mestre-v4.2.0.md` são a
 **cópia gerada** da versão publicada (`npm run regras:exportar`): leia-os antes de
 alterar fórmulas, progressão ou regras de domínio e **nunca os edite à mão** —
 `repo:verificar` acusa o cabeçalho ausente ou o corpo alterado. Para mudar uma regra,

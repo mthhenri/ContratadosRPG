@@ -66,6 +66,16 @@ describe('FichaCriar', () => {
 
   afterEach(() => TestBed.resetTestingModule());
 
+  it('conjunto visível vazio não afirma que a campanha inteira está vazia', () => {
+    const { fixture, raiz, componente } = montar([], null, CAMPANHA_ID, {
+      mediaNivel: 0, mediaPrestigio: 0, quantidade: 0,
+    });
+    componente['alterar']({ passo: 2 });
+    fixture.detectChanges();
+    expect(raiz.textContent).toContain('Nenhum agente visível');
+    expect(componente['nivelInicial']()).toBe(0);
+  });
+
   it('começa sem classe, cálculos ou recursos revelados no resumo operacional', () => {
     const { raiz } = montar();
     const resumo = raiz.querySelector('.guia__resumo-corpo');
@@ -233,6 +243,24 @@ describe('FichaCriar', () => {
   });
 
   describe('rascunho salvo neste dispositivo', () => {
+    for (const mediaNivel of [2, 0]) {
+      it(`retomar usa a média autorizada ${mediaNivel} e preserva os campos preenchidos`, () => {
+        const { componente, rascunhos } = montar([], null, CAMPANHA_ID, {
+          mediaNivel, mediaPrestigio: 0, quantidade: mediaNivel === 0 ? 0 : 1,
+        });
+        rascunhos.recuperar.mockReturnValue({
+          ...componente['estado'](), nome: 'Agente salvo', passo: 2,
+          mediaNivel: 6, mediaPrestigio: 28, nivelManual: 7, prestigioManual: 33,
+        });
+        componente['retomar']();
+        expect(componente['estado']().nome).toBe('Agente salvo');
+        expect(componente['estado']().mediaNivel).toBe(mediaNivel);
+        expect(componente['estado']().mediaPrestigio).toBe(0);
+        expect(componente['estado']().nivelManual).toBe(7);
+        expect(componente['estado']().prestigioManual).toBe(33);
+      });
+    }
+
     it('não sobrescreve o rascunho salvo antes do jogador decidir "Retomar" ou "Começar do zero"', () => {
       const { fixture, componente, rascunhos } = montar([], { nome: 'Agente salvo antes' });
 
@@ -1136,13 +1164,13 @@ describe('FichaCriar', () => {
       expect(componente['mediasEsquadrao']()).toBeNull();
     });
 
-    it('sem campanhaId, o passo Novo agente mostra "Ficha avulsa" em vez de "Primeiro agente da campanha"', () => {
+    it('sem campanhaId, o passo Novo agente mostra "Ficha avulsa" em vez de "Nenhum agente visível"', () => {
       const { fixture, raiz, componente } = montar([], null, null);
       componente['alterar']({ passo: 2 });
       fixture.detectChanges();
 
       expect(raiz.textContent).toContain('Ficha avulsa, sem campanha');
-      expect(raiz.textContent).not.toContain('Primeiro agente da campanha');
+      expect(raiz.textContent).not.toContain('Nenhum agente visível');
     });
 
     it('usa Nível e Prestígio exatos informados na ficha avulsa', () => {
@@ -1217,24 +1245,18 @@ describe('FichaCriar', () => {
     });
   });
 
-  describe('primeiro agente de um jogador comum numa campanha já com outros agentes', () => {
-    it('aplica a média do esquadrão mesmo sem nenhuma ficha alheia visível ao jogador (agregado do backend, não listarFichas)', () => {
-      // Cenário do bug reportado: um jogador comum sem `usuario_ficha_acesso` sobre as fichas
-      // alheias não as enxergaria numa listagem individual — mas a média é um agregado (§14 não
-      // se aplica), então `calcularMediasEsquadrao` devolve a média real do esquadrão mesmo
-      // quando este jogador não tem nenhuma ficha própria ainda.
-      const { fixture, raiz, componente } = montar([], null, CAMPANHA_ID, {
-        mediaNivel: 5,
-        mediaPrestigio: 20,
-        quantidade: 3,
+  describe('médias autorizadas pelo backend', () => {
+    for (const mediaNivel of [2, 6]) {
+      it(`usa a média personalizada ${mediaNivel} sem reconstruir o conjunto no browser`, () => {
+        const { fixture, raiz, componente } = montar([], null, CAMPANHA_ID, {
+          mediaNivel, mediaPrestigio: 20, quantidade: mediaNivel === 2 ? 1 : 2,
+        });
+        componente['alterar']({ passo: 2 });
+        fixture.detectChanges();
+        expect(raiz.textContent).not.toContain('Nenhum agente visível');
+        expect(componente['estado']().mediaNivel).toBe(mediaNivel);
+        expect(componente['novoAgente']().nivelInicial).toBe(mediaNivel - 1);
       });
-      componente['alterar']({ passo: 2 });
-      fixture.detectChanges();
-
-      expect(raiz.textContent).not.toContain('Primeiro agente da campanha');
-      expect(componente['estado']().mediaNivel).toBe(5);
-      expect(componente['estado']().mediaPrestigio).toBe(20);
-      expect(componente['novoAgente']().nivelInicial).toBe(4);
-    });
+    }
   });
 });

@@ -70,7 +70,7 @@ Revisão direta: diff de runtime limitado a `cli.cache.path`, defaults de
 habilitação/ambiente preservados; pasta já coberta por `.angular/` no `.gitignore`.
 Documentação e spec registram a recuperação sem transformar a causa interna
 desconhecida em afirmação. Não há gate visual: nenhum componente/estilo foi alterado.
-Alteração concorrente em `docs/core/sistema-v4.1.4.md` preservada, fora deste diff.
+Alteração concorrente em `docs/core/sistema-v4.1.5.md` preservada, fora deste diff.
 
 Logs e cópias locais em `.artifacts/p-104-build-cache/`, ignorados pelo Git e
 ausentes no clone. Commit autorizado pelo autor após a entrega; sem push.

@@ -10,3 +10,4 @@ export * from "./ficha-npc-condicao.dtos";
 export * from "./ficha-npc-referencia.dtos";
 export * from "./ficha-npc-calculo.dtos";
 export * from './ficha-rolagem-identidade.dtos';
+export * from './ficha-medias-esquadrao.dtos';

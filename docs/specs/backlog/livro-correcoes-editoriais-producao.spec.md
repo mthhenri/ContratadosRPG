@@ -114,7 +114,7 @@ funcionar no seu navegador, me avise.
 - [ ] No repositório: `npm run regras:exportar` (e, se quiser só comparar, `npm run regras:exportar -- --conferir`), depois
       commite `docs/core/`. Rode `npm run repo:verificar`; se ele acusar cabeçalho ou corpo de `docs/core/`, me chame.
 - [ ] Os números de versão novos aparecem nos nomes dos arquivos de `docs/core/`; se algo do repositório ainda apontar para
-      `sistema-v4.1.4.md` ou `guia_de_mestre-v4.2.0.md`, avise que eu ajusto os ponteiros.
+      `sistema-v4.1.5.md` ou `guia_de_mestre-v4.2.0.md`, avise que eu ajusto os ponteiros.
 
 ## Conferência no site (em 1920×1080 e 360×800)
 

@@ -4,3 +4,4 @@
 // `novo-agente.dtos`.
 export * from './novo-agente.dtos';
 export * from './novo-agente';
+export * from './medias-esquadrao';

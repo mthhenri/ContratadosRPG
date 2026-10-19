@@ -18,7 +18,7 @@ como parágrafo em itálico, de modo que o leitor apresente cálculos de forma c
   insere peças "Fórmula" (`oficina-estrutura.ts`).
 - Fonte da verdade é o **banco**: `docs/core/*.md` são cópias exportadas e **não** se editam à mão. A
   correção é editorial, pela Oficina, seguida de publicar e `npm run regras:exportar`.
-- Exemplo confirmado: `sistema-v4.1.4.md` linha ~2517, `***ATRIBUTO** dados de descanso + ( **NÍVEL** × 2 )*`,
+- Exemplo confirmado: `sistema-v4.1.5.md` linha ~2517, `***ATRIBUTO** dados de descanso + ( **NÍVEL** × 2 )*`,
   parágrafo em itálico depois de "Fórmula:".
 - Candidatos para triagem (grep nos exportados, lista **não exaustiva**): no Guia,
   "Cálculo da Vida Máxima: Base + (Nível + VIG) × Multiplicador de Categoria", "10 + Nível + (Atributo × 2)…",

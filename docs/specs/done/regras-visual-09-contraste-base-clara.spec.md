@@ -11,7 +11,7 @@ Ativar base Clara e abrir Experimento Híbrido. Os rótulos de 11px “Habilidad
 
 Tokens runtime de `docs/design/tema/_tokens.scss`, DESIGN.md, Stats e destaques do leitor de Regras. Cores/fundos observados estão no relatório.
 
-Regras e textos vêm de [Sistema](../../core/sistema-v4.1.4.md) e [Guia](../../core/guia_de_mestre-v4.2.0.md). Constituição, convenções e [design](../../design/DESIGN.md) prevalecem. A mudança é de apresentação; não alterar efeitos, custos, fórmulas ou permissões. Normalização/modelos de leitura pertencem ao frontend; nenhuma regra de domínio deve ser duplicada no renderer.
+Regras e textos vêm de [Sistema](../../core/sistema-v4.1.5.md) e [Guia](../../core/guia_de_mestre-v4.2.0.md). Constituição, convenções e [design](../../design/DESIGN.md) prevalecem. A mudança é de apresentação; não alterar efeitos, custos, fórmulas ou permissões. Normalização/modelos de leitura pertencem ao frontend; nenhuma regra de domínio deve ser duplicada no renderer.
 
 ## Entregáveis e aceite
 

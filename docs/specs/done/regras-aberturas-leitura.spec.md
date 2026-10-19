@@ -25,4 +25,4 @@ Reescrever narrativa, alterar regras, revisar tabelas, modificar primitivos ou c
 
 ## Dependências
 
-`docs/core/sistema-v4.1.4.md`, `docs/core/guia_de_mestre-v4.2.0.md`, `docs/design/DESIGN.md`, `docs/design/tema/`; leitor e renderer já existentes.
+`docs/core/sistema-v4.1.5.md`, `docs/core/guia_de_mestre-v4.2.0.md`, `docs/design/DESIGN.md`, `docs/design/tema/`; leitor e renderer já existentes.

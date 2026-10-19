@@ -11,7 +11,7 @@ Sistema → Jogando como um Civil → Saúde em 360×800: a ordem visual é VIDA
 
 Sistema, Saúde do Civil, Deslocamento, Tipos de Alcances e Afinidade com Fragmentos; `regras-grade.component.*` e reconhecimento de tabelas do normalizador.
 
-Regras e textos vêm de [Sistema](../../core/sistema-v4.1.4.md) e [Guia](../../core/guia_de_mestre-v4.2.0.md). Constituição, convenções e [design](../../design/DESIGN.md) prevalecem. A mudança é de apresentação; não alterar efeitos, custos, fórmulas ou permissões. Normalização/modelos de leitura pertencem ao frontend; nenhuma regra de domínio deve ser duplicada no renderer.
+Regras e textos vêm de [Sistema](../../core/sistema-v4.1.5.md) e [Guia](../../core/guia_de_mestre-v4.2.0.md). Constituição, convenções e [design](../../design/DESIGN.md) prevalecem. A mudança é de apresentação; não alterar efeitos, custos, fórmulas ou permissões. Normalização/modelos de leitura pertencem ao frontend; nenhuma regra de domínio deve ser duplicada no renderer.
 
 ## Entregáveis e aceite
 

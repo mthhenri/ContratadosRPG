@@ -83,8 +83,8 @@ export class FichaController {
   }
 
   /**
-   * Média de Nível/Prestígio do esquadrão da campanha ("Iniciando um Novo Agente") — agregado,
-   * qualquer membro pode consultar. Segmento literal antes de `:id` pela mesma razão de `minhas`.
+   * Média de Nível/Prestígio dos agentes visíveis ao observador ("Iniciando um Novo Agente").
+   * Mestre/jogador usam seu recorte; espectador não acessa. Literal antes de `:id`, como `minhas`.
    */
   @Get('medias-esquadrao')
   mediasEsquadrao(

@@ -5,6 +5,10 @@ Mapa de consumidores REST/WS de ficha oculta, achados e retomada:
 [spec investigativa arquivada em done](../specs/done/auditoria-ficha-oculta-todos-consumidores.spec.md),
 [retomada: cobertura por consumidor, decisões e specs de correção](../specs/done/auditoria-ficha-oculta-retomada-cobertura/verificacao.md).
 
+Médias por observador: `FichaService.calcularMediasEsquadrao` reutiliza `listarFichas`;
+`shared/src/regras/novo-agente/medias-esquadrao.ts` agrega o conjunto autorizado;
+[verificação D-02](../specs/done/ficha-medias-esquadrao-recorte-do-observador/verificacao.md).
+
 Recorte de identidade das rolagens por observador: `backend/src/modules/rolagem/rolagem-identidade.service.ts`,
 árbitro `FichaService.avaliarIdentidadeRolagem`, evento `rolagem:recortes-alterados`;
 [verificação D-01](../specs/done/ficha-oculta-rolagem-publica-sem-identidade/verificacao.md).
@@ -37,7 +41,7 @@ Estas são as fontes da verdade. Em conflito entre código e documento, **o docu
 | Grades de referência reconhecidas (RV-04) | `frontend/scripts/regras-grades.mjs`; `frontend/src/app/modules/regras/blocos/regras-grade-referencia.component.*` e `regras-faixas.component.*`; [verificação](../specs/done/regras-visual-04-grades-semanticas/verificacao.md) | conferir pares e hierarquia de Saúde do Civil, Afinidade, Alcances e Deslocamento |
 | Constituição do projeto — precede tudo | [`docs/SYSTEM.SPEC.md`](../SYSTEM.SPEC.md) | qualquer implementação |
 | Convenções de código (referência rápida) | [`docs/CONVENTIONS.md`](../CONVENTIONS.md) | escrever qualquer arquivo |
-| **Regras do jogo — jogador** | [`docs/core/sistema-v4.1.4.md`](../core/sistema-v4.1.4.md) | tocar em **qualquer** fórmula, tabela de progressão ou regra de domínio |
+| **Regras do jogo — jogador** | [`docs/core/sistema-v4.1.5.md`](../core/sistema-v4.1.5.md) | tocar em **qualquer** fórmula, tabela de progressão ou regra de domínio |
 | **Regras do jogo — ameaças/criaturas** | [`docs/core/guia_de_mestre-v4.2.0.md`](../core/guia_de_mestre-v4.2.0.md) | criar ou alterar criatura/NPC (M4) |
 | **Criatura — distribuição inicial e DT (P-101)** | `shared/src/dtos/ficha/ficha-criatura-calculo.dtos.ts`; `shared/src/regras/criatura/atributos.ts`/`modificadores.ts`; [`verificação integrada`](../specs/done/p-101-criaturas-guia-v4.2.0/p-101-verificacao.md) | consultar distribuição/validação de criação e DT contextual; localizar matriz de consumidores, provas REST/visuais e propostas editoriais |
 | **Ponteiros dos livros correntes (P-102)** | [`verificação documental`](../specs/done/p-102-referencias-documentos-vigentes/p-102-verificacao.md); [`inventário de referências`](../../.artifacts/p-102/referencias.json) | conferir correspondência das fontes, exceções históricas e integridade da publicação do JSON das Regras |

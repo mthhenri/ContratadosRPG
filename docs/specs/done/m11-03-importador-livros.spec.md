@@ -48,7 +48,7 @@ sem implementar nada além da primeira `PUBLICADA` de cada livro); `.docx`.
 
 ## Dependências
 
-`m11-01` e `m11-02` em `done/`. Documentos `docs/core/sistema-v4.1.4.md` e
+`m11-01` e `m11-02` em `done/`. Documentos `docs/core/sistema-v4.1.5.md` e
 `docs/core/guia_de_mestre-v4.2.0.md` (fonte; o documento vence a importação).
 
 ## Riscos e Mitigação

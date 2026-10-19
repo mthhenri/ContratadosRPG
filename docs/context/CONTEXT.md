@@ -33,8 +33,11 @@
 > médias usam fichas visíveis **por observador**, preservando recortes de dono/mestre (D-02).
 > P-130/P-131 e D-01 entregues: rolagens públicas conservam resultado/autoria da conta,
 > com identidade da ficha reservada por observador também no histórico e nas prévias;
-> invalidadores/reconexão rejeitam respostas anteriores. Duas specs restantes no backlog. D-02 depende de
-> alinhamento do livro publicado pela Oficina antes da implementação.
+> invalidadores/reconexão rejeitam respostas anteriores. D-02 implementada: médias e quantidade
+> reutilizam a listagem autorizada; guia reconcilia médias ao retomar rascunho, inclusive zero.
+> Sistema 4.1.5 publicado/exportado em banco isolado de verificação; o banco original e suas
+> edições de Oficina foram preservados. Publicação no ambiente final exige seu gate operacional.
+> Resta a spec de leitura autorizada de avatar no backlog.
 
 > **Requests — revisão de 2026-09-26 fechada:** as seis tasks do guarda-chuva
 > [requests-correcoes](../specs/done/requests-correcoes.spec.md) (`p-082`…`p-086` +
@@ -526,7 +529,7 @@
 > reload, em `1920×1080` e `360×800`. Detalhe completo em `HISTORY.md`.
 > Antes: Brainstorming aprovado (2026-09-21): o M7 "Encontro de Combate" amplia para um módulo de
 > **Cenas** — pedido do autor para tipar a cena na criação (Combate/Investigação/Furtiva/
-> Perseguição/Resistência, `docs/core/sistema-v4.1.4.md` "⬡ Cenas") e abrir caminho para uma cena de
+> Perseguição/Resistência, `docs/core/sistema-v4.1.5.md` "⬡ Cenas") e abrir caminho para uma cena de
 > Investigação que organiza documentos e fichas dos jogadores numa mesma tela. `cena` nasce como
 > raiz nova (tipo, status `PLANEJADA→ATIVA→ENCERRADA`, ordem); `encontro` continua intocado em
 > nome/código, passando a pendurar numa `cena_id` — é a estrutura que só Combate/Furtiva/
@@ -2391,7 +2394,7 @@ Dez domínios implementados e testados: `agente/` (15 fórmulas — vida, energi
 defesa/esquiva/bloqueio, proficiência, deslocamento, dano de corpo/furtivo, inventário),
 `compras/` (catálogo, limites por patente, modificações, amplificadores, fragmentos, venda),
 `dados/`, `descanso/`, `dt/`, `identidade/`, `novo-agente/`, `patente/`, `rolagem/` — todos
-contra `docs/core/sistema-v4.1.4.md` — e `criatura/` (`m4-02`, 10 módulos de fórmula do "Guia
+contra `docs/core/sistema-v4.1.5.md` — e `criatura/` (`m4-02`, 10 módulos de fórmula do "Guia
 de Criação de Ameaças" — atributos, modificadores, saúde, defesa, resistências/fraquezas,
 regeneração, deslocamento, cadência/iniciativa (Frenética declara `turnosPorRodada` >= 4, inclusive
 para combatentes avulsos; após o cálculo, a Iniciativa desenha um cartão por slot intercalado de
@@ -3832,7 +3835,7 @@ Armadilhas que já custaram retrabalho neste repositório. Cada uma tem um epis�
 - **Amplificadores e Modificações escalam por COMPRA, não por stack bruto** — a 1ª compra em ■■
   (Flexível/Resistente/Potente/Conservador/Veloz) **não** dobra o bônus; a penalidade continua no
   bruto.
-- Se código e `docs/core/sistema-v4.1.4.md` divergirem, **o documento vence** (proibição #27).
+- Se código e `docs/core/sistema-v4.1.5.md` divergirem, **o documento vence** (proibição #27).
 - **`docs/core/guia_de_mestre-v4.2.0.md` — "Guia de Criação de Ameaças" mantém divergências
   entre regra e exemplo "A Estátua"**: Fraco em VD 30 (fórmula dá +5, exemplo mostra "+6") e
   narrativa de Social base2→zero (“três pontos”, retirada efetiva de dois). Fraqueza agora

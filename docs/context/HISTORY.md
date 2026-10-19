@@ -1,5 +1,28 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-19 — ficha-medias-esquadrao-recorte-do-observador: D-02 implementada
+
+Quantidade e médias passaram a usar o mesmo conjunto autorizado de `listarFichas`, sem
+reproduzir permissões no agregado. Apenas jogador entra; função pura compartilhada mantém
+médias fracionárias, ignora valores nulos como o AVG anterior e preserva reduções/arredondamento.
+Removido o SQL global obsoleto. Guia informa “Nenhum agente visível” em vez de inferir campanha
+vazia; retomada reconcilia somente médias derivadas com a API, mantendo os campos preenchidos.
+
+Livro Sistema 4.1.5 publicado pela API da Oficina e exportado oficialmente antes da implementação,
+com zero pendências. Para preservar duas edições de formatação anteriores do autor, a operação
+usou cópia isolada do banco; o original não foi publicado nem reescrito. Diff do livro contém
+somente a política aprovada e o cabeçalho gerado. Ponteiros para a nova cópia corrigidos
+mecanicamente, inclusive espelhos AGENTS/CLAUDE e skills. Produção permanece fora da execução;
+[procedimento de publicação final e evidências](../specs/done/ficha-medias-esquadrao-recorte-do-observador/verificacao.md).
+
+TDD reproduziu B recebendo 6 em vez de 2; regressões de aviso vazio e retomada falharam antes.
+Shared: 1340 testes; backend: 1244 aprovados/99 skipped; frontend: 3583 testes. Builds e lint
+sem erros; avisos de estilo e orçamento inicial 599,36 kB/450 kB registrados. API real mostrou
+B=1 agente/média2, A e mestre=2/média6, conjunto vazio=0; espectador e não membro negados,
+criatura/NPC excluídos. Exibir/ocultar recompõe as médias. Guia e retomada conferidos contra
+API em quatro viewports, inspeção pessoal desktop/mobile. Revisão independente encontrou a
+média antiga do rascunho restaurada: corrigida com duas regressões e exercício real.
+
 ## 2026-10-19 — ficha-oculta-rolagem-publica-sem-identidade: D-01 implementada
 
 A rolagem pública continua pública, com autoria da conta e conteúdo livre; a identidade

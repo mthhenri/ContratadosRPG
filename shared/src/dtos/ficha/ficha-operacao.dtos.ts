@@ -85,12 +85,11 @@ export interface FichaListarDto {
 /**
  * Saída da média de Nível/Prestígio dos agentes (`JOGADOR`) ativos de uma campanha — recorte
  * calculado (`Entidade + Recorte + Dto`, sem verbo), consumido pelo guia de criação ao aplicar
- * "Iniciando um Novo Agente" (`docs/core/sistema-v4.1.3.md`). É um **agregado**: nunca expõe
- * fichas individuais, então **não** passa pela matriz de visibilidade por ficha (§14) que
- * `listarFichas` aplica — qualquer membro da campanha pode consultar, mestre ou jogador comum,
- * mesmo sem `usuario_ficha_acesso` sobre as fichas alheias somadas na média. Reusa `FichaListarDto`
- * como entrada (mesmo `campanhaId`). `quantidade` é o total de agentes considerados — `0` quando a
- * campanha ainda não tem nenhum, caso em que `mediaNivel`/`mediaPrestigio` saem `0`.
+ * "Iniciando um Novo Agente" (`docs/core/sistema-v4.1.5.md`). Considera somente os agentes que
+ * o observador pode visualizar, pelo mesmo árbitro de `listarFichas`: dono inclui a própria
+ * oculta, mestre inclui todas; concessão suspensa não inclui a oculta alheia. Criaturas/NPCs
+ * não entram. Reusa `FichaListarDto` como entrada; `quantidade = 0` significa nenhum agente
+ * autorizado no recorte, com médias `0`, sem inferir o conjunto oculto da campanha.
  */
 export interface FichaMediasEsquadraoDto {
   readonly mediaNivel: number;

@@ -11,14 +11,14 @@ description: >
 
 > A regra canônica vive no **banco** (Oficina das Regras, `SYSTEM.SPEC.md` §1.1); a cópia que se
 > lê no repositório é gerada em [`docs/core/`](../../../docs/core/): jogador em
-> `sistema-v4.1.4.md`, ameaça/criatura/NPC em `guia_de_mestre-v4.2.0.md`. A arquitetura vive em
+> `sistema-v4.1.5.md`, ameaça/criatura/NPC em `guia_de_mestre-v4.2.0.md`. A arquitetura vive em
 > `SYSTEM.SPEC.md` §6.6 e a convenção curta em `CONVENTIONS.md` (“Motor de Regras”); o mapa de
 > localização está em `MEMORY.md` §1/§2. Em conflito, o documento vence — a skill executa o
 > caminho, não reescreve regra nem fórmula.
 
 ## 1. Localizar a fonte e o motor
 
-1. Classifique a regra: jogador → `docs/core/sistema-v4.1.4.md`; ameaça, criatura ou NPC →
+1. Classifique a regra: jogador → `docs/core/sistema-v4.1.5.md`; ameaça, criatura ou NPC →
    `docs/core/guia_de_mestre-v4.2.0.md`. Cite arquivo e seção no teste e no fecho.
 2. Leia a seção canônica antes do código. Se divergir do código, altere o código e o teste; não
    adapte o documento sem decisão expressa do autor. **`docs/core/` é cópia gerada: nunca edite

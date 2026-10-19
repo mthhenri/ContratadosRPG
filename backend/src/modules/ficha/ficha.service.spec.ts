@@ -52,7 +52,6 @@ interface FichaRepositorioDublado {
   recuperarPorId: ReturnType<typeof vi.fn>;
   listarPorCampanha: ReturnType<typeof vi.fn>;
   listarVisiveisParaUsuario: ReturnType<typeof vi.fn>;
-  calcularMediasEsquadrao: ReturnType<typeof vi.fn>;
   listarPorUsuario: ReturnType<typeof vi.fn>;
   recuperarAcesso: ReturnType<typeof vi.fn>;
   concederAcesso: ReturnType<typeof vi.fn>;
@@ -288,7 +287,6 @@ describe('FichaService', () => {
       recuperarPorId: vi.fn(),
       listarPorCampanha: vi.fn(),
       listarVisiveisParaUsuario: vi.fn(),
-      calcularMediasEsquadrao: vi.fn(),
       listarPorUsuario: vi.fn(),
       recuperarAcesso: vi.fn(),
       concederAcesso: vi.fn(),
@@ -1407,36 +1405,81 @@ describe('FichaService', () => {
   });
 
   describe('calcularMediasEsquadrao', () => {
-    it('devolve o agregado do repositório para o mestre', async () => {
+    function fichaInterna(sobrescritas: Record<string, unknown>) {
+      return {
+        id: 6, usuarioId: usuarioMembro.sub, nome: 'B', tipo: TipoFichaEnum.JOGADOR,
+        classe: ClasseEnum.SUPORTE, nivel: 2, prestigio: 4,
+        atributos: ATRIBUTOS_RESUMO, habilidades: [], ...sobrescritas,
+      };
+    }
+
+    it('considera só o recorte autorizado de B: nível 2, sem inferir o nível 10 de A oculta', async () => {
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.JOGADOR });
+      fichaRepositorio.listarVisiveisParaUsuario.mockResolvedValue([fichaInterna({})]);
+      fichaRepositorio.listarPorCampanha.mockResolvedValue([
+        fichaInterna({}), fichaInterna({ id: 5, usuarioId: usuarioDono.sub, nivel: 10, prestigio: 20, oculta: true }),
+      ]);
+      const resposta = await service.calcularMediasEsquadrao({ campanhaId: 3 }, usuarioMembro);
+      expect(resposta).toEqual({ mediaNivel: 2, mediaPrestigio: 4, quantidade: 1 });
+      expect(fichaRepositorio.listarVisiveisParaUsuario).toHaveBeenCalledWith({ campanhaId: 3, usuarioId: usuarioMembro.sub });
+      expect(fichaRepositorio.listarPorCampanha).not.toHaveBeenCalled();
+      expect(fichaRepositorio.recuperarAcesso).not.toHaveBeenCalled();
+    });
+
+    it('mestre inclui todas as fichas de jogador, inclusive a oculta; exclui criaturas e NPCs', async () => {
       campanhaRepositorio.recuperarMembro.mockResolvedValue({
         papel: TipoCampanhaMembroPapelEnum.MESTRE,
       });
-      fichaRepositorio.calcularMediasEsquadrao.mockResolvedValue({
-        mediaNivel: 5,
-        mediaPrestigio: 20,
-        quantidade: 3,
-      });
+      fichaRepositorio.listarPorCampanha.mockResolvedValue([
+        fichaInterna({}), fichaInterna({ id: 5, usuarioId: usuarioDono.sub, nivel: 10, prestigio: 20, oculta: true }),
+        fichaInterna({ id: 7, nivel: 999, prestigio: 999, tipo: TipoFichaEnum.CRIATURA }),
+        fichaInterna({ id: 8, nivel: 999, prestigio: 999, tipo: TipoFichaEnum.NPC }),
+      ]);
 
       const resultado = await service.calcularMediasEsquadrao({ campanhaId: 3 }, usuarioMestre);
 
-      expect(fichaRepositorio.calcularMediasEsquadrao).toHaveBeenCalledWith({ campanhaId: 3 });
-      expect(resultado).toEqual({ mediaNivel: 5, mediaPrestigio: 20, quantidade: 3 });
+      expect(fichaRepositorio.listarPorCampanha).toHaveBeenCalledWith({ campanhaId: 3 });
+      expect(fichaRepositorio.listarVisiveisParaUsuario).not.toHaveBeenCalled();
+      expect(resultado).toEqual({ mediaNivel: 6, mediaPrestigio: 12, quantidade: 2 });
     });
 
-    it('devolve o mesmo agregado para um membro comum — não ramifica por papel (agregado, sem ficha individual)', async () => {
+    it('o dono inclui a própria oculta, sem filtrar oculta=false novamente', async () => {
       campanhaRepositorio.recuperarMembro.mockResolvedValue({
         papel: TipoCampanhaMembroPapelEnum.JOGADOR,
       });
-      fichaRepositorio.calcularMediasEsquadrao.mockResolvedValue({
-        mediaNivel: 5,
-        mediaPrestigio: 20,
-        quantidade: 3,
-      });
+      fichaRepositorio.listarVisiveisParaUsuario.mockResolvedValue([
+        fichaInterna({}), fichaInterna({ id: 5, usuarioId: usuarioDono.sub, nivel: 10, prestigio: 20, oculta: true }),
+      ]);
 
-      const resultado = await service.calcularMediasEsquadrao({ campanhaId: 3 }, usuarioMembro);
+      const resultado = await service.calcularMediasEsquadrao({ campanhaId: 3 }, usuarioDono);
 
-      expect(fichaRepositorio.calcularMediasEsquadrao).toHaveBeenCalledWith({ campanhaId: 3 });
-      expect(resultado).toEqual({ mediaNivel: 5, mediaPrestigio: 20, quantidade: 3 });
+      expect(fichaRepositorio.listarVisiveisParaUsuario).toHaveBeenCalledWith({ campanhaId: 3, usuarioId: usuarioDono.sub });
+      expect(resultado).toEqual({ mediaNivel: 6, mediaPrestigio: 12, quantidade: 2 });
+    });
+
+    it('exibir a oculta recompõe o mesmo recorte de B sem arredondar a média', async () => {
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.JOGADOR });
+      fichaRepositorio.listarVisiveisParaUsuario.mockResolvedValue([
+        fichaInterna({}), fichaInterna({ id: 5, nivel: 3, prestigio: 7, oculta: false }),
+      ]);
+      expect(await service.calcularMediasEsquadrao({ campanhaId: 3 }, usuarioMembro))
+        .toEqual({ mediaNivel: 2.5, mediaPrestigio: 5.5, quantidade: 2 });
+    });
+
+    it('não infere fichas fora do recorte vazio e preserva primeiro agente', async () => {
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.JOGADOR });
+      fichaRepositorio.listarVisiveisParaUsuario.mockResolvedValue([]);
+      expect(await service.calcularMediasEsquadrao({ campanhaId: 3 }, usuarioMembro))
+        .toEqual({ mediaNivel: 0, mediaPrestigio: 0, quantidade: 0 });
+    });
+
+    it('preserva jogador legado sem tipo e ignora NPC mesmo concedido', async () => {
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.JOGADOR });
+      fichaRepositorio.listarVisiveisParaUsuario.mockResolvedValue([
+        fichaInterna({ tipo: undefined }), fichaInterna({ tipo: TipoFichaEnum.NPC, nivel: 100 }),
+      ]);
+      expect(await service.calcularMediasEsquadrao({ campanhaId: 3 }, usuarioMembro))
+        .toEqual({ mediaNivel: 2, mediaPrestigio: 4, quantidade: 1 });
     });
 
     it('lança UnauthorizedAccessException quando o autor não é membro da campanha', async () => {
@@ -1446,7 +1489,8 @@ describe('FichaService', () => {
         service.calcularMediasEsquadrao({ campanhaId: 3 }, usuarioMembro),
       ).rejects.toThrow(UnauthorizedAccessException);
 
-      expect(fichaRepositorio.calcularMediasEsquadrao).not.toHaveBeenCalled();
+      expect(fichaRepositorio.listarVisiveisParaUsuario).not.toHaveBeenCalled();
+      expect(fichaRepositorio.listarPorCampanha).not.toHaveBeenCalled();
     });
 
     it('lança UnauthorizedAccessException quando o autor é ESPECTADOR (m8-02)', async () => {
@@ -1458,7 +1502,8 @@ describe('FichaService', () => {
         service.calcularMediasEsquadrao({ campanhaId: 3 }, usuarioMembro),
       ).rejects.toThrow(UnauthorizedAccessException);
 
-      expect(fichaRepositorio.calcularMediasEsquadrao).not.toHaveBeenCalled();
+      expect(fichaRepositorio.listarVisiveisParaUsuario).not.toHaveBeenCalled();
+      expect(fichaRepositorio.listarPorCampanha).not.toHaveBeenCalled();
     });
   });
 

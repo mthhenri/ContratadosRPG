@@ -1,7 +1,7 @@
 # Diagnóstico da importação (m11-03) — para revisão do autor
 
 > Anexo da [`m11-03`](../m11-03-importador-livros.spec.md). Gerado em 10/10/2026 a partir de
-> `docs/core/sistema-v4.1.4.md` e `docs/core/guia_de_mestre-v4.2.0.md`, lidos pelo normalizador atual.
+> `docs/core/sistema-v4.1.5.md` e `docs/core/guia_de_mestre-v4.2.0.md`, lidos pelo normalizador atual.
 > **Nenhuma decisão foi tomada pelo agente**: cada item trazia a recomendação e as respostas do
 > autor (10/10/2026) estão registradas nas colunas *Decisão do autor* e nas perguntas 1 a 4.
 

@@ -41,7 +41,7 @@ Não há imagem raster, filtro, máscara, cor fixa ou traço nos SVGs candidatos
 
 ## Paleta candidata
 
-Fonte: `docs/core/sistema-v4.1.4.md`, definições `image1`…`image8`.
+Fonte: `docs/core/sistema-v4.1.5.md`, definições `image1`…`image8`.
 Método: RGB mais frequente entre pixels de alfa máximo; não amostrar fundo,
 relevo ou antialiasing. A cor é apresentada opaca para cumprir a silhueta sólida.
 O alfa de origem é registrado; não se alterou o livro.
