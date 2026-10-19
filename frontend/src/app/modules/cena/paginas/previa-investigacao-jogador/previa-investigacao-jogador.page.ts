@@ -27,6 +27,7 @@ import { FichaCampanhaCard } from '../../../ficha/componentes/ficha-campanha-car
 import { FichaRolagemRegistroService } from '../../../ficha/ficha-rolagem-registro.service';
 import { DocumentosCenaEspectador } from '../../componentes/documentos-cena-espectador/documentos-cena-espectador.component';
 import { EsquadraoCenaJogador } from '../../componentes/esquadrao-cena-jogador/esquadrao-cena-jogador.component';
+import { montarAutoriaRolagem } from '../../../../shared/cartao-rolagem/autoria-rolagem.util';
 import { rotuloStatusCena, rotuloTipoCena } from '../../rotulos-cena';
 
 /** Investigação no recorte do jogador-alvo, sem chamadas ou ações de mestre. */
@@ -70,6 +71,7 @@ export class PreviaInvestigacaoJogador {
     )?.id ?? null,
   );
 
+  private readonly rolagensExcluidas = new Set<number>();
   private geracaoPrevia = 0;
   private geracaoCena = 0;
   private geracaoFichaPropria = 0;
@@ -103,8 +105,20 @@ export class PreviaInvestigacaoJogador {
         evento.campanhaId === this.campanhaId && (evento.fichas || evento.membros))),
       this.tempoReal.fichaAlterada$.pipe(filter((ficha) => this.salasFicha.has(ficha.id))),
       this.tempoReal.rolagemRegistrada$.pipe(filter((rolagem) => rolagem.campanhaId === this.campanhaId)),
-      this.tempoReal.rolagemExcluida$,
+      this.tempoReal.rolagemRecortesAlterados$.pipe(filter(evento => evento.campanhaId === this.campanhaId)),
+      this.tempoReal.rolagemExcluida$.pipe(
+        filter(evento => evento.campanhaId === this.campanhaId),
+      ),
     ).pipe(takeUntilDestroyed()).subscribe(() => this.recarregarPrevia());
+
+    this.tempoReal.rolagemExcluida$
+      .pipe(filter(evento => evento.campanhaId === this.campanhaId), takeUntilDestroyed())
+      .subscribe(evento => {
+        this.rolagensExcluidas.add(evento.id);
+        this.previa.update(previa => previa ? {
+          ...previa, rolagens: previa.rolagens.filter(rolagem => rolagem.id !== evento.id),
+        } : null);
+      });
 
     merge(
       this.tempoReal.cenaAlterada$.pipe(filter((evento) => evento.campanhaId === this.campanhaId)),
@@ -114,7 +128,7 @@ export class PreviaInvestigacaoJogador {
   }
 
   private aplicarPrevia(previa: CampanhaPreviaJogadorDto): void {
-    this.previa.set(previa);
+    this.previa.set({ ...previa, rolagens: previa.rolagens.filter(rolagem => !this.rolagensExcluidas.has(rolagem.id)) });
     this.topbar.definir(previa.campanha.nome);
     this.sincronizarSalasFicha(previa.fichas.map((ficha) => ficha.id));
     const fichaId = previa.fichas.find((ficha) =>
@@ -128,6 +142,7 @@ export class PreviaInvestigacaoJogador {
   }
 
   protected recarregarPrevia(): void {
+    this.previa.update(previa => previa ? { ...previa, rolagens: [] } : null);
     const geracao = ++this.geracaoPrevia;
     this.cargaPrevia?.unsubscribe();
     this.cargaPrevia = this.projecao.recuperarPreviaJogador(this.campanhaId, this.usuarioAlvoId)
@@ -231,7 +246,6 @@ export class PreviaInvestigacaoJogador {
   }
 
   protected autorRolagem(rolagem: RolagemResumoDto): string {
-    const membro = this.previa()?.membros.find((item) => item.usuarioId === rolagem.usuarioId);
-    return [membro?.nome ?? 'Participante', rolagem.nomeFicha].filter(Boolean).join(' · ');
+    return montarAutoriaRolagem(rolagem);
   }
 }

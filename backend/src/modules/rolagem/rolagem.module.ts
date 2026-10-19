@@ -6,6 +6,7 @@ import { EncontroModule } from '../encontro/encontro.module';
 import { RolagemController } from './rolagem.controller';
 import { RolagemRepository } from './rolagem.repository';
 import { RolagemService } from './rolagem.service';
+import { RolagemIdentidadeService } from './rolagem-identidade.service';
 
 /**
  * Módulo `rolagem` (m3-27): persistência das rolagens disparadas a partir de uma ficha — dono das
@@ -16,7 +17,7 @@ import { RolagemService } from './rolagem.service';
 @Module({
   imports: [FichaModule, CampanhaModule, EncontroModule, forwardRef(() => GatewayModule)],
   controllers: [RolagemController],
-  providers: [RolagemRepository, RolagemService],
-  exports: [RolagemRepository, RolagemService],
+  providers: [RolagemRepository, RolagemService, RolagemIdentidadeService],
+  exports: [RolagemRepository, RolagemService, RolagemIdentidadeService],
 })
 export class RolagemModule {}

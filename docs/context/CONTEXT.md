@@ -31,7 +31,9 @@
 > sem teste de produção. Autor decidiu: novas leituras exigem permissão atual;
 > rolagens públicas ocultam identidade da ficha para terceiros, inclusive histórico (D-01);
 > médias usam fichas visíveis **por observador**, preservando recortes de dono/mestre (D-02).
-> P-130/P-131 entregues; três specs restantes no backlog. D-02 depende de
+> P-130/P-131 e D-01 entregues: rolagens públicas conservam resultado/autoria da conta,
+> com identidade da ficha reservada por observador também no histórico e nas prévias;
+> invalidadores/reconexão rejeitam respostas anteriores. Duas specs restantes no backlog. D-02 depende de
 > alinhamento do livro publicado pela Oficina antes da implementação.
 
 > **Requests — revisão de 2026-09-26 fechada:** as seis tasks do guarda-chuva

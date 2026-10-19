@@ -2,6 +2,7 @@ import { Injectable, effect, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   bufferTime,
+  catchError,
   EMPTY,
   filter,
   finalize,
@@ -9,6 +10,7 @@ import {
   map,
   type Observable,
   Subject,
+  Subscription,
   switchMap,
   tap,
 } from 'rxjs';
@@ -32,15 +34,18 @@ type IntencaoInvalidacao = 'projecao' | 'encontro';
  *
  * Tempo real: o mestre continua nas salas dele, então **nenhum payload de socket é exibido como
  * veio** (pode carregar o recorte de mestre). Ficha, membro e encontro viram refetch da projeção
- * redigida; rolagem só entra no feed se o alvo também a receberia (`PUBLICA`, ou a própria
- * `PRIVADA` dele) — a sala `campanha:<id>:mestre` entrega as privadas de todo mundo ao mestre.
+ * redigida; rolagens também invalidam a projeção, pois uma pública pode trazer
+ * identidade estruturada autorizada apenas ao mestre.
  */
 @Injectable()
 export class CampanhaPreviaJogadorDadosService extends CampanhaDetalheDadosService {
   private readonly campanhaProjecaoService = inject(CampanhaProjecaoService);
   private readonly invalidacoes = new Subject<IntencaoInvalidacao>();
   private geracaoInvalidacao = 0;
+  private projecaoPendente = false;
   private usuarioAlvoId = 0;
+  private cargaInicial?: Subscription;
+  private readonly rolagensExcluidas = new Set<number>();
 
   /**
    * Chamado uma vez por `CampanhaPreviaJogador`, no lugar de `inicializar`. `previaInicial` é a
@@ -74,6 +79,8 @@ export class CampanhaPreviaJogadorDadosService extends CampanhaDetalheDadosServi
     });
     this.destroyRef.onDestroy(() => this.topbarContexto.limpar());
 
+    this.configurarCoordenadorInvalidacao();
+
     if (previaInicial) {
       this.aplicarPrevia(previaInicial);
       this.carregando.set(false);
@@ -86,7 +93,6 @@ export class CampanhaPreviaJogadorDadosService extends CampanhaDetalheDadosServi
 
     this.entrarSalas(id);
     this.assinarTempoReal(id);
-    this.configurarCoordenadorInvalidacao();
 
     // `reconexao$` (P-083) — só reconexões futuras à montagem; o coordenador de invalidação
     // acima já agrupa/serializa esta com qualquer outra intenção concorrente. Inventário fica de
@@ -135,9 +141,11 @@ export class CampanhaPreviaJogadorDadosService extends CampanhaDetalheDadosServi
   private carregarPrevia(): void {
     this.carregando.set(true);
     const geracaoEstadoNoInicio = this.geracaoEstadoOperacional;
-    this.campanhaProjecaoService
+    const geracao = this.geracaoInvalidacao;
+    this.cargaInicial = this.campanhaProjecaoService
       .recuperarPreviaJogador(this.idInterno, this.usuarioAlvoId)
       .pipe(
+        takeUntilDestroyed(this.destroyRef),
         finalize(() => {
           this.carregando.set(false);
           this.carregandoRolagens.set(false);
@@ -145,6 +153,7 @@ export class CampanhaPreviaJogadorDadosService extends CampanhaDetalheDadosServi
       )
       .subscribe({
         next: (previa) => {
+          if (geracao !== this.geracaoInvalidacao) return;
           this.aplicarPrevia(previa, geracaoEstadoNoInicio);
           // Inventário NÃO entra na carga inicial (requests-inventario-sob-demanda).
         },
@@ -169,17 +178,15 @@ export class CampanhaPreviaJogadorDadosService extends CampanhaDetalheDadosServi
         filter((rolagem) => this.rolagemVisivelAoAlvo(rolagem)),
         takeUntilDestroyed(this.destroyRef),
       )
-      .subscribe({
-        next: (rolagem) =>
-          this.rolagensFeed.update((atuais) =>
-            atuais.some((atual) => atual.id === rolagem.id) ? atuais : [rolagem, ...atuais],
-          ),
-      });
+      .subscribe(() => this.invalidacoes.next('projecao'));
+    this.tempoRealService.rolagemRecortesAlterados$
+      .pipe(filter(evento => evento.campanhaId === id), takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.invalidacoes.next('projecao'));
     this.tempoRealService.rolagemExcluida$
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (excluida) =>
-          this.rolagensFeed.update((atuais) => atuais.filter((rolagem) => rolagem.id !== excluida.id)),
+      .pipe(filter(evento => evento.campanhaId === id), takeUntilDestroyed(this.destroyRef))
+      .subscribe(excluida => {
+        this.rolagensExcluidas.add(excluida.id);
+        this.rolagensFeed.update(atuais => atuais.filter(rolagem => rolagem.id !== excluida.id));
       });
 
     merge(
@@ -225,11 +232,19 @@ export class CampanhaPreviaJogadorDadosService extends CampanhaDetalheDadosServi
   private configurarCoordenadorInvalidacao(): void {
     this.invalidacoes
       .pipe(
+        tap(intencao => {
+          if (intencao === 'projecao') {
+            this.projecaoPendente = true;
+            ++this.geracaoInvalidacao;
+            this.cargaInicial?.unsubscribe();
+            this.rolagensFeed.set([]);
+          }
+        }),
         bufferTime(25),
         filter((intencoes) => intencoes.length > 0),
         switchMap((intencoes) => {
-          const incluiProjecao = intencoes.includes('projecao');
-          const geracao = ++this.geracaoInvalidacao;
+          const incluiProjecao = this.projecaoPendente || intencoes.includes('projecao');
+          const geracao = this.geracaoInvalidacao;
           const requisicoes: Observable<unknown>[] = [];
 
           if (incluiProjecao) {
@@ -237,7 +252,12 @@ export class CampanhaPreviaJogadorDadosService extends CampanhaDetalheDadosServi
             requisicoes.push(
               this.campanhaProjecaoService
                 .recuperarPreviaJogador(this.idInterno, this.usuarioAlvoId)
-                .pipe(tap((previa) => this.aplicarPrevia(previa, geracaoEstadoNoInicio))),
+                .pipe(tap((previa) => {
+                  if (geracao === this.geracaoInvalidacao) {
+                    this.projecaoPendente = false;
+                    this.aplicarPrevia(previa, geracaoEstadoNoInicio);
+                  }
+                })),
             );
           } else if (intencoes.includes('encontro')) {
             requisicoes.push(
@@ -255,6 +275,7 @@ export class CampanhaPreviaJogadorDadosService extends CampanhaDetalheDadosServi
 
           return requisicoes.length > 0
             ? merge(...requisicoes).pipe(
+                catchError(() => EMPTY),
                 finalize(() => {
                   if (incluiProjecao && geracao === this.geracaoInvalidacao) {
                     this.ultimaAtualizacaoEm.set(Date.now());
@@ -294,7 +315,7 @@ export class CampanhaPreviaJogadorDadosService extends CampanhaDetalheDadosServi
     this.membros.set([...previa.membros]);
     this.fichas.set([...previa.fichas]);
     this.sincronizarSalasFicha(previa.fichas);
-    this.rolagensFeed.set(previa.rolagens);
+    this.rolagensFeed.set(previa.rolagens.filter(rolagem => !this.rolagensExcluidas.has(rolagem.id)));
     this.ultimaAtualizacaoEm.set(Date.now());
   }
 }

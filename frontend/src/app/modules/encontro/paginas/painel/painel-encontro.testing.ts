@@ -309,6 +309,7 @@ export function configurarPainel(opcoes: OpcoesDoPainel = {}) {
   const membroEntrou$ = new Subject<{ campanhaId: number }>();
   const acessoRevogado$ = new Subject<{ fichaId: number; usuarioId: number }>();
   const rolagemExcluida$ = new Subject<RolagemExcluidaDto>();
+  const rolagemRecortesAlterados$ = new Subject<{ campanhaId: number }>();
   const reconexao$ = new Subject<void>();
   const tempoReal = {
     conectar: vi.fn(),
@@ -319,6 +320,7 @@ export function configurarPainel(opcoes: OpcoesDoPainel = {}) {
     enviarPresencaEsquadrao: vi.fn(),
     conectado: () => true,
     reconexao: () => 0,
+    rolagemRecortesAlterados$,
     reconexao$: reconexao$.asObservable(),
     acessoRevogado$: acessoRevogado$.asObservable(),
     encontroAlterado$,
@@ -509,6 +511,7 @@ export function configurarPainel(opcoes: OpcoesDoPainel = {}) {
     rolagemExcluida$,
     membrosPendentes$,
     encontroPendente$,
+    rolagemRecortesAlterados$,
     reconexao$,
   };
 }

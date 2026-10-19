@@ -9,8 +9,10 @@ import type { CampanhaRepository } from '../campanha/campanha.repository';
 import type { FichaService } from '../ficha/ficha.service';
 import type { RolagemRepository } from './rolagem.repository';
 import { RolagemService } from './rolagem.service';
+import { RolagemIdentidadeService } from './rolagem-identidade.service';
 
 interface RolagemRepositorioDublado {
+  listarCampanhasPorFicha: ReturnType<typeof vi.fn>;
   registrarRolagem: ReturnType<typeof vi.fn>;
   listarPorFicha: ReturnType<typeof vi.fn>;
   listarPorCampanha: ReturnType<typeof vi.fn>;
@@ -20,6 +22,7 @@ interface RolagemRepositorioDublado {
 
 interface FichaServiceDublado {
   recuperarFicha: ReturnType<typeof vi.fn>;
+  avaliarIdentidadeRolagem: ReturnType<typeof vi.fn<FichaService['avaliarIdentidadeRolagem']>>;
 }
 
 interface CampanhaRepositorioDublado {
@@ -27,6 +30,7 @@ interface CampanhaRepositorioDublado {
 }
 
 interface CampanhaGatewayDublado {
+  emitirRolagemRecortesAlterados: ReturnType<typeof vi.fn>;
   emitirRolagemRegistrada: ReturnType<typeof vi.fn>;
   emitirRolagemExcluida: ReturnType<typeof vi.fn>;
 }
@@ -74,15 +78,16 @@ describe('RolagemService', () => {
 
   beforeEach(() => {
     rolagemRepositorio = {
+      listarCampanhasPorFicha: vi.fn().mockResolvedValue([]),
       registrarRolagem: vi.fn(),
-      listarPorFicha: vi.fn(),
+      listarPorFicha: vi.fn().mockResolvedValue({ itens: [], totalItens: 0, paginaAtual: 1, totalPaginas: 0 }),
       listarPorCampanha: vi.fn(),
       recuperarParaExclusao: vi.fn(),
       excluirRolagem: vi.fn(),
     };
-    fichaService = { recuperarFicha: vi.fn() };
+    fichaService = { recuperarFicha: vi.fn(), avaliarIdentidadeRolagem: vi.fn().mockResolvedValue(false) };
     campanhaRepositorio = { recuperarMembro: vi.fn() };
-    campanhaGateway = { emitirRolagemRegistrada: vi.fn(), emitirRolagemExcluida: vi.fn() };
+    campanhaGateway = { emitirRolagemRegistrada: vi.fn(), emitirRolagemExcluida: vi.fn(), emitirRolagemRecortesAlterados: vi.fn() };
     encontroRepositorio = {
       recuperarCombatentePorId: vi.fn(),
       recuperarPorId: vi.fn(),
@@ -93,6 +98,7 @@ describe('RolagemService', () => {
       campanhaRepositorio as unknown as CampanhaRepository,
       campanhaGateway as unknown as CampanhaGateway,
       encontroRepositorio as never,
+      new RolagemIdentidadeService(fichaService as unknown as FichaService),
     );
   });
 
@@ -106,7 +112,7 @@ describe('RolagemService', () => {
       const resposta = await service.excluirRolagem({ id: 9 }, admin);
 
       expect(rolagemRepositorio.excluirRolagem).toHaveBeenCalledWith(9);
-      expect(campanhaGateway.emitirRolagemExcluida).toHaveBeenCalledWith(alvo);
+      expect(campanhaGateway.emitirRolagemExcluida).toHaveBeenCalledWith(alvo, expect.any(Function));
       expect(resposta).toEqual(alvo);
     });
 
@@ -129,6 +135,53 @@ describe('RolagemService', () => {
     });
   });
 
+  it('recorta rolagens antigas no estado atual da ficha, preservando resultado e autoria', async () => {
+    campanhaRepositorio.recuperarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.JOGADOR });
+    fichaService.avaliarIdentidadeRolagem.mockResolvedValue(true);
+    const original = criarResumo({ encontroCombatenteId: 33, corFicha: '#123456' });
+    rolagemRepositorio.listarPorCampanha.mockResolvedValue([original, { ...original, id: 2 }]);
+    const resposta = await service.listarPorCampanha({ campanhaId: 5 }, usuarioAtivo);
+    expect(resposta).toEqual([1, 2].map(id => ({ ...original, id, fichaId: null,
+      encontroCombatenteId: null, nomeFicha: null, corFicha: null, identidadeReservada: true })));
+    expect(fichaService.avaliarIdentidadeRolagem).toHaveBeenCalledTimes(1);
+    expect(fichaService.avaliarIdentidadeRolagem).toHaveBeenCalledWith({ fichaId: 10, usuarioId: 7 });
+    expect(original.fichaId).toBe(10);
+  });
+
+  it('invalida também a terceira campanha histórica e deduplica origem/destino', async () => {
+    rolagemRepositorio.listarCampanhasPorFicha.mockResolvedValue([{ campanhaId: 1 }, { campanhaId: 3 }]);
+    await service.invalidarRecortesDaFicha({ fichaId: 10, campanhaIds: [3, 9] });
+    expect(rolagemRepositorio.listarCampanhasPorFicha).toHaveBeenCalledExactlyOnceWith({ fichaId: 10 });
+    expect(campanhaGateway.emitirRolagemRecortesAlterados.mock.calls).toEqual([
+      [{ campanhaId: 1 }], [{ campanhaId: 3 }], [{ campanhaId: 9 }],
+    ]);
+  });
+
+  it('entrega recorte ao autor e callbacks WS autorizados distintos para registro/exclusão', async () => {
+    const original = criarResumo();
+    fichaService.recuperarFicha.mockResolvedValue({ id: 10, campanhaId: 5 });
+    rolagemRepositorio.registrarRolagem.mockResolvedValue(original);
+    campanhaRepositorio.recuperarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.JOGADOR });
+    fichaService.avaliarIdentidadeRolagem.mockImplementation(({ usuarioId }) => Promise.resolve(usuarioId !== 7));
+    const resposta = await service.registrarRolagem({ fichaId: 10, rotulo: 'Luta', formula: null,
+      resultado, visibilidade: RolagemVisibilidadeEnum.PUBLICA }, usuarioAtivo);
+    expect(resposta).toEqual(original);
+    const montar = campanhaGateway.emitirRolagemRegistrada.mock.calls[0][1] as (usuario: JwtPayload) => Promise<RolagemResumoDto>;
+    expect(await montar({ ...usuarioAtivo, sub: 42 })).toMatchObject({ fichaId: null, identidadeReservada: true });
+    expect(await montar(usuarioAtivo)).toEqual(original);
+    campanhaRepositorio.recuperarMembro.mockResolvedValue(null);
+    await expect(montar({ ...usuarioAtivo, sub: 99 })).rejects.toThrow(UnauthorizedAccessException);
+
+    campanhaRepositorio.recuperarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.JOGADOR });
+    const excluida = { id: 1, fichaId: 10, campanhaId: 5, visibilidade: RolagemVisibilidadeEnum.PUBLICA };
+    rolagemRepositorio.recuperarParaExclusao.mockResolvedValue(excluida);
+    const excluidaParaAdmin = await service.excluirRolagem({ id: 1 }, { ...usuarioAtivo, sub: 42, tipo: TipoUsuarioEnum.ADMIN });
+    expect(excluidaParaAdmin).toEqual({ ...excluida, fichaId: null });
+    const excluirPara = campanhaGateway.emitirRolagemExcluida.mock.calls[0][1] as (usuario: JwtPayload) => Promise<unknown>;
+    expect(await excluirPara({ ...usuarioAtivo, sub: 42 })).toEqual({ ...excluida, fichaId: null });
+    expect(await excluirPara(usuarioAtivo)).toEqual(excluida);
+  });
+
   describe('NPC: gestão e privacidade obrigatórias', () => {
     it('força PRIVADA mesmo quando o dono solicita PUBLICA', async () => {
       fichaService.recuperarFicha.mockResolvedValue({ id: 10, usuarioId: 7, campanhaId: 5, tipo: TipoFichaEnum.NPC });
@@ -136,7 +189,7 @@ describe('RolagemService', () => {
       await service.registrarRolagem({ fichaId: 10, rotulo: 'Luta', formula: 'LUTd20kh1+NIV',
         resultado, visibilidade: RolagemVisibilidadeEnum.PUBLICA }, usuarioAtivo);
       expect(rolagemRepositorio.registrarRolagem).toHaveBeenCalledWith(expect.objectContaining({ visibilidade: RolagemVisibilidadeEnum.PRIVADA }));
-      expect(campanhaGateway.emitirRolagemRegistrada).toHaveBeenCalledWith(expect.objectContaining({ visibilidade: RolagemVisibilidadeEnum.PRIVADA }));
+      expect(campanhaGateway.emitirRolagemRegistrada).toHaveBeenCalledWith(expect.objectContaining({ visibilidade: RolagemVisibilidadeEnum.PRIVADA }), expect.any(Function));
     });
     it('concessão de leitura não permite registro nem histórico privado', async () => {
       fichaService.recuperarFicha.mockResolvedValue({ id: 10, usuarioId: 99, campanhaId: 5, tipo: TipoFichaEnum.NPC });
@@ -216,7 +269,7 @@ describe('RolagemService', () => {
         campanhaId: 5,
         usuarioId: usuarioAtivo.sub,
       }));
-      expect(campanhaGateway.emitirRolagemRegistrada).toHaveBeenCalledWith(registrada);
+      expect(campanhaGateway.emitirRolagemRegistrada).toHaveBeenCalledWith(registrada, expect.any(Function));
     });
   });
 
@@ -267,7 +320,7 @@ describe('RolagemService', () => {
         usuarioAtivo,
       );
 
-      expect(campanhaGateway.emitirRolagemRegistrada).toHaveBeenCalledWith(rolagemRegistrada);
+      expect(campanhaGateway.emitirRolagemRegistrada).toHaveBeenCalledWith(rolagemRegistrada, expect.any(Function));
     });
 
     it('também emite rolagem:registrada quando PRIVADA (m3-27 correção — o gateway decide a sala pela visibilidade)', async () => {
@@ -286,7 +339,7 @@ describe('RolagemService', () => {
         usuarioAtivo,
       );
 
-      expect(campanhaGateway.emitirRolagemRegistrada).toHaveBeenCalledWith(rolagemRegistrada);
+      expect(campanhaGateway.emitirRolagemRegistrada).toHaveBeenCalledWith(rolagemRegistrada, expect.any(Function));
     });
 
     it('propaga a negação de permissão de recuperarFicha sem persistir', async () => {
@@ -330,6 +383,13 @@ describe('RolagemService', () => {
   });
 
   describe('listarPorFicha', () => {
+    it('reavalia a identidade após a consulta histórica mesmo que a leitura tenha sido autorizada antes de ocultar', async () => {
+      fichaService.recuperarFicha.mockResolvedValue({ id: 10, campanhaId: 5 });
+      fichaService.avaliarIdentidadeRolagem.mockResolvedValue(true);
+      rolagemRepositorio.listarPorFicha.mockResolvedValue({ itens: [criarResumo()], totalItens: 1, paginaAtual: 1, totalPaginas: 1 });
+      const resposta = await service.listarPorFicha({ fichaId: 10, pagina: 1, itensPorPagina: 20 }, usuarioAtivo);
+      expect(resposta.itens[0]).toMatchObject({ fichaId: null, nomeFicha: null, corFicha: null, identidadeReservada: true });
+    });
     it('confere a permissão de visualização antes de listar', async () => {
       fichaService.recuperarFicha.mockResolvedValue({ id: 10, campanhaId: 5, usuarioId: 99, nome: 'Ficha' });
       const paginado = { itens: [criarResumo()], totalItens: 1, paginaAtual: 1, totalPaginas: 1 };

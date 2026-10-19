@@ -2,7 +2,7 @@ import { iconeTipoCena } from "../../../../shared/icone/icones-dominio";
 import { Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { filter, finalize, merge, Subscription } from 'rxjs';
+import { filter, merge, Subscription } from 'rxjs';
 
 import type { CampanhaPainelEspectadorDto } from '@contratados-rpg/shared/dtos/campanha';
 import type { EncontroRecuperadoDto } from '@contratados-rpg/shared/dtos/encontro';
@@ -10,7 +10,6 @@ import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 import { EncontroStatusEnum, RolagemVisibilidadeEnum } from '@contratados-rpg/shared/enums';
 
 import { CampanhaProjecaoService } from '../../../campanha/campanha-projecao.service';
-import { RolagemService } from '../../../ficha/rolagem.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { TopbarContextoService } from '../../../../core/services/topbar-contexto.service';
 import { HistoricoRolagensSidebar } from '../../../../shared/historico-rolagens-sidebar/historico-rolagens-sidebar.component';
@@ -71,7 +70,6 @@ export class PainelEncontroEspectador {
   protected readonly janelaHistorico = inject(HistoricoRolagensJanelaService);
   private readonly rotaAtiva = inject(ActivatedRoute);
   private readonly campanhaProjecaoService = inject(CampanhaProjecaoService);
-  private readonly rolagemService = inject(RolagemService);
   private readonly tempoRealService = inject(TempoRealService);
   private readonly topbarContexto = inject(TopbarContextoService);
   private readonly destroyRef = inject(DestroyRef);
@@ -104,7 +102,7 @@ export class PainelEncontroEspectador {
   private cargaCena?: Subscription;
   private geracaoCena = 0;
   private cargaPainel?: Subscription;
-  private cargaRolagens?: Subscription;
+  private readonly rolagensExcluidas = new Set<number>();
   private geracaoPainel = 0;
   protected readonly campanhaNome = signal<string | null>(null);
   protected readonly encontro = signal<EncontroRecuperadoDto | null>(null);
@@ -136,38 +134,28 @@ export class PainelEncontroEspectador {
       this.carregarPainel();
     }
 
-    this.cargaRolagens = this.rolagemService
-      .listarPorCampanha(this.campanhaId)
-      .pipe(takeUntilDestroyed(), finalize(() => this.carregandoRolagens.set(false)))
-      // Espectador real só recebe públicas; o mestre em prévia recebe também as privadas — a
-      // prévia mostra o recorte do espectador, então só as públicas entram.
-      .subscribe({
-        next: (itens) =>
-          this.rolagens.set(
-            itens.filter((rolagem) => rolagem.visibilidade === RolagemVisibilidadeEnum.PUBLICA),
-          ),
-      });
-
     this.tempoRealService.conectar();
     this.tempoRealService.entrarSalaCampanha(this.campanhaId);
     this.destroyRef.onDestroy(() => this.tempoRealService.sairSalaCampanha(this.campanhaId));
 
-    // Feed em tempo real (m8-03): só rolagens `PUBLICA` chegam pela sala do espectador — o backend
-    // nunca broadcasta privada por ali (§9). O mestre em prévia, porém, está na sala
-    // `campanha:<id>:mestre`, que recebe as privadas: o filtro mantém o recorte do espectador.
-    // Guarda contra duplicata do id mais recente, igual `espectador.page.ts`.
+    // A prévia usa a conexão do mestre. Nunca aplica identidade do socket ao recorte
+    // do espectador, inclusive quando a rolagem é pública.
     this.tempoRealService.rolagemRegistrada$
       .pipe(
         filter((rolagem) => rolagem.campanhaId === this.campanhaId
           && rolagem.visibilidade === RolagemVisibilidadeEnum.PUBLICA),
         takeUntilDestroyed(),
       )
-      .subscribe({
-      next: (rolagem) =>
-        this.rolagens.update((atuais) =>
-          atuais[0]?.id === rolagem.id ? atuais : [rolagem, ...atuais],
-        ),
-    });
+      .subscribe(() => this.invalidarRolagens());
+    this.tempoRealService.rolagemExcluida$
+      .pipe(filter(evento => evento.campanhaId === this.campanhaId), takeUntilDestroyed())
+      .subscribe(evento => {
+        this.rolagensExcluidas.add(evento.id);
+        this.rolagens.update(atuais => atuais.filter(rolagem => rolagem.id !== evento.id));
+      });
+    this.tempoRealService.rolagemRecortesAlterados$
+      .pipe(filter(evento => evento.campanhaId === this.campanhaId), takeUntilDestroyed())
+      .subscribe(() => this.invalidarRolagens());
 
     // Encontro alterado (m8-05): nunca confia no payload do socket (pode carregar o recorte de
     // MESTRE, para quem está em prévia) — só o refetch via REST garante o mesmo resultado para
@@ -186,14 +174,14 @@ export class PainelEncontroEspectador {
       this.tempoRealService.reconexao$,
     ).pipe(takeUntilDestroyed()).subscribe(() => {
       this.recarregarCena();
-      this.carregarPainel(false);
+      this.invalidarRolagens();
     });
     this.tempoRealService.campanhaAcessoAlterado$
       .pipe(filter((evento) => evento.campanhaId === this.campanhaId), takeUntilDestroyed())
       .subscribe(() => {
         ++this.geracaoPainel;
         this.cargaPainel?.unsubscribe();
-        this.cargaRolagens?.unsubscribe();
+
         this.aplicarCena(null);
         this.painel.set(null);
         this.rolagens.set([]);
@@ -204,15 +192,28 @@ export class PainelEncontroEspectador {
   private aplicarPainel(painel: CampanhaPainelEspectadorDto): void {
     this.campanhaNome.set(painel.campanha.nome);
     this.painel.set(painel);
+    this.aplicarRolagens(painel);
     this.aplicarCena(painel.cenaAtiva ?? null);
     this.carregando.set(false);
+  }
+
+  private aplicarRolagens(painel: CampanhaPainelEspectadorDto): void {
+    this.rolagens.set(painel.rolagens.itens.filter(rolagem => !this.rolagensExcluidas.has(rolagem.id)));
+    this.carregandoRolagens.set(false);
+  }
+
+  private invalidarRolagens(): void {
+    this.rolagens.set([]);
+    this.painel.update(painel => painel ? { ...painel, rolagens: { ...painel.rolagens, itens: [] } } : null);
+    this.carregandoRolagens.set(true);
+    this.carregarPainel(false);
   }
 
   private carregarPainel(reconciliarCena = true): void {
     const geracao = ++this.geracaoPainel;
     this.cargaPainel?.unsubscribe();
     this.cargaPainel = this.campanhaProjecaoService
-      .recuperarPainelEspectador(this.campanhaId, 1, 20)
+      .recuperarPainelEspectador(this.campanhaId, 1, 50)
       .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (painel) => {
         if (geracao !== this.geracaoPainel) { return; }
@@ -220,10 +221,12 @@ export class PainelEncontroEspectador {
         else {
           this.painel.set(painel);
           this.campanhaNome.set(painel.campanha.nome);
-          this.rolagens.set(painel.rolagens.itens);
+          this.aplicarRolagens(painel);
         }
       },
       error: () => {
+        if (geracao !== this.geracaoPainel) return;
+        this.carregandoRolagens.set(false);
         this.aplicarCena(null);
         this.carregando.set(false);
         this.falha.set(true);

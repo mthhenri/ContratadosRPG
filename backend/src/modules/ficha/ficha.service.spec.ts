@@ -88,6 +88,7 @@ interface CampanhaServiceDublado {
 }
 
 interface CampanhaGatewayDublado {
+  invalidarRolagemRecortesDaFicha: ReturnType<typeof vi.fn>;
   emitirFichaCriada: ReturnType<typeof vi.fn>;
   emitirFichaAlterada: ReturnType<typeof vi.fn>;
   emitirFichaRecortesAlterados: ReturnType<typeof vi.fn>;
@@ -319,6 +320,7 @@ describe('FichaService', () => {
       ),
     };
     campanhaGateway = {
+      invalidarRolagemRecortesDaFicha: vi.fn(),
       emitirFichaCriada: vi.fn(),
       emitirFichaAlterada: vi.fn(),
       emitirFichaRecortesAlterados: vi.fn(),
@@ -341,6 +343,39 @@ describe('FichaService', () => {
       campanhaGateway as unknown as CampanhaGateway,
       armazenamentoProvedor as unknown as ArmazenamentoProvedor,
     );
+  });
+
+  describe('avaliarIdentidadeRolagem', () => {
+    it.each([
+      [10, TipoCampanhaMembroPapelEnum.JOGADOR, false],
+      [7, TipoCampanhaMembroPapelEnum.MESTRE, false],
+      [42, TipoCampanhaMembroPapelEnum.JOGADOR, true],
+      [42, TipoCampanhaMembroPapelEnum.ESPECTADOR, true],
+      [null, null, true],
+    ])('ficha oculta: observador %s, papel %s, reserva %s', async (usuarioId, papel, reservada) => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue({ ...fichaPersistida, oculta: true });
+      campanhaRepositorio.recuperarMembro.mockResolvedValue(papel ? { papel } : null);
+      fichaRepositorio.recuperarAcesso.mockResolvedValue({ id: 1 });
+      expect(await service.avaliarIdentidadeRolagem({ fichaId: 5, usuarioId })).toBe(reservada);
+    });
+
+    it.each([
+      { oculta: false },
+      { oculta: true, campanhaId: null },
+      { oculta: true, tipo: TipoFichaEnum.CRIATURA },
+      { oculta: true, tipo: TipoFichaEnum.NPC },
+    ])('preserva os outros contratos de identidade: %o', async alteracoes => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue({ ...fichaPersistida, ...alteracoes });
+      expect(await service.avaliarIdentidadeRolagem({ fichaId: 5, usuarioId: null })).toBe(false);
+      expect(campanhaRepositorio.recuperarMembro).not.toHaveBeenCalled();
+    });
+
+    it('reserva com segurança a ficha inexistente e propaga falha de infraestrutura', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(null);
+      expect(await service.avaliarIdentidadeRolagem({ fichaId: 5, usuarioId: 7 })).toBe(true);
+      fichaRepositorio.recuperarPorId.mockRejectedValue(new Error('banco indisponível'));
+      await expect(service.avaliarIdentidadeRolagem({ fichaId: 5, usuarioId: 7 })).rejects.toThrow('banco indisponível');
+    });
   });
 
   describe('criarFicha', () => {
@@ -1878,6 +1913,7 @@ describe('FichaService', () => {
         expect(campanhaGateway.expulsarUsuarioDaFicha).toHaveBeenCalledTimes(1);
         expect(campanhaGateway.expulsarUsuarioDaFicha).toHaveBeenCalledWith(acessoSuspenso);
         expect(ordem).toEqual(['revogado', 'expulso', 'alterada']);
+        expect(campanhaGateway.invalidarRolagemRecortesDaFicha).toHaveBeenCalledExactlyOnceWith({ fichaId: 5, campanhaIds: [3] });
         expect(fichaRepositorio.revogarAcesso).not.toHaveBeenCalled();
       });
 
@@ -1898,6 +1934,8 @@ describe('FichaService', () => {
         expect(fichaRepositorio.listarAcessos).not.toHaveBeenCalled();
         expect(campanhaGateway.emitirAcessoRevogado).not.toHaveBeenCalled();
         expect(campanhaGateway.expulsarUsuarioDaFicha).not.toHaveBeenCalled();
+        expect(campanhaGateway.invalidarRolagemRecortesDaFicha).toHaveBeenCalledTimes(1);
+        expect(campanhaGateway.invalidarRolagemRecortesDaFicha).toHaveBeenCalledWith({ fichaId: 5, campanhaIds: [3] });
       });
 
       it('não expulsa concessionário de ficha solta ao ocultar', async () => {
@@ -2632,6 +2670,7 @@ describe('FichaService', () => {
 
       expect(campanhaGateway.emitirFichaCriada).not.toHaveBeenCalled();
       expect(campanhaGateway.emitirFichaRemovidaDaCampanha).toHaveBeenCalledWith({ campanhaId: 3 });
+      expect(campanhaGateway.invalidarRolagemRecortesDaFicha).toHaveBeenCalledExactlyOnceWith({ fichaId: 5, campanhaIds: [3, 9] });
       expect(campanhaGateway.emitirFichaRecortesAlterados).toHaveBeenCalledWith({
         campanhaId: 9,
         fichas: true,

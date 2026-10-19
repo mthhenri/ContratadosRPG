@@ -8,9 +8,11 @@ import type {
   RolagemListarDto,
   RolagemRegistrarDto,
   RolagemResumoDto,
+  RolagemFichaRecortesInvalidarDto,
 } from '@contratados-rpg/shared/dtos/rolagem';
 import { TipoCampanhaMembroPapelEnum, TipoUsuarioEnum, TipoFichaEnum, RolagemVisibilidadeEnum } from '@contratados-rpg/shared/enums';
 import type { FichaRecuperadaDto } from '@contratados-rpg/shared/dtos/ficha';
+import type { CampanhaMembroInternoRecuperarDto } from '@contratados-rpg/shared/dtos/campanha';
 import type { PaginatedResult } from '@contratados-rpg/shared/interfaces';
 import { ResourceNotFoundException, UnauthorizedAccessException } from '../../core/exceptions';
 import { CampanhaGateway } from '../../core/gateway/campanha.gateway';
@@ -19,6 +21,7 @@ import { CampanhaRepository } from '../campanha/campanha.repository';
 import { FichaService } from '../ficha/ficha.service';
 import { EncontroRepository } from '../encontro/encontro.repository';
 import { RolagemRepository } from './rolagem.repository';
+import { RolagemIdentidadeService } from './rolagem-identidade.service';
 
 /**
  * Regras do módulo `rolagem` (m3-27): persistência das rolagens disparadas a partir de uma ficha
@@ -37,11 +40,13 @@ import { RolagemRepository } from './rolagem.repository';
 export class RolagemService {
   constructor(
     private readonly rolagemRepositorio: RolagemRepository,
+    @Inject(forwardRef(() => FichaService))
     private readonly fichaService: FichaService,
     private readonly campanhaRepositorio: CampanhaRepository,
     @Inject(forwardRef(() => CampanhaGateway))
     private readonly campanhaGateway: CampanhaGateway,
     private readonly encontroRepositorio: EncontroRepository,
+    private readonly identidadeService: RolagemIdentidadeService,
   ) {}
 
   /**
@@ -71,8 +76,11 @@ export class RolagemService {
       resultado: dto.resultado,
     });
 
-    this.campanhaGateway.emitirRolagemRegistrada(rolagemRegistrada);
-    return rolagemRegistrada;
+    await this.emitirRolagemRegistrada(rolagemRegistrada);
+    const [recorte] = await this.identidadeService.recortarRolagens({
+      rolagens: [rolagemRegistrada], usuarioId: usuarioAtivo.sub,
+    });
+    return recorte;
   }
 
   /** Registra uma rolagem livre em nome de um avulso; somente o mestre da campanha pode fazê-la. */
@@ -106,7 +114,7 @@ export class RolagemService {
       visibilidade: dto.visibilidade,
       resultado: dto.resultado,
     });
-    this.campanhaGateway.emitirRolagemRegistrada(registrada);
+    await this.emitirRolagemRegistrada(registrada);
     return registrada;
   }
 
@@ -132,7 +140,7 @@ export class RolagemService {
       visibilidade: dto.visibilidade,
       resultado: dto.resultado,
     });
-    this.campanhaGateway.emitirRolagemRegistrada(registrada);
+    await this.emitirRolagemRegistrada(registrada);
     return registrada;
   }
 
@@ -152,8 +160,13 @@ export class RolagemService {
       throw new ResourceNotFoundException('Rolagem');
     }
     await this.rolagemRepositorio.excluirRolagem(rolagem.id);
-    this.campanhaGateway.emitirRolagemExcluida(rolagem);
-    return rolagem;
+    await this.campanhaGateway.emitirRolagemExcluida(rolagem, async usuario => {
+      if (rolagem.campanhaId !== null) {
+        await this.validarMembroEvento({ campanhaId: rolagem.campanhaId, usuarioId: usuario.sub });
+      }
+      return this.identidadeService.recortarExclusao({ rolagem, usuarioId: usuario.sub });
+    });
+    return this.identidadeService.recortarExclusao({ rolagem, usuarioId: usuarioAtivo.sub });
   }
 
   /**
@@ -166,7 +179,13 @@ export class RolagemService {
   ): Promise<PaginatedResult<RolagemResumoDto>> {
     const ficha = await this.fichaService.recuperarFicha({ id: dto.fichaId }, usuarioAtivo);
     if (ficha.tipo === TipoFichaEnum.NPC) await this.validarGestaoNpc(ficha, usuarioAtivo);
-    return this.rolagemRepositorio.listarPorFicha(dto);
+    const pagina = await this.rolagemRepositorio.listarPorFicha(dto);
+    return {
+      ...pagina,
+      itens: await this.identidadeService.recortarRolagens({
+        rolagens: pagina.itens, usuarioId: usuarioAtivo.sub,
+      }),
+    };
   }
 
   /** Concessão de leitura do NPC não autoriza registrar nem acessar seu histórico privado. */
@@ -194,10 +213,38 @@ export class RolagemService {
       throw new UnauthorizedAccessException();
     }
 
-    return this.rolagemRepositorio.listarPorCampanha({
+    const rolagens = await this.rolagemRepositorio.listarPorCampanha({
       campanhaId: dto.campanhaId,
       usuarioId: usuarioAtivo.sub,
       ehMestre: membroEncontrado.papel === TipoCampanhaMembroPapelEnum.MESTRE,
     });
+    return this.identidadeService.recortarRolagens({ rolagens, usuarioId: usuarioAtivo.sub });
+  }
+
+  private async emitirRolagemRegistrada(rolagem: RolagemResumoDto): Promise<void> {
+    await this.campanhaGateway.emitirRolagemRegistrada(rolagem, async usuario => {
+      if (rolagem.campanhaId !== null) {
+        await this.validarMembroEvento({ campanhaId: rolagem.campanhaId, usuarioId: usuario.sub });
+      }
+      const [recorte] = await this.identidadeService.recortarRolagens({
+        rolagens: [rolagem], usuarioId: usuario.sub,
+      });
+      return recorte;
+    });
+  }
+
+  /** A identidade depende da ficha atual mesmo nos feeds das campanhas que ela já deixou. */
+  async invalidarRecortesDaFicha(dto: RolagemFichaRecortesInvalidarDto): Promise<void> {
+    const historicas = await this.rolagemRepositorio.listarCampanhasPorFicha({ fichaId: dto.fichaId });
+    const campanhas = new Set([
+      ...historicas.map(campanha => campanha.campanhaId), ...(dto.campanhaIds ?? []),
+    ]);
+    for (const campanhaId of campanhas) this.campanhaGateway.emitirRolagemRecortesAlterados({ campanhaId });
+  }
+
+  /** Revalida o mesmo vínculo exigido pelo feed antes de entregar a um socket antigo. */
+  private async validarMembroEvento(dto: CampanhaMembroInternoRecuperarDto): Promise<void> {
+    const membro = await this.campanhaRepositorio.recuperarMembro(dto);
+    if (!membro) throw new UnauthorizedAccessException();
   }
 }

@@ -7,6 +7,7 @@ import { RolagemVisibilidadeEnum } from '@contratados-rpg/shared/enums';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
+import { CampanhaProjecaoService } from '../../campanha-projecao.service';
 import { RolagemService } from '../../../ficha/rolagem.service';
 import { HistoricoRolagensCampanhaJanela } from './historico-rolagens-janela.page';
 
@@ -35,10 +36,14 @@ describe('HistoricoRolagensCampanhaJanela', () => {
   const rolagemRegistrada$ = new Subject<RolagemResumoDto>();
   let rolagensRest: RolagemResumoDto[] = [];
   let reconexao$: Subject<void>;
+  let recortes$: Subject<{ campanhaId: number }>;
+  let excluidas$: Subject<{ campanhaId: number; id: number }>;
   let rolagemService: { listarPorCampanha: ReturnType<typeof vi.fn> };
 
   function montar(origem: string | null) {
     reconexao$ = new Subject<void>();
+    recortes$ = new Subject<{ campanhaId: number }>();
+    excluidas$ = new Subject<{ campanhaId: number; id: number }>();
     rolagemService = { listarPorCampanha: vi.fn(() => of(rolagensRest)) };
     TestBed.configureTestingModule({
       imports: [HistoricoRolagensCampanhaJanela],
@@ -54,6 +59,9 @@ describe('HistoricoRolagensCampanhaJanela', () => {
           },
         },
         { provide: RolagemService, useValue: rolagemService },
+        { provide: CampanhaProjecaoService, useValue: {
+          recuperarPainelEspectador: vi.fn(() => of({ rolagens: { itens: rolagensRest.filter(item => item.visibilidade === RolagemVisibilidadeEnum.PUBLICA), paginaAtual: 1, totalPaginas: 1 } })),
+        } },
         {
           provide: TempoRealService,
           useValue: {
@@ -61,7 +69,8 @@ describe('HistoricoRolagensCampanhaJanela', () => {
             entrarSalaCampanha: vi.fn(),
             sairSalaCampanha: vi.fn(),
             rolagemRegistrada$: rolagemRegistrada$.asObservable(),
-            rolagemExcluida$: new Subject().asObservable(),
+            rolagemExcluida$: excluidas$.asObservable(),
+            rolagemRecortesAlterados$: recortes$.asObservable(),
             reconexao: signal(0),
             reconexao$: reconexao$.asObservable(),
           },
@@ -103,6 +112,32 @@ describe('HistoricoRolagensCampanhaJanela', () => {
     expect(texto).not.toContain('Privada REST');
     expect(texto).not.toContain('Privada socket');
     rolagensRest = [];
+  });
+
+  it('prévia de espectador consulta a projeção e ignora a identidade do socket de mestre', () => {
+    rolagensRest = [{ ...rolagem(5, 'Pública', RolagemVisibilidadeEnum.PUBLICA), fichaId: null, nomeFicha: null, identidadeReservada: true }];
+    const fixture = montar('espectador');
+    rolagemRegistrada$.next({ ...rolagem(5, 'Pública', RolagemVisibilidadeEnum.PUBLICA), nomeFicha: 'SEGREDO DO SOCKET', fichaId: 999 });
+    fixture.detectChanges();
+    expect(rolagemService.listarPorCampanha).not.toHaveBeenCalled();
+    expect(fixture.nativeElement.textContent).toContain('Origem reservada');
+    expect(fixture.nativeElement.textContent).not.toContain('SEGREDO DO SOCKET');
+    rolagensRest = [];
+  });
+
+  it('descarta GET anterior à invalidação e conserva exclusão recebida durante o refetch', () => {
+    const fixture = montar(null);
+    const antiga = new Subject<readonly RolagemResumoDto[]>();
+    const atual = new Subject<readonly RolagemResumoDto[]>();
+    rolagemService.listarPorCampanha.mockReturnValueOnce(antiga).mockReturnValueOnce(atual);
+    reconexao$.next();
+    recortes$.next({ campanhaId: 8 });
+    expect(fixture.componentInstance['itens']()).toEqual([]);
+    antiga.next([rolagem(5, 'Antiga', RolagemVisibilidadeEnum.PUBLICA)]);
+    expect(fixture.componentInstance['itens']()).toEqual([]);
+    excluidas$.next({ campanhaId: 8, id: 6 });
+    atual.next([rolagem(6, 'Excluída', RolagemVisibilidadeEnum.PUBLICA)]);
+    expect(fixture.componentInstance['itens']()).toEqual([]);
   });
 
   it('aberta por mestre ou jogador, mantém o feed que a API devolveu', () => {

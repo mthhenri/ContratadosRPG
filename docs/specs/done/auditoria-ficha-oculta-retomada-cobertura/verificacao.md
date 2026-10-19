@@ -54,7 +54,7 @@ correções nem certifica a privacidade integral do produto.
 
 | Item | Decisão de 19/10/2026 | Destino |
 |---|---|---|
-| D-01 | Manter a rolagem pública e retirar a identidade da ficha oculta para terceiros, inclusive no histórico já publicado. Não converter para privada. Conta/autoria e texto livre não se confundem com identidade estruturada da ficha. | [Rolagem sem identidade](../../backlog/ficha-oculta-rolagem-publica-sem-identidade.spec.md) |
+| D-01 | Manter a rolagem pública e retirar a identidade da ficha oculta para terceiros, inclusive no histórico já publicado. Não converter para privada. Conta/autoria e texto livre não se confundem com identidade estruturada da ficha. | [Rolagem sem identidade](../../done/ficha-oculta-rolagem-publica-sem-identidade.spec.md) |
 | D-02 | Calcular pelas fichas que **cada observador pode ver**. Pergunta adicional esclareceu que não é excluir globalmente toda ficha marcada oculta: dono e mestre têm seus respectivos recortes. | [Médias por observador](../../backlog/ficha-medias-esquadrao-recorte-do-observador.spec.md) |
 | H-02 | Exigir permissão atual para novas leituras do avatar, inclusive quando a URL já é conhecida. Não prometer recolher cópias baixadas. | [Avatar autorizado](../../backlog/ficha-avatar-leitura-autorizada.spec.md) |
 

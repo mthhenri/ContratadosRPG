@@ -26,7 +26,7 @@ import type {
   FichaResumoDto,
   FichaVisibilidadeAlteradaDto,
 } from '@contratados-rpg/shared/dtos/ficha';
-import type { RolagemExcluidaDto, RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
+import type { RolagemExcluidaDto, RolagemResumoDto, RolagemRecortesAlteradosDto } from '@contratados-rpg/shared/dtos/rolagem';
 import type {
   PaginaCadernoEsquadraoAlteradaDto,
   PaginaCadernoEsquadraoPresencaDto,
@@ -114,6 +114,8 @@ export class TempoRealService {
   private readonly membroEntrouSubject = new Subject<CampanhaMembroEntradaDto>();
   private readonly campanhaAcessoAlteradoSubject = new Subject<CampanhaAcessoAlteradoDto>();
   private readonly acessoRevogadoSubject = new Subject<FichaAcessoRevogadoDto>();
+  private readonly rolagemRecortesAlteradosSubject = new Subject<RolagemRecortesAlteradosDto>();
+  readonly rolagemRecortesAlterados$ = this.rolagemRecortesAlteradosSubject.asObservable();
   private readonly rolagemRegistradaSubject = new Subject<RolagemResumoDto>();
   private readonly rolagemExcluidaSubject = new Subject<RolagemExcluidaDto>();
   private readonly estadoAlteradoSubject = new Subject<CampanhaEstadoAlteradaDto>();
@@ -306,6 +308,9 @@ export class TempoRealService {
     this.socket.on('ficha:acesso-revogado', (evento: FichaAcessoRevogadoDto) =>
       this.acessoRevogadoSubject.next(evento),
     );
+    this.socket.on('rolagem:recortes-alterados', (evento: RolagemRecortesAlteradosDto) =>
+      this.rolagemRecortesAlteradosSubject.next(evento),
+    );
     this.socket.on('rolagem:registrada', (rolagem: RolagemResumoDto) =>
       this.rolagemRegistradaSubject.next(rolagem),
     );
@@ -324,9 +329,11 @@ export class TempoRealService {
     this.socket.on('cena:alterada', (evento: CenaAlteradaDto) =>
       this.cenaAlteradaSubject.next(evento),
     );
-    this.socket.on("campanha:acesso-alterado", (evento: CampanhaAcessoAlteradoDto) =>
-      this.campanhaAcessoAlteradoSubject.next(evento),
-    );
+    this.socket.on("campanha:acesso-alterado", (evento: CampanhaAcessoAlteradoDto) => {
+      this.campanhaAcessoAlteradoSubject.next(evento);
+      // A conexão removida da sala já não recebe o invalidator amplo da campanha.
+      this.rolagemRecortesAlteradosSubject.next({ campanhaId: evento.campanhaId });
+    });
     this.socket.on('cena:documento-alterado', (evento: CenaDocumentoAlteradoDto) =>
       this.cenaDocumentoAlteradoSubject.next(evento),
     );
@@ -428,6 +435,7 @@ export class TempoRealService {
       if (resultado?.sucesso && socket === this.socket && this.conectado()
         && this.referenciasSalasCampanha.has(campanhaId)) {
         this.campanhaIngressadaSubject.next(campanhaId);
+        this.rolagemRecortesAlteradosSubject.next({ campanhaId });
       }
     });
   }

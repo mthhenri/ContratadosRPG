@@ -64,6 +64,8 @@ describe('TempoRealService', () => {
 
   it('confirma ingresso somente após autorização, inclusive no primeiro connect e na reconexão', () => {
     const { servico } = criar(() => 'jwt');
+    const recortes: unknown[] = [];
+    servico.rolagemRecortesAlterados$.subscribe(evento => recortes.push(evento));
     const ingressos: number[] = [];
     servico.campanhaIngressada$.subscribe(id => ingressos.push(id));
     servico.conectar();
@@ -86,6 +88,7 @@ describe('TempoRealService', () => {
     servico.desconectar();
     socketFake.confirmacoes[3]({ sucesso: true });
     expect(ingressos).toEqual([9, 9]);
+    expect(recortes).toEqual([{ campanhaId: 9 }, { campanhaId: 9 }]);
   });
 
   it('não conecta sem sessão (o handshake do gateway exige o token)', () => {
@@ -236,6 +239,24 @@ describe('TempoRealService', () => {
     socketFake.disparar('ficha:visibilidade-alterada', { fichaId: 5, campanhaId: 3 });
 
     expect(recebidos).toEqual([{ fichaId: 5, campanhaId: 3 }]);
+  });
+
+  it('invalida rolagens ao perder acesso à sala da campanha', () => {
+    const { servico } = criar(() => 'jwt');
+    servico.conectar();
+    const recebidos: unknown[] = [];
+    servico.rolagemRecortesAlterados$.subscribe(evento => recebidos.push(evento));
+    socketFake.disparar('campanha:acesso-alterado', { campanhaId: 3 });
+    expect(recebidos).toEqual([{ campanhaId: 3 }]);
+  });
+
+  it('repassa invalidação de rolagens sem identidade da ficha', () => {
+    const { servico } = criar(() => 'jwt');
+    servico.conectar();
+    const recebidos: unknown[] = [];
+    servico.rolagemRecortesAlterados$.subscribe((evento) => recebidos.push(evento));
+    socketFake.disparar('rolagem:recortes-alterados', { campanhaId: 3 });
+    expect(recebidos).toEqual([{ campanhaId: 3 }]);
   });
 
   it('repassa ficha:recortes-alterados com os invalidadores seletivos da campanha', () => {

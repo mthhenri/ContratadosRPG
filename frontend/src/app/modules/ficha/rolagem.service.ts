@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, map, tap } from 'rxjs';
+import { Observable, map, tap, defer, filter, finalize, merge, of, switchMap, take } from 'rxjs';
 import type { PaginatedResult, StandardResponse } from '@contratados-rpg/shared/interfaces';
 import type {
   RolagemExcluidaDto,
@@ -33,9 +33,11 @@ export class RolagemService {
    * chama normalmente só assina para reconciliar o histórico local (`HistoricoRolagensSidebar`).
    */
   registrar(fichaId: number, dto: RolagemRegistrarDto): Observable<RolagemResumoDto> {
-    return this.httpClient
+    return this.preservarRecorte(this.httpClient
       .post<StandardResponse<RolagemResumoDto>>(`${this.baseFicha}/${fichaId}/rolagem`, dto)
-      .pipe(map((resposta) => resposta.dados as RolagemResumoDto));
+      .pipe(
+        map((resposta) => resposta.dados as RolagemResumoDto),
+      ));
   }
 
   /** Registra uma rolagem livre em nome de um combatente avulso do encontro. */
@@ -44,19 +46,47 @@ export class RolagemService {
     combatenteId: number,
     dto: RolagemRegistrarDto,
   ): Observable<RolagemResumoDto> {
-    return this.httpClient
+    return this.preservarRecorte(this.httpClient
       .post<StandardResponse<RolagemResumoDto>>(
         `${this.baseEncontro}/${encontroId}/combatente/${combatenteId}/rolagem`,
         dto,
       )
-      .pipe(map((resposta) => resposta.dados as RolagemResumoDto));
+      .pipe(
+        map((resposta) => resposta.dados as RolagemResumoDto),
+      ));
   }
 
   /** Registra a rolagem livre do mestre diretamente no feed da campanha. */
   registrarAvulsaDaCampanha(campanhaId: number, dto: RolagemRegistrarDto): Observable<RolagemResumoDto> {
-    return this.httpClient
+    return this.preservarRecorte(this.httpClient
       .post<StandardResponse<RolagemResumoDto>>(`${environment.apiBase}/campanha/${campanhaId}/rolagem-avulsa`, dto)
-      .pipe(map((resposta) => resposta.dados as RolagemResumoDto));
+      .pipe(
+        map((resposta) => resposta.dados as RolagemResumoDto),
+      ));
+  }
+
+  /** Mantém a escrita em voo; só reconcilia seu retorno se o recorte mudou durante ela. */
+  private preservarRecorte(consulta: Observable<RolagemResumoDto>): Observable<RolagemResumoDto> {
+    return defer(() => {
+      const campanhasInvalidas = new Set<number>();
+      const assinatura = this.tempoRealService.rolagemRecortesAlterados$
+        .subscribe(evento => campanhasInvalidas.add(evento.campanhaId));
+      return consulta.pipe(
+        switchMap(rolagem => {
+          const campanhaId = rolagem.campanhaId;
+          if (campanhaId === null || !campanhasInvalidas.has(campanhaId)) return of(rolagem);
+          return merge(of(undefined), this.tempoRealService.rolagemRecortesAlterados$
+            .pipe(filter(evento => evento.campanhaId === campanhaId)))
+            .pipe(
+              switchMap(() => this.listarPorCampanha(campanhaId)),
+              take(1),
+              map(itens => itens.find(item => item.id === rolagem.id)),
+              filter((item): item is RolagemResumoDto => item !== undefined),
+            );
+        }),
+        finalize(() => assinatura.unsubscribe()),
+      );
+    });
   }
 
   /** Histórico paginado de uma ficha (§10.5), mais recente primeiro. */

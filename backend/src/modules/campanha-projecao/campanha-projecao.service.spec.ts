@@ -11,6 +11,7 @@ import type { CenaService } from "../cena/cena.service";
 import type { CenaDocumentoService } from "../cena/cena-documento.service";
 import type { EncontroRecuperadoDto } from "@contratados-rpg/shared/dtos/encontro";
 import { CampanhaProjecaoService } from './campanha-projecao.service';
+import { RolagemIdentidadeService } from '../rolagem/rolagem-identidade.service';
 
 interface CampanhaRepositorioDublado {
   recuperarPorId: ReturnType<typeof vi.fn>;
@@ -29,6 +30,7 @@ interface EncontroServicoDublado {
 }
 
 interface FichaServicoDublado {
+  avaliarIdentidadeRolagem: ReturnType<typeof vi.fn<FichaService['avaliarIdentidadeRolagem']>>;
   listarFichasParaAlvo: ReturnType<typeof vi.fn>;
   listarFichasParaEspectador: ReturnType<typeof vi.fn>;
   recuperarFichaParaAlvo: ReturnType<typeof vi.fn>;
@@ -72,6 +74,7 @@ describe('CampanhaProjecaoService', () => {
       recuperarEncontroAtivoParaAlvo: vi.fn().mockResolvedValue(null),
     };
     fichaServico = {
+      avaliarIdentidadeRolagem: vi.fn().mockResolvedValue(false),
       listarFichasParaAlvo: vi.fn(),
       listarFichasParaEspectador: vi.fn().mockResolvedValue([]),
       recuperarFichaParaAlvo: vi.fn(),
@@ -91,6 +94,7 @@ describe('CampanhaProjecaoService', () => {
         }),
       } as unknown as CenaService,
       {} as CenaDocumentoService,
+      new RolagemIdentidadeService(fichaServico as unknown as FichaService),
     );
   });
 
@@ -207,7 +211,7 @@ describe('CampanhaProjecaoService', () => {
 
       expect(resultado).not.toHaveProperty('codigoConvite');
       expect(resultado).not.toHaveProperty('codigoConviteEspectador');
-      expect(resultado.rolagens).toBe(feed);
+      expect(resultado.rolagens).toEqual(feed);
     });
 
     it('lança UnauthorizedAccessException para JOGADOR (não é espectador nem prévia de mestre)', async () => {
@@ -231,6 +235,24 @@ describe('CampanhaProjecaoService', () => {
   });
 
   describe('recuperarPreviaJogador', () => {
+    it('reserva a identidade para B e para prévia S mesmo autenticada como mestre; A preserva', async () => {
+      campanhaRepositorio.recuperarPorId.mockResolvedValue(campanhaPersistida);
+      campanhaServico.validarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.MESTRE });
+      fichaServico.listarFichasParaAlvo.mockResolvedValue([]);
+      const rolagem = { id: 8, fichaId: 11, encontroCombatenteId: 21, nomeFicha: 'Segredo', corFicha: '#123456' };
+      rolagemRepositorio.listarPorCampanha.mockResolvedValue([rolagem]);
+      rolagemRepositorio.listarPublicasPorCampanha.mockResolvedValue({ itens: [rolagem], totalItens: 1, paginaAtual: 1, totalPaginas: 1 });
+      fichaServico.avaliarIdentidadeRolagem.mockImplementation(({ usuarioId }: { usuarioId: number | null }) => Promise.resolve(usuarioId !== 10));
+      const paraB = await service.recuperarPreviaJogador({ campanhaId: 3, usuarioAlvoId: 55 }, usuarioMestre);
+      const paraA = await service.recuperarPreviaJogador({ campanhaId: 3, usuarioAlvoId: 10 }, usuarioMestre);
+      const paraS = await service.recuperarPainelEspectador({ campanhaId: 3, pagina: 1, itensPorPagina: 20 }, usuarioMestre);
+      const reservada = { ...rolagem, fichaId: null, encontroCombatenteId: null, nomeFicha: null, corFicha: null, identidadeReservada: true };
+      expect(paraB.rolagens).toEqual([reservada]);
+      expect(paraS.rolagens.itens).toEqual([reservada]);
+      expect(paraA.rolagens).toEqual([rolagem]);
+      expect(fichaServico.avaliarIdentidadeRolagem).toHaveBeenCalledWith({ fichaId: 11, usuarioId: null });
+    });
+
     it('devolve fichas/membros/feed/capacidade calculados com a identidade do alvo', async () => {
       campanhaRepositorio.recuperarPorId.mockResolvedValue(campanhaPersistida);
       campanhaServico.validarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.MESTRE });

@@ -102,6 +102,7 @@ describe('CampanhaGateway', () => {
       encontroService as unknown as EncontroService,
       documentoService as unknown as DocumentoService,
       documentoLeituraService as unknown as DocumentoLeituraService,
+      { invalidarRecortesDaFicha: vi.fn().mockResolvedValue(undefined) } as never,
     );
   });
 
@@ -322,7 +323,7 @@ describe('CampanhaGateway', () => {
   });
 
   describe('recalibração pós-permissão', () => {
-    it.each([null, TipoCampanhaMembroPapelEnum.ESPECTADOR, TipoCampanhaMembroPapelEnum.MESTRE])(
+    it.each([null, TipoCampanhaMembroPapelEnum.ESPECTADOR, TipoCampanhaMembroPapelEnum.MESTRE, TipoCampanhaMembroPapelEnum.JOGADOR])(
       "avisa somente os sockets afetados após recalibrar para %s, sem payload de gestão",
       async (papel) => {
         const socketAlvo = criarSocket({ usuario });
@@ -358,7 +359,7 @@ describe('CampanhaGateway', () => {
         }
         expect(socketOutro.emit).not.toHaveBeenCalled();
         expect(socketOutro.leave).not.toHaveBeenCalled();
-        expect(emitirParaSala).not.toHaveBeenCalled();
+        expect(emitirParaSala).toHaveBeenCalledExactlyOnceWith('rolagem:recortes-alterados', { campanhaId: 3 });
       },
     );
     it('remove o usuário da ficha revogada depois de emitir o aviso', async () => {
@@ -382,6 +383,7 @@ describe('CampanhaGateway', () => {
       const fetchSockets = vi.fn().mockResolvedValue([socketAlvo.cliente]);
       (gateway as unknown as { servidor: Server }).servidor = {
         in: vi.fn(() => ({ fetchSockets })),
+        to: vi.fn(() => ({ emit: vi.fn() })),
       } as unknown as Server;
 
       await gateway.recalibrarSalasCampanhaUsuario({
@@ -404,6 +406,7 @@ describe('CampanhaGateway', () => {
       const fetchSockets = vi.fn().mockResolvedValue([]);
       (gateway as unknown as { servidor: Server }).servidor = {
         in: vi.fn(() => ({ fetchSockets })),
+        to: vi.fn(() => ({ emit: vi.fn() })),
       } as unknown as Server;
 
       await gateway.recalibrarSalasCampanhaUsuario({ campanhaId: 3, usuarioId: 7, papel: null });
@@ -669,21 +672,96 @@ describe('CampanhaGateway', () => {
     });
 
     describe('emitirRolagemRegistrada (m3-27/m3-77; m3-27 correção)', () => {
-      it('PUBLICA com campanha emite na sala campanha:<id> e na sala do espectador — nunca em ficha:<id>', () => {
-        const rolagem = { id: 9, fichaId: 5, campanhaId: 3, visibilidade: 'PUBLICA' };
-
-        gateway.emitirRolagemRegistrada(rolagem as never);
-
-        expect(paraSala).toHaveBeenCalledTimes(1);
-        expect(paraSala).toHaveBeenCalledWith(['campanha:3', 'campanha:3:espectador']);
-        expect(emitir).toHaveBeenCalledTimes(1);
-        expect(emitir).toHaveBeenCalledWith('rolagem:registrada', rolagem);
+      it.each(['rolagem:registrada', 'rolagem:excluida'] as const)(
+        '%s descarta cache e consulta em voo ao invalidar entre duas abas de B', async evento => {
+        const primeiraAbaB = criarSocket({ usuario });
+        const observadorLento = criarSocket({ usuario: { ...usuario, sub: 99 } });
+        const segundaAbaB = criarSocket({ usuario });
+        const buscar = vi.fn().mockResolvedValue([primeiraAbaB.cliente, observadorLento.cliente, segundaAbaB.cliente]);
+        (gateway as unknown as { servidor: Server }).servidor = {
+          in: () => ({ fetchSockets: buscar }), to: paraSala,
+        } as never;
+        const original = { id: 9, fichaId: 5, campanhaId: 3, visibilidade: 'PUBLICA' };
+        const reservado = { ...original, fichaId: null };
+        let liberarConsulta!: () => void;
+        let informarConsulta!: () => void;
+        const bloqueio = new Promise<void>(resolve => { liberarConsulta = resolve; });
+        const consultaIniciada = new Promise<void>(resolve => { informarConsulta = resolve; });
+        let oculta = false;
+        let bloqueou = false;
+        const montar = vi.fn(async (alvo: JwtPayload) => {
+          const recorte = oculta ? reservado : original;
+          if (alvo.sub === 99 && !bloqueou) {
+            bloqueou = true;
+            informarConsulta();
+            await bloqueio;
+          }
+          return recorte as never;
+        });
+        const emissao = evento === 'rolagem:registrada'
+          ? gateway.emitirRolagemRegistrada(original as never, montar)
+          : gateway.emitirRolagemExcluida(original as never, montar);
+        await consultaIniciada;
+        expect(primeiraAbaB.emit).toHaveBeenCalledWith(evento, original);
+        oculta = true;
+        gateway.emitirRolagemRecortesAlterados({ campanhaId: 3 });
+        liberarConsulta();
+        await emissao;
+        expect(observadorLento.emit).toHaveBeenCalledExactlyOnceWith(evento, reservado);
+        expect(segundaAbaB.emit).toHaveBeenCalledExactlyOnceWith(evento, reservado);
+        expect(montar).toHaveBeenCalledTimes(4);
       });
 
-      it('PUBLICA de ficha solta (m3-28, campanhaId null) emite na sala ficha:<id> — só sala que existe pra ela', () => {
+      it.each(['rolagem:registrada', 'rolagem:excluida'] as const)('%s emite o recorte por usuário e nunca faz broadcast do original', async evento => {
+        const dono = criarSocket({ usuario });
+        const donoOutraAba = criarSocket({ usuario });
+        const terceiro = criarSocket({ usuario: { ...usuario, sub: 99 } });
+        const recusado = criarSocket({ usuario: { ...usuario, sub: 100 } });
+        const anonimo = criarSocket();
+        const buscar = vi.fn().mockResolvedValue([dono.cliente, donoOutraAba.cliente, terceiro.cliente, recusado.cliente, anonimo.cliente]);
+        const entrar = vi.fn(() => ({ fetchSockets: buscar }));
+        (gateway as unknown as { servidor: Server }).servidor = { in: entrar, to: paraSala } as never;
+        const original = { id: 9, fichaId: 5, campanhaId: 3, visibilidade: 'PUBLICA' };
+        const reservado = { ...original, fichaId: null };
+        const montar = vi.fn((alvo: JwtPayload) => {
+          if (alvo.sub === 100) throw new UnauthorizedAccessException();
+          return Promise.resolve((alvo.sub === usuario.sub ? original : reservado) as never);
+        });
+        if (evento === 'rolagem:registrada') await gateway.emitirRolagemRegistrada(original as never, montar);
+        else await gateway.emitirRolagemExcluida(original as never, montar);
+        expect(entrar).toHaveBeenCalledWith(['campanha:3', 'campanha:3:espectador']);
+        expect(paraSala).not.toHaveBeenCalled();
+        expect(montar).toHaveBeenCalledTimes(3);
+        expect(dono.emit).toHaveBeenCalledWith(evento, original);
+        expect(donoOutraAba.emit).toHaveBeenCalledWith(evento, original);
+        expect(terceiro.emit).toHaveBeenCalledWith(evento, reservado);
+        expect(recusado.emit).not.toHaveBeenCalled();
+        expect(anonimo.emit).not.toHaveBeenCalled();
+      });
+
+      it('invalidator de rolagem chega às duas salas carregando somente campanhaId', () => {
+        gateway.emitirRolagemRecortesAlterados({ campanhaId: 3 });
+        expect(paraSala).toHaveBeenCalledWith(['campanha:3', 'campanha:3:espectador']);
+        expect(emitir).toHaveBeenCalledWith('rolagem:recortes-alterados', { campanhaId: 3 });
+      });
+      it('PUBLICA com campanha emite na sala campanha:<id> e na sala do espectador — nunca em ficha:<id>', async () => {
+        const rolagem = { id: 9, fichaId: 5, campanhaId: 3, visibilidade: 'PUBLICA' };
+        const socket = criarSocket({ usuario });
+        const buscar = vi.fn().mockResolvedValue([socket.cliente]);
+        const entrar = vi.fn(() => ({ fetchSockets: buscar }));
+        (gateway as unknown as { servidor: Server }).servidor = { in: entrar, to: paraSala } as never;
+
+        await gateway.emitirRolagemRegistrada(rolagem as never, () => Promise.resolve(rolagem as never));
+
+        expect(entrar).toHaveBeenCalledWith(['campanha:3', 'campanha:3:espectador']);
+        expect(paraSala).not.toHaveBeenCalled();
+        expect(socket.emit).toHaveBeenCalledWith('rolagem:registrada', rolagem);
+      });
+
+      it('PUBLICA de ficha solta (m3-28, campanhaId null) emite na sala ficha:<id> — só sala que existe pra ela', async () => {
         const rolagem = { id: 9, fichaId: 5, campanhaId: null, visibilidade: 'PUBLICA' };
 
-        gateway.emitirRolagemRegistrada(rolagem as never);
+        await gateway.emitirRolagemRegistrada(rolagem as never, () => Promise.resolve(rolagem as never));
 
         expect(paraSala).toHaveBeenCalledTimes(1);
         expect(paraSala).toHaveBeenCalledWith('ficha:5');
@@ -691,19 +769,19 @@ describe('CampanhaGateway', () => {
         expect(emitir).toHaveBeenCalledWith('rolagem:registrada', rolagem);
       });
 
-      it('PUBLICA de avulso sem ficha nem campanha (registrarRolagemAvulso solto) não emite em lugar nenhum', () => {
+      it('PUBLICA de avulso sem ficha nem campanha (registrarRolagemAvulso solto) não emite em lugar nenhum', async () => {
         const rolagem = { id: 9, fichaId: null, campanhaId: null, visibilidade: 'PUBLICA' };
 
-        gateway.emitirRolagemRegistrada(rolagem as never);
+        await gateway.emitirRolagemRegistrada(rolagem as never, () => Promise.resolve(rolagem as never));
 
         expect(paraSala).not.toHaveBeenCalled();
         expect(emitir).not.toHaveBeenCalled();
       });
 
-      it('PRIVADA com campanha emite só na sala campanha:<id>:mestre — nunca na sala cheia nem no espectador', () => {
+      it('PRIVADA com campanha emite só na sala campanha:<id>:mestre — nunca na sala cheia nem no espectador', async () => {
         const rolagem = { id: 9, fichaId: 5, campanhaId: 3, visibilidade: 'PRIVADA' };
 
-        gateway.emitirRolagemRegistrada(rolagem as never);
+        await gateway.emitirRolagemRegistrada(rolagem as never, () => Promise.resolve(rolagem as never));
 
         expect(paraSala).toHaveBeenCalledTimes(1);
         expect(paraSala).toHaveBeenCalledWith('campanha:3:mestre');
@@ -711,10 +789,10 @@ describe('CampanhaGateway', () => {
         expect(emitir).toHaveBeenCalledWith('rolagem:registrada', rolagem);
       });
 
-      it('PRIVADA de ficha solta (campanhaId null) não emite em lugar nenhum — sem mestre de campanha', () => {
+      it('PRIVADA de ficha solta (campanhaId null) não emite em lugar nenhum — sem mestre de campanha', async () => {
         const rolagem = { id: 9, fichaId: 5, campanhaId: null, visibilidade: 'PRIVADA' };
 
-        gateway.emitirRolagemRegistrada(rolagem as never);
+        await gateway.emitirRolagemRegistrada(rolagem as never, () => Promise.resolve(rolagem as never));
 
         expect(paraSala).not.toHaveBeenCalled();
         expect(emitir).not.toHaveBeenCalled();

@@ -98,6 +98,7 @@ describe('CampanhaDetalheDadosService', () => {
     const estadoAlterado$ = new Subject<{ id: number; naBase: boolean }>();
     const inventarioAlterado$ = new Subject<{ campanhaId: number }>();
     const reconexao = signal(0);
+    const rolagemRecortesAlterados$ = new Subject<{ campanhaId: number }>();
     const reconexao$ = new Subject<void>();
     const campanhaIngressada$ = new Subject<number>();
     const cenaAlterada$ = new Subject<CenaAlteradaDto>();
@@ -121,6 +122,7 @@ describe('CampanhaDetalheDadosService', () => {
       estadoAlterado$: estadoAlterado$.asObservable(),
       inventarioAlterado$: inventarioAlterado$.asObservable(),
       reconexao,
+      rolagemRecortesAlterados$: rolagemRecortesAlterados$.asObservable(),
       reconexao$: reconexao$.asObservable(),
     };
 
@@ -158,8 +160,26 @@ describe('CampanhaDetalheDadosService', () => {
       fichaRemovidaDaCampanha$,
       fichaRecortesAlterados$,
       reconexao$,
+      rolagemRecortesAlterados$,
     };
   }
+
+  it('descarta identidade carregada e respostas antigas ao invalidar o recorte', () => {
+    const contexto = montar({ usuarioId: 1, membros: membrosCom(1, TipoCampanhaMembroPapelEnum.JOGADOR), rolagens: [rolagem()] });
+    const antiga = new Subject<RolagemResumoDto[]>();
+    const nova = new Subject<RolagemResumoDto[]>();
+    contexto.rolagemService.listarPorCampanha.mockReturnValueOnce(antiga);
+    contexto.reconexao$.next();
+    contexto.rolagemService.listarPorCampanha.mockReturnValueOnce(nova);
+    contexto.rolagemRecortesAlterados$.next({ campanhaId: CAMPANHA_ID });
+    expect(contexto.service.rolagensFeed()).toEqual([]);
+    const reservada = rolagem({ fichaId: null, nomeFicha: null, corFicha: null, identidadeReservada: true });
+    nova.next([reservada]);
+    antiga.next([rolagem()]);
+    expect(contexto.service.rolagensFeed()).toEqual([reservada]);
+    contexto.rolagemRecortesAlterados$.next({ campanhaId: CAMPANHA_ID + 1 });
+    expect(contexto.service.rolagensFeed()).toEqual([reservada]);
+  });
 
   it('refaz a cena após ingresso confirmado: cobre alteração perdida entre GET inicial e join', () => {
     const contexto = montar({ usuarioId: 1, membros: membrosCom(1, TipoCampanhaMembroPapelEnum.MESTRE) });
@@ -230,6 +250,8 @@ describe('CampanhaDetalheDadosService', () => {
 
     rolagemRegistrada$.next(rolagem({ id: 2, createdDate: "2026-10-05T12:00:01.000Z" }));
     expect(service.rolagensFeed()[0].id).toBe(2);
+    expect(service.rolagensFeed().length).toBe(2);
+    rolagemRegistrada$.next(rolagem({ id: 2 }));
     expect(service.rolagensFeed().length).toBe(2);
   });
 
@@ -365,7 +387,7 @@ describe('CampanhaDetalheDadosService', () => {
 
     reconexao$.next();
     rolagemExcluida$.next({ id: 2 });
-    expect(service.rolagensFeed().map((item) => item.id)).toEqual([1]);
+    expect(service.rolagensFeed().map((item) => item.id)).toEqual([]);
 
     // Resposta antiga do GET (pedida antes da exclusão) ainda traz o id 2.
     respostaLenta$.next([rolagem({ id: 2 }), rolagem({ id: 1 })]);
@@ -401,7 +423,7 @@ describe('CampanhaDetalheDadosService', () => {
 
     reconexao$.next();
     rolagemRegistrada$.next(rolagem({ id: 3, createdDate: '2099-01-01T00:00:00Z' }));
-    expect(service.rolagensFeed().map((item) => item.id)).toEqual([3, 1]);
+    expect(service.rolagensFeed().map((item) => item.id)).toEqual([3]);
 
     // Resposta do GET, disparada antes do registro 3 existir, ainda não o inclui.
     respostaLenta$.next([rolagem({ id: 1 })]);

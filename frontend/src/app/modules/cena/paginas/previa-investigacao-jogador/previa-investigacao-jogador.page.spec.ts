@@ -38,6 +38,7 @@ describe('PreviaInvestigacaoJogador', () => {
       fichaVisibilidadeAlterada$: new Subject<unknown>(),
       fichaRemovidaDaCampanha$: new Subject<unknown>(),
       fichaRecortesAlterados$: new Subject<unknown>(), fichaAlterada$: new Subject<unknown>(),
+      rolagemRecortesAlterados$: new Subject<{ campanhaId: number }>(),
       rolagemRegistrada$: new Subject<unknown>(), rolagemExcluida$: new Subject<unknown>(),
       cenaAlterada$: new Subject<{ campanhaId: number }>(), reconexao$: new Subject<void>(),
     };

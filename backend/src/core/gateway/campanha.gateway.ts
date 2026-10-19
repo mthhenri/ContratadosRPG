@@ -45,7 +45,12 @@ import type {
   EncontroAlteradoDto,
   EncontroIniciativaPedidoDto,
 } from '@contratados-rpg/shared/dtos/encontro';
-import type { RolagemExcluidaDto, RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
+import type {
+  RolagemExcluidaDto,
+  RolagemResumoDto,
+  RolagemRecortesAlteradosDto,
+  RolagemFichaRecortesInvalidarDto,
+} from '@contratados-rpg/shared/dtos/rolagem';
 import type {
   PaginaCadernoEsquadraoAlteradaDto,
   PaginaCadernoEsquadraoPresencaDto,
@@ -59,6 +64,7 @@ import { DocumentoService } from '../../modules/documento/documento.service';
 import { EncontroService } from '../../modules/encontro/encontro.service';
 import { omitirCamposPrivados } from '../../modules/ficha/ficha-campos-privados.util';
 import { FichaService } from '../../modules/ficha/ficha.service';
+import { RolagemService } from '../../modules/rolagem/rolagem.service';
 
 /** Resposta (ack) de um pedido de entrada em sala — o cliente sabe se a permissão foi concedida. */
 interface EntradaSalaResultado {
@@ -94,6 +100,7 @@ interface EntradaSalaResultado {
 export class CampanhaGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   private readonly servidor!: Server;
+  private readonly geracaoRecortesRolagem = new Map<number, number>();
 
   constructor(
     private readonly jwtService: JwtService,
@@ -107,6 +114,8 @@ export class CampanhaGateway implements OnGatewayConnection, OnGatewayDisconnect
     private readonly documentoService: DocumentoService,
     @Inject(forwardRef(() => DocumentoLeituraService))
     private readonly documentoLeituraService: DocumentoLeituraService,
+    @Inject(forwardRef(() => RolagemService))
+    private readonly rolagemService: RolagemService,
   ) {}
 
   /**
@@ -485,6 +494,7 @@ export class CampanhaGateway implements OnGatewayConnection, OnGatewayDisconnect
       campanhaId: dto.campanhaId,
       usuarioId: dto.usuarioId,
     });
+    this.emitirRolagemRecortesAlterados({ campanhaId: dto.campanhaId });
   }
 
   /** Propaga a criação já persistida de uma página colaborativa à campanha. */
@@ -519,6 +529,8 @@ export class CampanhaGateway implements OnGatewayConnection, OnGatewayDisconnect
    * ingressada), então é essa sala que recebe o evento; sem `fichaId` (rolagem de combatente
    * avulso) não há sala nenhuma — no-op.
    *
+   * Na campanha, PUBLICA usa o callback autorizado por observador; nenhuma sala recebe o original.
+   *
    * **`PRIVADA` (correção)**: broadcastar para a sala cheia vazaria o conteúdo a jogadores que não
    * deveriam vê-la (§14 — só autor e mestre enxergam uma `PRIVADA`, `RolagemRepository.
    * listarPorCampanha`). O autor já a recebe pela resposta REST do próprio POST; falta o mestre, que
@@ -527,7 +539,10 @@ export class CampanhaGateway implements OnGatewayConnection, OnGatewayDisconnect
    * jogador e espectador nunca a recebem. `campanhaId === null` (ficha solta) não tem essa sala:
    * uma `PRIVADA` avulsa não tem mestre de campanha para notificar — no-op, como antes.
    */
-  emitirRolagemRegistrada(rolagem: RolagemResumoDto): void {
+  async emitirRolagemRegistrada(
+    rolagem: RolagemResumoDto,
+    montarParaUsuario: (usuario: JwtPayload) => Promise<RolagemResumoDto>,
+  ): Promise<void> {
     if (rolagem.campanhaId === null) {
       if (rolagem.visibilidade === RolagemVisibilidadeEnum.PUBLICA && rolagem.fichaId !== null) {
         this.servidor.to(this.salaFicha(rolagem.fichaId)).emit('rolagem:registrada', rolagem);
@@ -535,9 +550,7 @@ export class CampanhaGateway implements OnGatewayConnection, OnGatewayDisconnect
       return;
     }
     if (rolagem.visibilidade === RolagemVisibilidadeEnum.PUBLICA) {
-      this.servidor
-        .to([this.salaCampanha(rolagem.campanhaId), this.salaCampanhaEspectador(rolagem.campanhaId)])
-        .emit('rolagem:registrada', rolagem);
+      await this.emitirRolagemPorUsuario(rolagem.campanhaId, 'rolagem:registrada', montarParaUsuario);
       return;
     }
     this.servidor.to(this.salaCampanhaMestre(rolagem.campanhaId)).emit('rolagem:registrada', rolagem);
@@ -545,11 +558,14 @@ export class CampanhaGateway implements OnGatewayConnection, OnGatewayDisconnect
 
   /**
    * Emite `rolagem:excluida` (soft delete por `ADMIN`) na mesma sala que `emitirRolagemRegistrada`
-   * usaria para a rolagem: `PUBLICA` na sala cheia + espectador (ou `ficha:<id>` para ficha solta),
-   * `PRIVADA` só na sala do mestre. Payload sem conteúdo (`RolagemExcluidaDto`), então nada privado
-   * vaza. Broadcast-only: a service chama depois de persistir.
+   * usaria para a rolagem: `PUBLICA` por observador da campanha + espectador (ou `ficha:<id>`
+   * para ficha solta), `PRIVADA` só na sala do mestre. O callback reserva também o fichaId.
+   * Broadcast-only: a service chama depois de persistir.
    */
-  emitirRolagemExcluida(rolagem: RolagemExcluidaDto): void {
+  async emitirRolagemExcluida(
+    rolagem: RolagemExcluidaDto,
+    montarParaUsuario: (usuario: JwtPayload) => Promise<RolagemExcluidaDto>,
+  ): Promise<void> {
     if (rolagem.campanhaId === null) {
       if (rolagem.visibilidade === RolagemVisibilidadeEnum.PUBLICA && rolagem.fichaId !== null) {
         this.servidor.to(this.salaFicha(rolagem.fichaId)).emit('rolagem:excluida', rolagem);
@@ -557,12 +573,59 @@ export class CampanhaGateway implements OnGatewayConnection, OnGatewayDisconnect
       return;
     }
     if (rolagem.visibilidade === RolagemVisibilidadeEnum.PUBLICA) {
-      this.servidor
-        .to([this.salaCampanha(rolagem.campanhaId), this.salaCampanhaEspectador(rolagem.campanhaId)])
-        .emit('rolagem:excluida', rolagem);
+      await this.emitirRolagemPorUsuario(rolagem.campanhaId, 'rolagem:excluida', montarParaUsuario);
       return;
     }
     this.servidor.to(this.salaCampanhaMestre(rolagem.campanhaId)).emit('rolagem:excluida', rolagem);
+  }
+
+  /** Invalidador público sem fichaId; alcança também o feed do espectador. */
+  emitirRolagemRecortesAlterados(evento: RolagemRecortesAlteradosDto): void {
+    this.geracaoRecortesRolagem.set(
+      evento.campanhaId, (this.geracaoRecortesRolagem.get(evento.campanhaId) ?? 0) + 1,
+    );
+    this.servidor.to([this.salaCampanha(evento.campanhaId), this.salaCampanhaEspectador(evento.campanhaId)])
+      .emit('rolagem:recortes-alterados', evento);
+  }
+
+  /** Delega a consulta histórica ao dono da rolagem, como a ponte de encontro da ficha. */
+  async invalidarRolagemRecortesDaFicha(dto: RolagemFichaRecortesInvalidarDto): Promise<void> {
+    await this.rolagemService.invalidarRecortesDaFicha(dto);
+  }
+
+  private async emitirRolagemPorUsuario<T extends RolagemResumoDto | RolagemExcluidaDto>(
+    campanhaId: number,
+    evento: 'rolagem:registrada' | 'rolagem:excluida',
+    montarParaUsuario: (usuario: JwtPayload) => Promise<T>,
+  ): Promise<void> {
+    const sockets = await this.servidor
+      .in([this.salaCampanha(campanhaId), this.salaCampanhaEspectador(campanhaId)]).fetchSockets();
+    const porUsuario = new Map<number, { geracao: number; recorte: T }>();
+    for (const socket of sockets) {
+      const usuario = (socket.data as { usuario?: JwtPayload }).usuario;
+      if (!usuario) continue;
+      while (true) {
+        const geracao = this.geracaoRecortesRolagem.get(campanhaId) ?? 0;
+        const memorizado = porUsuario.get(usuario.sub);
+        let recorte = memorizado?.geracao === geracao ? memorizado.recorte : undefined;
+        if (recorte) {
+          socket.emit(evento, recorte);
+          break;
+        }
+        try {
+          recorte = await montarParaUsuario(usuario);
+        } catch {
+          // Recorte negado: não transmite o original nem interrompe os outros membros.
+          break;
+        }
+        // Uma ocultação pode ter ocorrido durante a consulta de permissão. Reavalia antes
+        // de emitir e antes de reutilizar o cache em outra aba do mesmo observador.
+        if (geracao !== (this.geracaoRecortesRolagem.get(campanhaId) ?? 0)) continue;
+        porUsuario.set(usuario.sub, { geracao, recorte });
+        socket.emit(evento, recorte);
+        break;
+      }
+    }
   }
 
   /**

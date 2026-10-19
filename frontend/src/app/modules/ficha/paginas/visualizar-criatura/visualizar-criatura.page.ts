@@ -361,6 +361,7 @@ export class CriaturaVisualizar {
     this.ficha.set(null);
     this.fichaEdicao.definirBase(null);
     this.historicoRolagens.set([]);
+    this.bandejaDados.limpar();
     this.topbarContexto.limpar();
     this.notificacaoService.notificar({
       severidade: 'aviso',

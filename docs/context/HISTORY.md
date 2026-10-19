@@ -1,5 +1,30 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-19 — ficha-oculta-rolagem-publica-sem-identidade: D-01 implementada
+
+A rolagem pública continua pública, com autoria da conta e conteúdo livre; a identidade
+estruturada da ficha oculta é reservada a terceiros pela autorização atual. O serviço de
+identidade centraliza o recorte em REST, histórico paginado, prévias e eventos por socket.
+Dono/mestre mantêm a identidade. Mudança de visibilidade, vínculo, exclusão e papel invalida
+os feeds, inclusive campanhas históricas. Prévias refazem a projeção do alvo, sem aproveitar
+payload privilegiado do mestre. Respostas anteriores são canceladas/rejeitadas; POST em voo
+continua e reconcilia seu retorno se o recorte mudou. Bandeja de ficha negada também é limpa.
+
+Regressões de feed/autoria falharam antes da correção. Shared: 1335 testes; backend: suíte
+com 1240 aprovados/99 skipped, seguida de 23 testes do histórico/serviço; frontend: 3579 testes,
+mais 24 testes após preservar o teto de 50 itens nas janelas/painel. Builds e lint aprovados,
+com avisos de estilo existentes e budget inicial de 599,62 kB para 450 kB. A revisão independente
+encontrou cache de WS reutilizado após ocultação e cancelamento indevido do POST; ambos corrigidos,
+com regressões. Detectada duplicação em captura real, corrigida por id. Recorte de papel também
+invalida o feed quando a conexão perdeu a sala.
+
+REST/WS A/B/M/S, prévias, onze páginas/contextos já abertos, resposta autorizada atrasada,
+exibir novamente, exclusão, privadas e NPC forçado privado verificados na aplicação. Queda
+real da API e ocultação sem evento comprovaram reconexão sem reload em seis páginas.
+Investigação normal/prévias B/S observadas. Quatro viewports, inspeção pessoal do orquestrador,
+mesmos cartões e densidade do produto. [Evidência e limites](../specs/done/ficha-oculta-rolagem-publica-sem-identidade/verificacao.md).
+Cenário sintético permanece para a sequência autorizada; produção não foi alterada.
+
 ## 2026-10-19 — fix-ficha-oculta-leitores-apos-reconexao: P-130 corrigido
 
 Flutuante passou a revalidar o próprio documento, sem depender do hospedeiro;

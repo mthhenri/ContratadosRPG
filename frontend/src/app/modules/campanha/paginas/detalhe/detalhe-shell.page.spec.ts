@@ -68,6 +68,7 @@ describe('CampanhaDetalheShell', () => {
       paginaEsquadraoExcluida$: new Subject().asObservable(),
       presencaEsquadraoCaderno$: new Subject().asObservable(),
       reconexao: signal(0),
+      rolagemRecortesAlterados$: new Subject<{ campanhaId: number }>(),
       reconexao$: new Subject<void>().asObservable(),
       conectado: () => true,
     };

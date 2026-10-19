@@ -138,8 +138,9 @@ describe('PainelEncontroEspectador', () => {
     painelRetorno?: CampanhaPainelEspectadorDto;
     rolagensRetorno?: readonly RolagemResumoDto[];
   }) {
+    const painelProjetado = opts.painelRetorno ?? { ...painel(), rolagens: { ...painel().rolagens, itens: (opts.rolagensRetorno ?? []).filter(item => item.visibilidade === RolagemVisibilidadeEnum.PUBLICA) } };
     const campanhaProjecaoService = {
-      recuperarPainelEspectador: vi.fn(() => of(opts.painelRetorno ?? painel())),
+      recuperarPainelEspectador: vi.fn(() => of(painelProjetado)),
       recuperarCenaAtivaPainelEspectador: vi.fn(() => of((opts.painelRetorno ?? painel()).cenaAtiva ?? null)),
       listarDocumentosCenaEspectador: vi.fn(() => of([])),
       recuperarDocumentoCenaEspectador: vi.fn(),
@@ -158,6 +159,7 @@ describe('PainelEncontroEspectador', () => {
       sairSalaCampanha: vi.fn(),
       rolagemRegistrada$: rolagemRegistrada$.asObservable(),
       rolagemExcluida$: new Subject().asObservable(),
+      rolagemRecortesAlterados$: new Subject().asObservable(),
       encontroAlterado$: encontroAlterado$.asObservable(),
       cenaAlterada$: cenaAlterada$.asObservable(),
       cenaDocumentoAlterado$: new Subject().asObservable(),
@@ -175,7 +177,7 @@ describe('PainelEncontroEspectador', () => {
           useValue: {
             snapshot: {
               paramMap: { get: () => String(CAMPANHA_ID) },
-              data: { painelEspectador: opts.painelRetorno ?? painel() },
+              data: { painelEspectador: painelProjetado },
             },
           },
         },
@@ -259,7 +261,7 @@ describe('PainelEncontroEspectador', () => {
 
   it('alimenta o histórico de rolagens com o feed da campanha', () => {
     const { raiz, rolagemService } = montar({ rolagensRetorno: [rolagem()] });
-    expect(rolagemService.listarPorCampanha).toHaveBeenCalledWith(CAMPANHA_ID);
+    expect(rolagemService.listarPorCampanha).not.toHaveBeenCalled();
     expect(raiz.querySelector('app-historico-rolagens-sidebar')?.textContent).toContain('Ataque');
   });
 
@@ -330,6 +332,7 @@ describe('PainelEncontroEspectador', () => {
             sairSalaCampanha: vi.fn(),
             rolagemRegistrada$: new Subject<RolagemResumoDto>().asObservable(),
             rolagemExcluida$: new Subject().asObservable(),
+      rolagemRecortesAlterados$: new Subject().asObservable(),
             encontroAlterado$: new Subject<{ encontro: { campanhaId: number } }>().asObservable(),
             cenaAlterada$: new Subject().asObservable(),
             reconexao$: new Subject().asObservable(),
@@ -343,7 +346,7 @@ describe('PainelEncontroEspectador', () => {
     const campanhaProjecaoService = TestBed.inject(CampanhaProjecaoService) as unknown as {
       recuperarPainelEspectador: ReturnType<typeof vi.fn>;
     };
-    expect(campanhaProjecaoService.recuperarPainelEspectador).toHaveBeenCalledWith(CAMPANHA_ID, 1, 20);
+    expect(campanhaProjecaoService.recuperarPainelEspectador).toHaveBeenCalledWith(CAMPANHA_ID, 1, 50);
   });
 
   it('mestre em prévia: rolagens PRIVADA (REST ou socket) ficam fora do histórico do espectador', () => {
@@ -367,7 +370,7 @@ describe('PainelEncontroEspectador', () => {
 
   it('incorpora rolagem:registrada pública em tempo real, sem duplicar', () => {
     const existente = rolagem({ id: 1 });
-    const { fixture, raiz, rolagemRegistrada$ } = montar({ rolagensRetorno: [existente] });
+    const { fixture, raiz, rolagemRegistrada$, campanhaProjecaoService } = montar({ rolagensRetorno: [existente] });
 
     rolagemRegistrada$.next(existente);
     fixture.detectChanges();
@@ -375,6 +378,7 @@ describe('PainelEncontroEspectador', () => {
     expect(sidebar?.textContent?.match(/Ataque/g)?.length).toBe(1);
 
     const nova = rolagem({ id: 2, rotulo: 'Investigar' });
+    campanhaProjecaoService.recuperarPainelEspectador.mockReturnValue(of({ ...painel(), rolagens: { ...painel().rolagens, itens: [nova, existente] } }));
     rolagemRegistrada$.next(nova);
     fixture.detectChanges();
     expect(raiz.querySelector('app-historico-rolagens-sidebar')?.textContent).toContain(

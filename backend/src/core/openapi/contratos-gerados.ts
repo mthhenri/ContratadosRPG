@@ -5720,6 +5720,23 @@ export const schemasContratosPublicos = {
         "additionalProperties": false,
         "description": "Entrada da alteração pontual de Vida/Energia pelos cards da campanha."
     },
+    "FichaRolagemIdentidadeAvaliarDto": {
+        "type": "object",
+        "properties": {
+            "fichaId": {
+                "type": "number"
+            },
+            "usuarioId": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "fichaId",
+            "usuarioId"
+        ],
+        "additionalProperties": false,
+        "description": "Avalia a reserva da identidade de rolagem segundo o estado atual da ficha."
+    },
     "FichaAtributosDto": {
         "type": "object",
         "properties": {
@@ -10677,7 +10694,7 @@ export const schemasContratosPublicos = {
             },
             "nomeFicha": {
                 "type": "string",
-                "description": "Nome da ficha autora ou do combatente avulso. `null` significa rolagem avulsa do mestre na\ncampanha, sem ficha nem combatente — quem exibe mostra \"Mestre\" como origem."
+                "description": "Nome da ficha autora ou do combatente avulso. `null` significa rolagem avulsa do mestre na\ncampanha ou identidade reservada — `identidadeReservada` distingue as duas origens."
             },
             "rotulo": {
                 "type": "string"
@@ -10702,6 +10719,10 @@ export const schemasContratosPublicos = {
             "corFicha": {
                 "type": "string",
                 "description": "Cor de identidade visual da ficha autora (m3-61) — \"pega carona\" no mesmo `JOIN ficha` que já\nresolve `nomeFicha` (`RolagemRepository`). `null` sem cor definida: quem exibe cai no\n`--accent` de quem visualiza (`var(--cor-ficha, var(--accent))`)."
+            },
+            "identidadeReservada": {
+                "type": "boolean",
+                "description": "Origem de ficha reservada no recorte vigente; distingue-a da rolagem avulsa do mestre."
             }
         },
         "required": [
@@ -10720,7 +10741,89 @@ export const schemasContratosPublicos = {
             "corFicha"
         ],
         "additionalProperties": false,
-        "description": "Item de listagem/feed — usado tanto pelo histórico da ficha (`GET /ficha/:id/rolagem`) quanto\npelo feed da campanha (`GET /campanha/:id/rolagem`) e como saída do próprio registro. `nomeAutor`/\n`nomeFicha` vêm de `JOIN` (nunca duplicados como coluna); `nomeFicha` só fica `null` na rolagem\navulsa do mestre na campanha.\n`createdDate` chega como string ISO (serialização padrão do `StandardResponse` sobre `Date`)."
+        "description": "Item de listagem/feed — usado tanto pelo histórico da ficha (`GET /ficha/:id/rolagem`) quanto\npelo feed da campanha (`GET /campanha/:id/rolagem`) e como saída do próprio registro. `nomeAutor`/\n`nomeFicha` vêm de `JOIN` (nunca duplicados como coluna). A service aplica a reserva vigente\nda identidade sem alterar os registros originais.\n`createdDate` chega como string ISO (serialização padrão do `StandardResponse` sobre `Date`)."
+    },
+    "RolagemRecortesAlteradosDto": {
+        "type": "object",
+        "properties": {
+            "campanhaId": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "campanhaId"
+        ],
+        "additionalProperties": false,
+        "description": "Invalida o feed sem revelar qual ficha mudou de identidade autorizada."
+    },
+    "RolagemFichaCampanhasListarDto": {
+        "type": "object",
+        "properties": {
+            "fichaId": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "fichaId"
+        ],
+        "additionalProperties": false,
+        "description": "Campanhas históricas que contêm rolagens ainda ativas desta ficha."
+    },
+    "RolagemFichaRecortesInvalidarDto": {
+        "type": "object",
+        "properties": {
+            "fichaId": {
+                "type": "number"
+            },
+            "campanhaIds": {
+                "type": "array",
+                "items": {
+                    "type": "number"
+                }
+            }
+        },
+        "required": [
+            "fichaId"
+        ],
+        "additionalProperties": false,
+        "description": "Atualiza todos os feeds históricos e os vínculos atuais afetados por uma ficha."
+    },
+    "RolagemIdentidadeRecortarDto": {
+        "type": "object",
+        "properties": {
+            "rolagens": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/RolagemResumoDto"
+                }
+            },
+            "usuarioId": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "rolagens",
+            "usuarioId"
+        ],
+        "additionalProperties": false,
+        "description": "Recorte da identidade de um lote; null representa sempre a projeção de espectador."
+    },
+    "RolagemExclusaoIdentidadeRecortarDto": {
+        "type": "object",
+        "properties": {
+            "rolagem": {
+                "$ref": "#/components/schemas/RolagemExcluidaDto"
+            },
+            "usuarioId": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "rolagem",
+            "usuarioId"
+        ],
+        "additionalProperties": false,
+        "description": "Recorte do payload mínimo de exclusão para o observador."
     },
     "RolagemListarDto": {
         "type": "object",

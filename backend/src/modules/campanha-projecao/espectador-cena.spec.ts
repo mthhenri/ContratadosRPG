@@ -82,6 +82,7 @@ function criarContexto() {
     {} as never,
     cenas,
     cenaDocumentos,
+    {} as never,
   );
   return {
     cena,

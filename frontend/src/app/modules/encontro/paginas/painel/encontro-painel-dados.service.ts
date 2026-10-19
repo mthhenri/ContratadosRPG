@@ -1,7 +1,7 @@
 import { DestroyRef, Injectable, computed, effect, inject, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
-import { EMPTY, Observable, Subject, catchError, filter, finalize, merge, switchMap, tap } from 'rxjs';
+import { EMPTY, Observable, Subject, type Subscription, catchError, filter, finalize, merge, switchMap, tap } from 'rxjs';
 
 import type { CenaDocumentoResumoDto, CenaRecuperadaDto } from '@contratados-rpg/shared/dtos/cena';
 import type {
@@ -100,6 +100,8 @@ export class EncontroPainelDadosService {
   private geracaoDocumentos = 0;
   private geracaoFichas = 0;
   private geracaoMembros = 0;
+  private geracaoRolagens = 0;
+  private cargaRolagens?: Subscription;
 
   /** A cena da tela — `null` só enquanto carrega. */
   readonly cena = this.cenaAtual.asReadonly();
@@ -447,8 +449,11 @@ export class EncontroPainelDadosService {
 
     // O gateway só envia rolagens públicas a quem pode vê-las; privadas entram localmente pelas
     // páginas apenas para quem a fez (ou vêm do GET já recortado para o mestre).
+    this.tempoRealService.rolagemRecortesAlterados$
+      .pipe(filter((evento) => evento.campanhaId === this.campanhaId), takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.recarregarRolagensFeed());
     this.tempoRealService.rolagemRegistrada$
-      .pipe(takeUntilDestroyed())
+      .pipe(filter((rolagem) => rolagem.campanhaId === this.campanhaId), takeUntilDestroyed())
       .subscribe({ next: (rolagem) => this.adicionarRolagemAoFeed(rolagem) });
     this.tempoRealService.rolagemExcluida$
       .pipe(takeUntilDestroyed())
@@ -538,10 +543,7 @@ export class EncontroPainelDadosService {
 
   /** Busca inicial do feed. A permissão e o recorte de privadas pertencem ao backend. */
   private carregarRolagens(): void {
-    this.rolagemService
-      .listarPorCampanha(this.campanhaId)
-      .pipe(finalize(() => this.carregandoFeed.set(false)))
-      .subscribe({ next: (itens) => this.rolagensDoFeed.set(itens), error: () => undefined });
+    this.recarregarRolagensFeed();
   }
 
   /**
@@ -554,18 +556,26 @@ export class EncontroPainelDadosService {
    * específica; `idsRolagensExcluidas` (permanente) ainda filtra qualquer exclusão já vista.
    */
   private recarregarRolagensFeed(): void {
+    const geracao = ++this.geracaoRolagens;
+    this.cargaRolagens?.unsubscribe();
+    this.rolagensDoFeed.set([]);
+    this.carregandoFeed.set(true);
     const chegadasDuranteRecuperacao: RolagemResumoDto[] = [];
-    const assinatura = this.tempoRealService.rolagemRegistrada$.subscribe((rolagem) =>
-      chegadasDuranteRecuperacao.push(rolagem),
-    );
-    this.rolagemService
-      .listarPorCampanha(this.campanhaId)
-      .pipe(finalize(() => assinatura.unsubscribe()))
+    const assinatura = this.tempoRealService.rolagemRegistrada$
+      .pipe(filter((rolagem) => rolagem.campanhaId === this.campanhaId))
+      .subscribe((rolagem) => chegadasDuranteRecuperacao.push(rolagem));
+    this.cargaRolagens = this.rolagemService.listarPorCampanha(this.campanhaId)
+      .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
+        assinatura.unsubscribe();
+        if (geracao === this.geracaoRolagens) this.carregandoFeed.set(false);
+      }))
       .subscribe({
-        next: (itens) =>
-          this.rolagensDoFeed.set(
-            mesclarFeedRolagens(itens, chegadasDuranteRecuperacao, this.idsRolagensExcluidas),
-          ),
+        next: (itens) => {
+          if (geracao === this.geracaoRolagens) {
+            this.rolagensDoFeed.set(mesclarFeedRolagens(itens, chegadasDuranteRecuperacao, this.idsRolagensExcluidas));
+          }
+        },
+        error: () => undefined,
       });
   }
 

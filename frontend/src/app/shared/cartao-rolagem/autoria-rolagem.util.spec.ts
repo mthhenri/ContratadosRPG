@@ -3,6 +3,10 @@ import { describe, expect, it } from "vitest";
 import { montarAutoriaRolagem } from "./autoria-rolagem.util";
 
 describe("montarAutoriaRolagem", () => {
+  it("distingue uma origem reservada da rolagem avulsa do mestre", () => {
+    const rolagem = { nomeAutor: "Conta do jogador", nomeFicha: null, identidadeReservada: true };
+    expect(montarAutoriaRolagem(rolagem)).toBe("Conta do jogador · Origem reservada");
+  });
   it("junta autor e ficha quando a rolagem partiu de uma ficha", () => {
     expect(montarAutoriaRolagem({ nomeAutor: "Codex", nomeFicha: "Vera" })).toBe("Codex · Vera");
   });

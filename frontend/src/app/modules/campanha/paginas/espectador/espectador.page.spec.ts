@@ -101,12 +101,17 @@ describe('CampanhaEspectador', () => {
       listarCampanhas: vi.fn(() => of(opts.campanhas ?? [])),
     };
     const rolagemRegistrada$ = new Subject<RolagemResumoDto>();
+    const recortes$ = new Subject<{ campanhaId: number }>();
+    const exclusoes$ = new Subject<{ campanhaId: number; id: number }>();
+    const reconexao$ = new Subject<void>();
     const tempoRealService = {
       conectar: vi.fn(),
       entrarSalaCampanha: vi.fn(),
       sairSalaCampanha: vi.fn(),
       rolagemRegistrada$: rolagemRegistrada$.asObservable(),
-      rolagemExcluida$: new Subject().asObservable(),
+      rolagemExcluida$: exclusoes$.asObservable(),
+      rolagemRecortesAlterados$: recortes$.asObservable(),
+      reconexao$: reconexao$.asObservable(),
     };
 
     TestBed.configureTestingModule({
@@ -128,7 +133,7 @@ describe('CampanhaEspectador', () => {
       campanhaProjecaoService,
       campanhaService,
       tempoRealService,
-      rolagemRegistrada$,
+      rolagemRegistrada$, recortes$, exclusoes$, reconexao$,
     };
   }
 
@@ -165,6 +170,8 @@ describe('CampanhaEspectador', () => {
             sairSalaCampanha: vi.fn(),
             rolagemRegistrada$: new Subject<RolagemResumoDto>().asObservable(),
             rolagemExcluida$: new Subject().asObservable(),
+      rolagemRecortesAlterados$: new Subject().asObservable(),
+      reconexao$: new Subject().asObservable(),
           },
         },
       ],
@@ -238,19 +245,58 @@ describe('CampanhaEspectador', () => {
 
   it('incorpora rolagem:registrada pública em tempo real, sem duplicar o item que já veio pelo REST', () => {
     const existente = rolagem({ id: 1 });
-    const { fixture, raiz, rolagemRegistrada$ } = montar({ painelRetorno: painel([existente]) });
+    const { fixture, raiz, rolagemRegistrada$, campanhaProjecaoService } = montar({ painelRetorno: painel([existente]) });
 
     rolagemRegistrada$.next(existente);
     fixture.detectChanges();
     expect(raiz.querySelectorAll('li[app-cartao-rolagem]')).toHaveLength(1);
 
     const nova = rolagem({ id: 2, rotulo: '2d6+3' });
+    campanhaProjecaoService.recuperarPainelEspectador.mockReturnValue(of(painel([nova, existente])));
     rolagemRegistrada$.next(nova);
     fixture.detectChanges();
 
     const itens = raiz.querySelectorAll('li[app-cartao-rolagem]');
     expect(itens).toHaveLength(2);
     expect(itens[0].textContent).toContain('2d6+3');
+  });
+
+  it('nunca exibe a identidade privilegiada do socket do mestre; relê a projeção', () => {
+    const { fixture, raiz, rolagemRegistrada$, campanhaProjecaoService } = montar({});
+    const reservada = rolagem({ fichaId: null, nomeFicha: null, identidadeReservada: true });
+    campanhaProjecaoService.recuperarPainelEspectador.mockReturnValue(of(painel([reservada])));
+    rolagemRegistrada$.next(rolagem({ nomeFicha: 'IDENTIDADE SECRETA', fichaId: 999 }));
+    fixture.detectChanges();
+    expect(raiz.textContent).not.toContain('IDENTIDADE SECRETA');
+    expect(raiz.textContent).toContain('Origem reservada');
+  });
+
+  it('invalidação limpa imediatamente e impede página antiga de restaurar identidade', () => {
+    const { fixture, recortes$, campanhaProjecaoService } = montar({ painelRetorno: painel([rolagem()], 1, 2) });
+    const antiga = new Subject<CampanhaPainelEspectadorDto>();
+    campanhaProjecaoService.recuperarPainelEspectador.mockReturnValueOnce(antiga);
+    fixture.componentInstance['carregarMais']();
+    const atual = new Subject<CampanhaPainelEspectadorDto>();
+    campanhaProjecaoService.recuperarPainelEspectador.mockReturnValueOnce(atual);
+    recortes$.next({ campanhaId: CAMPANHA_ID });
+    expect(fixture.componentInstance['rolagens']()).toEqual([]);
+    antiga.next(painel([rolagem({ nomeFicha: 'IDENTIDADE ANTIGA' })], 2, 2));
+    expect(fixture.componentInstance['rolagens']()).toEqual([]);
+    atual.next(painel([rolagem({ fichaId: null, nomeFicha: null, identidadeReservada: true })]));
+    expect(fixture.componentInstance['rolagens']()[0].nomeFicha).toBeNull();
+  });
+
+  it('exclusão durante refetch não reaparece na resposta atrasada e reconexão relê', () => {
+    const { fixture, recortes$, exclusoes$, reconexao$, campanhaProjecaoService } = montar({});
+    const resposta = new Subject<CampanhaPainelEspectadorDto>();
+    campanhaProjecaoService.recuperarPainelEspectador.mockReturnValueOnce(resposta);
+    recortes$.next({ campanhaId: CAMPANHA_ID });
+    exclusoes$.next({ campanhaId: CAMPANHA_ID, id: 1 });
+    resposta.next(painel([rolagem()]));
+    expect(fixture.componentInstance['rolagens']()).toEqual([]);
+    campanhaProjecaoService.recuperarPainelEspectador.mockClear();
+    reconexao$.next();
+    expect(campanhaProjecaoService.recuperarPainelEspectador).toHaveBeenCalledTimes(1);
   });
 
   it('rolagem PRIVADA vinda pelo socket (mestre em prévia está na sala `:mestre`) nunca entra no feed', () => {
@@ -265,7 +311,7 @@ describe('CampanhaEspectador', () => {
   });
 
   it('mostra a rolagem avulsa do mestre como "autor · Mestre", nunca "null" (P-076)', () => {
-    const { fixture, raiz, rolagemRegistrada$ } = montar({ painelRetorno: painel([]) });
+    const { fixture, raiz, rolagemRegistrada$ } = montar({ painelRetorno: painel([rolagem({ id: 9, fichaId: null, nomeAutor: "Codex", nomeFicha: null })]) });
 
     rolagemRegistrada$.next(rolagem({ id: 9, fichaId: null, nomeAutor: "Codex", nomeFicha: null }));
     fixture.detectChanges();
@@ -338,6 +384,8 @@ describe('CampanhaEspectador', () => {
               sairSalaCampanha: vi.fn(),
               rolagemRegistrada$: new Subject<RolagemResumoDto>().asObservable(),
               rolagemExcluida$: new Subject().asObservable(),
+      rolagemRecortesAlterados$: new Subject().asObservable(),
+      reconexao$: new Subject().asObservable(),
             },
           },
         ],

@@ -43,7 +43,20 @@ describe('EncontroPainelDadosService', () => {
   };
 
   describe('carga e papel', () => {
-    it('recarrega membros ao entrar alguém e descarta resposta antiga após nova invalidação', () => {
+    it('invalidação limpa o feed e impede resposta anterior de restaurar identidade', () => {
+    const contexto = montar();
+    const antiga = new Subject<RolagemResumoDto[]>();
+    const nova = new Subject<RolagemResumoDto[]>();
+    contexto.rolagemService.listarPorCampanha.mockReturnValueOnce(antiga);
+    contexto.reconexao$.next();
+    contexto.rolagemService.listarPorCampanha.mockReturnValueOnce(nova);
+    contexto.rolagemRecortesAlterados$.next({ campanhaId: CAMPANHA_ID });
+    nova.next([]);
+    antiga.next([{ id: 444, fichaId: 200, nomeFicha: 'Identidade antiga' } as RolagemResumoDto]);
+    expect(contexto.dados.rolagensFeed()).toEqual([]);
+  });
+
+  it('recarrega membros ao entrar alguém e descarta resposta antiga após nova invalidação', () => {
       const { dados, campanhaService, membroEntrou$ } = montar();
       const antiga = new Subject<typeof dados.membrosDaCampanha extends () => infer T ? T : never>();
       campanhaService.listarMembros.mockReturnValueOnce(antiga as never)

@@ -2,13 +2,14 @@ import { CenaService } from "../../../cena/cena.service";
 import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { ActivatedRoute, provideRouter } from '@angular/router';
-import { Subject, of } from 'rxjs';
+import { Subject, of, throwError } from 'rxjs';
 import { ClasseEnum, EncontroStatusEnum, RolagemVisibilidadeEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import type { CampanhaPreviaJogadorDto } from '@contratados-rpg/shared/dtos/campanha';
 import type { EncontroRecuperadoDto } from '@contratados-rpg/shared/dtos/encontro';
 import type { FichaRecuperadaDto, FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 
+import { CampanhaPreviaJogadorDadosService } from './campanha-previa-jogador-dados.service';
 import { CampanhaPreviaJogador } from './previa-jogador.page';
 import { CampanhaProjecaoService } from '../../campanha-projecao.service';
 import { CampanhaService } from '../../campanha.service';
@@ -153,9 +154,11 @@ describe('CampanhaPreviaJogador', () => {
   function montar(
     opts: {
       previaResposta?: CampanhaPreviaJogadorDto;
+      cargaInicial?: Subject<CampanhaPreviaJogadorDto>;
       previaResolvida?: CampanhaPreviaJogadorDto;
     } = {},
   ) {
+    const recortesRolagens$ = new Subject<{ campanhaId: number }>();
     const rolagemRegistrada$ = new Subject<RolagemResumoDto>();
     const membroEntrou$ = new Subject<unknown>();
     const fichaRemovidaDaCampanha$ = new Subject<unknown>();
@@ -170,7 +173,7 @@ describe('CampanhaPreviaJogador', () => {
 
     const campanhaProjecaoService = {
       recuperarCenaAtivaPainelEspectador: vi.fn(() => of(null)),
-      recuperarPreviaJogador: vi.fn(() => of(opts.previaResposta ?? previa())),
+      recuperarPreviaJogador: vi.fn(() => opts.cargaInicial ?? of(opts.previaResposta ?? previa())),
       recuperarEncontroAtivoPreviaJogador: vi.fn(() => of(null as EncontroRecuperadoDto | null)),
       recuperarFichaPreviaJogador: vi.fn(
         (_campanhaId: number, _usuarioAlvoId: number, fichaId: number) =>
@@ -204,6 +207,7 @@ describe('CampanhaPreviaJogador', () => {
       sairSalaFicha: vi.fn(),
       rolagemRegistrada$: rolagemRegistrada$.asObservable(),
       rolagemExcluida$: new Subject().asObservable(),
+      rolagemRecortesAlterados$: recortesRolagens$.asObservable(),
       acessoRevogado$: new Subject().asObservable(),
       fichaCriada$: new Subject().asObservable(),
       membroEntrou$: membroEntrou$.asObservable(),
@@ -254,7 +258,7 @@ describe('CampanhaPreviaJogador', () => {
       campanhaService,
       fichaService,
       rolagemService,
-      rolagemRegistrada$,
+      rolagemRegistrada$, recortesRolagens$,
       membroEntrou$,
       fichaRemovidaDaCampanha$,
       fichaRecortesAlterados$,
@@ -414,22 +418,67 @@ describe('CampanhaPreviaJogador', () => {
   });
 
   describe('tempo real', () => {
-    it('rolagem pública e privada do próprio alvo entram no feed; privada de terceiro nunca', () => {
-      const { fixture, raiz, rolagemRegistrada$ } = montar({ previaResposta: previa({ rolagens: [] }) });
-
-      rolagemRegistrada$.next(rolagem({ id: 77, rotulo: 'Dano público' }));
-      rolagemRegistrada$.next(
+    it('socket do mestre refaz a projecao do alvo sem aplicar identidade privilegiada', async () => {
+      const { fixture, raiz, rolagemRegistrada$, campanhaProjecaoService } = montar({ previaResposta: previa({ rolagens: [] }) });
+      campanhaProjecaoService.recuperarPreviaJogador.mockReturnValue(of(previa({ rolagens: [
+        rolagem({ id: 77, rotulo: 'Dano publico', fichaId: null, nomeFicha: null, identidadeReservada: true }),
         rolagem({ id: 78, rotulo: 'Privada do alvo', visibilidade: RolagemVisibilidadeEnum.PRIVADA }),
-      );
-      rolagemRegistrada$.next(
-        rolagem({ id: 79, rotulo: 'Privada de outro', usuarioId: 55, visibilidade: RolagemVisibilidadeEnum.PRIVADA }),
-      );
+      ] })));
+      rolagemRegistrada$.next(rolagem({ id: 77, rotulo: 'Dano publico', nomeFicha: 'IDENTIDADE SECRETA' }));
+      rolagemRegistrada$.next(rolagem({ id: 78, rotulo: 'Privada do alvo', visibilidade: RolagemVisibilidadeEnum.PRIVADA }));
+      rolagemRegistrada$.next(rolagem({ id: 79, rotulo: 'Privada de outro', usuarioId: 55, visibilidade: RolagemVisibilidadeEnum.PRIVADA }));
+      await esperarCoordenador();
       fixture.detectChanges();
-
       const feed = raiz.querySelector('.detalhe__historico-lista')?.textContent ?? '';
-      expect(feed).toContain('Dano público');
+      expect(feed).toContain('Dano publico');
       expect(feed).toContain('Privada do alvo');
+      expect(feed).toContain('Origem reservada');
       expect(feed).not.toContain('Privada de outro');
+      expect(feed).not.toContain('IDENTIDADE SECRETA');
+    });
+
+    it('invalidação bloqueia o GET inicial antes da janela de agrupamento', async () => {
+      const inicial = new Subject<CampanhaPreviaJogadorDto>();
+      const { fixture, campanhaProjecaoService, recortesRolagens$ } = montar({ cargaInicial: inicial });
+      const dados = fixture.debugElement.injector.get(CampanhaPreviaJogadorDadosService);
+      campanhaProjecaoService.recuperarPreviaJogador.mockReturnValue(of(previa({
+        rolagens: [rolagem({ fichaId: null, nomeFicha: null, identidadeReservada: true })],
+      })));
+      recortesRolagens$.next({ campanhaId: CAMPANHA_ID });
+      inicial.next(previa({ rolagens: [rolagem({ nomeFicha: 'IDENTIDADE ANTIGA' })] }));
+      expect(dados.rolagensFeed()).toEqual([]);
+      await esperarCoordenador();
+      expect(dados.rolagensFeed()[0].identidadeReservada).toBe(true);
+    });
+
+    it('evento de encontro nao cancela a projecao de rolagens pendente', async () => {
+      const { fixture, campanhaProjecaoService, recortesRolagens$, encontroAlterado$ } = montar();
+      const dados = fixture.debugElement.injector.get(CampanhaPreviaJogadorDadosService);
+      const pendente = new Subject<CampanhaPreviaJogadorDto>();
+      campanhaProjecaoService.recuperarPreviaJogador.mockReturnValueOnce(pendente);
+      recortesRolagens$.next({ campanhaId: CAMPANHA_ID });
+      await esperarCoordenador();
+      campanhaProjecaoService.recuperarPreviaJogador.mockReturnValue(of(previa({
+        rolagens: [rolagem({ fichaId: null, nomeFicha: null, identidadeReservada: true })],
+      })));
+      encontroAlterado$.next({ encontro: { campanhaId: CAMPANHA_ID } });
+      await esperarCoordenador();
+      expect(dados.rolagensFeed()[0].identidadeReservada).toBe(true);
+    });
+
+    it('falha de leitura conserva o invalidator para a proxima tentativa', async () => {
+      const { fixture, campanhaProjecaoService, recortesRolagens$ } = montar();
+      const dados = fixture.debugElement.injector.get(CampanhaPreviaJogadorDadosService);
+      campanhaProjecaoService.recuperarPreviaJogador.mockReturnValueOnce(throwError(() => new Error('Indisponivel')));
+      recortesRolagens$.next({ campanhaId: CAMPANHA_ID });
+      await esperarCoordenador();
+      expect(dados.rolagensFeed()).toEqual([]);
+      campanhaProjecaoService.recuperarPreviaJogador.mockReturnValue(of(previa({
+        rolagens: [rolagem({ fichaId: null, nomeFicha: null, identidadeReservada: true })],
+      })));
+      recortesRolagens$.next({ campanhaId: CAMPANHA_ID });
+      await esperarCoordenador();
+      expect(dados.rolagensFeed()[0].identidadeReservada).toBe(true);
     });
 
     it('membro entrou, ficha removida e recorte alterado refazem a projeção do alvo', async () => {

@@ -1,6 +1,6 @@
 import { DestroyRef, Injectable, Injector, computed, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { bufferTime, catchError, filter, finalize, forkJoin, map, merge, of, Subject, switchMap, type Observable } from 'rxjs';
+import { bufferTime, catchError, filter, finalize, forkJoin, map, merge, of, Subject, switchMap, type Observable, type Subscription } from 'rxjs';
 import { CenaStatusEnum, TipoCampanhaMembroPapelEnum, TipoFichaEnum } from '@contratados-rpg/shared/enums';
 import type { CenaResumoDto } from '@contratados-rpg/shared/dtos/cena';
 import { CenaService } from '../../../cena/cena.service';
@@ -151,6 +151,8 @@ export class CampanhaDetalheDadosService {
    * ressuscitar o item quando a resposta antiga finalmente volta (`mesclarFeedRolagens`).
    */
   private readonly idsRolagensExcluidas = new Set<number>();
+  private geracaoRolagens = 0;
+  private cargaRolagens?: Subscription;
   private readonly invalidacoesListas = new Subject<'fichas' | 'membros'>();
   private fichasEmLeitura = false;
   private fichasInvalidas = false;
@@ -256,9 +258,13 @@ export class CampanhaDetalheDadosService {
     // membro; `PRIVADA` só chega aqui quando esta tela é a do mestre (backend emite só na sala
     // `campanha:<id>:mestre` — jogador/espectador nunca recebem). Prepend direto, sem refetch (o
     // payload já vem completo).
+    this.tempoRealService.rolagemRecortesAlterados$
+      .pipe(filter((evento) => evento.campanhaId === id), takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.invalidarRolagensFeed());
+
     this.tempoRealService.rolagemRegistrada$
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: (rolagem) => this.rolagensFeed.update((atuais) => [rolagem, ...atuais]) });
+      .pipe(filter((rolagem) => rolagem.campanhaId === id), takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: (rolagem) => this.rolagensFeed.update((atuais) => atuais.some(atual => atual.id === rolagem.id) ? atuais : [rolagem, ...atuais]) });
 
     this.tempoRealService.rolagemExcluida$
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -527,10 +533,11 @@ export class CampanhaDetalheDadosService {
   }
 
   private carregarRolagens(): void {
-    this.rolagemService
-      .listarPorCampanha(this.idInterno)
-      .pipe(finalize(() => this.carregandoRolagens.set(false)))
-      .subscribe({ next: (itens) => this.rolagensFeed.set(itens), error: () => undefined });
+    this.recarregarRolagensFeed();
+  }
+
+  protected invalidarRolagensFeed(): void {
+    this.recarregarRolagensFeed();
   }
 
   /**
@@ -545,18 +552,26 @@ export class CampanhaDetalheDadosService {
    * (permanente) ainda filtra a resposta contra qualquer exclusão já vista nesta instância.
    */
   private recarregarRolagensFeed(): void {
+    const geracao = ++this.geracaoRolagens;
+    this.cargaRolagens?.unsubscribe();
+    this.rolagensFeed.set([]);
+    this.carregandoRolagens.set(true);
     const chegadasDuranteRecuperacao: RolagemResumoDto[] = [];
-    const assinatura = this.tempoRealService.rolagemRegistrada$.subscribe((rolagem) =>
-      chegadasDuranteRecuperacao.push(rolagem),
-    );
-    this.rolagemService
-      .listarPorCampanha(this.idInterno)
-      .pipe(finalize(() => assinatura.unsubscribe()))
+    const assinatura = this.tempoRealService.rolagemRegistrada$
+      .pipe(filter((rolagem) => rolagem.campanhaId === this.idInterno))
+      .subscribe((rolagem) => chegadasDuranteRecuperacao.push(rolagem));
+    this.cargaRolagens = this.rolagemService.listarPorCampanha(this.idInterno)
+      .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
+        assinatura.unsubscribe();
+        if (geracao === this.geracaoRolagens) this.carregandoRolagens.set(false);
+      }))
       .subscribe({
-        next: (itens) =>
-          this.rolagensFeed.set(
-            mesclarFeedRolagens(itens, chegadasDuranteRecuperacao, this.idsRolagensExcluidas),
-          ),
+        next: (itens) => {
+          if (geracao === this.geracaoRolagens) {
+            this.rolagensFeed.set(mesclarFeedRolagens(itens, chegadasDuranteRecuperacao, this.idsRolagensExcluidas));
+          }
+        },
+        error: () => undefined,
       });
   }
 }

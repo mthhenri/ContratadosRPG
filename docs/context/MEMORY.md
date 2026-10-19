@@ -5,6 +5,10 @@ Mapa de consumidores REST/WS de ficha oculta, achados e retomada:
 [spec investigativa arquivada em done](../specs/done/auditoria-ficha-oculta-todos-consumidores.spec.md),
 [retomada: cobertura por consumidor, decisões e specs de correção](../specs/done/auditoria-ficha-oculta-retomada-cobertura/verificacao.md).
 
+Recorte de identidade das rolagens por observador: `backend/src/modules/rolagem/rolagem-identidade.service.ts`,
+árbitro `FichaService.avaliarIdentidadeRolagem`, evento `rolagem:recortes-alterados`;
+[verificação D-01](../specs/done/ficha-oculta-rolagem-publica-sem-identidade/verificacao.md).
+
 Revalidação de leitores de ficha no frontend:
 [`ficha-leitura-revalidar.ts`](../../frontend/src/app/modules/ficha/ficha-leitura-revalidar.ts),
 [verificação P-130](../specs/done/fix-ficha-oculta-leitores-apos-reconexao/verificacao.md).

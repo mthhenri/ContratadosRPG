@@ -26,6 +26,7 @@ import { CampanhaService } from '../campanha/campanha.service';
 import { EncontroService } from '../encontro/encontro.service';
 import { FichaService } from '../ficha/ficha.service';
 import { RolagemRepository } from '../rolagem/rolagem.repository';
+import { RolagemIdentidadeService } from '../rolagem/rolagem-identidade.service';
 
 /**
  * Projeções de leitura do módulo `m8-espectadores-campanha` (m8-02/m8-05, entregáveis 5/6): o
@@ -54,6 +55,7 @@ export class CampanhaProjecaoService {
     private readonly rolagemRepositorio: RolagemRepository,
     private readonly cenaService: CenaService,
     private readonly cenaDocumentoService: CenaDocumentoService,
+    private readonly identidadeRolagemService: RolagemIdentidadeService,
   ) {}
 
   /**
@@ -102,7 +104,14 @@ export class CampanhaProjecaoService {
     // `recuperarPreviaJogador` já usa pra Equipe, `usuarioAtivoEhMestre: false` sempre (nunca
     // amplia `acessoCompleto`, campo que este painel nem consome).
     return {
-      campanha: identidade, fichas, membros, rolagens, cenaAtiva,
+      campanha: identidade, fichas, membros,
+      rolagens: {
+        ...rolagens,
+        itens: await this.identidadeRolagemService.recortarRolagens({
+          rolagens: rolagens.itens, usuarioId: null,
+        }),
+      },
+      cenaAtiva,
       encontroAtivo: cenaAtiva?.encontro ?? null,
     };
   }
@@ -190,7 +199,9 @@ export class CampanhaProjecaoService {
       campanha: identidade,
       fichas,
       membros,
-      rolagens,
+      rolagens: await this.identidadeRolagemService.recortarRolagens({
+        rolagens, usuarioId: dto.usuarioAlvoId,
+      }),
       podeAcessarInventarioEsquadrao: identidade.naBase,
       encontroAtivo,
     };

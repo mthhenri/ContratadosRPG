@@ -7,6 +7,8 @@ import type {
   RolagemInternoListarDto,
   RolagemInternoRegistrarDto,
   RolagemResumoDto,
+  RolagemFichaCampanhasListarDto,
+  RolagemRecortesAlteradosDto,
 } from '@contratados-rpg/shared/dtos/rolagem';
 import { RolagemVisibilidadeEnum } from '@contratados-rpg/shared/enums';
 import type { PaginatedResult } from '@contratados-rpg/shared/interfaces';
@@ -108,6 +110,18 @@ export class RolagemRepository extends BaseRepository {
   /** Exclusão lógica da rolagem (`is_deleted = true`) — nunca DELETE físico. */
   async excluirRolagem(id: number): Promise<void> {
     await this.executarSoftDelete(id);
+  }
+
+  /** Inclui campanhas anteriores a movimentos da ficha, sem depender do vínculo atual. */
+  async listarCampanhasPorFicha(dto: RolagemFichaCampanhasListarDto): Promise<RolagemRecortesAlteradosDto[]> {
+    return this.executarConsulta<RolagemRecortesAlteradosDto>(
+      `SELECT DISTINCT rolagem.campanha_id AS "campanhaId"
+       FROM rolagem
+       WHERE rolagem.ficha_id = :fichaId
+         AND rolagem.campanha_id IS NOT NULL
+         AND rolagem.is_deleted = false`,
+      { fichaId: dto.fichaId },
+    );
   }
 
   /**

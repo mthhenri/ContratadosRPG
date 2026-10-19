@@ -53,6 +53,7 @@ import type {
   FichaResumoDto,
   FichaResumoInternoDto,
   FichaRolagemDto,
+  FichaRolagemIdentidadeAvaliarDto,
   FichaVitalidadeAlterarDto,
   FichaVitalidadeInternoAlterarDto,
 } from '@contratados-rpg/shared/dtos/ficha';
@@ -534,6 +535,9 @@ export class FichaService {
       this.campanhaGateway.emitirFichaVisibilidadeAlterada({
         campanhaId: fichaAlterada.campanhaId,
       });
+      await this.campanhaGateway.invalidarRolagemRecortesDaFicha({
+        fichaId: fichaAlterada.id, campanhaIds: [fichaAlterada.campanhaId],
+      });
     }
     return fichaAlterada;
   }
@@ -871,6 +875,10 @@ export class FichaService {
 
     await this.validarPermissaoEdicao(fichaEncontrada, usuarioAtivo);
     await this.fichaRepositorio.excluirFicha(dto);
+    await this.campanhaGateway.invalidarRolagemRecortesDaFicha({
+      fichaId: fichaEncontrada.id,
+      campanhaIds: fichaEncontrada.campanhaId === null ? [] : [fichaEncontrada.campanhaId],
+    });
   }
 
   /**
@@ -1447,6 +1455,12 @@ export class FichaService {
     }
 
     const fichaAtribuida = await this.fichaRepositorio.atribuirCampanha(dto);
+    if (ehJogador && dto.campanhaId !== fichaEncontrada.campanhaId) {
+      await this.campanhaGateway.invalidarRolagemRecortesDaFicha({
+        fichaId: fichaEncontrada.id,
+        campanhaIds: [fichaEncontrada.campanhaId, dto.campanhaId].filter((campanhaId): campanhaId is number => campanhaId !== null),
+      });
+    }
     if (dto.campanhaId !== null && dto.campanhaId !== fichaEncontrada.campanhaId) {
       // Atribuir não muda tipo nem ocultação: a decisão usa o estado lido antes da mutação.
       this.emitirFichaEntrouNaCampanha(fichaAtribuida, {
@@ -1573,6 +1587,21 @@ export class FichaService {
     usuarioAtivo: JwtPayload,
   ): Promise<boolean> {
     return this.avaliarVisibilidadePara(ficha, usuarioAtivo.sub);
+  }
+
+  /** A identidade pública só é reservada pela ocultação vigente de jogador em campanha. */
+  async avaliarIdentidadeRolagem(dto: FichaRolagemIdentidadeAvaliarDto): Promise<boolean> {
+    const ficha = await this.fichaRepositorio.recuperarPorId({ id: dto.fichaId });
+    if (!ficha) return true;
+    if (!this.concessaoSuspensaPorOcultacao(ficha)) return false;
+    if (dto.usuarioId === null) return true;
+    try {
+      await this.avaliarVisibilidadePara(ficha, dto.usuarioId);
+      return false;
+    } catch (erro: unknown) {
+      if (erro instanceof UnauthorizedAccessException) return true;
+      throw erro;
+    }
   }
 
   /**

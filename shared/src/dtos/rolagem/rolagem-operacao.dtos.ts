@@ -64,8 +64,8 @@ export interface RolagemInternoRegistrarDto {
 /**
  * Item de listagem/feed — usado tanto pelo histórico da ficha (`GET /ficha/:id/rolagem`) quanto
  * pelo feed da campanha (`GET /campanha/:id/rolagem`) e como saída do próprio registro. `nomeAutor`/
- * `nomeFicha` vêm de `JOIN` (nunca duplicados como coluna); `nomeFicha` só fica `null` na rolagem
- * avulsa do mestre na campanha.
+ * `nomeFicha` vêm de `JOIN` (nunca duplicados como coluna). A service aplica a reserva vigente
+ * da identidade sem alterar os registros originais.
  * `createdDate` chega como string ISO (serialização padrão do `StandardResponse` sobre `Date`).
  */
 export interface RolagemResumoDto {
@@ -77,7 +77,7 @@ export interface RolagemResumoDto {
   readonly nomeAutor: string;
   /**
    * Nome da ficha autora ou do combatente avulso. `null` significa rolagem avulsa do mestre na
-   * campanha, sem ficha nem combatente — quem exibe mostra "Mestre" como origem.
+   * campanha ou identidade reservada — `identidadeReservada` distingue as duas origens.
    */
   readonly nomeFicha: string | null;
   readonly rotulo: string;
@@ -91,6 +91,36 @@ export interface RolagemResumoDto {
    * `--accent` de quem visualiza (`var(--cor-ficha, var(--accent))`).
    */
   readonly corFicha: string | null;
+  /** Origem de ficha reservada no recorte vigente; distingue-a da rolagem avulsa do mestre. */
+  readonly identidadeReservada?: boolean;
+}
+
+/** Invalida o feed sem revelar qual ficha mudou de identidade autorizada. */
+export interface RolagemRecortesAlteradosDto {
+  readonly campanhaId: number;
+}
+
+/** Campanhas históricas que contêm rolagens ainda ativas desta ficha. */
+export interface RolagemFichaCampanhasListarDto {
+  readonly fichaId: number;
+}
+
+/** Atualiza todos os feeds históricos e os vínculos atuais afetados por uma ficha. */
+export interface RolagemFichaRecortesInvalidarDto {
+  readonly fichaId: number;
+  readonly campanhaIds?: readonly number[];
+}
+
+/** Recorte da identidade de um lote; null representa sempre a projeção de espectador. */
+export interface RolagemIdentidadeRecortarDto {
+  readonly rolagens: readonly RolagemResumoDto[];
+  readonly usuarioId: number | null;
+}
+
+/** Recorte do payload mínimo de exclusão para o observador. */
+export interface RolagemExclusaoIdentidadeRecortarDto {
+  readonly rolagem: RolagemExcluidaDto;
+  readonly usuarioId: number | null;
 }
 
 /**

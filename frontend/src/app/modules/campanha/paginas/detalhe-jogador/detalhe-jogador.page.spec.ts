@@ -273,6 +273,7 @@ describe('CampanhaDetalheJogador', () => {
       paginaEsquadraoExcluida$: new Subject().asObservable(),
       presencaEsquadraoCaderno$: new Subject().asObservable(),
       reconexao: () => 0,
+      rolagemRecortesAlterados$: new Subject<{ campanhaId: number }>(),
       reconexao$: reconexao$.asObservable(),
       acessoRevogado$: acessoRevogado$.asObservable(),
       conectado: () => true,

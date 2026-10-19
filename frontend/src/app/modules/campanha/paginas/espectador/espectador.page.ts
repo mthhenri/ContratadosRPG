@@ -1,7 +1,7 @@
 import { DestroyRef, Component, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { filter, finalize } from 'rxjs';
+import { filter, finalize, merge } from 'rxjs';
 import { RolagemVisibilidadeEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import type { CampanhaIdentidadeSeguraDto, CampanhaMembroResumoDto, CampanhaPainelEspectadorDto } from '@contratados-rpg/shared/dtos/campanha';
 import type { FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
@@ -93,6 +93,8 @@ export class CampanhaEspectador {
   protected readonly carregandoMais = signal(false);
   protected readonly campanha = signal<CampanhaIdentidadeSeguraDto | null>(null);
   protected readonly rolagens = signal<readonly RolagemResumoDto[]>([]);
+  private geracaoRolagens = 0;
+  private readonly rolagensExcluidas = new Set<number>();
   private readonly paginaAtual = signal(0);
   protected readonly temMais = signal(false);
 
@@ -202,34 +204,43 @@ export class CampanhaEspectador {
     this.tempoRealService.entrarSalaCampanha(this.id);
     this.destroyRef.onDestroy(() => this.tempoRealService.sairSalaCampanha(this.id));
 
-    // Feed em tempo real (m8-03) — só rolagens `PUBLICA` chegam por aqui (o backend nunca
-    // broadcasta privada, §9), e a sala do espectador nunca recebe outro evento (m8-02: a sala
-    // `campanha:<id>:espectador` só é alvo de `rolagem:registrada` público, por construção).
-    // Guarda contra duplicata do mesmo id — a rolagem mais recente do feed inicial (REST) pode
-    // coincidir com a primeira que chega pelo socket, dependendo de quando cada um resolve.
-    // O mestre em prévia também está na sala `campanha:<id>:mestre`, que recebe as `PRIVADA` de
-    // todo mundo: o filtro mantém a prévia no recorte exato do espectador.
+    // A conexão é do usuário autenticado: mestre em prévia pode receber identidade
+    // privilegiada até em rolagem pública. O socket apenas invalida; o GET projeta o alvo.
     this.tempoRealService.rolagemRegistrada$
       .pipe(
-        filter((rolagem) => rolagem.visibilidade === RolagemVisibilidadeEnum.PUBLICA),
+        filter((rolagem) => rolagem.campanhaId === this.id && rolagem.visibilidade === RolagemVisibilidadeEnum.PUBLICA),
         takeUntilDestroyed(),
       )
-      .subscribe({ next: (rolagem) => this.onRolagemRegistrada(rolagem) });
+      .subscribe({ next: () => this.onRolagemRegistrada() });
     // Exclusão por ADMIN (I-033): o evento leva só o id, sem conteúdo — mesma sala do registro.
     this.tempoRealService.rolagemExcluida$
-      .pipe(takeUntilDestroyed())
+      .pipe(filter(evento => evento.campanhaId === this.id), takeUntilDestroyed())
       .subscribe({ next: (excluida) => this.onRolagemExcluida(excluida.id) });
+
+    merge(
+      this.tempoRealService.rolagemRecortesAlterados$.pipe(filter(evento => evento.campanhaId === this.id)),
+      this.tempoRealService.reconexao$,
+    ).pipe(takeUntilDestroyed()).subscribe(() => this.invalidarRolagens());
 
     const relogio = setInterval(() => this.agora.set(Date.now()), 5000);
     this.destroyRef.onDestroy(() => clearInterval(relogio));
   }
 
   private onRolagemExcluida(id: number): void {
+    this.rolagensExcluidas.add(id);
     this.rolagens.update((atuais) => atuais.filter((rolagem) => rolagem.id !== id));
   }
 
-  private onRolagemRegistrada(rolagem: RolagemResumoDto): void {
-    this.rolagens.update((atuais) => (atuais[0]?.id === rolagem.id ? atuais : [rolagem, ...atuais]));
+  private onRolagemRegistrada(): void {
+    this.invalidarRolagens();
+  }
+
+  private invalidarRolagens(): void {
+    ++this.geracaoRolagens;
+    this.rolagens.set([]);
+    this.temMais.set(false);
+    this.carregandoMais.set(false);
+    this.carregarPainel(1);
   }
 
   /**
@@ -255,13 +266,18 @@ export class CampanhaEspectador {
   }
 
   private carregarPainel(pagina: number): void {
+    const geracao = this.geracaoRolagens;
     const marcarCarregando = pagina === 1 ? this.carregando : this.carregandoMais;
     marcarCarregando.set(true);
     this.campanhaProjecaoService
       .recuperarPainelEspectador(this.id, pagina, ITENS_POR_PAGINA)
-      .pipe(finalize(() => marcarCarregando.set(false)))
+      .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
+        if (geracao === this.geracaoRolagens) marcarCarregando.set(false);
+      }))
       .subscribe({
-        next: (painel) => this.aplicarPainel(painel, pagina),
+        next: (painel) => {
+          if (geracao === this.geracaoRolagens) this.aplicarPainel(painel, pagina);
+        },
       });
   }
 
@@ -272,7 +288,8 @@ export class CampanhaEspectador {
           this.fichas.set(painel.fichas);
           this.membros.set(painel.membros);
           this.rolagens.update((atuais) =>
-            pagina === 1 ? painel.rolagens.itens : [...atuais, ...painel.rolagens.itens],
+            (pagina === 1 ? painel.rolagens.itens : [...atuais, ...painel.rolagens.itens])
+              .filter(rolagem => !this.rolagensExcluidas.has(rolagem.id)),
           );
           this.paginaAtual.set(painel.rolagens.paginaAtual);
     this.temMais.set(painel.rolagens.paginaAtual < painel.rolagens.totalPaginas);

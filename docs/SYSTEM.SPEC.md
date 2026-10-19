@@ -607,6 +607,13 @@ usuario_ficha_acesso        ficha_id FK, usuario_id FK
   valer sozinha quando a ficha é exibida de novo, e uma concessão feita durante a ocultação só
   passa a valer depois dela. Dono e mestre mantêm leitura e gestão. Não se aplica a criatura/NPC
   (nelas a concessão é a própria revelação) nem a ficha solta, sem campanha.
+- **Rolagem pública de agente oculto preserva o resultado:** a autorização atual recorta a
+  identidade estruturada da ficha também no histórico anterior, nas projeções e nos eventos.
+  Terceiros recebem `fichaId`, vínculo de combatente, nome e cor nulos, com origem reservada;
+  dono e mestre conservam o recorte autorizado. Autoria da conta, resultado, fórmula e rótulo
+  livres permanecem públicos. A exclusão segue o mesmo recorte de identidade. Ocultar/exibir
+  invalida os feeds por evento contendo somente `campanhaId`, inclusive para espectadores;
+  reconexão e respostas em voo não podem restaurar o recorte anterior.
 - **No encontro, o agente oculto some do recorte de terceiros** (fix-ficha-oculta-identidade-encontro):
   jogador sem acesso, espectador e prévias sem dono não recebem o combatente, seus slots na ordem
   nem seus eventos de log, e a contagem de combatentes da listagem não o inclui. Durante o turno

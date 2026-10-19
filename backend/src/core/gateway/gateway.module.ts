@@ -4,6 +4,7 @@ import { CampanhaModule } from '../../modules/campanha/campanha.module';
 import { DocumentoModule } from '../../modules/documento/documento.module';
 import { EncontroModule } from '../../modules/encontro/encontro.module';
 import { FichaModule } from '../../modules/ficha/ficha.module';
+import { RolagemModule } from '../../modules/rolagem/rolagem.module';
 import { CampanhaGateway } from './campanha.gateway';
 
 /**
@@ -32,6 +33,7 @@ import { CampanhaGateway } from './campanha.gateway';
     forwardRef(() => CampanhaModule),
     forwardRef(() => EncontroModule),
     forwardRef(() => DocumentoModule),
+    forwardRef(() => RolagemModule),
   ],
   providers: [CampanhaGateway],
   exports: [CampanhaGateway],
