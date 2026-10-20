@@ -1,6 +1,6 @@
 # biblioteca-pastas.spec.md
 
-> Spec avulsa, **rascunho** (autor, 2026-10-16; modelo por cargo corrigido pelo autor no mesmo dia).
+> Spec avulsa, **concluída em 2026-10-20** (era rascunho) (autor, 2026-10-16; modelo por cargo corrigido pelo autor no mesmo dia).
 > Todas as decisões respondidas pelo autor; permanece no backlog até ele pedir a movimentação.
 
 ## Objetivo
@@ -83,3 +83,38 @@ Sem pontos em aberto: a spec fica no backlog até o autor mandar movê-la para `
 
 Organização individual por usuário, pastas controladas pelo mestre para os jogadores, permissão por
 pasta, tags e filtros salvos.
+
+## Andamento (2026-10-20)
+
+Movida para `active/` a pedido do autor. Decisões de implementação, autorizadas pelo autor em
+2026-10-20: primitivo novo `app-pasta-linha` em `shared/ui/` e ícones `pasta`/`pasta-aberta`.
+
+**Decisões assumidas na implementação** (dentro das 10 do autor):
+
+- Cargo = tabela `tipo_documento_organizacao` (`MESTRE`, `JOGADOR`); vínculo em
+  `documento_pasta_vinculo`; teto de 5 níveis, nome até 60 caracteres (migration `0040`).
+- Rotas: `GET campanha/:id/documento-organizacao`, `POST campanha/:id/documento-pasta`,
+  `PUT documento-pasta/:id` (renomear), `PUT documento-pasta/:id/posicao` (mover/reposicionar),
+  `DELETE documento-pasta/:id`, `PUT documento/:id/pasta` (documento ↔ pasta). Nenhuma recebe a
+  organização: o papel decide. Espectador escreve → 403; pasta do outro cargo → 404.
+- Tempo real: `documento:organizacao-alterada` dataless; a dos jogadores usa `except` da sala do
+  mestre (a sala cheia contém o mestre).
+- Ocultar limpa só o vínculo `JOGADOR`; excluir limpa os dois; documento revelado de novo cai na raiz.
+- Raiz da mesa ordena por id (criação); raiz do mestre por `documento.ordem`. Dentro de pasta, a
+  ordem do vínculo; só o mestre tem setas de ordem de documento, a mesa reordena soltando em pasta
+  (vai ao fim). Pastas sobem/descem pelo menu de qualquer editor.
+- Frontend: a organização é provida pelo `BibliotecaCorpo` (`BibliotecaOrganizacaoStore`), então
+  mestre, jogador, espectador e painel flutuante ganham pastas sem mudar as três visões. O seletor
+  de documento do Caderno **não** provê a store e continua plano.
+
+**Feito e verificado:** contrato em `shared/`; migration `0040`; `DocumentoPastaRepository`/
+`Service`/`Controller`; gateway; frontend (primitivo, árvore, store, dialogs, busca com caminho);
+testes (backend 1344, frontend documento/ícones/Caderno 385, `tsc`, ESLint sem erros);
+`repo:verificar`; DESIGN, SCHEMA e SYSTEM.SPEC.
+
+**Verificação ao vivo (2026-10-20):** concluída; relatório em
+[`biblioteca-pastas/verificacao.md`](biblioteca-pastas/verificacao.md). A migration `0040` rodou num
+PostgreSQL real, a API e o tempo real foram verificados com mestre, dois jogadores e espectador, e a
+UI foi inspecionada em `1920×1080` e `360×800`. O achado da verificação (ícone `mais` no gatilho e
+faixa "Soltar na raiz" que empurrava os alvos) foi corrigido; `opcoes` (três pontos) entrou como
+terceiro ícone novo.

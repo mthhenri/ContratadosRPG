@@ -751,6 +751,20 @@ os controles do mestre.
   lista e o documento aberto são o `app-biblioteca-corpo` (o host **é** o `.biblioteca__corpo`, sem
   nó novo — a página ficou idêntica pixel a pixel nas três visões e nos quatro viewports), que o
   layout monta reprojetando os dois slots de documento, e o painel flutuante monta direto.
+- **Pastas (`biblioteca-pastas`):** a lista vira árvore. Cada cargo vê a sua organização; o
+  espectador só navega. A **linha de pasta** é o primitivo `app-pasta-linha` (`shared/ui/`):
+  receita do `.documento-cartao` (superfície, borda, raio de cartão, hover com `--accent-border`),
+  mais baixa, com chevron que gira ao expandir, ícone `pasta`/`pasta-aberta` (`--accent` quando
+  aberta), nome em mono, contagem de itens e o slot `[pastaAcoes]`. O recuo de cada nível é
+  `--pasta-nivel`/`--lista-nivel` × `--space-16`; o alvo de soltar acende `--accent-dim` e
+  `--accent`. Quem edita (mestre, jogador) vê, acima da árvore, `Nova pasta` e `Organizar`
+  (`app-botao` `secundario` `pequeno`; Organizar vira `Concluir` com `check`). Os controles de
+  edição por item **só existem no modo Organizar**: um `app-botao-icone` (`mais`) abre o
+  `app-menu-acoes` contextual — pasta: Nova subpasta, Renomear, Mover para…, Subir/Descer, Excluir;
+  documento: Mover para…. Arrastar e soltar vale no desktop dentro do modo Organizar (item sobre a
+  pasta ou sobre o alvo "Soltar na raiz da Biblioteca"); "Mover para…" (dialog com `app-seletor`) é a
+  ação equivalente para o toque e o teclado. A busca mostra, sobre o trecho, o caminho da pasta do
+  resultado (`pasta` + mono 10px).
 - **Documentos da cena do espectador:** na Investigação ativa, coluna de vínculos revelados com
   `DocumentoCartao`, índice biblioteca e `LeitorDocumento` em `Modal`, abertura voluntária. Usa
   como análogos a lista/modal do jogador sem iniciativa e a casca própria espectadora. Desktop

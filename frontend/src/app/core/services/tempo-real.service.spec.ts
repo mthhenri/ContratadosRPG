@@ -473,4 +473,15 @@ describe('TempoRealService', () => {
     socketFake.disparar('documento:alterado', evento);
     expect(recebidos).toEqual([evento]);
   });
+
+  it('repassa a organização em pastas alterada, dataless, tal como chegou', () => {
+    const { servico } = criar(() => 'jwt');
+    servico.conectar();
+    const recebidos: unknown[] = [];
+    servico.documentoOrganizacaoAlterada$.subscribe((evento) => recebidos.push(evento));
+
+    const evento = { campanhaId: 9, organizacao: 'JOGADOR' };
+    socketFake.disparar('documento:organizacao-alterada', evento);
+    expect(recebidos).toEqual([evento]);
+  });
 });

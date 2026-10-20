@@ -1,0 +1,37 @@
+<!-- Mover para… (ação equivalente ao arrastar): a pasta de destino num seletor. -->
+<app-modal [aberto]="true" [titulo]="titulo()" [largura]="'440px'" (fechou)="fechou.emit()">
+    <form class="pasta-destino" [formGroup]="formulario" (ngSubmit)="confirmar()">
+        <app-campo rotulo="Mover para" tamanho="amplo">
+            <app-seletor
+                rotulo="Mover para"
+                formControlName="destino"
+                [opcoes]="opcoes()"
+                [obrigatorio]="true"
+                [desabilitado]="enviando()"
+            />
+        </app-campo>
+        <div class="pasta-destino__acoes">
+            <button
+                app-botao
+                variante="secundario"
+                tamanho="medio"
+                class="pasta-destino__acao pasta-destino__acao--cancelar"
+                type="button"
+                (click)="fechou.emit()"
+            >
+                Cancelar
+            </button>
+            <button
+                app-botao
+                variante="primario"
+                tamanho="medio"
+                class="pasta-destino__acao"
+                type="submit"
+                [disabled]="semMudanca()"
+                [carregando]="enviando()"
+            >
+                Mover
+            </button>
+        </div>
+    </form>
+</app-modal>

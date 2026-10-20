@@ -15,6 +15,9 @@
 > colaborador usam a cor da sua ficha alterada mais recentemente na campanha, com atualização
 > durante a edição e após reconexão. [Spec e evidências](../specs/done/caderno-cor-identidade-colaborador.spec.md).
 
+> **Biblioteca em pastas — concluída em 2026-10-20:** duas organizações por cargo (mestre; jogadores+espectador,
+> este só lê), teto de 5 níveis, raiz da mesa na ordem de criação. [Spec e verificação](../specs/done/biblioteca-pastas.spec.md).
+
 > **Auditoria de ficha oculta — retomada investigativa de 19/10 concluída:**
 > [cobertura por consumidor, decisões e limites](../specs/done/auditoria-ficha-oculta-retomada-cobertura/verificacao.md).
 > [Matriz histórica](../specs/done/auditoria-ficha-oculta-todos-consumidores/ficha-oculta-todos-consumidores.md).

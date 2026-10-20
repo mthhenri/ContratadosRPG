@@ -30,6 +30,18 @@
         display: flex;
     }
 
+    // Onde o resultado mora na organização em pastas: acima do trecho, em mono discreto.
+    &__pasta {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        color: var(--text-mute);
+        overflow-wrap: anywhere;
+    }
+
     // O trecho do `ts_headline`: texto corrido, no máximo três linhas, com o termo em destaque.
     &__trecho {
         display: -webkit-box;

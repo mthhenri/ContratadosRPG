@@ -53,6 +53,7 @@ import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
 import { CampanhaRepository } from '../campanha/campanha.repository';
 import { CampanhaService } from '../campanha/campanha.service';
 import { DocumentoLeituraService } from './documento-leitura.service';
+import { DocumentoPastaService } from './documento-pasta.service';
 import { DocumentoRepository } from './documento.repository';
 
 /** Mensagem da imagem acima do teto — a mesma na service e no interceptor do upload. */
@@ -87,6 +88,7 @@ export class DocumentoService {
     private readonly campanhaService: CampanhaService,
     private readonly transacaoService: TransacaoService,
     private readonly documentoLeituraService: DocumentoLeituraService,
+    private readonly documentoPastaService: DocumentoPastaService,
     @Inject(ARMAZENAMENTO_PROVEDOR)
     private readonly armazenamentoProvedor: ArmazenamentoProvedor,
     @Inject(forwardRef(() => CampanhaGateway))
@@ -299,6 +301,10 @@ export class DocumentoService {
       campanhaId: documentoOcultado.campanhaId,
       documentoId: documentoOcultado.id,
     });
+    await this.documentoPastaService.limparVinculoJogadores({
+      campanhaId: documentoOcultado.campanhaId,
+      documentoId: documentoOcultado.id,
+    });
     return {
       id: documentoOcultado.id,
       revelado: documentoOcultado.revelado,
@@ -317,6 +323,10 @@ export class DocumentoService {
       documento.revelado,
     );
     this.documentoLeituraService.removerLeitoresDocumento({
+      campanhaId: documento.campanhaId,
+      documentoId: documento.id,
+    });
+    await this.documentoPastaService.limparVinculosDocumento({
       campanhaId: documento.campanhaId,
       documentoId: documento.id,
     });

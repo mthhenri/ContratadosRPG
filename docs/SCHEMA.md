@@ -378,6 +378,50 @@ e é arbitrada pela `DocumentoService` (m9-02) — assim como o recorte por pape
 espectador só leem `revelado = true`). Os limites vivem em `shared/src/validators/documento.validators.ts`
 (`DOCUMENTO_TITULO_MAXIMO`, `DOCUMENTO_CONTEUDO_MAXIMO`, teto de imagem de 10 MB).
 
+### Pastas da Biblioteca (`biblioteca-pastas` — migration 0040)
+
+Cada campanha tem **duas organizações em pastas independentes**, uma por cargo: `MESTRE` (só o
+mestre) e `JOGADOR` (compartilhada por jogadores e espectadores). O cargo é a tabela de referência
+`tipo_documento_organizacao` (convenção de enum de coluna; `TipoDocumentoOrganizacaoEnum`). O
+documento **nunca** ganha coluna de pasta: o vínculo é tabela própria.
+
+```sql
+CREATE TABLE tipo_documento_organizacao (
+  -- BaseEntity...
+  codigo VARCHAR NOT NULL, descricao VARCHAR NOT NULL  -- 'MESTRE', 'JOGADOR'
+);
+-- uix_tipo_documento_organizacao_codigo_ativo: UNIQUE (codigo) WHERE is_deleted = false
+
+CREATE TABLE documento_pasta (
+  -- BaseEntity...
+  campanha_id                    INTEGER     NOT NULL, -- fk_documento_pasta_campanha
+  tipo_documento_organizacao_id  INTEGER     NOT NULL, -- fk_documento_pasta_tipo_documento_organizacao
+  documento_pasta_mae_id         INTEGER,              -- fk_documento_pasta_mae (null = raiz)
+  nome                           VARCHAR(60) NOT NULL, -- chk_documento_pasta_nome: 1..60 sem contar espaços das pontas
+  ordem                          INTEGER     NOT NULL  -- posição entre as irmãs (mesma mãe)
+);
+-- chk_documento_pasta_mae_diferente: a mãe nunca é a própria pasta
+-- ix_documento_pasta_campanha_organizacao: (campanha_id, tipo_documento_organizacao_id)
+-- ix_documento_pasta_mae: (documento_pasta_mae_id)
+
+CREATE TABLE documento_pasta_vinculo (
+  -- BaseEntity...
+  documento_id                   INTEGER NOT NULL, -- fk_documento_pasta_vinculo_documento
+  documento_pasta_id             INTEGER NOT NULL, -- fk_documento_pasta_vinculo_pasta
+  tipo_documento_organizacao_id  INTEGER NOT NULL, -- fk_documento_pasta_vinculo_tipo_documento_organizacao
+  ordem                          INTEGER NOT NULL  -- posição entre os documentos da mesma pasta
+);
+-- uix_documento_pasta_vinculo_documento_organizacao_ativo:
+--   UNIQUE (documento_id, tipo_documento_organizacao_id) WHERE is_deleted = false
+```
+
+Documento sem vínculo ativo está na **raiz** da organização. A coerência de campanha entre pasta,
+mãe e documento, o **teto de 5 níveis** (`DOCUMENTO_PASTA_PROFUNDIDADE_MAXIMA`), a recusa de ciclo
+e o cargo que pode escrever são arbitrados pela `DocumentoPastaService`, não por CHECK (dependem
+de consultar outras linhas). Excluir uma pasta faz soft delete dela, das descendentes e dos
+vínculos delas. Ocultar um documento remove só o vínculo da organização `JOGADOR`; excluí-lo remove
+os de todas. A organização `JOGADOR` só lista vínculo de documento revelado (o recorte vai ao `WHERE`).
+
 ## encontro (M7 — m7-01/m7-03)
 
 O **Encontro de Combate**: ordem de iniciativa com a Cadência das criaturas intercalada, rodadas e

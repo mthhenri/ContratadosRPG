@@ -65,8 +65,12 @@ describe('BibliotecaFlutuante', () => {
       reconexao: signal(0),
       reconexao$: new Subject<void>().asObservable(),
       documentoAlterado$: new Subject<DocumentoBibliotecaAlteradaDto>(),
+      documentoOrganizacaoAlterada$: new Subject<never>(),
     };
     const documentoService = {
+      recuperarOrganizacao: vi.fn(() =>
+        of({ campanhaId: 5, organizacao: 'MESTRE', editavel: true, pastas: [], vinculos: [] }),
+      ),
       listar: vi.fn(() => of([...documentos])),
       recuperar: vi.fn((id: number) =>
         of({ ...lista.find((item) => item.id === id)!, conteudoMarkdown: '# Texto', createdDate: V1 }),

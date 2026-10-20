@@ -29,6 +29,7 @@ import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
 import type { CampanhaRepository } from '../campanha/campanha.repository';
 import { CampanhaService } from '../campanha/campanha.service';
 import { DocumentoLeituraService } from './documento-leitura.service';
+import type { DocumentoPastaService } from './documento-pasta.service';
 import type { DocumentoRepository } from './documento.repository';
 import { DocumentoService } from './documento.service';
 
@@ -87,6 +88,10 @@ describe('DocumentoService', () => {
     listarImagens: Mock;
     lerTexto: Mock;
     salvarTexto: Mock;
+  };
+  let documentoPastaService: {
+    limparVinculoJogadores: Mock<DocumentoPastaService['limparVinculoJogadores']>;
+    limparVinculosDocumento: Mock<DocumentoPastaService['limparVinculosDocumento']>;
   };
   let campanhaGateway: {
     emitirDocumentoAlterado: Mock<(evento: DocumentoBibliotecaAlteradaDto, visivelParaMesa: boolean) => void>;
@@ -171,6 +176,10 @@ describe('DocumentoService', () => {
       lerTexto: vi.fn(),
       salvarTexto: vi.fn(),
     };
+    documentoPastaService = {
+      limparVinculoJogadores: vi.fn().mockResolvedValue(undefined),
+      limparVinculosDocumento: vi.fn().mockResolvedValue(undefined),
+    };
     campanhaGateway = {
       emitirDocumentoAlterado: vi.fn(),
       emitirDocumentoLeitores: vi.fn(),
@@ -193,6 +202,7 @@ describe('DocumentoService', () => {
       campanhaService,
       transacaoService as unknown as TransacaoService,
       documentoLeituraService,
+      documentoPastaService as unknown as DocumentoPastaService,
       armazenamentoProvedor,
       campanhaGateway as unknown as CampanhaGateway,
     );

@@ -12,6 +12,8 @@ import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { Campo } from '../../../../shared/ui/campo/campo.component';
 import { Esqueleto } from '../../../../shared/ui/esqueleto/esqueleto.component';
 import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
+import { BibliotecaOrganizacaoStore } from '../../biblioteca-organizacao.store';
+import { caminhosDosDocumentos } from '../../documento-arvore';
 import {
   NENHUM_LEITOR,
   leitoresDoDocumento,
@@ -37,6 +39,8 @@ interface PedidoBusca {
 
 interface ResultadoExibido {
   readonly resultado: DocumentoBuscaResultadoDto;
+  /** Pasta onde o documento está na organização do usuário; `null` na raiz. */
+  readonly caminho: string | null;
   readonly segmentos: readonly SegmentoTrecho[];
 }
 
@@ -62,6 +66,9 @@ interface ResultadoExibido {
 export class BuscaDocumentos {
   private readonly documentoService = inject(DocumentoService);
   private readonly tempoRealService = inject(TempoRealService);
+  /** Ausente fora do `BibliotecaCorpo` (seletor do Caderno): os resultados ficam sem pasta. */
+  private readonly organizacao = inject(BibliotecaOrganizacaoStore, { optional: true });
+  private readonly caminhos = computed(() => caminhosDosDocumentos(this.organizacao?.organizacao() ?? null));
 
   readonly campanhaId = input.required<number>();
   /** Chip Revelado/Oculto nos resultados — só o mestre (para a mesa é sempre revelado). */
@@ -98,6 +105,7 @@ export class BuscaDocumentos {
   protected readonly exibidos = computed<readonly ResultadoExibido[]>(() =>
     this.resultados().map((resultado) => ({
       resultado,
+      caminho: this.caminhos().get(resultado.id) ?? null,
       segmentos: segmentarTrecho(resultado.trecho),
     })),
   );

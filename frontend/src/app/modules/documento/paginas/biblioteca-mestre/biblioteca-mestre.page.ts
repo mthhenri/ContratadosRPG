@@ -24,6 +24,7 @@ import { CampanhaService } from '../../../campanha/campanha.service';
 import { BibliotecaLeitoresStore } from '../../biblioteca-leitores.store';
 import { BibliotecaLayout } from '../../componentes/biblioteca-layout/biblioteca-layout.component';
 import { DocumentoCriarDialog } from '../../componentes/documento-criar-dialog/documento-criar-dialog.component';
+import type { DocumentoMovimento } from '../../componentes/lista-documentos/lista-documentos.component';
 import { DocumentoEdicao } from '../../componentes/documento-edicao/documento-edicao.component';
 import { LeitorDocumento } from '../../componentes/leitor-documento/leitor-documento.component';
 import { DocumentoService } from '../../documento.service';
@@ -237,14 +238,15 @@ export class BibliotecaMestre implements TelaComRascunhoDocumento {
   }
 
   /**
-   * Sobe (`-1`) ou desce (`+1`) um documento uma posição. O backend exige a lista **inteira**
-   * (m9-02), então a troca é feita sobre ela e enviada completa.
+   * Troca de lugar dois documentos da raiz da biblioteca. O backend exige a lista **inteira**
+   * (m9-02), então a troca é feita sobre ela e enviada completa: o documento assume a posição do
+   * vizinho visível (o próximo documento da raiz), por cima dos que moram em pastas.
    */
-  protected mover(documento: DocumentoResumoDto, deslocamento: -1 | 1): void {
+  protected mover({ documento, vizinho }: DocumentoMovimento): void {
     const ordem = this.documentos().map((item) => item.id);
     const origem = ordem.indexOf(documento.id);
-    const destino = origem + deslocamento;
-    if (origem < 0 || destino < 0 || destino >= ordem.length || this.bloqueado()) {
+    const destino = ordem.indexOf(vizinho.id);
+    if (origem < 0 || destino < 0 || this.bloqueado()) {
       return;
     }
     [ordem[origem], ordem[destino]] = [ordem[destino], ordem[origem]];

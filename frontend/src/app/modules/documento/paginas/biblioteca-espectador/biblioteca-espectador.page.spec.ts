@@ -43,6 +43,7 @@ describe('BibliotecaEspectador', () => {
       reconexao: signal(0),
       reconexao$: new Subject<void>().asObservable(),
       documentoAlterado$: new Subject<DocumentoBibliotecaAlteradaDto>(),
+      documentoOrganizacaoAlterada$: new Subject<never>(),
     };
     const painel = {
       campanha: { id: CAMPANHA_ID, nome: 'Operação Maré', descricao: null },
@@ -76,9 +77,24 @@ describe('BibliotecaEspectador', () => {
     const pedidos = http.match(() => true);
     expect(pedidos.map((pedido) => `${pedido.request.method} ${pedido.request.url}`)).toEqual([
       `GET /campanha/${CAMPANHA_ID}/documento`,
+      `GET /campanha/${CAMPANHA_ID}/documento-organizacao`,
     ]);
     pedidos[0].flush({ sucesso: true, mensagem: '', dados: [documento] });
+    // O espectador recebe a organização dos jogadores só para navegar: `editavel: false`.
+    pedidos[1].flush({
+      sucesso: true,
+      mensagem: '',
+      dados: {
+        campanhaId: CAMPANHA_ID,
+        organizacao: 'JOGADOR',
+        editavel: false,
+        pastas: [],
+        vinculos: [],
+      },
+    });
     fixture.detectChanges();
+
+    expect(raiz.querySelector('.lista-documentos__barra')).toBeNull();
 
     expect(raiz.querySelector('.biblioteca__campanha')?.textContent?.trim()).toBe('Operação Maré');
     expect(raiz.querySelector('.documento-cartao__nome')?.textContent?.trim()).toBe(

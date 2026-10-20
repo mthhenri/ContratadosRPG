@@ -80,6 +80,9 @@ describe('BibliotecaMestre', () => {
     const listagem$ = new Subject<DocumentoResumoDto[]>();
     const lista = [...documentos];
     const documentoService = {
+      recuperarOrganizacao: vi.fn(() =>
+        of({ campanhaId: CAMPANHA_ID, organizacao: 'MESTRE', editavel: true, pastas: [], vinculos: [] }),
+      ),
       listar: vi.fn(() => (listagemPendente ? listagem$ : of([...lista]))),
       recuperar: vi.fn((id: number) => of(completo(lista.find((item) => item.id === id)!))),
       criar: vi.fn(),
@@ -88,7 +91,8 @@ describe('BibliotecaMestre', () => {
       revelar: vi.fn((id: number) => of({ id, revelado: true, updatedDate: V2 })),
       ocultar: vi.fn((id: number) => of({ id, revelado: false, updatedDate: V2 })),
       reordenar: vi.fn((_campanhaId: number, ordem: readonly number[]) =>
-        of(ordem.map((id) => lista.find((item) => item.id === id)!)),
+        // Como o backend: devolve a lista na nova ordem, com a `ordem` renumerada de 1.
+        of(ordem.map((id, indice) => ({ ...lista.find((item) => item.id === id)!, ordem: indice + 1 }))),
       ),
       enviarImagem: vi.fn(),
     };
@@ -101,6 +105,7 @@ describe('BibliotecaMestre', () => {
       reconexao: signal(0),
       reconexao$: reconexao$.asObservable(),
       documentoAlterado$,
+      documentoOrganizacaoAlterada$: new Subject<never>(),
       documentoLeitores$,
     };
     TestBed.configureTestingModule({

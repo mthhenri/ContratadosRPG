@@ -1,0 +1,44 @@
+<!-- Nome de pasta (nova/renomear): Enter confirma, Esc/fundo/Cancelar fecham. -->
+<app-modal [aberto]="true" [titulo]="titulo()" [largura]="'440px'" (fechou)="fechou.emit()">
+    <form class="pasta-nome" [formGroup]="formulario" (ngSubmit)="confirmar()">
+        <app-campo
+            rotulo="Nome"
+            tamanho="amplo"
+            [dica]="tamanhoNome() + '/' + nomeMaximo"
+            [erro]="erroNome()"
+        >
+            <input
+                appAutoFocus
+                class="campo__controle"
+                type="text"
+                formControlName="nome"
+                placeholder="Ex.: Mapas da cidade"
+                [attr.maxlength]="nomeMaximo"
+                autocomplete="off"
+                required
+            />
+        </app-campo>
+        <div class="pasta-nome__acoes">
+            <button
+                app-botao
+                variante="secundario"
+                tamanho="medio"
+                class="pasta-nome__acao pasta-nome__acao--cancelar"
+                type="button"
+                (click)="fechou.emit()"
+            >
+                Cancelar
+            </button>
+            <button
+                app-botao
+                variante="primario"
+                tamanho="medio"
+                class="pasta-nome__acao"
+                type="submit"
+                [carregando]="enviando()"
+            >
+                {{ rotuloConfirmar() }}
+            </button>
+        </div>
+    </form>
+</app-modal>

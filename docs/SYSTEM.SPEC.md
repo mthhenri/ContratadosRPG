@@ -355,7 +355,8 @@ Idênticos ao padrão de referência do autor (ver `CONVENTIONS.md`):
     acima, fechado por construção (a sala nunca é alvo desses `emit()`).
   - `campanha:<id>:mestre` — só quem entrou como `MESTRE`, além da sala cheia. Recebe o que é
     exclusivo do mestre: `rolagem:registrada` `PRIVADA`, `cena:alterada` de cena `PLANEJADA`,
-    `documento:alterado` de documento oculto e `documento:leitores`.
+    `documento:alterado` de documento oculto, `documento:leitores` e
+    `documento:organizacao-alterada` da organização `MESTRE`.
 - **Presença de leitura da Biblioteca (m9-09):** o cliente envia `documento:leitura`
   (`{ campanhaId, documentoId | null }`). É presença efêmera, sem persistência nem REST, como a do
   Caderno, e não é a mutação que a proibição #25 veda. O gateway só delega: a `DocumentoService`
@@ -364,6 +365,13 @@ Idênticos ao padrão de referência do autor (ver `CONVENTIONS.md`):
   `documento:leitores` vai **só** para `campanha:<id>:mestre`, nunca para a sala cheia nem para a
   do espectador. A presença é limpa na desconexão, em `campanha:sair`, na troca de papel ou
   revogação, e ao ocultar ou remover o documento.
+- **Pastas da Biblioteca (`biblioteca-pastas`):** `documento:organizacao-alterada`
+  (`{ campanhaId, organizacao }`) é dataless — avisa que a organização de um cargo mudou, e quem a
+  recebe refaz o `GET campanha/:id/documento-organizacao`. A organização `MESTRE` vai só para
+  `campanha:<id>:mestre`; a `JOGADOR`, para `campanha:<id>` e `campanha:<id>:espectador` **menos**
+  `campanha:<id>:mestre` (a sala cheia contém o mestre, por isso o `except`): o mestre nunca recebe
+  a mutação da organização dos jogadores. Ocultar um documento emite a da organização `JOGADOR`
+  (o vínculo some); excluí-lo emite as duas.
 - **Permissões:** a service de ficha/campanha é o único árbitro — o gateway consulta a
   mesma verificação usada pelo REST. Proibido duplicar regra de permissão no gateway.
 - **Resiliência:** cliente ressincroniza (refetch da ficha aberta) ao reconectar —
@@ -640,6 +648,22 @@ usuario_ficha_acesso        ficha_id FK, usuario_id FK
   e recebe somente eventos explicitamente encaminhados, nunca conteúdo privado ou gestão.
   `campanha:acesso-alterado` contém apenas `campanhaId` e é enviado diretamente às conexões do
   usuário afetado após recalibrar suas salas, inclusive na remoção; invalida a leitura em curso.
+- **Biblioteca em pastas** (`biblioteca-pastas`): a Biblioteca tem **duas organizações independentes
+  por campanha, uma por cargo**. A do **mestre** só ele vê e edita. A dos **jogadores** é uma só,
+  compartilhada por jogadores e espectadores: jogadores a editam (o que um cria, renomeia ou move
+  aparece para todos) e o espectador só a vê. O cargo do usuário na campanha escolhe a organização —
+  nenhuma rota recebe a organização do cliente — e a do outro cargo não existe para ele: pasta de
+  outra organização responde 404, como um id inexistente; escrita do espectador é 403. Os
+  documentos continuam sendo um conjunto só (a revelação segue com o mestre); o que muda por cargo
+  é **em que pasta** cada um aparece. Documento sem vínculo está na raiz; documento novo,
+  importado ou recém-revelado nasce na raiz. Pastas aninham até 5 níveis. Excluir uma pasta (com
+  subpastas e documentos) devolve tudo à raiz da mesma organização — nunca é bloqueado e qualquer
+  jogador pode, sem confirmação. Na organização dos jogadores só entra documento revelado; ocultar
+  ou excluir o documento limpa o vínculo (sem vazar título) e ele volta à raiz ao ser revelado.
+  Ordem: pastas por `ordem` entre irmãs; documento numa pasta, pela `ordem` do vínculo; na raiz,
+  a ordem manual do mestre (`documento.ordem`) na organização `MESTRE` e a **ordem de criação**
+  na dos jogadores — a ordem do mestre não vaza para a mesa. Edição simultânea: vence a última
+  gravação, sem estado corrompido.
 - Uma campanha tem exatamente **um** mestre no v1 — inicialmente o criador, mas o papel é
   **transferível** pelo mestre atual a outro membro (o alvo vira `MESTRE` e o mestre atual é
   rebaixado a `JOGADOR`, **atomicamente**; a invariante de exatamente um mestre se mantém).

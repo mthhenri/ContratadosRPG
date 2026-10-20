@@ -115,6 +115,9 @@ describe('Icone', () => {
       'imagem',
       'tamanho-real',
       'ajustar-largura',
+      'pasta',
+      'pasta-aberta',
+      'opcoes',
     ];
     const formas = nomes.map(assinatura);
     expect(formas.every((forma) => forma !== '')).toBe(true);

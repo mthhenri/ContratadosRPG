@@ -1,6 +1,23 @@
 # HISTORY.md — Histórico do Projeto
 
 
+## 2026-10-20 — biblioteca-pastas: Biblioteca em pastas, uma organização por cargo
+
+Duas organizações independentes por campanha (migration `0040`): a do mestre, só dele, e uma dos
+jogadores compartilhada com o espectador (que só lê). O papel escolhe a organização; pasta do outro
+cargo responde 404 e escrita do espectador, 403. Documento sem vínculo está na raiz; teto de 5 níveis;
+excluir pasta devolve tudo à raiz; ocultar limpa o vínculo dos jogadores. `documento:organizacao-alterada`
+(dataless) usa `except` da sala do mestre, que está dentro da sala cheia. Frontend: `BibliotecaCorpo`
+provê a `BibliotecaOrganizacaoStore`, então mestre, jogador, espectador e painel flutuante ganham a
+árvore (`ListaDocumentos`) e a busca mostra o caminho da pasta; primitivo novo `app-pasta-linha` e ícones
+`pasta`, `pasta-aberta`, `opcoes`. O seletor do Caderno segue plano.
+
+Testes: backend 1344, frontend das áreas tocadas verdes, ESLint/`tsc` limpos. Os testes acharam o menu
+abrindo vazio; a verificação ao vivo (PostgreSQL real, 33 checagens de API/sockets e UI com dois usuários)
+achou o ícone "+" enganoso e a faixa de soltar que empurrava os alvos. Docker Desktop precisou de limpeza
+de sockets antigos no perfil. [Verificação](../specs/done/biblioteca-pastas/verificacao.md).
+
+
 ## 2026-10-20 — ficha-avatar-leitura-autorizada: parte local validada, R2/CDN aberto
 
 Implementada leitura binária autenticada, pasta/bucket FICHAS separados e rota antiga

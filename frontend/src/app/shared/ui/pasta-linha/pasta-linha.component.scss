@@ -1,0 +1,99 @@
+// Linha de pasta da Biblioteca — receita do `.documento-cartao` (superfície, borda, raio de
+// cartão, hover com a borda de destaque), mais baixa: a pasta é navegação, o documento é conteúdo.
+// O recuo da árvore sai de `--pasta-nivel`. Só tokens (#29).
+
+@use "tema/breakpoints" as bp;
+
+:host {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    min-width: 0;
+    margin-left: calc(var(--pasta-nivel, 0) * var(--space-16));
+    padding-right: var(--space-4);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    transition:
+        border-color 0.15s ease,
+        background-color 0.15s ease;
+
+    &:hover {
+        background: var(--surface-2);
+        border-color: var(--accent-border);
+    }
+}
+
+:host(.pasta-linha--alvo) {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+}
+
+.pasta-linha {
+    &__alternar {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: var(--space-8);
+        padding: var(--space-8) var(--space-12);
+        font: inherit;
+        color: inherit;
+        text-align: left;
+        background: none;
+        border: 0;
+        border-radius: var(--radius-card);
+        cursor: pointer;
+
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+
+        &:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+    }
+
+    &__seta {
+        flex: none;
+        color: var(--text-mute);
+        transition: transform 0.15s ease;
+    }
+
+    &__icone {
+        flex: none;
+        color: var(--text-mute);
+    }
+
+    &__nome {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        font-family: var(--font-mono);
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text);
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    &__contagem {
+        flex: none;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        color: var(--text-mute);
+    }
+}
+
+:host(.pasta-linha--aberta) {
+    .pasta-linha__seta {
+        transform: rotate(90deg);
+    }
+
+    .pasta-linha__icone {
+        color: var(--accent);
+    }
+}

@@ -862,6 +862,32 @@ describe('CampanhaGateway', () => {
       });
     });
 
+    describe('emitirDocumentoOrganizacaoAlterada (pastas da Biblioteca, uma organização por cargo)', () => {
+      it('a organização do MESTRE vai só para campanha:<id>:mestre', () => {
+        const evento = { campanhaId: 3, organizacao: 'MESTRE' };
+
+        gateway.emitirDocumentoOrganizacaoAlterada(evento as never);
+
+        expect(paraSala).toHaveBeenCalledTimes(1);
+        expect(paraSala).toHaveBeenCalledWith('campanha:3:mestre');
+        expect(emitir).toHaveBeenCalledWith('documento:organizacao-alterada', evento);
+      });
+
+      it('a organização dos JOGADORES vai a jogadores e espectadores, excluindo a sala do mestre', () => {
+        const emitirJogadores = vi.fn();
+        const excetoSala = vi.fn(() => ({ emit: emitirJogadores }));
+        const paraSalas = vi.fn(() => ({ except: excetoSala }));
+        (gateway as unknown as { servidor: Server }).servidor = { to: paraSalas } as unknown as Server;
+        const evento = { campanhaId: 3, organizacao: 'JOGADOR' };
+
+        gateway.emitirDocumentoOrganizacaoAlterada(evento as never);
+
+        expect(paraSalas).toHaveBeenCalledWith(['campanha:3', 'campanha:3:espectador']);
+        expect(excetoSala).toHaveBeenCalledWith('campanha:3:mestre');
+        expect(emitirJogadores).toHaveBeenCalledWith('documento:organizacao-alterada', evento);
+      });
+    });
+
     describe('emitirDocumentoLeitores (m9-09, presença só para o mestre)', () => {
       const retrato = {
         campanhaId: 3,

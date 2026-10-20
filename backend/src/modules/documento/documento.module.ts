@@ -3,6 +3,9 @@ import { ArmazenamentoModule } from '../../core/armazenamento';
 import { GatewayModule } from '../../core/gateway/gateway.module';
 import { CampanhaModule } from '../campanha/campanha.module';
 import { DocumentoController } from './documento.controller';
+import { DocumentoPastaController } from './documento-pasta.controller';
+import { DocumentoPastaRepository } from './documento-pasta.repository';
+import { DocumentoPastaService } from './documento-pasta.service';
 import { DocumentoLeituraService } from './documento-leitura.service';
 import { DocumentoRepository } from './documento.repository';
 import { DocumentoService } from './documento.service';
@@ -17,11 +20,20 @@ import { DocumentoService } from './documento.service';
  * Exporta também a `DocumentoLeituraService` (`m9-09`, presença de leitura em memória): o
  * `CampanhaGateway` delega a ela a limpeza na desconexão, em `campanha:sair` e na recalibração de
  * papel — o gateway importa este módulo por `forwardRef`, como este importa o dele.
+ *
+ * As pastas da Biblioteca (`DocumentoPastaService`) são serviço próprio no mesmo módulo; a
+ * `DocumentoService` só a chama para limpar vínculos ao ocultar ou excluir um documento.
  */
 @Module({
   imports: [CampanhaModule, ArmazenamentoModule, forwardRef(() => GatewayModule)],
-  controllers: [DocumentoController],
-  providers: [DocumentoRepository, DocumentoService, DocumentoLeituraService],
+  controllers: [DocumentoController, DocumentoPastaController],
+  providers: [
+    DocumentoRepository,
+    DocumentoService,
+    DocumentoLeituraService,
+    DocumentoPastaRepository,
+    DocumentoPastaService,
+  ],
   exports: [DocumentoService, DocumentoLeituraService],
 })
 export class DocumentoModule {}

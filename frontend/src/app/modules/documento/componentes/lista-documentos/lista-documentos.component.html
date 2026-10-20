@@ -1,11 +1,12 @@
-<!-- Lista da biblioteca (m9-04 → m9-05): esqueleto, vazio ou os cartões — setas só para o mestre. -->
+<!-- Lista da biblioteca (m9-04 → m9-05; em árvore com pastas na biblioteca-pastas): esqueleto,
+     vazio ou as pastas e os cartões. Setas de ordem só para o mestre; organizar só para quem edita. -->
 @if (carregando()) {
 <div class="lista-documentos__esqueleto" role="status" aria-label="Carregando os documentos">
     @for (i of [0, 1, 2]; track i) {
     <app-esqueleto class="lista-documentos__esqueleto-linha" />
     }
 </div>
-} @else if (documentos().length === 0) {
+} @else if (semItens()) {
 <app-estado-vazio
     tamanho="compacto"
     icone="biblioteca"
@@ -13,31 +14,114 @@
     [linhaApoio]="vazioApoio()"
 />
 } @else {
+@if (editavel()) {
+<div class="lista-documentos__barra">
+    <button
+        app-botao
+        variante="secundario"
+        estilo="contorno"
+        tamanho="pequeno"
+        class="lista-documentos__barra-acao"
+        type="button"
+        [disabled]="emOperacao()"
+        (click)="abrirNovaPasta()"
+    >
+        <app-icone nome="pasta" />
+        Nova pasta
+    </button>
+    <button
+        app-botao
+        variante="secundario"
+        [estilo]="organizando() ? undefined : 'texto'"
+        tamanho="pequeno"
+        class="lista-documentos__barra-acao"
+        type="button"
+        [attr.aria-pressed]="organizando()"
+        (click)="alternarOrganizando()"
+    >
+        <app-icone [nome]="organizando() ? 'check' : 'editar'" />
+        {{ organizando() ? "Concluir" : "Organizar" }}
+    </button>
+</div>
+}
+
 <ol class="lista-documentos__itens">
-    @for (documento of documentos(); track documento.id; let primeiro = $first; let ultimo = $last) {
+    @for (linha of linhas(); track chaveLinha(linha)) {
+    @if (linha.tipo === "pasta") {
     <li class="lista-documentos__item">
+        <div
+            app-pasta-linha
+            [nome]="linha.no.pasta.nome"
+            [aberta]="expandidas().has(linha.no.pasta.id)"
+            [contagem]="contagem(linha.no)"
+            [nivel]="linha.nivel"
+            [alvo]="alvoDrop() === linha.no.pasta.id"
+            [attr.draggable]="arrastavel() ? 'true' : null"
+            (alternar)="alternarPasta(linha.no.pasta.id)"
+            (dragstart)="aoArrastar($event, { tipo: 'pasta', id: linha.no.pasta.id })"
+            (dragend)="limparArrasto()"
+            (dragover)="aoPassarSobre($event, linha.no.pasta.id)"
+            (dragleave)="aoSairDe(linha.no.pasta.id)"
+            (drop)="aoSoltar($event, linha.no.pasta.id)"
+        >
+            @if (organizando() && editavel()) {
+            <button
+                pastaAcoes
+                app-botao-icone
+                tamanho="padrao"
+                type="button"
+                aria-haspopup="menu"
+                [attr.aria-label]="'Ações da pasta ' + linha.no.pasta.nome"
+                [appTooltip]="'Ações da pasta'"
+                [disabled]="emOperacao()"
+                (click)="abrirMenu({ tipo: 'pasta', linha }, $event)"
+            >
+                <app-icone nome="opcoes" />
+            </button>
+            }
+        </div>
+    </li>
+    } @else {
+    <li class="lista-documentos__item" [style.--lista-nivel]="linha.nivel">
         <!-- O conteúdo do botão (ícone, título, tipo, chips) é o template do próprio
              `app-documento-cartao`; a regra não enxerga através do componente de atributo. -->
         <!-- eslint-disable-next-line @angular-eslint/template/elements-content -->
         <button
             app-documento-cartao
-            [titulo]="documento.titulo"
-            [tipo]="documento.tipo"
-            [revelado]="mostrarEstado() ? documento.revelado : null"
-            [leitores]="leitoresDoDocumento(leitoresPorDocumento(), documento.id)"
-            [aberto]="abertoId() === documento.id"
-            (click)="selecionar.emit(documento.id)"
+            [titulo]="linha.documento.titulo"
+            [tipo]="linha.documento.tipo"
+            [revelado]="mostrarEstado() ? linha.documento.revelado : null"
+            [leitores]="leitoresDoDocumento(leitoresPorDocumento(), linha.documento.id)"
+            [aberto]="abertoId() === linha.documento.id"
+            [attr.draggable]="arrastavel() ? 'true' : null"
+            (click)="selecionar.emit(linha.documento.id)"
+            (dragstart)="aoArrastar($event, { tipo: 'documento', id: linha.documento.id })"
+            (dragend)="limparArrasto()"
         ></button>
+        @if (organizando() && editavel()) {
+        <button
+            app-botao-icone
+            tamanho="padrao"
+            type="button"
+            aria-haspopup="menu"
+            [attr.aria-label]="'Ações de ' + linha.documento.titulo"
+            [appTooltip]="'Mover para…'"
+            [disabled]="emOperacao()"
+            (click)="abrirMenu({ tipo: 'documento', linha }, $event)"
+        >
+            <app-icone nome="opcoes" />
+        </button>
+        }
         @if (ordenavel()) {
         <div class="lista-documentos__controles">
             <button
                 app-botao-icone
                 tamanho="padrao"
                 type="button"
-                [attr.aria-label]="'Subir ' + documento.titulo"
+                [attr.aria-label]="'Subir ' + linha.documento.titulo"
                 [appTooltip]="'Subir na ordem'"
-                [disabled]="primeiro || bloqueado()"
-                (click)="mover.emit({ documento, deslocamento: -1 })"
+                [disabled]="linha.primeiro || bloqueado() || emOperacao()"
+                (click)="moverDocumento(linha, -1)"
             >
                 <app-icone nome="chevron" class="lista-documentos__seta-cima" />
             </button>
@@ -45,10 +129,10 @@
                 app-botao-icone
                 tamanho="padrao"
                 type="button"
-                [attr.aria-label]="'Descer ' + documento.titulo"
+                [attr.aria-label]="'Descer ' + linha.documento.titulo"
                 [appTooltip]="'Descer na ordem'"
-                [disabled]="ultimo || bloqueado()"
-                (click)="mover.emit({ documento, deslocamento: 1 })"
+                [disabled]="linha.ultimo || bloqueado() || emOperacao()"
+                (click)="moverDocumento(linha, 1)"
             >
                 <app-icone nome="chevron" />
             </button>
@@ -56,5 +140,64 @@
         }
     </li>
     }
+    }
 </ol>
+
+@if (arrastando() !== null) {
+<!-- Alvo de soltar na raiz — só aparece enquanto algo é arrastado, depois da lista: assim não
+     empurra os alvos de pasta durante o arrasto. -->
+<div
+    class="lista-documentos__raiz"
+    [class.lista-documentos__raiz--alvo]="alvoDrop() === 'raiz'"
+    (dragover)="aoPassarSobre($event, 'raiz')"
+    (dragleave)="aoSairDe('raiz')"
+    (drop)="aoSoltar($event, 'raiz')"
+>
+    <app-icone nome="biblioteca" />
+    Soltar na raiz da Biblioteca
+</div>
+}
+
+<app-menu-acoes
+    #menu
+    rotulo="Ações"
+    [contextual]="true"
+    [itens]="itensMenu()"
+    (escolheu)="aoEscolherAcao($event)"
+    (fechou)="aoFecharMenu()"
+/>
+}
+
+@if (dialogo(); as aberto) {
+@switch (aberto.tipo) {
+@case ("criar") {
+<app-pasta-nome-dialog
+    titulo="Nova pasta"
+    rotuloConfirmar="Criar"
+    [enviando]="emOperacao()"
+    (confirmou)="confirmarNome($event)"
+    (fechou)="fecharDialogo()"
+/>
+}
+@case ("renomear") {
+<app-pasta-nome-dialog
+    titulo="Renomear pasta"
+    rotuloConfirmar="Renomear"
+    [nomeInicial]="aberto.no.pasta.nome"
+    [enviando]="emOperacao()"
+    (confirmou)="confirmarNome($event)"
+    (fechou)="fecharDialogo()"
+/>
+}
+@default {
+<app-pasta-destino-dialog
+    [titulo]="tituloDestino()"
+    [destinos]="destinos()"
+    [atualId]="pastaAtualDoDialogo()"
+    [enviando]="emOperacao()"
+    (confirmou)="confirmarDestino($event)"
+    (fechou)="fecharDialogo()"
+/>
+}
+}
 }

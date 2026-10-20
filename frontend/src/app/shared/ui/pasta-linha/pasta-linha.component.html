@@ -1,0 +1,14 @@
+<button
+    class="pasta-linha__alternar"
+    type="button"
+    [attr.aria-expanded]="aberta()"
+    (click)="alternar.emit()"
+>
+    <app-icone class="pasta-linha__seta" nome="chevron-direita" />
+    <app-icone class="pasta-linha__icone" [nome]="aberta() ? 'pasta-aberta' : 'pasta'" />
+    <span class="pasta-linha__nome">{{ nome() }}</span>
+    @if (contagem() !== null) {
+    <span class="pasta-linha__contagem">{{ contagem() }}</span>
+    }
+</button>
+<ng-content select="[pastaAcoes]" />

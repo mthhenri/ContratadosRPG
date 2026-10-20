@@ -11,6 +11,7 @@ import type {
 import type { CenaAlteradaDto, CenaDocumentoAlteradoDto } from '@contratados-rpg/shared/dtos/cena';
 import type {
   DocumentoBibliotecaAlteradaDto,
+  DocumentoOrganizacaoAlteradaDto,
   DocumentoLeitoresDto,
   DocumentoLeituraInformarDto,
 } from '@contratados-rpg/shared/dtos/documento';
@@ -124,6 +125,8 @@ export class TempoRealService {
   private readonly cenaAlteradaSubject = new Subject<CenaAlteradaDto>();
   private readonly cenaDocumentoAlteradoSubject = new Subject<CenaDocumentoAlteradoDto>();
   private readonly documentoAlteradoSubject = new Subject<DocumentoBibliotecaAlteradaDto>();
+  private readonly documentoOrganizacaoAlteradaSubject =
+    new Subject<DocumentoOrganizacaoAlteradaDto>();
   private readonly documentoLeitoresSubject = new Subject<DocumentoLeitoresDto>();
   private readonly encontroIniciativaPedidoSubject = new Subject<
     EncontroIniciativaPedidoDto & { campanhaId: number }
@@ -205,6 +208,13 @@ export class TempoRealService {
    */
   readonly documentoAlterado$: Observable<DocumentoBibliotecaAlteradaDto> =
     this.documentoAlteradoSubject.asObservable();
+  /**
+   * Mudança nas pastas da Biblioteca (`documento:organizacao-alterada`). Dataless: avisa que a
+   * organização **do cargo deste usuário** mudou — o servidor só entrega a do mestre ao mestre e a
+   * dos jogadores a jogadores e espectadores; quem recebe busca a organização por REST.
+   */
+  readonly documentoOrganizacaoAlterada$: Observable<DocumentoOrganizacaoAlteradaDto> =
+    this.documentoOrganizacaoAlteradaSubject.asObservable();
   /**
    * Quem está lendo cada documento da Biblioteca (m9-09) — o **retrato completo** da campanha, sem
    * o mestre; só a sala `campanha:<id>:mestre` (ou o próprio socket do mestre, ao informar leitura)
@@ -339,6 +349,9 @@ export class TempoRealService {
     );
     this.socket.on('documento:alterado', (evento: DocumentoBibliotecaAlteradaDto) =>
       this.documentoAlteradoSubject.next(evento),
+    );
+    this.socket.on('documento:organizacao-alterada', (evento: DocumentoOrganizacaoAlteradaDto) =>
+      this.documentoOrganizacaoAlteradaSubject.next(evento),
     );
     this.socket.on('documento:leitores', (retrato: DocumentoLeitoresDto) =>
       this.documentoLeitoresSubject.next(retrato),

@@ -1603,6 +1603,327 @@ export const schemasContratosPublicos = {
         "additionalProperties": false,
         "description": "Payload de broadcast (`cena:documento-alterado`) — dataless como `campanha:inventario-alterado`:\nsó avisa que a coluna Documentos desta cena mudou; quem recebe refaz o `GET` já no próprio\nrecorte (mestre vê tudo; jogador/espectador, só o revelado)."
     },
+    "DocumentoPastaDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "nome": {
+                "type": "string"
+            },
+            "pastaMaeId": {
+                "type": "number",
+                "description": "Pasta-mãe, ou `null` na raiz."
+            },
+            "ordem": {
+                "type": "number",
+                "description": "Posição entre as pastas irmãs."
+            }
+        },
+        "required": [
+            "id",
+            "nome",
+            "pastaMaeId",
+            "ordem"
+        ],
+        "additionalProperties": false,
+        "description": "Uma pasta da organização — value object de `DocumentoOrganizacaoRecuperadaDto`."
+    },
+    "DocumentoPastaVinculoDto": {
+        "type": "object",
+        "properties": {
+            "documentoId": {
+                "type": "number"
+            },
+            "pastaId": {
+                "type": "number"
+            },
+            "ordem": {
+                "type": "number",
+                "description": "Posição entre os documentos da mesma pasta."
+            }
+        },
+        "required": [
+            "documentoId",
+            "pastaId",
+            "ordem"
+        ],
+        "additionalProperties": false,
+        "description": "Em que pasta está um documento e em que posição — value object da organização."
+    },
+    "DocumentoOrganizacaoRecuperarDto": {
+        "type": "object",
+        "properties": {
+            "campanhaId": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "campanhaId"
+        ],
+        "additionalProperties": false,
+        "description": "Entrada da organização do cargo do usuário na campanha — o `campanhaId` vem da rota."
+    },
+    "DocumentoOrganizacaoRecuperadaDto": {
+        "type": "object",
+        "properties": {
+            "campanhaId": {
+                "type": "number"
+            },
+            "organizacao": {
+                "type": "string",
+                "enum": [
+                    "MESTRE",
+                    "JOGADOR"
+                ]
+            },
+            "editavel": {
+                "type": "boolean"
+            },
+            "pastas": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/DocumentoPastaDto"
+                }
+            },
+            "vinculos": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/DocumentoPastaVinculoDto"
+                }
+            }
+        },
+        "required": [
+            "campanhaId",
+            "organizacao",
+            "editavel",
+            "pastas",
+            "vinculos"
+        ],
+        "additionalProperties": false,
+        "description": "Organização em pastas que o usuário enxerga. Documento sem vínculo está na raiz. `editavel` é\n`false` para o espectador, que só navega."
+    },
+    "DocumentoPastaCriarDto": {
+        "type": "object",
+        "properties": {
+            "campanhaId": {
+                "type": "number"
+            },
+            "nome": {
+                "type": "string"
+            },
+            "pastaMaeId": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "campanhaId",
+            "nome",
+            "pastaMaeId"
+        ],
+        "additionalProperties": false,
+        "description": "Entrada da criação de pasta — o `campanhaId` vem da rota. `pastaMaeId` `null` cria na raiz."
+    },
+    "DocumentoPastaCriadaDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "campanhaId": {
+                "type": "number"
+            },
+            "nome": {
+                "type": "string"
+            },
+            "pastaMaeId": {
+                "type": "number"
+            },
+            "ordem": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "id",
+            "campanhaId",
+            "nome",
+            "pastaMaeId",
+            "ordem"
+        ],
+        "additionalProperties": false,
+        "description": "Saída da criação de pasta."
+    },
+    "DocumentoPastaAlterarDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "nome": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "id",
+            "nome"
+        ],
+        "additionalProperties": false,
+        "description": "Entrada de renomear a pasta — o `id` vem da rota."
+    },
+    "DocumentoPastaAlteradaDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "campanhaId": {
+                "type": "number"
+            },
+            "nome": {
+                "type": "string"
+            },
+            "pastaMaeId": {
+                "type": "number"
+            },
+            "ordem": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "id",
+            "campanhaId",
+            "nome",
+            "pastaMaeId",
+            "ordem"
+        ],
+        "additionalProperties": false,
+        "description": "Saída de renomear a pasta."
+    },
+    "DocumentoPastaMoverDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "pastaMaeId": {
+                "type": "number"
+            },
+            "posicao": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "id",
+            "pastaMaeId"
+        ],
+        "additionalProperties": false,
+        "description": "Entrada de mover/reposicionar a pasta — o `id` vem da rota. `pastaMaeId` é o destino (`null` =\nraiz); `posicao` é o índice (0-based) entre as irmãs de destino, e omitida manda para o fim."
+    },
+    "DocumentoPastaMovidaDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "campanhaId": {
+                "type": "number"
+            },
+            "nome": {
+                "type": "string"
+            },
+            "pastaMaeId": {
+                "type": "number"
+            },
+            "ordem": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "id",
+            "campanhaId",
+            "nome",
+            "pastaMaeId",
+            "ordem"
+        ],
+        "additionalProperties": false,
+        "description": "Saída de mover a pasta."
+    },
+    "DocumentoPastaRemoverDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "id"
+        ],
+        "additionalProperties": false,
+        "description": "Entrada de excluir a pasta — o `id` vem da rota. Subpastas e documentos voltam à raiz da mesma\norganização; a exclusão nunca é bloqueada."
+    },
+    "DocumentoPastaVinculoAlterarDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "pastaId": {
+                "type": "number"
+            },
+            "posicao": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "id",
+            "pastaId"
+        ],
+        "additionalProperties": false,
+        "description": "Entrada de colocar um documento numa pasta — o `id` do documento vem da rota. `pastaId` `null`\ndevolve o documento à raiz; `posicao` é o índice (0-based) na pasta de destino, omitida = fim."
+    },
+    "DocumentoPastaVinculoAlteradoDto": {
+        "type": "object",
+        "properties": {
+            "documentoId": {
+                "type": "number"
+            },
+            "pastaId": {
+                "type": "number"
+            },
+            "ordem": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "documentoId",
+            "pastaId",
+            "ordem"
+        ],
+        "additionalProperties": false,
+        "description": "Saída de colocar um documento numa pasta."
+    },
+    "DocumentoOrganizacaoAlteradaDto": {
+        "type": "object",
+        "properties": {
+            "campanhaId": {
+                "type": "number"
+            },
+            "organizacao": {
+                "type": "string",
+                "enum": [
+                    "MESTRE",
+                    "JOGADOR"
+                ]
+            }
+        },
+        "required": [
+            "campanhaId",
+            "organizacao"
+        ],
+        "additionalProperties": false,
+        "description": "Payload de `documento:organizacao-alterada`. Dataless: só avisa **que** a organização do cargo\nmudou — quem precisa dela a busca por REST. `organizacao` `MESTRE` só chega às sessões do mestre;\n`JOGADOR`, só a jogadores e espectadores."
+    },
     "DocumentoCriarDto": {
         "type": "object",
         "properties": {

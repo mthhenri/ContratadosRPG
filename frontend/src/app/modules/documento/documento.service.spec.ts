@@ -187,4 +187,68 @@ describe('DocumentoService', () => {
     requisicao.flush(envelope({ id: 7, imagemUrl: '/uploads/documentos/a.png', updatedDate: 'v2' }));
     expect(recebido).toEqual({ id: 7, imagemUrl: '/uploads/documentos/a.png', updatedDate: 'v2' });
   });
+
+  describe('pastas da biblioteca', () => {
+    it('lê a organização do cargo sem informar a organização na rota', () => {
+      const { servico, http } = criar();
+      const organizacao = {
+        campanhaId: 3,
+        organizacao: 'JOGADOR',
+        editavel: true,
+        pastas: [],
+        vinculos: [],
+      };
+      let recebido: unknown;
+      servico.recuperarOrganizacao(3).subscribe((dados) => (recebido = dados));
+
+      const requisicao = http.expectOne((req) =>
+        req.url.endsWith('/campanha/3/documento-organizacao'),
+      );
+      expect(requisicao.request.method).toBe('GET');
+      requisicao.flush(envelope(organizacao));
+      expect(recebido).toEqual(organizacao);
+    });
+
+    it('cria a pasta sob a campanha, com a mãe (ou a raiz)', () => {
+      const { servico, http } = criar();
+      servico.criarPasta(3, 'Mapas', null).subscribe();
+
+      const requisicao = http.expectOne((req) => req.url.endsWith('/campanha/3/documento-pasta'));
+      expect(requisicao.request.method).toBe('POST');
+      expect(requisicao.request.body).toEqual({ nome: 'Mapas', pastaMaeId: null });
+      requisicao.flush(
+        envelope({ id: 1, campanhaId: 3, nome: 'Mapas', pastaMaeId: null, ordem: 1 }),
+      );
+    });
+
+    it('renomeia, move e exclui pela rota da pasta', () => {
+      const { servico, http } = criar();
+      servico.renomearPasta(4, 'Cidade').subscribe();
+      servico.moverPasta(4, 2, 0).subscribe();
+      servico.removerPasta(4).subscribe();
+
+      const renomear = http.expectOne(
+        (req) => req.method === 'PUT' && req.url.endsWith('/documento-pasta/4'),
+      );
+      expect(renomear.request.body).toEqual({ nome: 'Cidade' });
+      renomear.flush(envelope({}));
+      const mover = http.expectOne((req) => req.url.endsWith('/documento-pasta/4/posicao'));
+      expect(mover.request.method).toBe('PUT');
+      expect(mover.request.body).toEqual({ pastaMaeId: 2, posicao: 0 });
+      mover.flush(envelope({}));
+      const remover = http.expectOne((req) => req.method === 'DELETE');
+      expect(remover.request.url.endsWith('/documento-pasta/4')).toBe(true);
+      remover.flush(envelope(null));
+    });
+
+    it('coloca o documento numa pasta (ou na raiz) pela rota do documento', () => {
+      const { servico, http } = criar();
+      servico.moverDocumento(7, 4).subscribe();
+
+      const requisicao = http.expectOne((req) => req.url.endsWith('/documento/7/pasta'));
+      expect(requisicao.request.method).toBe('PUT');
+      expect(requisicao.request.body).toEqual({ pastaId: 4, posicao: undefined });
+      requisicao.flush(envelope({ documentoId: 7, pastaId: 4, ordem: 1 }));
+    });
+  });
 });

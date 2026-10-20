@@ -1,11 +1,57 @@
-// Lista da biblioteca (m9-04, extraída na m9-05). Um cartão por linha, com as setas de ordem ao
-// lado quando o mestre ordena — como as planejadas do hub de cenas. Só tokens (#29).
+// Lista da biblioteca (m9-04, extraída na m9-05; em árvore com pastas na biblioteca-pastas). Um
+// cartão por linha, com as setas de ordem ao lado quando o mestre ordena — como as planejadas do
+// hub de cenas. As pastas recuam pelo próprio primitivo (`app-pasta-linha`); o cartão de documento
+// recua pelo `--lista-nivel` do item. Só tokens (#29).
+
+@use "tema/breakpoints" as bp;
 
 :host {
     display: block;
 }
 
 .lista-documentos {
+    // Nova pasta + Organizar: o controle de quem edita, acima da árvore.
+    &__barra {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--space-8);
+        margin-bottom: var(--space-12);
+    }
+
+    &__barra-acao {
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+    }
+
+    // Alvo de soltar na raiz — só enquanto algo é arrastado.
+    &__raiz {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--space-8);
+        margin-top: var(--space-8);
+        padding: var(--space-12);
+        font-family: var(--font-mono);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        color: var(--text-mute);
+        border: 1px dashed var(--border-strong);
+        border-radius: var(--radius-card);
+        transition:
+            border-color 0.15s ease,
+            background-color 0.15s ease,
+            color 0.15s ease;
+
+        &--alvo {
+            color: var(--accent);
+            background: var(--accent-dim);
+            border-color: var(--accent);
+        }
+    }
+
     &__itens {
         display: flex;
         flex-direction: column;
@@ -19,6 +65,7 @@
         display: flex;
         align-items: center;
         gap: var(--space-8);
+        margin-left: calc(var(--lista-nivel, 0) * var(--space-16));
     }
 
     &__controles {
@@ -42,4 +89,9 @@
     &__esqueleto-linha {
         height: 62px;
     }
+}
+
+// Em arrasto, o item sob o cursor fica "levantado" (o navegador já mostra o fantasma).
+[draggable="true"] {
+    cursor: grab;
 }

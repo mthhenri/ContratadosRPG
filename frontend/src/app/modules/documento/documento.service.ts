@@ -11,6 +11,11 @@ import type {
   DocumentoCriarDto,
   DocumentoImagemAlteradaDto,
   DocumentoOcultadoDto,
+  DocumentoOrganizacaoRecuperadaDto,
+  DocumentoPastaAlteradaDto,
+  DocumentoPastaCriadaDto,
+  DocumentoPastaMovidaDto,
+  DocumentoPastaVinculoAlteradoDto,
   DocumentoRecuperadoDto,
   DocumentoResumoDto,
   DocumentoReveladoDto,
@@ -139,5 +144,79 @@ export class DocumentoService {
         context: new HttpContext().set(ERROS_TRATADOS_NA_TELA, [HttpStatusCode.BadRequest]),
       })
       .pipe(map((resposta) => resposta.dados as DocumentoImagemAlteradaDto));
+  }
+
+  // ── Pastas da Biblioteca ───────────────────────────────────────────────────
+
+  /**
+   * A organização em pastas do cargo do usuário: o mestre recebe a sua, jogador e espectador a
+   * compartilhada (o espectador com `editavel: false`). O backend escolhe pelo papel; o cliente
+   * nunca informa a organização.
+   */
+  recuperarOrganizacao(campanhaId: number): Observable<DocumentoOrganizacaoRecuperadaDto> {
+    return this.httpClient
+      .get<StandardResponse<DocumentoOrganizacaoRecuperadaDto>>(
+        `${environment.apiBase}/campanha/${campanhaId}/documento-organizacao`,
+      )
+      .pipe(map((resposta) => resposta.dados as DocumentoOrganizacaoRecuperadaDto));
+  }
+
+  /** Cria uma pasta no fim das irmãs; `pastaMaeId` `null` cria na raiz. */
+  criarPasta(
+    campanhaId: number,
+    nome: string,
+    pastaMaeId: number | null,
+  ): Observable<DocumentoPastaCriadaDto> {
+    return this.httpClient
+      .post<StandardResponse<DocumentoPastaCriadaDto>>(
+        `${environment.apiBase}/campanha/${campanhaId}/documento-pasta`,
+        { nome, pastaMaeId },
+      )
+      .pipe(map((resposta) => resposta.dados as DocumentoPastaCriadaDto));
+  }
+
+  /** Renomeia a pasta. */
+  renomearPasta(id: number, nome: string): Observable<DocumentoPastaAlteradaDto> {
+    return this.httpClient
+      .put<StandardResponse<DocumentoPastaAlteradaDto>>(
+        `${environment.apiBase}/documento-pasta/${id}`,
+        { nome },
+      )
+      .pipe(map((resposta) => resposta.dados as DocumentoPastaAlteradaDto));
+  }
+
+  /** Move a pasta para outra mãe (`null` = raiz) e/ou posição entre as irmãs (omitida = fim). */
+  moverPasta(
+    id: number,
+    pastaMaeId: number | null,
+    posicao?: number,
+  ): Observable<DocumentoPastaMovidaDto> {
+    return this.httpClient
+      .put<StandardResponse<DocumentoPastaMovidaDto>>(
+        `${environment.apiBase}/documento-pasta/${id}/posicao`,
+        { pastaMaeId, posicao },
+      )
+      .pipe(map((resposta) => resposta.dados as DocumentoPastaMovidaDto));
+  }
+
+  /** Exclui a pasta; subpastas e documentos voltam à raiz da mesma organização. */
+  removerPasta(id: number): Observable<void> {
+    return this.httpClient
+      .delete<StandardResponse<null>>(`${environment.apiBase}/documento-pasta/${id}`)
+      .pipe(map(() => undefined));
+  }
+
+  /** Coloca o documento numa pasta (`null` = raiz), na posição pedida (omitida = fim). */
+  moverDocumento(
+    id: number,
+    pastaId: number | null,
+    posicao?: number,
+  ): Observable<DocumentoPastaVinculoAlteradoDto> {
+    return this.httpClient
+      .put<StandardResponse<DocumentoPastaVinculoAlteradoDto>>(
+        `${this.base}/${id}/pasta`,
+        { pastaId, posicao },
+      )
+      .pipe(map((resposta) => resposta.dados as DocumentoPastaVinculoAlteradoDto));
   }
 }

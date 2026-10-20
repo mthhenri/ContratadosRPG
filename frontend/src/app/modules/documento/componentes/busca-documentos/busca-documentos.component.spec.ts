@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, type Provider, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Subject, of, throwError } from 'rxjs';
 
@@ -10,6 +10,7 @@ import { DocumentoAlteracaoEnum, TipoDocumentoEnum } from '@contratados-rpg/shar
 import type { PaginatedResult } from '@contratados-rpg/shared/interfaces';
 
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
+import { BibliotecaOrganizacaoStore } from '../../biblioteca-organizacao.store';
 import { DocumentoService } from '../../documento.service';
 import { BuscaDocumentos } from './busca-documentos.component';
 
@@ -66,12 +67,13 @@ describe('BuscaDocumentos', () => {
   beforeEach(() => vi.useFakeTimers());
   afterEach(() => vi.useRealTimers());
 
-  function montar(buscar = vi.fn(() => of(pagina([resultado(1)])))) {
+  function montar(buscar = vi.fn(() => of(pagina([resultado(1)]))), provedores: Provider[] = []) {
     const documentoAlterado$ = new Subject<DocumentoBibliotecaAlteradaDto>();
     const reconexao = signal(0);
     const reconexao$ = new Subject<void>();
     TestBed.configureTestingModule({
       providers: [
+        ...provedores,
         { provide: DocumentoService, useValue: { buscar } },
         {
           provide: TempoRealService,
@@ -102,6 +104,28 @@ describe('BuscaDocumentos', () => {
     expect(raiz.querySelector('.busca-documentos__resultados')).toBeNull();
     expect(fixture.componentInstance.ativa).toBe(false);
     expect(buscar).not.toHaveBeenCalled();
+  });
+
+  it('mostra a pasta onde cada resultado mora na organização do usuário; na raiz, nada', () => {
+    const organizacao = signal({
+      campanhaId: 9,
+      organizacao: 'JOGADOR',
+      editavel: true,
+      pastas: [
+        { id: 1, nome: 'Pistas', pastaMaeId: null, ordem: 1 },
+        { id: 2, nome: 'Cidade', pastaMaeId: 1, ordem: 1 },
+      ],
+      vinculos: [{ documentoId: 1, pastaId: 2, ordem: 1 }],
+    });
+    const { raiz, digitar } = montar(
+      vi.fn(() => of(pagina([resultado(1), resultado(2)]))),
+      [{ provide: BibliotecaOrganizacaoStore, useValue: { organizacao } }],
+    );
+
+    digitar('galpão');
+
+    const caminhos = Array.from(raiz.querySelectorAll('.busca-documentos__pasta'), texto);
+    expect(caminhos).toEqual(['Pistas / Cidade']);
   });
 
   it('com termo, busca depois do debounce e segmenta o destaque em <mark> como texto', () => {

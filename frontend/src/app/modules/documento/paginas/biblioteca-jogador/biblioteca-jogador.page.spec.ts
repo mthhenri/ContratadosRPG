@@ -58,6 +58,9 @@ describe('BibliotecaJogador', () => {
     const listagem$ = new Subject<DocumentoResumoDto[]>();
     const documentoAlterado$ = new Subject<DocumentoBibliotecaAlteradaDto>();
     const documentoService = {
+      recuperarOrganizacao: vi.fn(() =>
+        of({ campanhaId: CAMPANHA_ID, organizacao: 'JOGADOR', editavel: true, pastas: [], vinculos: [] }),
+      ),
       listar: vi.fn(() => (opcoes.pendente ? listagem$ : of([...lista]))),
       recuperar: vi.fn((id: number) => of(completo(lista.find((item) => item.id === id)!))),
       buscar: vi.fn(),
@@ -71,6 +74,7 @@ describe('BibliotecaJogador', () => {
       reconexao: signal(0),
       reconexao$: reconexao$.asObservable(),
       documentoAlterado$,
+      documentoOrganizacaoAlterada$: new Subject<never>(),
     };
     TestBed.configureTestingModule({
       providers: [

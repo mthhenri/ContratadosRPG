@@ -61,6 +61,12 @@
                 [aberto]="abertoId() === item.resultado.id"
                 (click)="selecionar.emit(item.resultado.id)"
             >
+                @if (item.caminho) {
+                <span class="busca-documentos__pasta">
+                    <app-icone nome="pasta" />
+                    {{ item.caminho }}
+                </span>
+                }
                 @if (item.segmentos.length > 0) {
                 <span class="busca-documentos__trecho">
                     @for (segmento of item.segmentos; track $index) {

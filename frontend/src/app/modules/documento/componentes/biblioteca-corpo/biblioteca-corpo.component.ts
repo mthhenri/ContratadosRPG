@@ -1,4 +1,4 @@
-import { Component, computed, input, output, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
 
 import type {
   DocumentoRecuperadoDto,
@@ -10,6 +10,7 @@ import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { Chip } from '../../../../shared/ui/chip/chip.component';
 import { Esqueleto } from '../../../../shared/ui/esqueleto/esqueleto.component';
 import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
+import { BibliotecaOrganizacaoStore } from '../../biblioteca-organizacao.store';
 import {
   NENHUM_LEITOR,
   leitoresDoDocumento,
@@ -38,6 +39,10 @@ import {
  * - `[bibliotecaCorpoDocumento]`: o corpo do documento aberto — sem projeção, o `LeitorDocumento`.
  * - `[bibliotecaAcaoLista]`: uma ação no fim do divisor da lista (m9-13, o "Novo documento" do
  *   painel; a página tem a dela no cabeçalho da casca).
+ *
+ * **Pastas (biblioteca-pastas):** o corpo provê a `BibliotecaOrganizacaoStore` — a organização em
+ * pastas do cargo do usuário —, compartilhada pela lista em árvore e pela busca. Mestre, jogador,
+ * espectador e painel flutuante ganham as pastas por aqui, sem mudar nenhuma das três visões.
  */
 @Component({
   selector: 'app-biblioteca-corpo',
@@ -53,6 +58,7 @@ import {
   ],
   templateUrl: './biblioteca-corpo.component.html',
   styleUrl: './biblioteca-corpo.component.scss',
+  providers: [BibliotecaOrganizacaoStore],
   host: {
     class: 'biblioteca__corpo',
     '[class.biblioteca__corpo--documento]': 'abertoId() !== null',
@@ -60,6 +66,8 @@ import {
   },
 })
 export class BibliotecaCorpo {
+  private readonly organizacao = inject(BibliotecaOrganizacaoStore);
+
   readonly campanhaId = input.required<number>();
 
   readonly documentos = input.required<readonly DocumentoResumoDto[]>();
@@ -97,6 +105,13 @@ export class BibliotecaCorpo {
   protected readonly totalBusca = signal<number | null>(null);
 
   protected readonly iconeTipo = iconeTipoDocumento;
+
+  constructor() {
+    effect(() => {
+      const campanhaId = this.campanhaId();
+      untracked(() => this.organizacao.iniciar(campanhaId));
+    });
+  }
 
   protected readonly leitoresAberto = computed(() =>
     leitoresDoDocumento(this.leitoresPorDocumento(), this.abertoId()),

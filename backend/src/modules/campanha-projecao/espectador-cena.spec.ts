@@ -45,6 +45,7 @@ function criarContexto() {
     {} as never,
     {} as never,
     {} as never,
+    {} as never,
   );
   const vinculo = {
     documentoId: 7,

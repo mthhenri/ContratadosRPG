@@ -24,11 +24,13 @@ import type {
   DocumentoBibliotecaAlteradaDto,
   DocumentoLeitoresDto,
   DocumentoLeituraInformarDto,
+  DocumentoOrganizacaoAlteradaDto,
 } from '@contratados-rpg/shared/dtos/documento';
 import {
   CenaStatusEnum,
   RolagemVisibilidadeEnum,
   TipoCampanhaMembroPapelEnum,
+  TipoDocumentoOrganizacaoEnum,
 } from '@contratados-rpg/shared/enums';
 import type {
   FichaAcessoRevogadoDto,
@@ -715,6 +717,25 @@ export class CampanhaGateway implements OnGatewayConnection, OnGatewayDisconnect
       ? [this.salaCampanha(evento.campanhaId), this.salaCampanhaEspectador(evento.campanhaId)]
       : [this.salaCampanhaMestre(evento.campanhaId)];
     this.servidor.to(salas).emit('documento:alterado', evento);
+  }
+
+  /**
+   * Emite `documento:organizacao-alterada` depois de uma mutação nas pastas da Biblioteca já
+   * persistida. Dataless: só avisa que a organização do cargo mudou. A do `MESTRE` vai só para
+   * `campanha:<id>:mestre`; a do `JOGADOR` vai a jogadores e espectadores e **nunca** ao mestre —
+   * `campanha:<id>` também contém o mestre, por isso a sala dele é excluída com `except`.
+   */
+  emitirDocumentoOrganizacaoAlterada(evento: DocumentoOrganizacaoAlteradaDto): void {
+    if (evento.organizacao === TipoDocumentoOrganizacaoEnum.MESTRE) {
+      this.servidor
+        .to(this.salaCampanhaMestre(evento.campanhaId))
+        .emit('documento:organizacao-alterada', evento);
+      return;
+    }
+    this.servidor
+      .to([this.salaCampanha(evento.campanhaId), this.salaCampanhaEspectador(evento.campanhaId)])
+      .except(this.salaCampanhaMestre(evento.campanhaId))
+      .emit('documento:organizacao-alterada', evento);
   }
 
   /**

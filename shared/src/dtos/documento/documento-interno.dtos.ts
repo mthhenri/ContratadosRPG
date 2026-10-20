@@ -1,4 +1,8 @@
-import type { TipoCampanhaMembroPapelEnum, TipoDocumentoEnum } from '../../enums';
+import type {
+  TipoCampanhaMembroPapelEnum,
+  TipoDocumentoEnum,
+  TipoDocumentoOrganizacaoEnum,
+} from '../../enums';
 
 /**
  * DTOs **internos** do módulo `documento` — trafegam só entre `DocumentoService` e
@@ -106,4 +110,67 @@ export interface DocumentoLeituraDocumentoInternoRemoverDto {
 export interface DocumentoReveladoInternoRecuperarDto {
   readonly id: number;
   readonly campanhaId: number;
+}
+
+// ── Pastas da Biblioteca ────────────────────────────────────────────────────
+
+/** Uma pasta como o repositório a devolve — com a organização e a campanha a que pertence. */
+export interface DocumentoPastaInternoRecuperadaDto {
+  readonly id: number;
+  readonly campanhaId: number;
+  readonly organizacao: TipoDocumentoOrganizacaoEnum;
+  readonly nome: string;
+  readonly pastaMaeId: number | null;
+  readonly ordem: number;
+}
+
+/** Entrada interna da leitura da organização de um cargo. */
+export interface DocumentoOrganizacaoInternoListarDto {
+  readonly campanhaId: number;
+  readonly organizacao: TipoDocumentoOrganizacaoEnum;
+}
+
+/** Entrada interna da criação de pasta — a `ordem` é calculada no `INSERT ... SELECT`. */
+export interface DocumentoPastaInternoCriarDto {
+  readonly campanhaId: number;
+  readonly organizacao: TipoDocumentoOrganizacaoEnum;
+  readonly nome: string;
+  readonly pastaMaeId: number | null;
+}
+
+/** Entrada interna de renomear a pasta. */
+export interface DocumentoPastaInternoAlterarDto {
+  readonly id: number;
+  readonly nome: string;
+}
+
+/** Entrada interna da posição de uma pasta (mãe + ordem entre as irmãs). */
+export interface DocumentoPastaPosicaoInternoAlterarDto {
+  readonly id: number;
+  readonly pastaMaeId: number | null;
+  readonly ordem: number;
+}
+
+/** Entrada interna da exclusão lógica de uma pasta e de todas as suas descendentes. */
+export interface DocumentoPastaInternoRemoverDto {
+  readonly id: number;
+}
+
+/** Entrada interna da posição de um documento numa pasta. */
+export interface DocumentoVinculoInternoAlterarDto {
+  readonly documentoId: number;
+  readonly organizacao: TipoDocumentoOrganizacaoEnum;
+  readonly pastaId: number;
+  readonly ordem: number;
+}
+
+/** Entrada interna de devolver o documento à raiz de uma organização. */
+export interface DocumentoVinculoInternoRemoverDto {
+  readonly documentoId: number;
+  readonly organizacao: TipoDocumentoOrganizacaoEnum;
+}
+
+/** Entrada interna de limpar o vínculo de um documento em **todas** as organizações. */
+export interface DocumentoVinculosInternoRemoverDto {
+  readonly documentoId: number;
 }
