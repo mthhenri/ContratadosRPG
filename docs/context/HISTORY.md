@@ -1,6 +1,17 @@
 # HISTORY.md — Histórico do Projeto
 
 
+## 2026-10-20 — icones-critico-adocao (ajuste): brilho grande sobre o dado no glifo `critico`
+
+O autor reviu o glifo do Crítico adotado em 18/10 ("dado excepcional com estrelinhas"): ilegível em 14 px. Escolhido, numa
+prancha de candidatos, o **dado em silhueta com um brilho de quatro pontas grande por cima**, com o contorno do dado
+recortado ao redor do brilho (máscara SVG `icone-critico-recorte` dentro do `@case ("critico")` de `app-icone`; o
+brilho é o único elemento preenchido, o resto segue de contorno). Único consumidor do glifo: o selo de críticos em
+`resultado-rolagem`. Testes do ícone e do resultado de rolagem passam (82). Ao vivo em 1920×1080, com um crítico real
+na bandeja da ficha e o glifo ampliado numa lupa de depuração: recorte funciona e o brilho lê em 14/20/36 px. Não
+repetido em 360×800 (mesmo glifo, mesmo tamanho). Nota 1.10.0 ajustada. Decisão do autor também registrada na spec ativa
+`icones-identidade-cards-agente` (alcance ampliado: ficha completa, painel do mestre, NPC e criatura).
+
 ## 2026-10-20 — montador-rolagem-fechamento: o Completo vira o montador único, liberado para todos
 
 Decisão do autor: seguir com o **Completo** e liberar o montador (I-041) para todos os usuários que rolam. Fecha o

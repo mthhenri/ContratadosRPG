@@ -63,9 +63,9 @@ import { Component, computed, input } from "@angular/core";
  * Cenas (UI-41): `cena-*` identifica cada tipo e `cenas` é o genérico (claquete).
  * Desenhos originais Codex (OpenAI), aprovados pelo autor na prancha da UI-41;
  * Furtiva segue o pedido expresso de homem encapuzado. O glifo `combate` é preservado.
- * `maestria` (Atributo coroado) e `critico` (Dado excepcional com estrelinhas):
- * desenhos originais Codex (OpenAI), aprovados pelo autor em 18/10/2026,
- * sem assets externos; uso sob a licença do projeto.
+ * `maestria` (Atributo coroado) e `critico` (dado em silhueta com brilho de quatro pontas por cima):
+ * desenhos originais Codex (OpenAI), aprovados pelo autor em 18/10/2026 (o brilho grande do crítico foi
+ * escolhido em 20/10/2026), sem assets externos; uso sob a licença do projeto.
  */
 export type IconeNome =
   | 'maestria'

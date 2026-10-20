@@ -12,7 +12,22 @@
             <path d="M5 10V7l4 2 3-6 3 6 4-2v3M5 13v7h14v-7M9 16h6" />
         }
         @case ("critico") {
-            <path d="m4 9 7-4 7 4v8l-7 4-7-4V9Zm0 0 7 4 7-4M11 13v8M20 1.5l.65 1.85 1.85.65-1.85.65L20 6.5l-.65-1.85L17.5 4l1.85-.65L20 1.5ZM21.5 7l.4 1.1L23 8.5l-1.1.4-.4 1.1-.4-1.1-1.1-.4 1.1-.4  .4-1.1Z" />
+            <defs>
+                <mask id="icone-critico-recorte" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24">
+                    <rect width="24" height="24" fill="#fff" />
+                    <path
+                        d="M12 3.5l2.6 6.9 6.9 2.6-6.9 2.6L12 21.5l-2.6-6.9L2.5 12l6.9-2.6z"
+                        fill="#000"
+                        stroke="#000"
+                        stroke-width="3.2"
+                    />
+                </mask>
+            </defs>
+            <g mask="url(#icone-critico-recorte)">
+                <path d="M12 2.2 20.8 7v10L12 21.8 3.2 17V7z" />
+                <path d="M3.2 7 12 12l8.8-5M12 12v9.8" stroke-opacity="0.6" />
+            </g>
+            <path d="M12 3.5l2.6 6.9 6.9 2.6-6.9 2.6L12 21.5l-2.6-6.9L2.5 12l6.9-2.6z" fill="currentColor" />
         }
         @case ("vida") {
             <path

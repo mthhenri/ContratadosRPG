@@ -60,3 +60,22 @@ Sem ícone extra de tipo: adotar classe base + arquétipo/subclasse; Civil sozin
 Alcance dos consumidores além dos cards continua aguardando a resposta à consulta.
 Proposta concreta em [adocao-proposta.md](icones-identidade-cards-agente/adocao-proposta.md)
 e [amostra visual](icones-identidade-cards-agente/proposta-visual.html).
+
+## Decisão do autor — 2026-10-20 (alcance ampliado)
+
+Resposta à decisão em aberto 3: o autor quer os ícones de identidade **em todas as telas onde a classe, o
+arquétipo ou o tipo de personagem aparece**, não só nos cards de jogador:
+
+- **Ficha completa**: os chips de classe e arquétipo da identidade (ex.: "Combatente" / "Vanguarda", ao lado do
+  avatar) ganham o ícone — consumidor `ficha-visualizacao` (via `rotuloClasseCompleto`/`perfilClasseRotulos`).
+- **Painel do mestre**: Esquadrão, cards de ficha (`ficha-campanha-card`), Iniciativa e seletor de combatentes.
+- **NPCs e criaturas**: usam o glifo `npc` (já existe) e, para criatura, a identidade que a spec
+  `icones-criatura-vd-tenacidade` definir; **não há glifo de criatura hoje** — se a tela pedir um, é glifo
+  novo e passa pelo autor (amostra visual) antes de entrar. Isto retira "ícones de criatura/NPC" do Fora de
+  Escopo desta spec, mantendo VD/Tenacidade na spec própria.
+- Continua valendo a decisão de 2026-10-18 (sem ícone de tipo; Civil sozinho) e que o **card do mestre não
+  ganha VD/Tenacidade**.
+
+Pendente: a lista final de consumidores com tamanho e `appTooltip` (entregável 2) agora cobre estes pontos e
+volta ao autor antes da aplicação (entregável 3). O gate visual passa a incluir a ficha completa e o painel do
+mestre, em `1920×1080` e `360×800`.
