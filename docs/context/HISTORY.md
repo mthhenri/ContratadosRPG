@@ -1,6 +1,15 @@
 # HISTORY.md — Histórico do Projeto
 
 
+## 2026-10-20 — versão 1.10.0: nota "A Biblioteca ganha pastas, o Caderno liga trechos a documentos e as cenas ganham ícones"
+
+Nota `docs/patchnotes/1.10.0.md` (14 a 20 de outubro) e versão dos pacotes em 1.10.0. Minor por trazer
+funcionalidade nova visível. Cobre a Biblioteca em pastas, o vínculo Caderno→Biblioteca, ícones de cena e
+de recursos, o recorte de fichas ocultas e os ajustes da leitura das Regras e da Oficina. A transcrição fica
+de fora (implementada e desativada na mesma semana). Conferido: `patchnotes:publicar --dry-run`,
+`versao:sincronizar`, build e testes do `shared`. Sem tag local; a tag e a publicação nascem no workflow, no merge.
+
+
 ## 2026-10-20 — biblioteca-pastas: Biblioteca em pastas, uma organização por cargo
 
 Duas organizações independentes por campanha (migration `0040`): a do mestre, só dele, e uma dos
