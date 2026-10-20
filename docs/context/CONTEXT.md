@@ -37,7 +37,11 @@
 > reutilizam a listagem autorizada; guia reconcilia médias ao retomar rascunho, inclusive zero.
 > Sistema 4.1.5 publicado/exportado em banco isolado de verificação; o banco original e suas
 > edições de Oficina foram preservados. Publicação no ambiente final exige seu gate operacional.
-> Resta a spec de leitura autorizada de avatar no backlog.
+> Avatar implementado e verificado localmente: leitura autenticada, origem legada controlada,
+> transporte com limpeza/revalidação e migração isolada aprovados. A
+> [spec permanece ativa](../specs/active/ficha-avatar-leitura-autorizada.spec.md): autor decidiu
+> em 20/10 manter o teste real R2/CDN aberto enquanto conclui a parte local.
+> [Verificação, revisão e pendências externas](../specs/active/ficha-avatar-leitura-autorizada/verificacao.md).
 
 > **Requests — revisão de 2026-09-26 fechada:** as seis tasks do guarda-chuva
 > [requests-correcoes](../specs/done/requests-correcoes.spec.md) (`p-082`…`p-086` +

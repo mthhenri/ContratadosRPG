@@ -1,4 +1,4 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, StreamableFile } from '@nestjs/common';
 import { IMAGEM_EXTENSAO_POR_MIME } from '@contratados-rpg/shared/validators';
 import type {
   EncontroCombatenteAdicionarDto,
@@ -23,6 +23,7 @@ import type {
   EncontroTurnoAvancarDto,
   EncontroTurnoVoltarDto,
   OrdemTurnoDto,
+  EncontroImagemAvulsoRecuperarDto,
 } from '@contratados-rpg/shared/dtos/encontro';
 import type { FichaCriaturaDadosDto } from '@contratados-rpg/shared/dtos/ficha';
 import {
@@ -93,6 +94,16 @@ export class EncontroService {
     @Inject(ARMAZENAMENTO_PROVEDOR)
     private readonly armazenamentoProvedor: ArmazenamentoProvedor,
   ) {}
+
+  /** Mantém público somente o objeto ainda referenciado por um avulso ativo. */
+  async recuperarImagemAvulso(dto: EncontroImagemAvulsoRecuperarDto): Promise<StreamableFile | null> {
+    const referencia = await this.encontroRepositorio.recuperarImagemAvulso(dto);
+    if (!referencia) return null;
+    const imagem = await this.armazenamentoProvedor.lerImagem({ caminho: referencia.caminho });
+    const atual = await this.encontroRepositorio.recuperarImagemAvulso(dto);
+    if (!imagem || atual?.caminho !== referencia.caminho) throw new ResourceNotFoundException('Avatar');
+    return new StreamableFile(imagem.conteudo, { type: imagem.mimetype, length: imagem.conteudo.length });
+  }
 
   // A criação do encontro saiu daqui na m7-22: o encontro só nasce dentro de uma cena, pela
   // `CenaService`, na mesma transação da cena (a invariante "uma ativa por campanha" é dela).

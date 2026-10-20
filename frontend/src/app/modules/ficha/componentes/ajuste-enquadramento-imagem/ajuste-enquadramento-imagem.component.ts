@@ -1,3 +1,5 @@
+import { AsyncPipe } from "@angular/common";
+import { ImagemFichaPipe } from "../../../../shared/imagem-ficha.pipe";
 import { Component, DestroyRef, computed, effect, inject, input, output, signal, viewChild } from '@angular/core';
 
 import type { FichaImagemFocoDto } from '@contratados-rpg/shared/dtos/ficha';
@@ -28,7 +30,7 @@ const ALTURA_PRE_VISUALIZACAO_PX = 220;
  */
 @Component({
   selector: 'app-ajuste-enquadramento-imagem',
-  imports: [Botao, FocoImagem],
+  imports: [AsyncPipe, ImagemFichaPipe, Botao, FocoImagem],
   templateUrl: './ajuste-enquadramento-imagem.component.html',
   styleUrl: './ajuste-enquadramento-imagem.component.scss',
 })

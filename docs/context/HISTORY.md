@@ -1,5 +1,34 @@
 # HISTORY.md — Histórico do Projeto
 
+
+## 2026-10-20 — ficha-avatar-leitura-autorizada: parte local validada, R2/CDN aberto
+
+Implementada leitura binária autenticada, pasta/bucket FICHAS separados e rota antiga
+agentes controlada pelos módulos proprietários. FichaService revalida snapshot factual
+único de ficha/papéis/concessões depois do I/O, sem await posterior à autorização.
+Frontend usa transporte com cancelamento/revogação por sessão/contexto e invalidadores,
+incluindo reconexão; imagens negadas usam fallback existente. Documentos/patchnotes
+mantêm URLs públicas; avulso continua público, com reemissão de URL no corte para não
+conservar origem antiga que possa ter pertencido a ficha excluída. Ferramenta simula,
+confere SHA-256, registra diário e só remove arquivo antigo depois de desvinculá-lo.
+
+Revisão independente encontrou três casos corrigidos: espera após autorização, navegação
+cancelada bloqueando imagem e origem compartilhada histórica. API real revelou também
+regex com `?` interpretado pelo Knex como binding; corrigido com regressão do SQL real.
+Suítes: shared 1.340, backend 1.313 (99 ignorados preexistentes), frontend 3.596 aprovados;
+builds e lint sem erros. Build Angular com cache persistente teve falha nativa Windows;
+produção passou com CI=true, sem alterar configuração permanente, mantendo aviso 600,81 kB.
+
+Verify com Postgres/API/SPA reais e banco/arquivos isolados: matriz REST e legado, mutações,
+prévia, espectador, resposta retida, hover, enquadramento e reconexão sem reload. Principal
+inspecionou quatro viewports e fallback; mesmos análogos/controles, sem overflow novo.
+Migração local aplicada na cópia preservou arquivos e banco originais. Dois implementadores
+Codex e revisor independente (modelo padrão); integração e inspeção visual pelo principal.
+
+Autor decidiu manter o gate real R2/CDN aberto enquanto conclui a parte local. Spec continua
+em active e P-132 aberto nesse recorte externo; commit local não constitui fecho integral,
+deploy ou prova de purge em produção. [Plano e verificação](../specs/active/ficha-avatar-leitura-autorizada/verificacao.md).
+
 ## 2026-10-19 — ficha-medias-esquadrao-recorte-do-observador: D-02 implementada
 
 Quantidade e médias passaram a usar o mesmo conjunto autorizado de `listarFichas`, sem

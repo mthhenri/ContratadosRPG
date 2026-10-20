@@ -29,18 +29,20 @@
 
 ## Ativos
 
-### P-132 — URL conhecida de avatar ignora a permissão atual da ficha · `ABERTO` · backend/armazenamento
+### P-132 — Avatar: corte e verificação real R2/CDN pendentes · `ABERTO` · backend/armazenamento
 
-- **Sintoma:** ficha de jogador oculta nega GET a B (403), mas nova leitura anônima da URL
-  conhecida do avatar retorna 200 e os mesmos bytes, com cache desabilitado.
-- **Causa:** `/uploads` é servido estaticamente; o provedor local devolve caminho público e
-  R2 devolve URL pública, sem passar pelo árbitro de leitura da ficha.
-- **Contorno:** nenhum para novas leituras do objeto público. Não é possível recolher cópias
-  já baixadas. Produção/R2/CDN não foram testados; confirmação dinâmica é do provedor local.
-- **Correção:** autor decidiu exigir permissão atual inclusive por URL conhecida;
-  [spec de avatar autorizado](../specs/backlog/ficha-avatar-leitura-autorizada.spec.md).
-- **Desde:** confirmado na retomada de 19/10/2026;
-  [método e limites](../specs/done/auditoria-ficha-oculta-retomada-cobertura/verificacao.md).
+- **Sintoma original:** URL conhecida continuava permitindo leitura anônima do avatar oculto.
+  A implementação local agora bloqueia nova leitura negada, incluindo a URL legada.
+- **Causa restante:** a configuração e as origens/caches R2/CDN reais ainda não foram testadas
+  nem receberam o corte operacional. Não há evidência de correção em produção.
+- **Contorno:** gate externo mantido aberto por decisão do autor em 20/10; cópias já baixadas
+  continuam fora do controle do site.
+- **Correção:** parte local implementada, revisada e verificada;
+  [spec ativa](../specs/active/ficha-avatar-leitura-autorizada.spec.md),
+  [evidências e pendências](../specs/active/ficha-avatar-leitura-autorizada/verificacao.md).
+  Falta teste controlado de bucket privado, origens antigas e purge de aliases/CDN.
+- **Desde:** confirmação local em 19/10/2026;
+  [investigação](../specs/done/auditoria-ficha-oculta-retomada-cobertura/verificacao.md).
 
 ### P-129 — Abas não selecionadas da campanha/NPC sem nome acessível no celular · `ABERTO` · frontend/acessibilidade
 

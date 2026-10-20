@@ -1,3 +1,5 @@
+import { AsyncPipe } from "@angular/common";
+import { ImagemFichaPipe } from "../../../../shared/imagem-ficha.pipe";
 import { AtributoFicha } from "../../../../shared/ui/atributo-ficha/atributo-ficha.component";
 import { IMAGEM_MIMES_ACCEPT, IMAGEM_MIMES_PERMITIDOS } from '@contratados-rpg/shared/validators';
 import { NgTemplateOutlet } from '@angular/common';
@@ -366,7 +368,7 @@ export interface AjusteClasse {
  */
 @Component({
   selector: 'app-ficha-visualizacao',
-  imports: [
+  imports: [AsyncPipe, ImagemFichaPipe,
     AtributoFicha,
     NgTemplateOutlet,
     ReactiveFormsModule,

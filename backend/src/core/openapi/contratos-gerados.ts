@@ -2181,6 +2181,31 @@ export const schemasContratosPublicos = {
         "additionalProperties": false,
         "description": "Payload de `documento:leitores` (`m9-09`), só para a sala do mestre: o **retrato completo** de\nquem está lendo cada documento da campanha, nunca um delta — o cliente substitui o que tem. Um\nusuário aparece uma vez por documento (várias abas no mesmo documento contam uma); o mestre\nnunca aparece."
     },
+    "EncontroImagemAvulsoRecuperarDto": {
+        "type": "object",
+        "properties": {
+            "caminho": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "caminho"
+        ],
+        "additionalProperties": false,
+        "description": "Referência exata da imagem de um combatente ativo sem ficha vinculada."
+    },
+    "EncontroImagemAvulsoDto": {
+        "type": "object",
+        "properties": {
+            "caminho": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "caminho"
+        ],
+        "additionalProperties": false
+    },
     "EncontroLinhaDto": {
         "type": "object",
         "properties": {
@@ -3883,6 +3908,116 @@ export const schemasContratosPublicos = {
         ],
         "additionalProperties": false,
         "description": "Uma habilidade especial da criatura — propriedade da própria criatura, não selecionada de\num catálogo (diferente das habilidades de jogador). `restricao` é a frequência/condição\nde uso quando aplicável (ex.: \"uma vez por cena\", \"recarga de 3 turnos\")."
+    },
+    "FichaImagemRecuperarDto": {
+        "type": "object",
+        "properties": {
+            "caminho": {
+                "type": "string"
+            },
+            "campanhaId": {
+                "type": "number"
+            },
+            "usuarioAlvoId": {
+                "type": "number"
+            },
+            "espectador": {
+                "type": "boolean"
+            }
+        },
+        "required": [
+            "caminho"
+        ],
+        "additionalProperties": false,
+        "description": "Leitura de bytes no recorte atual; contextos de prévia são reautorizados no servidor."
+    },
+    "FichaImagemContextoRecuperarDto": {
+        "type": "object",
+        "properties": {
+            "caminho": {
+                "type": "string"
+            },
+            "usuarioId": {
+                "type": "number"
+            },
+            "usuarioAlvoId": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "caminho",
+            "usuarioId",
+            "usuarioAlvoId"
+        ],
+        "additionalProperties": false,
+        "description": "Snapshot factual único, sem decidir autorização no SQL."
+    },
+    "FichaImagemContextoDto": {
+        "type": "object",
+        "properties": {
+            "ficha": {
+                "$ref": "#/components/schemas/FichaRecuperadaDto"
+            },
+            "papelUsuario": {
+                "type": "string",
+                "enum": [
+                    "MESTRE",
+                    "JOGADOR",
+                    "ESPECTADOR"
+                ]
+            },
+            "papelAlvo": {
+                "type": "string",
+                "enum": [
+                    "MESTRE",
+                    "JOGADOR",
+                    "ESPECTADOR"
+                ]
+            },
+            "acessoUsuario": {
+                "type": "boolean"
+            },
+            "acessoAlvo": {
+                "type": "boolean"
+            }
+        },
+        "required": [
+            "ficha",
+            "papelUsuario",
+            "papelAlvo",
+            "acessoUsuario",
+            "acessoAlvo"
+        ],
+        "additionalProperties": false
+    },
+    "FichaVisibilidadeContextoDto": {
+        "type": "object",
+        "properties": {
+            "ficha": {
+                "$ref": "#/components/schemas/FichaRecuperadaDto"
+            },
+            "usuarioId": {
+                "type": "number"
+            },
+            "papel": {
+                "type": "string",
+                "enum": [
+                    "MESTRE",
+                    "JOGADOR",
+                    "ESPECTADOR"
+                ]
+            },
+            "acessoConcedido": {
+                "type": "boolean"
+            }
+        },
+        "required": [
+            "ficha",
+            "usuarioId",
+            "papel"
+        ],
+        "additionalProperties": false,
+        "description": "Fatos consumidos pelo árbitro único de leitura; concessão ausente pede consulta posterior."
     },
     "FichaMediaReferenciaDto": {
         "type": "object",

@@ -1,3 +1,5 @@
+import { AsyncPipe } from "@angular/common";
+import { ImagemFichaPipe } from "../../../../shared/imagem-ficha.pipe";
 import { iconeTipoCena } from "../../../../shared/icone/icones-dominio";
 import { rotuloNavegacaoCena } from "../../../cena/rotulos-cena";
 import { Component, computed, effect, inject, signal, viewChild } from '@angular/core';
@@ -56,7 +58,7 @@ const ATRIBUTOS_NEUTROS: FichaAtributosDto = { destreza: 0, forca: 0, luta: 0, p
  */
 @Component({
   selector: 'app-campanha-detalhe-mestre',
-  imports: [
+  imports: [AsyncPipe, ImagemFichaPipe,
     RouterLink,
     ReactiveFormsModule,
     ColunaAcoes,

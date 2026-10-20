@@ -1,7 +1,7 @@
 <article class="criatura-card" [class.criatura-card--critico]="criatura().critico">
     <div class="criatura-card__cabecalho">
         <span class="criatura-card__avatar" aria-hidden="true" [style.--cor-ficha]="criatura().cor">
-            @if (criatura().imagemUrl; as urlImagem) {
+            @if (criatura().imagemUrl | imagemFicha | async; as urlImagem) {
                 <img class="criatura-card__avatar-imagem" [src]="urlImagem" alt="" />
             }
             <button

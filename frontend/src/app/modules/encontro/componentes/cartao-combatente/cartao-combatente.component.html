@@ -10,7 +10,7 @@
     <div class="combatente__identidade">
         <div class="combatente__retrato">
             <span class="combatente__avatar" aria-hidden="true">
-                @if (combatente().imagemUrl; as urlImagem) {
+                @if (combatente().imagemUrl | imagemFicha | async; as urlImagem) {
                     <img
                         class="combatente__avatar-imagem"
                         [src]="urlImagem"
@@ -310,7 +310,10 @@
             <span class="combatente__resistencias" [appTooltip]="'Resistência a dano'">
                 @for (resistencia of resistenciasExibidas(); track resistencia.rotulo) {
                     <span class="combatente__resistencia"
-                        ><app-icone class="icone--texto" [nome]="ICONE_TIPO_DANO[resistencia.tipo]" />
+                        ><app-icone
+                            class="icone--texto"
+                            [nome]="ICONE_TIPO_DANO[resistencia.tipo]"
+                        />
                         {{ resistencia.rotulo }} {{ resistencia.valor }}</span
                     >
                 }

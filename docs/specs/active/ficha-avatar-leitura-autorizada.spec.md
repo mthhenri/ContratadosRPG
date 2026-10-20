@@ -1,6 +1,8 @@
 # ficha-avatar-leitura-autorizada.spec.md
 
 > H-02 / P-132: leitura anônima local confirmada; política decidida em 19/10/2026.
+> Estado em 20/10: implementação e verificação locais aprovadas; gate real R2/CDN
+> permanece aberto por decisão do autor. [Evidências e pendências](ficha-avatar-leitura-autorizada/verificacao.md).
 
 ## Objetivo
 

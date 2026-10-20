@@ -27,6 +27,7 @@ substitutions:
   _DB_USUARIO: postgres
   _APP_FRONTEND_ORIGEM: '' # https://<projeto>.pages.dev — obrigatória no boot (CORS)
   _ARMAZENAMENTO_R2_BUCKET: ''
+  _ARMAZENAMENTO_R2_BUCKET_FICHAS: '' # privado, distinto; corte de avatares exige gate operacional
   _ARMAZENAMENTO_R2_URL_PUBLICA: ''
   _IMPORTAR_LIVROS_USUARIO: '' # id de um ADMIN; vazio desliga o passo `importar-livros`
 
@@ -124,7 +125,7 @@ steps:
       - --platform=managed
       - --allow-unauthenticated
       - --port=8080
-      - --set-env-vars=APP_PORTA=8080,APP_AMBIENTE=production,APP_FRONTEND_ORIGEM=$_APP_FRONTEND_ORIGEM,JWT_EXPIRACAO=7d,DB_HOST=$_DB_HOST,DB_PORT=$_DB_PORT,DB_NOME=$_DB_NOME,DB_USUARIO=$_DB_USUARIO,ARMAZENAMENTO_PROVEDOR=r2,ARMAZENAMENTO_R2_BUCKET=$_ARMAZENAMENTO_R2_BUCKET,ARMAZENAMENTO_R2_URL_PUBLICA=$_ARMAZENAMENTO_R2_URL_PUBLICA
+      - --set-env-vars=APP_PORTA=8080,APP_AMBIENTE=production,APP_FRONTEND_ORIGEM=$_APP_FRONTEND_ORIGEM,JWT_EXPIRACAO=7d,DB_HOST=$_DB_HOST,DB_PORT=$_DB_PORT,DB_NOME=$_DB_NOME,DB_USUARIO=$_DB_USUARIO,ARMAZENAMENTO_PROVEDOR=r2,ARMAZENAMENTO_R2_BUCKET=$_ARMAZENAMENTO_R2_BUCKET,ARMAZENAMENTO_R2_BUCKET_FICHAS=$_ARMAZENAMENTO_R2_BUCKET_FICHAS,ARMAZENAMENTO_R2_URL_PUBLICA=$_ARMAZENAMENTO_R2_URL_PUBLICA
       - --set-secrets=DB_SENHA=db-senha:latest,JWT_SECRETO=jwt-secreto:latest,ARMAZENAMENTO_R2_ACCOUNT_ID=armazenamento-r2-account-id:latest,ARMAZENAMENTO_R2_ACCESS_KEY_ID=armazenamento-r2-access-key-id:latest,ARMAZENAMENTO_R2_SECRET_ACCESS_KEY=armazenamento-r2-secret-access-key:latest
     waitFor: [push]
 

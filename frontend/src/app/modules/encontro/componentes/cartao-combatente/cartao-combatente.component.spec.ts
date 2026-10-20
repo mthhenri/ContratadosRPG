@@ -1,3 +1,5 @@
+import { of } from "rxjs";
+import { ImagemFichaService } from "../../../../core/services/imagem-ficha.service";
 import { TestBed } from '@angular/core/testing';
 
 import type { EncontroCombatenteResumoDto } from '@contratados-rpg/shared/dtos/encontro';
@@ -407,6 +409,10 @@ describe('CartaoCombatente', () => {
   });
 
   it('m7-16: o agente de ficha não oculta mostra a carteirinha mesmo sem acesso aos números', () => {
+    const observarImagem = vi.fn(() => of("blob:agente-autorizado"));
+    TestBed.configureTestingModule({ providers: [
+      { provide: ImagemFichaService, useValue: { observarImagem } },
+    ] });
     const fixture = montar(
       {
         ...base,
@@ -433,6 +439,8 @@ describe('CartaoCombatente', () => {
     // `revelado`; o nível fica de fora (a carteirinha identifica, não avalia a força do agente).
     expect(texto(fixture, '.combatente__origem')).toBe('Sirius\nCombatente - Lutador');
     expect(elemento.querySelector('.combatente__avatar-imagem')).not.toBeNull();
+    expect(elemento.querySelector('img')?.getAttribute('src')).toBe('blob:agente-autorizado');
+    expect(observarImagem).toHaveBeenCalledWith('/uploads/agentes/max-star.webp');
     // Os números continuam escondidos — nem a linha de recursos desenha (m7-16, sem "Vida —").
     expect(elemento.querySelector('.combatente__recursos')).toBeNull();
     expect(elemento.querySelector('.combatente__defesas')).toBeNull();

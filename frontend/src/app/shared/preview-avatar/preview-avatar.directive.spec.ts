@@ -1,3 +1,5 @@
+import { Observable, Subject } from "rxjs";
+import { ImagemFichaService } from "../../core/services/imagem-ficha.service";
 import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 
@@ -124,4 +126,27 @@ describe('PreviewAvatar', () => {
 
     expect(preview()).toBeNull();
   });
+  it("preview privado desaparece quando negado e fecha a assinatura ao sair", () => {
+    vi.useFakeTimers();
+    const imagens = new Subject<string | null>();
+    const encerrar = vi.fn();
+    TestBed.configureTestingModule({ providers: [{ provide: ImagemFichaService, useValue: {
+      observarImagem: () => new Observable<string | null>(saida => {
+        const assinatura = imagens.subscribe(saida);
+        return () => { assinatura.unsubscribe(); encerrar(); };
+      }),
+    } }] });
+    const { fixture, avatar } = montar();
+    fixture.componentInstance.url.set("/uploads/fichas/12345678-1234-4234-8234-123456789abc.png");
+    fixture.detectChanges();
+    avatar.dispatchEvent(evento("pointerenter"));
+    vi.advanceTimersByTime(600);
+    imagens.next("blob:autorizado");
+    expect(preview()?.querySelector("img")?.getAttribute("src")).toBe("blob:autorizado");
+    imagens.next(null);
+    expect(preview()).toBeNull();
+    avatar.dispatchEvent(evento("pointerleave"));
+    expect(encerrar).toHaveBeenCalledOnce();
+  });
+
 });

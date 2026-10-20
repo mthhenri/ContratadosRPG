@@ -15,6 +15,8 @@ import type {
   EncontroInternoCriarDto,
   EncontroLinhaDto,
   EncontroResumoDto,
+  EncontroImagemAvulsoDto,
+  EncontroImagemAvulsoRecuperarDto,
 } from '@contratados-rpg/shared/dtos/encontro';
 import { CenaStatusEnum, EncontroStatusEnum, TipoFichaEnum } from '@contratados-rpg/shared/enums';
 import { BaseRepository } from '../../core/base/base.repository';
@@ -35,6 +37,20 @@ import { KNEX_CONNECTION } from '../../database/database.provider';
 export class EncontroRepository extends BaseRepository {
   constructor(@Inject(KNEX_CONNECTION) conexao: Knex) {
     super(conexao, 'encontro');
+  }
+
+  /** Apenas imagem de avulso ativo; ficha_id nunca pode conferir acesso público por esta rota. */
+  async recuperarImagemAvulso(dto: EncontroImagemAvulsoRecuperarDto): Promise<EncontroImagemAvulsoDto | null> {
+    const [imagem] = await this.executarConsulta<EncontroImagemAvulsoDto>(
+      `SELECT encontro_combatente.imagem_url_avulso AS caminho
+       FROM encontro_combatente
+       WHERE encontro_combatente.is_deleted = false AND encontro_combatente.ficha_id IS NULL
+         AND (encontro_combatente.imagem_url_avulso = :caminho
+           OR (:caminho LIKE '/uploads/agentes/%'
+             AND regexp_replace(encontro_combatente.imagem_url_avulso, '^https{0,1}://[^/]+', '/uploads') = :caminho))`,
+      { caminho: dto.caminho },
+    );
+    return imagem ?? null;
   }
 
   /**

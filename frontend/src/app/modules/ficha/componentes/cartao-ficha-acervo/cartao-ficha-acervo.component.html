@@ -10,7 +10,7 @@
             (mouseenter)="avatarHover.emit($event)"
             (mouseleave)="avatarSaida.emit()"
         >
-            @if (item().imagemUrl; as urlImagem) {
+            @if (item().imagemUrl | imagemFicha | async; as urlImagem) {
                 <img class="acervo__cartao-avatar-imagem" [src]="urlImagem" alt="" />
             }
         </span>

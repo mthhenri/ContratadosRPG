@@ -58,11 +58,14 @@ describe('faxinarImagens (I-038)', () => {
   }
   const base = { referenciados: new Set(['/uploads/agentes/viva.png']), carenciaDias: 30, agora };
 
-  it('só varre AGENTES e DOCUMENTOS — nunca PATCHNOTES', async () => {
+  it('varre FICHAS, AGENTES e DOCUMENTOS — nunca PATCHNOTES', async () => {
     const armazenamento = montar();
     await faxinarImagens({ ...base, armazenamento, apagar: false });
 
-    expect(armazenamento.listarImagens).toHaveBeenCalledTimes(2);
+    expect(armazenamento.listarImagens).toHaveBeenCalledTimes(3);
+    expect(armazenamento.listarImagens).toHaveBeenCalledWith({
+      pasta: ArmazenamentoPastaEnum.FICHAS,
+    });
     expect(armazenamento.listarImagens).not.toHaveBeenCalledWith({
       pasta: ArmazenamentoPastaEnum.PATCHNOTES,
     });

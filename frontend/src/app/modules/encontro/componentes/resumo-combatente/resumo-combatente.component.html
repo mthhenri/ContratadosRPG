@@ -1,6 +1,6 @@
 <div class="resumo__topo">
     <span class="resumo__retrato" aria-hidden="true">
-        @if (combatente().imagemUrl; as urlImagem) {
+        @if (combatente().imagemUrl | imagemFicha | async; as urlImagem) {
             <img
                 class="resumo__retrato-imagem"
                 [src]="urlImagem"
@@ -64,8 +64,8 @@
                 >
                     @for (reacao of reacoes(); track reacao.rotulo) {
                         <div class="ficha-mini">
-                            <span class="ficha-mini__rotulo"
-                                >@if (iconeDefesa(reacao.rotulo); as icone) {
+                            <span class="ficha-mini__rotulo">
+                                @if (iconeDefesa(reacao.rotulo); as icone) {
                                     <app-icone class="icone--texto" [nome]="icone" />
                                 }
                                 {{ reacao.rotuloExtenso }}</span
@@ -76,7 +76,10 @@
                     @if (mostrarContraAusente()) {
                         <div class="ficha-mini ficha-mini--ausente">
                             <span class="ficha-mini__rotulo"
-                                ><app-icone class="icone--texto" [nome]="ICONE_REACAO.contraAtaque" />
+                                ><app-icone
+                                    class="icone--texto"
+                                    [nome]="ICONE_REACAO.contraAtaque"
+                                />
                                 Contra-ataque</span
                             >
                             <span class="ficha-mini__valor">—</span>
@@ -93,7 +96,10 @@
                     @for (resistencia of caixas; track resistencia.tipo) {
                         <div [class]="'ficha-resistencia ficha-resistencia--' + resistencia.sufixo">
                             <span class="ficha-resistencia__abrev"
-                                ><app-icone class="icone--texto" [nome]="ICONE_TIPO_DANO[resistencia.tipo]" />
+                                ><app-icone
+                                    class="icone--texto"
+                                    [nome]="ICONE_TIPO_DANO[resistencia.tipo]"
+                                />
                                 {{ resistencia.rotulo }}</span
                             >
                             <span class="ficha-resistencia__valor">{{ resistencia.valor }}</span>

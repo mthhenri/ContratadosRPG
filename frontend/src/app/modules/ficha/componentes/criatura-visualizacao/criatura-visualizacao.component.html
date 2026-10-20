@@ -121,7 +121,7 @@
                                 class="criatura__avatar criatura__avatar--editavel"
                                 [style.--cor-ficha]="cor()"
                             >
-                                @if (imagemUrl(); as urlImagem) {
+                                @if (imagemUrl() | imagemFicha | async; as urlImagem) {
                                     <div class="criatura__avatar-moldura">
                                         <img
                                             class="criatura__avatar-imagem"
@@ -196,7 +196,7 @@
                                 aria-hidden="true"
                                 [style.--cor-ficha]="cor()"
                             >
-                                @if (imagemUrl(); as urlImagem) {
+                                @if (imagemUrl() | imagemFicha | async; as urlImagem) {
                                     <div class="criatura__avatar-moldura">
                                         <img
                                             class="criatura__avatar-imagem"

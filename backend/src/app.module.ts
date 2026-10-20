@@ -20,6 +20,7 @@ import { PaginaCadernoModule } from './modules/pagina-caderno/pagina-caderno.mod
 import { DocumentoModule } from './modules/documento/documento.module';
 import { PatchnoteModule } from './modules/patchnote/patchnote.module';
 import { LivroModule } from './modules/livro/livro.module';
+import { AvatarModule } from './modules/avatar/avatar.module';
 
 /**
  * Módulo raiz da aplicação. Registra a infraestrutura genérica (`core/`) global, o
@@ -48,6 +49,7 @@ import { LivroModule } from './modules/livro/livro.module';
     PatchnoteModule,
     LivroModule,
     GatewayModule,
+    AvatarModule,
   ],
   controllers: [HealthController],
   providers: [

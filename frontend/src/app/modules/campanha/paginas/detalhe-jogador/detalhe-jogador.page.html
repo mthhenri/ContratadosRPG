@@ -752,7 +752,8 @@
                                             [style.--cor-ficha]="ficha.cor"
                                             [appPreviewAvatar]="ficha.imagemUrl"
                                         >
-                                            @if (ficha.imagemUrl; as urlImagem) {
+                                            @if (ficha.imagemUrl | imagemFicha | async; as
+                                            urlImagem) {
                                             <img
                                                 class="detalhe__equipe-ficha-avatar-imagem"
                                                 [src]="urlImagem"
@@ -798,7 +799,8 @@
                                             [style.--cor-ficha]="ficha.cor"
                                             [appPreviewAvatar]="ficha.imagemUrl"
                                         >
-                                            @if (ficha.imagemUrl; as urlImagem) {
+                                            @if (ficha.imagemUrl | imagemFicha | async; as
+                                            urlImagem) {
                                             <img
                                                 class="detalhe__equipe-ficha-avatar-imagem"
                                                 [src]="urlImagem"

@@ -74,9 +74,9 @@
                         [class.npc-identidade__avatar--editavel]="gerenciavel()"
                     >
                         <div class="npc-identidade__retrato">
-                            @if (documento.imagemUrl) {
+                            @if (documento.imagemUrl | imagemFicha | async; as urlImagem) {
                                 <img
-                                    [src]="documento.imagemUrl"
+                                    [src]="urlImagem"
                                     [alt]="documento.nome"
                                     [appFocoImagem]="documento.imagemFoco"
                                 />

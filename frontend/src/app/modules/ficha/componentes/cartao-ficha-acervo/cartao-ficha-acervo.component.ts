@@ -1,3 +1,5 @@
+import { AsyncPipe } from "@angular/common";
+import { ImagemFichaPipe } from "../../../../shared/imagem-ficha.pipe";
 import { Component, computed, input, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
@@ -55,7 +57,7 @@ export interface ItemAcervo {
  */
 @Component({
   selector: 'app-cartao-ficha-acervo',
-  imports: [RouterLink, Icone, Tooltip, BotaoIcone, Chip],
+  imports: [AsyncPipe, ImagemFichaPipe, RouterLink, Icone, Tooltip, BotaoIcone, Chip],
   templateUrl: './cartao-ficha-acervo.component.html',
   styleUrl: './cartao-ficha-acervo.component.scss',
 })

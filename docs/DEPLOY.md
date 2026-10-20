@@ -72,40 +72,48 @@ Cloudflare Pages           Render (Web Service)          Supabase
 
 ---
 
-## 2. Armazenamento de blob — Cloudflare R2 (avatar da ficha)
+## 2. Armazenamento de blob — Cloudflare R2
 
-O avatar da ficha (m3-62) nunca entra no Postgres — só a URL persiste; o arquivo em si vive num
-armazenamento externo, atrás de um toggle de ambiente (`ARMAZENAMENTO_PROVEDOR`). Em **dev** o
-padrão é `local` (disco, sem credencial nenhuma); em **produção** é sempre `r2`.
+Documentos, patchnotes e avatares de combatentes avulsos usam o bucket público
+`ARMAZENAMENTO_R2_BUCKET` e sua `ARMAZENAMENTO_R2_URL_PUBLICA` (HTTPS, sem barra final).
+Avatares de **ficha** usam um segundo bucket **privado**,
+`ARMAZENAMENTO_R2_BUCKET_FICHAS`, obrigatoriamente distinto. Nesse bucket não habilite
+r2.dev nem domínio público. A API retorna `/uploads/fichas/<arquivo>` e verifica a
+permissão atual antes de servir bytes; não entregue endereço público ou URL assinada.
 
-1. <https://dash.cloudflare.com> → **R2 Object Storage → Create bucket** — dê um nome (ex.:
-   `contratados-rpg-avatares`) e crie no plano gratuito.
-2. **Habilite o acesso público** ao bucket — duas opções:
-   - **Rápido:** aba **Settings** do bucket → **Public access → Allow Access** (domínio
-     `pub-<hash>.r2.dev`);
-   - **Domínio próprio:** aba **Settings → Custom Domains → Connect Domain** (requer o domínio já
-     na Cloudflare).
+Crie os dois buckets no painel R2 e um token Object Read & Write limitado a esses dois
+buckets. Configure `ARMAZENAMENTO_PROVEDOR=r2`, `ARMAZENAMENTO_R2_ACCOUNT_ID`,
+`ARMAZENAMENTO_R2_ACCESS_KEY_ID`, `ARMAZENAMENTO_R2_SECRET_ACCESS_KEY`,
+`ARMAZENAMENTO_R2_BUCKET`, `ARMAZENAMENTO_R2_BUCKET_FICHAS` e
+`ARMAZENAMENTO_R2_URL_PUBLICA`. O Cloud Build recebe o nome privado pela substituição
+`_ARMAZENAMENTO_R2_BUCKET_FICHAS`; o manifesto legado Render também declara a variável.
+Configuração incompleta ou os dois nomes iguais impedem o boot.
 
-   A URL pública resultante (com ou sem `https://`, sem barra no fim) é `ARMAZENAMENTO_R2_URL_PUBLICA`.
-3. **Crie o token de API** — **R2 → Manage API tokens → Create API token**: permissão
-   **Object Read & Write**, escopo restrito a **este bucket** (não "todos os buckets" da conta).
-   Anote o **Access Key ID** e o **Secret Access Key** exibidos (o segredo só aparece uma vez).
-4. **Account ID** — qualquer página do painel R2 mostra o ID da conta na barra lateral direita
-   (`ARMAZENAMENTO_R2_ACCOUNT_ID`).
-5. No Render (passo 3), preencha as seis variáveis:
+**Corte dos avatares existentes:** não basta implantar o endpoint novo. Revise o
+[plano de transição](specs/active/ficha-avatar-leitura-autorizada/plano.md) e execute
+primeiro o teste controlado R2/CDN. Com produção em janela sem escritas aprovada:
 
-   | Variável                          | Valor                                              |
-   |------------------------------------|-----------------------------------------------------|
-   | `ARMAZENAMENTO_PROVEDOR`           | `r2` (já fixo no `render.yaml`)                     |
-   | `ARMAZENAMENTO_R2_ACCOUNT_ID`      | do passo 4                                          |
-   | `ARMAZENAMENTO_R2_ACCESS_KEY_ID`   | do passo 3                                          |
-   | `ARMAZENAMENTO_R2_SECRET_ACCESS_KEY` | do passo 3                                        |
-   | `ARMAZENAMENTO_R2_BUCKET`          | nome do bucket do passo 1                           |
-   | `ARMAZENAMENTO_R2_URL_PUBLICA`     | domínio público do passo 2                          |
+```bash
+npm run armazenamento:migrar-avatares --workspace=backend
+npm run armazenamento:migrar-avatares --workspace=backend -- --aplicar --janela-sem-escritas-confirmada --diario=/caminho-protegido/transicao-avatar.json
+```
 
-> Sem nenhuma das cinco `ARMAZENAMENTO_R2_*`, o backend **não sobe** em produção
-> (`ARMAZENAMENTO_PROVEDOR=r2` fixo no `render.yaml` exige todas via `obterVariavelObrigatoria`) —
-> mesmo padrão de `DB_*`/`JWT_SECRETO`, que também travam o boot.
+A simulação inventaria fichas e órfãos do prefixo agentes; a aplicação copia/verifica
+SHA-256, registra o destino para retomada, troca referências e remove cópias antigas.
+Avatares de avulsos ativos são primeiro reemitidos em URLs públicas novas: assim uma
+origem antiga compartilhada com ficha excluída também é removida. Só os novos
+destinos comprovados pelo diário permanecem públicos; documentos e patchnotes
+conservam suas URLs.
+Uma referência compartilhada com avulso aborta e exige separação antes do corte.
+Preserve o diário e backups privados. Remova também exposição pública de aliases,
+purgue cache das URLs antigas e teste origem/CDN sem JWT, com JWT negado e com pedido
+condicional. Falha nesses gates mantém a janela aberta. Não use rollback que devolva
+avatares de ficha ao bucket público.
+
+Em desenvolvimento, `ARMAZENAMENTO_PROVEDOR=local` usa `backend/uploads` ou a raiz
+opcional `ARMAZENAMENTO_LOCAL_DIRETORIO`. Somente documentos/patchnotes são servidos
+estaticamente; agentes legados passam pela autorização de ficha ou pelo vínculo de
+avulso ativo. Novos avatares são gravados na subpasta fichas.
 
 ---
 
@@ -237,7 +245,7 @@ para as notas aparecerem na hora.
 ## Checklist rápido
 
 - [ ] Supabase criado; credenciais do banco copiadas para as `DB_*`
-- [ ] Bucket R2 criado, acesso público habilitado e API token (Object Read & Write, escopado ao bucket) gerado; as seis `ARMAZENAMENTO_*` anotadas
+- [ ] Buckets R2 público e privado distintos, token restrito aos dois, variáveis completas; transição de avatares e teste R2/CDN aprovados
 - [ ] Render: Build `npm install && npm run build --workspace=backend && npm run db:migrate --workspace=backend`, Start `start:prod`, Auto-Deploy On, Health `/health`
 - [ ] Render: envs preenchidas (incluindo `ARMAZENAMENTO_*`); `JWT_SECRETO` forte; **sem** `NODE_ENV=production`; `APP_FRONTEND_ORIGEM` = URL das Pages
 - [ ] `environment.production.ts` com o `apiBase` da URL do Render (commitado)

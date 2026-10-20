@@ -8,7 +8,7 @@
             [style.--cor-ficha]="ficha().cor"
             [appPreviewAvatar]="mostrarPreviewAvatar() ? ficha().imagemUrl : null"
         >
-            @if (ficha().imagemUrl; as urlImagem) {
+            @if (ficha().imagemUrl | imagemFicha | async; as urlImagem) {
                 <img class="espectador-ficha__avatar-imagem" [src]="urlImagem" alt="" />
             }
             @if (mostrarAcoes()) {

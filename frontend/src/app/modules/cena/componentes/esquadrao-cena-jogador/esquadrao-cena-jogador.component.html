@@ -23,7 +23,7 @@
                                 [style.--cor-ficha]="ficha.cor"
                                 [appPreviewAvatar]="ficha.imagemUrl"
                             >
-                                @if (ficha.imagemUrl; as imagemUrl) {
+                                @if (ficha.imagemUrl | imagemFicha | async; as imagemUrl) {
                                     <img [src]="imagemUrl" alt="" />
                                 }
                             </span>

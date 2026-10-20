@@ -1,3 +1,5 @@
+import { AsyncPipe } from "@angular/common";
+import { ImagemFichaPipe } from "../../../../shared/imagem-ficha.pipe";
 import { Component, ElementRef, afterRenderEffect, computed, input, viewChild } from '@angular/core';
 
 import type { EncontroRecuperadoDto } from '@contratados-rpg/shared/dtos/encontro';
@@ -45,7 +47,7 @@ interface PosicaoTrilhaDto {
  */
 @Component({
   selector: 'app-trilha-turnos',
-  imports: [Tooltip, FocoImagem, PreviewAvatar],
+  imports: [AsyncPipe, ImagemFichaPipe, Tooltip, FocoImagem, PreviewAvatar],
   templateUrl: './trilha-turnos.component.html',
   styleUrl: './trilha-turnos.component.scss',
   host: { '[class.trilha--com-acao]': 'comAcao()' },

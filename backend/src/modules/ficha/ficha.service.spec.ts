@@ -3087,7 +3087,7 @@ describe('FichaService', () => {
       const resultado = await service.alterarImagem({ id: 5, arquivo: arquivoJpeg }, usuarioDono);
 
       expect(armazenamentoProvedor.salvarImagem).toHaveBeenCalledWith({
-        pasta: ArmazenamentoPastaEnum.AGENTES,
+        pasta: ArmazenamentoPastaEnum.FICHAS,
         conteudo: arquivoJpeg.conteudo,
         mimetype: 'image/jpeg',
         extensao: 'jpg',

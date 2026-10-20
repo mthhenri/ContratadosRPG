@@ -1,3 +1,5 @@
+import { of } from "rxjs";
+import { ImagemFichaService } from "../../../../core/services/imagem-ficha.service";
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RolagemVisibilidadeEnum } from '@contratados-rpg/shared/enums';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
@@ -178,6 +180,9 @@ describe('EspectadorFichaCard', () => {
   it('amplia a imagem por mouse no próprio card e fecha ao sair', () => {
     vi.useFakeTimers();
     try {
+      TestBed.configureTestingModule({ providers: [
+        { provide: ImagemFichaService, useValue: { observarImagem: () => of("blob:kane") } },
+      ] });
       const raiz = montar(ficha({ imagemUrl: '/uploads/agentes/dev/kane.png' }));
       const avatar = raiz.querySelector('.espectador-ficha__avatar') as HTMLElement;
       avatar.dispatchEvent(Object.assign(new Event('pointerenter'), { pointerType: 'mouse' }));
@@ -185,7 +190,7 @@ describe('EspectadorFichaCard', () => {
       expect(document.body.querySelector('div[aria-hidden="true"] > img')).toBeNull();
       vi.advanceTimersByTime(1);
       const imagem = document.body.querySelector('div[aria-hidden="true"] > img');
-      expect(imagem?.getAttribute('src')).toBe('/uploads/agentes/dev/kane.png');
+      expect(imagem?.getAttribute('src')).toBe('blob:kane');
       avatar.dispatchEvent(new Event('pointerleave'));
       expect(document.body.querySelector('div[aria-hidden="true"] > img')).toBeNull();
     } finally { vi.useRealTimers(); }

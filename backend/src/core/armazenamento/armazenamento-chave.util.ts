@@ -9,6 +9,7 @@ import { ArmazenamentoPastaEnum } from './armazenamento-provedor.interface';
  * os arquivos já gravados — os caminhos persistidos continuam apontando para a pasta antiga.
  */
 const NOME_PASTA: Readonly<Record<ArmazenamentoPastaEnum, string>> = {
+  [ArmazenamentoPastaEnum.FICHAS]: 'fichas',
   [ArmazenamentoPastaEnum.AGENTES]: 'agentes',
   [ArmazenamentoPastaEnum.DOCUMENTOS]: 'documentos',
   [ArmazenamentoPastaEnum.PATCHNOTES]: 'patchnotes',
@@ -25,7 +26,24 @@ export function obterNomePasta(pasta: ArmazenamentoPastaEnum): string {
  * R2). Centralizado aqui para não duplicar a convenção de nomeação entre os dois provedores.
  */
 export function construirChaveImagem(pasta: ArmazenamentoPastaEnum, extensao: string): string {
+  if (!/^(png|jpg|jpeg|webp)$/.test(extensao)) throw new Error('Extensão de imagem inválida');
   return `${NOME_PASTA[pasta]}/${randomUUID()}.${extensao}`;
+}
+
+/** Extrai apenas chaves de imagens de origens conhecidas, recusando traversal e URLs alheias. */
+export function recuperarChaveImagem(caminho: string, urlPublica?: string): string {
+  const prefixoPublico = urlPublica ? `${urlPublica.replace(/\/$/, '')}/` : null;
+  const chave = caminho.startsWith('/uploads/') ? caminho.slice('/uploads/'.length)
+    : prefixoPublico && caminho.startsWith(prefixoPublico) ? caminho.slice(prefixoPublico.length) : '';
+  if (chave.includes('..') || !/^(?:agentes\/(?:[A-Za-z0-9_-]+\/)*|(?:fichas|documentos|patchnotes)\/)[A-Za-z0-9][A-Za-z0-9._-]*\.(?:png|jpg|jpeg|webp)$/.test(chave)) {
+    throw new Error('Caminho de imagem inválido');
+  }
+  return chave;
+}
+
+export function obterMimetypeImagem(chave: string): string {
+  const extensao = chave.split('.').at(-1);
+  return extensao === 'png' ? 'image/png' : extensao === 'webp' ? 'image/webp' : 'image/jpeg';
 }
 
 const PADRAO_NOME_ARQUIVO = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;

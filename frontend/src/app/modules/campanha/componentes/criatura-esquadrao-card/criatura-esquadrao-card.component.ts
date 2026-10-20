@@ -1,3 +1,5 @@
+import { AsyncPipe } from "@angular/common";
+import { ImagemFichaPipe } from "../../../../shared/imagem-ficha.pipe";
 import { Component, input, output } from '@angular/core';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 
@@ -46,7 +48,7 @@ export interface CriaturaEsquadraoCardDados {
  */
 @Component({
   selector: 'app-criatura-esquadrao-card',
-  imports: [BarraRecurso, BotaoIcone, Icone, Tooltip],
+  imports: [AsyncPipe, ImagemFichaPipe, BarraRecurso, BotaoIcone, Icone, Tooltip],
   templateUrl: './criatura-esquadrao-card.component.html',
   styleUrl: './criatura-esquadrao-card.component.scss',
 })

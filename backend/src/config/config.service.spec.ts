@@ -18,6 +18,8 @@ describe('resolução do .env', () => {
 
 const CHAVES_ARMAZENAMENTO = [
   'ARMAZENAMENTO_PROVEDOR',
+  'ARMAZENAMENTO_LOCAL_DIRETORIO',
+  'ARMAZENAMENTO_R2_BUCKET_FICHAS',
   'ARMAZENAMENTO_R2_ACCOUNT_ID',
   'ARMAZENAMENTO_R2_ACCESS_KEY_ID',
   'ARMAZENAMENTO_R2_SECRET_ACCESS_KEY',
@@ -59,6 +61,7 @@ describe('ConfigService.obterConfiguracaoArmazenamento (m3-62)', () => {
     process.env.ARMAZENAMENTO_R2_ACCESS_KEY_ID = 'chave-acesso';
     process.env.ARMAZENAMENTO_R2_SECRET_ACCESS_KEY = 'chave-secreta';
     process.env.ARMAZENAMENTO_R2_BUCKET = 'bucket-fichas';
+    process.env.ARMAZENAMENTO_R2_BUCKET_FICHAS = 'bucket-privado';
     process.env.ARMAZENAMENTO_R2_URL_PUBLICA = 'https://pub-hash.r2.dev';
 
     const configuracao = new ConfigService().obterConfiguracaoArmazenamento();
@@ -69,8 +72,26 @@ describe('ConfigService.obterConfiguracaoArmazenamento (m3-62)', () => {
       r2AccessKeyId: 'chave-acesso',
       r2SecretAccessKey: 'chave-secreta',
       r2Bucket: 'bucket-fichas',
+      r2BucketFichas: 'bucket-privado',
       r2UrlPublica: 'https://pub-hash.r2.dev',
     });
+  });
+
+  it('configura a raiz local sem exigir credenciais R2', () => {
+    process.env.ARMAZENAMENTO_PROVEDOR = 'local';
+    process.env.ARMAZENAMENTO_LOCAL_DIRETORIO = 'uploads-isolados';
+    expect(new ConfigService().obterConfiguracaoArmazenamento()).toEqual({ provedor: 'local', localDiretorio: 'uploads-isolados' });
+  });
+
+  it('exige bucket de ficha distinto do público', () => {
+    Object.assign(process.env, {
+      ARMAZENAMENTO_PROVEDOR: 'r2', ARMAZENAMENTO_R2_ACCOUNT_ID: 'id',
+      ARMAZENAMENTO_R2_ACCESS_KEY_ID: 'key', ARMAZENAMENTO_R2_SECRET_ACCESS_KEY: 'secret',
+      ARMAZENAMENTO_R2_BUCKET: 'publico', ARMAZENAMENTO_R2_URL_PUBLICA: 'https://publico.test',
+    });
+    expect(() => new ConfigService().obterConfiguracaoArmazenamento()).toThrow('ARMAZENAMENTO_R2_BUCKET_FICHAS');
+    process.env.ARMAZENAMENTO_R2_BUCKET_FICHAS = 'publico';
+    expect(() => new ConfigService().obterConfiguracaoArmazenamento()).toThrow('distinto');
   });
 
   it('lança quando o provedor é "r2" e falta uma variável R2', () => {

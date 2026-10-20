@@ -15,6 +15,10 @@ class ArmazenamentoMemoria implements ArmazenamentoProvedor {
     throw new Error('não usado');
   }
 
+  lerImagem(): Promise<null> {
+    return Promise.resolve(null);
+  }
+
   excluirImagem(): Promise<void> {
     throw new Error('não usado');
   }
