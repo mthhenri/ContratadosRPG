@@ -22,7 +22,7 @@ export const MARGEM_JANELA = 16;
 
 /**
  * Tamanho, redimensionar por alça e maximizar da janela flutuante do montador de rolagem — compartilhado pelo
- * `MontadorRolagem` (Atual) e pelo `MontadorRolagemExperimental`, que antes repetiam a mecânica. O primitivo
+ * `MontadorRolagem`, que concentra a mecânica da janela. O primitivo
  * `app-painel-flutuante` só conhece o retângulo da janela; o tamanho e o maximizar são do consumidor (ver a doc dele).
  * Maximizar segue o `CadernoFlutuante`: tamanho = viewport, posição `0,0` sem persistir, posição anterior devolvida
  * ao restaurar ou fechar.

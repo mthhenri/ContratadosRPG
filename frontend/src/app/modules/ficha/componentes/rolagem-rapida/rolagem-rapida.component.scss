@@ -47,8 +47,7 @@
         gap: 12px;
     }
 
-    // Seletor de versão do montador (só TESTER/ADMIN, montador-exp-02) ao lado do guia; no mobile desce para a
-    // linha inteira, abaixo do rótulo.
+    // Ações do rótulo (guia de fórmulas); no mobile desce para a linha inteira, abaixo do rótulo.
     &__rotulo-acoes {
         display: flex;
         align-items: center;
@@ -57,13 +56,6 @@
 
         @include bp.mobile {
             flex: 1 1 100%;
-        }
-    }
-
-    &__seletor-montador {
-        @include bp.mobile {
-            flex: 1;
-            min-width: 0;
         }
     }
 

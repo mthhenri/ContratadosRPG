@@ -1,104 +1,69 @@
-import { Component, computed, input, model, output, signal, viewChild } from '@angular/core';
+import { Component, computed, input, linkedSignal, model, output, signal, viewChild } from '@angular/core';
 
-import { TipoDanoEnum } from '@contratados-rpg/shared/enums';
-import { ABREVIACOES_ATRIBUTO, REPETICOES_MAXIMA } from '@contratados-rpg/shared/regras/rolagem';
+import type { FichaAtributosDto } from '@contratados-rpg/shared/dtos/ficha';
+import { expandirAtalhosDano, type ResultadoRolagemDto } from '@contratados-rpg/shared/regras/rolagem';
 
-import { Icone, type IconeNome } from '../icone/icone.component';
+import { Icone } from '../icone/icone.component';
 import { JanelaMontador } from '../janela-montador/janela-montador';
+import { OverflowFade } from '../overflow-fade/overflow-fade.directive';
+import { ResultadoRolagem } from '../resultado-rolagem/resultado-rolagem.component';
+import { Tooltip } from '../tooltip/tooltip.directive';
 import { Botao } from '../ui/botao/botao.component';
 import { BotaoIcone } from '../ui/botao-icone/botao-icone.component';
+import { CartaoReceita } from '../ui/cartao-receita/cartao-receita.component';
 import type { PainelFlutuantePosicao } from '../ui/painel-flutuante/painel-flutuante.component';
 import { PainelFlutuante } from '../ui/painel-flutuante/painel-flutuante.component';
-import { Segmentado } from '../ui/segmentado/segmentado.component';
-import { SegmentadoItem } from '../ui/segmentado/segmentado-item.component';
-import { StepInput } from '../ui/stepper/step-input.component';
-import { Tooltip } from '../tooltip/tooltip.directive';
+import { MontadorEditorPecas } from './montador-editor-pecas.component';
+import { type AmbienteMontador, lerFormula, resumirFormula, type ResumoFormulaMontador } from './montador-leitura';
 import {
-  adicionarDado,
-  adicionarTipoDano,
-  apagarUltimoBloco,
-  reposicionarOperadorPool,
-} from './montador-rolagem.util';
+  type AtalhosDanoMontador,
+  analisarFormulaMontador,
+  desfazerPassoHistorico,
+  type HistoricoMontador,
+  type MontadorFormulaAnalise,
+  type MontadorModo,
+  RECEITAS_MONTADOR,
+  type ReceitaMontador,
+  registrarPassoHistorico,
+} from './montador-modelo';
+import { podeMontarPecasOuTeste } from './montador-pecas';
 
-/** Dados canônicos do sistema (`docs/core/sistema-v4.1.3.md` — "Dados"); sem `d100`. */
-const DADOS: readonly number[] = [3, 4, 6, 8, 10, 12, 20];
-
-/** Os 10 atributos, na mesma ordem usada em `guia-formula`/`ficha-rolagens`. */
-const ATRIBUTOS: readonly string[] = Object.keys(ABREVIACOES_ATRIBUTO);
-
-/** Siglas curtas de `ABREVIACOES_FONTE_EXTRA` (que também aceita `PROFICIENCIA`/`NIVEL` por
- *  extenso). */
-const FONTES_EXTRA: readonly string[] = ['PROF', 'NIV'];
-
-/** Ícone de dado (`d3`..`d20`) por face — mesmo mapa de `resultado-rolagem.component.ts`. */
-const ICONE_POR_FACES: Readonly<Record<number, IconeNome>> = {
-  3: 'd3',
-  4: 'd4',
-  6: 'd6',
-  8: 'd8',
-  10: 'd10',
-  12: 'd12',
-  20: 'd20',
-};
-
-/** Um botão do grupo "Tipo de dano": sigla exibida + classe BEM para a cor do token. */
-interface TokenTipoDano {
-  readonly tipo: TipoDanoEnum;
-  readonly sigla: string;
-  readonly classe: string;
+/** Última rolagem feita pela barra, para o estado "resultado" (o painel não fecha ao rolar). */
+export interface MontadorUltimaRolagem {
+  readonly formula: string;
+  readonly resultado: ResultadoRolagemDto;
 }
 
-/** Sigla de 1 letra por tipo de dano — mesma convenção de `SIGLAS_TIPO_DANO`
- *  (`rolagem.dados.ts`), aqui só como rótulo de botão (a resolução real continua em
- *  `resolverTipoDanoSimples`). */
-const TIPOS_DANO: readonly TokenTipoDano[] = [
-  { tipo: TipoDanoEnum.FISICO, sigla: 'F', classe: 'fisico' },
-  { tipo: TipoDanoEnum.BALISTICO, sigla: 'B', classe: 'balistico' },
-  { tipo: TipoDanoEnum.EXPLOSAO, sigla: 'E', classe: 'explosao' },
-  { tipo: TipoDanoEnum.QUIMICO, sigla: 'Q', classe: 'quimico' },
-  { tipo: TipoDanoEnum.GERAL, sigla: 'G', classe: 'geral' },
-];
-
-/** Caracteres após os quais um novo token "aditivo" não precisa de `+` na frente. */
-const SEM_SINAL_NECESSARIO = new Set(['+', '-', '(']);
-
-/** Abaixo desta largura o painel vira folha cheia — mesmo limiar de `_breakpoints.scss`
- *  (`$bp-mobile`), lido do CSS via `matchMedia` (mesmo padrão de
- *  `FichaVisualizacao.verificarAnotacoesMobile`) em vez de duplicado como número mágico aqui. */
+/** Mesmo limiar de `$bp-mobile` (`_breakpoints.scss`), lido por `matchMedia` como no `MontadorRolagem`. */
 const BREAKPOINT_MOBILE = 560;
 
+/** Desktop: posição e tamanho iniciais, e mínimos do redimensionar (`JanelaMontador`, comum ao `MontadorRolagem`). */
 const POSICAO_INICIAL: PainelFlutuantePosicao = { x: 40, y: 136 };
-
-/** Tamanho de base 380×580 (ui-35) +50% horizontal/+25% vertical — pedido do autor, a caixa
- *  original ficava apertada demais pra composição de fórmulas compostas. */
-const LARGURA_INICIAL = 570;
-const ALTURA_INICIAL = 725;
-const LARGURA_MINIMA = 320;
-const ALTURA_MINIMA = 420;
+const LARGURA_INICIAL = 520;
+const ALTURA_INICIAL = 700;
+const LARGURA_MINIMA = 360;
+const ALTURA_MINIMA = 440;
 
 /**
- * Caixa flutuante de tokens para montar uma fórmula de rolagem sem decorar a sintaxe do motor
- * (`shared/regras/rolagem`) — ui-35, revisão de usabilidade. Mesma mecânica de
- * `CalculadoraFlutuante.inserir`: concatena texto no `model` `formula` com guardas simples, sem
- * parser client-side de "onde inserir" — a única exceção é o clique num dado, que delega a
- * composição ao utilitário puro. Duas ações
- * compostas (`(ATR±n)dM` e `(<fórmula>)#N`) evitam o erro mais comum de montar essas duas formas
- * sancionadas de parênteses na mão (parêntese sobrando/faltando).
+ * Montador de rolagem (versão Completo, escolhida pelo autor em 2026-10-20): gatilho, janela flutuante, visor
+ * editável, pontos de partida, estados "avançada"/"inválida", último resultado e rodapé fixo com **Desfazer**, Limpar
+ * e Rolar. Mesma casca `app-painel-flutuante` do restante do produto.
  *
- * **Nenhuma regra de dados vive aqui** (proibição #26 do `CLAUDE.md`): os tokens só reproduzem a
- * gramática já documentada em `guia-formula`; quem valida o resultado é `validarFormula`, chamada
- * pelo consumidor (`ficha-rolagens.component.ts`), não este componente.
+ * O texto da fórmula (`formula`, o mesmo `FormControl` da barra) é a única fonte de verdade: o estado da tela é
+ * derivado dele e toda edição dos controles passa por `aplicarEdicao`, que guarda o passo para o Desfazer. Quem rola
+ * é o consumidor (`rolar`).
  */
 @Component({
   selector: 'app-montador-rolagem',
   imports: [
     Botao,
     BotaoIcone,
+    CartaoReceita,
     Icone,
+    MontadorEditorPecas,
+    OverflowFade,
     PainelFlutuante,
-    Segmentado,
-    SegmentadoItem,
-    StepInput,
+    ResultadoRolagem,
     Tooltip,
   ],
   templateUrl: './montador-rolagem.component.html',
@@ -111,60 +76,140 @@ const ALTURA_MINIMA = 420;
   },
 })
 export class MontadorRolagem {
-  /** Fórmula em edição — mesmo texto que alimenta o `FormControl` da "Rolagem rápida". */
+  /** Fórmula em edição — o mesmo texto da barra de "Rolagem rápida". */
   readonly formula = model.required<string>();
 
-  /** Dano C. a C./Furtivo atuais (m3-31) — só mostra `CORPO`/`FURTIVO` quando há valor. */
-  readonly atalhosDano = input<{
-    readonly corpo?: string | null;
-    readonly furtivo?: string | null;
-  }>({});
+  /** Dano C. a C./Furtivo atuais — validam e oferecem os atalhos `CORPO`/`FURTIVO`. */
+  readonly atalhosDano = input<AtalhosDanoMontador>({});
 
-  /** Validade já computada pelo consumidor (`rapidaValida()`) — desabilita o "Rolar" do rodapé
-   *  com a mesma condição do botão externo, sem duplicar a chamada a `validarFormula` aqui. */
+  /** Validade já computada pelo consumidor — desabilita o Rolar com a mesma condição do botão da barra. */
   readonly formulaValida = input<boolean | null>(null);
 
-  /** A instância continua viva fora da aba Rolagens; nessa condição só o painel permanece visível. */
+  /** Última rolagem da barra; aparece acima do rodapé até ser fechada. */
+  readonly ultimaRolagem = input<MontadorUltimaRolagem | null>(null);
+
+  /** Cor de identidade da ficha, repassada ao resultado. */
+  readonly corFicha = input<string | null>(null);
+
+  /** Valores da ficha — leitura ao vivo (faixa, média, frase e campo de expressão). */
+  readonly atributos = input.required<FichaAtributosDto>();
+  readonly proficiencia = input<number | null>(null);
+  readonly nivel = input<number>(0);
+
+  /** A instância continua viva fora da aba Rolagens; nessa condição só a janela permanece. */
   readonly oculto = input(false);
 
-  /** Gate de acesso ao gatilho — hoje usado pela ficha de criatura/NPC pra restringir o Montador a
-   *  tester/admin (ver `RolagemRapida.podeUsarMontador`); a ficha de jogador não passa esse input e
-   *  mantém o padrão liberado. */
-  readonly permitido = input(true);
-
-  /** O rodapé pede pro consumidor rolar — o painel não fecha sozinho (o jogador pode ajustar e
-   *  rolar de novo, ex.: repetir com N diferente). */
+  /** Pede ao consumidor para rolar — o painel não fecha sozinho. */
   readonly rolar = output<void>();
 
-  protected readonly dados = DADOS;
-  protected readonly atributos = ATRIBUTOS;
-  protected readonly fontesExtra = FONTES_EXTRA;
-  protected readonly tiposDano = TIPOS_DANO;
-  protected readonly repeticoesMaxima = REPETICOES_MAXIMA;
+  protected readonly receitas = RECEITAS_MONTADOR;
   protected readonly posicaoInicial = POSICAO_INICIAL;
 
-  protected readonly temCorpo = computed(() => !!this.atalhosDano().corpo);
-  protected readonly temFurtivo = computed(() => !!this.atalhosDano().furtivo);
-
-  /** Margem de crítico aceita N > 1 (diferente de `kh`/`kl`, que agora são sempre 1). */
-  protected readonly margemCriticoN = signal(1);
-
-  // === Caixa flutuante: aberto/fechado, mesmo padrão de `CalculadoraFlutuante.alternar()` ===
-  protected readonly aberto = signal(false);
-  private readonly painelRef = viewChild<PainelFlutuante>('painel');
+  protected readonly ambiente = computed<AmbienteMontador>(() => ({
+    atributos: this.atributos(),
+    proficiencia: this.proficiencia(),
+    nivel: this.nivel(),
+  }));
 
   /**
-   * Posição do cursor no visor — `null` até o jogador clicar/digitar ali dentro (padrão:
-   * `reposicionarOperadorPool` busca da esquerda pra direita). Só atualiza em interação real com o
-   * campo de texto (clique/teclado); clicar nos outros botões do teclado (dado, atributo etc.)
-   * nunca move essa posição — todo token novo entra por concatenação no fim da fórmula, então uma
-   * posição já registrada continua válida depois deles.
+   * Estado derivado do texto: vazia, em peças, avançada ou inválida. Peças que os controles não montam também
+   * ficam como avançada — o texto nunca é reescrito por um controle que não o representa.
    */
-  private readonly cursorVisor = signal<number | null>(null);
+  protected readonly analise = computed<MontadorFormulaAnalise>(() => {
+    const analise = analisarFormulaMontador(this.formula(), this.atalhosDano());
+    if (analise.estado === 'PECAS' && analise.tokenizada && !podeMontarPecasOuTeste(analise.tokenizada)) {
+      return { estado: 'AVANCADA', tokenizada: null };
+    }
+    return analise;
+  });
 
-  protected aoPosicionarCursor(evento: Event): void {
-    this.cursorVisor.set((evento.target as HTMLInputElement).selectionStart);
+  /** Editor de controles visível: fórmula em peças, ou vazia depois de escolher um ponto de partida. */
+  protected readonly mostraEditor = computed(() => {
+    const estado = this.analise().estado;
+    return estado === 'PECAS' || (estado === 'VAZIA' && this.modo() !== null);
+  });
+
+  protected readonly tokenizadaEditor = computed(() => this.analise().tokenizada ?? { pecas: [] });
+
+  /** Linha de leitura sob o visor: faixa e média de uma rolagem (do motor) e a frase em português. */
+  protected readonly leitura = computed<{ resumo: ResumoFormulaMontador | null; frase: string | null } | null>(() => {
+    const analise = this.analise();
+    if (analise.estado !== 'PECAS' && analise.estado !== 'AVANCADA') return null;
+    const resumo = resumirFormula(expandirAtalhosDano(this.formula(), this.atalhosDano()), this.ambiente());
+    const frase = analise.tokenizada ? lerFormula(analise.tokenizada, this.ambiente(), this.atalhosDano()) : null;
+    return { resumo, frase };
+  });
+
+  protected textoFaixa(resumo: ResumoFormulaMontador): string {
+    const numero = (valor: number) => valor.toLocaleString('pt-BR', { maximumFractionDigits: 1 });
+    const faixa =
+      resumo.minimo === resumo.maximo ? numero(resumo.minimo) : numero(resumo.minimo) + ' a ' + numero(resumo.maximo);
+    return faixa + ' · média ' + numero(resumo.media);
   }
+
+  protected readonly repeticoes = computed(() => this.analise().tokenizada?.repeticoes ?? 1);
+
+  /**
+   * Modo escolhido num ponto de partida. `null` com a fórmula vazia mostra "Começar por"; com texto, o editor
+   * deriva o modo das peças. Limpar volta a `null`.
+   */
+  protected readonly modo = signal<MontadorModo | null>(null);
+
+  /** Lista "Modelos" aberta (trocar de ponto de partida sem limpar antes). */
+  protected readonly modelosAbertos = signal(false);
+
+  protected readonly mostraInicio = computed(() => this.analise().estado === 'VAZIA' && this.modo() === null);
+
+  // === Desfazer ===
+  private readonly historico = signal<HistoricoMontador>([]);
+  protected readonly podeDesfazer = computed(() => this.historico().length > 0);
+
+  /** Toda edição feita pelos controles do montador passa por aqui (guarda o texto anterior para o Desfazer). */
+  aplicarEdicao(texto: string): void {
+    const anterior = this.formula();
+    if (texto === anterior) {
+      return;
+    }
+    this.historico.update((pilha) => registrarPassoHistorico(pilha, anterior));
+    this.formula.set(texto);
+  }
+
+  protected desfazer(): void {
+    const passo = desfazerPassoHistorico(this.historico());
+    if (!passo) {
+      return;
+    }
+    this.historico.set(passo.historico);
+    this.formula.set(passo.texto);
+  }
+
+  protected limpar(): void {
+    this.aplicarEdicao('');
+    this.modo.set(null);
+    this.modelosAbertos.set(false);
+  }
+
+  protected escolherReceita(receita: ReceitaMontador): void {
+    this.aplicarEdicao(receita.formula);
+    this.modo.set(receita.modo);
+    this.modelosAbertos.set(false);
+  }
+
+  /** Digitação no visor: é o texto da barra, então não vira passo de Desfazer (o campo de texto já tem o seu). */
+  protected aoDigitarVisor(evento: Event): void {
+    this.formula.set((evento.target as HTMLInputElement).value);
+  }
+
+  // === Último resultado: some ao fechar e volta a aparecer na próxima rolagem ===
+  protected readonly resultadoVisivel = linkedSignal(() => this.ultimaRolagem());
+
+  protected fecharResultado(): void {
+    this.resultadoVisivel.set(null);
+  }
+
+  // === Janela: aberta/fechada, mesmo padrão do `MontadorRolagem` ===
+  protected readonly aberto = signal(false);
+  private readonly painelRef = viewChild<PainelFlutuante>('painel');
 
   protected alternar(): void {
     if (this.aberto() && this.painelRef()?.minimizado()) {
@@ -179,14 +224,14 @@ export class MontadorRolagem {
     this.aberto.set(false);
   }
 
-  // === Mobile: `[mobile]` de `app-painel-flutuante` reage à largura real da janela, mesmo padrão
-  // de `FichaVisualizacao.verificarAnotacoesMobile` (lido do CSS via `matchMedia`, não duplicado
-  // como breakpoint próprio). ===
+  // === Mobile: folha cheia abaixo de `$bp-mobile` ===
   protected readonly mobileAtivo = signal(this.verificarMobile());
+
   protected aoRedimensionarViewport(): void {
     this.janela.atualizarViewport();
     this.mobileAtivo.set(this.verificarMobile());
   }
+
   private verificarMobile(): boolean {
     if (typeof window === 'undefined') {
       return false;
@@ -196,8 +241,7 @@ export class MontadorRolagem {
       : window.innerWidth <= BREAKPOINT_MOBILE;
   }
 
-  // === Tamanho, redimensionar (desktop) e maximizar: `JanelaMontador`, comum ao `MontadorRolagemExperimental`;
-  // estado local (não há store aqui) e sem persistência entre sessões. ===
+  // === Tamanho, redimensionar (desktop) e maximizar: `JanelaMontador`, a mesma mecânica do `MontadorRolagem` ===
   protected readonly janela = new JanelaMontador({
     largura: LARGURA_INICIAL,
     altura: ALTURA_INICIAL,
@@ -212,98 +256,5 @@ export class MontadorRolagem {
 
   protected aoMoverPonteiroRedimensionar(evento: PointerEvent): void {
     this.janela.moverRedimensionamento(evento, this.painelRef());
-  }
-
-  // === Ação composta 1: "Dado por Propriedade + Ajuste" → `(ATR±n)dM` ===
-  protected readonly atributoComposto = signal<string>(ATRIBUTOS[0]);
-  protected readonly ajusteComposto = signal(1);
-  protected readonly usaMultiplicadorComposto = signal(false);
-  protected readonly multiplicadorComposto = signal(2);
-
-  // === Ação composta 2: "Repetir tudo" → `(<fórmula>)#N` ===
-  protected readonly repeticoesN = signal(2);
-  protected readonly podeRepetir = computed(() => this.formula().trim().length > 0);
-
-  /** Nome do ícone (`app-icone`) pra este `faces` — `dado` genérico no fallback (`d3`, sem SVG
-   *  próprio). */
-  protected iconeDado(faces: number): IconeNome {
-    return ICONE_POR_FACES[faces] ?? 'dado';
-  }
-
-  /** Clique num dado: soma quantidade no último termo cru daquela face já na fórmula, ou insere
-   *  um `dN` novo quando ainda não existe nenhum (comportamento padrão de sempre). */
-  protected clicarDado(faces: number): void {
-    this.formula.update((atual) => adicionarDado(atual, faces));
-  }
-
-  /** Preview editável dentro do painel — mesmo texto do input original da Rolagem rápida. */
-  protected aoDigitarPreview(evento: Event): void {
-    const alvo = evento.target as HTMLInputElement;
-    this.formula.set(alvo.value);
-    this.cursorVisor.set(alvo.selectionStart);
-  }
-
-  // === Inserção crua (tag de dano, operador por pool — encostado no texto atual) ===
-  protected inserir(token: string): void {
-    this.formula.update((atual) => atual + token);
-  }
-
-  /** Insere um termo "aditivo" (atributo modificador, atalho de dano) com `+` automático quando
-   *  o campo já tem conteúdo e o último caractere não é `+`/`-`/`(`. */
-  protected inserirComSinal(token: string): void {
-    this.formula.update((atual) => {
-      if (atual === '') {
-        return token;
-      }
-      const ultimo = atual.at(-1) ?? '';
-      return SEM_SINAL_NECESSARIO.has(ultimo) ? atual + token : `${atual}+${token}`;
-    });
-  }
-
-  /** `+`/`-` substituem o operador anterior em vez de encadear (`2d6+-3` nunca é o que se quer).
-   */
-  protected inserirOperador(token: '+' | '-'): void {
-    this.formula.update((atual) => {
-      const ultimo = atual.at(-1);
-      if (ultimo === '+' || ultimo === '-') {
-        return atual.slice(0, -1) + token;
-      }
-      return atual + token;
-    });
-  }
-
-  /** Remove o último bloco aditivo (não só o último caractere) — ver `apagarUltimoBloco`. */
-  protected apagarUltimo(): void {
-    this.formula.update((atual) => apagarUltimoBloco(atual));
-  }
-
-  protected limpar(): void {
-    this.formula.set('');
-  }
-
-  // === Ações compostas ===
-  /** Fecha `(ATR±n)dM` de uma vez — o atributo e o ajuste vêm dos steppers acima do teclado. */
-  protected inserirDadoPorAtributo(faces: number): void {
-    const quantidade = this.usaMultiplicadorComposto()
-      ? `*${this.multiplicadorComposto()}`
-      : `${this.ajusteComposto() >= 0 ? '+' : ''}${this.ajusteComposto()}`;
-    const bloco = `(${this.atributoComposto()}${quantidade})d${faces}`;
-    this.inserirComSinal(bloco);
-  }
-
-  protected reposicionarPool(operador: string): void {
-    this.formula.update((atual) => reposicionarOperadorPool(atual, operador, this.cursorVisor()));
-  }
-
-  protected adicionarDano(tipo: string): void {
-    this.formula.update((atual) => adicionarTipoDano(atual, tipo));
-  }
-
-  /** Envolve a fórmula **atual inteira** em `(...)#N` — sempre balanceado, por construção. */
-  protected repetirTudo(): void {
-    if (!this.podeRepetir()) {
-      return;
-    }
-    this.formula.update((atual) => `(${atual})#${this.repeticoesN()}`);
   }
 }

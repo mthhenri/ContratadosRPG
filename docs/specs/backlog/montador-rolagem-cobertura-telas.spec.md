@@ -13,7 +13,7 @@ monta, rola, registra no histórico) igual em todas as telas — respeitando o g
 - O montador vive no `RolagemRapida` (`modules/ficha/componentes/rolagem-rapida/`), que escolhe entre
   `MontadorRolagem` (Atual) e `MontadorRolagemExperimental` (Essencial/Completo/Blocos) e aplica o gate
   único `podeUsarMontador` (TESTER/ADMIN) — experimento guarda-chuva em
-  `docs/specs/active/montador-rolagem-experimento.spec.md`, à espera da avaliação do autor.
+  `docs/specs/done/montador-rolagem-experimento.spec.md`, à espera da avaliação do autor.
 - Consumidores do `RolagemRapida`: `ficha-rolagens` (usado em `ficha-visualizacao`, `ficha-campanha-card`,
   `ficha-rolagens-painel`, `detalhe-jogador`), `criatura-visualizacao` e `detalhe-mestre` (rolagem do
   mestre na campanha).
@@ -22,6 +22,10 @@ monta, rola, registra no histórico) igual em todas as telas — respeitando o g
 - O defeito exato "não funciona" em cada tela não foi reproduzido nesta triagem (sem rodar o app);
   `ficha-campanha-card` tem modos compactos (`mostrarRolagensCompacto`, `mostrarTopo`) que podem esconder ou
   quebrar o gatilho/painel — suspeita principal para as "fichas parciais".
+
+> **Atualização de 2026-10-20:** o experimento foi fechado (`done/montador-rolagem-fechamento.spec.md`): o Completo é o
+> único montador e vale para todos; não existe mais gate de TESTER/ADMIN, seletor nem as versões Atual/Essencial/Blocos
+> citadas abaixo. A decisão (c) está respondida (gate removido); a auditoria passa a ser feita como jogador comum.
 
 ## Entregáveis
 

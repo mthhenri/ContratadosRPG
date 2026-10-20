@@ -1,8 +1,6 @@
-// Teclado de tokens da Rolagem rápida (ui-35, revisão de usabilidade) — agora caixa flutuante,
-// mesmo padrão de `calculadora-flutuante` (moldura da janela mora em `app-painel-flutuante`,
-// ui-17; este arquivo só cuida do gatilho e do conteúdo projetado dentro do painel). Teclas em
-// BEM próprio (`__tile`/`__tecla`), mesma decisão já tomada e aprovada pela calculadora — uma
-// grade densa de tokens curtos é um teclado, não uma lista de botões de ação isolados.
+// Casca do montador de rolagem. Análogo aprovado: a moldura do `app-painel-flutuante` — mesma moldura
+// (`app-painel-flutuante`), gatilho, visor e rodapé fixo; os controles vêm dos primitivos de `shared/ui/`. Só
+// tokens do tema; espaços na escala de 5 degraus (`ui-18`).
 
 @use "tema/breakpoints" as bp;
 
@@ -10,26 +8,14 @@
     display: contents;
 }
 
-// No mobile a caixa preenche a tela toda (só recuando pelo notch/home indicator via `safe-area-inset`).
-// No desktop, a folga das bordas é do `JanelaMontador` (tamanho limitado ao viewport), não de margem em CSS.
 :host ::ng-deep .painel-flutuante__janela--mobile {
     inset: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
         env(safe-area-inset-left);
 }
 
 .montador-rolagem {
-    // Gatilho inline (não é círculo flutuante como a calculadora — mora dentro da linha da
-    // "Rolagem rápida", junto do "Rolar") — mesma receita visual de `.ficha-rol__btn--rolar`
-    // (levantada em `ficha-rolagens.component.scss`), só que como toggle: ativo vira preenchido.
     &__gatilho {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
         flex: none;
-
-        &--ativo {
-            filter: brightness(1.1);
-        }
 
         @include bp.mobile {
             min-height: bp.$alvo-toque;
@@ -41,39 +27,17 @@
         display: flex;
         flex-direction: column;
         height: 100%;
-        gap: 10px;
-        padding: 14px;
-    }
-
-    // Alça de redimensionar (desktop only, some maximizada) — mesma receita visual de
-    // `.caderno__redimensionar`.
-    &__redimensionar {
-        position: absolute;
-        right: 0;
-        bottom: 0;
-        width: 20px;
-        height: 20px;
-        cursor: nwse-resize;
-        touch-action: none;
-
-        &::after {
-            content: "";
-            position: absolute;
-            right: 4px;
-            bottom: 4px;
-            width: 8px;
-            height: 8px;
-            border-right: 1px solid var(--accent);
-            border-bottom: 1px solid var(--accent);
-        }
+        gap: var(--space-12);
+        padding: var(--space-12) var(--space-16) var(--space-16);
     }
 
     &__visor {
         flex: none;
+        min-width: 0;
         background: var(--surface-2);
         border: 1px solid var(--border);
         border-radius: var(--radius-control);
-        padding: 9px 12px;
+        padding: var(--space-8) var(--space-12);
         font-family: var(--font-mono);
         font-size: 14px;
         color: var(--text);
@@ -86,6 +50,42 @@
         &::placeholder {
             color: var(--text-mute);
         }
+
+        &--invalido {
+            border-color: color-mix(in srgb, var(--warning) 40%, transparent);
+        }
+
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+    }
+
+    // Linha de leitura sob o visor: faixa e média (mono) e a frase em português (sans).
+    &__leitura {
+        flex: none;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-4);
+    }
+
+    &__faixa {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text);
+    }
+
+    &__faixa-nota {
+        font-weight: 400;
+        color: var(--text-dim);
+    }
+
+    &__frase {
+        font-family: var(--font-sans);
+        font-size: 12px;
+        line-height: 1.4;
+        color: var(--text-dim);
+        overflow-wrap: anywhere;
     }
 
     &__corpo {
@@ -94,8 +94,7 @@
         overflow-y: auto;
         display: flex;
         flex-direction: column;
-        gap: 14px;
-        padding-right: 2px;
+        gap: var(--space-16);
 
         --fade-topo: 0px;
         --fade-base: 0px;
@@ -125,26 +124,26 @@
         }
     }
 
-    &__rodape {
-        flex: none;
-        display: flex;
-        gap: 8px;
-        padding-top: 10px;
-        border-top: 1px solid var(--border);
-
-        .montador-rolagem__tecla {
-            flex: 1;
-        }
-    }
-
     &__grupo {
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: var(--space-8);
+    }
+
+    &__cabecalho-grupo {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-8);
     }
 
     &__titulo {
+        display: flex;
+        align-items: baseline;
+        flex-wrap: wrap;
+        gap: var(--space-4) var(--space-8);
         margin: 0;
+        min-width: 0;
         font-family: var(--font-mono);
         font-size: 10px;
         font-weight: 600;
@@ -153,149 +152,136 @@
         color: var(--text-mute);
     }
 
-    &__dica {
-        margin: 0;
+    &__subtitulo {
+        font-family: var(--font-sans);
         font-size: 12px;
+        font-weight: 400;
+        letter-spacing: normal;
+        text-transform: none;
         color: var(--text-dim);
-
-        code {
-            font-family: var(--font-mono);
-            color: var(--text);
-        }
+        overflow-wrap: anywhere;
     }
 
-    &__grade {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
+    code.montador-rolagem__subtitulo {
+        font-family: var(--font-mono);
     }
 
-    &__linha {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        flex-wrap: wrap;
+    &__receitas {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: var(--space-8);
     }
 
-    &__rotulo-linha {
-        font-size: 12px;
-        color: var(--text-dim);
-    }
-
-    &__segmentado {
-        flex-wrap: wrap;
-    }
-
-    // Botão de rótulo longo (não cabe num tile quadrado): Manter maior/menor, Margem de crítico,
-    // CORPO/FURTIVO, Repetir, e as três ações do rodapé.
-    &__tecla {
-        min-height: 36px;
+    &__modelos {
+        flex: none;
 
         @include bp.mobile {
             min-height: bp.$alvo-toque;
         }
+    }
 
-        &--larga {
-            flex: 1;
-            min-width: 120px;
+    &__seta {
+        transition: transform 0.15s ease;
+
+        &--aberta {
+            transform: rotate(180deg);
         }
     }
 
-    // Tile quadrado (token curto): dado, atributo, tipo de dano, dígito, operador, parêntese.
-    &__tile {
-        width: 36px;
-        height: 36px;
-        padding: 0;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
+    // Faixa de aviso inline (receita do aviso de conflito da Biblioteca: cor a 12% de fundo e 40% de borda).
+    &__aviso {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-8);
+        padding: var(--space-12);
+        background: color-mix(in srgb, var(--warning) 12%, transparent);
+        border: 1px solid color-mix(in srgb, var(--warning) 40%, transparent);
+        border-radius: var(--radius-control);
 
-        @include bp.mobile {
-            width: bp.$alvo-toque;
-            height: bp.$alvo-toque;
-        }
-
-        // Mesmo motivo do `&--dano` abaixo (ui-29d, P-022): sem omitir `[variante]`/`[estilo]`
-        // no `app-botao`, `:host(.botao--primario.botao--estilo-contorno)` vencia por
-        // especificidade e a cor apagada nunca aparecia — PROF/NIV saíam sempre no accent.
-        &--extra {
-            color: var(--text-dim);
-            background: transparent;
-            border: 1px solid var(--border-strong);
-
-            &:hover:not(:disabled) {
-                color: var(--text);
-                border-color: var(--accent-border);
-            }
-        }
-
-        &--operador {
-            color: var(--accent);
-            border-color: var(--accent-border);
-        }
-
-        // Mesma paleta do chip de resumo de `resultado-rolagem` (`__grupo--#{tipo}`): cor do
-        // tipo no texto/borda + fundo esmaecido (`-dim`) — sem o fundo, a sigla ficava sem
-        // "corzinha" nenhuma, só um contorno colorido igual aos outros tiles neutros. Sem
-        // `[variante]`/`[estilo]` no `app-botao` (ui-29d: omitir é como pedir "herdado") — com eles,
-        // a regra de severidade de `:host(.botao--secundario.botao--estilo-contorno)` tem mais
-        // especificidade que uma classe só daqui e vencia sempre, deixando os cinco botões cinzas
-        // (achado ao vivo). Sem variante, `app-botao` não aplica cor/fundo/borda nenhum — só o que
-        // está aqui pinta o botão, então a borda também precisa nascer aqui (antes vinha de
-        // `estilo="contorno"`).
-        &--dano {
-            font-size: 13px;
-            border: 1px solid transparent;
-
-            // Sem variante não há hover de `app-botao` nenhum — mesmo `filter: brightness` que o
-            // mixin `pintar($estilo: "preenchido", ...)` usa nos demais botões do produto.
-            &:hover:not(:disabled) {
-                filter: brightness(1.15);
-            }
-
-            @each $tipo in fisico, balistico, explosao, quimico, geral {
-                &-#{$tipo} {
-                    color: var(--dano-#{$tipo});
-                    border-color: var(--dano-#{$tipo}-border);
-                    background: var(--dano-#{$tipo}-dim);
-                }
-            }
+        &--erro {
+            background: color-mix(in srgb, var(--erro) 12%, transparent);
+            border-color: color-mix(in srgb, var(--erro) 40%, transparent);
         }
     }
 
-    // Tile de dado: silhueta do `app-icone` (`d3`..`d20`) empilhada com o rótulo `D{faces}` por
-    // cima — mesma receita de `resultado-rolagem__dado`
-    // (`display:inline-grid; place-items:center` + `grid-area` compartilhada entre os filhos, em
-    // vez de posicionamento absoluto, pra não depender de o ícone herdar altura/largura daqui).
-    &__dado-tile {
-        display: inline-grid;
-        place-items: center;
-        font-size: calc(36px / 1.15); // caixa do ícone — acompanha o tamanho do tile
-
-        @include bp.mobile {
-            font-size: calc(#{bp.$alvo-toque} / 1.15);
-        }
-
-        > * {
-            grid-area: 1 / 1;
-        }
-    }
-
-    &__dado-svg {
-        display: block;
-        color: var(--text-dim);
-        opacity: 0.45; // silhueta esmaecida — o rótulo D{faces} por cima é o que importa
-    }
-
-    &__dado-rotulo {
+    &__aviso-titulo {
         font-family: var(--font-mono);
-        font-size: 10px;
+        font-size: 11px;
         font-weight: 700;
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        color: var(--warning);
+
+        .montador-rolagem__aviso--erro & {
+            color: var(--erro);
+        }
+    }
+
+    &__codigo {
+        max-width: 100%;
+        font-family: var(--font-mono);
+        font-size: 13px;
         color: var(--text);
-        // Halo escuro: sem ele, os traços do SVG por baixo atravessam visualmente os vãos do
-        // texto (mesmo racional de `resultado-rolagem__dado-valor`).
-        text-shadow:
-            0 0 3px rgb(0 0 0 / 70%),
-            0 0 3px rgb(0 0 0 / 70%);
+        overflow-wrap: anywhere;
+    }
+
+    &__aviso-texto {
+        margin: 0;
+        font-family: var(--font-sans);
+        font-size: 12px;
+        line-height: 1.4;
+        color: var(--text-dim);
+    }
+
+    &__resultado {
+        flex: none;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-8);
+        padding-top: var(--space-12);
+        border-top: 1px solid var(--border);
+    }
+
+    &__rodape {
+        flex: none;
+        display: flex;
+        gap: var(--space-8);
+        padding-top: var(--space-12);
+        border-top: 1px solid var(--border);
+    }
+
+    &__acao {
+        flex: 1;
+
+        &--rolar {
+            flex: 1.4;
+        }
+
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+    }
+
+    // Alça de redimensionar — mesma receita do `MontadorRolagem`.
+    &__redimensionar {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        width: 20px;
+        height: 20px;
+        cursor: nwse-resize;
+        touch-action: none;
+
+        &::after {
+            content: "";
+            position: absolute;
+            right: var(--space-4);
+            bottom: var(--space-4);
+            width: 8px;
+            height: 8px;
+            border-right: 1px solid var(--accent);
+            border-bottom: 1px solid var(--accent);
+        }
     }
 }

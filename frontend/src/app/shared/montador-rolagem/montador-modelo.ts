@@ -8,7 +8,7 @@ import {
 } from '@contratados-rpg/shared/regras/rolagem';
 
 /**
- * Modelo de estado das versões novas do montador (`montador-exp-02`). **O texto da fórmula é a única fonte de
+ * Modelo de estado do montador. **O texto da fórmula é a única fonte de
  * verdade** (decisão 6): o estado da tela é derivado dele (`analisarFormulaMontador`) e toda edição produz um texto
  * novo (`montarFormula`). Funções puras — nenhuma regra de jogo: quem lê e valida é o motor (`shared/regras`).
  */

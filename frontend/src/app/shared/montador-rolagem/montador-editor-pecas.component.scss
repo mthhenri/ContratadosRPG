@@ -1,4 +1,4 @@
-// Editor Completo/Essencial do montador (montador-exp-03). Análogo: o corpo do `MontadorRolagem` (grupos com título
+// Editor do montador de rolagem (versão Completo). Análogo: o corpo do `MontadorRolagem` (grupos com título
 // mono uppercase, grades de teclas `app-botao` pequenas). Os controles são os primitivos de `shared/ui/`; aqui só
 // tamanho e layout. Só tokens; espaços na escala de 5 degraus (`ui-18`).
 @use "tema/breakpoints" as bp;
@@ -152,29 +152,6 @@
         letter-spacing: normal;
         text-transform: none;
         opacity: 0.85;
-    }
-
-    &__adicionar {
-        display: flex;
-        flex-wrap: wrap;
-        gap: var(--space-8);
-    }
-
-    &__adicionar-botao {
-        @include bp.mobile {
-            flex: 1 1 calc(50% - var(--space-8));
-            min-height: bp.$alvo-toque;
-        }
-    }
-
-    &__painel {
-        display: flex;
-        flex-direction: column;
-        gap: var(--space-8);
-        padding: var(--space-12);
-        background: var(--surface-2);
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
     }
 
     &__linha {

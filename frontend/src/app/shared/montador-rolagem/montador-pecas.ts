@@ -14,7 +14,7 @@ import {
 import type { MontadorModo } from './montador-modelo';
 
 /**
- * Peças que os controles das versões novas montam (`montador-exp-03`/`04`) e o **teste de atributo** lido das peças.
+ * Peças que os controles do montador montam e o **teste de atributo** lido das peças.
  * Só forma de texto — o motor (`shared/regras/rolagem`) continua o único juiz do que a fórmula vale. O que fica de
  * fora dos controles por decisão do I-041 (kh/kl com N > 1, explosão/implosão com limiar, dado por atributo fora do
  * teste, `1d100`) volta como fórmula "avançada" (`podeMontarPecas`), nunca é reescrito.
@@ -106,7 +106,7 @@ function dadoMontavel(peca: PecaDadoDto, noTeste: boolean): boolean {
 }
 
 /**
- * Se os controles de termos (Completo/Essencial/Blocos) montam todas as peças. Fora deles fica a fórmula
+ * Se os controles de termos montam todas as peças. Fora deles fica a fórmula
  * "avançada": `kh`/`kl` com N > 1, explosão/implosão com limiar, dado por atributo fora do teste (`FORd6`), dado
  * que não é do sistema (`1d100`) e margem de crítico acima de 3.
  */
@@ -115,7 +115,7 @@ export function podeMontarPecas(tokenizada: FormulaTokenizadaDto): boolean {
 }
 
 /**
- * Se Completo/Essencial montam a fórmula: como teste de atributo (onde o pool por atributo vale) ou como termos.
+ * Se o editor monta a fórmula: como teste de atributo (onde o pool por atributo vale) ou como termos.
  * O resto aparece como fórmula avançada.
  */
 export function podeMontarPecasOuTeste(tokenizada: FormulaTokenizadaDto): boolean {

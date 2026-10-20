@@ -15,7 +15,7 @@ import {
 import { nomeDaFonte, TIPOS_DANO_MONTADOR } from './montador-pecas';
 
 /**
- * Leitura das versões novas do montador (`montador-exp-03`/`04`): a frase em português sob o visor, a faixa e a média
+ * Leitura do montador: a frase em português sob o visor, a faixa e a média
  * de uma rolagem e o valor ao vivo do campo de expressão. **Tudo que depende de regra vem do motor**: a faixa é a
  * própria rolagem do motor com o dado travado no mínimo e no máximo, e a quantidade de dados de uma conta é a que o
  * motor rolaria (inclusive a regra de atributo zerado). Aqui só há apresentação e probabilidade de dados — inclusive

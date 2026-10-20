@@ -16,7 +16,7 @@ import {
   substituirPeca,
 } from './montador-modelo';
 
-/** Modelo das versões novas do montador (montador-exp-02): estado derivado do texto, edição por peças e Desfazer. */
+/** Modelo do montador: estado derivado do texto, edição por peças e Desfazer. */
 describe('montador-modelo', () => {
   describe('analisarFormulaMontador — estado derivado do texto', () => {
     it('vazia', () => {

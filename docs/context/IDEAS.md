@@ -51,8 +51,9 @@
 
 - **Promovida em 2026-10-02** (o autor pediu a spec depois da E3.3 e das decisões abaixo): duas specs —
   `rolagem-expressao-quantidade-dados.spec.md` (extensão definitiva do motor, para todos; concluída em 2026-10-03, em
-  `docs/specs/done/`) e `docs/specs/active/montador-rolagem-experimento.spec.md` (guarda-chuva do experimento exclusivo de tester, tasks `montador-exp-01`…`04`).
-  A spec do **montador vencedor** e a liberação para todos são do autor, depois do experimento. O registro de pesquisa
+  `docs/specs/done/`) e `docs/specs/done/montador-rolagem-experimento.spec.md` (guarda-chuva do experimento exclusivo de tester, tasks `montador-exp-01`…`04`).
+  **Fechada em 2026-10-20**: o autor escolheu o Completo e o liberou para todos (`docs/specs/done/montador-rolagem-fechamento.spec.md`).
+  O registro de pesquisa
   abaixo é a memória dos achados; o contrato está nas specs.
 
 - **Ideia:** reduzir o `MontadorRolagem` ao que se usa toda sessão (dado, atributo com modo explícito
@@ -60,7 +61,7 @@
   `(ATR±n)dM`, `(…)#N`, composto, explosão — para um guia embutido no painel, com exemplos que se
   inserem no visor; leitura em português da fórmula sob o visor.
 - **Origem:** pedido do autor em 2026-10-01 (montador "burocrático e confuso"); análise de UX/UI e sete
-  direções de POC em [`docs/specs/active/montador-rolagem-experimento/montador-rolagem-simplificado.html`](../specs/active/montador-rolagem-experimento/montador-rolagem-simplificado.html).
+  direções de POC em [`docs/specs/done/montador-rolagem-experimento/montador-rolagem-simplificado.html`](../specs/done/montador-rolagem-experimento/montador-rolagem-simplificado.html).
 - **Por quê:** hoje são cerca de 75 controles em 9 grupos, com teclado de calculadora, parênteses que
   geram fórmula inválida, operadores que agem num alvo oculto e ajuda só em tooltip/modal fora do
   contexto (medido no POC; achados 1–8 e A–D na página).

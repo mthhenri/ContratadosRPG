@@ -1,11 +1,11 @@
-@if (!oculto() && permitido()) {
+@if (!oculto()) {
     <button
         app-botao-icone
         tamanho="padrao"
         variante="secundario"
         type="button"
         class="montador-rolagem__gatilho"
-        [class.montador-rolagem__gatilho--ativo]="aberto()"
+        [ativo]="aberto()"
         [attr.aria-pressed]="aberto() ? 'true' : 'false'"
         aria-label="Montar fórmula por botões"
         [appTooltip]="aberto() ? 'Fechar o montador' : 'Montar fórmula por botões'"
@@ -45,388 +45,176 @@
     <div class="montador-rolagem__caixa">
         <input
             class="montador-rolagem__visor"
+            [class.montador-rolagem__visor--invalido]="analise().estado === 'INVALIDA'"
             type="text"
             [value]="formula()"
-            (input)="aoDigitarPreview($event)"
-            (click)="aoPosicionarCursor($event)"
-            (keyup)="aoPosicionarCursor($event)"
+            (input)="aoDigitarVisor($event)"
             aria-label="Fórmula em edição"
             placeholder="Sua fórmula aparece aqui"
         />
+        @if (leitura(); as linha) {
+            <div class="montador-rolagem__leitura" aria-live="polite">
+                @if (linha.resumo; as resumo) {
+                    <span class="montador-rolagem__faixa">
+                        {{ textoFaixa(resumo) }}
+                        @if (repeticoes() > 1) {
+                            <span class="montador-rolagem__faixa-nota"
+                                >· cada uma das {{ repeticoes() }} rolagens</span
+                            >
+                        }
+                    </span>
+                }
+                @if (linha.frase) {
+                    <span class="montador-rolagem__frase">{{ linha.frase }}</span>
+                }
+            </div>
+        }
 
         <div class="montador-rolagem__corpo" appOverflowFade>
-            <section class="montador-rolagem__grupo">
-                <h3 class="montador-rolagem__titulo">Editar</h3>
-                <div class="montador-rolagem__grade">
-                    <button
-                        app-botao
-                        variante="primario"
-                        estilo="contorno"
-                        tamanho="pequeno"
-                        type="button"
-                        class="montador-rolagem__tile montador-rolagem__tile--operador"
-                        (click)="inserirOperador('+')"
-                    >
-                        +
-                    </button>
-                    <button
-                        app-botao
-                        variante="primario"
-                        estilo="contorno"
-                        tamanho="pequeno"
-                        type="button"
-                        class="montador-rolagem__tile montador-rolagem__tile--operador"
-                        (click)="inserirOperador('-')"
-                    >
-                        −
-                    </button>
-                    <button
-                        app-botao
-                        variante="secundario"
-                        estilo="contorno"
-                        tamanho="pequeno"
-                        type="button"
-                        class="montador-rolagem__tile"
-                        (click)="inserir('(')"
-                    >
-                        (
-                    </button>
-                    <button
-                        app-botao
-                        variante="secundario"
-                        estilo="contorno"
-                        tamanho="pequeno"
-                        type="button"
-                        class="montador-rolagem__tile"
-                        (click)="inserir(')')"
-                    >
-                        )
-                    </button>
-                    @for (digito of [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]; track digito) {
-                        <button
-                            app-botao
-                            variante="secundario"
-                            estilo="contorno"
-                            tamanho="pequeno"
-                            type="button"
-                            class="montador-rolagem__tile"
-                            (click)="inserir('' + digito)"
-                        >
-                            {{ digito }}
-                        </button>
-                    }
-                </div>
-            </section>
-
-            <section class="montador-rolagem__grupo">
-                <h3 class="montador-rolagem__titulo">Dado</h3>
-                <p class="montador-rolagem__dica">
-                    Clique de novo no mesmo dado pra somar quantidade.
-                </p>
-                <div class="montador-rolagem__grade">
-                    @for (faces of dados; track faces) {
-                        <button
-                            app-botao
-                            variante="secundario"
-                            estilo="contorno"
-                            tamanho="pequeno"
-                            type="button"
-                            class="montador-rolagem__tile montador-rolagem__dado-tile"
-                            [appTooltip]="'D' + faces + ' — clique de novo pra somar mais um'"
-                            (click)="clicarDado(faces)"
-                        >
-                            <app-icone
-                                class="montador-rolagem__dado-svg"
-                                [nome]="iconeDado(faces)"
-                            />
-                            <span class="montador-rolagem__dado-rotulo">D{{ faces }}</span>
-                        </button>
-                    }
-                </div>
-            </section>
-
-            <section class="montador-rolagem__grupo">
-                <h3 class="montador-rolagem__titulo">Atributo</h3>
-                <div class="montador-rolagem__grade">
-                    @for (sigla of atributos; track sigla) {
-                        <button
-                            app-botao
-                            variante="secundario"
-                            estilo="contorno"
-                            tamanho="pequeno"
-                            type="button"
-                            class="montador-rolagem__tile"
-                            [appTooltip]="
-                                'Soma/usa ' + sigla + ' como modificador ou fonte de dados'
-                            "
-                            (click)="inserirComSinal(sigla)"
-                        >
-                            {{ sigla }}
-                        </button>
-                    }
-                    @for (sigla of fontesExtra; track sigla) {
-                        <button
-                            app-botao
-                            tamanho="pequeno"
-                            type="button"
-                            class="montador-rolagem__tile montador-rolagem__tile--extra"
-                            [appTooltip]="sigla === 'PROF' ? 'Soma a Proficiência' : 'Soma o Nível'"
-                            (click)="inserirComSinal(sigla)"
-                        >
-                            {{ sigla }}
-                        </button>
-                    }
-                </div>
-            </section>
-
-            <section class="montador-rolagem__grupo">
-                <h3 class="montador-rolagem__titulo">Manter maior / menor</h3>
-                <div class="montador-rolagem__linha">
-                    <button
-                        app-botao
-                        variante="primario"
-                        estilo="contorno"
-                        tamanho="pequeno"
-                        type="button"
-                        class="montador-rolagem__tecla montador-rolagem__tecla--operador montador-rolagem__tecla--larga"
-                        appTooltip="Mantém só o maior dado do pool anterior"
-                        (click)="reposicionarPool('kh')"
-                    >
-                        Manter maior
-                    </button>
-                    <button
-                        app-botao
-                        variante="primario"
-                        estilo="contorno"
-                        tamanho="pequeno"
-                        type="button"
-                        class="montador-rolagem__tecla montador-rolagem__tecla--operador montador-rolagem__tecla--larga"
-                        appTooltip="Mantém só o menor dado do pool anterior — a desvantagem"
-                        (click)="reposicionarPool('kl')"
-                    >
-                        Manter menor
-                    </button>
-                </div>
-            </section>
-
-            <section class="montador-rolagem__grupo">
-                <h3 class="montador-rolagem__titulo">Avançado</h3>
-                <div class="montador-rolagem__linha">
-                    <button
-                        app-botao
-                        variante="primario"
-                        estilo="contorno"
-                        tamanho="pequeno"
-                        type="button"
-                        class="montador-rolagem__tecla montador-rolagem__tecla--operador montador-rolagem__tecla--larga"
-                        appTooltip="Conta os dados no valor máximo do pool anterior (cm) — não altera o total"
-                        (click)="reposicionarPool('cm' + margemCriticoN())"
-                    >
-                        Margem de crítico
-                    </button>
-                    <app-step-input
-                        [valorExterno]="margemCriticoN()"
-                        (valorAlterado)="margemCriticoN.set($event)"
-                        [min]="1"
-                        [max]="100"
-                        tamanho="compacto"
-                        ariaRotulo="Margem de crítico"
-                    />
-                </div>
-            </section>
-
-            <section class="montador-rolagem__grupo">
-                <h3 class="montador-rolagem__titulo">Tipo de dano</h3>
-                <div class="montador-rolagem__grade">
-                    @for (item of tiposDano; track item.sigla) {
-                        <button
-                            app-botao
-                            tamanho="pequeno"
-                            type="button"
-                            [class]="
-                                'montador-rolagem__tile montador-rolagem__tile--dano montador-rolagem__tile--dano-' +
-                                item.classe
-                            "
-                            [appTooltip]="'Marca o dano anterior como ' + item.tipo"
-                            (click)="adicionarDano(item.sigla)"
-                        >
-                            {{ item.sigla }}
-                        </button>
-                    }
-                </div>
-            </section>
-
-            @if (temCorpo() || temFurtivo()) {
+            @if (mostraInicio()) {
                 <section class="montador-rolagem__grupo">
-                    <h3 class="montador-rolagem__titulo">Atalhos do agente</h3>
-                    <div class="montador-rolagem__grade">
-                        @if (temCorpo()) {
+                    <h3 class="montador-rolagem__titulo">
+                        Começar por
+                        <span class="montador-rolagem__subtitulo"
+                            >um modelo que você ajusta depois</span
+                        >
+                    </h3>
+                    <div class="montador-rolagem__receitas">
+                        @for (receita of receitas; track receita.modo) {
                             <button
-                                app-botao
-                                variante="secundario"
-                                estilo="contorno"
-                                tamanho="pequeno"
+                                app-cartao-receita
                                 type="button"
-                                class="montador-rolagem__tecla"
-                                appTooltip="Vira o Dano Corpo a Corpo atual do agente"
-                                (click)="inserirComSinal('CORPO')"
+                                class="montador-rolagem__receita"
+                                [descricao]="receita.descricao"
+                                (click)="escolherReceita(receita)"
                             >
-                                CORPO
-                            </button>
-                        }
-                        @if (temFurtivo()) {
-                            <button
-                                app-botao
-                                variante="secundario"
-                                estilo="contorno"
-                                tamanho="pequeno"
-                                type="button"
-                                class="montador-rolagem__tecla"
-                                appTooltip="Vira o Dano Furtivo atual do agente"
-                                (click)="inserirComSinal('FURTIVO')"
-                            >
-                                FURTIVO
+                                {{ receita.titulo }}
                             </button>
                         }
                     </div>
                 </section>
-            }
-
-            <section class="montador-rolagem__grupo">
-                <h3 class="montador-rolagem__titulo">Dado por Propriedade + Ajuste</h3>
-                <p class="montador-rolagem__dica">
-                    Monta <code>(ATR±n)dM</code> ou <code>(ATR*Y)dM</code> de uma vez.
-                </p>
-                <app-segmentado
-                    rotulo="Propriedade para o dado por ajuste"
-                    class="montador-rolagem__segmentado"
-                >
-                    @for (sigla of atributos; track sigla) {
-                        <button
-                            app-segmentado-item
-                            type="button"
-                            [ativo]="atributoComposto() === sigla"
-                            (click)="atributoComposto.set(sigla)"
-                        >
-                            {{ sigla }}
-                        </button>
-                    }
-                    @for (sigla of fontesExtra; track sigla) {
-                        <button
-                            app-segmentado-item
-                            type="button"
-                            [ativo]="atributoComposto() === sigla"
-                            (click)="atributoComposto.set(sigla)"
-                        >
-                            {{ sigla }}
-                        </button>
-                    }
-                </app-segmentado>
-                <app-segmentado
-                    rotulo="Modo da quantidade de dados"
-                    class="montador-rolagem__segmentado"
-                >
-                    <button
-                        app-segmentado-item
-                        type="button"
-                        [ativo]="!usaMultiplicadorComposto()"
-                        (click)="usaMultiplicadorComposto.set(false)"
-                    >
-                        Ajuste
-                    </button>
-                    <button
-                        app-segmentado-item
-                        type="button"
-                        [ativo]="usaMultiplicadorComposto()"
-                        (click)="usaMultiplicadorComposto.set(true)"
-                    >
-                        Multiplicador
-                    </button>
-                </app-segmentado>
-                <div class="montador-rolagem__linha">
-                    <span class="montador-rolagem__rotulo-linha">{{
-                        usaMultiplicadorComposto() ? "Multiplicador" : "Ajuste"
-                    }}</span>
-                    <app-step-input
-                        [valorExterno]="
-                            usaMultiplicadorComposto() ? multiplicadorComposto() : ajusteComposto()
-                        "
-                        (valorAlterado)="
-                            usaMultiplicadorComposto()
-                                ? multiplicadorComposto.set($event)
-                                : ajusteComposto.set($event)
-                        "
-                        [min]="usaMultiplicadorComposto() ? 1 : -20"
-                        [max]="20"
-                        [comSinal]="!usaMultiplicadorComposto()"
-                        tamanho="compacto"
-                        [ariaRotulo]="
-                            usaMultiplicadorComposto()
-                                ? 'Multiplicador da propriedade'
-                                : 'Ajuste da propriedade'
-                        "
-                    />
-                </div>
-                <div class="montador-rolagem__grade">
-                    @for (faces of dados; track faces) {
+            } @else {
+                <section class="montador-rolagem__grupo">
+                    <div class="montador-rolagem__cabecalho-grupo">
+                        <h3 class="montador-rolagem__titulo">Fórmula</h3>
                         <button
                             app-botao
                             variante="secundario"
-                            estilo="contorno"
+                            estilo="texto"
                             tamanho="pequeno"
                             type="button"
-                            class="montador-rolagem__tile montador-rolagem__dado-tile"
-                            [appTooltip]="
-                                'Insere (' +
-                                atributoComposto() +
-                                (usaMultiplicadorComposto()
-                                    ? '*' + multiplicadorComposto()
-                                    : (ajusteComposto() >= 0 ? '+' : '') + ajusteComposto()) +
-                                ')d' +
-                                faces
-                            "
-                            (click)="inserirDadoPorAtributo(faces)"
+                            class="montador-rolagem__modelos"
+                            [attr.aria-expanded]="modelosAbertos() ? 'true' : 'false'"
+                            (click)="modelosAbertos.set(!modelosAbertos())"
                         >
+                            Modelos
                             <app-icone
-                                class="montador-rolagem__dado-svg"
-                                [nome]="iconeDado(faces)"
+                                nome="chevron"
+                                class="montador-rolagem__seta"
+                                [class.montador-rolagem__seta--aberta]="modelosAbertos()"
                             />
-                            <span class="montador-rolagem__dado-rotulo">D{{ faces }}</span>
                         </button>
+                    </div>
+                    @if (modelosAbertos()) {
+                        <div class="montador-rolagem__receitas">
+                            @for (receita of receitas; track receita.modo) {
+                                <button
+                                    app-cartao-receita
+                                    type="button"
+                                    class="montador-rolagem__receita"
+                                    [descricao]="receita.descricao"
+                                    [ativo]="modo() === receita.modo"
+                                    (click)="escolherReceita(receita)"
+                                >
+                                    {{ receita.titulo }}
+                                </button>
+                            }
+                        </div>
                     }
-                </div>
-            </section>
 
-            <section class="montador-rolagem__grupo">
-                <h3 class="montador-rolagem__titulo">Repetir tudo</h3>
-                <p class="montador-rolagem__dica">
-                    Envolve a fórmula atual inteira em <code>(...)#N</code>, com os parênteses
-                    sempre balanceados.
-                </p>
-                <div class="montador-rolagem__linha">
-                    <app-step-input
-                        [valorExterno]="repeticoesN()"
-                        (valorAlterado)="repeticoesN.set($event)"
-                        [min]="1"
-                        [max]="repeticoesMaxima"
-                        tamanho="compacto"
-                        ariaRotulo="Número de repetições"
+                    @switch (analise().estado) {
+                        @case ("AVANCADA") {
+                            <div class="montador-rolagem__aviso" role="status">
+                                <strong class="montador-rolagem__aviso-titulo">Fórmula avançada</strong>
+                                <code class="montador-rolagem__codigo">{{ formula() }}</code>
+                                <p class="montador-rolagem__aviso-texto">
+                                    Usa recursos que os controles não montam. Edite pelo texto, ou
+                                    limpe para montar pelos controles.
+                                </p>
+                                <button
+                                    app-botao
+                                    variante="secundario"
+                                    estilo="contorno"
+                                    tamanho="pequeno"
+                                    type="button"
+                                    (click)="limpar()"
+                                >
+                                    Limpar
+                                </button>
+                            </div>
+                        }
+                        @case ("INVALIDA") {
+                            <div
+                                class="montador-rolagem__aviso montador-rolagem__aviso--erro"
+                                role="status"
+                            >
+                                <strong class="montador-rolagem__aviso-titulo">Fórmula inválida</strong>
+                                <code class="montador-rolagem__codigo">{{ formula() }}</code>
+                                <p class="montador-rolagem__aviso-texto">
+                                    {{ analise().erro }} Corrija o texto ou limpe para montar pelos
+                                    controles.
+                                </p>
+                                <button
+                                    app-botao
+                                    variante="secundario"
+                                    estilo="contorno"
+                                    tamanho="pequeno"
+                                    type="button"
+                                    (click)="limpar()"
+                                >
+                                    Limpar
+                                </button>
+                            </div>
+                        }
+                    }
+                </section>
+                @if (mostraEditor()) {
+                    <app-montador-editor-pecas
+                        [tokenizada]="tokenizadaEditor()"
+                        [modo]="modo()"
+                        [atalhosDano]="atalhosDano()"
+                        [ambiente]="ambiente()"
+                        (editar)="aplicarEdicao($event)"
                     />
+                }
+            }
+        </div>
+
+        @if (resultadoVisivel(); as rolagem) {
+            <section class="montador-rolagem__resultado" aria-label="Última rolagem">
+                <div class="montador-rolagem__cabecalho-grupo">
+                    <h3 class="montador-rolagem__titulo">
+                        Última rolagem
+                        <code class="montador-rolagem__subtitulo">{{ rolagem.formula }}</code>
+                    </h3>
                     <button
-                        app-botao
-                        variante="primario"
-                        estilo="preenchido"
-                        tamanho="pequeno"
+                        app-botao-icone
+                        tamanho="compacto"
                         type="button"
-                        class="montador-rolagem__tecla montador-rolagem__tecla--destaque"
-                        [disabled]="!podeRepetir()"
-                        (click)="repetirTudo()"
+                        aria-label="Fechar resultado"
+                        appTooltip="Fechar resultado"
+                        (click)="fecharResultado()"
                     >
-                        Repetir (#{{ repeticoesN() }})
+                        <span aria-hidden="true">×</span>
                     </button>
                 </div>
+                <app-resultado-rolagem
+                    [resultado]="rolagem.resultado"
+                    [corFicha]="corFicha()"
+                    [compacto]="true"
+                />
             </section>
-        </div>
+        }
 
         <div class="montador-rolagem__rodape">
             <button
@@ -435,11 +223,13 @@
                 estilo="texto"
                 tamanho="pequeno"
                 type="button"
-                class="montador-rolagem__tecla montador-rolagem__tecla--funcao"
-                appTooltip="Apaga o último caractere"
-                (click)="apagarUltimo()"
+                class="montador-rolagem__acao"
+                [disabled]="!podeDesfazer()"
+                posicaoIcone="esquerda"
+                (click)="desfazer()"
             >
-                ⌫
+                <app-icone nome="desfazer" />
+                Desfazer
             </button>
             <button
                 app-botao
@@ -447,7 +237,8 @@
                 estilo="texto"
                 tamanho="pequeno"
                 type="button"
-                class="montador-rolagem__tecla montador-rolagem__tecla--funcao"
+                class="montador-rolagem__acao"
+                [disabled]="!formula() && modo() === null"
                 (click)="limpar()"
             >
                 Limpar
@@ -457,11 +248,13 @@
                 variante="primario"
                 estilo="preenchido"
                 tamanho="pequeno"
+                posicaoIcone="esquerda"
                 type="button"
-                class="montador-rolagem__tecla montador-rolagem__tecla--destaque"
+                class="montador-rolagem__acao montador-rolagem__acao--rolar"
                 [disabled]="!formula().trim() || formulaValida() === false"
                 (click)="rolar.emit()"
             >
+                <app-icone nome="d20" />
                 Rolar
             </button>
         </div>

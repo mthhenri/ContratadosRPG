@@ -3,43 +3,25 @@
         <span class="rolagem-rapida__rotulo-linha">
             <span class="rolagem-rapida__rotulo">Rolagem rápida</span>
             <span class="rolagem-rapida__rotulo-acoes">
-                @if (podeUsarMontador()) {
-                    <app-montador-seletor-versao class="rolagem-rapida__seletor-montador" />
-                }
                 <app-guia-formula #guiaExterna />
             </span>
         </span>
         <div class="rolagem-rapida__linha">
-            @if (versaoMontadorNova(); as versao) {
-                <app-montador-rolagem-experimental
-                    [versao]="versao"
-                    [oculto]="oculto()"
-                    [style.visibility]="oculto() ? 'visible' : null"
-                    [style.pointer-events]="oculto() ? 'auto' : null"
-                    [formula]="formula.value"
-                    (formulaChange)="formula.setValue($event)"
-                    [atalhosDano]="atalhosDano()"
-                    [formulaValida]="formulaValida()"
-                    [ultimaRolagem]="ultimaRolagem()"
-                    [corFicha]="cor()"
-                    [atributos]="atributos()"
-                    [proficiencia]="proficiencia()"
-                    [nivel]="nivel()"
-                    (rolar)="rolar()"
-                />
-            } @else {
-                <app-montador-rolagem
-                    [oculto]="oculto()"
-                    [style.visibility]="oculto() ? 'visible' : null"
-                    [style.pointer-events]="oculto() ? 'auto' : null"
-                    [formula]="formula.value"
-                    (formulaChange)="formula.setValue($event)"
-                    [atalhosDano]="atalhosDano()"
-                    [formulaValida]="formulaValida()"
-                    [permitido]="podeUsarMontador()"
-                    (rolar)="rolar()"
-                />
-            }
+            <app-montador-rolagem
+                [oculto]="oculto()"
+                [style.visibility]="oculto() ? 'visible' : null"
+                [style.pointer-events]="oculto() ? 'auto' : null"
+                [formula]="formula.value"
+                (formulaChange)="formula.setValue($event)"
+                [atalhosDano]="atalhosDano()"
+                [formulaValida]="formulaValida()"
+                [ultimaRolagem]="ultimaRolagem()"
+                [corFicha]="cor()"
+                [atributos]="atributos()"
+                [proficiencia]="proficiencia()"
+                [nivel]="nivel()"
+                (rolar)="rolar()"
+            />
             <input
                 class="rolagem-rapida__entrada"
                 type="text"

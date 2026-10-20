@@ -66,13 +66,6 @@ import {
   tipoPadraoDoModo,
 } from './montador-pecas';
 
-/** Densidade da versão: Completo deixa tudo à vista; Essencial recolhe o segundo plano. */
-export type MontadorDensidade = 'COMPLETO' | 'ESSENCIAL';
-
-/** Painéis de "+ Adicionar" do Essencial (um aberto por vez). */
-type PainelTermos = 'ATRIBUTO' | 'NUMERO' | 'EXPRESSAO' | 'REPETIR' | 'ATALHOS';
-type PainelTeste = 'COMBINAR' | 'DADOS' | 'BONUS' | 'OPCOES';
-
 const ICONE_POR_FACES: Readonly<Record<number, IconeNome>> = {
   3: 'd3',
   4: 'd4',
@@ -84,9 +77,8 @@ const ICONE_POR_FACES: Readonly<Record<number, IconeNome>> = {
 };
 
 /**
- * Editor das versões **Completo** (E3.1) e **Essencial** (E3.3) do montador (`montador-exp-03`) — um componente, duas
- * densidades: mesmo estado e mesma janela, só muda o que fica à vista. Recebe as peças da fórmula (`tokenizada`, lidas
- * do texto da barra) e devolve o texto novo a cada edição (`editar`); quem guarda o Desfazer é a casca.
+ * Editor do montador de rolagem (versão Completo, E3.1: controles de base à vista). Recebe as peças da fórmula
+ * (`tokenizada`, lidas do texto da barra) e devolve o texto novo a cada edição (`editar`); quem guarda o Desfazer é a casca.
  *
  * Dois editores: **teste de atributo** (pool de d20 de 1–2 atributos, soma ou média, dados a mais/menos, manter
  * maior/menor, margem de crítico, Proficiência, Nível, bônus e repetição) quando as peças têm essa forma, e **termos**
@@ -111,7 +103,6 @@ const ICONE_POR_FACES: Readonly<Record<number, IconeNome>> = {
   styleUrl: './montador-editor-pecas.component.scss',
 })
 export class MontadorEditorPecas {
-  readonly densidade = input.required<MontadorDensidade>();
   /** Peças da fórmula atual (vazia em "Dados livres" recém-escolhido). */
   readonly tokenizada = input.required<FormulaTokenizadaDto>();
   /** Modo escolhido num ponto de partida, ou `null` (fórmula vinda da barra). */
@@ -131,8 +122,6 @@ export class MontadorEditorPecas {
   protected readonly repeticoesMaxima = REPETICOES_MONTADOR;
   protected readonly margens = Array.from({ length: MARGEM_CRITICO_MAXIMA + 1 }, (_, indice) => indice);
 
-  protected readonly essencial = computed(() => this.densidade() === 'ESSENCIAL');
-
   /** Teste de atributo lido das peças (quando o modo admite), senão `null` → editor de termos. */
   protected readonly teste = computed<TesteMontador | null>(() => {
     const modo = this.modo();
@@ -147,18 +136,6 @@ export class MontadorEditorPecas {
   protected readonly atalhosDisponiveis = computed(() => listarAtalhosDisponiveis(this.atalhosDano()));
 
   protected readonly repeticoes = computed(() => this.tokenizada().repeticoes ?? 1);
-
-  // ── Painéis do Essencial ─────────────────────────────────────────────────
-  protected readonly painelTermos = signal<PainelTermos | null>(null);
-  protected readonly painelTeste = signal<PainelTeste | null>(null);
-
-  protected alternarPainelTermos(painel: PainelTermos): void {
-    this.painelTermos.update((atual) => (atual === painel ? null : painel));
-  }
-
-  protected alternarPainelTeste(painel: PainelTeste): void {
-    this.painelTeste.update((atual) => (atual === painel ? null : painel));
-  }
 
   // ── Apresentação ─────────────────────────────────────────────────────────
   protected iconeDado(faces: number): IconeNome {

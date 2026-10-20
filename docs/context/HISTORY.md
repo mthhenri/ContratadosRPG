@@ -1,10 +1,33 @@
 # HISTORY.md — Histórico do Projeto
 
 
+## 2026-10-20 — montador-rolagem-fechamento: o Completo vira o montador único, liberado para todos
+
+Decisão do autor: seguir com o **Completo** e liberar o montador (I-041) para todos os usuários que rolam. Fecha o
+experimento `montador-rolagem-experimento` (4 tasks, guarda-chuva movido para `done/` junto da pasta de anexos; os
+testes de `shared` que leem o corpus `montador-rolagem-formulas.json` apontam para o novo caminho).
+
+**O que mudou.** Saíram o gate `podeUsarMontador`, o seletor de versão, `MontadorVersaoPreferenciaService` (e a chave
+`contratados-rpg.montador-rolagem.versao`), o `MontadorRolagem` antigo (Atual, com sua `util`), a versão Essencial
+(painéis "+ Adicionar", "⋯ Mais" e a densidade do `MontadorEditorPecas`) e a versão Blocos (`montador-blocos`,
+`montador-editor-blocos`). A pasta `shared/montador-rolagem-experimental/` virou `shared/montador-rolagem/`; o
+componente é `MontadorRolagem`, seletor `app-montador-rolagem`, classes BEM `montador-rolagem__*` (antes
+`montador-exp__*`) e sem o selo "Experimento · …" no cabeçalho da janela. `RolagemRapida` renderiza só o Completo e já
+passa `ultimaRolagem` (o resultado fica na janela). Nenhuma mudança no motor (`shared/regras/rolagem`) nem no backend.
+
+**Verificação.** 230 testes dos arquivos tocados (montador, rolagem rápida, ficha-visualizacao) passam; ESLint sem erro
+nas pastas tocadas; `repo:verificar` ok. Ao vivo, como jogador **NORMAL** (antes invisível): gatilho presente na aba
+Rolagens da ficha, sem seletor; ponto de partida "Teste de atributo" monta `LUTd20kh1cm1 + PROF` com todos os grupos à
+vista (sem "+ Adicionar" nem "⋯ Mais"); fórmula inválida mostra o aviso e desabilita Rolar; `3d6 + FOR [Físico]` rola,
+registra o resultado na janela e na bandeja. `1920×1080` e `360×800` (folha em tela cheia, sem overflow, gatilho de
+44 px). Não verificados ao vivo: criatura, cartão do Esquadrão e rolagem do mestre (mesmo componente `RolagemRapida`,
+cobertos só por teste de componente); a auditoria por tela segue em `montador-rolagem-cobertura-telas` (backlog).
+Entra na nota 1.10.0.
+
 ## 2026-10-20 — versão 1.10.0: nota "A Biblioteca ganha pastas, o Caderno liga trechos a documentos e as cenas ganham ícones"
 
 Nota `docs/patchnotes/1.10.0.md` (14 a 20 de outubro) e versão dos pacotes em 1.10.0. Minor por trazer
-funcionalidade nova visível. Cobre a Biblioteca em pastas, o vínculo Caderno→Biblioteca, ícones de cena e
+funcionalidade nova visível. Cobre a Biblioteca em pastas, o montador de rolagem liberado para todos, o vínculo Caderno→Biblioteca, ícones de cena e
 de recursos, o recorte de fichas ocultas e os ajustes da leitura das Regras e da Oficina. A transcrição fica
 de fora (implementada e desativada na mesma semana). Conferido: `patchnotes:publicar --dry-run`,
 `versao:sincronizar`, build e testes do `shared`. Sem tag local; a tag e a publicação nascem no workflow, no merge.

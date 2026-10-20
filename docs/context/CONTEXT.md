@@ -1061,12 +1061,13 @@ na janela flutuante, NPC em nova aba (a janela não suporta NPC — `I-044`). Me
 NPC têm "Acesso de jogadores" (`CampanhaFichaAcesso`). A visão do jogador segue com `campanha-fichas-especiais`, só leitura
 (`I-043`).
 
-**Experimento do montador de rolagem (I-041) — tasks 4/4 concluídas; falta a avaliação do autor.** Guarda-chuva
-`montador-rolagem-experimento` em `active/`: `montador-exp-01` (fórmula em peças no `shared`), `02` (gate único
-`podeUsarMontador`, seletor Atual/Essencial/Completo/Blocos na barra de "Rolagem rápida", preferência em
-`localStorage`, casca comum), `03` (Completo e Essencial) e `04` (Blocos) em `done/`, verificados ao vivo. O guarda-chuva
-só fecha com a **avaliação qualitativa** das dez fórmulas dos jogadores pelo autor e pelos testers, registrada em
-`HISTORY.md`; a escolha do vencedor, a limpeza e a liberação para todos são uma spec do autor. Fonte: [guarda-chuva](../specs/active/montador-rolagem-experimento.spec.md).
+**Montador de rolagem (I-041) — experimento fechado em 2026-10-20.** O autor escolheu o **Completo** como montador
+único e o liberou para **todos** os usuários que rolam (ficha de jogador, criatura/NPC, cartão da campanha, rolagem do
+mestre). Saíram o gate `podeUsarMontador`, o seletor de versão, a preferência em `localStorage` e as versões Atual,
+Essencial e Blocos; o código vive em `frontend/src/app/shared/montador-rolagem/` (`MontadorRolagem`, editor
+`montador-editor-pecas`, modelo, leitura e peças puras), com a fórmula em peças no `shared/regras/rolagem`. A barra de
+"Rolagem rápida" é o único consumidor. Fonte: [fechamento](../specs/done/montador-rolagem-fechamento.spec.md) e
+[experimento](../specs/done/montador-rolagem-experimento.spec.md).
 
 **Requests-correcoes (guarda-chuva de 6 tasks, `P-082`…`P-086` + inventário sob demanda) —
 concluído, 6/6**: `p-082` (autosave/seleção da ficha), `p-083` (reconexão sem carga duplicada),
@@ -2207,7 +2208,6 @@ incluindo todos os ajustes avulsos de pós-milestone.
 | ~~`m11-10`~~ | regras | concluída; ver [guarda-chuva](../specs/done/m11-oficina-regras.spec.md) |
 | `regras-visual-06`…`10` | regras | cinco correções restantes após bateria visual; textos e contraste; [mapa e prioridades](../specs/done/regras-auditoria-visual-completa/auditoria.md) |
 
-Spec avulsa ativa: `montador-rolagem-experimento`, mantida em experimentação pelo autor.
 `icones-recursos-sistema` arquivada em `done/`; sua continuação
 `icones-recursos-glifos-e-pendencias` foi retomada em `active/`, junto de
 `icones-criatura-vd-tenacidade` e `icones-identidade-cards-agente`. Pranchas e mapas

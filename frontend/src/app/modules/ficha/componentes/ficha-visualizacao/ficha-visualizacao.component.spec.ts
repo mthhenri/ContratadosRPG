@@ -11,7 +11,6 @@ import {
   PersonalidadeEstagioEnum,
   SeveridadeLesaoEnum,
   TipoDanoEnum,
-  TipoUsuarioEnum,
 } from '@contratados-rpg/shared/enums';
 import type {
   FichaFragmentoConsumidoDto,
@@ -282,32 +281,18 @@ describe('FichaVisualizacao', () => {
     });
 
     it('mantém o montador aberto e visível ao navegar para outra aba', () => {
-      // Gatilho do Montador é restrito a TESTER/ADMIN pelo gate único (`podeUsarMontador`,
-      // `montador-rolagem-experimental/montador-acesso.ts`). Sessão de teste precisa refletir
-      // isso pro gatilho existir no DOM.
-      const sessaoAdmin: UsuarioAutenticadoDto = {
-        token: 'token-de-teste',
-        id: 1,
-        login: 'admin.teste',
-        nome: 'Admin Teste',
-        tipo: TipoUsuarioEnum.ADMIN,
-      };
-      try {
-        const alvo = montar(dados, 'Corvo', 42, true, false, true, sessaoAdmin);
-        alvo.fixture.componentRef.setInput('abaStatusInicial', 'rolagens');
-        alvo.fixture.detectChanges();
+      const alvo = montar(dados, 'Corvo', 42, true, false, true);
+      alvo.fixture.componentRef.setInput('abaStatusInicial', 'rolagens');
+      alvo.fixture.detectChanges();
 
-        alvo.raiz.querySelector<HTMLButtonElement>('.montador-rolagem__gatilho')!.click();
-        alvo.fixture.detectChanges();
-        expect(alvo.raiz.querySelector('.montador-rolagem__corpo')).not.toBeNull();
+      alvo.raiz.querySelector<HTMLButtonElement>('.montador-rolagem__gatilho')!.click();
+      alvo.fixture.detectChanges();
+      expect(alvo.raiz.querySelector('.montador-rolagem__corpo')).not.toBeNull();
 
-        alvo.fixture.componentInstance['selecionarAbaStatus']('inventario');
-        alvo.fixture.detectChanges();
+      alvo.fixture.componentInstance['selecionarAbaStatus']('inventario');
+      alvo.fixture.detectChanges();
 
-        expect(alvo.raiz.querySelector('.montador-rolagem__corpo')).not.toBeNull();
-      } finally {
-        localStorage.removeItem('contratados-rpg.sessao');
-      }
+      expect(alvo.raiz.querySelector('.montador-rolagem__corpo')).not.toBeNull();
     });
   });
 

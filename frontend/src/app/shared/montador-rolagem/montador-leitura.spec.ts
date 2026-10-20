@@ -27,7 +27,7 @@ const ambiente: AmbienteMontador = {
   nivel: 3,
 };
 
-/** Leitura das versões novas (montador-exp-03/04): faixa e média pelo motor, frase e campo de expressão. */
+/** Leitura do montador: faixa e média pelo motor, frase e campo de expressão. */
 describe('montador-leitura', () => {
   describe('resumirFormula — faixa e média de uma rolagem', () => {
     it('soma de dados e fixos', () => {

@@ -6,18 +6,9 @@ import { RolagemVisibilidadeEnum } from '@contratados-rpg/shared/enums';
 import type { FichaAtributosDto } from '@contratados-rpg/shared/dtos/ficha';
 import { expandirAtalhosDano, rolarFormula, validarFormula } from '@contratados-rpg/shared/regras/rolagem';
 
-import { SessaoService } from '../../../../core/services/sessao.service';
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { Icone } from '../../../../shared/icone/icone.component';
-import { MontadorRolagem } from '../../../../shared/montador-rolagem/montador-rolagem.component';
-import { podeUsarMontador } from '../../../../shared/montador-rolagem-experimental/montador-acesso';
-import {
-  MontadorRolagemExperimental,
-  type MontadorUltimaRolagem,
-} from '../../../../shared/montador-rolagem-experimental/montador-rolagem-experimental.component';
-import { MontadorSeletorVersao } from '../../../../shared/montador-rolagem-experimental/montador-seletor-versao.component';
-import type { MontadorVersao } from '../../../../shared/montador-rolagem-experimental/montador-versao';
-import { MontadorVersaoPreferenciaService } from '../../../../shared/montador-rolagem-experimental/montador-versao-preferencia.service';
+import { MontadorRolagem, type MontadorUltimaRolagem } from '../../../../shared/montador-rolagem/montador-rolagem.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import type { RolagemRealizadaDto } from '../../rolagem-realizada';
@@ -41,8 +32,6 @@ import { GuiaFormula } from '../guia-formula/guia-formula.component';
     ReactiveFormsModule,
     GuiaFormula,
     MontadorRolagem,
-    MontadorRolagemExperimental,
-    MontadorSeletorVersao,
     BotaoIcone,
     Icone,
     Tooltip,
@@ -72,23 +61,8 @@ export class RolagemRapida {
   readonly rolagemFeita = output<RolagemRealizadaDto>();
 
   private readonly bandeja = inject(BandejaDadosService);
-  private readonly sessao = inject(SessaoService);
 
-  private readonly preferenciaMontador = inject(MontadorVersaoPreferenciaService);
-
-  /** Montador e seletor de versão: gate único (`podeUsarMontador`), restrito a TESTER/ADMIN no experimento. */
-  protected readonly podeUsarMontador = computed(() => podeUsarMontador(this.sessao.usuario()?.tipo));
-
-  /**
-   * Versão nova do montador escolhida neste dispositivo, ou `null` para o Atual (padrão, e sempre para quem não
-   * passa no gate — o Atual então fica sem gatilho, `[permitido]="false"`).
-   */
-  protected readonly versaoMontadorNova = computed<Exclude<MontadorVersao, 'ATUAL'> | null>(() => {
-    const versao = this.preferenciaMontador.versao();
-    return this.podeUsarMontador() && versao !== 'ATUAL' ? versao : null;
-  });
-
-  /** Última rolagem desta barra — o montador novo a mostra sem fechar a janela. */
+  /** Última rolagem desta barra — o montador a mostra sem fechar a janela. */
   protected readonly ultimaRolagem = signal<MontadorUltimaRolagem | null>(null);
 
   protected readonly formula = new FormControl('', { nonNullable: true });
