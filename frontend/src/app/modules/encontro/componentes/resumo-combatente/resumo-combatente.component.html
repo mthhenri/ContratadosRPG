@@ -12,7 +12,14 @@
         }
     </span>
     <div class="resumo__identidade">
-        <span class="resumo__origem">{{ origem() }}</span>
+        <span class="resumo__origem">
+            @if (classeVisivel(); as identidade) {
+                {{ combatente().donoNome }}<br />
+                <app-identidade-classe [classe]="identidade.classe" [arquetipo]="identidade.arquetipo" />
+            } @else {
+                {{ origem() }}
+            }
+        </span>
         <div class="resumo__titulo-linha">
             <h2 class="resumo__nome">{{ combatente().nome }}</h2>
             @if (combatente().fichaId !== null) {

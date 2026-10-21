@@ -66,10 +66,14 @@ import { Component, computed, input } from "@angular/core";
  * `maestria` (Atributo coroado) e `critico` (dado em silhueta com brilho de quatro pontas por cima):
  * desenhos originais Codex (OpenAI), aprovados pelo autor em 18/10/2026 (o brilho grande do crítico foi
  * escolhido em 20/10/2026), sem assets externos; uso sob a licença do projeto.
+ * `valor-desafio` (Patamares de nível) e `tenacidade` (Coração reforçado): desenhos originais Codex (OpenAI),
+ * rodada 2 da `icones-criatura-vd-tenacidade`, votados pelo autor em 18/10/2026; sem assets externos.
  */
 export type IconeNome =
   | 'maestria'
   | 'critico'
+  | 'valor-desafio'
+  | 'tenacidade'
   | 'agente'
   | 'dt'
   | 'novo-agente'

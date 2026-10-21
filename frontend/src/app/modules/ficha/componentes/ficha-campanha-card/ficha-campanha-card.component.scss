@@ -1729,6 +1729,13 @@
         flex-wrap: wrap;
         align-items: center;
         gap: 8px;
+
+        // Ícone de classe/arquétipo (`icones-identidade-cards-agente`) antes do nome, com o respiro do texto.
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-4);
+        }
     }
 
     // Lápis para editar classe/arquétipo, ao lado dos chips. ui-30: `app-botao-icone` (compacto).

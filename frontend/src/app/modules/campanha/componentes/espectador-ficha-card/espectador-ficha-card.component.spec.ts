@@ -1,7 +1,7 @@
 import { of } from "rxjs";
 import { ImagemFichaService } from "../../../../core/services/imagem-ficha.service";
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { RolagemVisibilidadeEnum } from '@contratados-rpg/shared/enums';
+import { ArquetipoEnum, ClasseEnum, RolagemVisibilidadeEnum } from '@contratados-rpg/shared/enums';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 
 import type { ItemFicha } from '../../campanha-equipe.util';
@@ -22,7 +22,9 @@ describe('EspectadorFichaCard', () => {
       imagemUrl: null,
       cor: '#ff0000',
       nome: 'Kane',
-      classeTexto: 'Combatente - Ranger',
+      classeTexto: 'Combatente - Lutador',
+      classe: ClasseEnum.COMBATENTE,
+      arquetipo: ArquetipoEnum.LUTADOR,
       nivel: 3,
       vidaAtual: 8,
       vidaMaxima: 20,
@@ -80,9 +82,10 @@ describe('EspectadorFichaCard', () => {
 
     expect(raiz.querySelector('.espectador-ficha__dono')?.textContent?.trim()).toBe('Matheus');
     expect(raiz.querySelector('.espectador-ficha__nome')?.textContent?.trim()).toBe('Kane');
-    expect(raiz.querySelector('.espectador-ficha__classe')?.textContent?.trim()).toBe(
-      'Combatente - Ranger',
+    expect(raiz.querySelector('.espectador-ficha__classe')?.textContent?.replace(/\s+/g, ' ').trim()).toBe(
+      'Combatente - Lutador',
     );
+    expect(raiz.querySelectorAll('.espectador-ficha__classe app-icone')).toHaveLength(2);
     expect(raiz.querySelectorAll('app-barra-recurso')).toHaveLength(2);
   });
 

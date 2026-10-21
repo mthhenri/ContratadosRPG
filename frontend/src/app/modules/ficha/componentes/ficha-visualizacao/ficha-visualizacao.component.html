@@ -15,9 +15,11 @@
             <div class="ficha-hud__identidade">
                 <span class="ficha-hud__nome">{{ nome() }}</span>
                 <span class="ficha-hud__meta">
-                    {{ patenteTexto() }} · {{ classeTexto() }}
+                    {{ patenteTexto() }} ·
+                    <app-icone class="icone--texto" [nome]="iconesClasse().classeBase" [appTooltip]="classeTexto()" /> {{ classeTexto() }}
                     @if (subclasseTexto(); as subclasse) {
-                        · {{ subclasse }}
+                        ·
+                        <app-icone class="icone--texto" [nome]="iconesClasse().subclasse!" [appTooltip]="subclasse" /> {{ subclasse }}
                     }
                     · Nível {{ dados().nivel }}
                 </span>
@@ -360,11 +362,13 @@
                                             </div>
                                         } @else {
                                             <div class="ficha-ident__chips">
-                                                <span class="chip chip--accent">{{
-                                                    classeTexto()
-                                                }}</span>
+                                                <span class="chip chip--accent"
+><app-icone class="icone--texto" [nome]="iconesClasse().classeBase" [appTooltip]="classeTexto()" /> {{ classeTexto() }}</span
+>
                                                 @if (subclasseTexto(); as subclasse) {
-                                                    <span class="chip">{{ subclasse }}</span>
+                                                    <span class="chip"
+><app-icone class="icone--texto" [nome]="iconesClasse().subclasse!" [appTooltip]="subclasse" /> {{ subclasse }}</span
+>
                                                 }
                                                 @if (ajustavelAmplo()) {
                                                     <button

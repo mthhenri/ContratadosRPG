@@ -24,7 +24,10 @@
                             </span>
                             <span class="seletor__texto">
                                 <span class="seletor__nome">{{ ficha.nome }}</span>
-                                <span class="seletor__meta">{{ metaAgente(ficha) }}</span>
+                                <span class="seletor__meta"
+                                    ><app-identidade-classe [classe]="ficha.classe" [arquetipo]="ficha.arquetipo" />
+                                    · Nível {{ ficha.nivel }}</span
+                                >
                             </span>
                             @if (marcada(ficha)) {
                                 <app-icone nome="check" class="seletor__marca" />
@@ -66,7 +69,20 @@
                             </span>
                             <span class="seletor__texto">
                                 <span class="seletor__nome">{{ ficha.nome }}</span>
-                                <span class="seletor__meta">{{ metaCriatura(ficha) }}</span>
+                                <span class="seletor__meta"
+                                    >{{ metaAmeaca(ficha) }}
+                                    @if (ficha.vd !== null && ficha.vd !== undefined) {
+                                        @if (metaAmeaca(ficha)) {
+                                            ·
+                                        }
+                                        <app-icone
+                                            class="icone--texto"
+                                            nome="valor-desafio"
+                                            appTooltip="Valor de Desafio"
+                                        />
+                                        VD {{ ficha.vd }}
+                                    }</span
+                                >
                             </span>
                             @if (marcada(ficha)) {
                                 <app-icone nome="check" class="seletor__marca" />

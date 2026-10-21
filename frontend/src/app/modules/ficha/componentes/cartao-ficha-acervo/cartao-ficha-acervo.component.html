@@ -28,7 +28,8 @@
                     @if (item().classificacaoTexto) {
                         {{ item().classificacaoTexto }} ·
                     }
-                    NA {{ item().naTexto ?? "—" }} · VD {{ item().vd ?? "—" }}
+                    NA {{ item().naTexto ?? "—" }} ·
+                    <app-icone class="icone--texto" nome="valor-desafio" appTooltip="Valor de Desafio" /> VD {{ item().vd ?? "—" }}
                 </span>
                 <span class="acervo__cartao-vitais">
                     <span
@@ -62,7 +63,12 @@
                 </span>
             } @else {
                 <span class="acervo__cartao-meta">
-                    {{ item().classeTexto }} · Nível {{ item().nivel }} · {{ item().patenteTexto }}
+                    @if (item().classe; as classe) {
+                        <app-identidade-classe [classe]="classe" [arquetipo]="item().arquetipo ?? null" />
+                    } @else {
+                        {{ item().classeTexto }}
+                    }
+                    · Nível {{ item().nivel }} · {{ item().patenteTexto }}
                 </span>
                 <span class="acervo__cartao-vitais">
                     <span

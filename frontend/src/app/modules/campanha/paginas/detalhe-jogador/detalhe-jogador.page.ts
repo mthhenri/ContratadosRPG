@@ -65,6 +65,7 @@ import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.com
 import { Modal } from '../../../../shared/ui/modal/modal.component';
 import { Segmentado } from '../../../../shared/ui/segmentado/segmentado.component';
 import { SegmentadoItem } from '../../../../shared/ui/segmentado/segmentado-item.component';
+import { IdentidadeClasse } from '../../../ficha/componentes/identidade-classe/identidade-classe.component';
 
 /**
  * Visão do JOGADOR em `/campanhas/:id` — reprodução byte a byte do antigo ramo `@else` de
@@ -83,7 +84,7 @@ import { SegmentadoItem } from '../../../../shared/ui/segmentado/segmentado-item
  */
 @Component({
   selector: 'app-campanha-detalhe-jogador',
-  imports: [AsyncPipe, ImagemFichaPipe,
+  imports: [AsyncPipe, IdentidadeClasse, ImagemFichaPipe,
     CampanhaFichasEspeciais,
     RouterLink,
     ReactiveFormsModule,

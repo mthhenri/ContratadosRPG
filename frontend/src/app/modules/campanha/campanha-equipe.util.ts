@@ -1,6 +1,11 @@
 import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
 import type { FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
-import { TipoCampanhaMembroPapelEnum, TipoFichaEnum } from '@contratados-rpg/shared/enums';
+import {
+  type ArquetipoEnum,
+  type ClasseEnum,
+  TipoCampanhaMembroPapelEnum,
+  TipoFichaEnum,
+} from '@contratados-rpg/shared/enums';
 
 import { CONDICOES_FICHA, type DescritorCondicao } from '../ficha/condicoes-ficha';
 import { rotuloClasseCompleto } from '../ficha/rotulos-ficha';
@@ -39,6 +44,9 @@ export interface ItemFicha {
   readonly cor: string | null;
   readonly nome: string;
   readonly classeTexto: string;
+  /** Classe e arquétipo de origem do `classeTexto` — para o ícone de cada parte (`app-identidade-classe`). */
+  readonly classe: ClasseEnum;
+  readonly arquetipo: ArquetipoEnum | null;
   readonly nivel: number;
   readonly vidaAtual: number;
   readonly vidaMaxima?: number;
@@ -79,6 +87,8 @@ export type EquipeFichaExibicao =
       readonly imagemUrl: string | null;
       readonly cor: string | null;
       readonly classeTexto: string;
+      readonly classe: ClasseEnum;
+      readonly arquetipo: ArquetipoEnum | null;
       /**
        * As três condições (I-031) — únicas presentes numa carteirinha sem `acessoCompleto`
        * (`CampanhaMembroFichaResumoDto`). Sempre as 3, com `ativa`, mesma forma de
@@ -128,6 +138,8 @@ export function agruparFichasPorMembro(
       cor: ficha.cor ?? null,
       nome: ficha.nome,
       classeTexto: rotuloClasseCompleto(ficha.classe, ficha.arquetipo),
+      classe: ficha.classe,
+      arquetipo: ficha.arquetipo,
       nivel: ficha.nivel,
       vidaAtual: ficha.vidaAtual,
       vidaMaxima: ficha.vidaMaxima,
@@ -193,6 +205,8 @@ export function montarEquipeExibicao(
                 imagemUrl: ficha.imagemUrl,
                 cor: ficha.cor,
                 classeTexto: rotuloClasseCompleto(ficha.classe, ficha.arquetipo),
+                classe: ficha.classe,
+                arquetipo: ficha.arquetipo,
                 condicoes: CONDICOES_FICHA.map((condicao) => ({
                   ...condicao,
                   ativa: ficha[condicao.chave],

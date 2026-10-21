@@ -3,13 +3,14 @@ import { ImagemFichaPipe } from "../../../../shared/imagem-ficha.pipe";
 import { Component, computed, input, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
-import { TipoFichaEnum } from '@contratados-rpg/shared/enums';
+import { type ArquetipoEnum, type ClasseEnum, TipoFichaEnum } from '@contratados-rpg/shared/enums';
 
 import { Icone } from '../../../../shared/icone/icone.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { Chip } from '../../../../shared/ui/chip/chip.component';
 import { rotuloTipoFicha } from '../../rotulos-ficha';
+import { IdentidadeClasse } from '../identidade-classe/identidade-classe.component';
 
 /**
  * Ficha do acervo já enriquecida pro cartão (m4-11) — recorte de `FichaResumoDto` + os rótulos já
@@ -31,6 +32,9 @@ export interface ItemAcervo {
   readonly vidaMaxima?: number;
   /** JOGADOR — `rotuloClasseCompleto` (classe + arquétipo/subclasse). */
   readonly classeTexto?: string;
+  /** JOGADOR — classe e arquétipo de origem de `classeTexto`, para o ícone de cada parte. */
+  readonly classe?: ClasseEnum;
+  readonly arquetipo?: ArquetipoEnum | null;
   readonly nivel?: number;
   readonly categoriaTexto?: string;
   /** JOGADOR — Patente derivada do Prestígio (`rotuloPatente`). */
@@ -57,7 +61,7 @@ export interface ItemAcervo {
  */
 @Component({
   selector: 'app-cartao-ficha-acervo',
-  imports: [AsyncPipe, ImagemFichaPipe, RouterLink, Icone, Tooltip, BotaoIcone, Chip],
+  imports: [AsyncPipe, IdentidadeClasse, ImagemFichaPipe, RouterLink, Icone, Tooltip, BotaoIcone, Chip],
   templateUrl: './cartao-ficha-acervo.component.html',
   styleUrl: './cartao-ficha-acervo.component.scss',
 })

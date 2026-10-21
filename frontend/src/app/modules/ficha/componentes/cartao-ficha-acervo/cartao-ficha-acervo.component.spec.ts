@@ -3,7 +3,7 @@ import { ImagemFichaService } from "../../../../core/services/imagem-ficha.servi
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
-import { TipoFichaEnum } from '@contratados-rpg/shared/enums';
+import { ArquetipoEnum, ClasseEnum, TipoFichaEnum } from '@contratados-rpg/shared/enums';
 
 import { CartaoFichaAcervo, type ItemAcervo } from './cartao-ficha-acervo.component';
 
@@ -20,6 +20,8 @@ describe('CartaoFichaAcervo', () => {
     vidaAtual: 34,
     vidaMaxima: 34,
     classeTexto: 'Combatente - Lutador',
+    classe: ClasseEnum.COMBATENTE,
+    arquetipo: ArquetipoEnum.LUTADOR,
     nivel: 2,
     patenteTexto: 'Recruta',
     energiaAtual: 18,
@@ -69,7 +71,8 @@ describe('CartaoFichaAcervo', () => {
   it('agente: mostra classe, arquétipo/subclasse, nível e Patente — e Vida/Energia', () => {
     const { raiz } = montar(itemAgente);
 
-    expect(raiz.textContent).toContain('Combatente - Lutador · Nível 2 · Recruta');
+    expect(raiz.textContent?.replace(/\s+/g, ' ')).toContain('Combatente - Lutador · Nível 2 · Recruta');
+    expect(raiz.querySelectorAll('.acervo__cartao-meta app-identidade-classe app-icone')).toHaveLength(2);
     expect(raiz.textContent).toContain('Vida 34/34');
     expect(raiz.textContent).toContain('Energia 18/18');
     expect(raiz.querySelector('.acervo__cartao-link')?.getAttribute('href')).toBe('/fichas/1');

@@ -1,6 +1,7 @@
 import { AsyncPipe } from "@angular/common";
 import { ImagemFichaPipe } from "../../../../shared/imagem-ficha.pipe";
 import { Component, input, output } from '@angular/core';
+import type { ArquetipoEnum, ClasseEnum } from '@contratados-rpg/shared/enums';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 
 import { BarraRecurso } from '../../../../shared/ui/barra-recurso/barra-recurso.component';
@@ -9,6 +10,7 @@ import { Icone } from '../../../../shared/icone/icone.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { PreviewAvatar } from '../../../../shared/preview-avatar/preview-avatar.directive';
 import type { ItemFicha } from '../../campanha-equipe.util';
+import { IdentidadeClasse } from '../../../ficha/componentes/identidade-classe/identidade-classe.component';
 
 /**
  * Recorte de ficha que o cartão realmente lê — um subconjunto de `ItemFicha` (todo `ItemFicha` serve),
@@ -33,7 +35,12 @@ export type EspectadorFichaCardDados = Pick<
   | 'esquiva'
   | 'bloqueio'
   | 'contraAtaque'
-> & { readonly donoNome: string };
+> & {
+  readonly donoNome: string;
+  /** Só agentes têm classe: o NPC leva o nível em `classeTexto` e fica sem ícone de identidade. */
+  readonly classe?: ClasseEnum;
+  readonly arquetipo?: ArquetipoEnum | null;
+};
 
 /**
  * Cartão de ficha do Painel do espectador (m8-07) — análogo aprovado `.detalhe__ficha-card`
@@ -57,7 +64,7 @@ export type EspectadorFichaCardDados = Pick<
  */
 @Component({
   selector: 'app-espectador-ficha-card',
-  imports: [AsyncPipe, ImagemFichaPipe, BarraRecurso, BotaoIcone, Icone, Tooltip, PreviewAvatar],
+  imports: [AsyncPipe, IdentidadeClasse, ImagemFichaPipe, BarraRecurso, BotaoIcone, Icone, Tooltip, PreviewAvatar],
   templateUrl: './espectador-ficha-card.component.html',
   styleUrl: './espectador-ficha-card.component.scss',
 })

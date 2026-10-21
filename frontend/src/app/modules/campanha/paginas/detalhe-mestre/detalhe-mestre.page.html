@@ -669,7 +669,7 @@
             <span class="detalhe-mestre__membro-carteirinha-corpo">
                 <span class="detalhe-mestre__membro-carteirinha-nome">{{ ficha.nome }}</span>
                 <span class="detalhe-mestre__membro-carteirinha-classe"
-                    >{{ ficha.classeTexto }}</span
+                    ><app-identidade-classe [classe]="ficha.classe" [arquetipo]="ficha.arquetipo" /></span
                 >
             </span>
         </span>

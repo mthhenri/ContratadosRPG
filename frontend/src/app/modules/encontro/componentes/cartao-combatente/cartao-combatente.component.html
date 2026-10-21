@@ -102,7 +102,14 @@
         }
 
         <span class="combatente__origem-linha">
-            <span class="combatente__origem">{{ linhaOrigem() }}</span>
+            <span class="combatente__origem">
+                @if (classeVisivel(); as identidade) {
+                    {{ combatente().donoNome }}<br />
+                    <app-identidade-classe [classe]="identidade.classe" [arquetipo]="identidade.arquetipo" />
+                } @else {
+                    {{ linhaOrigem() }}
+                }
+            </span>
             @if (cadenciaRotulo(); as cadencia) {
                 <app-chip severidade="secundario">{{ cadencia }}</app-chip>
             }

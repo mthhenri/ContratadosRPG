@@ -249,6 +249,17 @@
 
 ## Abertas
 
+### I-063 — Ícones de identidade para NPC e criatura nos cards · frontend/icones
+
+- **Ideia:** mostrar um ícone de identidade também em NPCs e criaturas, onde hoje o agente já leva o ícone de classe e
+  arquétipo (cartão do Esquadrão, encontro, seletor, Acervo). O glifo `npc` existe; **não há glifo de criatura** (o
+  `criatura` é a marca SCP).
+- **Origem:** pedido do autor em 2026-10-20, ao fechar `icones-identidade-cards-agente` (que ficou só com agentes).
+- **Por quê:** a linha de identidade do cartão fica sem ícone justamente nos combatentes que o mestre mais manuseia.
+- **Custo aparente:** só UI; um glifo novo de criatura (prancha de votação, decisão do autor) e a escolha de onde o
+  NPC mostra o `npc` (hoje o `classeTexto` do NPC é "Nível N").
+
+
 ### I-061 — Evento de tempo real `livro:publicado` para o leitor de Regras · backend/livro
 
 - **Ideia:** ao publicar rascunho ou versão, emitir `livro:publicado` (broadcast-only, sala por papel) para

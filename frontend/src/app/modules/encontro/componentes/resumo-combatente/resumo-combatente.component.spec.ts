@@ -101,7 +101,12 @@ describe('ResumoCombatente', () => {
       const { raiz } = montar(agente);
 
       expect(texto(raiz.querySelector('.resumo__retrato'))).toBe('MK');
-      expect(raiz.querySelector('.resumo__origem')?.textContent).toMatch(/^Marcos\n/);
+      const origem = raiz.querySelector('.resumo__origem')!;
+      expect(origem.firstChild?.textContent?.trim()).toBe('Marcos');
+      expect(origem.querySelector('app-identidade-classe')?.textContent?.replace(/\s+/g, ' ').trim()).toBe(
+        'Combatente - Mercenário',
+      );
+      expect(raiz.querySelectorAll('.resumo__origem app-icone')).toHaveLength(2);
       expect(texto(raiz.querySelector('.resumo__nome'))).toBe('Marco "Aço" Kessler');
     });
 

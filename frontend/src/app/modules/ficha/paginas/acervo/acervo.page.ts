@@ -166,6 +166,8 @@ export class FichaAcervo {
       return {
         ...comum,
         classeTexto: rotuloClasseCompleto(ficha.classe, ficha.arquetipo),
+        classe: ficha.classe,
+        arquetipo: ficha.arquetipo,
         nivel: ficha.nivel,
         patenteTexto: rotuloPatente(ficha.prestigio ?? 0),
         energiaAtual: ficha.energiaAtual,

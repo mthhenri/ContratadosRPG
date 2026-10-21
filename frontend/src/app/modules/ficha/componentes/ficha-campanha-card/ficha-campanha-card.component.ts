@@ -95,6 +95,7 @@ import {
 import { FocoImagem } from '../../../../shared/foco-imagem.directive';
 import { HoldRepeat } from '../../../../shared/hold-repeat/hold-repeat.directive';
 import { Icone, IconeNome } from '../../../../shared/icone/icone.component';
+import { iconesIdentidade } from '../../../../shared/icone/icones-dominio';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { ReceberDanoDialog } from '../../../../shared/receber-dano/receber-dano-dialog.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
@@ -1238,6 +1239,7 @@ export class FichaCampanhaCard {
   protected readonly ehCivil = computed(() => this.dados().classe === ClasseEnum.CIVIL);
 
   protected readonly perfilClasse = computed(() => perfilClasseRotulos(this.dados().classe, this.dados().arquetipo));
+  protected readonly iconesClasse = computed(() => iconesIdentidade(this.dados().classe, this.dados().arquetipo));
   protected readonly classeTexto = computed(() => this.perfilClasse().classeBase);
   protected readonly subclasseTexto = computed(() => this.perfilClasse().subclasse);
   /** Patente derivada do Prestígio (`shared/regras/patente`) — não é persistida. */

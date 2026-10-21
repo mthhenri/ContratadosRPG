@@ -30,7 +30,13 @@
         <div class="espectador-ficha__corpo">
             <span class="espectador-ficha__dono">{{ ficha().donoNome }}</span>
             <span class="espectador-ficha__nome">{{ ficha().nome }}</span>
-            <span class="espectador-ficha__classe">{{ ficha().classeTexto }}</span>
+            <span class="espectador-ficha__classe">
+                @if (ficha().classe; as classe) {
+                    <app-identidade-classe [classe]="classe" [arquetipo]="ficha().arquetipo ?? null" />
+                } @else {
+                    {{ ficha().classeTexto }}
+                }
+            </span>
 
             <div class="espectador-ficha__recursos">
                 <app-barra-recurso

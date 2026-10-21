@@ -19,6 +19,17 @@ describe('Icone', () => {
             expect(svg.getAttribute('aria-hidden')).toBe('true');
         }
     });
+    it('VD e Tenacidade são glifos próprios de contorno, distintos de Vida, Defesa, Patente e DT', () => {
+        const nomes: IconeNome[] = ['valor-desafio', 'tenacidade', 'vida', 'defesa', 'patente', 'dt'];
+        const formas = nomes.map(assinatura);
+        expect(formas.every(Boolean)).toBe(true);
+        expect(new Set(formas).size).toBe(nomes.length);
+        for (const nome of ['valor-desafio', 'tenacidade'] as const) {
+            const svg = montar(nome).querySelector('svg')!;
+            expect(svg.getAttribute('fill')).toBe('none');
+            expect(svg.getAttribute('stroke')).toBe('currentColor');
+        }
+    });
     it("incorpora o trio preenchido aprovado, sem confundir Vida com Machucado", () => {
         for (const nome of ["vida", "energia", "defesa"] as const) {
             const svg = montar(nome).querySelector("svg")!;

@@ -1,6 +1,31 @@
 # HISTORY.md — Histórico do Projeto
 
 
+## 2026-10-20 — icones-criatura-vd-tenacidade e icones-identidade-cards-agente: VD, Tenacidade e ícones de classe adotados
+
+Duas specs de ícones de `active/` fechadas na mesma rodada, ambas só de UI (sem regra, DTO de API ou backend).
+
+**VD e Tenacidade** (votados em 18/10: Patamares de nível e Coração reforçado). `valor-desafio` e `tenacidade` em
+`app-icone`; adotados no stat da criatura (e, por reaproveitamento, na página e na janela flutuante), no `criar-criatura`
+(rótulos e resumos), no Acervo e no seletor de combatentes (que passou a montar o meta com `metaAmeaca` + ícone). Card do
+mestre intacto, como decidido.
+
+**Identidade de classe/arquétipo.** `iconesIdentidade` (mapas `ICONE_CLASSE`/`ICONE_ARQUETIPO`, agora também usados pelo
+leitor de Regras sem mudar o que ele exibe) e o componente `app-identidade-classe`; ícone antes de cada parte, `appTooltip`
+com o nome. Aplicado na ficha completa e no card da campanha (chips e HUD mobile), no Esquadrão (mestre/espectador e
+jogador), na Investigação, no Acervo, no seletor e no cartão/resumo do combatente. `ItemFicha`/teaser e `ItemAcervo`
+ganharam `classe` e `arquetipo`; o NPC fica só com texto (`I-063`). Os mapas e o refactor do leitor de Regras vinham
+não commitados de outra sessão e foram incorporados aqui. Os dois componentes já extensos (`ficha-visualizacao` e
+`ficha-campanha-card`) ganharam só um `computed` de ícones: a extração para o componente próprio não cabe nos chips, que
+têm estilo da ficha.
+
+**Verificação.** Suíte inteira do frontend verde (3579), ESLint do frontend sem erro, `repo:verificar` ok. Ao vivo
+(Playwright, app real) em `1920×1080` e `360×800`, tema escuro e claro: ficha, Acervo, criatura, painel do mestre e
+cartão do combatente. Achados só vistos na inspeção: chips sem respiro entre ícone e nome, e o ícone ficando sozinho na
+linha quando o nome quebra no card estreito do mobile (o componente passou a manter ícone e nome juntos). Não vistos ao
+vivo: Esquadrão/Investigação do jogador, seletor, `criar-criatura` e a janela flutuante (teste de componente). Relatórios:
+`docs/specs/done/icones-criatura-vd-tenacidade/verificacao.md` e `.../icones-identidade-cards-agente/verificacao.md`.
+
 ## 2026-10-20 — icones-critico-adocao (ajuste): brilho grande sobre o dado no glifo `critico`
 
 O autor reviu o glifo do Crítico adotado em 18/10 ("dado excepcional com estrelinhas"): ilegível em 14 px. Escolhido, numa

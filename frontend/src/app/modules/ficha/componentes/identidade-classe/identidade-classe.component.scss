@@ -1,0 +1,26 @@
+// Cada parte é ícone + nome em linha: se o nome quebrar, o ícone fica ao lado da primeira linha em vez de sobrar
+// sozinho no fim da linha anterior (cards estreitos do mobile).
+:host {
+    display: inline;
+}
+
+.identidade-classe {
+    &__parte {
+        display: inline-flex;
+        align-items: flex-start;
+        gap: var(--space-4);
+        max-width: 100%;
+        vertical-align: top;
+    }
+
+    &__icone {
+        display: inline-flex;
+        align-items: center;
+        flex: none;
+        height: 1lh;
+    }
+
+    &__nome {
+        min-width: 0;
+    }
+}

@@ -43,6 +43,7 @@ import { RolagemService } from '../../../ficha/rolagem.service';
 import type { RolagemRealizadaDto } from '../../../ficha/rolagem-realizada';
 import { RolagemRapida } from '../../../ficha/componentes/rolagem-rapida/rolagem-rapida.component';
 import { HistoricoRolagensJanelaService } from '../../../../shared/historico-rolagens-sidebar/historico-rolagens-janela.service';
+import { IdentidadeClasse } from '../../../ficha/componentes/identidade-classe/identidade-classe.component';
 
 /** Tipos de ficha com cartão e menu ⋯ na campanha do mestre. */
 type TipoFichaMenu = typeof TipoFichaEnum.JOGADOR | typeof TipoFichaEnum.CRIATURA | typeof TipoFichaEnum.NPC;
@@ -58,7 +59,7 @@ const ATRIBUTOS_NEUTROS: FichaAtributosDto = { destreza: 0, forca: 0, luta: 0, p
  */
 @Component({
   selector: 'app-campanha-detalhe-mestre',
-  imports: [AsyncPipe, ImagemFichaPipe,
+  imports: [AsyncPipe, IdentidadeClasse, ImagemFichaPipe,
     RouterLink,
     ReactiveFormsModule,
     ColunaAcoes,

@@ -1,5 +1,7 @@
 # icones-criatura-vd-tenacidade.spec.md
 
+> **Concluída em 2026-10-20** — relatório em [verificacao.md](icones-criatura-vd-tenacidade/verificacao.md).
+
 > Spec avulsa. Pedido do autor em 2026-10-14, marcado como **importante**: criar ícones para o Valor de
 > Desafio (VD) e para a Tenacidade da criatura.
 

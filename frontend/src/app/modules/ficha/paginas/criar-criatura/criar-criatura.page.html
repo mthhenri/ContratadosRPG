@@ -310,7 +310,9 @@
                         >
                     </label>
                     <label app-campo>
-                        <span class="campo__rotulo">Valor de Desafio (VD)</span>
+                        <span class="campo__rotulo"
+                            ><app-icone class="icone--texto" nome="valor-desafio" appTooltip="Valor de Desafio" /> Valor de Desafio (VD)</span
+                        >
                         <input
                             class="campo__controle campo__controle--numero"
                             type="number"
@@ -465,7 +467,9 @@
                     </p>
                 </div>
                 <label app-campo>
-                    <span class="campo__rotulo">Tenacidade</span>
+                    <span class="campo__rotulo"
+                        ><app-icone class="icone--texto" nome="tenacidade" appTooltip="Tenacidade" /> Tenacidade</span
+                    >
                     <select
                         class="campo__controle"
                         [value]="estado().tenacidade ?? ''"
@@ -1116,11 +1120,11 @@
                         <dd>{{ estado().designacao }}</dd>
                     </div>
                     <div>
-                        <dt>NA / VD</dt>
+                        <dt>NA / <app-icone class="icone--texto" nome="valor-desafio" appTooltip="Valor de Desafio" /> VD</dt>
                         <dd>{{ rotuloNivelAmeaca(estado().na) }} / {{ estado().vd }}</dd>
                     </div>
                     <div>
-                        <dt>Tenacidade / Vida Máxima</dt>
+                        <dt><app-icone class="icone--texto" nome="tenacidade" appTooltip="Tenacidade" /> Tenacidade / Vida Máxima</dt>
                         <dd>
                             {{ estado().tenacidade ? rotuloTenacidade(estado().tenacidade!) : '—' }}
                             / {{ vidaMaxima() }}
@@ -1200,7 +1204,7 @@
 
             @if (estado().vd > 0) {
             <div class="guia__resumo-linha">
-                <span>NA / VD</span><b>{{ rotuloNivelAmeaca(estado().na) }} / {{ estado().vd }}</b>
+                <span>NA / <app-icone class="icone--texto" nome="valor-desafio" appTooltip="Valor de Desafio" /> VD</span><b>{{ rotuloNivelAmeaca(estado().na) }} / {{ estado().vd }}</b>
             </div>
             } @if (estado().tenacidade) {
             <div class="guia__stats">

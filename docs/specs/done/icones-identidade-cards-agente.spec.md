@@ -1,5 +1,7 @@
 # icones-identidade-cards-agente.spec.md
 
+> **Concluída em 2026-10-20** — relatório em [verificacao.md](icones-identidade-cards-agente/verificacao.md).
+
 > Spec avulsa. Pedido do autor em 2026-10-14: colocar os ícones da classe, do arquétipo e da
 > subclasse (Experimento, Civil, Agente…) onde a classe aparece, a começar pelos cards de jogador.
 

@@ -1,6 +1,49 @@
-import { CenaTipoEnum, HabilidadeCategoriaEnum, TipoDanoEnum } from '@contratados-rpg/shared/enums';
+import { ArquetipoEnum, ClasseEnum, CenaTipoEnum, HabilidadeCategoriaEnum, TipoDanoEnum } from '@contratados-rpg/shared/enums';
+
+import { classeBaseDeHabilidades } from '@contratados-rpg/shared/regras/agente';
 
 import type { IconeNome } from './icone.component';
+
+/** Identidades já aprovadas na M10-03. Experimentos usam o glifo de sua subclasse. */
+export const ICONE_CLASSE: Readonly<Record<ClasseEnum, IconeNome>> = {
+  [ClasseEnum.COMBATENTE]: "combatente",
+  [ClasseEnum.ESPECIALISTA]: "especialista",
+  [ClasseEnum.SUPORTE]: "suporte",
+  [ClasseEnum.EXPERIMENTO_BESTIAL]: "bestial",
+  [ClasseEnum.EXPERIMENTO_ARTIFICIAL]: "artificial",
+  [ClasseEnum.EXPERIMENTO_HIBRIDO]: "hibrido",
+  [ClasseEnum.CIVIL]: "civil",
+};
+
+export const ICONE_ARQUETIPO: Readonly<Record<ArquetipoEnum, IconeNome>> = {
+  [ArquetipoEnum.LUTADOR]: "lutador",
+  [ArquetipoEnum.MERCENARIO]: "mercenario",
+  [ArquetipoEnum.VANGUARDA]: "vanguarda",
+  [ArquetipoEnum.ENGENHEIRO]: "engenheiro",
+  [ArquetipoEnum.ASSASSINO]: "assassino",
+  [ArquetipoEnum.ACADEMICO]: "academico",
+  [ArquetipoEnum.PARAMEDICO]: "paramedico",
+  [ArquetipoEnum.DIPLOMATA]: "diplomata",
+  [ArquetipoEnum.COMANDANTE]: "comandante",
+};
+
+export interface IconesIdentidade {
+  readonly classeBase: IconeNome;
+  readonly subclasse: IconeNome | null;
+}
+
+/**
+ * Ícones da identidade de um agente, na mesma divisão de `perfilClasseRotulos`: a classe-base e o
+ * arquétipo ou a subclasse de Experimento (que é daquela classe-base). Civil só tem a classe. Sem ícone
+ * de "tipo" do personagem — decisão do autor em 18/10/2026.
+ */
+export function iconesIdentidade(classe: ClasseEnum, arquetipo: ArquetipoEnum | null): IconesIdentidade {
+  const base = classeBaseDeHabilidades(classe);
+  if (base !== null && base !== classe) {
+    return { classeBase: ICONE_CLASSE[base], subclasse: ICONE_CLASSE[classe] };
+  }
+  return { classeBase: ICONE_CLASSE[classe], subclasse: arquetipo === null ? null : ICONE_ARQUETIPO[arquetipo] };
+}
 
 /** Desenhos escolhidos pelo autor na UI-41; o genérico identifica Cenas sem tipo ativo. */
 export const ICONE_CENAS: IconeNome = "cenas";

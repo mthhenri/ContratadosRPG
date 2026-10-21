@@ -217,7 +217,10 @@
                      3 caixas. -->
                         <div class="criatura__stats criatura__stats--compacta">
                             <div class="criatura__stat criatura__stat--vd">
-                                <span class="criatura__stat-rotulo">VD</span>
+                                <span class="criatura__stat-rotulo"
+                                    ><app-icone class="icone--texto" nome="valor-desafio" appTooltip="Valor de Desafio" />
+                                    VD</span
+                                >
                                 <app-valor-editavel
                                     class="criatura__stat-valor criatura__stat-botao"
                                     [valor]="dados().vd"
@@ -284,7 +287,10 @@
                             </div>
 
                             <div class="criatura__stat criatura__stat--tenacidade">
-                                <span class="criatura__stat-rotulo">Tenacidade</span>
+                                <span class="criatura__stat-rotulo"
+                                    ><app-icone class="icone--texto" nome="tenacidade" appTooltip="Tenacidade" />
+                                    Tenacidade</span
+                                >
                                 <app-valor-editavel
                                     class="criatura__stat-valor criatura__stat-botao criatura__stat-botao--tenacidade"
                                     [valor]="nomeTenacidade(dados().tenacidade)"

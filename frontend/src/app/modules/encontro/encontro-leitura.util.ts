@@ -1,7 +1,9 @@
 import type { EncontroCombatenteResumoDto, EncontroRecuperadoDto } from '@contratados-rpg/shared/dtos/encontro';
 import type { FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
 import {
+  type ArquetipoEnum,
   CadenciaEnum,
+  type ClasseEnum,
   CombatenteOrigemEnum,
   EncontroStatusEnum,
   NivelAmeacaEnum,
@@ -207,6 +209,20 @@ export function combatenteTemIdentidadeVisivel(
   combatente: Pick<EncontroCombatenteResumoDto, 'tipoFicha' | 'donoNome'>,
 ): boolean {
   return combatente.tipoFicha === TipoFichaEnum.JOGADOR && combatente.donoNome !== null;
+}
+
+/**
+ * Classe e arquétipo de um agente de identidade visível, para o consumidor desenhar o ícone de cada parte
+ * (`app-identidade-classe`) na segunda linha da origem; `null` quando não há o que mostrar (criatura, NPC,
+ * agente sem identidade visível ou sem classe) — aí vale o texto de {@link linhaOrigemDoCombatente}.
+ */
+export function classeVisivelDoCombatente(
+  combatente: EncontroCombatenteResumoDto,
+): { readonly classe: ClasseEnum; readonly arquetipo: ArquetipoEnum | null } | null {
+  if (!combatenteTemIdentidadeVisivel(combatente) || !combatente.classe) {
+    return null;
+  }
+  return { classe: combatente.classe, arquetipo: combatente.arquetipo };
 }
 
 /**

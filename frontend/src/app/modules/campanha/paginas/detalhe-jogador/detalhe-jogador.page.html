@@ -813,7 +813,7 @@
                                                 >{{ ficha.nome }}</span
                                             >
                                             <span class="detalhe__equipe-ficha-vitais"
-                                                >{{ ficha.classeTexto }}</span
+                                                ><app-identidade-classe [classe]="ficha.classe" [arquetipo]="ficha.arquetipo" /></span
                                             >
                                             @if (condicoesAtivas(ficha.condicoes); as ativas) { @if
                                             (ativas.length) {

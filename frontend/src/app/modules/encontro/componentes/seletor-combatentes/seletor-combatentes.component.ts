@@ -10,7 +10,7 @@ import { Icone } from '../../../../shared/icone/icone.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
 import { rotuloNivelAmeaca } from '../../../ficha/rotulos-criatura';
-import { rotuloClasseCompleto } from '../../../ficha/rotulos-ficha';
+import { IdentidadeClasse } from '../../../ficha/componentes/identidade-classe/identidade-classe.component';
 
 /**
  * Seletor de combatentes — o painel que **substitui** o antigo `<select>` de "Ficha da campanha".
@@ -26,7 +26,7 @@ import { rotuloClasseCompleto } from '../../../ficha/rotulos-ficha';
  */
 @Component({
   selector: 'app-seletor-combatentes',
-  imports: [AsyncPipe, ImagemFichaPipe, Icone, Tooltip, EstadoVazio],
+  imports: [AsyncPipe, IdentidadeClasse, ImagemFichaPipe, Icone, Tooltip, EstadoVazio],
   templateUrl: './seletor-combatentes.component.html',
   styleUrl: './seletor-combatentes.component.scss',
 })
@@ -44,7 +44,6 @@ export class SeletorCombatentes {
   readonly fichaAlternada = output<FichaResumoDto>();
 
   protected readonly TipoFichaEnum = TipoFichaEnum;
-  protected readonly rotuloClasseCompleto = rotuloClasseCompleto;
 
   /** Ids de ficha que já têm um combatente no encontro — o que fica "marcado" no cartão. */
   private readonly fichaIdsNoEncontro = computed<ReadonlySet<number>>(
@@ -75,21 +74,9 @@ export class SeletorCombatentes {
     return this.fichaIdsNoEncontro().has(ficha.id);
   }
 
-  /** "Combatente - Mercenário · Nível 3" — mesmo rótulo combinado do mini-card da campanha. */
-  protected metaAgente(ficha: FichaResumoDto): string {
-    return `${rotuloClasseCompleto(ficha.classe, ficha.arquetipo)} · Nível ${ficha.nivel}`;
-  }
-
-  /** "Ameaça · Média · VD 37" — mesmo par NA/VD do "Guia de Criação de Ameaças". */
-  protected metaCriatura(ficha: FichaResumoDto): string {
-    const partes: string[] = [];
-    if (ficha.na) {
-      partes.push(`Ameaça · ${rotuloNivelAmeaca(ficha.na)}`);
-    }
-    if (ficha.vd !== null && ficha.vd !== undefined) {
-      partes.push(`VD ${ficha.vd}`);
-    }
-    return partes.join(' · ');
+  /** "Ameaça · Média" — o VD vem depois, com o próprio ícone (par NA/VD do "Guia de Criação de Ameaças"). */
+  protected metaAmeaca(ficha: FichaResumoDto): string {
+    return ficha.na ? `Ameaça · ${rotuloNivelAmeaca(ficha.na)}` : '';
   }
 
   protected alternar(ficha: FichaResumoDto): void {

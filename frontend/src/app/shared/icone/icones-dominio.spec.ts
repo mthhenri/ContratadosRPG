@@ -1,6 +1,8 @@
-import { CenaTipoEnum, HabilidadeCategoriaEnum, TipoDanoEnum } from '@contratados-rpg/shared/enums';
+import { ArquetipoEnum, ClasseEnum, CenaTipoEnum, HabilidadeCategoriaEnum, TipoDanoEnum } from '@contratados-rpg/shared/enums';
 
 import {
+  ICONE_CLASSE,
+  ICONE_ARQUETIPO,
   ICONE_CATEGORIA_HABILIDADE,
   ICONE_REACAO,
   ICONE_TIPO_DANO,
@@ -9,9 +11,29 @@ import {
   iconeTipoCena,
   iconeDefesa,
   iconeTipoDano,
+  iconesIdentidade,
 } from './icones-dominio';
 
 describe('icones-dominio', () => {
+  it("cobre todas as classes e arquétipos com identidades já aprovadas", () => {
+    expect(Object.keys(ICONE_CLASSE).sort()).toEqual(Object.values(ClasseEnum).sort());
+    expect(Object.keys(ICONE_ARQUETIPO).sort()).toEqual(Object.values(ArquetipoEnum).sort());
+    expect(Object.values(ICONE_CLASSE)).toEqual([
+      "combatente", "especialista", "suporte", "bestial", "artificial", "hibrido", "civil",
+    ]);
+    expect(Object.values(ICONE_ARQUETIPO)).toEqual([
+      "lutador", "mercenario", "vanguarda", "engenheiro", "assassino", "academico",
+      "paramedico", "diplomata", "comandante",
+    ]);
+  });
+  it("divide a identidade como o rótulo: classe-base + arquétipo, classe-base + subclasse, Civil sozinho", () => {
+    expect(iconesIdentidade(ClasseEnum.COMBATENTE, ArquetipoEnum.LUTADOR)).toEqual({ classeBase: "combatente", subclasse: "lutador" });
+    expect(iconesIdentidade(ClasseEnum.SUPORTE, null)).toEqual({ classeBase: "suporte", subclasse: null });
+    expect(iconesIdentidade(ClasseEnum.EXPERIMENTO_BESTIAL, null)).toEqual({ classeBase: "combatente", subclasse: "bestial" });
+    expect(iconesIdentidade(ClasseEnum.EXPERIMENTO_ARTIFICIAL, null)).toEqual({ classeBase: "especialista", subclasse: "artificial" });
+    expect(iconesIdentidade(ClasseEnum.EXPERIMENTO_HIBRIDO, null)).toEqual({ classeBase: "suporte", subclasse: "hibrido" });
+    expect(iconesIdentidade(ClasseEnum.CIVIL, null)).toEqual({ classeBase: "civil", subclasse: null });
+  });
   it('cobre cada tipo de cena com um desenho distinto e reserva o genérico', () => {
     const desenhos = Object.values(CenaTipoEnum).map(tipo => iconeTipoCena(tipo));
     expect(desenhos).toEqual(Object.values(CenaTipoEnum).map(tipo => ICONE_TIPO_CENA[tipo]));

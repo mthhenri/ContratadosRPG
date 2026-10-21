@@ -20,10 +20,12 @@ import { rotuloNivelAmeaca } from '../../../ficha/rotulos-criatura';
 import {
   combatenteTemIdentidadeVisivel,
   defesasDoCombatente,
+  classeVisivelDoCombatente,
   linhaOrigemDoCombatente,
   turnosPorRodadaDoCombatente,
   type DefesaExibidaDto,
 } from '../../encontro-leitura.util';
+import { IdentidadeClasse } from '../../../ficha/componentes/identidade-classe/identidade-classe.component';
 
 /** Abreviação de cada `TipoDanoEnum` na faixa compacta de resistências do cartão (m7-17). */
 const ABREVIACAO_RESISTENCIA: Record<TipoDanoEnum, string> = {
@@ -55,7 +57,7 @@ const ABREVIACAO_RESISTENCIA: Record<TipoDanoEnum, string> = {
  */
 @Component({
   selector: 'app-cartao-combatente',
-  imports: [AsyncPipe, ImagemFichaPipe, Icone, Tooltip, FocoImagem, ReceberDanoDialog, Chip, BarraRecurso, Botao, BotaoIcone],
+  imports: [AsyncPipe, IdentidadeClasse, ImagemFichaPipe, Icone, Tooltip, FocoImagem, ReceberDanoDialog, Chip, BarraRecurso, Botao, BotaoIcone],
   templateUrl: './cartao-combatente.component.html',
   styleUrl: './cartao-combatente.component.scss',
 })
@@ -168,6 +170,9 @@ export class CartaoCombatente {
    * concatenado na mesma string.
    */
   protected readonly linhaOrigem = computed<string>(() => linhaOrigemDoCombatente(this.combatente()));
+
+  /** Classe/arquétipo do agente visível — a segunda linha da origem leva o ícone de cada parte. */
+  protected readonly classeVisivel = computed(() => classeVisivelDoCombatente(this.combatente()));
 
   /**
    * Chip "Cadência N" ao lado da linha de origem (`ui-16` — antes era sufixo de texto embutido em

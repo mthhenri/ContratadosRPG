@@ -1,0 +1,15 @@
+<span class="identidade-classe__parte">
+    <span class="identidade-classe__icone"
+        ><app-icone class="icone--texto" [nome]="icones().classeBase" [appTooltip]="perfil().classeBase"
+    /></span>
+    <span class="identidade-classe__nome">{{ perfil().classeBase }}</span>
+</span>
+@if (perfil().subclasse; as subclasse) {
+    <span class="identidade-classe__separador" aria-hidden="true"> - </span>
+    <span class="identidade-classe__parte">
+        <span class="identidade-classe__icone"
+            ><app-icone class="icone--texto" [nome]="icones().subclasse!" [appTooltip]="subclasse"
+        /></span>
+        <span class="identidade-classe__nome">{{ subclasse }}</span>
+    </span>
+}

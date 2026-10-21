@@ -134,14 +134,14 @@ describe('SeletorCombatentes', () => {
 
   it('mostra classe/arquétipo e nível no cartão do agente', () => {
     const fixture = montar([agente]);
-    expect(elemento(fixture).querySelector('.seletor__meta')?.textContent?.trim()).toBe(
+    expect(elemento(fixture).querySelector('.seletor__meta')?.textContent?.replace(/\s+/g, ' ').trim()).toBe(
       'Combatente - Mercenário · Nível 3',
     );
   });
 
   it('mostra Nível de Ameaça e VD no cartão da criatura', () => {
     const fixture = montar([criatura]);
-    expect(elemento(fixture).querySelector('.seletor__meta')?.textContent?.trim()).toBe(
+    expect(elemento(fixture).querySelector('.seletor__meta')?.textContent?.replace(/\s+/g, ' ').trim()).toBe(
       'Ameaça · Média · VD 37',
     );
   });

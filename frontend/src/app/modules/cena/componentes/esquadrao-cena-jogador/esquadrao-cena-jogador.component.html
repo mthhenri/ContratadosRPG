@@ -29,7 +29,7 @@
                             </span>
                             <span class="esquadrao-cena__corpo">
                                 <strong class="esquadrao-cena__nome">{{ ficha.nome }}</strong>
-                                <span class="esquadrao-cena__classe">{{ ficha.classeTexto }}</span>
+                                <span class="esquadrao-cena__classe"><app-identidade-classe [classe]="ficha.classe" [arquetipo]="ficha.arquetipo" /></span>
                                 @if (ficha.tipo === "completa") {
                                     <span class="esquadrao-cena__vitais">
                                         <app-icone

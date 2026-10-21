@@ -2208,17 +2208,14 @@ incluindo todos os ajustes avulsos de pós-milestone.
 | ~~`m11-10`~~ | regras | concluída; ver [guarda-chuva](../specs/done/m11-oficina-regras.spec.md) |
 | `regras-visual-06`…`10` | regras | cinco correções restantes após bateria visual; textos e contraste; [mapa e prioridades](../specs/done/regras-auditoria-visual-completa/auditoria.md) |
 
-`icones-recursos-sistema` arquivada em `done/`; sua continuação
-`icones-recursos-glifos-e-pendencias` foi retomada em `active/`, junto de
-`icones-criatura-vd-tenacidade` e `icones-identidade-cards-agente`. Pranchas e mapas
-estão nos anexos respectivos. Criatura: VD A e Tenacidade B da rodada 2 aprovados,
-assim como todos os locais propostos; card do mestre permanece como está. Recursos:
-Maestria B, Crítico A com estrelinhas, Energia em Utilizar e T3 implementados após
-autorização posterior expressa; quatro specs em done, com relatórios nos anexos.
-T3 mantém nome em barras/fichas/cards/resumos e “N de Energia” só nos custos avulsos
-do inventário e das habilidades de NPC; leitor de regras fora. Quatro viewports,
-duas bases, teclado e toque emulado verificados; ações genéricas aguardam votos. Identidade: sem ícone
-extra de tipo; alcance da adoção continua aguardando decisão.
+`icones-recursos-sistema` arquivada em `done/`; sua continuação `icones-recursos-glifos-e-pendencias` segue em
+`active/` só pelas **ações genéricas** (prancha sem votos). Concluídos e em `done/`, com relatórios nos anexos: Maestria B,
+Crítico (dado em silhueta com brilho grande, escolhido em 20/10), Energia em Utilizar, T3 (nome em barras/fichas/cards,
+"N de Energia" só nos custos avulsos do inventário e das habilidades de NPC), **VD A e Tenacidade B** da criatura
+(`valor-desafio`/`tenacidade` em `app-icone`, adotados na ficha de criatura, no `criar-criatura`, no Acervo e no seletor
+de combatentes; card do mestre intacto) e a **identidade de classe/arquétipo** (`iconesIdentidade` +
+`app-identidade-classe`, sem ícone de tipo, Civil sozinho) nos cards, ficha completa, Esquadrão, Investigação, Acervo,
+seletor e encontro; NPC e criatura ficam sem ícone de identidade (`I-063`).
 As duas avaliações de usabilidade permanecem no backlog.
 
 Milestones ainda não abertos: `m5-guia-missao`. M10 `m10-regras` implementada: `m10-01`…`m10-11`

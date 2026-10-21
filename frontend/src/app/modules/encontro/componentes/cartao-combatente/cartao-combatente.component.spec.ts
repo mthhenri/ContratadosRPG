@@ -204,7 +204,10 @@ describe('CartaoCombatente', () => {
       classe: ClasseEnum.COMBATENTE,
       arquetipo: ArquetipoEnum.LUTADOR,
     });
-    expect(texto(fixture, '.combatente__origem')).toBe('Bia\nCombatente - Lutador');
+    const origem = (fixture.nativeElement as HTMLElement).querySelector('.combatente__origem')!;
+    expect(origem.firstChild?.textContent?.trim()).toBe('Bia');
+    expect(origem.querySelector('app-identidade-classe')?.textContent?.replace(/\s+/g, ' ').trim()).toBe('Combatente - Lutador');
+    expect(origem.querySelectorAll('app-identidade-classe app-icone')).toHaveLength(2);
   });
 
   it('dá precedência a "Morrendo" sobre a vez, e some com a etiqueta de turno fora do combate', () => {
@@ -437,7 +440,9 @@ describe('CartaoCombatente', () => {
 
     // A carteirinha aparece — dono e classe/arquétipo, em duas linhas — e avatar, mesmo sem
     // `revelado`; o nível fica de fora (a carteirinha identifica, não avalia a força do agente).
-    expect(texto(fixture, '.combatente__origem')).toBe('Sirius\nCombatente - Lutador');
+    const origem = elemento.querySelector('.combatente__origem')!;
+    expect(origem.firstChild?.textContent?.trim()).toBe('Sirius');
+    expect(origem.querySelector('app-identidade-classe')?.textContent?.replace(/\s+/g, ' ').trim()).toBe('Combatente - Lutador');
     expect(elemento.querySelector('.combatente__avatar-imagem')).not.toBeNull();
     expect(elemento.querySelector('img')?.getAttribute('src')).toBe('blob:agente-autorizado');
     expect(observarImagem).toHaveBeenCalledWith('/uploads/agentes/max-star.webp');

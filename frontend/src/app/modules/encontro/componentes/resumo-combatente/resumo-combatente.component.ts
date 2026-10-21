@@ -15,10 +15,12 @@ import { Chip } from '../../../../shared/ui/chip/chip.component';
 import { rotuloNivelAmeaca } from '../../../ficha/rotulos-criatura';
 import {
   defesasDoCombatente,
+  classeVisivelDoCombatente,
   linhaOrigemDoCombatente,
   siglaDoCombatente,
   turnosPorRodadaDoCombatente,
 } from '../../encontro-leitura.util';
+import { IdentidadeClasse } from '../../../ficha/componentes/identidade-classe/identidade-classe.component';
 
 /** Uma caixa de Resistência: rótulo curto, total e o sufixo BEM da cor do tipo de dano. */
 interface ResistenciaExibidaDto {
@@ -51,7 +53,7 @@ const RESISTENCIAS: readonly Omit<ResistenciaExibidaDto, 'valor'>[] = [
  */
 @Component({
   selector: 'app-resumo-combatente',
-  imports: [AsyncPipe, ImagemFichaPipe, FocoImagem, Icone, Tooltip, BarraRecurso, BotaoIcone, Chip],
+  imports: [AsyncPipe, IdentidadeClasse, ImagemFichaPipe, FocoImagem, Icone, Tooltip, BarraRecurso, BotaoIcone, Chip],
   templateUrl: './resumo-combatente.component.html',
   styleUrl: './resumo-combatente.component.scss',
   host: {
@@ -71,6 +73,7 @@ export class ResumoCombatente {
   protected readonly iconeDefesa = iconeDefesa;
   protected readonly sigla = computed(() => siglaDoCombatente(this.combatente().nome));
   protected readonly origem = computed(() => linhaOrigemDoCombatente(this.combatente()));
+  protected readonly classeVisivel = computed(() => classeVisivelDoCombatente(this.combatente()));
 
   protected readonly ehCriatura = computed(
     () => this.combatente().tipoFicha === TipoFichaEnum.CRIATURA,
