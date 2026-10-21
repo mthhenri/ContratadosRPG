@@ -26,6 +26,13 @@ linha quando o nome quebra no card estreito do mobile (o componente passou a man
 vivo: Esquadrão/Investigação do jogador, seletor, `criar-criatura` e a janela flutuante (teste de componente). Relatórios:
 `docs/specs/done/icones-criatura-vd-tenacidade/verificacao.md` e `.../icones-identidade-cards-agente/verificacao.md`.
 
+## 2026-10-20 — versão 1.11.0: nota "O montador de rolagem chega a todos e a identidade dos personagens ganha ícones"
+
+A 1.10.0 foi publicada (push até `f8ba3517`, tag no commit certo) exatamente como desenvolvida, a pedido do autor, em vez de
+reescrever a nota. O que veio depois dela entra na `docs/patchnotes/1.11.0.md` e nos pacotes em 1.11.0 (minor, funcionalidade
+nova visível): montador de rolagem único e liberado para todos, brilho grande no ícone do Crítico, VD e Tenacidade com
+ícone, ícones de classe e arquétipo. A nota da 1.10.0 voltou ao texto original do `f8ba3517`.
+
 ## 2026-10-20 — icones-critico-adocao (ajuste): brilho grande sobre o dado no glifo `critico`
 
 O autor reviu o glifo do Crítico adotado em 18/10 ("dado excepcional com estrelinhas"): ilegível em 14 px. Escolhido, numa
@@ -63,7 +70,7 @@ Entra na nota 1.10.0.
 ## 2026-10-20 — versão 1.10.0: nota "A Biblioteca ganha pastas, o Caderno liga trechos a documentos e as cenas ganham ícones"
 
 Nota `docs/patchnotes/1.10.0.md` (14 a 20 de outubro) e versão dos pacotes em 1.10.0. Minor por trazer
-funcionalidade nova visível. Cobre a Biblioteca em pastas, o montador de rolagem liberado para todos, o vínculo Caderno→Biblioteca, ícones de cena e
+funcionalidade nova visível. Cobre a Biblioteca em pastas, o vínculo Caderno→Biblioteca, ícones de cena e
 de recursos, o recorte de fichas ocultas e os ajustes da leitura das Regras e da Oficina. A transcrição fica
 de fora (implementada e desativada na mesma semana). Conferido: `patchnotes:publicar --dry-run`,
 `versao:sincronizar`, build e testes do `shared`. Sem tag local; a tag e a publicação nascem no workflow, no merge.
