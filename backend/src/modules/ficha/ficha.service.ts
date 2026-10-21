@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { forwardRef, Inject, Injectable, StreamableFile, UnauthorizedException } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { IMAGEM_EXTENSAO_POR_MIME } from '@contratados-rpg/shared/validators';
 import { calcularMediasEsquadrao } from '@contratados-rpg/shared/regras/novo-agente';
 import type { CampanhaInventarioItemDto } from '@contratados-rpg/shared/dtos/campanha';
@@ -33,9 +33,6 @@ import type {
   FichaImagemFocoDto,
   FichaImagemAlterarDto,
   FichaImagemExcluirDto,
-  FichaImagemRecuperarDto,
-  FichaImagemContextoDto,
-  FichaVisibilidadeContextoDto,
   FichaInternoAlterarDto,
   FichaInventarioItemMandarParaBaseDto,
   FichaInventarioItemPegarDto,
@@ -283,7 +280,7 @@ export class FichaService {
     const fichas = await this.fichaRepositorio.listarPorCampanha(dto);
     return fichas
       .filter(
-        (ficha) => this.identidadePublicaDeJogador(ficha),
+        (ficha) => (ficha.tipo ?? TipoFichaEnum.JOGADOR) === TipoFichaEnum.JOGADOR && !ficha.oculta,
       )
       .map((ficha) => this.paraResumoPublico(ficha));
   }
@@ -787,63 +784,6 @@ export class FichaService {
     return fichaAlterada;
   }
 
-  /** Bytes nunca escapam antes de autorizar e conferir novamente o vínculo após o I/O. */
-  async recuperarImagem(dto: FichaImagemRecuperarDto, usuarioAtivo?: JwtPayload): Promise<StreamableFile | null> {
-    const consulta = { caminho: dto.caminho, usuarioId: usuarioAtivo?.sub ?? null, usuarioAlvoId: dto.usuarioAlvoId ?? null };
-    const contexto = await this.fichaRepositorio.recuperarContextoImagem(consulta);
-    if (!contexto) return null;
-    this.validarLeituraImagem(contexto, dto, usuarioAtivo);
-    const imagem = await this.armazenamentoProvedor.lerImagem({ caminho: contexto.ficha.imagemUrl! });
-    const atual = await this.fichaRepositorio.recuperarContextoImagem(consulta);
-    if (!atual || atual.ficha.id !== contexto.ficha.id || atual.ficha.imagemUrl !== contexto.ficha.imagemUrl) {
-      throw new ResourceNotFoundException('Avatar');
-    }
-    // A última consulta traz ficha, papéis e concessões no mesmo snapshot do banco.
-    // Nenhum await separa esta decisão do retorno dos bytes, inclusive entre instâncias da API.
-    this.validarLeituraImagem(atual, dto, usuarioAtivo);
-    if (!imagem) throw new ResourceNotFoundException('Avatar');
-    return new StreamableFile(imagem.conteudo, { type: imagem.mimetype, length: imagem.conteudo.length });
-  }
-
-  /** A carteirinha pública de jogador compartilha exatamente o predicado do painel S. */
-  private identidadePublicaDeJogador(ficha: Pick<FichaRecuperadaDto, 'tipo' | 'oculta'>): boolean {
-    return (ficha.tipo ?? TipoFichaEnum.JOGADOR) === TipoFichaEnum.JOGADOR && !ficha.oculta;
-  }
-
-  private validarLeituraImagem(
-    contexto: FichaImagemContextoDto, dto: FichaImagemRecuperarDto, usuarioAtivo?: JwtPayload,
-  ): void {
-    const { ficha } = contexto;
-    if (!usuarioAtivo) throw new UnauthorizedException();
-    if (dto.campanhaId !== undefined && dto.campanhaId !== ficha.campanhaId) {
-      throw new ResourceNotFoundException('Avatar');
-    }
-    if (ficha.campanhaId === null) {
-      if (dto.usuarioAlvoId !== undefined || dto.espectador) throw new UnauthorizedAccessException();
-      this.avaliarVisibilidadeNoContexto({ ficha, usuarioId: usuarioAtivo.sub, papel: null, acessoConcedido: contexto.acessoUsuario });
-      return;
-    }
-    if (contexto.papelUsuario === null) throw new UnauthorizedAccessException();
-    let usuarioId = usuarioAtivo.sub;
-    let papel = contexto.papelUsuario;
-    let acessoConcedido = contexto.acessoUsuario;
-    let espectador = this.campanhaService.ehEspectador(papel);
-    if (dto.usuarioAlvoId !== undefined) {
-      if (!this.campanhaService.ehMestre(papel) || dto.espectador) throw new UnauthorizedAccessException();
-      if (contexto.papelAlvo === null || !this.campanhaService.ehJogador(contexto.papelAlvo)) throw new UnauthorizedAccessException();
-      usuarioId = dto.usuarioAlvoId;
-      papel = contexto.papelAlvo;
-      acessoConcedido = contexto.acessoAlvo;
-      espectador = false;
-    } else if (dto.espectador) {
-      if (!this.campanhaService.ehMestre(papel) && !espectador) throw new UnauthorizedAccessException();
-      espectador = true;
-    }
-    if (this.identidadePublicaDeJogador(ficha)) return;
-    if (espectador) throw new UnauthorizedAccessException();
-    this.avaliarVisibilidadeNoContexto({ ficha, usuarioId, papel, acessoConcedido });
-  }
-
   /** Troca o avatar da ficha sem alterar os demais campos. */
   async alterarImagem(
     dto: FichaImagemAlterarDto,
@@ -867,7 +807,7 @@ export class FichaService {
     }
 
     const imagemSalva = await this.armazenamentoProvedor.salvarImagem({
-      pasta: ArmazenamentoPastaEnum.FICHAS,
+      pasta: ArmazenamentoPastaEnum.AGENTES,
       conteudo: dto.arquivo.conteudo,
       mimetype: dto.arquivo.mimetype,
       extensao,
@@ -1668,32 +1608,23 @@ export class FichaService {
     ficha: FichaRecuperadaDto,
     usuarioId: number,
   ): Promise<boolean> {
-    const membro = ficha.campanhaId === null ? null : await this.campanhaRepositorio.recuperarMembro({
-      campanhaId: ficha.campanhaId, usuarioId,
-    });
-    const contexto = { ficha, usuarioId, papel: membro?.papel ?? null };
-    const decisao = this.avaliarVisibilidadeNoContexto(contexto);
-    if (decisao !== null) return decisao;
-    const acesso = await this.fichaRepositorio.recuperarAcesso({ fichaId: ficha.id, usuarioId });
-    return this.avaliarVisibilidadeNoContexto({ ...contexto, acessoConcedido: !!acesso })!;
-  }
-
-  /** Único núcleo de permissão: síncrono para snapshot factual e consultas usuais da ficha. */
-  private avaliarVisibilidadeNoContexto(dto: FichaVisibilidadeContextoDto): boolean | null {
-    const { ficha, usuarioId, papel } = dto;
     if (ficha.campanhaId !== null) {
+      const membroEncontrado = await this.campanhaRepositorio.recuperarMembro({
+        campanhaId: ficha.campanhaId,
+        usuarioId,
+      });
       // m8-02: um espectador nunca vê ficha — nem a própria, se o mestre o rebaixou de JOGADOR
       // depois de ele já possuir uma (`CampanhaService.alterarPapelMembro`), nem por concessão
       // (decisão de produto #4: "uma concessão em usuario_ficha_acesso não amplia este papel").
       // Checado antes da posse para não deixar a ficha antiga do ex-jogador escapar pelo `return`
       // logo abaixo.
-      if (papel !== null && this.campanhaService.ehEspectador(papel)) {
+      if (membroEncontrado && this.campanhaService.ehEspectador(membroEncontrado.papel)) {
         throw new UnauthorizedAccessException();
       }
       if (ficha.usuarioId === usuarioId) {
         return false;
       }
-      if (papel === TipoCampanhaMembroPapelEnum.MESTRE) {
+      if (membroEncontrado?.papel === TipoCampanhaMembroPapelEnum.MESTRE) {
         return false;
       }
       if (this.concessaoSuspensaPorOcultacao(ficha)) {
@@ -1703,8 +1634,11 @@ export class FichaService {
       return false;
     }
 
-    if (dto.acessoConcedido === undefined) return null;
-    if (!dto.acessoConcedido) {
+    const acessoConcedido = await this.fichaRepositorio.recuperarAcesso({
+      fichaId: ficha.id,
+      usuarioId,
+    });
+    if (!acessoConcedido) {
       throw new UnauthorizedAccessException();
     }
     return true;

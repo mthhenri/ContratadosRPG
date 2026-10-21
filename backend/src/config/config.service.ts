@@ -39,14 +39,13 @@ export interface ConfiguracaoAplicacao {
  * e só são lidas via `obterVariavelObrigatoria` — quando `provedor === 'r2'`.
  */
 export type ConfiguracaoArmazenamento =
-  | { provedor: 'local'; localDiretorio?: string }
+  | { provedor: 'local' }
   | {
       provedor: 'r2';
       r2AccountId: string;
       r2AccessKeyId: string;
       r2SecretAccessKey: string;
       r2Bucket: string;
-      r2BucketFichas: string;
       r2UrlPublica: string;
     };
 
@@ -92,7 +91,7 @@ export class ConfigService {
 
   /**
    * Retorna a configuração de armazenamento de blob (`ARMAZENAMENTO_*`, m3-62). `provedor` é
-   * sempre obrigatória; as variáveis `ARMAZENAMENTO_R2_*` só são lidas (e exigidas) quando
+   * sempre obrigatória; as cinco variáveis `ARMAZENAMENTO_R2_*` só são lidas (e exigidas) quando
    * `provedor === 'r2'` — em `local` nenhuma delas é necessária para rodar.
    */
   obterConfiguracaoArmazenamento(): ConfiguracaoArmazenamento {
@@ -103,22 +102,14 @@ export class ConfigService {
       );
     }
     if (provedor === 'local') {
-      const localDiretorio = process.env.ARMAZENAMENTO_LOCAL_DIRETORIO;
-      return localDiretorio ? { provedor, localDiretorio } : { provedor };
+      return { provedor };
     }
-    const r2AccountId = this.obterVariavelObrigatoria('ARMAZENAMENTO_R2_ACCOUNT_ID');
-    const r2AccessKeyId = this.obterVariavelObrigatoria('ARMAZENAMENTO_R2_ACCESS_KEY_ID');
-    const r2SecretAccessKey = this.obterVariavelObrigatoria('ARMAZENAMENTO_R2_SECRET_ACCESS_KEY');
-    const r2Bucket = this.obterVariavelObrigatoria('ARMAZENAMENTO_R2_BUCKET');
-    const r2BucketFichas = this.obterVariavelObrigatoria('ARMAZENAMENTO_R2_BUCKET_FICHAS');
-    if (r2Bucket === r2BucketFichas) throw new Error('ARMAZENAMENTO_R2_BUCKET_FICHAS deve ser privado e distinto do bucket público');
     return {
       provedor,
-      r2AccountId,
-      r2AccessKeyId,
-      r2SecretAccessKey,
-      r2Bucket,
-      r2BucketFichas,
+      r2AccountId: this.obterVariavelObrigatoria('ARMAZENAMENTO_R2_ACCOUNT_ID'),
+      r2AccessKeyId: this.obterVariavelObrigatoria('ARMAZENAMENTO_R2_ACCESS_KEY_ID'),
+      r2SecretAccessKey: this.obterVariavelObrigatoria('ARMAZENAMENTO_R2_SECRET_ACCESS_KEY'),
+      r2Bucket: this.obterVariavelObrigatoria('ARMAZENAMENTO_R2_BUCKET'),
       r2UrlPublica: this.obterVariavelObrigatoria('ARMAZENAMENTO_R2_URL_PUBLICA'),
     };
   }

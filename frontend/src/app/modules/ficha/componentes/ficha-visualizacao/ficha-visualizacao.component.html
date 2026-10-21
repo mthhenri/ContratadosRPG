@@ -181,10 +181,7 @@
                                                 [style.--cor-ficha]="cor()"
                                                 [appTooltip]="'Cor de identidade da ficha'"
                                             >
-                                                @if (
-                                                    imagemUrl() | imagemFicha | async;
-                                                    as urlImagem
-                                                ) {
+                                                @if (imagemUrl(); as urlImagem) {
                                                     <div class="ficha-ident__avatar-moldura">
                                                         <img
                                                             class="ficha-ident__avatar-imagem"
@@ -260,7 +257,7 @@
                                             aria-hidden="true"
                                             [style.--cor-ficha]="cor()"
                                         >
-                                            @if (imagemUrl() | imagemFicha | async; as urlImagem) {
+                                            @if (imagemUrl(); as urlImagem) {
                                                 <div class="ficha-ident__avatar-moldura">
                                                     <img
                                                         class="ficha-ident__avatar-imagem"

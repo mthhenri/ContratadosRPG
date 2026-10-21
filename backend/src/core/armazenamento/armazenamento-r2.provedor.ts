@@ -6,11 +6,9 @@ import {
   S3Client,
 } from '@aws-sdk/client-s3';
 import type { ConfiguracaoArmazenamento } from '../../config/config.service';
-import { construirChaveImagem, construirChaveTexto, obterNomePasta, obterMimetypeImagem, recuperarChaveImagem } from './armazenamento-chave.util';
+import { construirChaveImagem, construirChaveTexto, obterNomePasta } from './armazenamento-chave.util';
 import type {
   ArmazenamentoImagemExcluir,
-  ArmazenamentoImagemLer,
-  ArmazenamentoImagemLida,
   ArmazenamentoImagemListada,
   ArmazenamentoImagensListar,
   ArmazenamentoImagemSalva,
@@ -19,16 +17,16 @@ import type {
   ArmazenamentoTextoLer,
   ArmazenamentoTextoSalvar,
 } from './armazenamento-provedor.interface';
-import { ArmazenamentoPastaEnum } from './armazenamento-provedor.interface';
 
 /** Recorte de `ConfiguracaoArmazenamento` com `provedor: 'r2'` — só os campos que este provedor usa. */
 type ConfiguracaoArmazenamentoR2 = Extract<ConfiguracaoArmazenamento, { provedor: 'r2' }>;
 
 /**
  * Armazenamento no Cloudflare R2 (produção, `ARMAZENAMENTO_PROVEDOR=r2`) — S3-compatible via
- * `@aws-sdk/client-s3`, apontando o `endpoint` para o domínio da conta. FICHAS usa bucket privado
- * separado e retorna caminho relativo da API; avulso/documentos/patchnotes preservam bucket e
- * URLs públicas existentes. Nenhuma URL assinada substitui a autorização de cada leitura.
+ * `@aws-sdk/client-s3`, apontando o `endpoint` para o domínio da conta (SDK oficial recomendado
+ * pela Cloudflare). Grava sob a chave `<pasta>/<uuid>.<extensão>` (`agentes/` para os avatares,
+ * `documentos/` para os documentos de campanha — `armazenamento-chave.util.ts`) e devolve a URL pública (domínio custom ou `*.r2.dev`) — durável, sobrevive
+ * a redeploy.
  */
 export class ArmazenamentoR2Provedor implements ArmazenamentoProvedor {
   private readonly clienteS3: S3Client;
@@ -48,38 +46,18 @@ export class ArmazenamentoR2Provedor implements ArmazenamentoProvedor {
     const chave = construirChaveImagem(dto.pasta, dto.extensao);
     await this.clienteS3.send(
       new PutObjectCommand({
-        Bucket: dto.pasta === ArmazenamentoPastaEnum.FICHAS ? this.configuracao.r2BucketFichas : this.configuracao.r2Bucket,
+        Bucket: this.configuracao.r2Bucket,
         Key: chave,
         Body: dto.conteudo,
         ContentType: dto.mimetype,
       }),
     );
-    return { caminho: dto.pasta === ArmazenamentoPastaEnum.FICHAS
-      ? `/uploads/${chave}` : `${this.configuracao.r2UrlPublica}/${chave}` };
-  }
-
-  async lerImagem(dto: ArmazenamentoImagemLer): Promise<ArmazenamentoImagemLida | null> {
-    const chave = recuperarChaveImagem(dto.caminho, this.configuracao.r2UrlPublica);
-    try {
-      const resposta = await this.clienteS3.send(new GetObjectCommand({
-        Bucket: chave.startsWith('fichas/') ? this.configuracao.r2BucketFichas : this.configuracao.r2Bucket,
-        Key: chave,
-      }));
-      const conteudo = await resposta.Body?.transformToByteArray();
-      return conteudo ? { conteudo, mimetype: obterMimetypeImagem(chave) } : null;
-    } catch (erro) {
-      const { name, $metadata } = erro as { name?: string; $metadata?: { httpStatusCode?: number } };
-      if (name === 'NoSuchKey' || $metadata?.httpStatusCode === 404) return null;
-      throw erro;
-    }
+    return { caminho: `${this.configuracao.r2UrlPublica}/${chave}` };
   }
 
   async excluirImagem(dto: ArmazenamentoImagemExcluir): Promise<void> {
-    const chave = recuperarChaveImagem(dto.caminho, this.configuracao.r2UrlPublica);
-    await this.clienteS3.send(new DeleteObjectCommand({
-      Bucket: chave.startsWith('fichas/') ? this.configuracao.r2BucketFichas : this.configuracao.r2Bucket,
-      Key: chave,
-    }));
+    const chave = dto.caminho.replace(`${this.configuracao.r2UrlPublica}/`, '');
+    await this.clienteS3.send(new DeleteObjectCommand({ Bucket: this.configuracao.r2Bucket, Key: chave }));
   }
 
   /** Varre `<pasta>/` com `ListObjectsV2`, seguindo a paginação (até 1000 chaves por página). */
@@ -89,7 +67,7 @@ export class ArmazenamentoR2Provedor implements ArmazenamentoProvedor {
     do {
       const resposta = await this.clienteS3.send(
         new ListObjectsV2Command({
-          Bucket: dto.pasta === ArmazenamentoPastaEnum.FICHAS ? this.configuracao.r2BucketFichas : this.configuracao.r2Bucket,
+          Bucket: this.configuracao.r2Bucket,
           Prefix: `${obterNomePasta(dto.pasta)}/`,
           ContinuationToken: token,
         }),
@@ -97,7 +75,7 @@ export class ArmazenamentoR2Provedor implements ArmazenamentoProvedor {
       for (const objeto of resposta.Contents ?? []) {
         if (objeto.Key && objeto.LastModified) {
           imagens.push({
-            caminho: dto.pasta === ArmazenamentoPastaEnum.FICHAS ? `/uploads/${objeto.Key}` : `${this.configuracao.r2UrlPublica}/${objeto.Key}`,
+            caminho: `${this.configuracao.r2UrlPublica}/${objeto.Key}`,
             modificadoEm: objeto.LastModified,
           });
         }

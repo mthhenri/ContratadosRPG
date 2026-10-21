@@ -1,5 +1,3 @@
-import { Subject } from "rxjs";
-import { ImagemFichaService } from "../../../../core/services/imagem-ficha.service";
 import { TestBed } from '@angular/core/testing';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -142,21 +140,4 @@ describe('AjusteEnquadramentoImagem', () => {
     expect(acoes.map((botao) => botao.textContent?.trim())).toEqual(['Cancelar', 'Confirmar']);
     expect(acoes.every((botao) => botao.classList.contains('botao--medio'))).toBe(true);
   });
-  it("reenquadramento privado usa o transporte e remove a imagem quando perde leitura", () => {
-    const imagens = new Subject<string | null>();
-    const observarImagem = vi.fn(() => imagens);
-    TestBed.configureTestingModule({ providers: [
-      { provide: ImagemFichaService, useValue: { observarImagem } },
-    ] });
-    const caminho = "/uploads/fichas/12345678-1234-4234-8234-123456789abc.png";
-    const { fixture, raiz } = montar(caminho);
-    expect(observarImagem).toHaveBeenCalledWith(caminho);
-    imagens.next("blob:autorizada"); fixture.detectChanges();
-    expect(raiz.querySelector("img")?.getAttribute("src")).toBe("blob:autorizada");
-    imagens.next(null); fixture.detectChanges();
-    expect(raiz.querySelector("img")).toBeNull();
-    fixture.destroy();
-    expect(imagens.observed).toBe(false);
-  });
-
 });

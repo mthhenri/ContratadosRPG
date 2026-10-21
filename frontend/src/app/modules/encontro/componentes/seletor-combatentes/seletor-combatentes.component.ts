@@ -1,5 +1,3 @@
-import { AsyncPipe } from "@angular/common";
-import { ImagemFichaPipe } from "../../../../shared/imagem-ficha.pipe";
 import { Component, computed, input, output } from '@angular/core';
 
 import type { EncontroCombatenteResumoDto } from '@contratados-rpg/shared/dtos/encontro';
@@ -26,7 +24,7 @@ import { IdentidadeClasse } from '../../../ficha/componentes/identidade-classe/i
  */
 @Component({
   selector: 'app-seletor-combatentes',
-  imports: [AsyncPipe, IdentidadeClasse, ImagemFichaPipe, Icone, Tooltip, EstadoVazio],
+  imports: [IdentidadeClasse, Icone, Tooltip, EstadoVazio],
   templateUrl: './seletor-combatentes.component.html',
   styleUrl: './seletor-combatentes.component.scss',
 })

@@ -14,5 +14,5 @@ export function criarArmazenamentoProvedor(
 ): ArmazenamentoProvedor {
   return configuracao.provedor === 'r2'
     ? new ArmazenamentoR2Provedor(configuracao)
-    : new ArmazenamentoLocalProvedor(configuracao.localDiretorio);
+    : new ArmazenamentoLocalProvedor();
 }

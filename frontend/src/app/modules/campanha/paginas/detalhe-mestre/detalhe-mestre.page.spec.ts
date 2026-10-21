@@ -1,4 +1,3 @@
-import { ImagemFichaService } from "../../../../core/services/imagem-ficha.service";
 import { CenaService } from "../../../cena/cena.service";
 import { ApplicationRef } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
@@ -272,15 +271,11 @@ describe('CampanhaDetalheMestre', () => {
       conectado: () => true,
     };
 
-    const imagemFichaService = {
-      observarImagem: vi.fn((url: string | null) => of(url ? "blob:avatar-autorizado" : null)),
-    };
     TestBed.configureTestingModule({
       imports: [CampanhaDetalheMestre],
       providers: [
         provideRouter([]),
         CampanhaDetalheDadosService,
-        { provide: ImagemFichaService, useValue: imagemFichaService },
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => String(CAMPANHA_ID) } } } },
         { provide: CenaService, useValue: { listarPorCampanha: vi.fn(() => of([])) } },
         { provide: CampanhaService, useValue: campanhaService },
@@ -313,7 +308,6 @@ describe('CampanhaDetalheMestre', () => {
       navegar,
       rolagemService,
       estadoAlterado$,
-      imagemFichaService,
       reconexao$,
     };
   }
@@ -765,7 +759,7 @@ describe('CampanhaDetalheMestre', () => {
     it('abre a prévia completa depois do hover sustentado no avatar do Esquadrão e fecha ao sair', () => {
       vi.useFakeTimers();
       try {
-        const { fixture, imagemFichaService } = montar();
+        const { fixture } = montar();
         const cartao = fixture.debugElement.query(By.directive(EspectadorFichaCard));
         const avatar = cartao.nativeElement.querySelector('.espectador-ficha__avatar') as HTMLElement;
 
@@ -777,8 +771,7 @@ describe('CampanhaDetalheMestre', () => {
         vi.advanceTimersByTime(1);
         fixture.detectChanges();
         const preview = document.body.querySelector('div[aria-hidden="true"] > img') as HTMLImageElement;
-        expect(preview.getAttribute('src')).toBe('blob:avatar-autorizado');
-        expect(imagemFichaService.observarImagem).toHaveBeenCalledWith('/uploads/agentes/dev/vera.png');
+        expect(preview.src).toContain('/uploads/agentes/dev/vera.png');
 
         avatar.dispatchEvent(new Event('pointerleave'));
         fixture.detectChanges();

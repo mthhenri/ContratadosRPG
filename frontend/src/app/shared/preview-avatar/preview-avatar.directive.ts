@@ -1,5 +1,3 @@
-import { Subscription } from "rxjs";
-import { ImagemFichaService } from "../../core/services/imagem-ficha.service";
 import { DOCUMENT } from '@angular/common';
 import { DestroyRef, Directive, ElementRef, Renderer2, effect, inject, input } from '@angular/core';
 
@@ -50,8 +48,6 @@ export class PreviewAvatar {
   private readonly renderer = inject(Renderer2);
   private readonly documento = inject(DOCUMENT);
 
-  private readonly imagens = inject(ImagemFichaService);
-  private cargaImagem?: Subscription;
   private preview: HTMLElement | null = null;
   private temporizador: ReturnType<typeof setTimeout> | null = null;
   private encerrarRolagem: (() => void) | null = null;
@@ -82,12 +78,6 @@ export class PreviewAvatar {
       clearTimeout(this.temporizador);
       this.temporizador = null;
     }
-    this.cargaImagem?.unsubscribe();
-    this.cargaImagem = undefined;
-    this.removerPreview();
-  }
-
-  private removerPreview(): void {
     this.encerrarRolagem?.();
     this.encerrarRolagem = null;
     if (this.preview) {
@@ -98,13 +88,6 @@ export class PreviewAvatar {
 
   private mostrar(url: string): void {
     this.temporizador = null;
-    this.cargaImagem = this.imagens.observarImagem(url).subscribe(imagem => {
-      this.removerPreview();
-      if (imagem) this.renderizar(imagem);
-    });
-  }
-
-  private renderizar(url: string): void {
     const janela = this.documento.defaultView;
     if (!janela) {
       return;

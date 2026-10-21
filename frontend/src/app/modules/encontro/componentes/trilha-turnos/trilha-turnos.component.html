@@ -40,7 +40,7 @@
                     aria-hidden="true"
                     [appPreviewAvatar]="posicao.combatente.imagemUrl"
                 >
-                    @if (posicao.combatente.imagemUrl | imagemFicha | async; as urlImagem) {
+                    @if (posicao.combatente.imagemUrl; as urlImagem) {
                         <img
                             class="trilha__avatar-imagem"
                             [src]="urlImagem"

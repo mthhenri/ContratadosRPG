@@ -1,32 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
-import knex, { type Knex } from 'knex';
+import type { Knex } from 'knex';
 import { TipoFichaEnum } from '@contratados-rpg/shared/enums';
 import { FichaRepository } from './ficha.repository';
 
 describe('FichaRepository', () => {
-  it('avatar consulta ficha/papéis/concessões num único snapshot factual com parâmetros exatos', async () => {
-    const contexto = { ficha: { id: 5 }, papelUsuario: 'JOGADOR', papelAlvo: null, acessoUsuario: false, acessoAlvo: false };
-    const raw = vi.fn().mockResolvedValue({ rows: [contexto] });
-    const repositorio = new FichaRepository({ raw } as unknown as Knex);
-    expect(await repositorio.recuperarContextoImagem({ caminho: '/uploads/agentes/dev/a.png', usuarioId: 42, usuarioAlvoId: null })).toEqual(contexto);
-    expect(raw).toHaveBeenCalledTimes(1);
-    const [sql, parametros] = raw.mock.calls[0] as [string, Record<string, unknown>];
-    expect(sql).toContain('ficha.is_deleted = false');
-    expect(sql).toContain('usuario_ficha_acesso.is_deleted = false');
-    expect(sql).toContain('membro_usuario.is_deleted = false');
-    expect(sql).toContain('membro_alvo.is_deleted = false');
-    expect(sql).toContain('ficha.imagem_url = :caminho');
-    expect(sql).toContain("regexp_replace(ficha.imagem_url, '^https{0,1}://[^/]+', '/uploads') = :caminho");
-    expect(parametros).toEqual({ caminho: '/uploads/agentes/dev/a.png', usuarioId: 42, usuarioAlvoId: null });
-    const compilador = knex({ client: 'pg' });
-    try {
-      const compilado = compilador.raw(sql, parametros).toSQL().toNative();
-      const indices = [...compilado.sql.matchAll(/\$(\d+)/g)].map(item => Number(item[1]));
-      expect(Math.max(...indices)).toBe(compilado.bindings.length);
-    } finally {
-      await compilador.destroy();
-    }
-  });
     it("resumo expõe Categoria do JSONB mantendo filtro de fichas ativas", async () => {
         const raw = vi.fn().mockResolvedValue({ rows: [] });
         const repositorio = new FichaRepository({ raw } as unknown as Knex);

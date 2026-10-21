@@ -1,5 +1,3 @@
-import { AsyncPipe } from "@angular/common";
-import { ImagemFichaPipe } from "../../../../shared/imagem-ficha.pipe";
 import { Component, computed, input, output } from '@angular/core';
 import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
 import type { FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
@@ -18,7 +16,7 @@ import { IdentidadeClasse } from '../../../ficha/componentes/identidade-classe/i
 /** Esquadrão já redigido pelo backend para quem observa a Investigação. */
 @Component({
   selector: 'app-esquadrao-cena-jogador',
-  imports: [AsyncPipe, IdentidadeClasse, ImagemFichaPipe, Botao, Cartao, Chip, EstadoVazio, Icone, PreviewAvatar, Tooltip],
+  imports: [IdentidadeClasse, Botao, Cartao, Chip, EstadoVazio, Icone, PreviewAvatar, Tooltip],
   templateUrl: './esquadrao-cena-jogador.component.html',
   styleUrl: './esquadrao-cena-jogador.component.scss',
 })

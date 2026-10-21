@@ -22,7 +22,6 @@ const DESCRICOES_TAG: Readonly<Record<string, string>> = {
     "Usuários": "Perfil, credenciais e administração de contas.",
     "Campanhas": "Campanhas, membros, estado e inventário do esquadrão.",
     "Fichas": "Fichas, vitalidade, acervo, imagens, acessos e inventário.",
-    "Avatares": "Bytes de avatar com autorização atual; legado público limitado a avulsos ativos.",
     "Rolagens": "Registro e históricos de rolagens de dados.",
     "Caderno": "Páginas privadas, caderno do esquadrão e busca de campanha.",
     "Encontros": "Encontros de combate, combatentes, turnos, recursos e condições.",

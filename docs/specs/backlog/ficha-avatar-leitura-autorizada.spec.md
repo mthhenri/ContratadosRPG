@@ -1,8 +1,11 @@
 # ficha-avatar-leitura-autorizada.spec.md
+> **Estado em 2026-10-21 — implementação revertida, volta como pendência do sistema.** O autor decidiu não adotar agora o
+> bucket privado de fichas. A implementação local (leitura autenticada, `/uploads/fichas/`, migração) está no commit
+> `84532f88` e foi revertida; reaplicá-la é `git revert` do commit de reversão. [Plano](ficha-avatar-leitura-autorizada/plano.md) e
+> [verificação](ficha-avatar-leitura-autorizada/verificacao.md) descrevem o que foi feito e o que faltava (gate real R2/CDN).
+> `P-132` segue aberto em `PROBLEMS.md`.
 
 > H-02 / P-132: leitura anônima local confirmada; política decidida em 19/10/2026.
-> Estado em 20/10: implementação e verificação locais aprovadas; gate real R2/CDN
-> permanece aberto por decisão do autor. [Evidências e pendências](ficha-avatar-leitura-autorizada/verificacao.md).
 
 ## Objetivo
 

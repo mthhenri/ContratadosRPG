@@ -1,5 +1,3 @@
-import { AsyncPipe } from "@angular/common";
-import { ImagemFichaPipe } from "../../../../shared/imagem-ficha.pipe";
 import { Component, computed, input, output } from '@angular/core';
 
 import type { EncontroCombatenteResumoDto } from '@contratados-rpg/shared/dtos/encontro';
@@ -53,7 +51,7 @@ const RESISTENCIAS: readonly Omit<ResistenciaExibidaDto, 'valor'>[] = [
  */
 @Component({
   selector: 'app-resumo-combatente',
-  imports: [AsyncPipe, IdentidadeClasse, ImagemFichaPipe, FocoImagem, Icone, Tooltip, BarraRecurso, BotaoIcone, Chip],
+  imports: [IdentidadeClasse, FocoImagem, Icone, Tooltip, BarraRecurso, BotaoIcone, Chip],
   templateUrl: './resumo-combatente.component.html',
   styleUrl: './resumo-combatente.component.scss',
   host: {

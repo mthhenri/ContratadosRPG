@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { mkdir, readFile, rm, symlink, unlink, writeFile } from 'node:fs/promises';
+import { readFile, rm } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { ArmazenamentoLocalProvedor } from './armazenamento-local.provedor';
@@ -17,41 +17,6 @@ const diretorioUploads = resolve(__dirname, '..', '..', '..', 'uploads');
 describe('ArmazenamentoLocalProvedor (m3-62)', () => {
   const provedor = new ArmazenamentoLocalProvedor();
   const arquivosCriados: string[] = [];
-
-  it('lê bytes de ficha pela API canônica sem tornar a pasta estática', async () => {
-    const conteudo = new Uint8Array([1, 2, 3]);
-    const salvo = await provedor.salvarImagem({ pasta: ArmazenamentoPastaEnum.FICHAS,
-      conteudo, mimetype: 'image/png', extensao: 'png' });
-    arquivosCriados.push(salvo.caminho);
-    expect(salvo.caminho).toMatch(/^\/uploads\/fichas\/[0-9a-f-]+\.png$/);
-    expect(await provedor.lerImagem(salvo)).toEqual({ conteudo, mimetype: 'image/png' });
-  });
-
-  it('raiz isolada inventaria legado/dev recursivamente, sem órfão omitido nem symlink externo', async () => {
-    const raiz = resolve(__dirname, '../../../../.artifacts/ficha-avatar-leitura-autorizada', `local-${randomUUID()}`);
-    const fora = `${raiz}-exterior`;
-    const legado = resolve(raiz, 'agentes/dev/orfao.png');
-    const secreto = resolve(fora, 'secreto.png');
-    const link = resolve(raiz, 'agentes/atalho');
-    await mkdir(resolve(raiz, 'agentes/dev'), { recursive: true });
-    await mkdir(fora, { recursive: true });
-    await writeFile(legado, new Uint8Array([4]));
-    await writeFile(secreto, new Uint8Array([9]));
-    const isolado = new ArmazenamentoLocalProvedor(raiz);
-    let criouLink = false;
-    try {
-      await symlink(fora, link, 'junction');
-      criouLink = true;
-      const listadas = await isolado.listarImagens({ pasta: ArmazenamentoPastaEnum.AGENTES });
-      expect(listadas.map(item => item.caminho)).toEqual(['/uploads/agentes/dev/orfao.png']);
-      expect(await isolado.lerImagem({ caminho: '/uploads/agentes/dev/orfao.png' }))
-        .toEqual({ conteudo: new Uint8Array([4]), mimetype: 'image/png' });
-      await expect(isolado.lerImagem({ caminho: '/uploads/agentes/atalho/secreto.png' })).rejects.toThrow('inválido');
-    } finally {
-      if (criouLink) await unlink(link);
-      await Promise.all([rm(legado, { force: true }), rm(secreto, { force: true })]);
-    }
-  });
 
   afterEach(async () => {
     await Promise.all(

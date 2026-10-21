@@ -1,4 +1,4 @@
-import { CallHandler, ExecutionContext, Injectable, NestInterceptor, StreamableFile } from '@nestjs/common';
+import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
 import { Observable, map } from 'rxjs';
 import type { StandardResponse } from '@contratados-rpg/shared/interfaces';
 
@@ -8,14 +8,14 @@ import type { StandardResponse } from '@contratados-rpg/shared/interfaces';
  */
 @Injectable()
 export class ResponseFormatInterceptor<TData = unknown>
-  implements NestInterceptor<TData, StandardResponse<TData> | StreamableFile>
+  implements NestInterceptor<TData, StandardResponse<TData>>
 {
   intercept(
     contexto: ExecutionContext,
     proximoManipulador: CallHandler<TData>,
-  ): Observable<StandardResponse<TData> | StreamableFile> {
+  ): Observable<StandardResponse<TData>> {
     return proximoManipulador.handle().pipe(
-      map((dados) => dados instanceof StreamableFile ? dados : ({
+      map((dados) => ({
         sucesso: true,
         dados,
         mensagem: 'Operação realizada com sucesso.',

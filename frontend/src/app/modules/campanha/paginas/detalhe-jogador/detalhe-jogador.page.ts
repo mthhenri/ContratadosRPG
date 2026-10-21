@@ -1,5 +1,3 @@
-import { AsyncPipe } from "@angular/common";
-import { ImagemFichaPipe } from "../../../../shared/imagem-ficha.pipe";
 import { iconeTipoCena } from "../../../../shared/icone/icones-dominio";
 import { rotuloNavegacaoCena } from "../../../cena/rotulos-cena";
 import { CampanhaFichasEspeciais } from "../../componentes/campanha-fichas-especiais/campanha-fichas-especiais.component";
@@ -84,7 +82,7 @@ import { IdentidadeClasse } from '../../../ficha/componentes/identidade-classe/i
  */
 @Component({
   selector: 'app-campanha-detalhe-jogador',
-  imports: [AsyncPipe, IdentidadeClasse, ImagemFichaPipe,
+  imports: [IdentidadeClasse, 
     CampanhaFichasEspeciais,
     RouterLink,
     ReactiveFormsModule,

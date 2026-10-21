@@ -663,8 +663,7 @@
                 aria-hidden="true"
                 [style.--cor-ficha]="ficha.cor"
             >
-                @if (ficha.imagemUrl | imagemFicha | async; as urlImagem) {
-                <img [src]="urlImagem" alt="" /> }
+                @if (ficha.imagemUrl; as urlImagem) { <img [src]="urlImagem" alt="" /> }
             </span>
             <span class="detalhe-mestre__membro-carteirinha-corpo">
                 <span class="detalhe-mestre__membro-carteirinha-nome">{{ ficha.nome }}</span>

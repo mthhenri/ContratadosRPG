@@ -1,5 +1,3 @@
-import { AsyncPipe } from "@angular/common";
-import { ImagemFichaPipe } from "../../../../shared/imagem-ficha.pipe";
 import { Component, input, output } from '@angular/core';
 import type { ArquetipoEnum, ClasseEnum } from '@contratados-rpg/shared/enums';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
@@ -64,7 +62,7 @@ export type EspectadorFichaCardDados = Pick<
  */
 @Component({
   selector: 'app-espectador-ficha-card',
-  imports: [AsyncPipe, IdentidadeClasse, ImagemFichaPipe, BarraRecurso, BotaoIcone, Icone, Tooltip, PreviewAvatar],
+  imports: [IdentidadeClasse, BarraRecurso, BotaoIcone, Icone, Tooltip, PreviewAvatar],
   templateUrl: './espectador-ficha-card.component.html',
   styleUrl: './espectador-ficha-card.component.scss',
 })

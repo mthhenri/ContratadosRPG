@@ -11,13 +11,13 @@ import {
 
 /**
  * Faxina de imagens órfãs (I-038): apaga do armazenamento (R2 em `ARMAZENAMENTO_PROVEDOR=r2`, disco
- * local em `local`) as imagens de `FICHAS`/`AGENTES`/`DOCUMENTOS` sem referência viva. O soft
+ * local em `local`) as imagens de `AGENTES`/`DOCUMENTOS` que nenhuma linha viva referencia. O soft
  * delete mantém `imagem_url` e o arquivo — a carência (padrão 30 dias, pela data de gravação) deixa
  * a remoção recuperável antes de o arquivo sumir. Simula por padrão; `PATCHNOTES` nunca é tocada.
  * Uso: `npm run armazenamento:faxinar --workspace=backend -- [--apagar] [--carencia-dias=30]`.
  */
 
-const PASTAS_VARRIDAS = [ArmazenamentoPastaEnum.FICHAS, ArmazenamentoPastaEnum.AGENTES, ArmazenamentoPastaEnum.DOCUMENTOS];
+const PASTAS_VARRIDAS = [ArmazenamentoPastaEnum.AGENTES, ArmazenamentoPastaEnum.DOCUMENTOS];
 const CARENCIA_DIAS_PADRAO = 30;
 const MILISSEGUNDOS_POR_DIA = 24 * 60 * 60 * 1000;
 

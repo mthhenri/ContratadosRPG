@@ -1,5 +1,3 @@
-import { AsyncPipe } from "@angular/common";
-import { ImagemFichaPipe } from "../../../../shared/imagem-ficha.pipe";
 import { IMAGEM_MIMES_ACCEPT } from '@contratados-rpg/shared/validators';
 import { Component, computed, input, output, signal } from '@angular/core';
 
@@ -57,7 +55,7 @@ const ABREVIACAO_RESISTENCIA: Record<TipoDanoEnum, string> = {
  */
 @Component({
   selector: 'app-cartao-combatente',
-  imports: [AsyncPipe, IdentidadeClasse, ImagemFichaPipe, Icone, Tooltip, FocoImagem, ReceberDanoDialog, Chip, BarraRecurso, Botao, BotaoIcone],
+  imports: [IdentidadeClasse, Icone, Tooltip, FocoImagem, ReceberDanoDialog, Chip, BarraRecurso, Botao, BotaoIcone],
   templateUrl: './cartao-combatente.component.html',
   styleUrl: './cartao-combatente.component.scss',
 })

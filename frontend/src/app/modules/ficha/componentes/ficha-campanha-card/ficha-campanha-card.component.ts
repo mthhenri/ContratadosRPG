@@ -1,5 +1,3 @@
-import { AsyncPipe } from "@angular/common";
-import { ImagemFichaPipe } from "../../../../shared/imagem-ficha.pipe";
 import { IMAGEM_MIMES_ACCEPT, IMAGEM_MIMES_PERMITIDOS } from '@contratados-rpg/shared/validators';
 import { NgTemplateOutlet } from '@angular/common';
 import {
@@ -386,7 +384,7 @@ export interface AjusteClasse {
  */
 @Component({
   selector: 'app-ficha-campanha-card',
-  imports: [AsyncPipe, ImagemFichaPipe,
+  imports: [
     NgTemplateOutlet,
     ReactiveFormsModule,
     HoldRepeat,

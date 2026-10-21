@@ -16,8 +16,6 @@ import type {
   FichaExcluirDto,
   FichaImagemAlteradaDto,
   FichaImagemInternoAlterarDto,
-  FichaImagemContextoRecuperarDto,
-  FichaImagemContextoDto,
   FichaInternoAlterarDto,
   FichaInternoCriarDto,
   FichaInventarioInternoAlterarDto,
@@ -92,42 +90,6 @@ export class FichaRepository extends BaseRepository {
       { id: dto.id },
     );
     return fichaEncontrada ?? null;
-  }
-
-  /** Referência ativa exata; a alternativa HTTPS só normaliza o legado R2 para a rota antiga. */
-  async recuperarContextoImagem(dto: FichaImagemContextoRecuperarDto): Promise<FichaImagemContextoDto | null> {
-    const [contexto] = await this.executarConsulta<FichaImagemContextoDto>(
-      `SELECT json_build_object('id', ficha.id, 'campanhaId', ficha.campanha_id,
-                'usuarioId', ficha.usuario_id, 'nome', ficha.nome, 'cor', ficha.cor,
-                'imagemUrl', ficha.imagem_url, 'imagemFoco', ficha.imagem_foco,
-                'oculta', COALESCE(ficha.oculta, false), 'tipo', tipo_ficha.codigo,
-                'dados', ficha.dados) AS ficha,
-              papel_usuario.codigo AS "papelUsuario", papel_alvo.codigo AS "papelAlvo",
-              EXISTS (SELECT 1 FROM usuario_ficha_acesso
-                WHERE usuario_ficha_acesso.ficha_id = ficha.id
-                  AND usuario_ficha_acesso.usuario_id = :usuarioId
-                  AND usuario_ficha_acesso.is_deleted = false) AS "acessoUsuario",
-              EXISTS (SELECT 1 FROM usuario_ficha_acesso
-                WHERE usuario_ficha_acesso.ficha_id = ficha.id
-                  AND usuario_ficha_acesso.usuario_id = :usuarioAlvoId
-                  AND usuario_ficha_acesso.is_deleted = false) AS "acessoAlvo"
-       FROM ficha
-       ${this.juncaoTipoResumo()}
-       LEFT JOIN campanha_membro AS membro_usuario ON membro_usuario.campanha_id = ficha.campanha_id
-         AND membro_usuario.usuario_id = :usuarioId AND membro_usuario.is_deleted = false
-       LEFT JOIN tipo_campanha_membro_papel AS papel_usuario
-         ON papel_usuario.id = membro_usuario.tipo_campanha_membro_papel_id AND papel_usuario.is_deleted = false
-       LEFT JOIN campanha_membro AS membro_alvo ON membro_alvo.campanha_id = ficha.campanha_id
-         AND membro_alvo.usuario_id = :usuarioAlvoId AND membro_alvo.is_deleted = false
-       LEFT JOIN tipo_campanha_membro_papel AS papel_alvo
-         ON papel_alvo.id = membro_alvo.tipo_campanha_membro_papel_id AND papel_alvo.is_deleted = false
-       WHERE ficha.is_deleted = false
-         AND (ficha.imagem_url = :caminho
-           OR (:caminho LIKE '/uploads/agentes/%'
-             AND regexp_replace(ficha.imagem_url, '^https{0,1}://[^/]+', '/uploads') = :caminho))`,
-      { caminho: dto.caminho, usuarioId: dto.usuarioId, usuarioAlvoId: dto.usuarioAlvoId },
-    );
-    return contexto ?? null;
   }
 
   /**

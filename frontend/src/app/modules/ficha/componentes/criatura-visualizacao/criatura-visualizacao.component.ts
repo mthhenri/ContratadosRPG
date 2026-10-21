@@ -1,5 +1,3 @@
-import { AsyncPipe } from "@angular/common";
-import { ImagemFichaPipe } from "../../../../shared/imagem-ficha.pipe";
 import { IMAGEM_MIMES_ACCEPT } from '@contratados-rpg/shared/validators';
 import { Component, computed, effect, inject, input, output, signal, viewChild } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
@@ -142,7 +140,7 @@ const ANOTACOES_ALTURA_MINIMA = 260;
  */
 @Component({
   selector: 'app-criatura-visualizacao',
-  imports: [AsyncPipe, ImagemFichaPipe,
+  imports: [
     Botao,
     BotaoIcone,
     Campo,

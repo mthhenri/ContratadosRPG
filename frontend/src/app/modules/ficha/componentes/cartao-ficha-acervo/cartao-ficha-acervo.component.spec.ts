@@ -1,5 +1,3 @@
-import { Subject } from "rxjs";
-import { ImagemFichaService } from "../../../../core/services/imagem-ficha.service";
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
@@ -134,20 +132,4 @@ describe('CartaoFichaAcervo', () => {
 
     expect(espiao).toHaveBeenCalledTimes(1);
   });
-  it("avatar negado volta ao placeholder existente e nao deixa img sem src", () => {
-    const imagem = new Subject<string | null>();
-    TestBed.resetTestingModule();
-    TestBed.configureTestingModule({ imports: [CartaoFichaAcervo], providers: [provideRouter([]),
-      { provide: ImagemFichaService, useValue: { observarImagem: () => imagem } },
-    ] });
-    const fixture = TestBed.createComponent(CartaoFichaAcervo);
-    fixture.componentRef.setInput("item", { ...itemAgente, imagemUrl: "/uploads/fichas/privada.png" });
-    fixture.detectChanges();
-    imagem.next("blob:autorizada"); fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector("img")?.getAttribute("src")).toBe("blob:autorizada");
-    imagem.next(null); fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector("img")).toBeNull();
-    expect(fixture.nativeElement.querySelector(".acervo__cartao-avatar")).not.toBeNull();
-  });
-
 });

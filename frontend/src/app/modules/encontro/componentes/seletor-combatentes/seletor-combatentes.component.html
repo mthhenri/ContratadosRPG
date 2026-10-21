@@ -18,7 +18,7 @@
                             (click)="alternar(ficha)"
                         >
                             <span class="seletor__avatar" aria-hidden="true">
-                                @if (ficha.imagemUrl | imagemFicha | async; as urlImagem) {
+                                @if (ficha.imagemUrl; as urlImagem) {
                                     <img class="seletor__avatar-imagem" [src]="urlImagem" alt="" />
                                 }
                             </span>
@@ -63,7 +63,7 @@
                                 class="seletor__avatar seletor__avatar--criatura"
                                 aria-hidden="true"
                             >
-                                @if (ficha.imagemUrl | imagemFicha | async; as urlImagem) {
+                                @if (ficha.imagemUrl; as urlImagem) {
                                     <img class="seletor__avatar-imagem" [src]="urlImagem" alt="" />
                                 }
                             </span>
@@ -118,7 +118,7 @@
                                 class="seletor__avatar seletor__avatar--criatura"
                                 aria-hidden="true"
                             >
-                                @if (ficha.imagemUrl | imagemFicha | async; as urlImagem) {
+                                @if (ficha.imagemUrl; as urlImagem) {
                                     <img class="seletor__avatar-imagem" [src]="urlImagem" alt="" />
                                 }
                             </span>

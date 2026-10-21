@@ -43,56 +43,12 @@ describe('ArmazenamentoR2Provedor (m3-62)', () => {
     r2AccessKeyId: 'chave-acesso',
     r2SecretAccessKey: 'chave-secreta',
     r2Bucket: 'bucket-fichas',
-    r2BucketFichas: 'bucket-privado',
     r2UrlPublica: 'https://pub-hash.r2.dev',
   };
 
   beforeEach(() => {
     enviarMock.mockReset().mockResolvedValue(undefined);
     construtoresComandoRecebidos.length = 0;
-  });
-
-  it('salva/lê/exclui ficha no bucket privado e mantém URL canônica relativa', async () => {
-    const provedor = new ArmazenamentoR2Provedor(configuracaoR2);
-    const conteudo = new Uint8Array([5, 6]);
-    const salvo = await provedor.salvarImagem({ pasta: ArmazenamentoPastaEnum.FICHAS, conteudo,
-      mimetype: 'image/png', extensao: 'png' });
-    expect(salvo.caminho).toMatch(/^\/uploads\/fichas\/[0-9a-f-]+\.png$/);
-    enviarMock.mockResolvedValue({ Body: { transformToByteArray: () => Promise.resolve(conteudo) } });
-    expect(await provedor.lerImagem(salvo)).toEqual({ conteudo, mimetype: 'image/png' });
-    await provedor.excluirImagem(salvo);
-    expect(construtoresComandoRecebidos).toHaveLength(3);
-    expect(construtoresComandoRecebidos.every(comando => (comando as { Bucket: string }).Bucket === 'bucket-privado')).toBe(true);
-  });
-
-  it('lê legado da origem pública própria, sem aceitar domínios ou caminhos forjados', async () => {
-    const provedor = new ArmazenamentoR2Provedor(configuracaoR2);
-    enviarMock.mockResolvedValue({ Body: { transformToByteArray: () => Promise.resolve(new Uint8Array([1])) } });
-    await provedor.lerImagem({ caminho: 'https://pub-hash.r2.dev/agentes/dev/a.jpg' });
-    expect(construtoresComandoRecebidos[0]).toEqual({ Bucket: 'bucket-fichas', Key: 'agentes/dev/a.jpg' });
-    enviarMock.mockClear();
-    for (const caminho of ['https://outro.test/agentes/a.jpg', '/uploads/fichas/../a.png', '/uploads/agentes/%2e%2e/a.png']) {
-      await expect(provedor.lerImagem({ caminho })).rejects.toThrow('inválido');
-    }
-    expect(enviarMock).not.toHaveBeenCalled();
-  });
-
-  it('lista FICHAS no bucket privado e retorna caminhos relativos para migração/faxina', async () => {
-    const provedor = new ArmazenamentoR2Provedor(configuracaoR2);
-    const data = new Date();
-    enviarMock.mockResolvedValue({ Contents: [{ Key: 'fichas/a.png', LastModified: data }] });
-    expect(await provedor.listarImagens({ pasta: ArmazenamentoPastaEnum.FICHAS })).toEqual([
-      { caminho: '/uploads/fichas/a.png', modificadoEm: data },
-    ]);
-    expect(construtoresComandoRecebidos[0]).toMatchObject({ Bucket: 'bucket-privado', Prefix: 'fichas/' });
-  });
-
-  it('imagem ausente retorna null; falha de credencial não se disfarça de ausência', async () => {
-    const provedor = new ArmazenamentoR2Provedor(configuracaoR2);
-    enviarMock.mockRejectedValueOnce(Object.assign(new Error('ausente'), { name: 'NoSuchKey' }));
-    expect(await provedor.lerImagem({ caminho: '/uploads/fichas/ausente.png' })).toBeNull();
-    enviarMock.mockRejectedValueOnce(Object.assign(new Error('negado'), { name: 'AccessDenied' }));
-    await expect(provedor.lerImagem({ caminho: '/uploads/fichas/ausente.png' })).rejects.toThrow('negado');
   });
 
   it('salva via PutObjectCommand na chave agentes/<uuid>.<extensão> e devolve a URL pública', async () => {

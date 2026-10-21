@@ -56,7 +56,5 @@ services:
         sync: false
       - key: ARMAZENAMENTO_R2_BUCKET
         sync: false
-      - key: ARMAZENAMENTO_R2_BUCKET_FICHAS
-        sync: false
       - key: ARMAZENAMENTO_R2_URL_PUBLICA
         sync: false

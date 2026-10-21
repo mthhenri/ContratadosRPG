@@ -1,5 +1,3 @@
-import { Subscription } from "rxjs";
-import { ImagemFichaService } from "../../../../core/services/imagem-ficha.service";
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { finalize, forkJoin } from 'rxjs';
@@ -82,8 +80,6 @@ const TIPOS_ACERVO: readonly DefinicaoTipoAcervo[] = [
   styleUrl: './acervo.page.scss',
 })
 export class FichaAcervo {
-  private readonly imagensFicha = inject(ImagemFichaService);
-  private cargaPreviewAvatar?: Subscription;
   private readonly fichaService = inject(FichaService);
   private readonly campanhaService = inject(CampanhaService);
   private readonly confirmacaoService = inject(ConfirmacaoService);
@@ -334,16 +330,12 @@ export class FichaAcervo {
         espacoDireita >= PX_PREVIEW_AVATAR + folga
           ? retangulo.right + folga
           : Math.max(retangulo.left - PX_PREVIEW_AVATAR - folga, folga);
-      this.cargaPreviewAvatar = this.imagensFicha.observarImagem(imagemUrl).subscribe(url => {
-        this.previewAvatar.set(url ? { url, top, left } : null);
-      });
+      this.previewAvatar.set({ url: imagemUrl, top, left });
     }, MS_PREVIEW_AVATAR);
   }
 
   /** Cancela o agendamento e fecha o preview ampliado do avatar, se aberto. */
   protected cancelarPreviewAvatar(): void {
-    this.cargaPreviewAvatar?.unsubscribe();
-    this.cargaPreviewAvatar = undefined;
     if (this.temporizadorPreviewAvatar !== null) {
       clearTimeout(this.temporizadorPreviewAvatar);
       this.temporizadorPreviewAvatar = null;

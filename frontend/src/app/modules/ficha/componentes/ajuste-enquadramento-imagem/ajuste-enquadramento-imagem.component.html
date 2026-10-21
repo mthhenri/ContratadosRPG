@@ -13,17 +13,15 @@
         (pointerup)="aoSoltarArrasto($event)"
         (pointercancel)="aoSoltarArrasto($event)"
     >
-        @if (previewUrl() | imagemFicha | async; as urlImagem) {
-            <img
-                #focoImg="appFocoImagem"
-                class="enquadramento__imagem"
-                [src]="urlImagem"
-                alt=""
-                draggable="false"
-                [appFocoImagem]="{ x: x(), y: y(), escala: escala() }"
-                [appFocoImagemCaixa]="proporcao()"
-            />
-        }
+        <img
+            #focoImg="appFocoImagem"
+            class="enquadramento__imagem"
+            [src]="previewUrl()"
+            alt=""
+            draggable="false"
+            [appFocoImagem]="{ x: x(), y: y(), escala: escala() }"
+            [appFocoImagemCaixa]="proporcao()"
+        />
     </div>
 
     <label class="enquadramento__zoom">

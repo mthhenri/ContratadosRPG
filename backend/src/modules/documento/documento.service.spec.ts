@@ -82,7 +82,6 @@ describe('DocumentoService', () => {
   let campanhaRepositorio: { recuperarMembro: Mock<CampanhaRepository['recuperarMembro']> };
   let transacaoService: { executar: Mock<(operacao: () => Promise<unknown>) => Promise<unknown>> };
   let armazenamentoProvedor: {
-    lerImagem: Mock;
     salvarImagem: Mock;
     excluirImagem: Mock;
     listarImagens: Mock;
@@ -169,7 +168,6 @@ describe('DocumentoService', () => {
       }),
     };
     armazenamentoProvedor = {
-      lerImagem: vi.fn(),
       salvarImagem: vi.fn().mockResolvedValue({ caminho: '/uploads/documentos/nova.png' }),
       excluirImagem: vi.fn().mockResolvedValue(undefined),
       listarImagens: vi.fn().mockResolvedValue([]),

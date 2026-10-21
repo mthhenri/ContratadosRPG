@@ -1,5 +1,3 @@
-import { AsyncPipe } from "@angular/common";
-import { ImagemFichaPipe } from "../../../../shared/imagem-ficha.pipe";
 import { Component, computed, effect, inject, input, output, signal, viewChild } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormControl, ReactiveFormsModule } from "@angular/forms";
@@ -53,7 +51,7 @@ const LIMITES_COOPERACAO = [1, 2, 4, 7, 10] as const;
  */
 @Component({
     selector: "app-npc-identidade",
-    imports: [AsyncPipe, ImagemFichaPipe, ReactiveFormsModule, Icone, AutoFocus, FocoImagem, Tooltip, Botao, BotaoIcone, Cartao,
+    imports: [ReactiveFormsModule, Icone, AutoFocus, FocoImagem, Tooltip, Botao, BotaoIcone, Cartao,
         Chip, Stat, StatValor, ValorEditavel, BarraRecurso, BarraEscala, AjusteEnquadramentoImagem],
     templateUrl: "./npc-identidade.component.html", styleUrl: "./npc-identidade.component.scss",
 })

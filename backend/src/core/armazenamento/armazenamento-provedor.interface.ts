@@ -6,8 +6,6 @@
  */
 export interface ArmazenamentoProvedor {
   salvarImagem(dto: ArmazenamentoImagemSalvar): Promise<ArmazenamentoImagemSalva>;
-  /** Bytes somente após autorização pela service dona; não cria URL pública ou assinada. */
-  lerImagem(dto: ArmazenamentoImagemLer): Promise<ArmazenamentoImagemLida | null>;
   excluirImagem(dto: ArmazenamentoImagemExcluir): Promise<void>;
   /** Lista as imagens de uma pasta, com o caminho no formato de `salvarImagem` (faxina de órfãs). */
   listarImagens(dto: ArmazenamentoImagensListar): Promise<ArmazenamentoImagemListada[]>;
@@ -18,25 +16,15 @@ export interface ArmazenamentoProvedor {
 }
 
 /**
- * Pasta de destino — cada módulo dono grava na sua (`FICHAS` privada para ficha, `AGENTES` para
- * avulso do encontro e legado, `DOCUMENTOS` para documentos, `PATCHNOTES` para notas de versão e o
+ * Pasta de destino — cada módulo dono grava na sua (`AGENTES` para os avatares de ficha e de avulso
+ * do encontro, `DOCUMENTOS` para os documentos de campanha, `PATCHNOTES` para as notas de versão e o
  * índice delas). Técnico, nunca sai do backend; o nome real da pasta está em
  * `armazenamento-chave.util.ts`.
  */
 export enum ArmazenamentoPastaEnum {
-  FICHAS = 'FICHAS',
   AGENTES = 'AGENTES',
   DOCUMENTOS = 'DOCUMENTOS',
   PATCHNOTES = 'PATCHNOTES',
-}
-
-export interface ArmazenamentoImagemLer {
-  readonly caminho: string;
-}
-
-export interface ArmazenamentoImagemLida {
-  readonly conteudo: Uint8Array;
-  readonly mimetype: string;
 }
 
 /**

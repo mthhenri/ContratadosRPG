@@ -26,6 +26,17 @@ linha quando o nome quebra no card estreito do mobile (o componente passou a man
 vivo: Esquadrão/Investigação do jogador, seletor, `criar-criatura` e a janela flutuante (teste de componente). Relatórios:
 `docs/specs/done/icones-criatura-vd-tenacidade/verificacao.md` e `.../icones-identidade-cards-agente/verificacao.md`.
 
+## 2026-10-21 — ficha-avatar-leitura-autorizada: implementação revertida, volta como pendência
+
+Decisão do autor: o bucket privado de fichas e a leitura autenticada de avatar (commit `84532f88`, H-02/P-132) foram
+considerados desnecessários agora. O commit foi revertido por inteiro — backend (módulo `avatar`, provedores de
+armazenamento, `ARMAZENAMENTO_R2_BUCKET_FICHAS`, migração de avatares), DTOs de imagem no `shared`, `ImagemFichaService` e
+o pipe no frontend, `cloudbuild.yaml`, `.env.example` e `docs/DEPLOY.md` — e os avatares voltam a ser servidos como antes
+(bucket público no R2, `/uploads` no local). Os ícones de identidade, que haviam sido feitos por cima dos mesmos
+templates, foram preservados na resolução. A spec voltou ao `backlog/` com o plano e a verificação do que foi feito,
+`P-132` segue **aberto** em `PROBLEMS.md`, e a linha `ARMAZENAMENTO_R2_BUCKET_FICHAS` que havia sido acrescentada ao
+workflow de versão foi retirada. Reaplicar a proteção é reverter este revert.
+
 ## 2026-10-20 — versão 1.11.0: nota "O montador de rolagem chega a todos e a identidade dos personagens ganha ícones"
 
 A 1.10.0 foi publicada (push até `f8ba3517`, tag no commit certo) exatamente como desenvolvida, a pedido do autor, em vez de
