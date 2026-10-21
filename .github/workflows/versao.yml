@@ -33,6 +33,8 @@ jobs:
       ARMAZENAMENTO_R2_ACCESS_KEY_ID: ${{ secrets.ARMAZENAMENTO_R2_ACCESS_KEY_ID }}
       ARMAZENAMENTO_R2_SECRET_ACCESS_KEY: ${{ secrets.ARMAZENAMENTO_R2_SECRET_ACCESS_KEY }}
       ARMAZENAMENTO_R2_BUCKET: ${{ secrets.ARMAZENAMENTO_R2_BUCKET }}
+      # O publicador só grava notas no bucket público, mas a configuração do backend exige o bucket privado de fichas.
+      ARMAZENAMENTO_R2_BUCKET_FICHAS: ${{ secrets.ARMAZENAMENTO_R2_BUCKET_FICHAS }}
       ARMAZENAMENTO_R2_URL_PUBLICA: ${{ secrets.ARMAZENAMENTO_R2_URL_PUBLICA }}
       GITHUB_EVENT_BEFORE: ${{ github.event.before }}
     steps:
