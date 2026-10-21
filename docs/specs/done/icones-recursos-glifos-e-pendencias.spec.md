@@ -1,5 +1,7 @@
 # Ícones de recursos — glifos e pendências
 
+> **Concluída em 2026-10-20** — as ações genéricas foram votadas ([decisões](icones-recursos-glifos-e-pendencias/decisoes.md)) e a adoção segue em [icones-acoes-genericas-adocao](../backlog/icones-acoes-genericas-adocao.spec.md).
+
 > Continuação da [rodada arquivada](../done/icones-recursos-sistema.spec.md).
 > O autor decidiu em 09/10/2026 manter o trabalho restante aberto no backlog.
 
@@ -61,4 +63,4 @@ implementar conceitos ou ampliar primitivos sem decisão do autor.
 
 ## Execução posterior autorizada — 18/10/2026
 
-Autor autorizou executar as quatro specs próprias. Maestria, Crítico, Energia em Utilizar e T3 concluídas, com specs e verificação em done. Ações genéricas continuam abertas. A aprovação inicial dos desenhos não foi usada como autorização implícita.
+Autor autorizou executar as quatro specs próprias. Maestria, Crítico, Energia em Utilizar e T3 concluídas, com specs e verificação em done. Ações genéricas votadas em 20/10/2026; adoção em task própria. A aprovação inicial dos desenhos não foi usada como autorização implícita.
