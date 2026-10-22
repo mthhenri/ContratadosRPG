@@ -29,17 +29,6 @@
 
 ## Ativos
 
-### P-135 — Montador sobreposto por conteúdo da ficha na campanha de jogador · `ABERTO` · frontend/painéis
-
-- **Sintoma:** em 1366×768, na campanha de jogador, depois de rolar 1d6 e abrir o montador,
-  cliques em Fechar resultado/Fechar montador foram interceptados por atributos/cabeçalho
-  da ficha. Observado no cenário local temporário 140; `elementFromPoint` confirmou o alvo
-  sob outro conteúdo. Não foi reproduzido na ficha completa durante a matriz posterior.
-- **Causa:** não investigada; não atribuir à troca do SVG sem comparação com a revisão anterior.
-- **Contorno:** usar o montador na ficha completa; fechamento do resultado pelo teclado.
-- **Correção:** investigar empilhamento/recorte e eventos de ponteiro do consumidor da campanha.
-- **Desde:** encontrado em 22/10/2026 na verificação de `icones-acoes-genericas-adocao`.
-
 ### P-134 — Calculadora minimizada não reabre no primeiro acionamento da ficha completa · `CONTORNADO` · frontend/painéis
 
 - **Sintoma:** minimizar a Calculadora na ficha completa e acionar a ação Calculadora alterna

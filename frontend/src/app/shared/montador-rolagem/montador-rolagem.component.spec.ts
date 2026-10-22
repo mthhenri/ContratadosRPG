@@ -1,5 +1,7 @@
 import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
+import { PainelFlutuante } from '../ui/painel-flutuante/painel-flutuante.component';
 
 import { rolarFormula } from '@contratados-rpg/shared/regras/rolagem';
 
@@ -48,6 +50,29 @@ function montar() {
  * Desfazer real; estados vazia/avançada/inválida/resultado; o painel não fecha ao rolar.
  */
 describe('MontadorRolagem', () => {
+  it('abrir por comando externo abre, preserva a janela aberta e restaura quando minimizada', () => {
+    const fixture = TestBed.createComponent(Hospedeiro);
+    fixture.detectChanges();
+    const montador = fixture.debugElement.query(By.directive(MontadorRolagem))
+      .componentInstance as MontadorRolagem;
+    const painel = fixture.debugElement.query(By.directive(PainelFlutuante))
+      .componentInstance as PainelFlutuante;
+    expect(painel.aberto()).toBe(false);
+    montador.abrir();
+    fixture.detectChanges();
+    expect(painel.aberto()).toBe(true);
+    montador.abrir();
+    fixture.detectChanges();
+    expect(painel.aberto()).toBe(true);
+    (fixture.nativeElement as HTMLElement)
+      .querySelector<HTMLButtonElement>('[aria-label="Minimizar Montador de rolagem"]')!.click();
+    fixture.detectChanges();
+    expect(painel.minimizado()).toBe(true);
+    montador.abrir();
+    fixture.detectChanges();
+    expect(painel.aberto()).toBe(true);
+    expect(painel.minimizado()).toBe(false);
+  });
   it('vazia: mostra os três pontos de partida; escolher um escreve a fórmula na barra', () => {
     const { fixture, hospedeiro, raiz, botaoPorTexto } = montar();
     const receitas = Array.from(raiz.querySelectorAll('.montador-rolagem__receita')).map((receita) =>

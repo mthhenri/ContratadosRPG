@@ -1,0 +1,23 @@
+<div class="rolagem-mestre">
+    <button
+        type="button"
+        app-botao
+        variante="secundario"
+        estilo="preenchido"
+        tamanho="pequeno"
+        posicaoIcone="esquerda"
+        class="rolagem-mestre__visibilidade"
+        [attr.aria-pressed]="oculta()"
+        [appTooltip]="oculta() ? 'Próximas rolagens: privadas' : 'Próximas rolagens: públicas'"
+        (click)="alternarVisibilidade()"
+    >
+        <app-icone [nome]="oculta() ? 'olho-fechado' : 'olho'" />
+        {{ oculta() ? "Rolagens ocultas" : "Rolagens públicas" }}
+    </button>
+    <app-rolagem-rapida
+        [atributos]="atributos"
+        [podeRolar]="true"
+        [rolagemOculta]="oculta()"
+        (rolagemFeita)="registrarRolagem($event)"
+    />
+</div>

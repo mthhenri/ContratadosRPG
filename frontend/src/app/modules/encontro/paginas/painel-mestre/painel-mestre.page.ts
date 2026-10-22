@@ -41,6 +41,7 @@ import { BibliotecaFlutuante } from '../../../documento/componentes/biblioteca-f
 import { FichaFlutuante } from '../../../ficha/componentes/ficha-flutuante/ficha-flutuante.component';
 import { nomeCadencia } from '../../../ficha/rotulos-criatura';
 import { CenaService } from '../../../cena/cena.service';
+import { RolagemMestre } from '../../../cena/componentes/rolagem-mestre/rolagem-mestre.component';
 import { CartaoCombatente } from '../../componentes/cartao-combatente/cartao-combatente.component';
 import { ConducaoTurno } from '../../componentes/conducao-turno/conducao-turno.component';
 import { ResumoCombatente } from '../../componentes/resumo-combatente/resumo-combatente.component';
@@ -107,6 +108,7 @@ const ATRIBUTOS_NEUTROS: FichaAtributosDto = {
     Tooltip,
     CalculadoraFlutuante,
     HistoricoRolagensSidebar,
+    RolagemMestre,
     CadernoFlutuante,
     BibliotecaFlutuante,
     CartaoCombatente,

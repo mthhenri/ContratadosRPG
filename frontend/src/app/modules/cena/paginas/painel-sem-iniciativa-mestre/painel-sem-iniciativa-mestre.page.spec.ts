@@ -3,6 +3,7 @@ import { By } from '@angular/platform-browser';
 import { of } from 'rxjs';
 
 import type { FichaAlteradaDto, FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
+import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 import { CenaStatusEnum, CenaTipoEnum, TipoDocumentoEnum } from '@contratados-rpg/shared/enums';
 
 import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
@@ -19,6 +20,7 @@ import {
 } from '../../../encontro/paginas/painel/painel-encontro.testing';
 import { FichaFlutuante } from '../../../ficha/componentes/ficha-flutuante/ficha-flutuante.component';
 import { PainelCenaSemIniciativaMestre } from './painel-sem-iniciativa-mestre.page';
+import { RolagemMestre } from '../../componentes/rolagem-mestre/rolagem-mestre.component';
 
 /**
  * Prova a visão do mestre da cena sem iniciativa (m7-24): a casca da `ui-37` sem trilha, a grade de
@@ -33,6 +35,16 @@ describe('PainelCenaSemIniciativaMestre', () => {
       incluirFichaDoJogador: true,
       ...opcoes,
     });
+
+  it('reconcilia a rolagem do mestre com o broadcast sem duplicar o histórico', () => {
+    const { fixture, dados, rolagemRegistrada$ } = montar();
+    const rolador = fixture.debugElement.query(By.directive(RolagemMestre)).componentInstance as RolagemMestre;
+    const rolagem = { id: 701, campanhaId: CAMPANHA_ID, fichaId: null, nomeAutor: 'Mestre' } as RolagemResumoDto;
+    expect(rolador.campanhaId()).toBe(CAMPANHA_ID);
+    rolador.rolagemRegistrada.emit(rolagem);
+    rolagemRegistrada$.next(rolagem);
+    expect(dados.rolagensFeed()).toEqual([rolagem]);
+  });
 
   const clicarEConfirmar = async (
     fixture: ReturnType<typeof montar>['fixture'],

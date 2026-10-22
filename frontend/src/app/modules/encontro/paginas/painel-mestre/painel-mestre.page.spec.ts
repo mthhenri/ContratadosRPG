@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 
 import type {
@@ -31,6 +32,7 @@ import {
   texto,
 } from '../painel/painel-encontro.testing';
 import { PainelEncontroMestre } from './painel-mestre.page';
+import { RolagemMestre } from '../../../cena/componentes/rolagem-mestre/rolagem-mestre.component';
 
 /**
  * Prova a visão do mestre da tela "Iniciativa" (m7-05, `ui-37`/`ui-38`), extraída do antigo
@@ -40,6 +42,15 @@ import { PainelEncontroMestre } from './painel-mestre.page';
  * `EncontroPainelDadosService` e é provada no spec dele.
  */
 describe('PainelEncontroMestre', () => {
+  it('reconcilia a rolagem do mestre com o broadcast sem duplicar o histórico', () => {
+    const { fixture, dados, rolagemRegistrada$ } = montarPainel(PainelEncontroMestre);
+    const rolador = fixture.debugElement.query(By.directive(RolagemMestre)).componentInstance as RolagemMestre;
+    const rolagem = { id: 701, campanhaId: CAMPANHA_ID, fichaId: null, nomeAutor: 'Mestre' } as RolagemResumoDto;
+    expect(rolador.campanhaId()).toBe(CAMPANHA_ID);
+    rolador.rolagemRegistrada.emit(rolagem);
+    rolagemRegistrada$.next(rolagem);
+    expect(dados.rolagensFeed()).toEqual([rolagem]);
+  });
   /** Monta a página do mestre com os mesmos parâmetros posicionais do spec de antes da extração. */
   const montar = (
     estado: EncontroRecuperadoDto = encontroAtivo,
@@ -953,7 +964,8 @@ describe('PainelEncontroMestre', () => {
           'Nenhum combate em andamento.',
         );
         expect(elemento.querySelector('app-trilha-turnos')).toBeNull();
-        expect(elemento.querySelector('app-modal')).toBeNull();
+        // O rolador hospeda o guia de fórmula; criação de cena continua exclusiva do hub.
+        expect(elemento.querySelector('app-modal:not(app-rolagem-mestre app-modal)')).toBeNull();
       });
 
       it('lista os combates anteriores no próprio estado vazio; cada um abre a cena dele', () => {
@@ -985,7 +997,7 @@ describe('PainelEncontroMestre', () => {
         expect(navegar).toHaveBeenCalledWith(['/campanhas', CAMPANHA_ID, 'cenas'], {
           queryParams: { nova: 1 },
         });
-        expect(elemento.querySelector('app-modal')).toBeNull();
+        expect(elemento.querySelector('app-modal:not(app-rolagem-mestre app-modal)')).toBeNull();
       });
     });
 

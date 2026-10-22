@@ -18,9 +18,11 @@
         </span>
         <button
             app-botao-icone
+            tamanho="compacto"
             class="rolagem-avulso__fechar"
             type="button"
             aria-label="Fechar rolagens"
+            appTooltip="Fechar rolagens"
             (pointerdown)="$event.stopPropagation()"
             (click)="fechado.emit()"
         >
@@ -29,23 +31,37 @@
     </header>
 
     <form class="rolagem-avulso__formulario" (submit)="$event.preventDefault(); rolar()">
-        <label class="rolagem-avulso__campo">
-            <span>Expressão</span>
+        <button
+            app-botao-icone
+            class="rolagem-avulso__montador"
+            tamanho="padrao"
+            variante="secundario"
+            type="button"
+            aria-label="Montar fórmula por botões"
+            appTooltip="Montar fórmula por botões"
+            (click)="montador.abrir()"
+        >
+            <app-icone nome="dado-mais" />
+        </button>
+        <app-campo class="rolagem-avulso__campo" rotulo="Expressão" tamanho="padrao">
             <input
-                class="rolagem-avulso__expressao"
+                class="campo__controle rolagem-avulso__expressao"
                 type="text"
                 autocomplete="off"
                 placeholder="Ex.: 2d6+3"
                 [value]="expressao()"
                 (input)="alterarExpressao($any($event.target).value)"
             />
-        </label>
+        </app-campo>
 
         <button
             app-botao
+            variante="secundario"
+            estilo="preenchido"
+            tamanho="pequeno"
+            posicaoIcone="esquerda"
             class="rolagem-avulso__visibilidade"
             type="button"
-            [class.rolagem-avulso__visibilidade--ativa]="oculta()"
             [attr.aria-pressed]="oculta()"
             [appTooltip]="
                 oculta() ? 'Próximas rolagens: só o mestre vê' : 'Próximas rolagens: públicas'
@@ -61,6 +77,9 @@
         <button
             app-botao
             variante="secundario"
+            estilo="preenchido"
+            tamanho="pequeno"
+            posicaoIcone="esquerda"
             class="rolagem-avulso__rolar"
             type="submit"
             [class.rolagem-avulso__rolar--confirmada]="rolagemConfirmada()"
@@ -73,3 +92,15 @@
 
     <p class="rolagem-avulso__ajuda">Dados e operações livres, sem atributos de ficha.</p>
 </section>
+
+<app-montador-rolagem
+    #montador
+    [oculto]="true"
+    [formula]="expressao()"
+    (formulaChange)="alterarExpressao($event)"
+    [formulaValida]="formulaValida()"
+    [atributos]="atributosNeutros"
+    [corFicha]="combatente().corFicha"
+    [ultimaRolagem]="ultimaRolagem()"
+    (rolar)="rolar()"
+/>

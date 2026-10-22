@@ -322,6 +322,7 @@ describe('FichaCampanhaCard', () => {
         alvo.raiz.querySelector('[data-aba-status="rolagens"]')?.classList,
       ).toContain('ficha-status__aba--ativa');
       expect(alvo.raiz.querySelector('app-ficha-rolagens-painel')).not.toBeNull();
+      expect(alvo.raiz.querySelector('.ficha-visao__linha-colunas--rolagens')).toBeNull();
     });
   });
 

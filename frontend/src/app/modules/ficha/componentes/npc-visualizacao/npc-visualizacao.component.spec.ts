@@ -12,6 +12,8 @@ import { NpcHabilidadesLista } from "./npc-habilidades-lista.component";
 import { NpcIdentidade } from "./npc-identidade.component";
 import { NpcVisualizacao } from "./npc-visualizacao.component";
 import { NpcRolagemService } from "../../npc-rolagem.service";
+import { FichaRolagemRegistroService } from "../../ficha-rolagem-registro.service";
+import { RolagemRapida } from "../rolagem-rapida/rolagem-rapida.component";
 
 const aguardarMicrotarefas = () => new Promise((resolve) => setTimeout(resolve));
 
@@ -21,6 +23,7 @@ describe("NpcVisualizacao", () => {
         TestBed.configureTestingModule({ imports: [NpcVisualizacao], providers: [
             FichaEdicaoNpcService, NpcEdicaoFormulario,
             { provide: NpcRolagemService, useValue: { rolar: vi.fn() } },
+            { provide: FichaRolagemRegistroService, useValue: { registrar: vi.fn() } },
             { provide: FichaService, useValue: api },
             { provide: TemaService, useValue: { accentEfetivo: () => "var(--accent)" } },
         ] });
@@ -34,6 +37,32 @@ describe("NpcVisualizacao", () => {
             formulario: fixture.componentInstance.formulario,
             raiz: fixture.nativeElement as HTMLElement };
     }
+
+    it("oferece montador privado ao gestor com contexto salvo e registra o resultado", () => {
+        const { fixture, ficha } = montar(true);
+        const barra = fixture.debugElement.query(By.directive(RolagemRapida))
+            ?.componentInstance as RolagemRapida;
+        expect(barra).toBeDefined();
+        expect(barra.atributos()).toEqual(ficha.dados.atributos);
+        expect(barra.nivel()).toBe(ficha.dados.nivel);
+        expect(barra.proficiencia()).toBe(ficha.dados.nivel);
+        expect(barra.rolagemOculta()).toBe(true);
+        barra["formula"].setValue("1d6 + NIV");
+        barra["rolar"]();
+        expect(TestBed.inject(FichaRolagemRegistroService).registrar)
+            .toHaveBeenCalledWith(expect.objectContaining({ formula: "1d6 + NIV" }));
+    });
+
+    it("não oferece rolagem livre ao leitor e bloqueia enquanto edita", () => {
+        const { fixture, pagina } = montar(false);
+        expect(fixture.nativeElement.querySelector("app-rolagem-rapida")).toBeNull();
+        fixture.componentRef.setInput("gerenciavel", true);
+        fixture.detectChanges();
+        pagina.iniciar("atributos"); fixture.detectChanges();
+        const barra = fixture.debugElement.query(By.directive(RolagemRapida))
+            .componentInstance as RolagemRapida;
+        expect(barra.podeRolar()).toBe(false);
+    });
 
     it("Civil conserva Vida e snapshots, sem controles de Energia ou gestão para leitor", () => {
         const { raiz, pagina, fixture } = montar(false);

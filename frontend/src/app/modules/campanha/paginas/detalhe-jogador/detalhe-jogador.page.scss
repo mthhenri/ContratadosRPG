@@ -746,31 +746,7 @@ app-coluna-acoes {
             margin: 0;
         }
 
-        --fade-topo: 0px;
-        --fade-base: 0px;
-        &.overflow-fade--topo,
-        &.overflow-fade--base {
-            -webkit-mask-image: linear-gradient(
-                to bottom,
-                transparent 0,
-                #000 var(--fade-topo),
-                #000 calc(100% - var(--fade-base)),
-                transparent 100%
-            );
-            mask-image: linear-gradient(
-                to bottom,
-                transparent 0,
-                #000 var(--fade-topo),
-                #000 calc(100% - var(--fade-base)),
-                transparent 100%
-            );
-        }
-        &.overflow-fade--topo {
-            --fade-topo: 16px;
-        }
-        &.overflow-fade--base {
-            --fade-base: 16px;
-        }
+        // P-135: mask-image neste ancestral aprisionava o montador flutuante.
     }
 
     // Cabeçalho de seção — rótulo mono uppercase + régua fina + contagem, mesmo tratamento em

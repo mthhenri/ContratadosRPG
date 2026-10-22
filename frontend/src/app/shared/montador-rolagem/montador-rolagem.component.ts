@@ -211,6 +211,12 @@ export class MontadorRolagem {
   protected readonly aberto = signal(false);
   private readonly painelRef = viewChild<PainelFlutuante>('painel');
 
+  /** Gatilhos externos abrem ou restauram a janela sem alternar o seu fechamento. */
+  abrir(): void {
+    this.aberto.set(true);
+    this.painelRef()?.restaurar();
+  }
+
   protected alternar(): void {
     if (this.aberto() && this.painelRef()?.minimizado()) {
       this.painelRef()?.restaurar();

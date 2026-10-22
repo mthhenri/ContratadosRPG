@@ -28,6 +28,7 @@ import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { TopbarContextoService } from '../../../../core/services/topbar-contexto.service';
 import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
 import { PaginaCadernoService } from '../../../pagina-caderno/pagina-caderno.service';
+import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 
 /**
  * Prova `CampanhaDetalheJogador` — extraído do ramo `@else` de `ehMestre()` do antigo
@@ -335,6 +336,13 @@ describe('CampanhaDetalheJogador', () => {
     return item;
   }
 
+
+  it('a coluna rolável não mascara a janela do montador (P-135)', () => {
+    const { fixture } = montar({ usuarioId: 2, membros: membrosDois(), fichas });
+    const corpo = fixture.debugElement.query(By.css('.detalhe__rolagens-painel-corpo'));
+    expect(corpo).not.toBeNull();
+    expect(corpo.providerTokens).not.toContain(OverflowFade);
+  });
 
   it('o botão Cenas reflete o tipo ativo e volta ao genérico sem cena', () => {
     const { fixture, dados } = montar({ usuarioId: 2, membros: [{ usuarioId: 2, nome: "Jogador", papel: TipoCampanhaMembroPapelEnum.JOGADOR, fichas: [] }] });
@@ -1151,8 +1159,11 @@ describe('CampanhaDetalheJogador', () => {
   it('destino "Rolagens" do mobile rola até o card só depois do Angular tirar o [hidden] (não na hora)', () => {
     vi.useFakeTimers();
     // jsdom não implementa `matchMedia` — `aoMudarDestinoFicha` lê `prefers-reduced-motion`.
-    const matchMediaOriginal = window.matchMedia;
-    window.matchMedia = vi.fn(() => ({ matches: false }) as MediaQueryList);
+    const descritorMatchMedia = Object.getOwnPropertyDescriptor(window, "matchMedia");
+    Object.defineProperty(window, "matchMedia", {
+      configurable: true,
+      value: vi.fn(() => ({ matches: false }) as MediaQueryList),
+    });
     try {
       const { fixture, raiz } = montar({
         usuarioId: 2,
@@ -1181,7 +1192,11 @@ describe('CampanhaDetalheJogador', () => {
       vi.advanceTimersByTime(0);
       expect(scrollSpy).toHaveBeenCalledTimes(1);
     } finally {
-      window.matchMedia = matchMediaOriginal;
+      if (descritorMatchMedia) {
+        Object.defineProperty(window, "matchMedia", descritorMatchMedia);
+      } else {
+        Reflect.deleteProperty(window, "matchMedia");
+      }
       vi.useRealTimers();
     }
   });

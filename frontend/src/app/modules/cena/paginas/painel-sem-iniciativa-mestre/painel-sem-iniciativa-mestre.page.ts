@@ -35,6 +35,7 @@ import { FichaFlutuante } from '../../../ficha/componentes/ficha-flutuante/ficha
 import { CadernoFlutuante } from '../../../pagina-caderno/caderno-flutuante.component';
 import { BibliotecaFlutuante } from '../../../documento/componentes/biblioteca-flutuante/biblioteca-flutuante.component';
 import { CenaService } from '../../cena.service';
+import { RolagemMestre } from '../../componentes/rolagem-mestre/rolagem-mestre.component';
 import { CenaDocumentoLeituraService } from "../../cena-documento-leitura.service";
 import { rotuloStatusCena, rotuloTipoCena } from '../../rotulos-cena';
 
@@ -70,6 +71,7 @@ import { rotuloStatusCena, rotuloTipoCena } from '../../rotulos-cena';
     CadernoFlutuante,
     BibliotecaFlutuante,
     HistoricoRolagensSidebar,
+    RolagemMestre,
     EspectadorFichaCard,
     FichaFlutuante,
   ],

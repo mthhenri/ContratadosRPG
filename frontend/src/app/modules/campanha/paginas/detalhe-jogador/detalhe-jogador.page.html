@@ -628,7 +628,8 @@
                         [hidden]="painelLateralAtivo() !== 'rolar'"
                         #cardRolagens
                     >
-                        <div class="detalhe__rolagens-painel-corpo" appOverflowFade>
+                        <!-- Sem máscara no ancestral: o montador fixed deve escapar da coluna (P-135). -->
+                        <div class="detalhe__rolagens-painel-corpo">
                             @if (fichaExibidaDados(); as fichaParaRolar) {
                             <app-ficha-rolagens-painel
                                 [dados]="fichaParaRolar.dados"

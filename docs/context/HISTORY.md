@@ -1,5 +1,41 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-22 — montador-rolagem-cobertura-telas: roladores nas cenas/NPC e correções de sobreposição/mobile
+
+Autor autorizou verificar jogador, criatura e NPC, oferecer rolador avulso ao mestre nas cenas
+e corrigir P-135. O montador Completo existente foi reutilizado: barra privada do NPC com
+atributos/nível e registro da própria página; `RolagemMestre` concentra barra, visibilidade e
+persistência avulsa da campanha nas cenas com/sem iniciativa; combatente avulso ganhou montador
+preservando autoria, confirmação pública, restrição sem atributos e bandeja única.
+
+P-135 reproduzido em 1366×768 com coluna cheia: `mask-image` no corpo rolável aprisionava a
+janela fixa. Retirada local da máscara/diretiva preserva scroll e libera ambos os fechamentos.
+O gate encontrou também Rolagens internas escondidas no celular pela classe destinada ao
+painel externo: condição agora distingue `mostrarRolagensCompacto`. Revisão independente achou
+montador do avulso preso no contexto fixo z35, sob a bandeja z50; reprodução móvel confirmou e
+a janela foi hospedada fora da seção, com método aditivo `abrir()` para o gatilho canônico.
+
+Verificação real: **48 combinações de 12 superfícies × 4 viewports** (1920×1080, 1366×768,
+960×1080 e 360×800), incluindo fichas completas, campanhas, cenas dos dois papéis, fichas
+flutuantes de agente/criatura e combatente avulso. Principal inspecionou pessoalmente a UI,
+comparando com RolagemRapida da ficha completa: mesma identidade, densidade e hierarquia,
+controles canônicos, sem overflow horizontal na matriz principal, fechamentos atingíveis,
+alvos móveis 44×44 e foco restaurado. Fórmula inválida/avançada, modelo por clique, arraste,
+maximizar/restaurar, minimizar/reabrir e Escape exercitados. Pública chegou ao segundo usuário
+sem reload; privada ausente de seu feed/DOM. Janela externa é histórico de leitura, sem montador.
+
+Gates: frontend **3.580**, normalizadores **89**, shared **1.340**, backend **1.275** aprovados
+(99 ignorados na configuração existente). Lint sem erros, com avisos legados; build de produção
+aprovado com o contorno CI/dois workers já documentado no P-111, mantendo aviso de orçamento
+inicial. Testes no sandbox tiveram EPERM de cache antes da coleta; fora dele passaram. A suíte
+ampla expôs mock `matchMedia` somente leitura: teste da campanha passou a restaurar o descritor
+original; suíte completa repetida e aprovada. `repo:verificar` conferido no fecho.
+
+Spec/anexos movidos juntos para `done/`; P-135 removido dos ativos. Campanha 141 e fichas
+488/489/490 de teste removidas por soft delete via API local. Capturas/logs permanecem locais
+em `.artifacts/montador-rolagem-cobertura-telas/`; sem push nesta tarefa.
+Relatório, mapa de impacto e limites: [auditoria](../specs/done/montador-rolagem-cobertura-telas/auditoria.md).
+
 ## 2026-10-22 — icones-acoes-genericas-adocao: gate autenticado e limpeza concluídos
 
 Após autorização expressa de login e cenário temporário, principal verificou as superfícies

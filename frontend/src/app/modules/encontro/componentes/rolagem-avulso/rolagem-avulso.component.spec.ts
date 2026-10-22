@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { of } from 'rxjs';
 
 import type { EncontroCombatenteResumoDto } from '@contratados-rpg/shared/dtos/encontro';
@@ -6,6 +7,8 @@ import { CadenciaEnum, CombatenteOrigemEnum } from '@contratados-rpg/shared/enum
 import { RolagemVisibilidadeEnum } from '@contratados-rpg/shared/enums';
 
 import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
+import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
+import { MontadorRolagem } from '../../../../shared/montador-rolagem/montador-rolagem.component';
 import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
 import { RolagemService } from '../../../ficha/rolagem.service';
 import { RolagemAvulso } from './rolagem-avulso.component';
@@ -153,6 +156,67 @@ describe('RolagemAvulso', () => {
       resultado: expect.objectContaining({ total: expect.any(Number) }),
     });
     expect(registros).toHaveLength(1);
+  });
+
+  it('montador e campo compartilham fórmula, resultado e uma única bandeja atribuída ao avulso', () => {
+    const { fixture, elemento, rolagemService } = montar();
+    const mostrar = vi.spyOn(TestBed.inject(BandejaDadosService), 'mostrar').mockReturnValue(1);
+    const montador = fixture.debugElement.query(By.directive(MontadorRolagem))
+      .componentInstance as MontadorRolagem;
+    montador.formula.set('2d6+3');
+    fixture.detectChanges();
+    expect(elemento.querySelector<HTMLInputElement>('.rolagem-avulso__expressao')!.value)
+      .toBe('2d6+3');
+    montador.rolar.emit();
+    fixture.detectChanges();
+
+    expect(rolagemService.registrarAvulso).toHaveBeenCalledOnce();
+    expect(rolagemService.registrarAvulso).toHaveBeenCalledWith(12, 31,
+      expect.objectContaining({ formula: '2d6+3', visibilidade: RolagemVisibilidadeEnum.PRIVADA }));
+    expect(mostrar).toHaveBeenCalledOnce();
+    expect(mostrar).toHaveBeenCalledWith(expect.objectContaining({ corFicha: combatente.corFicha }));
+    expect(montador.ultimaRolagem()).toEqual({
+      formula: '2d6+3', resultado: mostrar.mock.calls[0][0].resultado,
+    });
+
+    const campo = elemento.querySelector<HTMLInputElement>('.rolagem-avulso__expressao')!;
+    campo.value = '1d20+FOR';
+    campo.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    expect(montador.formula()).toBe('1d20+FOR');
+    expect(montador.formulaValida()).toBe(false);
+    montador.rolar.emit();
+    expect(rolagemService.registrarAvulso).toHaveBeenCalledOnce();
+    expect(mostrar).toHaveBeenCalledOnce();
+  });
+
+  it('hospeda o montador fora do painel fixo e abre pelo gatilho externo', () => {
+    const { fixture, elemento } = montar();
+    const host = elemento.querySelector('app-montador-rolagem')!;
+    const montador = fixture.debugElement.query(By.directive(MontadorRolagem))
+      .componentInstance as MontadorRolagem;
+    expect(host.closest('.rolagem-avulso')).toBeNull();
+    expect(montador.oculto()).toBe(true);
+    expect(host.querySelector('.montador-rolagem__gatilho')).toBeNull();
+    const abrir = vi.spyOn(montador, 'abrir');
+    elemento.querySelector<HTMLButtonElement>('.rolagem-avulso__montador')!.click();
+    expect(abrir).toHaveBeenCalledOnce();
+  });
+
+  it('rolar pelo montador respeita a confirmação de visibilidade pública', async () => {
+    const { fixture, elemento, rolagemService } = montar();
+    const mostrar = vi.spyOn(TestBed.inject(BandejaDadosService), 'mostrar').mockReturnValue(1);
+    elemento.querySelector<HTMLButtonElement>('.rolagem-avulso__visibilidade')!.click();
+    await TestBed.inject(ConfirmacaoService).responder(true);
+    fixture.detectChanges();
+    const montador = fixture.debugElement.query(By.directive(MontadorRolagem))
+      .componentInstance as MontadorRolagem;
+    montador.formula.set('1d6');
+    montador.rolar.emit();
+    expect(rolagemService.registrarAvulso).toHaveBeenCalledWith(12, 31,
+      expect.objectContaining({ visibilidade: RolagemVisibilidadeEnum.PUBLICA }));
+    expect(mostrar).toHaveBeenCalledWith(
+      expect.objectContaining({ visibilidade: RolagemVisibilidadeEnum.PUBLICA }));
   });
 
   it('confirma a rolagem no botão com um efeito temporário', () => {

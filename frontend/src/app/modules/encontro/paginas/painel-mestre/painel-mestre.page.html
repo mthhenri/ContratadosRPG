@@ -235,6 +235,10 @@
             }
         </header>
 
+        <app-rolagem-mestre
+            [campanhaId]="dados.campanhaId"
+            (rolagemRegistrada)="dados.adicionarRolagemAoFeed($event)"
+        />
         @if (dados.encontro(); as encontroAtual) {
         <div class="iniciativa-mestre__linha">
             <app-trilha-turnos

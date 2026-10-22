@@ -3,10 +3,12 @@
 > Spec avulsa. Pedido do autor em 2026-10-14: o montador de rolagem "deveria funcionar em todos os
 > lugares" — visão do jogador, visão do mestre, fichas parciais etc.
 
+> Escopo autorizado em 22/10/2026: verificar jogador, criatura e NPC; adicionar o rolador avulso do mestre nas cenas com e sem iniciativa; corrigir P-135; executar a matriz visual. As decisões (a) e (b) estão autorizadas neste recorte. A cobertura usa apenas o montador Completo, como jogador NORMAL; versões antigas e gate estão aposentados.
+
 ## Objetivo
 
-Todo lugar onde se digita uma fórmula de rolagem livre oferece o montador, e ele funciona (abre,
-monta, rola, registra no histórico) igual em todas as telas — respeitando o gate do experimento.
+As superfícies de fórmula livre enumeradas nesta spec oferecem o montador, e ele funciona (abre,
+monta, rola, registra no histórico) igual em todas elas — usando o Completo, sem gate de tester.
 
 ## Situação atual (levantada em 2026-10-14)
 
@@ -33,13 +35,14 @@ monta, rola, registra no histórico) igual em todas as telas — respeitando o g
    card da ficha no Esquadrão (jogador e mestre), ficha flutuante, Investigação do jogador
    (`painel-sem-iniciativa-jogador`), Iniciativa do jogador e do mestre, rolagem do mestre na campanha,
    rolagem avulsa do encontro, janela externa — registrar se há campo de fórmula, se o montador aparece,
-   e se abrir/montar/rolar/registrar funciona nas quatro versões, como TESTER e como jogador comum.
+   e se abrir/montar/rolar/registrar funciona no montador Completo, como jogador comum e como mestre.
 2. Corrigir as falhas de **funcionamento** encontradas onde o `RolagemRapida` já está (posicionamento do
    painel flutuante, gatilho escondido em modo compacto, rolar sem ficha/combatente etc.), com causa raiz
    registrada.
-3. Levar ao autor, com a auditoria em mãos, antes de implementar: (a) se `rolagem-avulso` do encontro passa
-   a usar o `RolagemRapida`/montador; (b) se a ficha de NPC ganha Rolagem rápida; (c) se o gate de tester
-   continua — liberar para todos é o fechamento do experimento, que tem spec própria do autor.
+3. Decisões autorizadas pelo autor em 22/10/2026: (a) `rolagem-avulso` do encontro recebe o montador,
+   preservando validação sem atributos, autoria e confirmação de visibilidade; (b) NPC recebe Rolagem
+   rápida privada; cenas com/sem iniciativa recebem rolador avulso do mestre, sem ficha/combatente.
+   A decisão (c), remoção do gate de tester, já foi entregue no fechamento do experimento.
 4. Testes de componente para cada correção e para o gate continuar centralizado (nenhum consumidor novo
    reintroduz restrição local).
 
@@ -58,4 +61,10 @@ Escolher o montador final, mudar a gramática de fórmulas, mudar o comportament
 
 ## Dependências
 
-`montador-rolagem-experimento.spec.md` (`active/`); `ui-35`/`ui-36` (`done/`).
+`montador-rolagem-experimento.spec.md` (`done/`); `ui-35`/`ui-36` (`done/`).
+
+## Fecho — 22/10/2026
+
+Entregue e verificado na aplicação real. Auditoria, causas das falhas corrigidas, mapa de impacto,
+matriz de 48 combinações de superfícies/resoluções, testes e limites em
+[auditoria.md](montador-rolagem-cobertura-telas/auditoria.md). P-135 removido dos problemas ativos.

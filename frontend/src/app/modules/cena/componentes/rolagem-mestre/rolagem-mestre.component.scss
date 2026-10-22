@@ -1,0 +1,21 @@
+@use "tema/breakpoints" as bp;
+
+:host {
+    display: block;
+    min-width: 0;
+}
+
+.rolagem-mestre {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-12);
+    margin-bottom: var(--space-16);
+
+    &__visibilidade {
+        align-self: flex-start;
+
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+    }
+}

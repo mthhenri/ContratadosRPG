@@ -11,6 +11,17 @@
             <app-npc-atributos [dados]="dados()" [gerenciavel]="gerenciavel()" />
         </div>
         <div class="npc__coluna">
+            @if (gerenciavel()) {
+                <app-rolagem-rapida
+                    [atributos]="documento.dados.atributos"
+                    [nivel]="documento.dados.nivel"
+                    [proficiencia]="documento.dados.nivel"
+                    [podeRolar]="!edicao.edicaoPendente() && !edicao.salvando()"
+                    [rolagemOculta]="true"
+                    [cor]="documento.cor"
+                    (rolagemFeita)="registro.registrar($event)"
+                />
+            }
             <app-abas rotulo="Detalhes do NPC" (navegou)="aba.set($event)">
                 @for (destino of abas; track destino) {
                     <button

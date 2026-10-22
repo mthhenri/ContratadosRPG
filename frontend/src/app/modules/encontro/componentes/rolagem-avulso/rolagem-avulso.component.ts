@@ -1,16 +1,18 @@
-import { Component, ElementRef, HostListener, OnInit, inject, input, output, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, HostListener, OnInit, computed, inject, input, output, signal, viewChild } from '@angular/core';
 
 import type { EncontroCombatenteResumoDto } from '@contratados-rpg/shared/dtos/encontro';
 import type { FichaAtributosDto } from '@contratados-rpg/shared/dtos/ficha';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 import { RolagemVisibilidadeEnum } from '@contratados-rpg/shared/enums';
-import { rolarFormula } from '@contratados-rpg/shared/regras/rolagem';
+import { rolarFormula, validarFormula } from '@contratados-rpg/shared/regras/rolagem';
 
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { Icone } from '../../../../shared/icone/icone.component';
+import { MontadorRolagem, type MontadorUltimaRolagem } from '../../../../shared/montador-rolagem/montador-rolagem.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
+import { Campo } from '../../../../shared/ui/campo/campo.component';
 import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
 import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
 import { GuiaFormula } from '../../../ficha/componentes/guia-formula/guia-formula.component';
@@ -34,7 +36,7 @@ const FONTE_DE_FICHA = /\b(?:DES|FOR|LUT|PON|VIG|INT|MED|SEN|SOC|VON|PROF|PROFIC
 /** Painel compacto de rolagem livre atribuído a um combatente avulso. */
 @Component({
   selector: 'app-rolagem-avulso',
-  imports: [Icone, Tooltip, Botao, BotaoIcone, GuiaFormula],
+  imports: [Icone, Tooltip, Botao, BotaoIcone, Campo, GuiaFormula, MontadorRolagem],
   templateUrl: './rolagem-avulso.component.html',
   styleUrl: './rolagem-avulso.component.scss',
 })
@@ -51,6 +53,12 @@ export class RolagemAvulso implements OnInit {
   readonly ocultaAlterada = output<boolean>();
 
   protected readonly expressao = signal('');
+  protected readonly atributosNeutros = ATRIBUTOS_NEUTROS;
+  protected readonly ultimaRolagem = signal<MontadorUltimaRolagem | null>(null);
+  protected readonly formulaValida = computed<boolean | null>(() => {
+    const formula = this.expressao().trim();
+    return formula === '' ? null : !FONTE_DE_FICHA.test(formula) && validarFormula(formula);
+  });
   protected readonly oculta = signal(true);
   protected readonly rolagemConfirmada = signal(false);
   private confirmacaoHandle: ReturnType<typeof setTimeout> | null = null;
@@ -146,6 +154,7 @@ export class RolagemAvulso implements OnInit {
     }
 
     const combatente = this.combatente();
+    this.ultimaRolagem.set({ formula, resultado });
     this.confirmarRolagemNoBotao();
     this.bandeja.mostrar({
       rotulo: 'Rolagem livre',

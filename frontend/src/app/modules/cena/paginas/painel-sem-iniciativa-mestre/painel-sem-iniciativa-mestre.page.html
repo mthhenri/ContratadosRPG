@@ -95,6 +95,10 @@
             <span class="cena-mestre__regua"></span>
         </header>
 
+        <app-rolagem-mestre
+            [campanhaId]="dados.campanhaId"
+            (rolagemRegistrada)="dados.adicionarRolagemAoFeed($event)"
+        />
         <div class="cena-mestre__linha">
             @if (dados.ehInvestigacao()) {
             <section class="cena-mestre__documentos" aria-label="Documentos">

@@ -18,17 +18,20 @@ import { NpcEquipamento } from "./npc-equipamento.component";
 import { NpcIdentidade } from "./npc-identidade.component";
 import { NpcHabilidadesLista } from "./npc-habilidades-lista.component";
 import { NpcSanidadeLista } from "./npc-sanidade-lista.component";
+import { RolagemRapida } from "../rolagem-rapida/rolagem-rapida.component";
+import { FichaRolagemRegistroService } from "../../ficha-rolagem-registro.service";
 
 @Component({
     selector: "app-npc-visualizacao",
     imports: [ReactiveFormsModule, Icone, Tooltip, AbaPainel, Aba, Abas, BotaoIcone, Campo, Cartao,
         NpcAtributos, NpcBlocoAcoes, NpcIdentidade, NpcHabilidadesLista, NpcSanidadeLista,
-        NpcEquipamento],
+        NpcEquipamento, RolagemRapida],
     templateUrl: "./npc-visualizacao.component.html", styleUrl: "./npc-visualizacao.scss",
 })
 export class NpcVisualizacao {
     readonly formulario = inject(NpcEdicaoFormulario);
     readonly edicao = this.formulario.edicao;
+    readonly registro = inject(FichaRolagemRegistroService);
     readonly gerenciavel = input(false);
     readonly apertado = input(false);
     readonly imagemOcupada = input(false);

@@ -1067,8 +1067,13 @@ NPC têm "Acesso de jogadores" (`CampanhaFichaAcesso`). A visão do jogador segu
 mestre). Saíram o gate `podeUsarMontador`, o seletor de versão, a preferência em `localStorage` e as versões Atual,
 Essencial e Blocos; o código vive em `frontend/src/app/shared/montador-rolagem/` (`MontadorRolagem`, editor
 `montador-editor-pecas`, modelo, leitura e peças puras), com a fórmula em peças no `shared/regras/rolagem`. A barra de
-"Rolagem rápida" é o único consumidor. Fonte: [fechamento](../specs/done/montador-rolagem-fechamento.spec.md) e
-[experimento](../specs/done/montador-rolagem-experimento.spec.md).
+"Rolagem rápida" e o rolador de combatente avulso consomem o montador. NPC tem barra privada;
+cenas do mestre, com/sem iniciativa, têm rolador avulso da campanha, com visibilidade pública/privada.
+A cobertura por telas está concluída: P-135 corrigido sem máscara no ancestral; Rolagens internas
+das fichas parciais/flutuantes permanecem visíveis no celular. O montador do avulso é hospedado fora
+da seção fixa para não ficar sob a bandeja. Fontes: [fechamento](../specs/done/montador-rolagem-fechamento.spec.md),
+[experimento](../specs/done/montador-rolagem-experimento.spec.md) e
+[auditoria de cobertura](../specs/done/montador-rolagem-cobertura-telas/auditoria.md).
 
 **Requests-correcoes (guarda-chuva de 6 tasks, `P-082`…`P-086` + inventário sob demanda) —
 concluído, 6/6**: `p-082` (autosave/seleção da ficha), `p-083` (reconexão sem carga duplicada),
