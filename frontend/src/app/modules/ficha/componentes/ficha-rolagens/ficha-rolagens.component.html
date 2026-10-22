@@ -51,8 +51,8 @@
                             <span
                                 class="ficha-rol__cadeia"
                                 [appTooltip]="'Encadeado — vários passos'"
-                                >⛓</span
-                            >
+                                ><app-icone nome="rolagem-encadeada"
+                            /></span>
                         }
                         <span class="ficha-rol__preset-nome">{{ preset.nome }}</span>
                     </div>
@@ -80,7 +80,7 @@
                                         aria-label="Cancelar remoção do preset"
                                         (click)="cancelarRemocao()"
                                     >
-                                        ✕
+                                        <app-icone nome="cancelar-edicao" />
                                     </button>
                                 </span>
                             } @else {
@@ -115,7 +115,7 @@
                                     aria-label="Remover preset"
                                     (click)="removerPedido(preset.indice)"
                                 >
-                                    ✕
+                                    <app-icone nome="excluir" />
                                 </button>
                             }
                         </div>
@@ -401,7 +401,7 @@
                             aria-label="Remover passo"
                             (click)="removerPasso($index)"
                         >
-                            ✕
+                            <app-icone nome="excluir" />
                         </button>
                     </div>
                     <input
@@ -460,7 +460,9 @@
                         <span class="ficha-rol__hab-nome">{{ habilidade.nome }}</span>
                         <span class="ficha-rol__hab-custo"
                             >{{
-                                habilidade.custoEnergia === null ? "X" : custoComDesconto(habilidade.custoEnergia)
+                                habilidade.custoEnergia === null
+                                    ? "X"
+                                    : custoComDesconto(habilidade.custoEnergia)
                             }}
                             E</span
                         >

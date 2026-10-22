@@ -39,7 +39,7 @@ do dado, preservando suas faces e a família de contorno. Desenho original Codex
 
 Prancha [prancha-acoes.html](prancha-acoes.html) votada pelo autor (14 conceitos). O desenho de cada um está aprovado;
 **o alcance (onde cada glifo substitui o caractere de hoje) e a execução ficam na task própria**
-[icones-acoes-genericas-adocao](../../backlog/icones-acoes-genericas-adocao.spec.md), como a spec exige.
+[icones-acoes-genericas-adocao](../../done/icones-acoes-genericas-adocao.spec.md), como a spec exige.
 
 | Conceito | Voto |
 |---|---|

@@ -14,7 +14,7 @@
                 aria-label="Fechar"
                 (click)="fechar.emit()"
             >
-                ×
+                <app-icone nome="fechar-painel" />
             </button>
         </header>
 
@@ -108,7 +108,10 @@
                         }
                         @if (ehGeralMelhorada(habilidade)) {
                             <span class="seletor__opcao-selo"
-                                ><app-icone class="icone--texto" nome="habilidade-geral-melhorada" />
+                                ><app-icone
+                                    class="icone--texto"
+                                    nome="habilidade-geral-melhorada"
+                                />
                                 Geral melhorada</span
                             >
                         }
@@ -150,7 +153,9 @@
                             (click)="removerHabilidade(habilidade.nome)"
                         >
                             <span class="seletor__opcao-marca">Na ficha</span>
-                            <span class="seletor__opcao-remover-x" aria-hidden="true">✕</span>
+                            <span class="seletor__opcao-remover-x" aria-hidden="true"
+                                ><app-icone nome="excluir"
+                            /></span>
                         </button>
                     } @else {
                         <button

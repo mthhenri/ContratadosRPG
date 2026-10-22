@@ -16,10 +16,20 @@
                 <span class="ficha-hud__nome">{{ nome() }}</span>
                 <span class="ficha-hud__meta">
                     {{ patenteTexto() }} ·
-                    <app-icone class="icone--texto" [nome]="iconesClasse().classeBase" [appTooltip]="classeTexto()" /> {{ classeTexto() }}
+                    <app-icone
+                        class="icone--texto"
+                        [nome]="iconesClasse().classeBase"
+                        [appTooltip]="classeTexto()"
+                    />
+                    {{ classeTexto() }}
                     @if (subclasseTexto(); as subclasse) {
                         ·
-                        <app-icone class="icone--texto" [nome]="iconesClasse().subclasse!" [appTooltip]="subclasse" /> {{ subclasse }}
+                        <app-icone
+                            class="icone--texto"
+                            [nome]="iconesClasse().subclasse!"
+                            [appTooltip]="subclasse"
+                        />
+                        {{ subclasse }}
                     }
                     · Nível {{ dados().nivel }}
                 </span>
@@ -360,12 +370,22 @@
                                         } @else {
                                             <div class="ficha-ident__chips">
                                                 <span class="chip chip--accent"
-><app-icone class="icone--texto" [nome]="iconesClasse().classeBase" [appTooltip]="classeTexto()" /> {{ classeTexto() }}</span
->
+                                                    ><app-icone
+                                                        class="icone--texto"
+                                                        [nome]="iconesClasse().classeBase"
+                                                        [appTooltip]="classeTexto()"
+                                                    />
+                                                    {{ classeTexto() }}</span
+                                                >
                                                 @if (subclasseTexto(); as subclasse) {
                                                     <span class="chip"
-><app-icone class="icone--texto" [nome]="iconesClasse().subclasse!" [appTooltip]="subclasse" /> {{ subclasse }}</span
->
+                                                        ><app-icone
+                                                            class="icone--texto"
+                                                            [nome]="iconesClasse().subclasse!"
+                                                            [appTooltip]="subclasse"
+                                                        />
+                                                        {{ subclasse }}</span
+                                                    >
                                                 }
                                                 @if (ajustavelAmplo()) {
                                                     <button
@@ -1963,7 +1983,9 @@
                                                                             cancelarRemocaoFragmentoConsumido()
                                                                         "
                                                                     >
-                                                                        ✕
+                                                                        <app-icone
+                                                                            nome="cancelar-edicao"
+                                                                        />
                                                                     </button>
                                                                 </span>
                                                             } @else {
@@ -1980,7 +2002,7 @@
                                                                             )
                                                                         "
                                                                     >
-                                                                        ✕
+                                                                        <app-icone nome="excluir" />
                                                                     </button>
                                                                 </span>
                                                             }

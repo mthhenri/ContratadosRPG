@@ -29,6 +29,37 @@
 
 ## Ativos
 
+### P-135 — Montador sobreposto por conteúdo da ficha na campanha de jogador · `ABERTO` · frontend/painéis
+
+- **Sintoma:** em 1366×768, na campanha de jogador, depois de rolar 1d6 e abrir o montador,
+  cliques em Fechar resultado/Fechar montador foram interceptados por atributos/cabeçalho
+  da ficha. Observado no cenário local temporário 140; `elementFromPoint` confirmou o alvo
+  sob outro conteúdo. Não foi reproduzido na ficha completa durante a matriz posterior.
+- **Causa:** não investigada; não atribuir à troca do SVG sem comparação com a revisão anterior.
+- **Contorno:** usar o montador na ficha completa; fechamento do resultado pelo teclado.
+- **Correção:** investigar empilhamento/recorte e eventos de ponteiro do consumidor da campanha.
+- **Desde:** encontrado em 22/10/2026 na verificação de `icones-acoes-genericas-adocao`.
+
+### P-134 — Calculadora minimizada não reabre no primeiro acionamento da ficha completa · `CONTORNADO` · frontend/painéis
+
+- **Sintoma:** minimizar a Calculadora na ficha completa e acionar a ação Calculadora alterna
+  o booleano da página em vez de restaurar a janela; a mesma operação funciona pela coluna
+  da campanha. O recorte desta task não alterou os handlers.
+- **Causa:** `visualizar.page.ts` usa `calculadoraAberta.update`; a campanha usa
+  `calculadoraRef()?.alternar()`, que trata `painel.minimizado()`.
+- **Contorno:** reabrir pela campanha; na ficha, fechar/reabrir o estado da ação.
+- **Correção:** alinhar o consumidor da ficha ao método público da Calculadora.
+- **Desde:** confirmado em 22/10/2026 na verificação de `icones-acoes-genericas-adocao`.
+
+### P-133 — Enter no Fechar da Calculadora executa cálculo · `CONTORNADO` · frontend/acessibilidade
+
+- **Sintoma:** focar o botão Fechar da Calculadora e pressionar Enter não o aciona.
+- **Causa:** `CalculadoraFlutuante.aoTeclado` trata qualquer Enter como cálculo e chama
+  `preventDefault`, mesmo vindo de um botão. Handler preexistente, sem alteração nesta task.
+- **Contorno:** fechar pelo ponteiro ou Escape.
+- **Correção:** respeitar a ativação nativa de controles no handler de teclado.
+- **Desde:** confirmado em 22/10/2026 na verificação de `icones-acoes-genericas-adocao`.
+
 ### P-132 — URL conhecida de avatar ignora a permissão atual da ficha · `ABERTO` · backend/armazenamento
 
 - **Sintoma:** ficha de jogador oculta nega GET a B (403), mas nova leitura anônima da URL

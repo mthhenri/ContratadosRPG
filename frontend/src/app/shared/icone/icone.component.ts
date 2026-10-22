@@ -69,7 +69,22 @@ import { Component, computed, input } from "@angular/core";
  * `valor-desafio` (Patamares de nível) e `tenacidade` (Coração reforçado): desenhos originais Codex (OpenAI),
  * rodada 2 da `icones-criatura-vd-tenacidade`, votados pelo autor em 18/10/2026; sem assets externos.
  */
+// Ações: desenhos originais Codex (OpenAI), votos de 20/10/2026, prancha-acoes aprovada.
 export type IconeNome =
+  | 'menu-acoes'
+  | 'alca-arrastar'
+  | 'apagar-termo'
+  | 'rolagem-encadeada'
+  | 'janela-minimizar'
+  | 'janela-maximizar'
+  | 'janela-restaurar'
+  | 'mover-acima'
+  | 'mover-abaixo'
+  | 'rolar-inicio'
+  | 'rolar-fim'
+  | 'fechar-painel'
+  | 'cancelar-edicao'
+  | 'restaurar-padrao'
   | 'maestria'
   | 'critico'
   | 'valor-desafio'

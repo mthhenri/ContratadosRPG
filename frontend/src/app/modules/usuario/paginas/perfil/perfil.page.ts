@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { finalize } from 'rxjs';
 import { TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
 
@@ -27,7 +27,7 @@ import { UsuarioService } from '../../usuario.service';
  */
 @Component({
   selector: 'app-perfil',
-  imports: [RouterLink, ReactiveFormsModule, Icone, Botao, BotaoIcone, Campo, Cartao, Esqueleto],
+  imports: [ReactiveFormsModule, Icone, Botao, BotaoIcone, Campo, Cartao, Esqueleto],
   templateUrl: './perfil.page.html',
   styleUrl: './perfil.page.scss',
 })

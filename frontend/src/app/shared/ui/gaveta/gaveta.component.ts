@@ -4,6 +4,8 @@ import {
     afterRenderEffect, inject, input, model, viewChild,
 } from "@angular/core";
 
+import { Icone } from '../../icone/icone.component';
+
 import { BotaoIcone } from "../botao-icone/botao-icone.component";
 
 const SELETOR_FOCAVEL =
@@ -18,7 +20,7 @@ const SELETOR_FOCAVEL =
  */
 @Component({
     selector: "app-gaveta",
-    imports: [BotaoIcone],
+    imports: [BotaoIcone, Icone],
     templateUrl: "./gaveta.component.html",
     styleUrl: "./gaveta.component.scss",
     changeDetection: ChangeDetectionStrategy.OnPush,

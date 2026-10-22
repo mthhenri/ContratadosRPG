@@ -75,7 +75,7 @@
                     [appTooltip]="'Fechar busca'"
                     (click)="fecharBuscaItens()"
                 >
-                    ✕
+                    <app-icone nome="fechar-painel" />
                 </button>
             </div>
         } @else if (compacto()) {
@@ -1234,7 +1234,7 @@
                                         aria-label="Cancelar remoção"
                                         (click)="cancelarRemocao()"
                                     >
-                                        ✕
+                                        <app-icone nome="cancelar-edicao" />
                                     </button>
                                 } @else {
                                     <button
@@ -1245,7 +1245,7 @@
                                         [attr.aria-label]="'Remover item ' + item.nomeExibido"
                                         (click)="removerItem(item.indice)"
                                     >
-                                        ✕
+                                        <app-icone nome="excluir" />
                                     </button>
                                 }
                             </span>
@@ -1961,7 +1961,7 @@
                                                                         removerEfeitoMod($index)
                                                                     "
                                                                 >
-                                                                    ×
+                                                                    <app-icone nome="excluir" />
                                                                 </button>
                                                             </div>
                                                             <div class="ficha-inv__efeito-campos">

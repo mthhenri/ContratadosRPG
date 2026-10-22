@@ -265,7 +265,7 @@
                         [appTooltip]="'Ações de ficha'"
                         (click)="alternarMenu()"
                     >
-                        ⋯
+                        <app-icone nome="menu-acoes" />
                     </button>
                     @if (menuAberto()) {
                     <button
@@ -811,8 +811,10 @@
                                                 >{{ ficha.nome }}</span
                                             >
                                             <span class="detalhe__equipe-ficha-vitais"
-                                                ><app-identidade-classe [classe]="ficha.classe" [arquetipo]="ficha.arquetipo" /></span
-                                            >
+                                                ><app-identidade-classe
+                                                    [classe]="ficha.classe"
+                                                    [arquetipo]="ficha.arquetipo"
+                                            /></span>
                                             @if (condicoesAtivas(ficha.condicoes); as ativas) { @if
                                             (ativas.length) {
                                             <span

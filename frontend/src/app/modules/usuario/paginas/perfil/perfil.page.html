@@ -10,8 +10,6 @@
     } @else {
     <app-cartao titulo="Perfil" nivelTitulo="h1">
         <span cartaoIndice>//</span>
-        <a app-botao variante="secundario" tamanho="medio" class="perfil__transcricao" routerLink="/transcricoes/dispositivos"><app-icone nome="vincular" />Dispositivos de transcrição</a>
-
         <form class="perfil__formulario" [formGroup]="formularioPerfil" (ngSubmit)="salvarPerfil()">
             <div class="perfil__tipo" [attr.data-tipo]="tipoUsuario()">
                 <app-icone

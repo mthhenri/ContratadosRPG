@@ -3,7 +3,11 @@
     <span
         class="oficina-peca__marca"
         role="img"
-        [attr.aria-label]="marcaDaPeca === 'nova' ? 'Peça nova desde a versão publicada' : 'Peça alterada desde a versão publicada'"
+        [attr.aria-label]="
+            marcaDaPeca === 'nova'
+                ? 'Peça nova desde a versão publicada'
+                : 'Peça alterada desde a versão publicada'
+        "
     ></span>
 }
 @if (pendencias().length > 0) {
@@ -40,7 +44,7 @@
             [disabled]="!podeSubir()"
             (click)="mover(-1)"
         >
-            <span aria-hidden="true">↑</span>
+            <app-icone nome="mover-acima" />
         </button>
         <button
             app-botao-icone
@@ -51,7 +55,7 @@
             [disabled]="!podeDescer()"
             (click)="mover(1)"
         >
-            <span aria-hidden="true">↓</span>
+            <app-icone nome="mover-abaixo" />
         </button>
         <app-barra-ferramentas-separador />
         <button

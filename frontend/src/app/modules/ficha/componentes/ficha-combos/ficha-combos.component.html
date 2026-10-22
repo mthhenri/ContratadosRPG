@@ -120,7 +120,7 @@
                                             aria-label="Cancelar remoção do combo"
                                             (click)="cancelarRemocao()"
                                         >
-                                            ✕
+                                            <app-icone nome="cancelar-edicao" />
                                         </button>
                                     </span>
                                 } @else {
@@ -144,7 +144,7 @@
                                         aria-label="Remover combo"
                                         (click)="removerPedido(combo.indice)"
                                     >
-                                        ✕
+                                        <app-icone nome="excluir" />
                                     </button>
                                 }
                             }
@@ -218,7 +218,7 @@
                             [disabled]="$index === 0"
                             (click)="moverPasso($index, -1)"
                         >
-                            ↑
+                            <app-icone nome="mover-acima" />
                         </button>
                         <button
                             app-botao-icone
@@ -230,7 +230,7 @@
                             [disabled]="$index === passos.length - 1"
                             (click)="moverPasso($index, 1)"
                         >
-                            ↓
+                            <app-icone nome="mover-abaixo" />
                         </button>
                         <button
                             app-botao-icone
@@ -241,7 +241,7 @@
                             aria-label="Remover passo"
                             (click)="removerPasso($index)"
                         >
-                            ✕
+                            <app-icone nome="excluir" />
                         </button>
                     </div>
                 </div>

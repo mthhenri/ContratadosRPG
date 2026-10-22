@@ -274,7 +274,7 @@
                                         [disabled]="formulario.edicao.salvando()"
                                         (click)="confirmandoRemocao.set(item.indice)"
                                     >
-                                        ✕
+                                        <app-icone nome="excluir" />
                                     </button>
                                 }
                             </span>
@@ -369,7 +369,7 @@
                                         [disabled]="formulario.edicao.salvando()"
                                         (click)="removerModificacao(item.indice, mod.nome)"
                                     >
-                                        ✕
+                                        <app-icone nome="excluir" />
                                     </button>
                                 }
                             </span>

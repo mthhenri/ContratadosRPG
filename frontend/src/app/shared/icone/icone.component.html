@@ -8,12 +8,67 @@
     aria-hidden="true"
 >
     @switch (glifo()) {
+        @case ("menu-acoes") {
+            <path d="M3 10h4v4H3zM10 10h4v4h-4zM17 10h4v4h-4z" />
+        }
+        @case ("alca-arrastar") {
+            <circle cx="8" cy="5" r="1.3" />
+            <circle cx="16" cy="5" r="1.3" />
+            <circle cx="8" cy="12" r="1.3" />
+            <circle cx="16" cy="12" r="1.3" />
+            <circle cx="8" cy="19" r="1.3" />
+            <circle cx="16" cy="19" r="1.3" />
+        }
+        @case ("apagar-termo") {
+            <path d="M9 5h12v14H9M14 10h4M12 12H3m4-4-4 4 4 4" />
+        }
+        @case ("rolagem-encadeada") {
+            <path d="M2 7h6v10H2zM16 7h6v10h-6zM8 12h8m-3-3 3 3-3 3M4 10h2M18 14h2" />
+        }
+        @case ("janela-minimizar") {
+            <path d="M4 4h16v16H4zM4 8h16M8 16h8" />
+        }
+        @case ("janela-maximizar") {
+            <path d="M9 4H4v5M15 4h5v5M4 15v5h5M20 15v5h-5M8 8h8v8H8z" />
+        }
+        @case ("janela-restaurar") {
+            <path d="M3 8h13v13H3zM8 8V3h13v13h-5M3 12h13M12 5h6" />
+        }
+        @case ("mover-acima") {
+            <path d="M6 20V4m-3 3 3-3 3 3M13 5h8M13 12h6M13 19h4" />
+        }
+        @case ("mover-abaixo") {
+            <path d="M6 4v16m-3-3 3 3 3-3M13 5h8M13 12h6M13 19h4" />
+        }
+        @case ("rolar-inicio") {
+            <path d="M4 3h16M6 12l6-6 6 6M6 21l6-6 6 6" />
+        }
+        @case ("rolar-fim") {
+            <path d="M4 21h16M6 3l6 6 6-6M6 12l6 6 6-6" />
+        }
+        @case ("fechar-painel") {
+            <path d="m6 6 12 12M18 6 6 18" />
+        }
+        @case ("cancelar-edicao") {
+            <circle cx="12" cy="12" r="9" />
+            <path d="m6 18 12-12" />
+        }
+        @case ("restaurar-padrao") {
+            <path d="M5 9a8 8 0 1 1-1 7M5 9V3M5 9h6M10 11h5v5h-5z" />
+        }
         @case ("maestria") {
             <path d="M5 10V7l4 2 3-6 3 6 4-2v3M5 13v7h14v-7M9 16h6" />
         }
         @case ("critico") {
             <defs>
-                <mask id="icone-critico-recorte" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24">
+                <mask
+                    id="icone-critico-recorte"
+                    maskUnits="userSpaceOnUse"
+                    x="0"
+                    y="0"
+                    width="24"
+                    height="24"
+                >
                     <rect width="24" height="24" fill="#fff" />
                     <path
                         d="M12 3.5l2.6 6.9 6.9 2.6-6.9 2.6L12 21.5l-2.6-6.9L2.5 12l6.9-2.6z"
@@ -27,7 +82,10 @@
                 <path d="M12 2.2 20.8 7v10L12 21.8 3.2 17V7z" />
                 <path d="M3.2 7 12 12l8.8-5M12 12v9.8" stroke-opacity="0.6" />
             </g>
-            <path d="M12 3.5l2.6 6.9 6.9 2.6-6.9 2.6L12 21.5l-2.6-6.9L2.5 12l6.9-2.6z" fill="currentColor" />
+            <path
+                d="M12 3.5l2.6 6.9 6.9 2.6-6.9 2.6L12 21.5l-2.6-6.9L2.5 12l6.9-2.6z"
+                fill="currentColor"
+            />
         }
         @case ("valor-desafio") {
             <path d="M8 3h8v4H8zM5 10h14v4H5zM2 17h20v4H2z" />
@@ -1133,11 +1191,15 @@ c0 -18 -10 -8 -25 24 l-16 32 21 -24 c11 -13 20 -27 20 -32z m38 -74 c-3 -3
         }
         @case ("pasta") {
             <!-- Pasta fechada — "folder" da Tabler Icons (MIT). Linha de pasta da Biblioteca. -->
-            <path d="M5 4h4l3 3h7a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2" />
+            <path
+                d="M5 4h4l3 3h7a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2"
+            />
         }
         @case ("pasta-aberta") {
             <!-- Pasta aberta — "folder-open" da Tabler Icons (MIT). Pasta expandida da Biblioteca. -->
-            <path d="M5 19l2.757 -7.351a1 1 0 0 1 .936 -.649h12.307a1 1 0 0 1 .986 1.164l-.996 5.211a2 2 0 0 1 -1.964 1.625h-14.026a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2h4l3 3h7a2 2 0 0 1 2 2v2" />
+            <path
+                d="M5 19l2.757 -7.351a1 1 0 0 1 .936 -.649h12.307a1 1 0 0 1 .986 1.164l-.996 5.211a2 2 0 0 1 -1.964 1.625h-14.026a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2h4l3 3h7a2 2 0 0 1 2 2v2"
+            />
         }
         @case ("tamanho-real") {
             <!-- Quatro setas para fora — "arrows-maximize" da Tabler Icons (MIT): a imagem ajustada

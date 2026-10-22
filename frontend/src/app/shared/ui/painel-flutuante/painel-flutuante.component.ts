@@ -12,6 +12,8 @@ import {
   viewChild,
 } from '@angular/core';
 
+import { Icone } from '../../icone/icone.component';
+
 import { BotaoIcone } from '../botao-icone/botao-icone.component';
 
 export interface PainelFlutuantePosicao {
@@ -53,7 +55,7 @@ interface EstadoPersistido {
 @Component({
   selector: 'app-painel-flutuante',
   exportAs: 'appPainelFlutuante',
-  imports: [BotaoIcone],
+  imports: [BotaoIcone, Icone],
   templateUrl: './painel-flutuante.component.html',
   styleUrl: './painel-flutuante.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -233,7 +233,7 @@
                                         aria-label="Remover habilidade"
                                         (click)="pedirRemocao(idx)"
                                     >
-                                        ✕
+                                        <app-icone nome="excluir" />
                                     </button>
                                 }
                             </div>
@@ -310,7 +310,7 @@
                     aria-label="Fechar"
                     (click)="cancelar()"
                 >
-                    ×
+                    <app-icone nome="fechar-painel" />
                 </button>
             </header>
             <ng-container [ngTemplateOutlet]="editor" />

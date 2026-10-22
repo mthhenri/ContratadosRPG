@@ -141,7 +141,12 @@
 > `icones-recursos-sistema` arquivada em `done/` por decisão do autor: entrega 1 concluída;
 > entrega 2 (ícone ao lado do texto) com verificação ao vivo registrada em 09/10 e três defeitos corrigidos
 > ([relato](../specs/done/icones-recursos-sistema/entrega-2-verificacao.md)). Glifos, tooltip por extenso e limites
-> restantes ficam na [continuação ativa](../specs/active/icones-recursos-glifos-e-pendencias.spec.md);
+> restantes foram tratados na [continuação concluída](../specs/done/icones-recursos-glifos-e-pendencias.spec.md).
+> As 14 ações genéricas votadas foram adotadas e encerradas em 22/10 na
+> [adoção concluída](../specs/done/icones-acoes-genericas-adocao.spec.md), com testes/build/lint
+> aprovados e inspeção pública/autenticada nos quatro viewports e duas bases; cenário
+> temporário autorizado removido por soft delete. Dois glifos ficam somente no catálogo;
+> [cobertura, componentes sem consumidor e limites](../specs/done/icones-acoes-genericas-adocao/verificacao.md);
 > votação da prancha da entrega 3 concluída (21 itens). `icones-dano-habilidade-fragmento-reacao` concluída:
 > 19 ícones novos + 2 fragmentos redesenhados no `app-icone`, ponte `shared/icone/icones-dominio.ts`,
 > adoção nas telas ([verificação](../specs/done/icones-dano-habilidade-fragmento-reacao/verificacao.md)).
@@ -2196,7 +2201,7 @@ incluindo todos os ajustes avulsos de pós-milestone.
 
 | Spec | Frente | O que é |
 |---|---|---|
-| `transcricoes-01`…`09` | Transcriber | **ABANDONADA em 17/10/2026**, por decisão do autor: o fluxo Python pessoal já resolve a necessidade. Integração sem endpoints, rotas web ou atalho. 01/03 preservadas como histórico; 02/04–09 e guarda-chuva arquivados como abandonados. Código, dados e migrations preservados; nenhuma retomada planejada. [Desativação](../specs/done/transcricoes-desativacao.spec.md) |
+| `transcricoes-01`…`09` | Transcriber | **ABANDONADA em 17/10/2026**, por decisão do autor: o fluxo Python pessoal já resolve a necessidade. Integração sem endpoints, rotas web ou atalhos; link residual de dispositivos no Perfil removido e desativação reconferida em 22/10 ([verificação](../specs/done/transcricoes-desativacao-acessos-residuais/verificacao.md)). 01/03 preservadas como histórico; 02/04–09 e guarda-chuva arquivados como abandonados. Código, dados e migrations preservados; nenhuma retomada planejada. [Desativação](../specs/done/transcricoes-desativacao.spec.md) |
 | `civil-guia-criacao` | ficha | mapeia o escopo de `PROBLEMS.md` `P-018` (o guia de criação trata a classe Civil como um agente comum em vários passos) — spec de levantamento, ainda não implementa |
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
 | `revisao-formatacao-pdf-regras` | regras | revisão substancial da apresentação e aprovação visual do autor; Sistema suspenso (P-108) |
@@ -2204,8 +2209,12 @@ incluindo todos os ajustes avulsos de pós-milestone.
 | ~~`m11-10`~~ | regras | concluída; ver [guarda-chuva](../specs/done/m11-oficina-regras.spec.md) |
 | `regras-visual-06`…`10` | regras | cinco correções restantes após bateria visual; textos e contraste; [mapa e prioridades](../specs/done/regras-auditoria-visual-completa/auditoria.md) |
 
-`icones-recursos-sistema` arquivada em `done/`; sua continuação `icones-recursos-glifos-e-pendencias` segue em
-`active/` só pelas **ações genéricas** (prancha sem votos). Concluídos e em `done/`, com relatórios nos anexos: Maestria B,
+`icones-recursos-sistema` e sua continuação `icones-recursos-glifos-e-pendencias` estão em `done/`;
+as 14 ações genéricas foram votadas em 20/10 e a adoção `icones-acoes-genericas-adocao`
+foi concluída em 22/10, com gates técnicos e inspeção pública/autenticada nas duas bases
+e quatro viewports. Sem consumidor atual para `apagar-termo`/`rolar-fim`; componentes
+inativos e limites no relatório. P-133…P-135 registram achados de painéis fora desse escopo.
+Concluídos e em `done/`, com relatórios nos anexos: Maestria B,
 Crítico (dado em silhueta com brilho grande, escolhido em 20/10), Energia em Utilizar, T3 (nome em barras/fichas/cards,
 "N de Energia" só nos custos avulsos do inventário e das habilidades de NPC), **VD A e Tenacidade B** da criatura
 (`valor-desafio`/`tenacidade` em `app-icone`, adotados na ficha de criatura, no `criar-criatura`, no Acervo e no seletor

@@ -49,13 +49,14 @@
                             </app-chip>
                             <button
                                 app-botao-icone
+                                tamanho="compacto"
                                 class="bandeja__fechar"
                                 type="button"
                                 aria-label="Fechar rolagem"
                                 [appTooltip]="'Fechar'"
                                 (click)="bandeja.fechar(entrada.id)"
                             >
-                                ×
+                                <app-icone nome="fechar-painel" />
                             </button>
                         </header>
 

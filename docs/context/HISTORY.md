@@ -1,5 +1,81 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-22 — icones-acoes-genericas-adocao: gate autenticado e limpeza concluídos
+
+Após autorização expressa de login e cenário temporário, principal verificou as superfícies
+autenticadas em 1920×1080, 1366×768, 960×1080 e 360×800, claro/escuro: campanha e Acervo,
+menus, fichas, criatura/NPC, cenas, Caderno/Biblioteca, Oficina, Gestão, inventários,
+presets/encadeamento, kit/resumo de criação, montador/resultados, bandeja, Histórico,
+Calculadora, cor salva e notificação real. Capturas e recortes inspecionados pessoalmente;
+mesma família, densidade, hierarquia e controles canônicos, sem overflow horizontal nas
+medições. Alvos móveis migrados observados em 44×44; kit e confirmação do inventário
+recapturados depois de ajustar o enquadramento. Remoção de efeitos exercitada sem salvar mods.
+
+Oficina observada sem mutação: árvore idêntica antes/depois e zero requests de escrita;
+reordenação/persistência do livro não foi reexecutada. Componentes sem consumidor vivo
+(Combos, sidebar legado e Extras do card compacto) identificados, sem alegar tela inexistente.
+Gates técnicos da rodada anterior continuam válidos; nenhum código de ícones mudou nesta
+retomada. Perfil/testes/build/lint posteriores também aprovados na correção da transcrição.
+
+Contas 246/247, campanha 140, fichas 485–487, cena 87/encontro 46, item e rolagens 291–303
+limpos por soft delete; endpoints usados quando disponíveis. SQL limitado completou cena,
+encontro, combatente e vínculo do criador. Consulta final: zero registros ativos do cenário;
+documento original da ficha 6 preservado. Nenhum papel de conta existente foi alterado.
+Achados de teclado/restauração da Calculadora e sobreposição do montador encaminhados a
+P-133…P-135, sem alterar comportamento fora do escopo dos glifos.
+[Spec](../specs/done/icones-acoes-genericas-adocao.spec.md) e
+[verificação completa e limites](../specs/done/icones-acoes-genericas-adocao/verificacao.md).
+
+## 2026-10-22 — transcricoes-desativacao-acessos-residuais: Perfil sem link abandonado
+
+Autor encontrou o botão Dispositivos de transcrição ainda no Perfil após a desativação
+de 17/10. Retirados o link, a classe exclusiva e o import standalone RouterLink sem uso.
+Busca de acessos/rotas/imports/configuração não encontrou outra entrada produtiva;
+código histórico, contratos, migrations e dados permanecem conforme decisão original.
+
+API real reconferida: 36 operações antigas, com e sem JWT, resultaram em 72 respostas
+404; OpenAPI sem caminhos/categoria de transcrição (schemas históricos preservados).
+Quatro URLs antigas não montam os componentes em desktop/mobile. Principal inspecionou
+o Perfil nos quatro viewports canônicos, claro/escuro: sem link, corte ou overflow,
+mesma densidade/hierarquia e controles de conta canônicos. Testes Perfil 8/8 e
+normalizador 89/89; build frontend aprovado, aviso de orçamento 603,33/450 kB;
+lint frontend zero erros, avisos existentes. Sem deploy ou alteração do Python.
+[Spec](../specs/done/transcricoes-desativacao-acessos-residuais.spec.md) e
+[evidências/limites](../specs/done/transcricoes-desativacao-acessos-residuais/verificacao.md).
+
+## 2026-10-21 — icones-acoes-genericas-adocao: implementação e verificação pública, gate autenticado aberto
+
+Autor autorizou a adoção e o alcance dos 14 desenhos de ações votados em 20/10. Spec movida
+para `active/`, ponteiros para a prancha arquivada corrigidos. Catálogo ganhou os 14 nomes e
+geometrias exatas; menus, alças, janelas, reordenação, rolagem encadeada, fechar/cancelar e
+restaurar padrão adotados conforme mapas de consumidores. Remoção real usa `excluir` existente.
+Setas de pesquisa, matemática, marcas editoriais, limpar filtro e Parar execução preservados.
+`apagar-termo` e `rolar-fim` permanecem sem consumidor equivalente atual; não foram inventadas
+ações para aproveitar os desenhos. Revisão independente encontrou Voltar ao topo, que recebeu
+`rolar-inicio` sem a rotação do chevron anterior. Nenhuma regra/API/DTO alterada.
+
+Principal inspecionou a aplicação real em 1920×1080, 1366×768, 960×1080 e 360×800, duas bases:
+Simulação, Tema/Ajuda, Regras normais/maximizadas/restauradas/minimizadas, gaveta e Compras
+(item, foco, confirmar/cancelar/remoção). A inspeção encontrou receita antiga reduzindo as
+ações de remoção de Compras a 40px; correção local repetida e medida em 44×44px no celular.
+Sem mudança do primitivo compartilhado. Superfícies observadas preservam família visual,
+densidade/hierarquia e controles canônicos, sem overflow horizontal dos novos ícones.
+
+Shared: 1.340 testes; backend: 1.275 aprovados/99 ignorados preexistentes; frontend final:
+3.568 aprovados em 286 arquivos, mais 89 do normalizador. Duas expectativas antigas da
+integração foram ajustadas (atributo Angular na assinatura e ícones de severidade versus
+fechamento); testes focados e integração final aprovados. Build produção aprovado, 603,33kB
+iniciais com aviso de orçamento preexistente, sem elevar teto. Lint sem erros, avisos de estilo
+preexistentes e do recorte. `repo:test`, `repo:verificar` e `git diff --check` aprovados.
+Execução fora do sandbox necessária para temporários do Vitest/Git e fontes do build.
+
+A revisão automática de permissões rejeitou o login da fixture local `codex.dev` por falta de
+autorização específica para usar credenciais. Autorização solicitada; nenhum login/contorno.
+UI privada e estados restantes **não certificados**; a tarefa permanece aberta em `active/`,
+sem commit/publicação. Banco preservado, sem reset/seed/publicação. Dois recortes delegados
+por módulo e uma revisão estática independente; inspeção pública feita pelo principal.
+[Relatório, mapas e retomada](../specs/done/icones-acoes-genericas-adocao/verificacao.md).
+
 
 ## 2026-10-20 — icones-criatura-vd-tenacidade e icones-identidade-cards-agente: VD, Tenacidade e ícones de classe adotados
 

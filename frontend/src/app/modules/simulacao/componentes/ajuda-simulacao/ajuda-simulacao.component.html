@@ -11,9 +11,13 @@
     "
     (click)="aoClicarLimpar()"
 >
-    <span class="ajuda-limpar__marca" aria-hidden="true">{{
-        confirmandoLimpeza() ? "!" : "↺"
-    }}</span>
+    <span class="ajuda-limpar__marca" aria-hidden="true">
+        @if (confirmandoLimpeza()) {
+            !
+        } @else {
+            <app-icone nome="restaurar-padrao" />
+        }
+    </span>
     <span>{{ confirmandoLimpeza() ? "Tem certeza?" : "Limpar" }}</span>
 </button>
 

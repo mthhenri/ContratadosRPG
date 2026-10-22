@@ -61,11 +61,13 @@
                 <button
                     class="historico-rolagens__fechar"
                     type="button"
-                    app-botao
+                    app-botao-icone
+                    tamanho="compacto"
+                    appTooltip="Fechar"
                     [attr.aria-label]="'Fechar ' + titulo().toLowerCase()"
                     (click)="fechar()"
                 >
-                    ✕
+                    <app-icone nome="fechar-painel" />
                 </button>
             }
         </header>

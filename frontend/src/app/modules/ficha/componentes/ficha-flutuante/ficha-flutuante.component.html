@@ -45,7 +45,7 @@
             (pointerdown)="$event.stopPropagation()"
             (click)="alternarMaximizacao()"
         >
-            <span aria-hidden="true">{{ maximizada() ? "❐" : "□" }}</span>
+            <app-icone [nome]="maximizada() ? 'janela-restaurar' : 'janela-maximizar'" />
         </button>
     }
 

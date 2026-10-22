@@ -1,6 +1,7 @@
 <div class="oficina-sumario">
     <p class="oficina-sumario__ajuda">
-        Arraste <span aria-hidden="true">⋮⋮</span> para mover. Pelo teclado: Alt + setas movem, F2 renomeia.
+        Arraste <span aria-hidden="true"><app-icone nome="alca-arrastar" /></span> para mover. Pelo
+        teclado: Alt + setas movem, F2 renomeia.
     </p>
     <ol
         class="oficina-sumario__lista"
@@ -21,10 +22,14 @@
             >
                 <div
                     class="oficina-sumario__linha"
-                    [class.oficina-sumario__linha--ativa]="store.selecionada() === linha.identificador"
+                    [class.oficina-sumario__linha--ativa]="
+                        store.selecionada() === linha.identificador
+                    "
                     [style.padding-left.px]="8 + linha.profundidade * recuo"
                 >
-                    <span cdkDragHandle class="oficina-sumario__alca" aria-hidden="true">⋮⋮</span>
+                    <span cdkDragHandle class="oficina-sumario__alca" aria-hidden="true"
+                        ><app-icone nome="alca-arrastar"
+                    /></span>
                     @if (renomeando() === linha.identificador) {
                         <input
                             class="oficina-sumario__campo"
@@ -43,7 +48,9 @@
                             type="button"
                             aria-keyshortcuts="Alt+ArrowUp Alt+ArrowDown Alt+ArrowLeft Alt+ArrowRight F2"
                             [attr.data-sumario-peca]="linha.identificador"
-                            [attr.aria-current]="store.selecionada() === linha.identificador ? 'location' : null"
+                            [attr.aria-current]="
+                                store.selecionada() === linha.identificador ? 'location' : null
+                            "
                             (click)="irPara.emit(linha.identificador)"
                             (keydown)="aoTeclar($event, linha)"
                         >
@@ -52,10 +59,16 @@
                                     class="oficina-sumario__marca"
                                     [class.oficina-sumario__marca--nova]="marcaDaLinha === 'nova'"
                                     role="img"
-                                    [attr.aria-label]="marcaDaLinha === 'nova' ? 'Nova desde a versão publicada' : 'Alterada desde a versão publicada'"
+                                    [attr.aria-label]="
+                                        marcaDaLinha === 'nova'
+                                            ? 'Nova desde a versão publicada'
+                                            : 'Alterada desde a versão publicada'
+                                    "
                                 ></span>
                             }
-                            <span class="oficina-sumario__glifo" aria-hidden="true">{{ glifo(linha) }}</span>
+                            <span class="oficina-sumario__glifo" aria-hidden="true">{{
+                                glifo(linha)
+                            }}</span>
                             @if (linha.rotulo) {
                                 {{ linha.rotulo }}
                             } @else {
@@ -79,7 +92,9 @@
                     *cdkDragPlaceholder
                     class="oficina-sumario__alvo"
                     [class.oficina-sumario__alvo--recusado]="previa()?.resultado?.ok === false"
-                    [style.margin-left.px]="8 + (previa()?.profundidade ?? linha.profundidade) * recuo"
+                    [style.margin-left.px]="
+                        8 + (previa()?.profundidade ?? linha.profundidade) * recuo
+                    "
                     role="presentation"
                 ></div>
                 <div
@@ -87,7 +102,9 @@
                     class="oficina-sumario__previa"
                     [class.oficina-sumario__previa--recusada]="previa()?.resultado?.ok === false"
                 >
-                    <strong class="oficina-sumario__previa-nome">{{ linha.rotulo || "sem nome" }}</strong>
+                    <strong class="oficina-sumario__previa-nome">{{
+                        linha.rotulo || "sem nome"
+                    }}</strong>
                     <span class="oficina-sumario__previa-destino">{{ textoDaPrevia() }}</span>
                 </div>
             </li>

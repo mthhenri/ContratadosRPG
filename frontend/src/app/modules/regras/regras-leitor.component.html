@@ -1,5 +1,10 @@
-<div class="regras" [class.regras--gaveta]="usarGaveta()" [class.regras--painel]="emPainel()"
-    [class.regras--lateral-aberta]="usarLateral() && mudancasAbertas()" [style.--gaveta-lateral-largura.px]="larguraLateral()">
+<div
+    class="regras"
+    [class.regras--gaveta]="usarGaveta()"
+    [class.regras--painel]="emPainel()"
+    [class.regras--lateral-aberta]="usarLateral() && mudancasAbertas()"
+    [style.--gaveta-lateral-largura.px]="larguraLateral()"
+>
     @if (usarGaveta()) {
         <div class="regras__barra">
             <button
@@ -55,7 +60,11 @@
     }
     <div class="regras__rolagem" [attr.inert]="gavetaAberta() ? '' : null">
         @if (oficinaAtiva()) {
-            <app-oficina-barra (irPara)="abrirPaleta()" (irParaPeca)="irParaPeca($event)" (alternarMudancas)="mudancasAbertas.set(!mudancasAbertas())" />
+            <app-oficina-barra
+                (irPara)="abrirPaleta()"
+                (irParaPeca)="irParaPeca($event)"
+                (alternarMudancas)="mudancasAbertas.set(!mudancasAbertas())"
+            />
         }
         @if (pesquisa.termo().trim().length >= 2 && documento() && !oficinaAtiva()) {
             <div class="regras__pesquisa-contador">
@@ -98,7 +107,14 @@
             <p class="regras__rascunho" role="status">
                 <app-chip severidade="primario">Versão {{ vista.numero }}</app-chip>
                 Somente leitura: você está vendo uma versão antiga.
-                <button app-botao variante="secundario" estilo="contorno" tamanho="pequeno" type="button" (click)="voltarVersaoAtual()">
+                <button
+                    app-botao
+                    variante="secundario"
+                    estilo="contorno"
+                    tamanho="pequeno"
+                    type="button"
+                    (click)="voltarVersaoAtual()"
+                >
                     Voltar à atual
                 </button>
             </p>
@@ -185,7 +201,12 @@
     }
     @if (oficinaAtiva()) {
         <div class="regras__gaveta-area">
-            <app-gaveta [(aberta)]="mudancasAbertas" rotulo="O que mudou" lado="fim" [modo]="usarLateral() ? 'lateral' : 'sobreposta'">
+            <app-gaveta
+                [(aberta)]="mudancasAbertas"
+                rotulo="O que mudou"
+                lado="fim"
+                [modo]="usarLateral() ? 'lateral' : 'sobreposta'"
+            >
                 <app-oficina-mudancas (irPara)="irParaMudanca($event)" />
             </app-gaveta>
         </div>
@@ -200,7 +221,7 @@
         appTooltip="Voltar ao topo"
         (click)="voltarAoTopo()"
     >
-        <app-icone nome="chevron" class="regras__icone-topo" />
+        <app-icone nome="rolar-inicio" />
     </button>
 </div>
 @if (pesquisa.outroDocumento(); as outro) {
@@ -249,10 +270,16 @@
         </div>
         @if (podeEditar() && versoes().length > 0) {
             <app-campo rotulo="Versão" tamanho="compacto">
-                <select class="campo__controle regras__versao" aria-label="Versão do livro" (change)="escolherVersao($event)">
+                <select
+                    class="campo__controle regras__versao"
+                    aria-label="Versão do livro"
+                    (change)="escolherVersao($event)"
+                >
                     <option value="0" [selected]="versaoVista() === null">Atual</option>
                     @for (versao of versoes(); track versao.id) {
-                        <option [value]="versao.id" [selected]="versaoVista()?.id === versao.id">{{ rotuloVersao(versao) }}</option>
+                        <option [value]="versao.id" [selected]="versaoVista()?.id === versao.id">
+                            {{ rotuloVersao(versao) }}
+                        </option>
                     }
                 </select>
             </app-campo>

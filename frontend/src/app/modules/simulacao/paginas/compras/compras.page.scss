@@ -1046,6 +1046,12 @@
         align-items: center;
         justify-content: center;
     }
+    // A receita antiga de 40px reduzia o alvo do primitivo nas ações de remoção.
+    .compras-btn--remocao,
+    .compras-efeito__remover {
+        min-width: bp.$alvo-toque;
+        min-height: bp.$alvo-toque;
+    }
     .compras-item__acoes {
         flex-wrap: wrap;
     }

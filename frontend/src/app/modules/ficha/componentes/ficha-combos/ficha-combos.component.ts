@@ -11,6 +11,7 @@ import type {
 } from '@contratados-rpg/shared/dtos/ficha';
 
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
+import { Icone } from '../../../../shared/icone/icone.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
@@ -49,7 +50,7 @@ interface ComboVM {
  */
 @Component({
   selector: 'app-ficha-combos',
-  imports: [ReactiveFormsModule, NgTemplateOutlet, Tooltip, Botao, BotaoIcone, EstadoVazio],
+  imports: [Icone, ReactiveFormsModule, NgTemplateOutlet, Tooltip, Botao, BotaoIcone, EstadoVazio],
   templateUrl: './ficha-combos.component.html',
   styleUrl: './ficha-combos.component.scss',
 })

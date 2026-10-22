@@ -1,6 +1,6 @@
 # Ícones de recursos — glifos e pendências
 
-> **Concluída em 2026-10-20** — as ações genéricas foram votadas ([decisões](icones-recursos-glifos-e-pendencias/decisoes.md)) e a adoção segue em [icones-acoes-genericas-adocao](../backlog/icones-acoes-genericas-adocao.spec.md).
+> **Concluída em 2026-10-20** — as ações genéricas foram votadas ([decisões](icones-recursos-glifos-e-pendencias/decisoes.md)) e a adoção segue em [icones-acoes-genericas-adocao](../done/icones-acoes-genericas-adocao.spec.md).
 
 > Continuação da [rodada arquivada](../done/icones-recursos-sistema.spec.md).
 > O autor decidiu em 09/10/2026 manter o trabalho restante aberto no backlog.

@@ -1,6 +1,7 @@
 import { Component, computed, DestroyRef, inject, input, output, signal } from '@angular/core';
 
 import { AbaAjuda, CONTEUDO_AJUDA } from './conteudo-ajuda';
+import { Icone } from '../../../../shared/icone/icone.component';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { Modal } from '../../../../shared/ui/modal/modal.component';
 
@@ -32,7 +33,7 @@ const JANELA_CONFIRMACAO_MS = 3000;
  */
 @Component({
   selector: 'app-ajuda-simulacao',
-  imports: [Botao, Modal],
+  imports: [Icone, Botao, Modal],
   templateUrl: './ajuda-simulacao.component.html',
   styleUrl: './ajuda-simulacao.component.scss',
 })

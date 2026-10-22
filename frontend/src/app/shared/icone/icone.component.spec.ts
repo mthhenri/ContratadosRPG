@@ -7,6 +7,51 @@ import { Icone, IconeNome } from './icone.component';
  * `currentColor`, sem emoji) e desenha formas diferentes conforme o `nome`.
  */
 describe('Icone', () => {
+
+    // Geometrias votadas em 20/10/2026: prancha-acoes.html, cópia de aceite independente.
+    const acoesAprovadas = {
+    "menu-acoes": "<path d=\"M3 10h4v4H3zM10 10h4v4h-4zM17 10h4v4h-4z\" />",
+    "alca-arrastar": "<circle cx=\"8\" cy=\"5\" r=\"1.3\" /> <circle cx=\"16\" cy=\"5\" r=\"1.3\" /> <circle cx=\"8\" cy=\"12\" r=\"1.3\" /> <circle cx=\"16\" cy=\"12\" r=\"1.3\" /> <circle cx=\"8\" cy=\"19\" r=\"1.3\" /> <circle cx=\"16\" cy=\"19\" r=\"1.3\" />",
+    "apagar-termo": "<path d=\"M9 5h12v14H9M14 10h4M12 12H3m4-4-4 4 4 4\" />",
+    "rolagem-encadeada": "<path d=\"M2 7h6v10H2zM16 7h6v10h-6zM8 12h8m-3-3 3 3-3 3M4 10h2M18 14h2\" />",
+    "janela-minimizar": "<path d=\"M4 4h16v16H4zM4 8h16M8 16h8\" />",
+    "janela-maximizar": "<path d=\"M9 4H4v5M15 4h5v5M4 15v5h5M20 15v5h-5M8 8h8v8H8z\" />",
+    "janela-restaurar": "<path d=\"M3 8h13v13H3zM8 8V3h13v13h-5M3 12h13M12 5h6\" />",
+    "mover-acima": "<path d=\"M6 20V4m-3 3 3-3 3 3M13 5h8M13 12h6M13 19h4\" />",
+    "mover-abaixo": "<path d=\"M6 4v16m-3-3 3 3 3-3M13 5h8M13 12h6M13 19h4\" />",
+    "rolar-inicio": "<path d=\"M4 3h16M6 12l6-6 6 6M6 21l6-6 6 6\" />",
+    "rolar-fim": "<path d=\"M4 21h16M6 3l6 6 6-6M6 12l6 6 6-6\" />",
+    "fechar-painel": "<path d=\"m6 6 12 12M18 6 6 18\" />",
+    "cancelar-edicao": "<circle cx=\"12\" cy=\"12\" r=\"9\" /> <path d=\"m6 18 12-12\" />",
+    "restaurar-padrao": "<path d=\"M5 9a8 8 0 1 1-1 7M5 9V3M5 9h6M10 11h5v5h-5z\" />"
+};
+
+    it('preserva a geometria aprovada das 14 ações e o SVG decorativo', () => {
+        for (const [nome, geometria] of Object.entries(acoesAprovadas)) {
+            const svg = montar(nome as IconeNome).querySelector('svg')!;
+            const esperado = document.createElement('div');
+            esperado.innerHTML = '<svg>' + geometria + '</svg>';
+            const atributos = (elemento: Element) => Array.from(elemento.attributes)
+                .filter(atributo => !atributo.name.startsWith('_ngcontent-'))
+                .map(atributo => atributo.name + '=' + atributo.value).sort().join('|');
+            const assinaturaFormas = (elemento: Element) => Array.from(elemento.children)
+                .map(forma => forma.tagName.toLowerCase() + ':' + atributos(forma));
+            expect(assinaturaFormas(svg)).toEqual(assinaturaFormas(esperado.firstElementChild!));
+            expect(svg.getAttribute('fill')).toBe('none');
+            expect(svg.getAttribute('stroke')).toBe('currentColor');
+            expect(svg.getAttribute('aria-hidden')).toBe('true');
+            expect(svg.querySelector('[id], mask, clipPath')).toBeNull();
+        }
+    });
+
+    it('distingue as 14 ações entre si e dos conceitos vizinhos', () => {
+        const nomes = [...Object.keys(acoesAprovadas), 'excluir', 'mais', 'voltar',
+            'refazer', 'desfazer', 'vincular', 'link', 'tamanho-real', 'ajustar-largura', 'opcoes'];
+        const formas = nomes.map(nome => assinatura(nome as IconeNome));
+        expect(formas.every(Boolean)).toBe(true);
+        expect(new Set(formas).size).toBe(nomes.length);
+    });
+
     it('mantém Maestria e Crítico como glifos próprios de contorno, distintos dos vizinhos', () => {
         const nomes: IconeNome[] = ['maestria', 'critico', 'habilidade-geral', 'patente', 'd20'];
         const formas = nomes.map(assinatura);

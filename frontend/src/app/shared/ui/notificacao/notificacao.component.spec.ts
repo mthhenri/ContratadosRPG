@@ -42,7 +42,7 @@ describe('Notificacoes', () => {
     fixture.detectChanges();
 
     const icones = fixture.debugElement
-      .queryAll(By.directive(Icone))
+      .queryAll(By.css('.notificacoes__icone app-icone'))
       .map((de) => (de.componentInstance as Icone).nome());
     expect(icones).toEqual(['check', 'olho', 'alerta', 'excluir']);
   });

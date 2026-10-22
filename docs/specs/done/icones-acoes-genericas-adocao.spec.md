@@ -4,6 +4,8 @@
 > em 2026-10-20. Os desenhos estão aprovados; **o alcance abaixo precisa da aprovação explícita do autor antes de qualquer
 > código** (decisão da spec de origem).
 
+> Execução e alcance autorizados pelo autor em 21/10/2026: “bora fazer aquela ali do ícones”.
+
 ## Objetivo
 
 Adotar em `app-icone` os 14 glifos votados e substituí-los, nos consumidores aprovados, pelos caracteres de texto que hoje
@@ -16,13 +18,13 @@ Rolagem encadeada **B — Fluxo** · Minimizar janela **A — Traço inferior** 
 Restaurar janela **A — Quadros sobrepostos** · Mover peça acima **A — Seta e lista** · Mover peça abaixo **A — Seta e
 lista** · Rolar ao início **B — Duas etapas** · Rolar ao fim **B — Duas etapas** · Fechar painel **A — Cruz aberta** ·
 Cancelar edição **B — Interromper** · Restaurar valores padrão **B — Ciclo e referência**. Geometrias na
-[prancha](../active/icones-recursos-glifos-e-pendencias/prancha-acoes.html); registro em
-[decisoes.md](../active/icones-recursos-glifos-e-pendencias/decisoes.md).
+[prancha](../done/icones-recursos-glifos-e-pendencias/prancha-acoes.html); registro em
+[decisoes.md](../done/icones-recursos-glifos-e-pendencias/decisoes.md).
 
-## Alcance proposto (a aprovar pelo autor)
+## Alcance aprovado pelo autor em 21/10/2026
 
-Fonte: [inventário](../active/icones-recursos-glifos-e-pendencias/inventario.md) (seção "Interfaces genéricas") e
-[ocorrências](../active/icones-recursos-glifos-e-pendencias/ocorrencias.md), 261 ocorrências em 68 arquivos.
+Fonte: [inventário](../done/icones-recursos-glifos-e-pendencias/inventario.md) (seção "Interfaces genéricas") e
+[ocorrências](../done/icones-recursos-glifos-e-pendencias/ocorrencias.md), 261 ocorrências em 68 arquivos.
 
 | Glifo | Consumidores propostos |
 |---|---|

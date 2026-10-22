@@ -490,7 +490,8 @@
                         <button
                             type="button"
                             app-botao-icone
-                            class="compras-btn compras-btn--adicionar compras-btn--icone"
+                            tamanho="compacto"
+                            class="compras-btn compras-btn--adicionar compras-btn--icone compras-btn--remocao"
                             [appTooltip]="'Confirmar remoção'"
                             aria-label="Confirmar remoção"
                             (click)="confirmarRemocaoItem(item.uid)"
@@ -500,23 +501,25 @@
                         <button
                             type="button"
                             app-botao-icone
-                            class="compras-btn compras-btn--remover compras-btn--icone"
+                            tamanho="compacto"
+                            class="compras-btn compras-btn--remover compras-btn--icone compras-btn--remocao"
                             [appTooltip]="'Cancelar'"
                             aria-label="Cancelar remoção"
                             (click)="cancelarRemocao()"
                         >
-                            ✕
+                            <app-icone nome="cancelar-edicao" />
                         </button>
                         } @else {
                         <button
                             type="button"
                             app-botao-icone
-                            class="compras-btn compras-btn--remover compras-btn--icone"
+                            tamanho="compacto"
+                            class="compras-btn compras-btn--remover compras-btn--icone compras-btn--remocao"
                             [appTooltip]="'Remover'"
                             aria-label="Remover item"
                             (click)="removerItem(item.uid)"
                         >
-                            ✕
+                            <app-icone nome="excluir" />
                         </button>
                         }
                     </span>
@@ -684,7 +687,7 @@
                                             [appTooltip]="'Remover efeito'"
                                             (click)="removerEfeitoMod($index)"
                                         >
-                                            ×
+                                            <app-icone nome="excluir" />
                                         </button>
                                     </div>
                                     <div class="calc-config compras-efeito__campos">

@@ -31,6 +31,7 @@
         <button
             painelAcoesExtras
             app-botao-icone
+            tamanho="compacto"
             type="button"
             [attr.aria-label]="
                 janela.maximizada() ? 'Restaurar tamanho do montador' : 'Maximizar montador'
@@ -39,7 +40,7 @@
             (pointerdown)="$event.stopPropagation()"
             (click)="alternarMaximizar()"
         >
-            <span aria-hidden="true">{{ janela.maximizada() ? "❐" : "□" }}</span>
+            <app-icone [nome]="janela.maximizada() ? 'janela-restaurar' : 'janela-maximizar'" />
         </button>
     }
     <div class="montador-rolagem__caixa">
@@ -135,7 +136,9 @@
                     @switch (analise().estado) {
                         @case ("AVANCADA") {
                             <div class="montador-rolagem__aviso" role="status">
-                                <strong class="montador-rolagem__aviso-titulo">Fórmula avançada</strong>
+                                <strong class="montador-rolagem__aviso-titulo"
+                                    >Fórmula avançada</strong
+                                >
                                 <code class="montador-rolagem__codigo">{{ formula() }}</code>
                                 <p class="montador-rolagem__aviso-texto">
                                     Usa recursos que os controles não montam. Edite pelo texto, ou
@@ -158,7 +161,9 @@
                                 class="montador-rolagem__aviso montador-rolagem__aviso--erro"
                                 role="status"
                             >
-                                <strong class="montador-rolagem__aviso-titulo">Fórmula inválida</strong>
+                                <strong class="montador-rolagem__aviso-titulo"
+                                    >Fórmula inválida</strong
+                                >
                                 <code class="montador-rolagem__codigo">{{ formula() }}</code>
                                 <p class="montador-rolagem__aviso-texto">
                                     {{ analise().erro }} Corrija o texto ou limpe para montar pelos
@@ -205,7 +210,7 @@
                         appTooltip="Fechar resultado"
                         (click)="fecharResultado()"
                     >
-                        <span aria-hidden="true">×</span>
+                        <app-icone nome="fechar-painel" />
                     </button>
                 </div>
                 <app-resultado-rolagem

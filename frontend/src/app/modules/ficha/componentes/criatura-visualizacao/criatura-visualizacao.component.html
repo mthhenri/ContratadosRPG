@@ -218,7 +218,11 @@
                         <div class="criatura__stats criatura__stats--compacta">
                             <div class="criatura__stat criatura__stat--vd">
                                 <span class="criatura__stat-rotulo"
-                                    ><app-icone class="icone--texto" nome="valor-desafio" appTooltip="Valor de Desafio" />
+                                    ><app-icone
+                                        class="icone--texto"
+                                        nome="valor-desafio"
+                                        appTooltip="Valor de Desafio"
+                                    />
                                     VD</span
                                 >
                                 <app-valor-editavel
@@ -288,7 +292,11 @@
 
                             <div class="criatura__stat criatura__stat--tenacidade">
                                 <span class="criatura__stat-rotulo"
-                                    ><app-icone class="icone--texto" nome="tenacidade" appTooltip="Tenacidade" />
+                                    ><app-icone
+                                        class="icone--texto"
+                                        nome="tenacidade"
+                                        appTooltip="Tenacidade"
+                                    />
                                     Tenacidade</span
                                 >
                                 <app-valor-editavel
@@ -500,7 +508,7 @@
                                 (click)="alternarEdicaoClassificacao()"
                             >
                                 @if (classificacaoEmEdicao()) {
-                                    ✕
+                                    <app-icone nome="cancelar-edicao" />
                                 } @else {
                                     <app-icone nome="editar" />
                                 }

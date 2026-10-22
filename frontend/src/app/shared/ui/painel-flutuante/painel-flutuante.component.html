@@ -34,24 +34,26 @@
             <div class="painel-flutuante__acoes">
                 <button
                     app-botao-icone
+                    tamanho="compacto"
                     type="button"
                     [attr.aria-label]="'Minimizar ' + titulo()"
                     appTooltip="Minimizar"
                     (pointerdown)="$event.stopPropagation()"
                     (click)="alternarMinimizar()"
                 >
-                    <span aria-hidden="true">−</span>
+                    <app-icone nome="janela-minimizar" />
                 </button>
                 <ng-content select="[painelAcoesExtras]" />
                 <button
                     app-botao-icone
+                    tamanho="compacto"
                     type="button"
                     [attr.aria-label]="'Fechar ' + titulo()"
                     appTooltip="Fechar"
                     (pointerdown)="$event.stopPropagation()"
                     (click)="fechar.emit()"
                 >
-                    <span aria-hidden="true">×</span>
+                    <app-icone nome="fechar-painel" />
                 </button>
             </div>
         </header>

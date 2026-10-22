@@ -29,7 +29,12 @@
                         {{ item().classificacaoTexto }} ·
                     }
                     NA {{ item().naTexto ?? "—" }} ·
-                    <app-icone class="icone--texto" nome="valor-desafio" appTooltip="Valor de Desafio" /> VD {{ item().vd ?? "—" }}
+                    <app-icone
+                        class="icone--texto"
+                        nome="valor-desafio"
+                        appTooltip="Valor de Desafio"
+                    />
+                    VD {{ item().vd ?? "—" }}
                 </span>
                 <span class="acervo__cartao-vitais">
                     <span
@@ -64,7 +69,10 @@
             } @else {
                 <span class="acervo__cartao-meta">
                     @if (item().classe; as classe) {
-                        <app-identidade-classe [classe]="classe" [arquetipo]="item().arquetipo ?? null" />
+                        <app-identidade-classe
+                            [classe]="classe"
+                            [arquetipo]="item().arquetipo ?? null"
+                        />
                     } @else {
                         {{ item().classeTexto }}
                     }
@@ -107,7 +115,7 @@
                 [attr.aria-expanded]="menuAberto()"
                 (click)="menu.emit($event)"
             >
-                ⋯
+                <app-icone nome="menu-acoes" />
             </button>
         }
     </div>

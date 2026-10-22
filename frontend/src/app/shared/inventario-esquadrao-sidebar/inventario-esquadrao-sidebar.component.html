@@ -33,13 +33,14 @@
             <span class="inventario-sidebar__regua"></span>
             <button
                 app-botao-icone
+                tamanho="compacto"
                 class="inventario-sidebar__fechar"
                 type="button"
                 aria-label="Fechar inventário"
                 [appTooltip]="'Fechar'"
                 (click)="fechar()"
             >
-                ×
+                <app-icone nome="fechar-painel" />
             </button>
         </header>
         <div class="inventario-sidebar__corpo">

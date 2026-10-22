@@ -32,7 +32,10 @@
             <span class="espectador-ficha__nome">{{ ficha().nome }}</span>
             <span class="espectador-ficha__classe">
                 @if (ficha().classe; as classe) {
-                    <app-identidade-classe [classe]="classe" [arquetipo]="ficha().arquetipo ?? null" />
+                    <app-identidade-classe
+                        [classe]="classe"
+                        [arquetipo]="ficha().arquetipo ?? null"
+                    />
                 } @else {
                     {{ ficha().classeTexto }}
                 }
@@ -121,7 +124,7 @@
                 [attr.aria-expanded]="menuAberto()"
                 (click)="alternarMenu.emit($event)"
             >
-                ⋯
+                <app-icone nome="menu-acoes" />
             </button>
         }
     </div>
