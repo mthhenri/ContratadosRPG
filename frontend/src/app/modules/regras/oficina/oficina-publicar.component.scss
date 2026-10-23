@@ -9,6 +9,21 @@
     flex-direction: column;
     gap: var(--space-16);
 
+    &__acoes {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: var(--space-12);
+        @include bp.mobile {
+            // A barra canônica do editor fica acima do teclado. Reserva estável impede
+            // que ela cubra as ações ou que elas saltem durante o blur do editor.
+            margin-bottom: calc(#{bp.$alvo-toque} + var(--space-12));
+            button {
+                min-height: bp.$alvo-toque;
+            }
+        }
+    }
+
     &__resumo {
         display: grid;
         gap: var(--space-4);

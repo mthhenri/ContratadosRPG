@@ -1,6 +1,6 @@
 import { HttpClient, HttpContext } from "@angular/common/http";
 import { Injectable, inject } from "@angular/core";
-import type { LivroLeituraDto } from "@contratados-rpg/shared/dtos/livro";
+import type { LivroCodigoRecuperarDto, LivroLeituraDto } from "@contratados-rpg/shared/dtos/livro";
 import { projetarPecasEmRegras } from "@contratados-rpg/shared/livro";
 import type { StandardResponse } from "@contratados-rpg/shared/interfaces";
 import { Observable, catchError, map, shareReplay, throwError } from "rxjs";
@@ -36,6 +36,22 @@ export class RegrasService {
 
     carregarDocumento(id: RegrasDocumento["id"]): Observable<RegrasDocumento> {
         return this.carregarLeitura(id).pipe(map((leitura) => leitura.documento));
+    }
+
+    /** Lê a regra oficial ao navegar da comparação, mesmo com sessão de tester/admin. */
+    carregarPublicada(dto: LivroCodigoRecuperarDto): Observable<RegrasLeitura> {
+        return this.httpClient.get<StandardResponse<LivroLeituraDto>>(
+            `${environment.apiBase}/livros/${encodeURIComponent(dto.codigo)}/publicada`,
+            { context: this.contexto },
+        ).pipe(map(resposta => {
+            const livro = resposta.dados as LivroLeituraDto;
+            return {
+                documento: projetarPecasEmRegras(livro.conteudo) as unknown as RegrasDocumento,
+                situacao: livro.situacao,
+                numero: livro.numero,
+                ancorasAntigas: livro.conteudo.ancorasAntigas ?? {},
+            };
+        }));
     }
 
     /** Descarta a leitura em cache do livro (a Oficina gravou ou publicou desde então). */

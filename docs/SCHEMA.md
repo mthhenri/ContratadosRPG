@@ -550,6 +550,9 @@ completo na migration `0036 - Tabelas do livro e das pecas de regra.sql`; o cont
 - `livro_versao` é imutável: o trigger `trg_livro_versao_imutavel` recusa UPDATE de livro, situação,
   número, formato, conteúdo, data, autor e nota; só o soft delete passa. O rascunho e a versão atuais
   de um livro são a fotografia mais recente de cada situação.
+- `livro_versao.nota` guarda as notas editoriais opcionais em Markdown da publicação;
+  texto simples legado continua legível. O campo da publicação oficial é público na consulta
+  de mudanças; notas de rascunho continuam fora desse recorte. Sem coluna ou migration nova.
 - Alterar, mover e excluir exigem a `revisao` lida. Excluir uma peça exclui suas descendentes e suas âncoras antigas (soft delete, numa instrução);
   a âncora liberada pode ser reutilizada.
 

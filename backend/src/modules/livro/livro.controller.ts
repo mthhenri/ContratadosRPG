@@ -1,6 +1,7 @@
-import { Body, Controller, Get, Header, Param, ParseIntPipe, Post } from "@nestjs/common";
+import { Body, Controller, Get, Header, Param, ParseIntPipe, Post, Query } from "@nestjs/common";
 import type {
   LivroLeituraDto,
+  LivroMudancasPublicadasDto,
   LivroPublicadoDto,
   LivroPublicarDto,
   LivroResumoDto,
@@ -48,6 +49,23 @@ export class LivroController {
     @ActiveUser() usuarioAtivo: JwtPayload,
   ): Promise<LivroVersaoResumoDto[]> {
     return this.livroService.listarVersoes({ codigo }, usuarioAtivo);
+  }
+
+  @AutenticacaoOpcional()
+  @Header("Cache-Control", "no-store")
+  @Get(":codigo/publicada")
+  recuperarPublicada(@Param("codigo") codigo: string): Promise<LivroLeituraDto> {
+    return this.livroService.recuperarPublicada({ codigo });
+  }
+
+  @AutenticacaoOpcional()
+  @Header("Cache-Control", "no-store")
+  @Get(":codigo/mudancas")
+  recuperarMudancasPublicadas(
+    @Param("codigo") codigo: string,
+    @Query("origemId", new ParseIntPipe({ optional: true })) origemId?: number,
+  ): Promise<LivroMudancasPublicadasDto> {
+    return this.livroService.recuperarMudancasPublicadas({ codigo, origemId });
   }
 
   @TiposPermitidos(TipoUsuarioEnum.ADMIN)

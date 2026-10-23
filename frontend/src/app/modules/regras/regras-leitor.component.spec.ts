@@ -2,7 +2,7 @@ import { signal } from "@angular/core";
 import { TestBed } from "@angular/core/testing";
 import { TipoLivroVersaoSituacaoEnum, TipoUsuarioEnum } from "@contratados-rpg/shared/enums";
 import { SessaoService } from "../../core/services/sessao.service";
-import { of } from "rxjs";
+import { of, throwError } from "rxjs";
 import { RegrasDocumento } from "./regras.model";
 import { RegrasLeitor } from "./regras-leitor.component";
 import { RegrasService } from "./regras.service";
@@ -26,6 +26,72 @@ describe("Leitor compartilhado de Regras", () => {
         vi.spyOn(window, "scrollTo").mockImplementation(() => undefined);
     });
     afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+
+    it.each([false, true])("oferece mudanças publicadas sem Oficina (painel=%s)", (emPainel) => {
+        const leitor = TestBed.createComponent(RegrasLeitor);
+        leitor.componentRef.setInput("livro", "sistema");
+        leitor.componentRef.setInput("emPainel", emPainel);
+        leitor.detectChanges();
+        const gatilho = (leitor.nativeElement as HTMLElement)
+            .querySelector<HTMLButtonElement>('[aria-label="O que mudou nas publicações"]');
+        expect(gatilho).not.toBeNull();
+        expect(gatilho?.disabled).toBe(false);
+        gatilho?.click();
+        leitor.detectChanges();
+        expect(leitor.nativeElement.querySelector('app-gaveta.gaveta--aberta')?.textContent)
+            .toContain("O que mudou");
+        leitor.destroy();
+    });
+
+    it("o link da comparação troca o rascunho pela regra oficial vigente", async () => {
+        const carregarPublicada = vi.fn(() => of({
+            documento: { ...documento, versao: "4.1.5" },
+            situacao: TipoLivroVersaoSituacaoEnum.PUBLICADA,
+            numero: "4.1.5", ancorasAntigas: {},
+        }));
+        TestBed.overrideProvider(RegrasService, { useValue: {
+            carregarLeitura: () => of({ documento,
+                situacao: TipoLivroVersaoSituacaoEnum.RASCUNHO,
+                numero: "4.1.6-rascunho", ancorasAntigas: {} }),
+            carregarPublicada,
+        } });
+        const leitor = TestBed.createComponent(RegrasLeitor);
+        leitor.componentRef.setInput("livro", "sistema");
+        leitor.detectChanges();
+        expect(leitor.nativeElement.textContent).toContain("ainda não publicada");
+        leitor.componentInstance["irParaPublicada"]("vida");
+        leitor.detectChanges();
+        await leitor.whenStable();
+        expect(carregarPublicada).toHaveBeenCalledWith({ codigo: "sistema" });
+        expect(leitor.componentInstance["leitura"]()?.situacao).toBe("PUBLICADA");
+        expect(leitor.componentInstance["ativo"]()).toBe("vida");
+        expect(leitor.nativeElement.textContent).not.toContain("ainda não publicada");
+        leitor.destroy();
+    });
+
+    it("nova tentativa de um link oficial conserva a publicação e a âncora", () => {
+        const carregarPublicada = vi.fn()
+            .mockReturnValueOnce(throwError(() => new Error("Rede indisponível")))
+            .mockReturnValueOnce(of({ documento: { ...documento, versao: "4.1.5" },
+                situacao: TipoLivroVersaoSituacaoEnum.PUBLICADA,
+                numero: "4.1.5", ancorasAntigas: {} }));
+        const carregarLeitura = vi.fn(() => of({ documento,
+            situacao: TipoLivroVersaoSituacaoEnum.RASCUNHO,
+            numero: "4.1.6-rascunho", ancorasAntigas: {} }));
+        TestBed.overrideProvider(RegrasService, { useValue: { carregarPublicada, carregarLeitura } });
+        const leitor = TestBed.createComponent(RegrasLeitor);
+        leitor.componentRef.setInput("livro", "sistema");
+        leitor.detectChanges();
+        leitor.componentInstance["irParaPublicada"]("vida");
+        leitor.detectChanges();
+        leitor.componentInstance["tentarNovamente"]();
+        leitor.detectChanges();
+        expect(carregarPublicada).toHaveBeenCalledTimes(2);
+        expect(carregarLeitura).toHaveBeenCalledTimes(1);
+        expect(leitor.componentInstance["leitura"]()?.situacao).toBe("PUBLICADA");
+        expect(leitor.componentInstance["ativo"]()).toBe("vida");
+        leitor.destroy();
+    });
 
     it("devolve o painel ao topo sem rolar a página e conserva o termo pesquisado", async () => {
         const leitor = TestBed.createComponent(RegrasLeitor);

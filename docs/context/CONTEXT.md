@@ -2382,6 +2382,17 @@ estados na `app-oficina-barra` e seletor de versão do admin (versão antiga só
 `app-menu-acoes`; `sugerirNumeroVersao` em `shared/src/livro`. Voltar da Oficina para a Leitura invalida e relê a
 leitura em cache. [Verificação](../specs/done/m11-09-oficina-mudancas-e-publicar/verificacao.md).
 
+**Mudanças publicadas para leitores — concluída em 2026-10-22:** “O que mudou” na página
+e no painel, notas em Markdown pelo editor canônico e somente blocos afetados; anterior → atual
+por padrão, origem mais antiga opcional. API pública `/livros/:codigo/mudancas` não expõe
+rascunho/trabalho; links carregam a regra oficial por `/livros/:codigo/publicada`, inclusive
+em sessão admin/tester e após retry. Nota permanece em `livro_versao.nota`, sem migration.
+Gates e **38 casos reais** nos quatro viewports, claro/escuro e página/painel aprovados;
+[spec e evidências](../specs/done/livros-mudancas-publicadas-para-leitores.spec.md).
+[Exportação da publicação atual e importação no dev](../specs/backlog/livros-exportacao-publicada-e-importacao-dev.spec.md)
+continua no backlog, sem implementação: transporte leva só a atual; consulta de diferenças
+depende das publicações preservadas no banco. Sem reconstrução de histórico ausente.
+
 ### Ícones de identidade (M10-03)
 
 `app-icone` (`frontend/src/app/shared/icone/`) oferece 17 desenhos aprovados no

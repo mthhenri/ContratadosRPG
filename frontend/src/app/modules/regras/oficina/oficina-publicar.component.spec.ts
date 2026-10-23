@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { OficinaMudancas } from "./oficina-mudancas.service";
 import { OficinaPublicar } from "./oficina-publicar.component";
 import { OficinaStore } from "./oficina.store";
+import { EDITOR_MARKDOWN_FACTORY } from "../../../shared/ui/editor-markdown/editor-markdown.component";
 
 const pendencia = (gravidade: Gravidade) => ({ codigo: "X", gravidade, identificador: "a", caminho: ["A"], mensagem: "falta" });
 const resumoCom = (alterada: number, nova = 0) => ({
@@ -17,6 +18,7 @@ describe("OficinaPublicar", () => {
     let comparacao = signal<{ mudancas: never[]; resumo: ReturnType<typeof resumoCom> } | null>(null);
     let publicar: ReturnType<typeof vi.fn>;
     let falhou = signal(false);
+    let alterarMarkdown: (markdown: string) => void;
 
     function montar() {
         const fixture = TestBed.createComponent(OficinaPublicar);
@@ -41,6 +43,14 @@ describe("OficinaPublicar", () => {
         publicar = vi.fn().mockResolvedValue({ ok: true, resultado: {} });
         TestBed.configureTestingModule({
             providers: [
+                { provide: EDITOR_MARKDOWN_FACTORY, useValue: (opcoes: {
+                    aoAlterar: (markdown: string) => void;
+                }) => {
+                    alterarMarkdown = opcoes.aoAlterar;
+                    return { criar: async () => {}, destruir: () => {},
+                        obterMarkdown: () => "", definirMarkdown: () => {},
+                        definirSomenteLeitura: () => {}, aplicarAcao: () => {} };
+                } },
                 { provide: OficinaStore, useValue: { estado: signal("ok"), pendencias } },
                 { provide: OficinaMudancas, useValue: {
                     comparacao, total: () => comparacao()?.resumo.total ?? 0, numeroSugerido: () => "4.1.5",
@@ -98,16 +108,17 @@ describe("OficinaPublicar", () => {
         expect(raiz.querySelector(".oficina-publicar__nada")?.textContent).toContain("tudo entra como novo");
     });
 
-    it("confirmar publica com situação, número e nota e fecha o diálogo", async () => {
+    it("publica o Markdown do editor canônico com situação e número e fecha o diálogo", async () => {
         const { fixture, raiz, abrir, confirmar } = montar();
         abrir("Publicar versão");
-        const nota = raiz.querySelector<HTMLTextAreaElement>(".oficina-publicar__entrada--nota")!;
-        nota.value = "ajuste de custos";
-        nota.dispatchEvent(new Event("input"));
+        expect(raiz.querySelector("app-editor-markdown")).not.toBeNull();
+        await fixture.whenStable();
+        alterarMarkdown("## Equipamentos\n\n- **Ajuste** de custos.");
         fixture.detectChanges();
         confirmar().click();
         await fixture.whenStable();
-        expect(publicar).toHaveBeenCalledWith(Situacao.PUBLICADA, "4.1.5", "ajuste de custos");
+        expect(publicar).toHaveBeenCalledWith(Situacao.PUBLICADA, "4.1.5",
+            "## Equipamentos\n\n- **Ajuste** de custos.");
         fixture.detectChanges();
         expect(raiz.querySelector("dialog")?.hasAttribute("open")).toBe(false);
     });

@@ -47,6 +47,21 @@ describe("RegrasService", () => {
 
     afterEach(() => httpTestingController.verify());
 
+    it("consulta a publicação oficial sem substituir o cache de leitura por papel", () => {
+        let oficial: RegrasLeitura | undefined;
+        servico.carregarLeitura("sistema").subscribe();
+        httpTestingController.expectOne("/livros/sistema")
+            .flush(livroDaApi(TipoLivroVersaoSituacaoEnum.RASCUNHO));
+        servico.carregarPublicada({ codigo: "sistema" }).subscribe(leitura => oficial = leitura);
+        httpTestingController.expectOne("/livros/sistema/publicada").flush(livroDaApi());
+        expect(oficial?.situacao).toBe("PUBLICADA");
+        expect(oficial?.ancorasAntigas).toEqual({ "agentes-velho": "agentes" });
+        let leituraPorPapel: RegrasLeitura | undefined;
+        servico.carregarLeitura("sistema").subscribe(leitura => leituraPorPapel = leitura);
+        expect(leituraPorPapel?.situacao).toBe("RASCUNHO");
+        httpTestingController.expectNone("/livros/sistema");
+    });
+
     it("lê a fotografia da API e a projeta no formato do leitor", () => {
         let recebido: RegrasLeitura | undefined;
         servico.carregarLeitura("sistema").subscribe((leitura) => recebido = leitura);

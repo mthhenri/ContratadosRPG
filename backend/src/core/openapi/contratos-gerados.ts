@@ -10466,6 +10466,153 @@ export const schemasContratosPublicos = {
         "additionalProperties": false,
         "description": "Uma pendência encontrada na árvore, apontando a peça e o caminho legível até ela."
     },
+    "LivroPublicacaoResumoDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "numero": {
+                "type": "string"
+            },
+            "publicacaoData": {
+                "type": "string"
+            },
+            "nota": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "id",
+            "numero",
+            "publicacaoData",
+            "nota"
+        ],
+        "additionalProperties": false,
+        "description": "Metadados públicos de uma publicação oficial, sem autoria interna."
+    },
+    "LivroMudancasPublicadasRecuperarDto": {
+        "type": "object",
+        "properties": {
+            "codigo": {
+                "type": "string"
+            },
+            "origemId": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "codigo"
+        ],
+        "additionalProperties": false
+    },
+    "LivroMudancaPublicadaDto": {
+        "type": "object",
+        "properties": {
+            "identificador": {
+                "type": "string"
+            },
+            "situacao": {
+                "type": "string",
+                "enum": [
+                    "NOVA",
+                    "REMOVIDA",
+                    "ALTERADA",
+                    "MOVIDA"
+                ]
+            },
+            "caminho": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                }
+            },
+            "caminhoAnterior": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                }
+            },
+            "antesMarkdown": {
+                "type": "string"
+            },
+            "depoisMarkdown": {
+                "type": "string"
+            },
+            "ancoraAtual": {
+                "type": "string"
+            },
+            "campos": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/LivroCampoAlteradoDto"
+                }
+            },
+            "posicao": {
+                "$ref": "#/components/schemas/LivroPosicaoMudancaDto",
+                "description": "Localização e ordem antes/depois, inclusive movimento entre irmãs."
+            }
+        },
+        "required": [
+            "identificador",
+            "situacao",
+            "caminho",
+            "caminhoAnterior",
+            "antesMarkdown",
+            "depoisMarkdown",
+            "ancoraAtual",
+            "campos"
+        ],
+        "additionalProperties": false,
+        "description": "Uma peça afetada; alteração e movimento compartilham a mesma entrada."
+    },
+    "LivroMudancasPublicadasDto": {
+        "type": "object",
+        "properties": {
+            "codigo": {
+                "type": "string"
+            },
+            "titulo": {
+                "type": "string"
+            },
+            "publicacoes": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/LivroPublicacaoResumoDto"
+                },
+                "description": "Mais recente primeiro; número editorial pode se repetir."
+            },
+            "origem": {
+                "$ref": "#/components/schemas/LivroPublicacaoResumoDto"
+            },
+            "atual": {
+                "$ref": "#/components/schemas/LivroPublicacaoResumoDto"
+            },
+            "notas": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/LivroPublicacaoResumoDto"
+                },
+                "description": "Notas após a origem até a atual, em ordem cronológica."
+            },
+            "mudancas": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/LivroMudancaPublicadaDto"
+                }
+            }
+        },
+        "required": [
+            "codigo",
+            "titulo",
+            "publicacoes",
+            "origem",
+            "atual",
+            "notas",
+            "mudancas"
+        ],
+        "additionalProperties": false
+    },
     "PaginaCadernoEsquadraoCriarDto": {
         "type": "object",
         "properties": {
@@ -14136,6 +14283,22 @@ export const operacoesContratosPublicos = {
         "tag": "Livros de regras",
         "publica": false,
         "responseSchema": "LivroVersaoResumoDto[]"
+    },
+    "LivroController_recuperarPublicada": {
+        "controller": "LivroController",
+        "metodo": "get",
+        "caminho": "/livros/:codigo/publicada",
+        "tag": "Livros de regras",
+        "publica": true,
+        "responseSchema": "LivroLeituraDto"
+    },
+    "LivroController_recuperarMudancasPublicadas": {
+        "controller": "LivroController",
+        "metodo": "get",
+        "caminho": "/livros/:codigo/mudancas",
+        "tag": "Livros de regras",
+        "publica": true,
+        "responseSchema": "LivroMudancasPublicadasDto"
     },
     "LivroController_recuperarVersao": {
         "controller": "LivroController",

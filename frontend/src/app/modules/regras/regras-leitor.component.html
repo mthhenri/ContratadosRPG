@@ -2,7 +2,7 @@
     class="regras"
     [class.regras--gaveta]="usarGaveta()"
     [class.regras--painel]="emPainel()"
-    [class.regras--lateral-aberta]="usarLateral() && mudancasAbertas()"
+    [class.regras--lateral-aberta]="usarLateral() && (mudancasAbertas() || publicacoesAbertas())"
     [style.--gaveta-lateral-largura.px]="larguraLateral()"
 >
     @if (usarGaveta()) {
@@ -59,6 +59,22 @@
         </aside>
     }
     <div class="regras__rolagem" [attr.inert]="gavetaAberta() ? '' : null">
+        @if (documento() && !oficinaAtiva()) {
+            <div class="regras__acoes-leitura">
+                <button
+                    app-botao
+                    variante="secundario"
+                    estilo="contorno"
+                    tamanho="pequeno"
+                    type="button"
+                    aria-label="O que mudou nas publicações"
+                    [attr.aria-expanded]="publicacoesAbertas()"
+                    (click)="publicacoesAbertas.set(!publicacoesAbertas())"
+                >
+                    O que mudou
+                </button>
+            </div>
+        }
         @if (oficinaAtiva()) {
             <app-oficina-barra
                 (irPara)="abrirPaleta()"
@@ -208,6 +224,22 @@
                 [modo]="usarLateral() ? 'lateral' : 'sobreposta'"
             >
                 <app-oficina-mudancas (irPara)="irParaMudanca($event)" />
+            </app-gaveta>
+        </div>
+    }
+    @if (!oficinaAtiva()) {
+        <div class="regras__gaveta-area">
+            <app-gaveta
+                [(aberta)]="publicacoesAbertas"
+                rotulo="O que mudou"
+                lado="fim"
+                [modo]="usarLateral() ? 'lateral' : 'sobreposta'"
+            >
+                <app-regras-mudancas-publicadas
+                    [codigo]="livro()"
+                    [aberta]="publicacoesAbertas()"
+                    (irPara)="irParaPublicada($event)"
+                />
             </app-gaveta>
         </div>
     }

@@ -1,5 +1,72 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-22 — Livros: “O que mudou” público, notas em Markdown e blocos afetados
+
+Implementada primeiro a [consulta de mudanças](../specs/done/livros-mudancas-publicadas-para-leitores.spec.md),
+conforme pedido do autor. Página e painel de Regras agora oferecem notas editoriais em Markdown
+antes dos blocos novos/removidos/alterados/movidos. Origem anterior por padrão e seleção mais
+antiga com notas intermediárias; destino sempre na publicação atual. O editor canônico substitui
+o texto simples da publicação com formulário reativo, mantendo a nota na fotografia imutável.
+
+API pública específica preserva os endpoints administrativos: somente PUBLICADA, sem autoria
+interna nem fotografia histórica integral. Fragmentos aproveitam o comparador e exportador
+existentes; estado/apresentação pública ficam separados da Oficina. Link à regra vigente usa
+leitura oficial explícita, mesmo para tester/admin que estava lendo rascunho. Sem migration,
+mudança de regras, edição de Markdown gerado ou alteração de primitivo visual.
+
+Revisão independente encontrou quatro casos, todos corrigidos e conferidos: descendente novo
+além de peça movida omitido pelo agrupamento, retry voltando à leitura por papel, reordenação
+sem posições legíveis e categoria de habilidade com fragmentos iguais. Na inspeção principal,
+a barra móvel do editor cobria as ações: reserva estável local e alvos de 44px corrigiram;
+Cancelar e publicação real foram exercitados em 360×800.
+
+Gates: shared **1.340**, backend **1.305** (99 ignorados existentes), frontend **3.594** mais
+normalizadores **89** aprovados; lint/tipos sem erros, com avisos de estilo; builds aprovados,
+mantendo aviso de orçamento inicial do frontend (603,33 kB/450 kB). Organização e diff limpos.
+Stack isolado Docker/Nest/Angular em 3101/4301, banco original e produção preservados:
+**38 casos reais** nos quatro viewports, claro/escuro, NORMAL/visitante, página/painel,
+mais primeira publicação, espera e falha/retry; zero erro JavaScript/overflow e foco restaurado.
+Principal executou navegador e inspecionou pessoalmente capturas e estados, comparando aos
+análogos Oficina/Publicar/editor. Publicação pelo editor chegou formatada ao NORMAL; TESTER
+em rascunho abriu a regra oficial. Sem nota/sem diferenças e recusas a ids não publicados
+confirmadas na API real. Falhas iniciais de runner por EPERM passaram fora do sandbox.
+
+Subagentes Codex (modelo herdado) dividiram API/UI, cenário e revisão; os quatro achados da
+revisão foram resolvidos. [Relatório com método, correções e limites](../specs/done/livros-mudancas-publicadas-para-leitores/verificacao.md).
+Capturas/logs locais em `.artifacts/livros-mudancas-publicadas-para-leitores/`, ignorados;
+sem deploy ou push. Após a entrega, o autor autorizou o commit local; conteúdo preparado
+verificado com `repo:verificar -- --staged` e coautoria Codex conferida na mensagem gravada.
+A exportação/importação permanece no backlog.
+
+## 2026-10-22 — Livros: specs de transporte da publicação e consulta de mudanças
+
+A pedido do autor, duas tasks avulsas foram especificadas no backlog, sem iniciar
+implementação: [exportação/importação](../specs/backlog/livros-exportacao-publicada-e-importacao-dev.spec.md)
+e [mudanças para leitores](../specs/done/livros-mudancas-publicadas-para-leitores.spec.md).
+O autor definiu que o transporte traz sempre a publicação atual; o objetivo é trazer
+o livro de produção para o banco local e gerar a cópia do Git pelo exportador existente.
+A spec prevê pacote estruturado administrativo, simulação e substituição local explícita
+com recuperação, preservando identidade, links e metadados editoriais, sem transportar histórico.
+
+Para os jogadores, o acordo é consultar só os blocos afetados, com notas da publicação
+em Markdown acima da comparação automática; anterior → atual por padrão e origem mais
+antiga opcional. Reaproveitar o campo de nota, editor canônico e comparador da Oficina,
+com API pública restrita a publicações oficiais. Não estender leitura integral de versões
+antigas nem expor rascunhos. Escolhas técnicas adicionais estão identificadas nas specs,
+incluindo pacote dos dois livros e notas intermediárias em comparação acumulada.
+
+Recorte documental conferido contra o template, contratos atuais, importador/exportador,
+publicação e comparação existentes. Critérios incluem round-trip, rollback, permissões,
+Markdown seguro, estados de comparação e gates visuais para a implementação futura.
+Não foram alterados código, banco, livros gerados ou fontes visuais; nenhum teste de
+produto ou gate visual é reivindicado nesta preparação documental.
+Revisão independente por subagente Codex (modelo herdado) não encontrou bloqueios;
+escolhas técnicas adicionais permanecem identificadas nas specs. Passe final
+`convencoes-check`: somente documentação, requisitos e referências conferidos,
+sem mudanças de SQL, DTOs, regras ou estilos. `npm run repo:verificar` aprovado;
+`npm run repo:test` **14/14** aprovado fora do sandbox após falha de permissão
+no `git init` temporário do teste no ambiente restrito; `git diff --check` limpo.
+
 ## 2026-10-22 — montador-rolagem-cobertura-telas: roladores nas cenas/NPC e correções de sobreposição/mobile
 
 Autor autorizou verificar jogador, criatura e NPC, oferecer rolador avulso ao mestre nas cenas

@@ -3,6 +3,9 @@ import type {
   LivroCodigoRecuperarDto,
   LivroLeituraDto,
   LivroListarDto,
+  LivroMudancasPublicadasDto,
+  LivroMudancasPublicadasRecuperarDto,
+  LivroPublicacaoResumoDto,
   LivroLeituraRecuperarDto,
   LivroPecaDto,
   LivroPendenciaDto,
@@ -33,6 +36,7 @@ import type { JwtPayload } from "../autenticacao/jwt-payload.interface";
 import { LivroRepository } from "./livro.repository";
 import { LivroVersaoRepository } from "./livro-versao.repository";
 import { RegraPecaRepository } from "./regra-peca.repository";
+import { montarMudancasPublicadas } from "./livro-mudancas-publicadas.util";
 
 const PAPEIS_QUE_VEEM_RASCUNHO: readonly (TipoUsuarioEnum | null)[] = [
   TipoUsuarioEnum.TESTER,
@@ -97,10 +101,48 @@ export class LivroService {
     };
   }
 
+  /** Leitura vigente explícita para destinos da comparação, inclusive ADMIN/TESTER. */
+  async recuperarPublicada(dto: LivroCodigoRecuperarDto): Promise<LivroLeituraDto> {
+    return this.recuperarLivro({ codigo: dto.codigo, tipoUsuario: null });
+  }
+
   async listarVersoes(dto: LivroCodigoRecuperarDto, usuarioAtivo: JwtPayload): Promise<LivroVersaoResumoDto[]> {
     this.exigirAdmin(usuarioAtivo);
     const livro = await this.recuperarLivroExistente(dto.codigo);
     return this.livroVersaoRepository.listarVersoes({ livroId: livro.id });
+  }
+
+  /** Consulta pública independente do papel: nunca mistura rascunhos e trabalho. */
+  async recuperarMudancasPublicadas(dto: LivroMudancasPublicadasRecuperarDto): Promise<LivroMudancasPublicadasDto> {
+    const livro = await this.recuperarLivroExistente(dto.codigo);
+    if (dto.origemId !== undefined && (!Number.isSafeInteger(dto.origemId) || dto.origemId <= 0)) {
+      throw new BusinessException("Publicação de origem inválida.");
+    }
+    const versoes = (await this.livroVersaoRepository.listarVersoes({ livroId: livro.id }))
+      .filter((versao) => versao.livroId === livro.id && versao.situacao === TipoLivroVersaoSituacaoEnum.PUBLICADA)
+      .sort((primeira, segunda) => segunda.publicacaoData.localeCompare(primeira.publicacaoData) || segunda.id - primeira.id);
+    if (!versoes.length) throw new ResourceNotFoundException("Versão publicada do livro");
+    const indiceOrigem = dto.origemId === undefined ? (versoes.length > 1 ? 1 : -1) : versoes.findIndex((versao) => versao.id === dto.origemId);
+    if (dto.origemId !== undefined && indiceOrigem <= 0) throw new ResourceNotFoundException("Publicação de origem");
+    const resumo = (versao: LivroVersaoResumoDto): LivroPublicacaoResumoDto => ({ id: versao.id, numero: versao.numero, publicacaoData: versao.publicacaoData, nota: versao.nota });
+    const origem = indiceOrigem > 0 ? versoes[indiceOrigem] : null;
+    const recuperar = async (versao: LivroVersaoResumoDto): Promise<LivroVersaoRecuperadaDto> => {
+      const fotografia = await this.livroVersaoRepository.recuperarVersao({ id: versao.id });
+      if (!fotografia || fotografia.livroId !== livro.id || fotografia.situacao !== TipoLivroVersaoSituacaoEnum.PUBLICADA) {
+        throw new ResourceNotFoundException("Publicação do livro");
+      }
+      return fotografia;
+    };
+    const [atualCompleta, origemCompleta] = await Promise.all([recuperar(versoes[0]), origem ? recuperar(origem) : Promise.resolve(null)]);
+    return {
+      codigo: livro.codigo,
+      titulo: livro.titulo,
+      publicacoes: versoes.map(resumo),
+      atual: resumo(versoes[0]),
+      origem: origem ? resumo(origem) : null,
+      notas: versoes.slice(0, indiceOrigem > 0 ? indiceOrigem : 1).reverse().map(resumo),
+      mudancas: origemCompleta ? montarMudancasPublicadas(origemCompleta.conteudo, atualCompleta.conteudo) : [],
+    };
   }
 
   async recuperarVersao(

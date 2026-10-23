@@ -80,6 +80,11 @@ describe("LivroService — leitura por papel", () => {
   const rascunhoNovo = versao(11, TipoLivroVersaoSituacaoEnum.RASCUNHO);
   const rascunhoVelho = versao(9, TipoLivroVersaoSituacaoEnum.RASCUNHO);
 
+  it("a leitura vigente explícita mantém a publicada para navegação da comparação", async () => {
+    const { servico } = criar({ publicada, rascunho: rascunhoNovo });
+    expect(await servico.recuperarPublicada({ codigo: "sistema" })).toMatchObject({ numero: publicada.numero, situacao: "PUBLICADA" });
+  });
+
   it.each([
     ["visitante", null],
     ["NORMAL", TipoUsuarioEnum.NORMAL],

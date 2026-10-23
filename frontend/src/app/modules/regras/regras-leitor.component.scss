@@ -1,5 +1,16 @@
 @use "tema/breakpoints" as bp;
 
+.regras__acoes-leitura {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: var(--space-8);
+    @include bp.mobile {
+        button {
+            min-height: bp.$alvo-toque;
+        }
+    }
+}
+
 // Análogo: trilhos e sumário dos patchnotes; largura/coluna do exemplão aprovado M10.
 .regras {
     // A barra da Oficina fica fixa logo abaixo da topbar (e da barra do celular).

@@ -1,4 +1,6 @@
-import { Component, type WritableSignal, computed, inject, signal } from "@angular/core";
+import { Component, computed, inject, signal } from "@angular/core";
+import { toSignal } from "@angular/core/rxjs-interop";
+import { FormControl, ReactiveFormsModule } from "@angular/forms";
 import { LivroPendenciaGravidadeEnum, TipoLivroVersaoSituacaoEnum } from "@contratados-rpg/shared/enums";
 
 import { Icone } from "../../../shared/icone/icone.component";
@@ -6,6 +8,7 @@ import { Botao } from "../../../shared/ui/botao/botao.component";
 import { Campo } from "../../../shared/ui/campo/campo.component";
 import { MenuAcoes, type MenuAcoesItem } from "../../../shared/ui/menu-acoes/menu-acoes.component";
 import { Modal } from "../../../shared/ui/modal/modal.component";
+import { EditorMarkdown } from "../../../shared/ui/editor-markdown/editor-markdown.component";
 import { OficinaMudancas } from "./oficina-mudancas.service";
 import { OficinaStore } from "./oficina.store";
 
@@ -22,7 +25,7 @@ const ITENS: readonly MenuAcoesItem[] = [
  */
 @Component({
     selector: "app-oficina-publicar",
-    imports: [MenuAcoes, Modal, Botao, Campo, Icone],
+    imports: [MenuAcoes, Modal, Botao, Campo, Icone, EditorMarkdown, ReactiveFormsModule],
     templateUrl: "./oficina-publicar.component.html",
     styleUrl: "./oficina-publicar.component.scss",
 })
@@ -32,8 +35,9 @@ export class OficinaPublicar {
     protected readonly itens = ITENS;
 
     protected readonly situacao = signal<TipoLivroVersaoSituacaoEnum | null>(null);
-    protected readonly numero = signal("");
-    protected readonly nota = signal("");
+    protected readonly numeroControle = new FormControl("", { nonNullable: true });
+    protected readonly notaControle = new FormControl("", { nonNullable: true });
+    protected readonly numero = toSignal(this.numeroControle.valueChanges, { initialValue: "" });
     protected readonly recusa = signal<{ readonly mensagem: string; readonly erros: readonly string[] } | null>(null);
 
     protected readonly aberto = computed(() => this.situacao() !== null);
@@ -51,8 +55,8 @@ export class OficinaPublicar {
 
     protected abrir(situacao: string): void {
         this.situacao.set(situacao as TipoLivroVersaoSituacaoEnum);
-        this.numero.set(this.mudancas.numeroSugerido());
-        this.nota.set("");
+        this.numeroControle.setValue(this.mudancas.numeroSugerido());
+        this.notaControle.setValue("");
         this.recusa.set(null);
     }
 
@@ -60,14 +64,10 @@ export class OficinaPublicar {
         this.situacao.set(null);
     }
 
-    protected digitar(sinal: WritableSignal<string>, evento: Event): void {
-        sinal.set((evento.target as HTMLInputElement | HTMLTextAreaElement).value);
-    }
-
     protected async confirmar(): Promise<void> {
         const situacao = this.situacao();
         if (!situacao || this.bloqueada()) return;
-        const resultado = await this.mudancas.publicar(situacao, this.numero(), this.nota());
+        const resultado = await this.mudancas.publicar(situacao, this.numero(), this.notaControle.value);
         if (resultado.ok) this.fechar();
         else this.recusa.set({ mensagem: resultado.mensagem, erros: resultado.erros });
     }

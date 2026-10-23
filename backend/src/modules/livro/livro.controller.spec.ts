@@ -10,6 +10,8 @@ describe("LivroController (m11-04)", () => {
   const servico = {
     listarLivros: vi.fn().mockResolvedValue([]),
     recuperarLivro: vi.fn().mockResolvedValue({}),
+    recuperarPublicada: vi.fn().mockResolvedValue({}),
+    recuperarMudancasPublicadas: vi.fn().mockResolvedValue({}),
     listarVersoes: vi.fn().mockResolvedValue([]),
     recuperarVersao: vi.fn().mockResolvedValue({}),
     publicar: vi.fn().mockResolvedValue({}),
@@ -36,7 +38,14 @@ describe("LivroController (m11-04)", () => {
     );
   });
 
-  it.each(["listar", "recuperar"] as const)("%s é de login opcional e não é cacheada às cegas", (metodo) => {
+  it("consulta mudanças e publicada sem transmitir papel para a seleção", async () => {
+    await controller.recuperarMudancasPublicadas("sistema", 4);
+    expect(servico.recuperarMudancasPublicadas).toHaveBeenCalledWith({ codigo: "sistema", origemId: 4 });
+    await controller.recuperarPublicada("sistema");
+    expect(servico.recuperarPublicada).toHaveBeenCalledWith({ codigo: "sistema" });
+  });
+
+  it.each(["listar", "recuperar", "recuperarMudancasPublicadas", "recuperarPublicada"] as const)("%s é de login opcional e não é cacheada às cegas", (metodo) => {
     const manipulador = LivroController.prototype[metodo];
     expect(Reflect.getMetadata(IS_PUBLIC_KEY, manipulador)).toBe("opcional");
     expect(Reflect.getMetadata("__headers__", manipulador)).toEqual([

@@ -1,0 +1,204 @@
+<div class="mudancas-publicadas">
+    @if (resultado(); as comparacao) {
+        <div class="mudancas-publicadas__controles">
+            <strong class="mudancas-publicadas__titulo">{{ comparacao.titulo }}</strong>
+            @if (comparacao.origem) {
+                <app-campo rotulo="De — publicação de origem" tamanho="compacto">
+                    <app-seletor
+                        rotulo="Publicação de origem"
+                        [formControl]="origem"
+                        [opcoes]="opcoes()"
+                    />
+                </app-campo>
+            }
+            <div class="mudancas-publicadas__destino">
+                <span class="mudancas-publicadas__rotulo">Para — publicação atual</span>
+                <span
+                    >{{ comparacao.atual.numero }} ·
+                    {{ comparacao.atual.publicacaoData | date: "dd/MM/yyyy HH:mm" }}</span
+                >
+            </div>
+        </div>
+    }
+    <div class="mudancas-publicadas__corpo" [attr.aria-busy]="carregando()">
+        @if (carregando()) {
+            <div class="mudancas-publicadas__espera" role="status">
+                <span>Comparando publicações…</span>
+                <app-esqueleto class="mudancas-publicadas__esqueleto" />
+                <app-esqueleto class="mudancas-publicadas__esqueleto" />
+            </div>
+        } @else if (falha()) {
+            <app-estado-vazio
+                tamanho="compacto"
+                icone="alerta"
+                titulo="Não foi possível consultar as mudanças."
+                linhaApoio="Tente carregar as publicações novamente."
+            >
+                <button
+                    estadoVazioAcao
+                    app-botao
+                    type="button"
+                    variante="secundario"
+                    estilo="contorno"
+                    tamanho="pequeno"
+                    class="mudancas-publicadas__acao"
+                    (click)="tentarNovamente()"
+                >
+                    Tentar novamente
+                </button>
+            </app-estado-vazio>
+        } @else if (resultado(); as comparacao) {
+            <app-cartao titulo="Notas das publicações" [semCaixa]="true">
+                <span cartaoIndice>01</span>
+                <p class="mudancas-publicadas__apoio">
+                    Histórico editorial em ordem de publicação. Os blocos abaixo mostram a diferença
+                    acumulada entre origem e atual; alterações revertidas podem constar somente nas
+                    notas.
+                </p>
+                @for (nota of notas(); track nota.id) {
+                    <section
+                        class="mudancas-publicadas__nota"
+                        [attr.aria-label]="'Notas da publicação ' + nota.numero"
+                    >
+                        <strong class="mudancas-publicadas__titulo"
+                            >{{ nota.numero }} ·
+                            {{ nota.publicacaoData | date: "dd/MM/yyyy HH:mm" }}</strong
+                        >
+                        @if (nota.html) {
+                            <div
+                                class="mudancas-publicadas__markdown"
+                                [innerHTML]="nota.html"
+                            ></div>
+                        } @else {
+                            <p class="mudancas-publicadas__apoio">
+                                Esta publicação não tem nota editorial.
+                            </p>
+                        }
+                    </section>
+                } @empty {
+                    <p class="mudancas-publicadas__apoio">
+                        Não há notas editoriais neste intervalo.
+                    </p>
+                }
+            </app-cartao>
+            @if (!comparacao.origem) {
+                <app-estado-vazio
+                    tamanho="compacto"
+                    titulo="Não existe publicação anterior."
+                    linhaApoio="Esta é a primeira publicação disponível deste livro."
+                />
+            } @else if (mudancas().length === 0) {
+                <app-estado-vazio
+                    tamanho="compacto"
+                    titulo="Sem alterações de conteúdo."
+                    linhaApoio="O conteúdo das duas publicações é igual; as notas editoriais continuam acima."
+                />
+            } @else {
+                <app-cartao titulo="Blocos alterados" [semCaixa]="true">
+                    <span cartaoIndice>02</span>
+                    @for (mudanca of mudancas(); track mudanca.identificador) {
+                        <article class="mudancas-publicadas__item">
+                            <div class="mudancas-publicadas__cabecalho">
+                                <span class="mudancas-publicadas__caminho">{{
+                                    mudanca.caminho.join(" › ")
+                                }}</span>
+                                <app-chip
+                                    [severidade]="severidades[mudanca.situacao]"
+                                    tom="contorno"
+                                    >{{ rotulos[mudanca.situacao] }}</app-chip
+                                >
+                            </div>
+                            @if (mudanca.caminhoAnterior) {
+                                <p class="mudancas-publicadas__apoio">
+                                    Localização: {{ mudanca.caminhoAnterior.join(" › ") }} →
+                                    {{ mudanca.caminho.join(" › ") }}
+                                </p>
+                            }
+                            @if (mudanca.posicaoTexto) {
+                                <p class="mudancas-publicadas__apoio">{{ mudanca.posicaoTexto }}</p>
+                            }
+                            @if (mudanca.situacao !== Situacao.MOVIDA) {
+                                @if (
+                                    mudanca.antesMarkdown !== null &&
+                                    mudanca.situacao !== Situacao.NOVA
+                                ) {
+                                    <section data-lado="antes">
+                                        <h3 class="mudancas-publicadas__rotulo">Antes</h3>
+                                        <div
+                                            class="mudancas-publicadas__markdown"
+                                            [innerHTML]="mudanca.antesHtml"
+                                        ></div>
+                                    </section>
+                                }
+                                @if (
+                                    mudanca.depoisMarkdown !== null &&
+                                    mudanca.situacao !== Situacao.REMOVIDA
+                                ) {
+                                    <section data-lado="depois">
+                                        <h3 class="mudancas-publicadas__rotulo">Depois</h3>
+                                        <div
+                                            class="mudancas-publicadas__markdown"
+                                            [innerHTML]="mudanca.depoisHtml"
+                                        ></div>
+                                    </section>
+                                }
+                                @if (mudanca.textos.length) {
+                                    <div class="mudancas-publicadas__diferencas">
+                                        <h3 class="mudancas-publicadas__rotulo">
+                                            Diferenças no texto
+                                        </h3>
+                                        <p class="mudancas-publicadas__apoio">
+                                            Adições sublinhadas; remoções riscadas; formatação
+                                            indicada por pontilhado.
+                                        </p>
+                                        @for (campo of mudanca.textos; track $index) {
+                                            <p>
+                                                @for (trecho of campo.texto; track $index) {
+                                                    @switch (trecho.operacao) {
+                                                        @case (Operacao.ADICIONADO) {
+                                                            <ins>{{ trecho.texto }}</ins>
+                                                        }
+                                                        @case (Operacao.REMOVIDO) {
+                                                            <del>{{ trecho.texto }}</del>
+                                                        }
+                                                        @case (Operacao.FORMATACAO) {
+                                                            <span
+                                                                class="mudancas-publicadas__formatacao"
+                                                                aria-label="Formatação alterada"
+                                                                >{{ trecho.texto }}</span
+                                                            >
+                                                        }
+                                                        @default {
+                                                            <span>{{ trecho.texto }}</span>
+                                                        }
+                                                    }
+                                                }
+                                            </p>
+                                        }
+                                    </div>
+                                }
+                            }
+                            @if (mudanca.ancoraAtual; as ancora) {
+                                <button
+                                    app-botao
+                                    type="button"
+                                    variante="secundario"
+                                    estilo="contorno"
+                                    tamanho="pequeno"
+                                    class="mudancas-publicadas__acao"
+                                    (click)="irPara.emit(ancora)"
+                                >
+                                    {{
+                                        mudanca.situacao === Situacao.REMOVIDA
+                                            ? "Ir para seção atual"
+                                            : "Ir para regra atual"
+                                    }}
+                                </button>
+                            }
+                        </article>
+                    }
+                </app-cartao>
+            }
+        }
+    </div>
+</div>

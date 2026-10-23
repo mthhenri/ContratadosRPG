@@ -6,35 +6,59 @@
     [desabilitado]="store.estado() !== 'ok'"
     (escolheu)="abrir($event)"
 />
-<app-modal [aberto]="aberto()" [titulo]="titulo()" largura="480px" posicao="inferior" (fechou)="fechar()">
+<app-modal
+    [aberto]="aberto()"
+    [titulo]="titulo()"
+    largura="640px"
+    posicao="inferior"
+    (fechou)="fechar()"
+>
     <div class="oficina-publicar">
         <div class="oficina-publicar__resumo">
             <span class="oficina-publicar__rotulo">Mudanças desde a versão publicada</span>
             @if (mudancas.falhou()) {
-                <p class="oficina-publicar__nada">Não foi possível ler as versões do livro. Feche e tente de novo.</p>
+                <p class="oficina-publicar__nada">
+                    Não foi possível ler as versões do livro. Feche e tente de novo.
+                </p>
             } @else if (!mudancas.carregou()) {
                 <p class="oficina-publicar__nada">Lendo as versões do livro…</p>
             } @else if (resumo(); as contagem) {
                 @if (mudancas.total() === 0) {
-                    <p class="oficina-publicar__nada">Nada mudou: a edição está igual à versão publicada.</p>
+                    <p class="oficina-publicar__nada">
+                        Nada mudou: a edição está igual à versão publicada.
+                    </p>
                 } @else {
                     <p class="oficina-publicar__contagem">
                         @if (contagem.ALTERADA) {
-                            <span class="oficina-publicar__c--alterada">{{ contagem.ALTERADA }} {{ contagem.ALTERADA === 1 ? "alterada" : "alteradas" }}</span>
+                            <span class="oficina-publicar__c--alterada"
+                                >{{ contagem.ALTERADA }}
+                                {{ contagem.ALTERADA === 1 ? "alterada" : "alteradas" }}</span
+                            >
                         }
                         @if (contagem.NOVA) {
-                            <span class="oficina-publicar__c--nova">{{ contagem.NOVA }} {{ contagem.NOVA === 1 ? "nova" : "novas" }}</span>
+                            <span class="oficina-publicar__c--nova"
+                                >{{ contagem.NOVA }}
+                                {{ contagem.NOVA === 1 ? "nova" : "novas" }}</span
+                            >
                         }
                         @if (contagem.REMOVIDA) {
-                            <span class="oficina-publicar__c--removida">{{ contagem.REMOVIDA }} {{ contagem.REMOVIDA === 1 ? "removida" : "removidas" }}</span>
+                            <span class="oficina-publicar__c--removida"
+                                >{{ contagem.REMOVIDA }}
+                                {{ contagem.REMOVIDA === 1 ? "removida" : "removidas" }}</span
+                            >
                         }
                         @if (contagem.MOVIDA) {
-                            <span class="oficina-publicar__c--movida">{{ contagem.MOVIDA }} {{ contagem.MOVIDA === 1 ? "movida" : "movidas" }}</span>
+                            <span class="oficina-publicar__c--movida"
+                                >{{ contagem.MOVIDA }}
+                                {{ contagem.MOVIDA === 1 ? "movida" : "movidas" }}</span
+                            >
                         }
                     </p>
                 }
             } @else {
-                <p class="oficina-publicar__nada">Este livro ainda não tem versão publicada: tudo entra como novo.</p>
+                <p class="oficina-publicar__nada">
+                    Este livro ainda não tem versão publicada: tudo entra como novo.
+                </p>
             }
         </div>
 
@@ -42,7 +66,8 @@
             <div class="oficina-publicar__alerta" role="alert">
                 <app-icone nome="alerta" />
                 <span>
-                    {{ pendencias().length }} {{ pendencias().length === 1 ? "pendência" : "pendências" }} no livro.
+                    {{ pendencias().length }}
+                    {{ pendencias().length === 1 ? "pendência" : "pendências" }} no livro.
                     @if (estruturais() > 0) {
                         Há pendência estrutural: nenhuma publicação sai assim.
                     } @else if (ehRascunho()) {
@@ -60,18 +85,23 @@
                 type="text"
                 autocomplete="off"
                 maxlength="32"
-                [value]="numero()"
-                (input)="digitar(numero, $event)"
+                [formControl]="numeroControle"
             />
         </app-campo>
-        <app-campo rotulo="O que mudou (opcional)">
-            <textarea
-                class="campo__controle campo__controle--area oficina-publicar__entrada--nota"
-                rows="3"
-                placeholder="Ex.: ajuste de custos do Lutador"
-                [value]="nota()"
-                (input)="digitar(nota, $event)"
-            ></textarea>
+        <app-campo
+            rotulo="O que mudou (opcional)"
+            dica="Notas em Markdown que acompanham esta publicação."
+        >
+            @if (aberto()) {
+                <app-editor-markdown
+                    class="oficina-publicar__entrada--nota"
+                    rotulo="O que mudou nesta publicação"
+                    [compacto]="true"
+                    [propagarImediatamente]="true"
+                    [somenteLeitura]="mudancas.publicando()"
+                    [formControl]="notaControle"
+                />
+            }
         </app-campo>
 
         @if (recusa(); as falha) {
@@ -90,8 +120,15 @@
             </div>
         }
     </div>
-    <ng-container modalAcoes>
-        <button app-botao variante="secundario" estilo="contorno" tamanho="pequeno" type="button" (click)="fechar()">
+    <div modalAcoes class="oficina-publicar__acoes">
+        <button
+            app-botao
+            variante="secundario"
+            estilo="contorno"
+            tamanho="pequeno"
+            type="button"
+            (click)="fechar()"
+        >
             Cancelar
         </button>
         <button
@@ -104,5 +141,5 @@
         >
             {{ mudancas.publicando() ? "Publicando…" : titulo() }}
         </button>
-    </ng-container>
+    </div>
 </app-modal>

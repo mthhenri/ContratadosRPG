@@ -1,0 +1,193 @@
+@use "tema/breakpoints" as bp;
+
+// Análogo: gaveta da Oficina (controles fixos, corpo rolável, caminho mono e chip).
+:host {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    min-width: 0;
+}
+.mudancas-publicadas {
+    app-cartao,
+    section {
+        min-width: 0;
+    }
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    min-width: 0;
+    &__controles {
+        display: grid;
+        flex: none;
+        gap: var(--space-12);
+        padding-bottom: var(--space-12);
+        border-bottom: 1px solid var(--border);
+    }
+    &__destino {
+        display: grid;
+        gap: var(--space-4);
+        font-size: 12px;
+    }
+    &__corpo {
+        display: grid;
+        align-content: start;
+        gap: var(--space-16);
+        flex: 1;
+        min-height: 0;
+        min-width: 0;
+        overflow-y: auto;
+        padding-top: var(--space-12);
+    }
+    &__titulo {
+        font: 600 13.5px var(--font-mono);
+        overflow-wrap: anywhere;
+    }
+    &__rotulo {
+        margin: 0 0 var(--space-4);
+        font: 500 11px var(--font-mono);
+        color: var(--text-mute);
+    }
+    &__apoio {
+        margin: 0;
+        font-size: 12px;
+        color: var(--text-dim);
+        overflow-wrap: anywhere;
+    }
+    &__nota,
+    &__item {
+        display: grid;
+        gap: var(--space-8);
+        min-width: 0;
+        padding: var(--space-12) 0;
+        border-bottom: 1px solid var(--border);
+    }
+    &__cabecalho {
+        display: flex;
+        align-items: baseline;
+        flex-wrap: wrap;
+        gap: var(--space-8);
+    }
+    &__caminho {
+        font: 500 11px var(--font-mono);
+        color: var(--text-dim);
+        overflow-wrap: anywhere;
+    }
+    &__acao {
+        justify-self: start;
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+    }
+    &__espera {
+        display: grid;
+        gap: var(--space-12);
+        font-size: 13px;
+        color: var(--text-dim);
+    }
+    &__esqueleto {
+        height: 80px;
+        width: 100%;
+    }
+    &__diferencas {
+        font-size: 13px;
+        overflow-wrap: anywhere;
+        p {
+            margin: 0 0 var(--space-8);
+        }
+    }
+    &__formatacao {
+        text-decoration: underline dotted;
+    }
+    ins,
+    del {
+        border-radius: var(--radius-tight);
+    }
+    ins {
+        color: var(--positive);
+        background: color-mix(in srgb, var(--positive) 18%, transparent);
+        text-decoration: underline;
+    }
+    del {
+        color: var(--erro);
+        background: color-mix(in srgb, var(--erro) 18%, transparent);
+    }
+    // Mesmo escopo do Markdown dos patchnotes: conteúdo inserido não recebe atributos Angular.
+    &__markdown {
+        min-width: 0;
+        overflow-x: auto;
+        overflow-wrap: anywhere;
+        font-size: 14px;
+        line-height: 1.55;
+        color: var(--text-dim);
+        ::ng-deep {
+            p,
+            ul,
+            ol,
+            blockquote,
+            pre,
+            table {
+                margin: 0 0 var(--space-8);
+            }
+            h1,
+            h2,
+            h3,
+            h4,
+            h5,
+            h6 {
+                margin: var(--space-12) 0 var(--space-8);
+                font: 600 14px var(--font-mono);
+                color: var(--text);
+            }
+            ul,
+            ol {
+                padding-left: var(--space-20);
+            }
+            ul {
+                list-style: disc;
+            }
+            ol {
+                list-style: decimal;
+            }
+            strong {
+                color: var(--text);
+                font-weight: 600;
+            }
+            a {
+                color: var(--accent);
+                text-decoration: underline;
+            }
+            code {
+                font-family: var(--font-mono);
+                background: var(--surface-2);
+                border-radius: var(--radius-tight);
+            }
+            pre {
+                overflow-x: auto;
+                padding: var(--space-8);
+                background: var(--surface-2);
+            }
+            blockquote {
+                border-left: 2px solid var(--border-strong);
+                padding-left: var(--space-12);
+            }
+            table {
+                border-collapse: collapse;
+                min-width: 100%;
+                font-size: 12px;
+            }
+            th,
+            td {
+                padding: var(--space-8);
+                border: 1px solid var(--border);
+                text-align: left;
+            }
+            th {
+                color: var(--text);
+                font-family: var(--font-mono);
+                background: var(--surface-2);
+            }
+        }
+    }
+}

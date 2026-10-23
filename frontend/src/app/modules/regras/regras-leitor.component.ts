@@ -16,6 +16,7 @@ import { OficinaBarra } from "./oficina/oficina-barra.component";
 import { OficinaApi } from "./oficina/oficina-api.service";
 import { OficinaMudancas } from "./oficina/oficina-mudancas.service";
 import { OficinaMudancasLista } from "./oficina/oficina-mudancas.component";
+import { RegrasMudancasPublicadas } from "./publicacoes/regras-mudancas-publicadas.component";
 import { Campo } from "../../shared/ui/campo/campo.component";
 import type { LivroVersaoResumoDto } from "@contratados-rpg/shared/dtos/livro";
 import { projetarPecasEmRegras } from "@contratados-rpg/shared/livro";
@@ -57,7 +58,8 @@ const MARGEM_LATERAL = 32;
     imports: [NgTemplateOutlet, Icone, Marca, Botao, Cartao, Esqueleto, EstadoVazio,
         Segmentado, SegmentadoItem, Gaveta, Paleta, RegrasPesquisa, RegrasPesquisaProjecao,
         BotaoIcone, Tooltip, Chip,
-        RegrasConteudoRender, OficinaBarra, OficinaSumario, MenuInsercao, OficinaMudancasLista, Campo],
+        RegrasConteudoRender, OficinaBarra, OficinaSumario, MenuInsercao, OficinaMudancasLista,
+        RegrasMudancasPublicadas, Campo],
     templateUrl: "./regras-leitor.component.html",
     styleUrl: "./regras-leitor.component.scss",
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -106,6 +108,9 @@ export class RegrasLeitor {
     protected readonly oficinaAtiva = computed(() => this.podeEditar() && this.modoOficina() && this.versaoVista() === null);
     /** Gaveta "O que mudou" (só na Oficina). */
     protected readonly mudancasAbertas = signal(false);
+    protected readonly publicacoesAbertas = signal(false);
+    private readonly ancoraPublicada = signal<string | null>(null);
+    private leituraOficialSolicitada = false;
     /** Largura livre à direita da coluna do livro (px); o "O que mudou" só vira painel lateral se ela comportar o painel. */
     private readonly espacoLateral = signal(0);
     protected readonly usarLateral = computed(() =>
@@ -177,7 +182,10 @@ export class RegrasLeitor {
         });
         effect(() => {
             const livro = this.livro();
-            untracked(() => this.carregarDocumento(livro));
+            untracked(() => {
+                this.publicacoesAbertas.set(false);
+                this.carregarDocumento(livro);
+            });
         });
         effect(() => {
             const ativa = this.oficinaAtiva();
@@ -192,7 +200,7 @@ export class RegrasLeitor {
         });
         effect(() => {
             const documento = this.documento();
-            const pedido = this.ancoraInicial();
+            const pedido = this.ancoraPublicada() ?? this.ancoraInicial();
             // Na Oficina o livro mostrado vem da cópia de trabalho: só navega quando ele já está na tela.
             const pronto = this.estadoExibido() === "ok";
             // URL de antes de uma renomeação: a âncora antiga leva à atual.
@@ -242,11 +250,12 @@ export class RegrasLeitor {
             void this.oficina.carregar(this.livro(), { titulo: documento.titulo, numero: documento.versao });
             return;
         }
-        this.carregarDocumento(this.livro());
+        this.carregarDocumento(this.livro(), this.leituraOficialSolicitada, this.ancoraPublicada());
     }
 
     protected alternarModo(oficina: boolean): void {
         this.gavetaAberta.set(false);
+        this.publicacoesAbertas.set(false);
         if (oficina) this.voltarVersaoAtual();
         else if (this.oficinaAtiva()) {
             // O que a Oficina gravou ou publicou não está na leitura em cache: lê de novo ao voltar para a Leitura.
@@ -408,6 +417,15 @@ export class RegrasLeitor {
         this.posicionarAncora(ancora, true);
     }
 
+    /** A comparação aponta sempre para a publicação oficial, inclusive em sessão privilegiada. */
+    protected irParaPublicada(ancora: string): void {
+        this.publicacoesAbertas.set(false);
+        this.gavetaAberta.set(false);
+        this.versaoVista.set(null);
+        this.pesquisa.limpar();
+        this.carregarDocumento(this.livro(), true, ancora);
+    }
+
     protected clicarSumario(evento: MouseEvent, ancora: string): void {
         if (evento.button !== 0 || evento.ctrlKey || evento.metaKey
             || evento.shiftKey || evento.altKey) {
@@ -436,7 +454,11 @@ export class RegrasLeitor {
         }
     }
 
-    private carregarDocumento(livro: RegrasDocumento["id"]): void {
+    private carregarDocumento(
+        livro: RegrasDocumento["id"], publicada = false, ancora: string | null = null,
+    ): void {
+        this.leituraOficialSolicitada = publicada;
+        this.ancoraPublicada.set(ancora);
         this.pesquisa.desconectarDocumento();
         this.geracao++;
         this.desconectar?.();
@@ -445,7 +467,9 @@ export class RegrasLeitor {
         this.leitura.set(null);
         this.ativo.set(null);
         this.estado.set("carregando");
-        this.assinatura = this.service.carregarLeitura(livro).subscribe({
+        const leitura = publicada
+            ? this.service.carregarPublicada({ codigo: livro }) : this.service.carregarLeitura(livro);
+        this.assinatura = leitura.subscribe({
             next: ({ documento, ...origem }) => {
                 this.leitura.set({ documento, ...origem });
                 this.documento.set(documento);
