@@ -1,18 +1,24 @@
 # HISTORY.md — Histórico do Projeto
 
-## 2026-10-25 — v1.12.0: preparação autorizada para produção
+## 2026-10-25 — v1.12.0 publicada em produção
 
 Autor aprovou a v1.12.0 e o envio a produção com as mudanças posteriores à v1.11.0:
 ícones e ajustes de interface, montador em mais telas, consulta de mudanças dos livros,
 exportação das publicações e organização de Regras/Investigação com críticos nos cartões.
-Nota em linguagem de jogador escrita em docs/patchnotes/1.12.0.md; pacotes, lock e constante
-sincronizados. Seed e reset permanecem ferramentas locais, fora das notas públicas.
+Nota em linguagem de jogador em docs/patchnotes/1.12.0.md; pacotes, lock e constante
+sincronizados. Seed e reset continuam locais, fora das notas públicas.
 
-Pré-publicação: nota e workflow simulados, build shared/backend/frontend aprovados,
+Commit `97776c07` enviado a master; workflow 40211763891 publicou as notas e criou a tag
+v1.12.0 no mesmo commit. Cloudflare Pages e Cloud Build concluídos com sucesso; revisão
+Cloud Run `contratados-rpg-api-00098-7mf` recebeu 100% do tráfego. `/health` confirmou
+1.12.0; nota pública disponível e inspecionada em 1920×1080 e 360×800, sem overflow.
+Exportação de livros sem sessão devolveu 401; conteúdo administrativo de produção não foi
+baixado durante a conferência.
+
+Pré-publicação: nota/workflow simulados, builds shared/backend/frontend aprovados,
 1340 testes shared aprovados e repo:verificar aprovado. Bundle frontend mantém aviso
-603,33 kB/450 kB. Push e comprovação do deploy seguem na
-[spec ativa](../specs/active/publicar-v1-12-0.spec.md).
-
+603,33 kB/450 kB. Não houve migration nova nem reset/seed em produção. Evidências e limites na
+[verificação](../specs/done/publicar-v1-12-0/verificacao.md).
 
 ## 2026-10-25 — Seed de desenvolvimento: NPCs e revisão dos exemplos
 

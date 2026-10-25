@@ -3655,10 +3655,10 @@ de view aplica o atributo do TEMPLATE DO CONSUMIDOR, não o do componente).
 
 ### Versão e patchnotes — `shared/versao`, `backend/patchnote`, `frontend/patchnotes` (pn-01…pn-07)
 
-A **versão do sistema** tem fonte única: o `version` do `package.json` da raiz (hoje `1.12.0`).
-Nota 1.6.0 aprovada pelo autor e preparação local validada: crítico de teste, livros
-vigentes, Competências/equipamento/ataques de NPC e criação de ameaças. Publicação no R2,
-tag e deploy pendentes do envio ao remoto e do workflow; sem validação desta versão em produção.
+A **versão do sistema** tem fonte única: o `version` do `package.json` da raiz (hoje `1.12.0`, publicada em produção em 25/10/2026).
+Nota 1.12.0 publicada no R2, tag criada e deploy confirmado: mudanças dos livros, exportação
+das publicações, montador em mais telas e ajustes de Regras/Investigação e críticos nos cartões.
+API e frontend validados em produção; evidências em `docs/specs/done/publicar-v1-12-0/verificacao.md`.
 `npm run versao:sincronizar` alinha os três workspaces e o lock e gera `shared/src/versao.ts`
 (`VERSAO_SISTEMA`); um teste de `shared` falha se algo divergir. Ela aparece na topbar (chip ao lado
 da marca, com ponto enquanto a última versão vista neste navegador for outra — `VersaoService`, que
