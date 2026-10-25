@@ -1,5 +1,19 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-25 — v1.12.0: preparação autorizada para produção
+
+Autor aprovou a v1.12.0 e o envio a produção com as mudanças posteriores à v1.11.0:
+ícones e ajustes de interface, montador em mais telas, consulta de mudanças dos livros,
+exportação das publicações e organização de Regras/Investigação com críticos nos cartões.
+Nota em linguagem de jogador escrita em docs/patchnotes/1.12.0.md; pacotes, lock e constante
+sincronizados. Seed e reset permanecem ferramentas locais, fora das notas públicas.
+
+Pré-publicação: nota e workflow simulados, build shared/backend/frontend aprovados,
+1340 testes shared aprovados e repo:verificar aprovado. Bundle frontend mantém aviso
+603,33 kB/450 kB. Push e comprovação do deploy seguem na
+[spec ativa](../specs/active/publicar-v1-12-0.spec.md).
+
+
 ## 2026-10-25 — Seed de desenvolvimento: NPCs e revisão dos exemplos
 
 Atendido o pedido de reset local com NPCs padrão: cada campanha recebe um Civil, um
