@@ -64,6 +64,10 @@
 
 ### P-129 — Abas não selecionadas da campanha/NPC sem nome acessível no celular · `ABERTO` · frontend/acessibilidade
 
+> Recorte da campanha corrigido: as três abas têm `aria-label`, inclusive quando
+> só o ícone aparece; [verificação](../specs/done/investigacao-rolagem-coluna-e-icones-abas/verificacao.md).
+> A pendência permanece nas abas da ficha de NPC citadas abaixo.
+
 - **Sintoma:** em 360×800, a aba Criaturas não selecionada não é encontrada por papel
   `tab` e nome "Criaturas"; o desenho aparece, mas falta nome acessível.
 - **Causa:** `shared/ui/abas/aba.component.scss` oculta `.abas__rotulo` com `display: none`

@@ -49,4 +49,12 @@
             (livroAlterado)="selecionarLivro($event)"
         />
     }
+    @if (!ehMobile() && !maximizada()) {
+        <span
+            painelRedimensionar
+            class="regras-flutuante__redimensionar"
+            aria-hidden="true"
+            (pointerdown)="iniciarRedimensionamento($event)"
+        ></span>
+    }
 </app-painel-flutuante>

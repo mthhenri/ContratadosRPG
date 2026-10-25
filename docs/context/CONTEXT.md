@@ -1055,7 +1055,9 @@ redistribuição, preserva orçamento/tetos e a base Civil, com foco de teclado 
 Sem rascunho local nem diálogo de sair (a saída é o
 `canDeactivate`); sem imagem de registro (`I-046`); casco copiado, não compartilhado (`I-045`). **Campanha do mestre (`m4-15`):**
 `CampanhaFichasAbas` (`campanha/componentes/campanha-fichas-abas/`) traz as três abas (`app-abas`), cada uma com o mesmo
-cabeçalho de seção (contagem + botão de criar) e a mesma grade; Esquadrão e NPC usam `EspectadorFichaCard` (generalizado: dados
+cabeçalho de seção (contagem + botão de criar) e a mesma grade. Abas usam `membros`,
+`criatura` (SCP) e `npc` (peão), com nomes acessíveis também no mobile.
+Esquadrão e NPC usam `EspectadorFichaCard` (generalizado: dados
 são um `Pick<ItemFicha>`, `donoNome` = categoria no NPC, `mostrarEnergia` falso no Civil), criatura usa
 `CriaturaEsquadraoCard`; ordem A–Z por `ordenarPorNome` (`ficha/ordenacao-nome.ts`, também do acervo). "Abrir ficha": criatura
 na janela flutuante, NPC em nova aba (a janela não suporta NPC — `I-044`). Menu ⋯ (raiz da página) nos três tipos; criatura e
@@ -1538,7 +1540,10 @@ ficha nenhuma) e `CampanhaRepository.listarMembros` (mesmo padrão de `recuperar
 para o nome do dono). Frontend: novo componente `EspectadorFichaCard`, reusando
 `agruparFichasPorMembro`/`ordenarMembros` (`campanha-equipe.util.ts`, m8-04) para montar a grade.
 "Última rolagem" é derivada no cliente do feed já paginado (primeira ocorrência do `fichaId`),
-nunca uma consulta nova. Testes: `shared` 744/744, `backend` 551/551 (13 novos), `frontend`
+nunca uma consulta nova. Crítico usa as marcas do resultado recebido para mostrar o ícone
+antes da rolagem e brilho canônico na cor da ficha, sem selo/texto visível; nome longo
+elide, ícone e total permanecem. [Verificação](../specs/done/ultima-rolagem-indicador-critico/verificacao.md).
+Testes: `shared` 744/744, `backend` 551/551 (13 novos), `frontend`
 1631/1631 (18 novos); lint sem erro novo nos três workspaces; build limpo (frontend com o aviso de
 budget conhecido, `P-004`). Verificação ao vivo (Postgres + backend + frontend reais, cenário via
 REST cru) em `1920×1080`/`960×1080`/`360×800`: ficha oculta nunca apareceu, nome do dono resolvido
@@ -3183,6 +3188,9 @@ no palco do mestre — não emite, não sincroniza entre dispositivos dele), `li
 (`DELETE cena/:id/documento/foco`, mesmas permissões, sem revelar/remover/emissão) e `apresentar` (revela +
 marca em foco). `CampanhaGateway.emitirCenaDocumentoAlterado` — dataless (`{ campanhaId, cenaId }`,
 molde de `campanha:inventario-alterado`) para as três salas; quem recebe refaz o `GET`.
+Rolagem rápida/público-oculto ficam no topo da coluna de rolagens, acima do histórico,
+no mesmo padrão compacto da campanha; destacar o histórico preserva o rolador.
+[Layout e ícones das abas](../specs/done/investigacao-rolagem-coluna-e-icones-abas/verificacao.md).
 `EncontroPainelDadosService.documentosCena`/`ehInvestigacao`/`documentoEmFoco` carregam só quando
 `cena.tipo === INVESTIGACAO` e assinam `cenaDocumentoAlterado$` (`TempoRealService`) filtrado pela
 cena da tela. No mestre: coluna Documentos entre a de ações e Rolagens (`app-documento-cartao` da
@@ -3499,7 +3507,12 @@ Esta auditoria encerra a investigação documental, não certifica o leitor como
 Topbar Regras e ação da ficha abrem painel global; ↗ abre `/regras/sistema` ou
 `/regras/guia` na seção atual. `RegrasLeitor` é o corpo comum, `RegrasPage` cuida
 da URL e `RegrasFlutuante` da janela; memória por livro em `RegrasLeituraStore`
-durante a sessão. IDs locais isolam página e painel simultâneos. Rotas públicas
+durante a sessão. No painel compacto, Sumário e Sistema/Guia dividem uma linha e
+a pesquisa fica visível abaixo; resultados continuam no sumário, destaques e contador
+no livro. Alça permite redimensionar, com tamanho preservado ao maximizar/restaurar
+e posição confinada mesmo após reduzir o viewport. Mobile mantém folha cheia.
+[Layout e verificação](../specs/done/regras-flutuante-layout-e-redimensionamento/verificacao.md).
+IDs locais isolam página e painel simultâneos. Rotas públicas
 lazy, JSON com cache por livro, versão do asset, sumário até nível 3 e títulos até nível 4
 navegáveis. O sumário inclui também as três classes e três subclasses sob suas seções;
 os cartões têm âncoras próprias, seleção por leitura e IDs isolados por leitor.

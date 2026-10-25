@@ -27,6 +27,33 @@ describe("Leitor compartilhado de Regras", () => {
     });
     afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
+    it("oferece pesquisa na barra do painel compacto sem campo duplicado no sumário", () => {
+        const leitor = TestBed.createComponent(RegrasLeitor);
+        leitor.componentRef.setInput("livro", "sistema");
+        leitor.componentRef.setInput("emPainel", true);
+        leitor.detectChanges();
+        const raiz = leitor.nativeElement as HTMLElement;
+        const campo = raiz.querySelector<HTMLInputElement>(".regras__barra input");
+        expect(campo).not.toBeNull();
+        expect(campo?.placeholder).toBe("Pesquisar no livro…");
+        expect(campo?.getAttribute("aria-label")).toBe("Pesquisar no livro");
+        raiz.querySelector<HTMLButtonElement>('[aria-label="Abrir sumário das Regras"]')!.click();
+        leitor.detectChanges();
+        expect(raiz.querySelectorAll('input[aria-label="Pesquisar no livro"]')).toHaveLength(1);
+        expect(raiz.querySelector(".regras__ir-para")).toBeNull();
+        leitor.destroy();
+    });
+
+    it("mantém a pesquisa no trilho da página completa", () => {
+        const leitor = TestBed.createComponent(RegrasLeitor);
+        leitor.componentRef.setInput("livro", "sistema");
+        leitor.detectChanges();
+        const raiz = leitor.nativeElement as HTMLElement;
+        expect(raiz.querySelector(".regras__barra input")).toBeNull();
+        expect(raiz.querySelector(".regras__trilho input")).not.toBeNull();
+        leitor.destroy();
+    });
+
     it.each([false, true])("oferece mudanças publicadas sem Oficina (painel=%s)", (emPainel) => {
         const leitor = TestBed.createComponent(RegrasLeitor);
         leitor.componentRef.setInput("livro", "sistema");

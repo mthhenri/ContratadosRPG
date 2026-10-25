@@ -126,8 +126,93 @@ describe("RegrasFlutuante", () => {
             expect(painel.largura()).toBeNull();
             expect(fixture.nativeElement.querySelector('[aria-label="Maximizar Regras"]'))
                 .toBeNull();
+            expect(fixture.nativeElement.querySelector("[painelRedimensionar]")).toBeNull();
         } finally {
             Object.defineProperty(window, "innerWidth", { configurable: true, value: largura });
+        }
+    });
+
+    it("redimensiona a partir da caixa real e restaura o tamanho escolhido após maximizar", () => {
+        const { fixture, consulta } = montar();
+        consulta.abrir(); fixture.detectChanges();
+        const painel = fixture.debugElement.query(By.directive(PainelFlutuante))
+            .componentInstance as PainelFlutuante;
+        vi.spyOn(painel, "obterElemento").mockReturnValue({ getBoundingClientRect: () => ({
+            left: 40, top: 80, width: 600, height: 500,
+        }) } as HTMLElement);
+        const alca = fixture.debugElement.query(By.css("[painelRedimensionar]"));
+        expect(alca).not.toBeNull();
+        alca.triggerEventHandler("pointerdown", {
+            button: 0, pointerId: 1, clientX: 640, clientY: 580,
+            preventDefault: vi.fn(), stopPropagation: vi.fn(),
+        });
+        window.dispatchEvent(new MouseEvent("pointermove", { clientX: 720, clientY: 620 }));
+        window.dispatchEvent(new MouseEvent("pointerup"));
+        fixture.detectChanges();
+        expect(painel.largura()).toBe(680);
+        expect(painel.altura()).toBe(540);
+        fixture.nativeElement.querySelector('[aria-label="Maximizar Regras"]').click();
+        fixture.detectChanges();
+        expect(fixture.nativeElement.querySelector("[painelRedimensionar]")).toBeNull();
+        fixture.nativeElement.querySelector('[aria-label="Restaurar tamanho das Regras"]').click();
+        fixture.detectChanges();
+        expect(painel.largura()).toBe(680);
+        expect(painel.altura()).toBe(540);
+    });
+
+    it("limita o arraste à área livre e encerra ao cancelar o ponteiro", () => {
+        const { fixture, consulta } = montar();
+        consulta.abrir(); fixture.detectChanges();
+        const painel = fixture.debugElement.query(By.directive(PainelFlutuante))
+            .componentInstance as PainelFlutuante;
+        vi.spyOn(painel, "obterElemento").mockReturnValue({ getBoundingClientRect: () => ({
+            left: 100, top: 80, width: 600, height: 500,
+        }) } as HTMLElement);
+        const alca = fixture.debugElement.query(By.css("[painelRedimensionar]"));
+        expect(alca).not.toBeNull();
+        alca.triggerEventHandler("pointerdown", {
+            button: 0, pointerId: 1, clientX: 700, clientY: 580,
+            preventDefault: vi.fn(), stopPropagation: vi.fn(),
+        });
+        window.dispatchEvent(new MouseEvent("pointermove", { clientX: 9999, clientY: 9999 }));
+        fixture.detectChanges();
+        expect(painel.largura()).toBe(window.innerWidth - 100);
+        expect(painel.altura()).toBe(window.innerHeight - 80);
+        window.dispatchEvent(new MouseEvent("pointermove", { clientX: -9999, clientY: -9999 }));
+        fixture.detectChanges();
+        expect(painel.largura()).toBe(360);
+        expect(painel.altura()).toBe(360);
+        window.dispatchEvent(new MouseEvent("pointercancel"));
+        window.dispatchEvent(new MouseEvent("pointermove", { clientX: 9999, clientY: 9999 }));
+        fixture.detectChanges();
+        expect(painel.largura()).toBe(360);
+    });
+
+    it("restaura dentro da tela quando o viewport diminui durante a maximização", () => {
+        const dimensoes = { largura: window.innerWidth, altura: window.innerHeight };
+        const definirViewport = (largura: number, altura: number) => {
+            Object.defineProperty(window, "innerWidth", { configurable: true, value: largura });
+            Object.defineProperty(window, "innerHeight", { configurable: true, value: altura });
+        };
+        try {
+            definirViewport(1920, 1080);
+            const { fixture, consulta } = montar();
+            consulta.abrir(); fixture.detectChanges();
+            const painel = fixture.debugElement.query(By.directive(PainelFlutuante))
+                .componentInstance as PainelFlutuante;
+            painel.moverPara({ x: 1000, y: 300 });
+            fixture.nativeElement.querySelector('[aria-label="Maximizar Regras"]').click();
+            fixture.detectChanges();
+            definirViewport(800, 700);
+            window.dispatchEvent(new Event("resize"));
+            fixture.detectChanges();
+            fixture.nativeElement.querySelector('[aria-label="Restaurar tamanho das Regras"]').click();
+            fixture.detectChanges();
+            expect(painel.obterPosicaoAtual()).toEqual({ x: 40, y: 56 });
+            expect(painel.largura()).toBe(760);
+            expect(painel.altura()).toBe(644);
+        } finally {
+            definirViewport(dimensoes.largura, dimensoes.altura);
         }
     });
 });

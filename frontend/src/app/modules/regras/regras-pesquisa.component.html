@@ -1,35 +1,42 @@
-<app-campo
-    rotulo="Pesquisar no livro"
-    icone="busca"
-    tamanho="compacto"
-    dica="A partir de 2 caracteres. Enter / Shift+Enter navegam; Esc limpa."
->
-    <input
-        #campoPesquisa
-        class="campo__controle regras-pesquisa__campo"
-        type="text"
-        inputmode="search"
-        enterkeyhint="search"
-        autocomplete="off"
-        placeholder="Pesquisar…"
-        [formControl]="termo"
-        maxlength="160"
-    />
-    @if (termo.value) {
-        <button
-            app-botao-icone
-            class="regras-pesquisa__limpar"
-            tamanho="padrao"
-            type="button"
-            aria-label="Limpar campo de pesquisa"
-            appTooltip="Limpar pesquisa (Esc)"
-            (click)="limpar()"
-        >
-            <span aria-hidden="true">×</span>
-        </button>
-    }
-</app-campo>
-@if (pesquisa.termo().trim().length >= 2) {
+@if (apresentacao() !== "resultados") {
+    <app-campo
+        [rotulo]="apresentacao() === 'campo' ? '' : 'Pesquisar no livro'"
+        icone="busca"
+        tamanho="compacto"
+        [dica]="
+            apresentacao() === 'campo'
+                ? ''
+                : 'A partir de 2 caracteres. Enter / Shift+Enter navegam; Esc limpa.'
+        "
+    >
+        <input
+            #campoPesquisa
+            class="campo__controle regras-pesquisa__campo"
+            type="text"
+            inputmode="search"
+            enterkeyhint="search"
+            autocomplete="off"
+            [placeholder]="apresentacao() === 'campo' ? 'Pesquisar no livro…' : 'Pesquisar…'"
+            aria-label="Pesquisar no livro"
+            [formControl]="termo"
+            maxlength="160"
+        />
+        @if (termo.value) {
+            <button
+                app-botao-icone
+                class="regras-pesquisa__limpar"
+                tamanho="padrao"
+                type="button"
+                aria-label="Limpar campo de pesquisa"
+                appTooltip="Limpar pesquisa (Esc)"
+                (click)="limpar()"
+            >
+                <span aria-hidden="true">×</span>
+            </button>
+        }
+    </app-campo>
+}
+@if (apresentacao() !== "campo" && pesquisa.termo().trim().length >= 2) {
     <div class="regras-pesquisa__resultados">
         @if (pesquisa.resultados().length === 0) {
             <app-estado-vazio

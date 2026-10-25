@@ -1,4 +1,4 @@
-import { Component, DestroyRef, ElementRef, effect, inject, output, viewChild } from "@angular/core";
+import { Component, DestroyRef, ElementRef, effect, inject, input, output, viewChild } from "@angular/core";
 import { FormControl, ReactiveFormsModule } from "@angular/forms";
 import { Campo } from "../../shared/ui/campo/campo.component";
 import { Botao } from "../../shared/ui/botao/botao.component";
@@ -13,12 +13,17 @@ import { RegrasPesquisaController } from "./regras-pesquisa.controller";
     imports: [ReactiveFormsModule, Campo, Botao, BotaoIcone, Tooltip, EstadoVazio, Icone],
     templateUrl: "./regras-pesquisa.component.html",
     styleUrl: "./regras-pesquisa.component.scss",
-    host: { "(keydown)": "tratarTecla($event)" },
+    host: {
+        "(keydown)": "tratarTecla($event)",
+        "[class.regras-pesquisa--barra]": "apresentacao() === 'campo'",
+    },
 })
 export class RegrasPesquisa {
+    /** O painel compacto separa o campo fixo da lista de resultados no sumário. */
+    readonly apresentacao = input<"completa" | "campo" | "resultados">("completa");
     protected readonly pesquisa = inject(RegrasPesquisaController);
     protected readonly termo = new FormControl(this.pesquisa.termo(), { nonNullable: true });
-    private readonly campo = viewChild.required<ElementRef<HTMLInputElement>>("campoPesquisa");
+    private readonly campo = viewChild<ElementRef<HTMLInputElement>>("campoPesquisa");
     readonly abrirOutro = output<void>();
     readonly selecionar = output<number>();
 
@@ -36,7 +41,7 @@ export class RegrasPesquisa {
     protected limpar(): void {
         this.termo.setValue("", { emitEvent: false });
         this.pesquisa.limpar();
-        this.campo().nativeElement.focus();
+        this.campo()?.nativeElement.focus();
     }
 
     protected tratarTecla(evento: KeyboardEvent): void {

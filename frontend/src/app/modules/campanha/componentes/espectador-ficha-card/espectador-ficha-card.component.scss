@@ -4,6 +4,7 @@
 // tema "Terminal de Contenção" (proibição #29).
 
 @use "tema/breakpoints" as bp;
+@use "tema/glow" as glow;
 
 :host {
     display: block;
@@ -212,14 +213,35 @@
 
     // O texto/rótulo da rolagem fica colorido pela cor da ficha, não o fundo (contrato de design).
     &__ultima-rolagem-texto {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-4);
         min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
         white-space: nowrap;
         font-family: var(--font-mono);
         font-size: 12px;
         font-weight: 700;
         color: var(--cor-ficha, var(--text));
+
+        &--critico {
+            @include glow.duplo(var(--cor-ficha, var(--accent)));
+        }
+    }
+
+    &__ultima-rolagem-nome {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    &__ultima-rolagem-total {
+        flex: none;
+    }
+
+    &__ultima-rolagem-critico {
+        flex: none;
+        // Halo do SVG: mesma receita de ícone já usada no painel de mestre.
+        filter: drop-shadow(0 0 4px color-mix(in srgb, var(--cor-ficha, var(--accent)) 65%, transparent));
     }
 
     &__ultima-rolagem-tempo {

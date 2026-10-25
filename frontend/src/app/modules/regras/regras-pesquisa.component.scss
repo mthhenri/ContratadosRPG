@@ -3,6 +3,13 @@
 :host {
     display: contents;
 }
+
+@container (max-width: 430px) {
+    :host(.regras-pesquisa--barra) .regras-pesquisa__campo {
+        min-height: bp.$alvo-toque;
+        font-size: 16px;
+    }
+}
 .regras-pesquisa {
     &__campo {
         padding-right: calc(var(--space-20) * 2 + var(--space-8));

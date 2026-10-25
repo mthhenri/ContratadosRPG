@@ -149,6 +149,55 @@ describe('EspectadorFichaCard', () => {
       'Nenhuma rolagem carregada ainda',
     );
     expect(raiz.textContent).not.toContain('nunca rolou');
+    expect(raiz.querySelector('.espectador-ficha__ultima-rolagem-critico')).toBeNull();
+    expect(raiz.querySelector('.espectador-ficha__ultima-rolagem-texto--critico')).toBeNull();
+  });
+
+  it.each([
+    { dados: [], atributos: [], constante: 12, total: 24, critico: true },
+    {
+      dados: [{ sinal: 1 as const, faces: 20, valores: [20], subtotal: 22, criticos: 1 }],
+      atributos: [], constante: 2, total: 24,
+    },
+  ])("indica crítico pelo resultado autoritativo sem alterar o total: %j", (resultado) => {
+    const raiz = montar(ficha(), rolagem({ rotulo: "Vigor", resultado }));
+    const indicador = raiz.querySelector(".espectador-ficha__ultima-rolagem-critico");
+    const texto = raiz.querySelector(".espectador-ficha__ultima-rolagem-texto");
+    expect(texto?.classList.contains("espectador-ficha__ultima-rolagem-texto--critico"))
+      .toBe(true);
+    expect(indicador?.matches("app-icone[nome=critico]")).toBe(true);
+    expect(indicador?.querySelector("svg")).not.toBeNull();
+    expect(texto?.firstElementChild).toBe(indicador);
+    expect(texto?.querySelector(".sr-only")?.textContent).toContain("Crítico");
+    expect(raiz.querySelector("app-chip")).toBeNull();
+    expect(texto?.querySelector(".espectador-ficha__ultima-rolagem-nome")?.textContent)
+      .toBe("Vigor");
+    expect(texto?.querySelector(".espectador-ficha__ultima-rolagem-total")?.textContent)
+      .toBe("— 24");
+  });
+
+  it("não infere crítico por total alto nem pelo estado crítico de vitalidade da ficha", () => {
+    const raiz = montar(ficha({ critico: true }), rolagem({
+      resultado: {
+        dados: [{ sinal: 1, faces: 20, valores: [19], subtotal: 19, criticos: 0 }],
+        atributos: [], constante: 81, total: 100,
+      },
+    }));
+    expect(raiz.querySelector(".espectador-ficha__ultima-rolagem-critico")).toBeNull();
+    expect(raiz.querySelector(".espectador-ficha__ultima-rolagem-texto--critico")).toBeNull();
+    expect(raiz.querySelector(".espectador-ficha__ultima-rolagem-texto")?.textContent).toContain("100");
+  });
+
+  it("remove o indicador quando a última rolagem é substituída por uma comum", () => {
+    const raiz = montar(ficha(), rolagem({
+      resultado: { dados: [], atributos: [], constante: 12, total: 24, critico: true },
+    }));
+    expect(raiz.querySelector(".espectador-ficha__ultima-rolagem-critico")).not.toBeNull();
+    fixture.componentRef.setInput("ultimaRolagem", rolagem({ id: 2 }));
+    fixture.detectChanges();
+    expect(raiz.querySelector(".espectador-ficha__ultima-rolagem-critico")).toBeNull();
+    expect(raiz.querySelector(".espectador-ficha__ultima-rolagem-texto--critico")).toBeNull();
+    expect(raiz.querySelector(".espectador-ficha__ultima-rolagem-texto")?.textContent).toContain("17");
   });
 
   it('não tem nenhum controle de escrita — sem input, button ou stepper de vitalidade', () => {

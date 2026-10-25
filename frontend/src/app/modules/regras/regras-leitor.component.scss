@@ -306,6 +306,9 @@
         gap: var(--space-8);
         padding-bottom: var(--space-12);
     }
+    &__barra-controles {
+        display: contents;
+    }
     &__gaveta-area {
         position: fixed;
         inset: var(--altura-topbar) 0 0;
@@ -361,9 +364,45 @@
             background: var(--surface);
             padding-bottom: 0;
         }
+        .regras__barra--painel {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            gap: var(--space-8);
+            padding: var(--space-12) var(--space-16);
+            border-bottom: 1px solid var(--border);
+
+            .regras__barra-controles {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: var(--space-12);
+            }
+
+            .regras__abrir-sumario {
+                min-height: 38px;
+            }
+
+            @container (max-width: 430px) {
+                padding: var(--space-12);
+
+                .regras__barra-controles {
+                    gap: var(--space-8);
+                }
+
+                .regras__abrir-sumario {
+                    min-height: bp.$alvo-toque;
+                }
+
+                .regras__seletor {
+                    padding: var(--space-8);
+                    min-height: bp.$alvo-toque;
+                }
+            }
+        }
         &.regras--gaveta {
             grid-template-rows: auto minmax(0, 1fr);
-            gap: var(--space-12);
+            gap: 0;
             .regras__trilho-conteudo {
                 max-height: none;
             }

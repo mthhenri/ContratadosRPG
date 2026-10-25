@@ -95,10 +95,12 @@
             <span class="cena-mestre__regua"></span>
         </header>
 
+        @if (!dados.ehInvestigacao()) {
         <app-rolagem-mestre
             [campanhaId]="dados.campanhaId"
             (rolagemRegistrada)="dados.adicionarRolagemAoFeed($event)"
         />
+        }
         <div class="cena-mestre__linha">
             @if (dados.ehInvestigacao()) {
             <section class="cena-mestre__documentos" aria-label="Documentos">
@@ -181,15 +183,28 @@
                 />
                 }
             </section>
-            } @if (!janelaHistorico.estaAbertaCampanha(dados.campanhaId)) {
-            <div class="cena-mestre__rolagens">
-                <app-historico-rolagens-sidebar
-                    [fixo]="true"
-                    titulo="Rolagens"
-                    [itens]="dados.rolagensFeed()"
-                    [carregando]="dados.carregandoRolagens()"
-                    [campanhaIdJanela]="dados.campanhaId"
+            } @if (dados.ehInvestigacao() || !janelaHistorico.estaAbertaCampanha(dados.campanhaId))
+            {
+            <div
+                class="cena-mestre__rolagens"
+                [class.cena-mestre__rolagens--com-rolador]="dados.ehInvestigacao()"
+            >
+                @if (dados.ehInvestigacao()) {
+                <app-rolagem-mestre
+                    [campanhaId]="dados.campanhaId"
+                    (rolagemRegistrada)="dados.adicionarRolagemAoFeed($event)"
                 />
+                } @if (!janelaHistorico.estaAbertaCampanha(dados.campanhaId)) {
+                <div class="cena-mestre__historico">
+                    <app-historico-rolagens-sidebar
+                        [fixo]="true"
+                        titulo="Rolagens"
+                        [itens]="dados.rolagensFeed()"
+                        [carregando]="dados.carregandoRolagens()"
+                        [campanhaIdJanela]="dados.campanhaId"
+                    />
+                </div>
+                }
             </div>
             }
 

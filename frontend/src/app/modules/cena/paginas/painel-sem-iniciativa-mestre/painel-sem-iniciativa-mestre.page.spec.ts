@@ -21,6 +21,9 @@ import {
 import { FichaFlutuante } from '../../../ficha/componentes/ficha-flutuante/ficha-flutuante.component';
 import { PainelCenaSemIniciativaMestre } from './painel-sem-iniciativa-mestre.page';
 import { RolagemMestre } from '../../componentes/rolagem-mestre/rolagem-mestre.component';
+import {
+  HistoricoRolagensJanelaService,
+} from "../../../../shared/historico-rolagens-sidebar/historico-rolagens-janela.service";
 
 /**
  * Prova a visão do mestre da cena sem iniciativa (m7-24): a casca da `ui-37` sem trilha, a grade de
@@ -230,6 +233,28 @@ describe('PainelCenaSemIniciativaMestre', () => {
   describe('coluna Documentos — Investigação (m7-25)', () => {
     const montarInvestigacao = (opcoes: OpcoesDoPainel = {}) =>
       montar({ cenaTipo: CenaTipoEnum.INVESTIGACAO, ...opcoes });
+
+    it("mantém uma só rolagem rápida dentro da coluna de rolagens", () => {
+      const { fixture } = montarInvestigacao();
+      const elemento = fixture.nativeElement as HTMLElement;
+      const coluna = elemento.querySelector(".cena-mestre__rolagens");
+      expect(coluna?.querySelector("app-rolagem-mestre")).not.toBeNull();
+      expect(elemento.querySelectorAll("app-rolagem-mestre")).toHaveLength(1);
+      expect(coluna?.querySelector(".cena-mestre__historico app-historico-rolagens-sidebar"))
+        .not.toBeNull();
+    });
+
+    it("mantém o rolador da Investigação quando o histórico abre em janela", () => {
+      const { fixture } = montarInvestigacao();
+      vi.spyOn(TestBed.inject(HistoricoRolagensJanelaService), "estaAbertaCampanha")
+        .mockReturnValue(true);
+      fixture.changeDetectorRef.markForCheck();
+      fixture.detectChanges();
+      const elemento = fixture.nativeElement as HTMLElement;
+      expect(elemento.querySelector("app-historico-rolagens-sidebar")).toBeNull();
+      expect(elemento.querySelector(".cena-mestre__rolagens app-rolagem-mestre"))
+        .not.toBeNull();
+    });
 
     it('mostra "Anexar documento" e a coluna Documentos só para Investigação', () => {
       const elemento = montarInvestigacao().fixture.nativeElement as HTMLElement;

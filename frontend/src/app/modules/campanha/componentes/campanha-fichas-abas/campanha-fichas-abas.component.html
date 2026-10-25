@@ -26,6 +26,7 @@
         <button
             app-aba
             valor="esquadrao"
+            aria-label="Esquadrão"
             id="fichas-aba-esquadrao"
             aria-controls="fichas-painel"
             [ativa]="abaAtiva() === 'esquadrao'"
@@ -37,23 +38,25 @@
         <button
             app-aba
             valor="criaturas"
+            aria-label="Criaturas"
             id="fichas-aba-criaturas"
             aria-controls="fichas-painel"
             [ativa]="abaAtiva() === 'criaturas'"
             (click)="selecionarAba('criaturas')"
         >
-            <app-icone nome="alerta" />
+            <app-icone nome="criatura" />
             <span class="abas__rotulo">Criaturas</span>
         </button>
         <button
             app-aba
             valor="npcs"
+            aria-label="NPCs"
             id="fichas-aba-npcs"
             aria-controls="fichas-painel"
             [ativa]="abaAtiva() === 'npcs'"
             (click)="selecionarAba('npcs')"
         >
-            <app-icone nome="agente" />
+            <app-icone nome="npc" />
             <span class="abas__rotulo">NPCs</span>
         </button>
     </app-abas>

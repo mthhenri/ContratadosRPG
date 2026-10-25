@@ -1,5 +1,66 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-25 — Investigação: rolagem na coluna e identidades das abas
+
+Atendida a marcação do autor: Rolagem rápida e seletor público/oculto da
+Investigação foram para o topo da coluna de rolagens, acima do histórico,
+com a mesma composição compacta da campanha. Histórico continua com rolagem
+independente e pode ser destacado sem retirar o rolador. Resistência/encontro
+preservados. Nas abas da campanha, Criaturas usa SCP e NPCs usa peão; Esquadrão
+mantém membros. Os desenhos canônicos vieram do catálogo posterior M10-03/04;
+os antigos alerta/agente eram da criação da barra em 05/10, não da task anterior.
+As três abas receberam nome acessível; P-129 permanece só pelo recorte NPC.
+
+[Spec e evidências](../specs/done/investigacao-rolagem-coluna-e-icones-abas.spec.md).
+Inspeção pessoal em 1920×1080, 1366×768, 960×1080 e 360×800: coluna/formulário,
+histórico, alternância, registro privado, popup e três seleções de abas. Sem
+overflow/sobreposição; cena planejada e rolagens temporárias removidas logicamente,
+sem trocar cena ativa ou alterar registros anteriores. Teste focado 22/22;
+frontend integrado 290 arquivos/3611 testes, normalizadores executados; lint
+sem erros, avisos antigos; build produção aprovado com aviso conhecido de budget.
+Prettier/diff aprovados; `repo:verificar` aprovou organização e espelhos no fecho.
+Sem commit/deploy.
+
+Delegação: explorador Codex (modelo padrão) conferiu origem e impacto das abas;
+implementação e inspeção real pelo agente principal.
+
+## 2026-10-24 — Regras flutuantes e crítico na última rolagem
+
+Aplicada a prévia visual aprovada pelo autor à [janela de Regras](../specs/done/regras-flutuante-layout-e-redimensionamento.spec.md):
+Sumário e seletor de livros numa linha com respiro, pesquisa visível abaixo, alça
+análoga ao Caderno, tamanho preservado na maximização e folha cheia no celular.
+Pesquisa conserva controller, destaques, contador e resultados no sumário; página
+e Oficina preservadas. Revisão apontou restauração de posição antiga fora da tela
+após diminuir viewport maximizado: reproduzida em teste vermelho e confinada na casca.
+Inspeção pessoal em 1920×1080, 1366×768, 960×1080 e 360×800, incluindo busca com/sem
+resultado, teclado, sumário, Sistema/Guia, redimensionar/maximizar/restaurar e página.
+Campo estreito corrigido para 44px/16px. [Evidências e limites](../specs/done/regras-flutuante-layout-e-redimensionamento/verificacao.md).
+
+Na [última rolagem](../specs/done/ultima-rolagem-indicador-critico.spec.md), flags
+autoritativas do resultado passam a mostrar crítico. A primeira versão usou selo;
+o autor pediu a forma final discreta: ícone antes do texto com brilho, sem palavra
+visível. Reutiliza glow/ícone canônicos e cor da ficha, sem mexer em regra, feed ou
+permissão; apenas o nome longo elide, mantendo total. Agente principal observou
+crítico/comum/ausência e prévia de espectador em desktop/mobile. Cenários locais
+temporários removidos logicamente, preservando dados anteriores.
+[Verificação](../specs/done/ultima-rolagem-indicador-critico/verificacao.md).
+
+Gates: frontend 3608 testes + 89 normalizadores na integração inicial; versão final
+com 52 testes focados (18 do card). Shared 1340; backend 1339 aprovados e 100 pulados,
+com quatro HTTP inicialmente bloqueados por conexão local passando na repetição
+autorizada. Lint dos três workspaces e frontend final sem erros, com avisos antigos;
+build produção aprovado com aviso conhecido de budget inicial (603,33kB/450kB).
+TEMP/TMP local contornou EPERM de testes; build CI/dois workers e rede autorizada
+contornaram cache/fontes, sem alterar configuração. Diff/formato e revisão independente
+sem nova regressão; correção de posição confirmada em teste e aplicação real.
+`npm run repo:verificar` aprovado (organização e espelhos); `npm run repo:test`
+14/14 após repetição autorizada do teste que cria Git temporário, impedido de
+gravar sua configuração no ambiente restrito. Sem commit ou deploy.
+
+Delegação: subagente Codex (modelo padrão) implementou o card; revisão independente
+Codex (modelo padrão) examinou o diff integrado. O principal inspecionou pessoalmente
+a UI e tratou o caso de posição identificado na revisão.
+
 ## 2026-10-23 — Livros: exportar publicação atual e importar/recuperar no dev
 
 Concluído o segundo recorte pedido pelo autor após “O que mudou”:

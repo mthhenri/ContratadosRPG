@@ -1,4 +1,4 @@
-import { Component, input, output } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 import type { ArquetipoEnum, ClasseEnum } from '@contratados-rpg/shared/enums';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 
@@ -72,6 +72,15 @@ export class EspectadorFichaCard {
   readonly ultimaRolagem = input<RolagemResumoDto | null>(null);
   /** Tempo relativo já formatado (ex.: "há 8s") — `null` junto com `ultimaRolagem` nula. */
   readonly ultimaRolagemTempo = input<string | null>(null);
+
+  /** Mesmo realce de ResultadoRolagem: apresenta as marcas recebidas, sem recalcular a regra. */
+  protected readonly ultimaRolagemCritica = computed(() => {
+    const resultado = this.ultimaRolagem()?.resultado;
+    return (
+      resultado?.critico === true ||
+      (resultado?.dados.some((dado) => (dado.criticos ?? 0) > 0) ?? false)
+    );
+  });
 
   /** Modo interativo — `false` por padrão (espectador, só leitura). */
   readonly mostrarAcoes = input(false);

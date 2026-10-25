@@ -8,6 +8,28 @@
 @include casca.casca("cena-mestre");
 
 .cena-mestre {
+    &__rolagens--com-rolador {
+        display: flex;
+        flex-direction: column;
+        min-height: 360px;
+
+        @include bp.tablet {
+            height: 480px;
+        }
+    }
+
+    // O painel fixo do histórico preenche este recorte, abaixo do rolador.
+    &__historico {
+        position: relative;
+        flex: 1;
+        min-height: 160px;
+    }
+
+    // Sem rolador, mantém o mesmo containing block que a casca sempre forneceu.
+    &__rolagens:not(.cena-mestre__rolagens--com-rolador) &__historico {
+        position: static;
+    }
+
     // A grade ocupa o palco inteiro — sem a ficha resumida ao lado, o `align-self` da casca sobra.
     &__todos {
         align-self: stretch;
