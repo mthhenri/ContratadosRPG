@@ -26,6 +26,8 @@
     "frontend:dev": "npm run start --workspace=frontend",
     "db:up": "node scripts/db-up.mjs",
     "regras:exportar": "npm run regras:exportar --workspace=backend --",
+    "regras:importar-pacote": "npm run regras:importar-pacote --workspace=backend --",
+    "regras:restaurar-pacote": "npm run regras:restaurar-pacote --workspace=backend --",
     "db:down": "docker compose down",
     "db:migrate": "npm run db:migrate --workspace=backend",
     "db:rollback": "npm run db:rollback --workspace=backend",

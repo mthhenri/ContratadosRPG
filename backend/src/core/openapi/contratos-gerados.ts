@@ -8473,6 +8473,75 @@ export const schemasContratosPublicos = {
         "additionalProperties": false,
         "description": "A peça renomeada (já com a âncora nova e a revisão seguinte)."
     },
+    "LivroPacoteItemDto": {
+        "type": "object",
+        "properties": {
+            "codigo": {
+                "type": "string"
+            },
+            "titulo": {
+                "type": "string"
+            },
+            "ordem": {
+                "type": "number"
+            },
+            "numero": {
+                "type": "string"
+            },
+            "formato": {
+                "type": "number"
+            },
+            "publicacaoData": {
+                "type": "string"
+            },
+            "nota": {
+                "type": "string"
+            },
+            "conteudo": {
+                "$ref": "#/components/schemas/LivroVersaoConteudoDto"
+            }
+        },
+        "required": [
+            "codigo",
+            "titulo",
+            "ordem",
+            "numero",
+            "formato",
+            "publicacaoData",
+            "nota",
+            "conteudo"
+        ],
+        "additionalProperties": false,
+        "description": "Publicação portátil: não inclui ids relacionais, autoria ou cópia de trabalho."
+    },
+    "LivroPacoteDto": {
+        "type": "object",
+        "properties": {
+            "formato": {
+                "type": "number"
+            },
+            "exportacaoData": {
+                "type": "string"
+            },
+            "livros": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/LivroPacoteItemDto"
+                }
+            },
+            "sha256": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "formato",
+            "exportacaoData",
+            "livros",
+            "sha256"
+        ],
+        "additionalProperties": false,
+        "description": "SHA-256 do JSON canônico sem sha256: integridade, sem assinatura de procedência."
+    },
     "LivroSecaoDadosDto": {
         "type": "object",
         "properties": {
@@ -10610,6 +10679,391 @@ export const schemasContratosPublicos = {
             "atual",
             "notas",
             "mudancas"
+        ],
+        "additionalProperties": false
+    },
+    "LivroRecuperacaoLinhaDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "created_date": {
+                "type": "string"
+            },
+            "updated_date": {
+                "type": "string"
+            },
+            "is_deleted": {
+                "type": "boolean"
+            },
+            "deleted_date": {
+                "type": "string"
+            },
+            "codigo": {
+                "type": "string"
+            },
+            "titulo": {
+                "type": "string"
+            },
+            "ordem": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "id",
+            "created_date",
+            "updated_date",
+            "is_deleted",
+            "deleted_date",
+            "codigo",
+            "titulo",
+            "ordem"
+        ],
+        "additionalProperties": false,
+        "description": "Registro local completo; nunca transportado pela API pública."
+    },
+    "LivroPecaRecuperacaoLinhaDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "created_date": {
+                "type": "string"
+            },
+            "updated_date": {
+                "type": "string"
+            },
+            "is_deleted": {
+                "type": "boolean"
+            },
+            "deleted_date": {
+                "type": "string"
+            },
+            "livro_id": {
+                "type": "number"
+            },
+            "peca_pai_id": {
+                "type": "number"
+            },
+            "tipo_regra_peca_id": {
+                "type": "number"
+            },
+            "identificador": {
+                "type": "string"
+            },
+            "ancora": {
+                "type": "string"
+            },
+            "ordem": {
+                "type": "number"
+            },
+            "dados": {
+                "oneOf": [
+                    {
+                        "$ref": "#/components/schemas/LivroSecaoDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroTextoDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroListaDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroTabelaDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroHabilidadeDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroClasseDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroArquetipoDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroSubclasseDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroOrigensDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroOrigemDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroTermosDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroTermoDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroEquipamentosDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroEquipamentoDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroModificacoesDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroModificacaoDadosDto"
+                    },
+                    {
+                        "type": "object",
+                        "additionalProperties": true
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroAmplificadorDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroModulosDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroNiveisAmeacaDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroFichaCriaturaDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroHabilidadeCriaturaDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroRoteiroDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroFaixasDadosDto"
+                    },
+                    {
+                        "type": "object",
+                        "additionalProperties": true
+                    },
+                    {
+                        "type": "object",
+                        "additionalProperties": true
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroAberturaDadosDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LivroGenericoDadosDto"
+                    }
+                ]
+            },
+            "revisao": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "id",
+            "created_date",
+            "updated_date",
+            "is_deleted",
+            "deleted_date",
+            "livro_id",
+            "peca_pai_id",
+            "tipo_regra_peca_id",
+            "identificador",
+            "ancora",
+            "ordem",
+            "dados",
+            "revisao"
+        ],
+        "additionalProperties": false
+    },
+    "LivroAncoraRecuperacaoLinhaDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "created_date": {
+                "type": "string"
+            },
+            "updated_date": {
+                "type": "string"
+            },
+            "is_deleted": {
+                "type": "boolean"
+            },
+            "deleted_date": {
+                "type": "string"
+            },
+            "livro_id": {
+                "type": "number"
+            },
+            "regra_peca_id": {
+                "type": "number"
+            },
+            "ancora": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "id",
+            "created_date",
+            "updated_date",
+            "is_deleted",
+            "deleted_date",
+            "livro_id",
+            "regra_peca_id",
+            "ancora"
+        ],
+        "additionalProperties": false
+    },
+    "LivroVersaoRecuperacaoLinhaDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "created_date": {
+                "type": "string"
+            },
+            "updated_date": {
+                "type": "string"
+            },
+            "is_deleted": {
+                "type": "boolean"
+            },
+            "deleted_date": {
+                "type": "string"
+            },
+            "livro_id": {
+                "type": "number"
+            },
+            "tipo_livro_versao_situacao_id": {
+                "type": "number"
+            },
+            "numero": {
+                "type": "string"
+            },
+            "formato": {
+                "type": "number"
+            },
+            "conteudo": {
+                "$ref": "#/components/schemas/LivroVersaoConteudoDto"
+            },
+            "publicacao_data": {
+                "type": "string"
+            },
+            "usuario_id": {
+                "type": "number"
+            },
+            "nota": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "id",
+            "created_date",
+            "updated_date",
+            "is_deleted",
+            "deleted_date",
+            "livro_id",
+            "tipo_livro_versao_situacao_id",
+            "numero",
+            "formato",
+            "conteudo",
+            "publicacao_data",
+            "usuario_id",
+            "nota"
+        ],
+        "additionalProperties": false
+    },
+    "LivroRecuperacaoEstadoDto": {
+        "type": "object",
+        "properties": {
+            "codigo": {
+                "type": "string"
+            },
+            "livro": {
+                "$ref": "#/components/schemas/LivroRecuperacaoLinhaDto"
+            },
+            "pecas": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/LivroPecaRecuperacaoLinhaDto"
+                }
+            },
+            "ancoras": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/LivroAncoraRecuperacaoLinhaDto"
+                }
+            },
+            "versoes": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/LivroVersaoRecuperacaoLinhaDto"
+                }
+            }
+        },
+        "required": [
+            "codigo",
+            "livro",
+            "pecas",
+            "ancoras",
+            "versoes"
+        ],
+        "additionalProperties": false
+    },
+    "LivroRecuperacaoAlvoDto": {
+        "type": "object",
+        "properties": {
+            "host": {
+                "type": "string"
+            },
+            "porta": {
+                "type": "number"
+            },
+            "nome": {
+                "type": "string"
+            },
+            "sistemaIdentificador": {
+                "type": "string"
+            },
+            "bancoOid": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "host",
+            "porta",
+            "nome",
+            "sistemaIdentificador",
+            "bancoOid"
+        ],
+        "additionalProperties": false
+    },
+    "LivroRecuperacaoDto": {
+        "type": "object",
+        "properties": {
+            "formato": {
+                "type": "number"
+            },
+            "criacaoData": {
+                "type": "string"
+            },
+            "alvo": {
+                "$ref": "#/components/schemas/LivroRecuperacaoAlvoDto"
+            },
+            "estados": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/LivroRecuperacaoEstadoDto"
+                }
+            },
+            "sha256": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "formato",
+            "criacaoData",
+            "alvo",
+            "estados",
+            "sha256"
         ],
         "additionalProperties": false
     },
@@ -14259,6 +14713,14 @@ export const operacoesContratosPublicos = {
         "tag": "Fichas",
         "publica": false,
         "responseSchema": "FichaAcessoRevogadoDto"
+    },
+    "LivroPacoteController_exportarPublicados": {
+        "controller": "LivroPacoteController",
+        "metodo": "get",
+        "caminho": "/livros/pacotes/publicados",
+        "tag": "Livros de regras",
+        "publica": false,
+        "responseSchema": "LivroPacoteDto"
     },
     "LivroController_listar": {
         "controller": "LivroController",

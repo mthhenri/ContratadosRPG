@@ -150,7 +150,7 @@ exportação/importação entre ambientes, tratada na outra spec.
   `shared/src/livro/diff-texto-rico.ts`, `shared/src/dtos/livro/`,
   `frontend/src/app/modules/regras/oficina/` e `frontend/src/app/shared/ui/editor-markdown/`.
 - Publicações anteriores precisam existir no banco para haver comparação. A
-  [importação para dev](../backlog/livros-exportacao-publicada-e-importacao-dev.spec.md) traz só
+  [importação para dev](../done/livros-exportacao-publicada-e-importacao-dev.spec.md) traz só
   a atual: seu aceite usa histórico semeado em banco isolado, sem ampliar aquele pacote.
 
 ## Riscos e Mitigação

@@ -2389,9 +2389,17 @@ rascunho/trabalho; links carregam a regra oficial por `/livros/:codigo/publicada
 em sessão admin/tester e após retry. Nota permanece em `livro_versao.nota`, sem migration.
 Gates e **38 casos reais** nos quatro viewports, claro/escuro e página/painel aprovados;
 [spec e evidências](../specs/done/livros-mudancas-publicadas-para-leitores.spec.md).
-[Exportação da publicação atual e importação no dev](../specs/backlog/livros-exportacao-publicada-e-importacao-dev.spec.md)
-continua no backlog, sem implementação: transporte leva só a atual; consulta de diferenças
-depende das publicações preservadas no banco. Sem reconstrução de histórico ausente.
+**Transporte dos livros publicados — concluído em 2026-10-23:** ADMIN exporta Sistema
+e Guia pela Oficina; `GET /livros/pacotes/publicados` entrega somente a publicação
+atual, em pacote versionado com hash. Ferramentas locais `regras:importar-pacote` e
+`regras:restaurar-pacote` têm simulação, guard de desenvolvimento, administrador local,
+substituição explícita e recuperação verificada antes da transação. Preservam UUIDs,
+links, nota/data originais e mapa de âncoras. Fluxo em [DEVELOPMENT](../DEVELOPMENT.md).
+[Spec e evidências](../specs/done/livros-exportacao-publicada-e-importacao-dev.spec.md):
+UI nos quatro viewports/claro/escuro, CLI e PostgreSQL isolado, geração/conferência
+canônica aprovados. Produção e banco do autor preservados. Transporte leva só a atual;
+consulta de diferenças depende das publicações preservadas no banco, sem reconstruir
+histórico ausente.
 
 ### Ícones de identidade (M10-03)
 

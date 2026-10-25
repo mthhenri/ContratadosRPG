@@ -50,6 +50,7 @@ const TAGS_POR_CONTROLLER: Readonly<Record<string, string>> = {
     AplicativoController: "Transcrições",
     PatchnoteController: "Patchnotes",
     LivroController: "Livros de regras",
+    LivroPacoteController: "Livros de regras",
     RegraPecaController: "Livros de regras",
 };
 

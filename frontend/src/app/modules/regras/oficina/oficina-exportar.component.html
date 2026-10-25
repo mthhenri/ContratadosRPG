@@ -1,0 +1,14 @@
+@if (administrador()) {
+    <button
+        app-botao
+        variante="secundario"
+        estilo="contorno"
+        tamanho="pequeno"
+        type="button"
+        [disabled]="exportando()"
+        [carregando]="exportando()"
+        (click)="exportar()"
+    >
+        {{ exportando() ? "Exportando livros…" : "Exportar livros publicados" }}
+    </button>
+}

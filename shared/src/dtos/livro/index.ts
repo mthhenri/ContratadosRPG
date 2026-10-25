@@ -4,3 +4,5 @@ export * from "./livro-peca.dtos";
 export * from "./livro-operacao.dtos";
 export * from "./livro-comparacao.dtos";
 export * from "./livro-publicacao.dtos";
+export * from "./livro-pacote.dtos";
+export * from "./livro-recuperacao.dtos";

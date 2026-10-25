@@ -1,0 +1,13 @@
+@use "tema/breakpoints" as bp;
+
+:host {
+    display: inline-block;
+    max-width: 100%;
+}
+
+button {
+    max-width: 100%;
+    @include bp.mobile {
+        min-height: bp.$alvo-toque;
+    }
+}

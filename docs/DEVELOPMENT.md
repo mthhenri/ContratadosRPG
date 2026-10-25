@@ -1,5 +1,56 @@
 # Ambiente de desenvolvimento
 
+## Trazer a publicação atual dos livros
+
+Na Oficina, entre como administrador e use **Exportar livros publicados**. O JSON
+contém a publicação atual de Sistema e Guia, mesmo com rascunhos ou edições pendentes.
+Se faltar uma publicação, o download falha por inteiro. A ação apenas lê o banco.
+
+No ambiente local, confira a conexão do `.env` da raiz antes dos comandos. A ferramenta
+aceita somente `APP_AMBIENTE=development`, `DB_HOST=localhost` ou `127.0.0.1`,
+`DB_NOME=contratados_rpg`, `DB_USUARIO=postgres` e `ARMAZENAMENTO_PROVEDOR=local`.
+`DB_PORT` deve ser uma porta TCP válida; a conexão usa exatamente o alvo validado,
+inclusive na simulação. `--usuario` é o **id de um administrador ativo local**.
+
+```bash
+npm run regras:importar-pacote -- --arquivo="C:/Downloads/livros-publicados.json" --usuario=1 --simular
+npm run regras:importar-pacote -- --arquivo="C:/Downloads/livros-publicados.json" --usuario=1 --substituir
+npm run regras:exportar
+npm run regras:exportar -- --conferir
+```
+
+A prévia mostra as versões locais e recebidas, quantidades e substituições, incluindo
+o descarte de trabalho local divergente. Confirme esse resultado antes de executar
+com `--substituir`: a operação substitui os dois livros, sem mesclar edições.
+Repetir sobre estado equivalente não duplica peças ou publicações. Mesmo número
+editorial com conteúdo diferente exige substituição. Não use o importador inicial
+`regras:importar` para esse fluxo.
+
+Antes da escrita, a ferramenta salva e relê uma recuperação em
+`.artifacts/livros-exportacao-publicada-e-importacao-dev/recuperacoes/`, informando o
+caminho. Sem recuperação verificável não há substituição. O arquivo preserva o
+estado lógico ativo anterior: trabalho, versões locais (inclusive rascunhos) e
+âncoras antigas. Não inclui registros que já estavam excluídos. A restauração fica
+vinculada ao mesmo banco e instância PostgreSQL, além de host e porta.
+
+```bash
+npm run regras:restaurar-pacote -- --arquivo="C:/caminho/recuperacao.json" --usuario=1 --simular
+npm run regras:restaurar-pacote -- --arquivo="C:/caminho/recuperacao.json" --usuario=1 --substituir
+```
+
+A restauração também preserva o estado que será substituído. Guarde os arquivos de
+recuperação enquanto precisar reverter. Pacotes e recuperações ficam fora do Git;
+não os transforme em fixtures ou fontes de regras. O SHA-256 verifica integridade
+do conteúdo e metadados, mas não comprova a procedência do arquivo.
+
+Depois de gerar os documentos, revise o diff de `docs/core/` e dos derivados, execute
+as verificações do repositório e faça o commit normalmente. A importação conserva
+data e nota originais, usa autoria técnica local e não transporta histórico da origem,
+usuários, fichas ou campanhas. O histórico anterior local fica substituído por soft
+delete e pode ser recuperado pelo arquivo. Banco e arquivos gerados são etapas
+separadas: se a geração falhar, corrija a causa e repita `regras:exportar`; o sucesso
+da importação não significa que os arquivos já foram gerados ou commitados.
+
 ## Documentação de tarefas e verificação do repositório
 
 Specs e seus anexos seguem [`SYSTEM.SPEC.md` §3.1](SYSTEM.SPEC.md#31-documentação-de-tarefa-e-artefatos-de-execução)

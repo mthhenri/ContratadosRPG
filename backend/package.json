@@ -23,6 +23,10 @@
     "db:seed:dev": "ts-node tools/database/seed-dev.ts",
     "db:reset:dev": "ts-node tools/database/reset-dev.ts",
     "regras:importar": "ts-node tools/regras/importar-livros.ts",
+    "preregras:importar-pacote": "tsc --project ../shared/tsconfig.build.json",
+    "regras:importar-pacote": "ts-node tools/regras/importar-pacote.ts",
+    "preregras:restaurar-pacote": "tsc --project ../shared/tsconfig.build.json",
+    "regras:restaurar-pacote": "ts-node tools/regras/restaurar-pacote.ts",
     "preregras:exportar": "tsc --project ../shared/tsconfig.build.json",
     "regras:exportar": "ts-node tools/regras/exportar-livros.ts"
   },

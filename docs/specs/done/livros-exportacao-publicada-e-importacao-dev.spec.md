@@ -1,6 +1,6 @@
 # livros-exportacao-publicada-e-importacao-dev.spec.md
 
-> Task avulsa · backlog · definição com o autor em 2026-10-22.
+> Task avulsa · concluída em 2026-10-23 · definição com o autor em 2026-10-22.
 > Exportar em produção e importar no desenvolvimento **sempre a publicação atual**,
 > para manter o banco local e a cópia gerada do Git acompanhando o livro oficial.
 

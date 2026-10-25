@@ -1,5 +1,42 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-23 — Livros: exportar publicação atual e importar/recuperar no dev
+
+Concluído o segundo recorte pedido pelo autor após “O que mudou”:
+[transporte dos livros](../specs/done/livros-exportacao-publicada-e-importacao-dev.spec.md).
+Oficina oferece download administrativo de Sistema e Guia publicados; API ADMIN
+com leitura MVCC única e no-store, sem exportar rascunhos, trabalho ou autoria.
+DTOs portáteis versionados e hash canônico em shared; validação de forma, referências,
+UUID e metadados no backend. Sem migration ou mudança de regra/documentos gerados.
+
+Importação e restauração CLI têm prévia, guard local do reset-dev, administrador local,
+conexão construída do alvo conferido, substituição explícita e recuperação gravada e
+relida antes da primeira escrita. Uma transação cobre os dois livros; soft delete
+preserva registros antigos, UUIDs são reutilizados e links por âncora viram identidades
+editáveis. Nota e data editorial originais permanecem, autoria técnica é local.
+Recuperação protege trabalho, versões ativas e âncoras, vinculada à instância/banco;
+triggers continuam ativos e não se promete transação entre banco e arquivos.
+
+Revisão independente Codex encontrou rascunho incompleto impedindo backup, UUID
+maiúsculo divergindo do PostgreSQL e ordem de arrays impedindo repetição equivalente.
+Os três foram corrigidos e cobertos. Principal inspecionou UI real nos quatro viewports,
+claro/escuro: download, espera, falha/retry e bloqueios. Controles canônicos, foco,
+alvo móvel44px e ausência de overflow conferidos em comparação com Publicar.
+
+Banco destino exclusivo5434 e origem de teste3101/4301: exportação, simulação,
+importação, repetição e recuperação reais aprovadas, com volta do hash editorial,
+histórico, mapa e link locais. Cenário PostgreSQL inclui rollback no segundo livro,
+isolamento, rascunho/trabalho incompletos, links/âncoras, republicação, mesmo número
+com conteúdo diferente e microssegundos. Comandos reais de exportar/conferir/repetir
+geraram Markdown e condições apenas numa cópia temporária. Produção, banco do autor
+e serviço de outro projeto preservados; não equivale a prova operacional em produção.
+
+Gates: shared1.340, backend1.343 (+100 ignorados; integração PostgreSQL opt-in passou
+separadamente), frontend3.600+89, organização14; lint sem erros e builds aprovados.
+Avisos preexistentes de estilo/orçamento frontend603,33kB permanecem. Fluxo e recuperação
+documentados em DEVELOPMENT; [relatório completo](../specs/done/livros-exportacao-publicada-e-importacao-dev/verificacao.md).
+Sem commit/push automático neste recorte.
+
 ## 2026-10-22 — Livros: “O que mudou” público, notas em Markdown e blocos afetados
 
 Implementada primeiro a [consulta de mudanças](../specs/done/livros-mudancas-publicadas-para-leitores.spec.md),
@@ -41,7 +78,7 @@ A exportação/importação permanece no backlog.
 ## 2026-10-22 — Livros: specs de transporte da publicação e consulta de mudanças
 
 A pedido do autor, duas tasks avulsas foram especificadas no backlog, sem iniciar
-implementação: [exportação/importação](../specs/backlog/livros-exportacao-publicada-e-importacao-dev.spec.md)
+implementação: [exportação/importação](../specs/done/livros-exportacao-publicada-e-importacao-dev.spec.md)
 e [mudanças para leitores](../specs/done/livros-mudancas-publicadas-para-leitores.spec.md).
 O autor definiu que o transporte traz sempre a publicação atual; o objetivo é trazer
 o livro de produção para o banco local e gerar a cópia do Git pelo exportador existente.

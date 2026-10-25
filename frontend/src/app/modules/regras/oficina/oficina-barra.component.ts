@@ -7,6 +7,7 @@ import { Botao } from "../../../shared/ui/botao/botao.component";
 import { Chip } from "../../../shared/ui/chip/chip.component";
 import { OficinaMudancas } from "./oficina-mudancas.service";
 import { OficinaPublicar } from "./oficina-publicar.component";
+import { OficinaExportar } from "./oficina-exportar.component";
 import { OficinaStore } from "./oficina.store";
 
 /**
@@ -15,7 +16,7 @@ import { OficinaStore } from "./oficina.store";
  */
 @Component({
     selector: "app-oficina-barra",
-    imports: [Botao, Chip, Icone, Tooltip, OficinaPublicar],
+    imports: [Botao, Chip, Icone, Tooltip, OficinaPublicar, OficinaExportar],
     templateUrl: "./oficina-barra.component.html",
     styleUrl: "./oficina-barra.component.scss",
 })
