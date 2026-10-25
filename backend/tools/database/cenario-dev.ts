@@ -1,9 +1,10 @@
+import { montarAtributosAgenteDev } from './agentes-dev';
+import { montarNpcsDev } from './npcs-dev';
 import type {
   FichaAtributosDto,
   FichaCriaturaDadosDto,
   FichaFormacaoDto,
   FichaIdentidadeDto,
-  FichaJogadorDadosDto,
 } from '@contratados-rpg/shared/dtos/ficha';
 import type { CarrinhoItemDto } from '@contratados-rpg/shared/regras/compras';
 import {
@@ -25,14 +26,7 @@ import {
   TipoDanoEnum,
   TipoFichaEnum,
 } from '@contratados-rpg/shared/enums';
-import {
-  calcularDerivados,
-  calcularEnergia,
-  calcularVida,
-  habilidadesIniciais,
-} from '@contratados-rpg/shared/regras/agente';
-import { CATALOGO_ITENS } from '@contratados-rpg/shared/regras/compras';
-import { aplicarFormacaoAosDerivados, materializarHabilidadePersonalidade } from '@contratados-rpg/shared/regras/identidade';
+import { itemDev } from './inventario-dev';
 
 export const SENHA_CONTAS_DEV = 'contratados.dev';
 
@@ -94,72 +88,56 @@ export interface DefinicaoCriaturaDev {
 }
 
 const ATRIBUTOS_COMBATENTE: FichaAtributosDto = {
-  destreza: 2,
-  forca: 3,
-  luta: 3,
-  pontaria: 2,
-  vigor: 3,
+  destreza: 1,
+  forca: 2,
+  luta: 2,
+  pontaria: 1,
+  vigor: 2,
   intelecto: 1,
   medicina: 1,
   sentidos: 2,
   social: 1,
-  vontade: 2,
+  vontade: 1,
 };
 
 const ATRIBUTOS_ESPECIALISTA: FichaAtributosDto = {
-  destreza: 3,
-  forca: 1,
-  luta: 1,
-  pontaria: 2,
-  vigor: 2,
-  intelecto: 4,
-  medicina: 2,
-  sentidos: 3,
-  social: 1,
-  vontade: 2,
-};
-
-const ATRIBUTOS_SUPORTE: FichaAtributosDto = {
   destreza: 2,
   forca: 1,
   luta: 1,
   pontaria: 1,
-  vigor: 2,
-  intelecto: 2,
-  medicina: 4,
+  vigor: 1,
+  intelecto: 3,
+  medicina: 1,
   sentidos: 2,
-  social: 3,
-  vontade: 3,
+  social: 1,
+  vontade: 1,
+};
+
+const ATRIBUTOS_SUPORTE: FichaAtributosDto = {
+  destreza: 1,
+  forca: 1,
+  luta: 1,
+  pontaria: 1,
+  vigor: 1,
+  intelecto: 2,
+  medicina: 3,
+  sentidos: 1,
+  social: 2,
+  vontade: 1,
 };
 
 const ATRIBUTOS_EXPERIMENTO: FichaAtributosDto = {
-  destreza: 3,
-  forca: 4,
-  luta: 3,
+  destreza: 1,
+  forca: 2,
+  luta: 2,
   pontaria: 1,
-  vigor: 4,
+  vigor: 2,
   intelecto: 1,
   medicina: 1,
-  sentidos: 3,
+  sentidos: 2,
   social: 1,
-  vontade: 2,
+  vontade: 1,
 };
-
-function itemDev(nome: string, categoria: ItemCategoriaEnum, quantidade = 1): CarrinhoItemDto {
-  const item = CATALOGO_ITENS[categoria].find((candidato) => candidato.nome === nome);
-  if (!item) throw new Error(`Item de seed não encontrado no catálogo: ${categoria}/${nome}.`);
-  return {
-    nome: item.nome,
-    categoria,
-    custo: item.custo,
-    peso: item.peso,
-    quantidade,
-    guardada: false,
-    modificacoes: [],
-    ...(categoria === ItemCategoriaEnum.PROTECOES ? { equipado: true } : {}),
-    ...(item.duracaoMunicao ? { contagemMunicao: { atual: item.duracaoMunicao.maxima, ...item.duracaoMunicao } } : {}),
-  };
-}
 
 function identidadeDev(
   personalidade: string,
@@ -258,7 +236,7 @@ export const CENARIO_DEV = {
       arquetipo: ArquetipoEnum.MERCENARIO,
       nivel: 3,
       prestigio: 2,
-      atributos: ATRIBUTOS_COMBATENTE,
+      atributos: montarAtributosAgenteDev(ATRIBUTOS_COMBATENTE, ClasseEnum.COMBATENTE, ArquetipoEnum.MERCENARIO, 3),
       dinheiro: 2500,
       identidade: IDENTIDADES_DEV.sentinela,
       itens: [itemDev('Escopeta', ItemCategoriaEnum.ARMAS_DE_FOGO), itemDev('Cartuchos 12GA', ItemCategoriaEnum.MUNICOES), itemDev('Mochila Mediana', ItemCategoriaEnum.ARMAZENAMENTO), itemDev('Lanterna Tática', ItemCategoriaEnum.OPERACIONAL)],
@@ -274,7 +252,7 @@ export const CENARIO_DEV = {
       arquetipo: ArquetipoEnum.ENGENHEIRO,
       nivel: 2,
       prestigio: 1,
-      atributos: ATRIBUTOS_ESPECIALISTA,
+      atributos: montarAtributosAgenteDev(ATRIBUTOS_ESPECIALISTA, ClasseEnum.ESPECIALISTA, ArquetipoEnum.ENGENHEIRO, 2),
       dinheiro: 2250,
       identidade: IDENTIDADES_DEV.operador,
       itens: [itemDev('Pistola', ItemCategoriaEnum.ARMAS_DE_FOGO), itemDev('9mm', ItemCategoriaEnum.MUNICOES), itemDev('Lockpick', ItemCategoriaEnum.OPERACIONAL), itemDev('Binóculos', ItemCategoriaEnum.OPERACIONAL), itemDev('Mochila Pequena', ItemCategoriaEnum.ARMAZENAMENTO)],
@@ -290,7 +268,7 @@ export const CENARIO_DEV = {
       arquetipo: ArquetipoEnum.VANGUARDA,
       nivel: 2,
       prestigio: 1,
-      atributos: ATRIBUTOS_COMBATENTE,
+      atributos: montarAtributosAgenteDev(ATRIBUTOS_COMBATENTE, ClasseEnum.COMBATENTE, ArquetipoEnum.VANGUARDA, 2),
       dinheiro: 2100,
       identidade: IDENTIDADES_DEV.vanguarda,
       itens: [itemDev('Fuzil de Assalto', ItemCategoriaEnum.ARMAS_DE_FOGO), itemDev('5.56mm', ItemCategoriaEnum.MUNICOES), itemDev('Colete Leve', ItemCategoriaEnum.PROTECOES), itemDev('Radio Comunicador', ItemCategoriaEnum.OPERACIONAL)],
@@ -306,7 +284,7 @@ export const CENARIO_DEV = {
       arquetipo: ArquetipoEnum.DIPLOMATA,
       nivel: 1,
       prestigio: 0,
-      atributos: ATRIBUTOS_SUPORTE,
+      atributos: montarAtributosAgenteDev(ATRIBUTOS_SUPORTE, ClasseEnum.SUPORTE, ArquetipoEnum.DIPLOMATA, 1),
       dinheiro: 1900,
       identidade: IDENTIDADES_DEV.diplomata,
       itens: [itemDev('Pistola', ItemCategoriaEnum.ARMAS_DE_FOGO), itemDev('9mm', ItemCategoriaEnum.MUNICOES), itemDev('Bandagem', ItemCategoriaEnum.MEDICINAL, 2), itemDev('Radio Comunicador', ItemCategoriaEnum.OPERACIONAL)],
@@ -322,7 +300,7 @@ export const CENARIO_DEV = {
       arquetipo: ArquetipoEnum.PARAMEDICO,
       nivel: 2,
       prestigio: 1,
-      atributos: ATRIBUTOS_SUPORTE,
+      atributos: montarAtributosAgenteDev(ATRIBUTOS_SUPORTE, ClasseEnum.SUPORTE, ArquetipoEnum.PARAMEDICO, 2),
       dinheiro: 2000,
       identidade: IDENTIDADES_DEV.paramedico,
       itens: [itemDev('Mochila Médica', ItemCategoriaEnum.ARMAZENAMENTO), itemDev('Kit Médico', ItemCategoriaEnum.MEDICINAL), itemDev('Bandagem', ItemCategoriaEnum.MEDICINAL, 2), itemDev('Pistola', ItemCategoriaEnum.ARMAS_DE_FOGO), itemDev('9mm', ItemCategoriaEnum.MUNICOES)],
@@ -338,7 +316,7 @@ export const CENARIO_DEV = {
       arquetipo: null,
       nivel: 1,
       prestigio: -1,
-      atributos: ATRIBUTOS_EXPERIMENTO,
+      atributos: montarAtributosAgenteDev(ATRIBUTOS_EXPERIMENTO, ClasseEnum.EXPERIMENTO_BESTIAL, null, 1),
       dinheiro: 1750,
       identidade: IDENTIDADES_DEV.quimera,
       itens: [itemDev('Mediana', ItemCategoriaEnum.CORPO_A_CORPO), itemDev('Mochila Pequena', ItemCategoriaEnum.ARMAZENAMENTO), itemDev('Energético', ItemCategoriaEnum.OPERACIONAL), itemDev('Compressor de Ferida', ItemCategoriaEnum.MEDICINAL)],
@@ -354,7 +332,7 @@ export const CENARIO_DEV = {
       arquetipo: ArquetipoEnum.ACADEMICO,
       nivel: 3,
       prestigio: 2,
-      atributos: ATRIBUTOS_ESPECIALISTA,
+      atributos: montarAtributosAgenteDev(ATRIBUTOS_ESPECIALISTA, ClasseEnum.ESPECIALISTA, ArquetipoEnum.ACADEMICO, 3),
       dinheiro: 2400,
       identidade: IDENTIDADES_DEV.academico,
       itens: [itemDev('Rifle de Precisão', ItemCategoriaEnum.ARMAS_DE_FOGO), itemDev('7.62mm', ItemCategoriaEnum.MUNICOES), itemDev('Óculos de Visão Noturna', ItemCategoriaEnum.OPERACIONAL), itemDev('Mochila Pequena', ItemCategoriaEnum.ARMAZENAMENTO)],
@@ -370,12 +348,13 @@ export const CENARIO_DEV = {
       arquetipo: ArquetipoEnum.LUTADOR,
       nivel: 2,
       prestigio: 1,
-      atributos: ATRIBUTOS_COMBATENTE,
+      atributos: montarAtributosAgenteDev(ATRIBUTOS_COMBATENTE, ClasseEnum.COMBATENTE, ArquetipoEnum.LUTADOR, 2),
       dinheiro: 2050,
       identidade: IDENTIDADES_DEV.lutador,
       itens: [itemDev('Leve', ItemCategoriaEnum.CORPO_A_CORPO), itemDev('Colete Leve', ItemCategoriaEnum.PROTECOES), itemDev('Bandoleira', ItemCategoriaEnum.OPERACIONAL), itemDev('Gel Cicatrizante', ItemCategoriaEnum.MEDICINAL)],
     },
   ],
+  npcs: montarNpcsDev(),
   criaturas: [
     {
       campanha: 'campanha-matheus',
@@ -439,16 +418,16 @@ export const CENARIO_DEV = {
             nome: 'Pancada',
             teste: '5d20kh1+12',
             custoAcao: CustoAcaoEnum.MOVIMENTO,
-            dano: '3D12+4',
-            danoCritico: '6D12+8',
+            dano: '3D12+4 [Físico]',
+            danoCritico: '6D12+8 [Físico]',
             area: false,
           },
           {
             nome: 'Esmagamento',
             teste: '5d20kh1+12',
             custoAcao: CustoAcaoEnum.PADRAO,
-            dano: '4D12+10',
-            danoCritico: '8D12+20',
+            dano: '4D12+10 [Físico]',
+            danoCritico: '8D12+20 [Físico]',
             area: false,
             efeito: 'O alvo realiza um teste de Vigor (DT 20) ou fica Imobilizado por 1 turno.',
           },
@@ -539,16 +518,16 @@ export const CENARIO_DEV = {
             nome: 'Rajada',
             teste: '3d20kh1+5',
             custoAcao: CustoAcaoEnum.MOVIMENTO,
-            dano: '2D10',
-            danoCritico: '4D10',
+            dano: '2D10 [Balístico]',
+            danoCritico: '4D10 [Balístico]',
             area: false,
           },
           {
             nome: 'Enxurrada de Fragmentos',
             teste: '3d20kh1+5',
             custoAcao: CustoAcaoEnum.PADRAO,
-            dano: '2D12+6',
-            danoCritico: '4D12+12',
+            dano: '2D12+6 [Explosão]',
+            danoCritico: '4D12+12 [Explosão]',
             area: true,
             efeito:
               'Todos os alvos num raio de 3m realizam um teste de Destreza (DT 15) ou ficam Sangrando por 1 turno.',
@@ -635,16 +614,16 @@ export const CENARIO_DEV = {
             nome: 'Garras Longas',
             teste: '5d20kh1+20',
             custoAcao: CustoAcaoEnum.MOVIMENTO,
-            dano: '5D12+4',
-            danoCritico: '10D12+8',
+            dano: '5D12+4 [Físico]',
+            danoCritico: '10D12+8 [Físico]',
             area: false,
           },
           {
             nome: 'Investida Predatória',
             teste: '5d20kh1+20',
             custoAcao: CustoAcaoEnum.PADRAO,
-            dano: '6D12+18',
-            danoCritico: '12D12+36',
+            dano: '6D12+18 [Físico]',
+            danoCritico: '12D12+36 [Físico]',
             area: false,
             efeito: 'O alvo realiza um teste de Vigor (DT 25) ou fica Atordoado por 1 turno.',
           },
@@ -681,62 +660,7 @@ export const CENARIO_DEV = {
   readonly membros: readonly DefinicaoMembroDev[];
   readonly fichas: readonly DefinicaoFichaDev[];
   readonly criaturas: readonly DefinicaoCriaturaDev[];
+  readonly npcs: ReturnType<typeof montarNpcsDev>;
 };
 
-export function montarDadosFichaDev(ficha: DefinicaoFichaDev): FichaJogadorDadosDto {
-  const vidaMaxima = calcularVida({
-    classe: ficha.classe,
-    nivel: ficha.nivel,
-    vigor: ficha.atributos.vigor,
-  });
-  const energiaMaxima = calcularEnergia({
-    classe: ficha.classe,
-    nivel: ficha.nivel,
-    destreza: ficha.atributos.destreza,
-  });
-  const habilidades = habilidadesIniciais(ficha.classe, ficha.arquetipo).map(
-    ({ nome, categoria, custoEnergia, descricao, origem }) => ({
-      nome,
-      categoria,
-      custoEnergia,
-      descricao,
-      ...(origem === undefined ? {} : { origem }),
-    }),
-  );
-  const habilidadePersonalidade = materializarHabilidadePersonalidade(ficha.identidade);
-  if (habilidadePersonalidade) {
-    habilidades.push(habilidadePersonalidade);
-  }
-  const derivadosBase = calcularDerivados(ficha.classe, ficha.nivel, ficha.atributos, habilidades);
-  const derivados = aplicarFormacaoAosDerivados(
-    derivadosBase,
-    ficha.identidade.origem?.formacao ?? [],
-  );
-
-  return {
-    classe: ficha.classe,
-    arquetipo: ficha.arquetipo,
-    nivel: ficha.nivel,
-    prestigio: ficha.prestigio,
-    atributos: ficha.atributos,
-    maestria: null,
-    estado: {
-      vidaAtual: vidaMaxima,
-      energiaAtual: energiaMaxima,
-      vidaMaxima,
-      energiaMaxima,
-      sequelas: [],
-      traumas: [],
-      lesoes: [],
-    },
-    derivados,
-    habilidades,
-    identidade: ficha.identidade,
-    inventario: { itens: ficha.itens, amplificadores: [] },
-    rolagens: [],
-    combos: [],
-    anotacoes: '',
-    historia: '',
-    dinheiro: ficha.dinheiro,
-  } satisfies FichaJogadorDadosDto;
-}
+export { montarDadosFichaDev } from './agentes-dev';

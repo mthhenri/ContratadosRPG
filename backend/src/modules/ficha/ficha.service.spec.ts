@@ -1,3 +1,4 @@
+import { PRESET_INICIATIVA_PADRAO } from './ficha-presets-padrao';
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import type {
   FichaCriaturaDadosDto,
@@ -45,7 +46,7 @@ import type { CampanhaRepository } from '../campanha/campanha.repository';
 import { CampanhaService } from '../campanha/campanha.service';
 import { omitirCamposPrivados } from './ficha-campos-privados.util';
 import type { FichaRepository } from './ficha.repository';
-import { FichaService, PRESET_INICIATIVA_PADRAO } from './ficha.service';
+import { FichaService } from './ficha.service';
 
 interface FichaRepositorioDublado {
   criarFicha: ReturnType<typeof vi.fn>;

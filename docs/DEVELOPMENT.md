@@ -106,6 +106,7 @@ conta `senhor.contratados`.
 | `codex.dev` | `contratados.dev` | mestre da campanha própria e jogador da campanha do Matheus |
 | `jogador.stub.1` | `contratados.dev` | jogador stub nas duas campanhas |
 | `jogador.stub.2` | `contratados.dev` | jogador stub nas duas campanhas |
+| `espectador.stub` | mesma senha das contas dev acima | espectador nas duas campanhas |
 
 Essas credenciais compartilhadas são exclusivamente locais. O guard impede a execução do seed em
 produção ou contra banco remoto.
@@ -115,11 +116,21 @@ produção ou contra banco remoto.
 - `Campanha do Matheus`: Matheus é mestre; Codex e os dois stubs são jogadores.
 - `Campanha do Codex`: Codex é mestre; Matheus e os dois stubs são jogadores.
 - Cada campanha contém uma ficha de agente de Matheus, Codex e de cada um dos dois stubs.
-- As oito fichas são diferentes entre as campanhas, têm cores de identidade distintas e conteúdo
-  calculado pelo motor atual de `shared/regras`.
+- As oito fichas são diferentes entre as campanhas, têm cores de identidade distintas e retratos locais.
+  Atributos respeitam criação, progressão e bônus de especialização; o pacote inicial de quatro Gerais,
+  escolhas de habilidades por Nível, Personalidade, Origem e preset de Iniciativa estão preenchidos.
+  Vida, Energia e derivados usam `shared/regras`, com as habilidades já materializadas.
 - Cada campanha também ganha ao menos uma criatura de teste (`CENARIO_DEV.criaturas`), sempre de
-  posse do mestre daquela campanha e validada contra `shared/regras/criatura` — sem NPCs nem
-  imagens nas fixtures.
+  posse do mestre daquela campanha e validada contra `shared/regras/criatura`. Seus ataques têm
+  tipos de dano explícitos, inclusive nas fórmulas de crítico.
+- Cada campanha ganha três NPCs (`CENARIO_DEV.npcs`): Civil, Operativo e Elite, com identidade,
+  competências, equipamento, habilidades da biblioteca, sanidade e conduta de combate. As categorias
+  exercitam ausência de Energia, reserva fixa e pool com recarga. Os NPCs pertencem ao mestre,
+  não possuem retrato obrigatório e não são compartilhados nem geram rolagens públicas pelo seed.
 
 Os convites determinísticos são `DEVMT001` e `DEVCD001`. IDs seriais não fazem parte do contrato do
 cenário e não devem ser assumidos por testes ou ferramentas.
+
+O reset recria também as tabelas de livros; o seed de campanhas não importa publicações. Para
+conservar os livros locais, preserve o pacote de publicações antes do reset e restaure-o com
+`regras:importar-pacote` depois (seção "Trazer a publicação atual dos livros", acima).

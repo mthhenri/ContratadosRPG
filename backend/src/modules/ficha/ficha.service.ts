@@ -1,3 +1,4 @@
+import { PRESET_INICIATIVA_PADRAO } from './ficha-presets-padrao';
 import { randomUUID } from 'node:crypto';
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { IMAGEM_EXTENSAO_POR_MIME } from '@contratados-rpg/shared/validators';
@@ -53,7 +54,6 @@ import type {
   FichaRecuperarDto,
   FichaResumoDto,
   FichaResumoInternoDto,
-  FichaRolagemDto,
   FichaRolagemIdentidadeAvaliarDto,
   FichaVitalidadeAlterarDto,
   FichaVitalidadeInternoAlterarDto,
@@ -103,20 +103,6 @@ import { validarDadosNpc } from "./ficha-npc-validacao.util";
 
 /** Tamanho máximo do avatar da ficha (m3-62) — 2MB. */
 const TAMANHO_MAXIMO_IMAGEM_BYTES = 2 * 1024 * 1024;
-
-/**
- * Preset de rolagem de Iniciativa (m3-47), gerado automaticamente em toda criação de ficha —
- * fonte única no backend para não duplicar com o wizard do frontend. `DESd6` usa a gramática de
- * atributo-como-fonte-de-dados (m3-29): cada ponto de Destreza é 1d6 rolado na Iniciativa.
- */
-export const PRESET_INICIATIVA_PADRAO: FichaRolagemDto = {
-  nome: 'Iniciativa',
-  formula: 'DESd6',
-  descricao:
-    'Quantidade de dados rolados para a iniciativa. Essa quantidade é relativa ao seu atributo ' +
-    'de DESTREZA, sendo cada ponto neste atributo 1 dado de 6 faces (D6) a ser rolado na ' +
-    'Iniciativa, somando todos para obter o valor total.',
-};
 
 /**
  * Regras da ficha de jogador (SYSTEM.SPEC §13/§14): CRUD com a **matriz de permissões** (§14) e a

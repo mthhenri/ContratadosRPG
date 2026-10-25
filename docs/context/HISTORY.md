@@ -1,5 +1,34 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-25 — Seed de desenvolvimento: NPCs e revisão dos exemplos
+
+Atendido o pedido de reset local com NPCs padrão: cada campanha recebe um Civil, um
+Operativo e um Elite, com identidade, competências, equipamento, habilidades de referência,
+patente quando cabível, recursos, sanidade e conduta. Pertencem ao mestre e permanecem
+sem compartilhamento automático; não foram criadas rolagens públicas para eles.
+
+A revisão encontrou atributos de agentes acima do orçamento, escolhas do pacote inicial e de
+Nível ausentes, nenhum preset de Iniciativa e ataques de criatura sem tipo de dano.
+Os agentes agora usam criação/progressão/bônus canônicos uma vez, materializam habilidades
+antes da Vida e recebem a mesma Iniciativa da service, extraída para módulo leve.
+Construção de agentes e itens foi extraída do cenário extenso; nenhuma fórmula compartilhada,
+regra do jogo, migration ou UI foi alterada. Documentação do cenário corrigida.
+
+Reset oficial executado em localhost:5432/contratados_rpg, somente no volume deste Compose:
+40 migrations, 5 usuários, 2 campanhas, 10 vínculos, 8 agentes, 3 criaturas e 6 NPCs.
+Repetição do seed manteve 17 fichas. Preservadas e restauradas as publicações que estavam na
+base (Sistema 4.1.4 e Guia 4.2.0), com igualdade canônica integral de conteúdo e metadados.
+API real confirmou três NPCs na campanha do dono e nenhum visível ao jogador; ficha de NPC
+inspecionada pelo agente principal em 1920×1080 e 360×800 pela skill verify.
+
+Backend: 1360 testes aprovados/100 ignorados; shared: 1340 aprovados; fixtures finais: 61
+aprovados. Typecheck, build backend, lint dos três workspaces (avisos existentes) e
+repo:verificar aprovados. Frontend: 89 normalizadores aprovados; 3610 testes aprovados e um
+timeout de layout na rodada ampla, seguido de 18/18 no arquivo isolado sem alteração.
+Detalhes, impacto da extração de Iniciativa e limites em
+[verificação](../specs/done/seed-dev-npcs-e-completude/verificacao.md).
+
+
 ## 2026-10-25 — Investigação: rolagem na coluna e identidades das abas
 
 Atendida a marcação do autor: Rolagem rápida e seletor público/oculto da

@@ -1,6 +1,6 @@
 import { copyFile, mkdir, readdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import type { FichaCriaturaDadosDto, FichaJogadorDadosDto } from '@contratados-rpg/shared/dtos/ficha';
+import type { FichaCriaturaDadosDto, FichaJogadorDadosDto, FichaNpcDadosDto } from '@contratados-rpg/shared/dtos/ficha';
 import {
   TipoUsuarioEnum,
   type TipoCampanhaMembroPapelEnum,
@@ -26,6 +26,7 @@ export interface ResumoSeedDev {
   readonly membros: number;
   readonly fichas: number;
   readonly criaturas: number;
+  readonly npcs: number;
 }
 
 /** Recorte comum entre `DefinicaoFichaDev` e `DefinicaoCriaturaDev` — o único usado por
@@ -51,7 +52,7 @@ export interface OperacoesSeedDev {
     campanhaId: number,
     usuarioId: number,
     ficha: FichaComumDev,
-    dados: FichaJogadorDadosDto | FichaCriaturaDadosDto,
+    dados: FichaJogadorDadosDto | FichaCriaturaDadosDto | FichaNpcDadosDto,
   ): Promise<number>;
 }
 
@@ -107,12 +108,19 @@ export async function executarSeedDevComPersistencia(
       await transacao.garantirRolagem(obterId(campanhas, criatura.campanha), obterId(usuarios, criatura.usuario), fichaId, 'Ação de ameaça');
     }
 
+    for (const npc of CENARIO_DEV.npcs) {
+      await transacao.garantirFicha(
+        obterId(campanhas, npc.campanha), obterId(usuarios, npc.usuario), npc, npc.dados,
+      );
+    }
+
     return {
       usuarios: CENARIO_DEV.usuarios.length,
       campanhas: CENARIO_DEV.campanhas.length,
       membros: CENARIO_DEV.membros.length,
       fichas: CENARIO_DEV.fichas.length,
       criaturas: CENARIO_DEV.criaturas.length,
+      npcs: CENARIO_DEV.npcs.length,
     };
   });
 }
@@ -265,7 +273,7 @@ class OperacoesKnexSeedDev implements OperacoesSeedDev {
     campanhaId: number,
     usuarioId: number,
     ficha: FichaComumDev,
-    dados: FichaJogadorDadosDto | FichaCriaturaDadosDto,
+    dados: FichaJogadorDadosDto | FichaCriaturaDadosDto | FichaNpcDadosDto,
   ): Promise<number> {
     const tipoFichaId = this.exigirId(
       await this.selecionarId(
@@ -366,7 +374,7 @@ export async function main(): Promise<void> {
     const resumo = await executarSeedDev(conexao);
     console.log(
       `[db:seed:dev] ${resumo.usuarios} usuários, ${resumo.campanhas} campanhas, ` +
-        `${resumo.membros} membros, ${resumo.fichas} fichas, ${resumo.criaturas} criaturas.`,
+        `${resumo.membros} membros, ${resumo.fichas} fichas, ${resumo.criaturas} criaturas, ${resumo.npcs} NPCs.`,
     );
   } finally {
     await conexao.destroy();

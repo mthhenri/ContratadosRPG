@@ -1,4 +1,4 @@
-import type { FichaCriaturaDadosDto, FichaJogadorDadosDto } from '@contratados-rpg/shared/dtos/ficha';
+import type { FichaCriaturaDadosDto, FichaJogadorDadosDto, FichaNpcDadosDto } from '@contratados-rpg/shared/dtos/ficha';
 import type { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import { describe, expect, it } from 'vitest';
 import type { DefinicaoCampanhaDev, DefinicaoUsuarioDev } from './cenario-dev';
@@ -13,7 +13,7 @@ interface EstadoEmMemoria {
   usuarios: Map<string, { id: number; nome: string; senha: string }>;
   campanhas: Map<string, { id: number; nome: string }>;
   membros: Map<string, TipoCampanhaMembroPapelEnum>;
-  fichas: Map<string, { id: number; cor: string; dados: FichaJogadorDadosDto | FichaCriaturaDadosDto }>;
+  fichas: Map<string, { id: number; cor: string; dados: FichaJogadorDadosDto | FichaCriaturaDadosDto | FichaNpcDadosDto }>;
   rolagens: Map<number, string>;
 }
 
@@ -50,6 +50,7 @@ class PersistenciaEmMemoria implements PersistenciaSeedDev, OperacoesSeedDev {
       this.estado.campanhas = anterior.campanhas;
       this.estado.membros = anterior.membros;
       this.estado.fichas = anterior.fichas;
+      this.estado.rolagens = anterior.rolagens;
       throw erro;
     }
   }
@@ -95,7 +96,7 @@ class PersistenciaEmMemoria implements PersistenciaSeedDev, OperacoesSeedDev {
     campanhaId: number,
     usuarioId: number,
     ficha: FichaComumDev,
-    dados: FichaJogadorDadosDto | FichaCriaturaDadosDto,
+    dados: FichaJogadorDadosDto | FichaCriaturaDadosDto | FichaNpcDadosDto,
   ): Promise<number> {
     this.fichasProcessadas += 1;
     if (this.falharNaFicha === this.fichasProcessadas) throw new Error('falha simulada na ficha');
@@ -129,12 +130,20 @@ describe('executarSeedDevComPersistencia', () => {
     await executarSeedDevComPersistencia(persistencia, 'hash-dev');
     const resumo = await executarSeedDevComPersistencia(persistencia, 'hash-dev');
 
-    expect(resumo).toEqual({ usuarios: 5, campanhas: 2, membros: 10, fichas: 8, criaturas: 3 });
+    expect(resumo).toEqual({ usuarios: 5, campanhas: 2, membros: 10, fichas: 8, criaturas: 3, npcs: 6 });
     expect(persistencia.estado.usuarios.size).toBe(5);
     expect(persistencia.estado.campanhas.size).toBe(2);
     expect(persistencia.estado.membros.size).toBe(10);
-    expect(persistencia.estado.fichas.size).toBe(11);
+    expect(persistencia.estado.fichas.size).toBe(17);
     expect(persistencia.estado.rolagens.size).toBe(11);
+  });
+
+  it('não cria rolagens públicas para NPCs ocultos', async () => {
+    const persistencia = new PersistenciaEmMemoria();
+    await executarSeedDevComPersistencia(persistencia, 'hash-dev');
+    const npcs = [...persistencia.estado.fichas.values()].filter(({ dados }) => 'categoria' in dados);
+    expect(npcs).toHaveLength(6);
+    for (const npc of npcs) expect(persistencia.estado.rolagens.has(npc.id)).toBe(false);
   });
 
   it('reverte toda a transação quando uma ficha falha', async () => {

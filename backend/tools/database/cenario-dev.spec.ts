@@ -1,3 +1,5 @@
+import { calcularVida, calcularProgressaoAcumulada, habilidadesIniciais } from '@contratados-rpg/shared/regras/agente';
+import { interpretarFormula } from '@contratados-rpg/shared/regras/rolagem';
 import { describe, expect, it } from 'vitest';
 import {
   HabilidadeCategoriaEnum,
@@ -143,10 +145,10 @@ describe('montarDadosFichaDev', () => {
       prestigio: ficha.prestigio,
       atributos: ficha.atributos,
       maestria: null,
-      rolagens: [],
+      rolagens: [expect.objectContaining({ nome: 'Iniciativa', formula: 'DESd6' })],
       combos: [],
-      anotacoes: '',
-      historia: '',
+      anotacoes: expect.stringMatching(/.+/),
+      historia: expect.stringMatching(/.+/),
       dinheiro: ficha.dinheiro,
     });
     expect(dados.estado.vidaAtual).toBe(dados.estado.vidaMaxima);
@@ -175,4 +177,31 @@ describe('montarDadosFichaDev', () => {
     );
     },
   );
+});
+
+
+describe('completude das escolhas e fórmulas', () => {
+  it.each(CENARIO_DEV.fichas.map((ficha) => [ficha.nome, ficha] as const))(
+    '%s tem todas as escolhas de criação e Nível, sem repetir habilidades', (_nome, ficha) => {
+      const dados = montarDadosFichaDev(ficha);
+      const ganhos = calcularProgressaoAcumulada(ficha);
+      const quantidade = habilidadesIniciais(ficha.classe, ficha.arquetipo).length + 4
+        + ganhos.habilidadesGerais + ganhos.habilidadesClasse + ganhos.habilidadesClasseOuArquetipo + 1;
+      expect(dados.habilidades).toHaveLength(quantidade);
+      expect(new Set(dados.habilidades.map(({ nome }) => nome)).size).toBe(quantidade);
+      expect(dados.estado.vidaMaxima).toBe(calcularVida({ classe: ficha.classe,
+        nivel: ficha.nivel, vigor: ficha.atributos.vigor, habilidades: dados.habilidades }));
+    },
+  );
+
+  it('todos os danos de criatura possuem tipo e são interpretáveis', () => {
+    for (const criatura of CENARIO_DEV.criaturas) {
+      for (const ataque of criatura.dados.ataques) {
+        for (const formula of [ataque.dano, ataque.danoCritico]) {
+          expect(formula).toMatch(/\[(Físico|Balístico|Explosão)\]/u);
+          expect(interpretarFormula(formula).formula).toBeTruthy();
+        }
+      }
+    }
+  });
 });
