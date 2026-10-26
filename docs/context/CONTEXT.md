@@ -1076,6 +1076,15 @@ das fichas parciais/flutuantes permanecem visíveis no celular. O montador do av
 da seção fixa para não ficar sob a bandeja. Fontes: [fechamento](../specs/done/montador-rolagem-fechamento.spec.md),
 [experimento](../specs/done/montador-rolagem-experimento.spec.md) e
 [auditoria de cobertura](../specs/done/montador-rolagem-cobertura-telas/auditoria.md).
+O layout atual segue a POC aprovada: atributos antes da combinação; Proficiência/Nível antes dos
+dados extras e bônus; modelos acessíveis por seleção fixa, com montagens locais preservadas.
+Dano/Livre têm lista de termos com destaque da linha selecionada e editor independente de
+valor, sinal, tipo/divisão e opções. Fontes admitem multiplicador/divisor, incluindo PROF/NIV.
+Responsabilidades separadas entre editor de teste, lista/adição e editor de termo; fórmula textual
+continua sendo a fonte única. O cabeçalho oferece o guia de uso em `shared/guia-montador`,
+complementar ao guia de expressões agora em `shared/guia-formula` (gramática preservada).
+Fonte e evidências: [interface e guia](../specs/done/montador-rolagem-interface-e-guia.spec.md),
+[verificação](../specs/done/montador-rolagem-interface-e-guia/verificacao.md).
 
 **Requests-correcoes (guarda-chuva de 6 tasks, `P-082`…`P-086` + inventário sob demanda) —
 concluído, 6/6**: `p-082` (autosave/seleção da ficha), `p-083` (reconexão sem carga duplicada),

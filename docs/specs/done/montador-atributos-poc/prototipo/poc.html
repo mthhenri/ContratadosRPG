@@ -1,0 +1,372 @@
+<main class="estudo">
+  <header class="estudo__cabecalho">
+    <span class="estudo__marca">// CONTRATADOS RPG</span>
+    <app-chip variante="sutil">POC visual</app-chip>
+  </header>
+  <aside
+    class="estudo__notas"
+    [class.estudo__notas--dano]="modelo() !== 'TESTE'"
+  >
+    <app-cartao titulo="Menos movimento, mais clareza">
+      @if (modelo() === 'LIVRE') {
+      <p>Comece em branco e combine dados, atributos, números e expressões.</p>
+      <p>
+        A edição independente e o destaque da linha são os mesmos do dano de
+        arma. Nenhum tipo de dano vem selecionado ao adicionar um termo.
+      </p>
+      <div class="estudo__nota">
+        Expressões podem ser um bônus, como (FOR+VIG)*2, ou a quantidade de
+        dados, como (FOR+1)d6. Os outros dois modelos continuam disponíveis.
+      </div>
+      } @else if (modelo() === 'DANO') {
+      <p>Dados, atributos e bônus são termos independentes.</p>
+      <p>
+        Use os botões dos dados para montar a fórmula. Toque de novo para somar
+        mais um ou escolha outro dado para acrescentar um novo termo.
+      </p>
+      <p>
+        A linha inteira destaca a seleção. A edição ao lado mostra exatamente
+        qual termo está aberto, seu multiplicador e seu tipo de dano.
+      </p>
+      <div class="estudo__nota">
+        Experimente “Exemplo misto”: Força ×2 e Proficiência em Físico, com d8 e
+        Nível em Balístico. Alterar um termo preserva os demais. Atalhos e
+        contas livres ainda ficam fora deste recorte.
+      </div>
+      } @else {
+      <p>O mesmo montador, com os atributos reunidos em um único bloco.</p>
+      <p>
+        Alterne entre <strong>Só um</strong>, <strong>Soma</strong> e
+        <strong>Média</strong>. Os campos mantêm o lugar, e a combinação aparece
+        resumida logo abaixo.
+      </p>
+      <p>
+        O segundo atributo fica desabilitado quando não entra na conta. Sua
+        escolha é preservada ao alternar.
+      </p>
+      <div class="estudo__nota">
+        Recorte desta POC: teste de atributo. Valores de exemplo, sem salvar na
+        ficha.
+      </div>
+      }
+      <button
+        app-botao
+        variante="secundario"
+        estilo="contorno"
+        tamanho="pequeno"
+        (click)="aberto.set(true)"
+      >
+        Abrir proposta
+      </button>
+    </app-cartao>
+  </aside>
+</main>
+
+<app-painel-flutuante
+  id="poc-montador-atributos-v1"
+  [titulo]="mobile() ? 'Montar rolagem' : 'Montador de rolagem'"
+  [aberto]="aberto()"
+  [mobile]="mobile()"
+  [largura]="modelo() !== 'TESTE' ? 760 : 520"
+  [altura]="altura() < 850 ? altura() - 112 : modelo() !== 'TESTE' ? 880 : 728"
+  [posicaoInicial]="{ x: 64, y: 88 }"
+  (fechar)="aberto.set(false)"
+>
+  <button
+    painelAcoesExtras
+    app-botao
+    variante="secundario"
+    estilo="texto"
+    tamanho="pequeno"
+    class="poc-guia"
+    type="button"
+    aria-label="Como usar o montador"
+    (pointerdown)="$event.stopPropagation()"
+    (click)="guiaAberto.set(true)"
+  >
+    Guia
+  </button>
+  <div class="poc-area">
+    <div class="poc-navegacao">
+      <app-segmentado rotulo="Modelo da prévia" [fluido]="true">
+        <button
+          app-segmentado-item
+          class="montador__segmento"
+          [ativo]="modelo() === 'TESTE'"
+          aria-label="Teste de atributo"
+          (click)="modelo.set('TESTE')"
+        >
+          {{ mobile() ? 'Teste' : 'Teste de atributo' }}
+        </button>
+        <button
+          app-segmentado-item
+          class="montador__segmento"
+          [ativo]="modelo() === 'DANO'"
+          (click)="modelo.set('DANO')"
+        >
+          Dano de arma
+        </button>
+        <button
+          app-segmentado-item
+          class="montador__segmento"
+          [ativo]="modelo() === 'LIVRE'"
+          (click)="modelo.set('LIVRE')"
+        >
+          Dados livres
+        </button>
+      </app-segmentado>
+    </div>
+    <app-dano-poc [ambiente]="ambiente" [hidden]="modelo() !== 'DANO'" />
+    <app-dano-poc
+      [ambiente]="ambiente"
+      [livre]="true"
+      [hidden]="modelo() !== 'LIVRE'"
+    />
+    <div class="montador" [hidden]="modelo() !== 'TESTE'">
+      <div class="montador__topo">
+        <div class="montador__contexto">
+          <span>Teste de atributo</span
+          ><app-chip variante="sutil">Prévia</app-chip>
+        </div>
+        <app-campo rotulo="Fórmula" tamanho="compacto">
+          <input
+            class="campo__controle montador__formula"
+            [value]="formula()"
+            readonly
+            aria-label="Fórmula montada"
+          />
+        </app-campo>
+        <p class="montador__resumo" aria-live="polite">
+          {{ dados() }}d20 · mantém o {{ estado().manter === 'MAIOR' ? 'maior' :
+          'menor' }}<span>
+            · {{ estado().repeticoes }} {{ estado().repeticoes === 1 ? 'rolagem'
+            : 'rolagens' }}</span
+          >
+        </p>
+      </div>
+
+      <div class="montador__corpo">
+        <section class="montador__grupo" aria-labelledby="atributos-titulo">
+          <h3 id="atributos-titulo">Atributos</h3>
+
+          <div class="montador__atributos">
+            <app-campo rotulo="Atributo" tamanho="compacto">
+              <select
+                class="campo__controle"
+                aria-label="Atributo principal"
+                (change)="escolher($event)"
+              >
+                @for (atributo of atributos; track atributo.sigla) {
+                <option
+                  [value]="atributo.sigla"
+                  [selected]="estado().atributos[0] === atributo.sigla"
+                >
+                  {{ atributo.sigla }} · {{ atributo.nome }} ({{
+                  valor(atributo.sigla) }})
+                </option>
+                }
+              </select>
+            </app-campo>
+            <app-campo rotulo="Combinar com" tamanho="compacto">
+              <select
+                class="campo__controle"
+                aria-label="Segundo atributo"
+                [disabled]="modo() === 'UM'"
+                (change)="escolher($event, true)"
+              >
+                @for (atributo of atributos; track atributo.sigla) {
+                <option
+                  [value]="atributo.sigla"
+                  [selected]="segundo() === atributo.sigla"
+                  [disabled]="estado().atributos[0] === atributo.sigla"
+                >
+                  {{ atributo.sigla }} · {{ atributo.nome }} ({{
+                  valor(atributo.sigla) }})
+                </option>
+                }
+              </select>
+            </app-campo>
+          </div>
+          <app-segmentado rotulo="Combinar atributos" [fluido]="true">
+            <button
+              app-segmentado-item
+              class="montador__segmento"
+              [ativo]="modo() === 'UM'"
+              (click)="combinar('UM')"
+            >
+              Só um
+            </button>
+            <button
+              app-segmentado-item
+              class="montador__segmento"
+              [ativo]="modo() === 'SOMA'"
+              (click)="combinar('SOMA')"
+            >
+              Soma
+            </button>
+            <button
+              app-segmentado-item
+              class="montador__segmento"
+              [ativo]="modo() === 'MEDIA'"
+              (click)="combinar('MEDIA')"
+            >
+              Média
+            </button>
+          </app-segmentado>
+          <p class="montador__conta" aria-live="polite">
+            {{ conta() }}<strong
+              >{{ dados() }}d20{{ estado().extra !== 0 ? ' com ajuste' : ''
+              }}</strong
+            >
+          </p>
+        </section>
+
+        <section
+          class="montador__grupo montador__grupo--divisor"
+          aria-labelledby="ajustes-titulo"
+        >
+          <h3 id="ajustes-titulo">Ajustes</h3>
+          <div class="montador__bonus">
+            <app-segmentado rotulo="Proficiência no teste" [fluido]="true"
+              ><button
+                app-segmentado-item
+                class="montador__segmento"
+                [ativo]="estado().proficiencia"
+                (click)="alterar({ proficiencia: !estado().proficiencia })"
+              >
+                Proficiência +2
+              </button></app-segmentado
+            >
+            <app-segmentado rotulo="Nível no teste" [fluido]="true"
+              ><button
+                app-segmentado-item
+                class="montador__segmento"
+                [ativo]="estado().nivel"
+                (click)="alterar({ nivel: !estado().nivel })"
+              >
+                Nível +5
+              </button></app-segmentado
+            >
+          </div>
+          <div class="montador__linha">
+            <div>
+              <span>Dados a mais ou a menos</span
+              ><small>Altera a quantidade de d20</small>
+            </div>
+            <app-step-input
+              tamanho="compacto"
+              [min]="-10"
+              [max]="10"
+              [valorExterno]="estado().extra"
+              ariaRotulo="Dados a mais ou a menos"
+              (valorAlterado)="alterar({ extra: $event })"
+            />
+          </div>
+          <div class="montador__linha">
+            <span>Bônus fixo</span
+            ><app-step-input
+              tamanho="compacto"
+              [min]="-999"
+              [max]="999"
+              [valorExterno]="estado().bonus"
+              ariaRotulo="Bônus fixo"
+              (valorAlterado)="alterar({ bonus: $event })"
+            />
+          </div>
+        </section>
+
+        <section
+          class="montador__grupo montador__grupo--divisor"
+          aria-labelledby="opcoes-titulo"
+        >
+          <h3 id="opcoes-titulo">Opções do teste</h3>
+          <div class="montador__linha">
+            <span>Manter</span
+            ><app-segmentado rotulo="Manter dado"
+              ><button
+                app-segmentado-item
+                class="montador__segmento"
+                [ativo]="estado().manter === 'MAIOR'"
+                (click)="alterar({ manter: 'MAIOR' })"
+              >
+                Maior</button
+              ><button
+                app-segmentado-item
+                class="montador__segmento"
+                [ativo]="estado().manter === 'MENOR'"
+                (click)="alterar({ manter: 'MENOR' })"
+              >
+                Menor
+              </button></app-segmentado
+            >
+          </div>
+          <div class="montador__linha">
+            <span>Margem de crítico</span
+            ><app-segmentado rotulo="Margem de crítico"
+              >@for (margem of [0, 1, 2, 3]; track margem) {<button
+                app-segmentado-item
+                class="montador__segmento"
+                [ativo]="estado().margem === margem"
+                (click)="alterar({ margem })"
+              >
+                {{ margem === 0 ? 'Padrão' : '+' + margem }}</button
+              >}</app-segmentado
+            >
+          </div>
+          <div class="montador__linha">
+            <span>Repetir a rolagem</span
+            ><app-step-input
+              tamanho="compacto"
+              [min]="1"
+              [max]="10"
+              [valorExterno]="estado().repeticoes"
+              ariaRotulo="Repetir a rolagem"
+              (valorAlterado)="alterar({ repeticoes: $event })"
+            />
+          </div>
+        </section>
+      </div>
+
+      <div class="montador__resultado" aria-live="polite">
+        {{ resultado() || 'Demonstração local · não registra no histórico' }}
+      </div>
+      <footer class="montador__rodape">
+        <button
+          app-botao
+          variante="secundario"
+          estilo="texto"
+          tamanho="pequeno"
+          posicaoIcone="esquerda"
+          [disabled]="historico().length === 0"
+          (click)="desfazer()"
+        >
+          <app-icone nome="desfazer" />Desfazer
+        </button>
+        <button
+          app-botao
+          variante="secundario"
+          estilo="texto"
+          tamanho="pequeno"
+          (click)="restaurar()"
+        >
+          Restaurar
+        </button>
+        <button
+          app-botao
+          variante="primario"
+          estilo="preenchido"
+          tamanho="pequeno"
+          posicaoIcone="esquerda"
+          class="montador__rolar"
+          (click)="rolar()"
+        >
+          <app-icone nome="d20" />Rolar
+        </button>
+      </footer>
+    </div>
+  </div>
+</app-painel-flutuante>
+<app-guia-montador-poc
+  [aberto]="guiaAberto()"
+  (fechar)="guiaAberto.set(false)"
+/>

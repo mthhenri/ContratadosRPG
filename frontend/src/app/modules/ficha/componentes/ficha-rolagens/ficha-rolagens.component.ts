@@ -30,7 +30,7 @@ import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.com
 import { Modal } from '../../../../shared/ui/modal/modal.component';
 import { executarPassoPreset } from '../../executar-rolagem';
 import type { RolagemRealizadaDto } from '../../rolagem-realizada';
-import { GuiaFormula } from '../guia-formula/guia-formula.component';
+import { GuiaFormula } from '../../../../shared/guia-formula/guia-formula.component';
 import { RolagemRapida } from '../rolagem-rapida/rolagem-rapida.component';
 
 /** Grupo tipado de um passo seguinte no formulário (encadeamento), com as habilidades **deste passo**. */

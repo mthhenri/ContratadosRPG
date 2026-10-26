@@ -1,0 +1,495 @@
+<div class="montador">
+  <div class="montador__topo">
+    <div class="montador__contexto">
+      <span>{{ livre() ? "Dados livres" : "Dano de arma" }}</span
+      ><app-chip variante="sutil">Prévia</app-chip>
+    </div>
+    <app-campo rotulo="Fórmula" tamanho="compacto"
+      ><input
+        class="campo__controle montador__formula"
+        [value]="formula()"
+        readonly
+        [attr.aria-label]="livre() ? 'Fórmula livre montada' : 'Fórmula de dano montada'"
+    /></app-campo>
+    <p class="montador__resumo" aria-live="polite">
+      @if (resumo(); as faixa) { {{ faixa.minimo }} a {{ faixa.maximo }}{{
+      livre() ? "" : " de dano" }} · média {{
+      faixa.media.toLocaleString('pt-BR', { maximumFractionDigits: 1 }) }} }
+      @else { Monte os termos da rolagem }
+    </p>
+  </div>
+  <div class="dano__layout">
+    <div class="dano__montagem">
+      <section class="montador__grupo dano__formula-termos">
+        <div class="dano__titulo-lista">
+          <h3>Termos da fórmula</h3>
+          <button
+            app-botao
+            variante="secundario"
+            estilo="texto"
+            tamanho="pequeno"
+            class="dano__exemplo"
+            (click)="exemploMisto()"
+          >
+            {{ livre() ? "Ver exemplo" : "Exemplo misto" }}
+          </button>
+        </div>
+        <p class="dano__dica">
+          Selecione uma linha para editar. Cada termo tem seu próprio tipo de
+          dano.
+        </p>
+        <div class="dano__lista">
+          @for (peca of estado().pecas; track $index; let indice = $index) {
+          <div
+            class="dano__termo"
+            [class.dano__termo--selecionado]="selecionado() === indice"
+            role="group"
+            [attr.aria-label]="'Termo ' + (indice + 1) + ': ' + rotulo(peca)"
+            (pointerdown)="aoFocarLinha(indice, $event)"
+            (focusin)="aoFocarLinha(indice, $event)"
+          >
+            <app-ficha-termo
+              [compacta]="true"
+              [cor]="cor(tipoDe(peca).primeiro)"
+              [corSecundaria]="cor(tipoDe(peca).segundo)"
+              [rotuloRemover]="'Remover ' + rotulo(peca)"
+              (remover)="removerTermo(indice)"
+            >
+              <button
+                fichaTermoRotulo
+                app-botao
+                variante="secundario"
+                estilo="texto"
+                tamanho="pequeno"
+                class="dano__selecionar"
+                [attr.aria-label]="'Editar ' + rotulo(peca)"
+                [attr.aria-pressed]="selecionado() === indice"
+                (click)="selecionar(indice)"
+              >
+                <span class="dano__identidade"
+                  ><strong>{{ rotulo(peca) }}</strong
+                  ><small>{{ detalhe(peca) }}</small></span
+                >
+              </button>
+              @if (!contaDe(peca)) {
+              <app-step-input
+                fichaTermoControles
+                tamanho="compacto"
+                [min]="minimo(peca)"
+                [max]="maximo(peca)"
+                [valorExterno]="valorControle(peca)"
+                [ariaRotulo]="nomeControle(peca) + ' de ' + rotulo(peca) + ' do termo ' + (indice + 1)"
+                (valorAlterado)="definirValor(indice, $event)"
+              />
+              } @else {
+              <button
+                fichaTermoControles
+                app-botao
+                variante="secundario"
+                estilo="contorno"
+                tamanho="pequeno"
+                class="dano__editar-conta"
+                [attr.aria-label]="'Editar conta do termo ' + (indice + 1)"
+                (click)="selecionar(indice)"
+              >
+                Editar conta
+              </button>
+              }
+            </app-ficha-termo>
+          </div>
+          } @empty {
+          <app-estado-vazio
+            titulo="Monte sua rolagem"
+            linhaApoio="Adicione dados, atributos, números ou uma expressão pelos controles abaixo."
+            tamanho="compacto"
+          />
+          }
+        </div>
+      </section>
+
+      <section class="montador__grupo">
+        <h3>Adicionar dados</h3>
+        <div class="dano__teclado">
+          @for (facesDado of faces; track facesDado) {
+          <button
+            app-botao
+            variante="secundario"
+            estilo="contorno"
+            tamanho="pequeno"
+            posicaoIcone="esquerda"
+            class="dano__tecla"
+            [attr.aria-label]="'Adicionar d' + facesDado"
+            (click)="adicionarDado(facesDado)"
+          >
+            <app-icone [nome]="icone(facesDado)" />d{{ facesDado }}
+          </button>
+          }
+        </div>
+      </section>
+      <section class="montador__grupo dano__adicionar">
+        <h3>Adicionar atributo ou bônus</h3>
+        <div class="dano__adicionar-atributo">
+          <app-campo rotulo="Atributo" tamanho="compacto"
+            ><select
+              class="campo__controle"
+              aria-label="Atributo para adicionar"
+              (change)="atributoNovo.set(texto($event))"
+            >
+              @for (atributo of atributos; track atributo.sigla) {
+              <option
+                [value]="atributo.sigla"
+                [selected]="atributoNovo() === atributo.sigla"
+              >
+                {{ atributo.nome }}
+              </option>
+              }
+            </select></app-campo
+          ><button
+            app-botao
+            variante="secundario"
+            estilo="contorno"
+            tamanho="pequeno"
+            class="dano__tecla"
+            aria-label="Adicionar atributo"
+            (click)="adicionarFonte(atributoNovo())"
+          >
+            Adicionar
+          </button>
+        </div>
+        <div class="dano__atalhos">
+          <button
+            app-botao
+            variante="secundario"
+            estilo="contorno"
+            tamanho="pequeno"
+            class="dano__tecla"
+            aria-label="Adicionar proficiência"
+            (click)="adicionarFonte('PROF')"
+          >
+            Proficiência</button
+          ><button
+            app-botao
+            variante="secundario"
+            estilo="contorno"
+            tamanho="pequeno"
+            class="dano__tecla"
+            aria-label="Adicionar nível"
+            (click)="adicionarFonte('NIV')"
+          >
+            Nível</button
+          ><button
+            app-botao
+            variante="secundario"
+            estilo="contorno"
+            tamanho="pequeno"
+            class="dano__tecla"
+            aria-label="Adicionar número"
+            (click)="adicionarNumero()"
+          >
+            Número
+          </button>
+        </div>
+      </section>
+      @if (livre()) {
+      <section class="montador__grupo dano__expressao">
+        <h3>Adicionar expressão</h3>
+        <app-segmentado rotulo="Uso da expressão" [fluido]="true"
+          ><button
+            app-segmentado-item
+            class="montador__segmento"
+            [ativo]="usoExpressao() === 'BONUS'"
+            (click)="usoExpressao.set('BONUS')"
+          >
+            Bônus</button
+          ><button
+            app-segmentado-item
+            class="montador__segmento"
+            [ativo]="usoExpressao() === 'QUANTIDADE'"
+            (click)="usoExpressao.set('QUANTIDADE')"
+          >
+            Quantidade
+          </button></app-segmentado
+        >
+        <app-campo rotulo="Conta" tamanho="compacto"
+          ><input
+            class="campo__controle"
+            aria-label="Expressão para adicionar"
+            placeholder="(FOR+VIG)*2"
+            [value]="expressaoNova()"
+            (input)="expressaoNova.set(texto($event))"
+            (keydown.enter)="adicionarExpressao()"
+        /></app-campo>
+        <app-campo rotulo="Dado da expressão" tamanho="compacto"
+          ><select
+            class="campo__controle"
+            aria-label="Dado da expressão"
+            [disabled]="usoExpressao() !== 'QUANTIDADE'"
+            (change)="facesExpressao.set(+texto($event))"
+          >
+            @for (face of faces; track face) {
+            <option [value]="face" [selected]="facesExpressao() === face">
+              d{{ face }}
+            </option>
+            }
+          </select></app-campo
+        >
+        <p class="dano__feedback" aria-live="polite">
+          @if (expressaoNova()) { @if (expressaoAvaliada().valida) { Conta
+          válida · confira o termo após adicionar. } @else { {{
+          erroNova() }} } } @else { Atributos, PROF, NIV, + − × /
+          e parênteses. }
+        </p>
+        <button
+          app-botao
+          variante="secundario"
+          estilo="contorno"
+          tamanho="pequeno"
+          class="dano__tecla"
+          [disabled]="!expressaoAvaliada().valida"
+          (click)="adicionarExpressao()"
+        >
+          Adicionar expressão
+        </button>
+      </section>
+      }
+      <div class="montador__linha dano__repetir">
+        <span>Repetir a rolagem</span
+        ><app-step-input
+          tamanho="compacto"
+          [min]="1"
+          [max]="repeticoesMaxima"
+          [valorExterno]="estado().repeticoes"
+          ariaRotulo="Repetir o dano"
+          (valorAlterado)="alterar({ repeticoes: $event })"
+        />
+      </div>
+    </div>
+
+    <div class="dano__inspecao">
+      <fieldset
+        class="montador__grupo dano__editor"
+        [disabled]="estado().pecas.length === 0"
+      >
+        <div class="dano__editor-cabecalho">
+          <span class="dano__rotulo"
+            >Editando termo {{ estado().pecas.length ? selecionado() + 1 : '—'
+            }}</span
+          ><strong
+            >{{ estado().pecas.length ? rotulo(termo()) : 'Nenhum termo'
+            }}</strong
+          ><span
+            >{{ estado().pecas.length ? detalhe(termo()) : 'Adicione um termo à
+            fórmula' }}</span
+          >
+        </div>
+        <div
+          class="dano__valor-editor"
+          [class.dano__valor-editor--livre]="livre()"
+        >
+          @if (contaDe(termo())) {
+          <app-campo rotulo="Conta deste termo" tamanho="compacto"
+            ><input
+              class="campo__controle"
+              aria-label="Conta do termo selecionado"
+              [value]="expressaoEdicao()"
+              (input)="expressaoEdicao.set(texto($event))"
+              (keydown.enter)="aplicarConta()"
+          /></app-campo>
+          <button
+            app-botao
+            variante="secundario"
+            estilo="contorno"
+            tamanho="pequeno"
+            class="dano__tecla"
+            [disabled]="!edicaoAvaliada().valida"
+            (click)="aplicarConta()"
+          >
+            Aplicar conta
+          </button>
+          <p class="dano__feedback" aria-live="polite">
+            @if (!edicaoAvaliada().valida) { {{ erroEdicao() }} } @else
+            { A conta será aplicada somente a este termo. }
+          </p>
+          } @else {
+          <div class="montador__linha">
+            <span
+              >{{ nomeControle(termo()) }}{{ termo().tipo === 'FONTE' ? ' (×)' :
+              '' }}</span
+            ><app-step-input
+              tamanho="compacto"
+              [min]="minimo(termo())"
+              [max]="maximo(termo())"
+              [valorExterno]="valorControle(termo())"
+              ariaRotulo="Valor do termo selecionado"
+              (valorAlterado)="definirValor(selecionado(), $event)"
+            />
+          </div>
+          }
+        </div>
+
+        <app-segmentado rotulo="Sinal do termo" [fluido]="true"
+          ><button
+            app-segmentado-item
+            class="montador__segmento"
+            [ativo]="termo().sinal === 1"
+            (click)="definirSinal(1)"
+          >
+            Somar</button
+          ><button
+            app-segmentado-item
+            class="montador__segmento"
+            [ativo]="termo().sinal === -1"
+            (click)="definirSinal(-1)"
+          >
+            Subtrair
+          </button></app-segmentado
+        >
+        <span class="dano__rotulo">Tipo de dano deste termo</span>
+        <app-segmentado rotulo="Tipo de dano do termo" class="dano__tipos"
+          ><button
+            app-segmentado-item
+            class="montador__segmento"
+            [ativo]="tipoTermo().primeiro === null"
+            (click)="escolherTipo(null)"
+          >
+            Sem tipo</button
+          >@for (tipo of tipos; track tipo.tipo) {
+          <button
+            app-segmentado-item
+            class="montador__segmento"
+            [ativo]="tipoTermo().primeiro === tipo.tipo"
+            (click)="escolherTipo(tipo.tipo)"
+          >
+            {{ tipo.nome }}
+          </button>
+          }</app-segmentado
+        >
+        <span class="dano__rotulo">Dividir meio a meio com</span>
+        <app-segmentado rotulo="Divisão do tipo de dano" class="dano__tipos"
+          ><button
+            app-segmentado-item
+            class="montador__segmento"
+            [ativo]="!tipoTermo().segundo"
+            (click)="escolherSegundo(null)"
+          >
+            Não dividir</button
+          >@for (tipo of tiposBloqueaveis; track tipo.tipo) {
+          <button
+            app-segmentado-item
+            class="montador__segmento"
+            [ativo]="tipoTermo().segundo === tipo.tipo"
+            [desabilitado]="!podeDividir() || tipoTermo().primeiro === tipo.tipo"
+            (click)="escolherSegundo(tipo.tipo)"
+          >
+            {{ tipo.nome }}
+          </button>
+          }</app-segmentado
+        >
+      </fieldset>
+      <fieldset
+        class="montador__grupo dano__editor dano__opcoes"
+        [disabled]="estado().pecas.length === 0 || termo().tipo !== 'DADO'"
+      >
+        <h3>Opções de dados</h3>
+        <p class="dano__dica">
+          {{ termo().tipo === 'DADO' ? 'Aplicadas somente a este termo.' :
+          'Disponíveis ao selecionar um termo de dados.' }}
+        </p>
+        <div class="montador__linha">
+          <span>Manter</span
+          ><app-segmentado rotulo="Manter dados do dano"
+            ><button
+              app-segmentado-item
+              class="montador__segmento"
+              [ativo]="manter() === 'TODOS'"
+              (click)="opcoes({ manter: 'TODOS' })"
+            >
+              Todos</button
+            ><button
+              app-segmentado-item
+              class="montador__segmento"
+              [ativo]="manter() === 'MAIOR'"
+              (click)="opcoes({ manter: 'MAIOR' })"
+            >
+              Maior</button
+            ><button
+              app-segmentado-item
+              class="montador__segmento"
+              [ativo]="manter() === 'MENOR'"
+              (click)="opcoes({ manter: 'MENOR' })"
+            >
+              Menor
+            </button></app-segmentado
+          >
+        </div>
+        <app-campo rotulo="Dado extra" tamanho="compacto"
+          ><select
+            class="campo__controle"
+            aria-label="Dado extra do dano"
+            (change)="escolherExtra($event)"
+          >
+            <option value="NENHUM" [selected]="extra() === 'NENHUM'">
+              Nenhum
+            </option>
+            <option value="EXPLODE" [selected]="extra() === 'EXPLODE'">
+              Explode no máximo
+            </option>
+            <option value="IMPLODE" [selected]="extra() === 'IMPLODE'">
+              Implode no 1
+            </option>
+          </select></app-campo
+        >
+        <div class="montador__linha">
+          <span>Margem de crítico</span
+          ><app-segmentado rotulo="Margem de crítico do dano"
+            >@for (margemDado of [0, 1, 2, 3]; track margemDado) {
+            <button
+              app-segmentado-item
+              class="montador__segmento"
+              [ativo]="margem() === margemDado"
+              (click)="opcoes({ margem: margemDado })"
+            >
+              {{ margemDado === 0 ? 'Padrão' : '+' + margemDado }}
+            </button>
+            }</app-segmentado
+          >
+        </div>
+      </fieldset>
+    </div>
+  </div>
+  <div class="montador__resultado" aria-live="polite">
+    {{ resultado() || 'Demonstração local · não registra no histórico' }}
+  </div>
+  <footer class="montador__rodape">
+    <button
+      app-botao
+      variante="secundario"
+      estilo="texto"
+      tamanho="pequeno"
+      posicaoIcone="esquerda"
+      [disabled]="historico().length === 0"
+      (click)="desfazer()"
+    >
+      <app-icone nome="desfazer" />Desfazer</button
+    ><button
+      app-botao
+      variante="secundario"
+      estilo="texto"
+      tamanho="pequeno"
+      (click)="restaurar()"
+    >
+      {{ livre() ? "Limpar" : "Restaurar" }}</button
+    ><button
+      app-botao
+      variante="primario"
+      estilo="preenchido"
+      tamanho="pequeno"
+      posicaoIcone="esquerda"
+      class="montador__rolar"
+      [disabled]="estado().pecas.length === 0"
+      (click)="rolar()"
+    >
+      <app-icone nome="d20" />Rolar
+    </button>
+  </footer>
+</div>

@@ -4,13 +4,15 @@ import type { FichaAtributosDto } from '@contratados-rpg/shared/dtos/ficha';
 import { expandirAtalhosDano, type ResultadoRolagemDto } from '@contratados-rpg/shared/regras/rolagem';
 
 import { Icone } from '../icone/icone.component';
+import { GuiaMontador } from '../guia-montador/guia-montador.component';
 import { JanelaMontador } from '../janela-montador/janela-montador';
 import { OverflowFade } from '../overflow-fade/overflow-fade.directive';
 import { ResultadoRolagem } from '../resultado-rolagem/resultado-rolagem.component';
 import { Tooltip } from '../tooltip/tooltip.directive';
 import { Botao } from '../ui/botao/botao.component';
 import { BotaoIcone } from '../ui/botao-icone/botao-icone.component';
-import { CartaoReceita } from '../ui/cartao-receita/cartao-receita.component';
+import { Segmentado } from '../ui/segmentado/segmentado.component';
+import { SegmentadoItem } from '../ui/segmentado/segmentado-item.component';
 import type { PainelFlutuantePosicao } from '../ui/painel-flutuante/painel-flutuante.component';
 import { PainelFlutuante } from '../ui/painel-flutuante/painel-flutuante.component';
 import { MontadorEditorPecas } from './montador-editor-pecas.component';
@@ -18,15 +20,13 @@ import { type AmbienteMontador, lerFormula, resumirFormula, type ResumoFormulaMo
 import {
   type AtalhosDanoMontador,
   analisarFormulaMontador,
-  desfazerPassoHistorico,
-  type HistoricoMontador,
+  HISTORICO_MONTADOR_LIMITE,
   type MontadorFormulaAnalise,
   type MontadorModo,
   RECEITAS_MONTADOR,
   type ReceitaMontador,
-  registrarPassoHistorico,
 } from './montador-modelo';
-import { podeMontarPecasOuTeste } from './montador-pecas';
+import { lerTeste, podeMontarPecasOuTeste } from './montador-pecas';
 
 /** Última rolagem feita pela barra, para o estado "resultado" (o painel não fecha ao rolar). */
 export interface MontadorUltimaRolagem {
@@ -39,8 +39,7 @@ const BREAKPOINT_MOBILE = 560;
 
 /** Desktop: posição e tamanho iniciais, e mínimos do redimensionar (`JanelaMontador`, comum ao `MontadorRolagem`). */
 const POSICAO_INICIAL: PainelFlutuantePosicao = { x: 40, y: 136 };
-const LARGURA_INICIAL = 520;
-const ALTURA_INICIAL = 700;
+const ALTURA_INICIAL = 880;
 const LARGURA_MINIMA = 360;
 const ALTURA_MINIMA = 440;
 
@@ -58,13 +57,15 @@ const ALTURA_MINIMA = 440;
   imports: [
     Botao,
     BotaoIcone,
-    CartaoReceita,
+    GuiaMontador,
     Icone,
     MontadorEditorPecas,
     OverflowFade,
     PainelFlutuante,
     ResultadoRolagem,
     Tooltip,
+    Segmentado,
+    SegmentadoItem,
   ],
   templateUrl: './montador-rolagem.component.html',
   styleUrl: './montador-rolagem.component.scss',
@@ -123,10 +124,10 @@ export class MontadorRolagem {
     return analise;
   });
 
-  /** Editor de controles visível: fórmula em peças, ou vazia depois de escolher um ponto de partida. */
+  /** Editor de controles visível para uma fórmula representável ou vazia. */
   protected readonly mostraEditor = computed(() => {
     const estado = this.analise().estado;
-    return estado === 'PECAS' || (estado === 'VAZIA' && this.modo() !== null);
+    return estado === 'PECAS' || estado === 'VAZIA';
   });
 
   protected readonly tokenizadaEditor = computed(() => this.analise().tokenizada ?? { pecas: [] });
@@ -150,49 +151,53 @@ export class MontadorRolagem {
   protected readonly repeticoes = computed(() => this.analise().tokenizada?.repeticoes ?? 1);
 
   /**
-   * Modo escolhido num ponto de partida. `null` com a fórmula vazia mostra "Começar por"; com texto, o editor
-   * deriva o modo das peças. Limpar volta a `null`.
+   * Modelo escolhido; sem escolha explícita, o editor deriva Teste ou Livre da fórmula.
    */
   protected readonly modo = signal<MontadorModo | null>(null);
-
-  /** Lista "Modelos" aberta (trocar de ponto de partida sem limpar antes). */
-  protected readonly modelosAbertos = signal(false);
-
-  protected readonly mostraInicio = computed(() => this.analise().estado === 'VAZIA' && this.modo() === null);
+  protected readonly modoAtual = computed<MontadorModo>(
+    () => this.modo() ?? (lerTeste(this.tokenizadaEditor()) ? 'TESTE' : 'LIVRE'),
+  );
+  protected readonly guiaAberto = signal(false);
+  private readonly montagens = new Map<MontadorModo, string>();
 
   // === Desfazer ===
-  private readonly historico = signal<HistoricoMontador>([]);
+  private readonly historico = signal<readonly { texto: string; modo: MontadorModo | null }[]>([]);
   protected readonly podeDesfazer = computed(() => this.historico().length > 0);
 
   /** Toda edição feita pelos controles do montador passa por aqui (guarda o texto anterior para o Desfazer). */
-  aplicarEdicao(texto: string): void {
+  aplicarEdicao(texto: string, modo = this.modo()): void {
     const anterior = this.formula();
-    if (texto === anterior) {
+    if (texto === anterior && modo === this.modo()) {
       return;
     }
-    this.historico.update((pilha) => registrarPassoHistorico(pilha, anterior));
+    this.historico.update((pilha) =>
+      [...pilha, { texto: anterior, modo: this.modo() }].slice(-HISTORICO_MONTADOR_LIMITE),
+    );
     this.formula.set(texto);
+    this.modo.set(modo);
   }
 
   protected desfazer(): void {
-    const passo = desfazerPassoHistorico(this.historico());
+    const passo = this.historico().at(-1);
     if (!passo) {
       return;
     }
-    this.historico.set(passo.historico);
+    this.historico.update((pilha) => pilha.slice(0, -1));
+    this.janela.restaurar(this.painelRef());
+    this.modo.set(passo.modo);
     this.formula.set(passo.texto);
   }
 
   protected limpar(): void {
     this.aplicarEdicao('');
-    this.modo.set(null);
-    this.modelosAbertos.set(false);
+    this.montagens.set(this.modoAtual(), '');
   }
 
   protected escolherReceita(receita: ReceitaMontador): void {
-    this.aplicarEdicao(receita.formula);
-    this.modo.set(receita.modo);
-    this.modelosAbertos.set(false);
+    if (this.modo() === receita.modo) return;
+    this.montagens.set(this.modoAtual(), this.formula());
+    this.janela.restaurar(this.painelRef());
+    this.aplicarEdicao(this.montagens.get(receita.modo) ?? receita.formula, receita.modo);
   }
 
   /** Digitação no visor: é o texto da barra, então não vira passo de Desfazer (o campo de texto já tem o seu). */
@@ -234,7 +239,8 @@ export class MontadorRolagem {
   protected readonly mobileAtivo = signal(this.verificarMobile());
 
   protected aoRedimensionarViewport(): void {
-    this.janela.atualizarViewport();
+    this.janelaTeste.atualizarViewport();
+    this.janelaTermos.atualizarViewport();
     this.mobileAtivo.set(this.verificarMobile());
   }
 
@@ -248,13 +254,23 @@ export class MontadorRolagem {
   }
 
   // === Tamanho, redimensionar (desktop) e maximizar: `JanelaMontador`, a mesma mecânica do `MontadorRolagem` ===
-  protected readonly janela = new JanelaMontador({
-    largura: LARGURA_INICIAL,
+  private readonly janelaTermos = new JanelaMontador({
+    largura: 760,
     altura: ALTURA_INICIAL,
     larguraMinima: LARGURA_MINIMA,
     alturaMinima: ALTURA_MINIMA,
     posicaoInicial: POSICAO_INICIAL,
   });
+  private readonly janelaTeste = new JanelaMontador({
+    largura: 520,
+    altura: 728,
+    larguraMinima: LARGURA_MINIMA,
+    alturaMinima: ALTURA_MINIMA,
+    posicaoInicial: POSICAO_INICIAL,
+  });
+  protected get janela(): JanelaMontador {
+    return this.modoAtual() === 'TESTE' ? this.janelaTeste : this.janelaTermos;
+  }
 
   protected alternarMaximizar(): void {
     this.janela.alternarMaximizar(this.painelRef());

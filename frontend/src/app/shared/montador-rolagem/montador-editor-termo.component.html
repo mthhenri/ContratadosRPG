@@ -1,0 +1,178 @@
+<fieldset class="termo__grupo" [disabled]="!peca()">
+    <div class="termo__cabecalho">
+        <span class="termo__rotulo">Editando termo {{ peca() ? indice() + 1 : "—" }}</span>
+        <strong>{{ peca() ? rotulo() : "Nenhum termo" }}</strong>
+        <span>{{ peca() ? detalhe() : "Adicione um termo à fórmula." }}</span>
+    </div>
+    <div class="termo__valor">
+        @if (temConta()) {
+            <app-campo rotulo="Conta deste termo" tamanho="compacto">
+                <input
+                    class="campo__controle"
+                    [formControl]="conta"
+                    aria-label="Conta do termo selecionado"
+                    (keydown.enter)="aplicarConta()"
+                />
+            </app-campo>
+            <button
+                app-botao
+                variante="secundario"
+                estilo="contorno"
+                tamanho="pequeno"
+                class="termo__acao"
+                [disabled]="!avaliacao().valida"
+                (click)="aplicarConta()"
+            >
+                Aplicar conta
+            </button>
+            <p class="termo__dica" aria-live="polite">
+                {{ erroConta() || "A conta será aplicada somente a este termo." }}
+            </p>
+        } @else if (podeValor()) {
+            <div class="termo__linha">
+                <span>{{ nomeValor() }}</span>
+                <app-step-input
+                    tamanho="compacto"
+                    [min]="atual().tipo === 'NUMERO' ? 0 : 1"
+                    [max]="maximo()"
+                    [valorExterno]="valor()"
+                    ariaRotulo="Valor do termo selecionado"
+                    (valorAlterado)="definirValor($event)"
+                />
+            </div>
+        } @else {
+            <p class="termo__dica">O valor deste termo vem da fórmula ou do atalho da ficha.</p>
+        }
+    </div>
+    <app-segmentado rotulo="Sinal do termo" [fluido]="true">
+        <button
+            app-segmentado-item
+            class="termo__segmento"
+            [ativo]="atual().sinal === 1"
+            (click)="definirSinal(1)"
+        >
+            Somar
+        </button>
+        <button
+            app-segmentado-item
+            class="termo__segmento"
+            [ativo]="atual().sinal === -1"
+            (click)="definirSinal(-1)"
+        >
+            Subtrai
+        </button>
+    </app-segmentado>
+</fieldset>
+<fieldset class="termo__grupo" [disabled]="!peca() || atual().tipo === 'ATALHO'">
+    <span class="termo__rotulo">Tipo de dano deste termo</span>
+    <app-segmentado rotulo="Tipo de dano do termo" class="termo__tipos">
+        <button
+            app-segmentado-item
+            class="termo__segmento"
+            [ativo]="tipo().primeiro === null"
+            (click)="definirTipo(null)"
+        >
+            Sem tipo
+        </button>
+        @for (opcao of tipos; track opcao.tipo) {
+            <button
+                app-segmentado-item
+                class="termo__segmento"
+                [ativo]="tipo().primeiro === opcao.tipo"
+                (click)="definirTipo(opcao.tipo)"
+            >
+                {{ opcao.nome }}
+            </button>
+        }
+    </app-segmentado>
+    <span class="termo__rotulo">Dividir meio a meio com</span>
+    <app-segmentado rotulo="Divisão do tipo de dano" class="termo__tipos">
+        <button
+            app-segmentado-item
+            class="termo__segmento"
+            [ativo]="!tipo().segundo"
+            (click)="definirSegundo(null)"
+        >
+            Não dividir
+        </button>
+        @for (opcao of tiposCompostos; track opcao.tipo) {
+            <button
+                app-segmentado-item
+                class="termo__segmento"
+                [ativo]="tipo().segundo === opcao.tipo"
+                [desabilitado]="!podeDividir() || tipo().primeiro === opcao.tipo"
+                (click)="definirSegundo(opcao.tipo)"
+            >
+                {{ opcao.nome }}
+            </button>
+        }
+    </app-segmentado>
+    @if (atual().tipo === "ATALHO") {
+        <p class="termo__dica">O tipo de dano está definido no atalho da ficha.</p>
+    }
+</fieldset>
+<fieldset class="termo__grupo termo__grupo--opcoes" [disabled]="!peca() || !ehDado()">
+    <h3>Opções dos dados</h3>
+    <p class="termo__dica">
+        {{
+            peca() && ehDado()
+                ? "Aplicadas somente a este termo."
+                : "Disponíveis ao selecionar um termo de dados."
+        }}
+    </p>
+    <div class="termo__linha">
+        <span>Manter</span>
+        <app-segmentado rotulo="Manter dados do termo">
+            <button
+                app-segmentado-item
+                class="termo__segmento"
+                [ativo]="manter() === 'TODOS'"
+                (click)="definirOpcoes({ manter: 'TODOS' })"
+            >
+                Todos
+            </button>
+            <button
+                app-segmentado-item
+                class="termo__segmento"
+                [ativo]="manter() === 'MAIOR'"
+                (click)="definirOpcoes({ manter: 'MAIOR' })"
+            >
+                Maior
+            </button>
+            <button
+                app-segmentado-item
+                class="termo__segmento"
+                [ativo]="manter() === 'MENOR'"
+                (click)="definirOpcoes({ manter: 'MENOR' })"
+            >
+                Menor
+            </button>
+        </app-segmentado>
+    </div>
+    <app-campo rotulo="Dado extra" tamanho="compacto">
+        <select
+            class="campo__controle"
+            [formControl]="entradaExtra"
+            aria-label="Dado extra do termo"
+        >
+            <option value="NENHUM">Nenhum</option>
+            <option value="EXPLODE">Explode no máximo</option>
+            <option value="IMPLODE">Implode no 1</option>
+        </select>
+    </app-campo>
+    <div class="termo__linha">
+        <span>Margem de crítico</span>
+        <app-segmentado rotulo="Margem de crítico do termo">
+            @for (valor of [0, 1, 2, 3]; track valor) {
+                <button
+                    app-segmentado-item
+                    class="termo__segmento"
+                    [ativo]="margem() === valor"
+                    (click)="definirOpcoes({ margem: valor })"
+                >
+                    {{ valor === 0 ? "Sem" : valor === 1 ? "Máximo" : valor + " maiores" }}
+                </button>
+            }
+        </app-segmentado>
+    </div>
+</fieldset>

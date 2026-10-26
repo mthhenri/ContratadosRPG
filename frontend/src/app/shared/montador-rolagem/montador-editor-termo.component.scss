@@ -1,0 +1,100 @@
+@use "tema/breakpoints" as bp;
+:host {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-16);
+    min-width: 0;
+}
+.termo {
+    &__grupo {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-8);
+        min-width: 0;
+        padding: 0;
+        margin: 0;
+        border: 0;
+    }
+    &__grupo--opcoes {
+        padding-top: var(--space-12);
+        border-top: 1px solid var(--border);
+    }
+    &__cabecalho {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-4);
+        min-height: 80px;
+        padding: var(--space-12);
+        background: var(--accent-dim);
+        border-left: 2px solid var(--accent-border);
+        overflow-wrap: anywhere;
+    }
+    &__cabecalho strong {
+        font-family: var(--font-mono);
+        font-size: 14px;
+    }
+    &__cabecalho > span:last-child {
+        font-size: 11px;
+        color: var(--text-dim);
+    }
+    &__rotulo,
+    h3 {
+        margin: 0;
+        font-family: var(--font-mono);
+        font-size: 9px;
+        font-weight: 600;
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        color: var(--text-dim);
+    }
+    &__valor {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: var(--space-8);
+        min-height: 136px;
+    }
+    &__linha {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-8);
+        min-width: 0;
+        color: var(--text-dim);
+        font-size: 12px;
+    }
+    &__tipos {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    &__segmento {
+        padding: var(--space-8);
+        min-width: 0;
+        min-height: 32px;
+        font-size: 10px;
+    }
+    &__dica {
+        margin: 0;
+        font-size: 11px;
+        color: var(--text-dim);
+        line-height: 1.4;
+        overflow-wrap: anywhere;
+    }
+    @include bp.mobile {
+        &__segmento,
+        &__acao {
+            min-height: bp.$alvo-toque;
+        }
+        &__linha {
+            font-size: 11px;
+        }
+        &__linha .termo__segmento {
+            min-width: bp.$alvo-toque;
+            padding: var(--space-8) var(--space-4);
+        }
+        input,
+        select {
+            min-height: bp.$alvo-toque;
+        }
+    }
+}

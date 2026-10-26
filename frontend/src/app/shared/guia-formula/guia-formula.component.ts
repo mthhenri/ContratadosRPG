@@ -1,7 +1,7 @@
 import { Component, input, signal } from '@angular/core';
 
-import { Botao } from '../../../../shared/ui/botao/botao.component';
-import { Modal } from '../../../../shared/ui/modal/modal.component';
+import { Botao } from '../ui/botao/botao.component';
+import { Modal } from '../ui/modal/modal.component';
 
 /** Uma linha do guia: um trecho de fórmula + o que ele significa. */
 interface LinhaGuia {

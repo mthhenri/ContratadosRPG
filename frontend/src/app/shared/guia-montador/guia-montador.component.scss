@@ -1,0 +1,135 @@
+@use "tema/breakpoints" as bp;
+
+.guia {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-16);
+    &__intro {
+        margin: 0;
+        font-size: 14px;
+        line-height: 1.5;
+        color: var(--text-dim);
+    }
+    &__aba {
+        padding: var(--space-8) var(--space-12);
+        min-height: 36px;
+        font-size: 11px;
+    }
+    &__conteudo {
+        min-height: 410px;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-20);
+    }
+    &__secao {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-8);
+        min-width: 0;
+    }
+    h3 {
+        margin: 0;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text);
+    }
+    p,
+    li,
+    dd {
+        font-family: var(--font-sans);
+        font-size: 13px;
+        line-height: 1.6;
+        color: var(--text-dim);
+    }
+    p {
+        margin: 0;
+    }
+    strong {
+        color: var(--text);
+        font-weight: 600;
+    }
+    ul {
+        margin: 0;
+        padding-left: var(--space-20);
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-4);
+    }
+    code {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        color: var(--text);
+        overflow-wrap: anywhere;
+    }
+    &__formula {
+        display: block;
+        padding: var(--space-12);
+        background: var(--surface-2);
+        border-left: 2px solid var(--accent-border);
+        line-height: 1.6;
+    }
+    &__modelos {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-8);
+        margin: 0;
+    }
+    &__modelos > div {
+        display: grid;
+        grid-template-columns: 160px minmax(0, 1fr);
+        gap: var(--space-12);
+    }
+    dt {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--text);
+        padding-top: var(--space-4);
+    }
+    dd {
+        margin: 0;
+    }
+    &__referencia {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: var(--space-16);
+        padding-top: var(--space-16);
+        border-top: 1px solid var(--border);
+    }
+    &__referencia strong {
+        font-family: var(--font-mono);
+        font-size: 12px;
+    }
+    &__rodape {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: var(--space-16);
+    }
+
+    &__fechar {
+        flex: none;
+    }
+}
+@include bp.mobile {
+    .guia__aba {
+        min-height: bp.$alvo-toque;
+        padding: var(--space-8) var(--space-4);
+        font-size: 10px;
+    }
+    .guia__modelos > div {
+        grid-template-columns: minmax(0, 1fr);
+        gap: var(--space-4);
+    }
+    .guia__rodape {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .guia__fechar {
+        min-height: bp.$alvo-toque;
+    }
+    .guia__conteudo {
+        min-height: 0;
+    }
+}

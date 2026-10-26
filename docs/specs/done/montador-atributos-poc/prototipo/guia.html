@@ -1,0 +1,236 @@
+<app-modal
+  [aberto]="aberto()"
+  titulo="Como usar o montador"
+  largura="900px"
+  (fechou)="fechar.emit()"
+>
+  <div class="guia">
+    <p class="guia__intro">
+      Monte uma rolagem pelos controles. A fórmula no topo acompanha suas
+      escolhas.
+    </p>
+    <app-segmentado rotulo="Assunto do guia do montador" [fluido]="true">
+      <button
+        app-segmentado-item
+        class="guia__aba"
+        [ativo]="pagina() === 'COMEÇAR'"
+        (click)="pagina.set('COMEÇAR')"
+      >
+        Começar
+      </button>
+      <button
+        app-segmentado-item
+        class="guia__aba"
+        [ativo]="pagina() === 'EDITAR'"
+        (click)="pagina.set('EDITAR')"
+      >
+        Editar termos
+      </button>
+      <button
+        app-segmentado-item
+        class="guia__aba"
+        [ativo]="pagina() === 'EXEMPLOS'"
+        (click)="pagina.set('EXEMPLOS')"
+      >
+        Exemplos
+      </button>
+    </app-segmentado>
+
+    <div class="guia__conteudo">
+      @switch (pagina()) { @case ('COMEÇAR') {
+      <section class="guia__secao">
+        <h3>1. Escolha um modelo</h3>
+        <dl class="guia__modelos">
+          <div>
+            <dt>Teste de atributo</dt>
+            <dd>
+              Escolha o atributo do teste. Use <strong>Só um</strong>,
+              <strong>Soma</strong> ou <strong>Média</strong> para definir se
+              entra um segundo atributo. Depois ajuste os dados a mais ou a
+              menos e os bônus.
+            </dd>
+          </div>
+          <div>
+            <dt>Dano de arma</dt>
+            <dd>
+              Parte de <code>2d6 + FOR</code> como dano Físico. É um ponto de
+              partida: você pode mudar os dados e acrescentar outros termos.
+            </dd>
+          </div>
+          <div>
+            <dt>Dados livres</dt>
+            <dd>
+              Começa em branco. Adicione dados, atributos, números ou
+              expressões. Os termos novos começam em <strong>Sem tipo</strong>;
+              classifique o dano se precisar.
+            </dd>
+          </div>
+        </dl>
+      </section>
+      <section class="guia__secao">
+        <h3>2. Monte a rolagem</h3>
+        <p>
+          Em Dano de arma e Dados livres, cada linha é um
+          <strong>termo</strong>: um conjunto de dados, um atributo,
+          Proficiência, Nível, um número ou uma conta.
+        </p>
+        <p>
+          Os botões <strong>d3 a d20</strong> acrescentam dados. Clicar duas
+          vezes em d6 monta 2d6. Um dado com tipo ou opções diferentes pode
+          entrar em outra linha.
+        </p>
+        <p>
+          Para somar um atributo, escolha o nome e clique em
+          <strong>Adicionar</strong>. Proficiência, Nível e Número têm botões
+          próprios. Cada clique acrescenta um termo que você pode editar
+          separadamente.
+        </p>
+      </section>
+      <section class="guia__secao">
+        <h3>3. Confira e role</h3>
+        <p>
+          Revise a fórmula no topo e, quando disponível, a faixa de resultado e
+          a média. <strong>Rolar</strong> executa a fórmula inteira.
+          <strong>Repetir a rolagem</strong> faz novas rolagens completas; não
+          multiplica um único resultado.
+        </p>
+        <p>
+          No teste de atributo, confira também <strong>Manter</strong>, a margem
+          de crítico e os bônus escolhidos.
+        </p>
+      </section>
+      } @case ('EDITAR') {
+      <section class="guia__secao">
+        <h3>Selecione a linha que quer alterar</h3>
+        <p>
+          A linha selecionada ganha destaque e brilho. O cabeçalho da edição
+          mostra o mesmo termo. Em telas largas, o editor fica ao lado; nas
+          estreitas, ele fica abaixo da montagem.
+        </p>
+        <p>
+          O nome do tipo e a faixa colorida em cada linha ajudam a conferir onde
+          aquela parte da fórmula entra.
+        </p>
+      </section>
+      <section class="guia__secao">
+        <h3>Quantidade, multiplicador e sinal</h3>
+        <ul>
+          <li>
+            <strong>Quantidade</strong> muda quantos dados aquele termo rola:
+            2d6 → 3d6.
+          </li>
+          <li>
+            <strong>Multiplicador</strong> muda o valor de uma fonte. Se Força
+            vale 3, <strong>FOR ×2</strong> soma 6. Isso não dobra os outros
+            termos.
+          </li>
+          <li>
+            <strong>Valor</strong> altera um número fixo.
+            <strong>Somar</strong> e <strong>Subtrair</strong> escolhem o sinal
+            do termo selecionado.
+          </li>
+        </ul>
+      </section>
+      <section class="guia__secao">
+        <h3>O tipo pertence ao termo</h3>
+        <p>
+          Você pode ter um dado Físico, Força em Físico, outro dado Balístico e
+          Nível em Balístico. Mudar o tipo de Nível preserva os tipos dos outros
+          termos.
+        </p>
+        <p>
+          <strong>Dividir meio a meio com</strong> reparte somente o termo
+          selecionado entre os dois tipos. Combinações que não se aplicam ficam
+          desabilitadas.
+        </p>
+      </section>
+      <section class="guia__secao">
+        <h3>Opções e correções</h3>
+        <p>
+          <strong>Manter</strong>, <strong>Dado extra</strong> e
+          <strong>Margem de crítico</strong> são opções do termo de dados
+          selecionado. Ficam desabilitadas ao selecionar um atributo, número ou
+          conta de bônus.
+        </p>
+        <p>
+          A lixeira remove uma linha. <strong>Desfazer</strong> recupera a
+          edição ou remoção anterior. <strong>Restaurar</strong> volta ao
+          exemplo inicial de Dano de arma; <strong>Limpar</strong> esvazia Dados
+          livres e também pode ser desfeito.
+        </p>
+      </section>
+      } @case ('EXEMPLOS') {
+      <section class="guia__secao">
+        <h3>Dados com bônus fixo</h3>
+        <p>
+          Em <strong>Dados livres</strong>, clique duas vezes em d6, uma em d8 e
+          depois em Número. Na linha do número, mude o valor para 3.
+        </p>
+        <code class="guia__formula">2d6 + 1d8 + 3</code>
+      </section>
+      <section class="guia__secao">
+        <h3>Força em Físico e Nível em Balístico</h3>
+        <p>
+          Em <strong>Dano de arma</strong>, selecione FOR e ajuste seu
+          multiplicador para 2. Adicione d8 e mude apenas o tipo dele para
+          Balístico. Adicione Proficiência em Físico e Nível em Balístico,
+          selecionando cada linha para conferir seu tipo.
+        </p>
+        <code class="guia__formula"
+          >2d6 + FOR*2 [F] + 1d8 [B] + PROF [F] + NIV [B]</code
+        >
+        <p>
+          O botão <strong>Exemplo misto</strong> carrega essa montagem para você
+          explorar. Desfazer recupera a montagem anterior.
+        </p>
+      </section>
+      <section class="guia__secao">
+        <h3>Uma conta como bônus ou quantidade</h3>
+        <p>
+          Em <strong>Dados livres → Adicionar expressão</strong>, escolha o uso
+          antes de adicionar:
+        </p>
+        <ul>
+          <li>
+            <strong>Bônus:</strong> escreva <code>(FOR+VIG)*2</code> para
+            acrescentar o resultado dessa conta.
+          </li>
+          <li>
+            <strong>Quantidade:</strong> escreva <code>FOR+1</code> e escolha d6
+            para rolar essa quantidade de dados de seis faces.
+          </li>
+        </ul>
+        <p>
+          Clique em <strong>Adicionar expressão</strong>. Para corrigir depois,
+          selecione a linha, edite a conta e clique em
+          <strong>Aplicar conta</strong>. Uma conta inválida mantém o botão
+          desabilitado e não substitui a fórmula que já estava montada.
+        </p>
+      </section>
+      } }
+    </div>
+
+    <div class="guia__referencia">
+      <div>
+        <strong>Guia de expressões</strong>
+        <p>Consulte a sintaxe, as abreviações e os operadores da fórmula.</p>
+      </div>
+      <app-guia-formula [compacto]="false" />
+    </div>
+    <footer class="guia__rodape">
+      <span
+        >Nesta prévia, as rolagens são demonstrações locais e não entram no
+        histórico da ficha.</span
+      ><button
+        app-botao
+        variante="secundario"
+        estilo="contorno"
+        tamanho="pequeno"
+        class="guia__fechar"
+        (click)="fechar.emit()"
+      >
+        Voltar ao montador
+      </button>
+    </footer>
+  </div>
+</app-modal>

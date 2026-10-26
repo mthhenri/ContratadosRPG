@@ -1,0 +1,11 @@
+@use "../../../../../frontend/src/styles/tema/tokens";
+@use "../../../../../frontend/src/styles/tema/base";
+
+body {
+  margin: 0;
+}
+button,
+input,
+select {
+  font: inherit;
+}

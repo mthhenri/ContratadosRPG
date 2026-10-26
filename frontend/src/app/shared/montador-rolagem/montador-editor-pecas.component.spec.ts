@@ -42,6 +42,26 @@ function montar(formula: string, modo: MontadorModo | null = null) {
 
 /** Editor do montador de rolagem (versão Completo): tudo à vista, o texto de saída é a fonte de verdade. */
 describe('MontadorEditorPecas', () => {
+  it('seleciona a linha inteira e edita o multiplicador sem alterar os destinos dos outros termos', () => {
+    const { fixture, raiz, emitidos } = montar('2d6 + FOR*2 [F] + NIV [B]', 'DANO');
+    const selecionar = raiz.querySelector<HTMLButtonElement>('[aria-label="Editar Força × 2"]');
+    expect(selecionar).not.toBeNull();
+    selecionar!.click();
+    fixture.detectChanges();
+    expect(raiz.querySelectorAll('.editor__termo--selecionado')).toHaveLength(1);
+    const multiplicador = raiz.querySelector<HTMLInputElement>('[aria-label="Valor do termo selecionado"]')!;
+    multiplicador.value = '3';
+    multiplicador.dispatchEvent(new Event('input'));
+    expect(emitidos.at(-1)).toBe('2d6 + FOR*3 [F] + NIV [B]');
+  });
+
+  it('mantém o segundo atributo no lugar e desabilitado quando o teste usa somente um', () => {
+    const { raiz } = montar('FORd20kh1', 'TESTE');
+    const segundo = raiz.querySelector<HTMLSelectElement>('[aria-label="Segundo atributo do teste"]');
+    expect(segundo).not.toBeNull();
+    expect(segundo!.disabled).toBe(true);
+  });
+
   it('termos: uma ficha por peça, na ordem, cada uma com o seu tipo', () => {
     const { raiz } = montar('3D10+36 [Balístico] + 3D8 [Químico]');
     const fichas = Array.from(raiz.querySelectorAll('app-ficha-termo'));
@@ -52,7 +72,7 @@ describe('MontadorEditorPecas', () => {
 
   it('sinal e opções ficam à vista, sem menu "⋯ Mais"', () => {
     const { raiz } = montar('2d6 [F-Q]');
-    expect(raiz.querySelector('app-segmentado[aria-label="Sinal de 2d6"]')).not.toBeNull();
+    expect(raiz.querySelector('app-segmentado[aria-label="Sinal do termo"]')).not.toBeNull();
     expect(raiz.querySelector('.ficha-termo__mais-gatilho')).toBeNull();
   });
 
@@ -64,9 +84,7 @@ describe('MontadorEditorPecas', () => {
     botao('Subtrai')!.click();
     expect(emitidos.at(-1)).toBe('-2d6 + FOR [F]');
 
-    const tipo = raiz.querySelector<HTMLSelectElement>('select[aria-label="Tipo de dano de 2d6"]')!;
-    tipo.value = 'Químico';
-    tipo.dispatchEvent(new Event('change'));
+    botao('Químico')!.click();
     expect(emitidos.at(-1)).toBe('2d6 [Q] + FOR [F]');
 
     raiz.querySelector<HTMLButtonElement>('button[aria-label="Remover Força"]')!.click();
@@ -75,13 +93,15 @@ describe('MontadorEditorPecas', () => {
 
   it('os grupos de "Adicionar" ficam todos à vista', () => {
     const completo = montar('2d6', 'LIVRE');
-    expect(completo.botao('FOR')).toBeDefined();
+    expect(completo.raiz.querySelector('select[aria-label="Atributo para adicionar"] option[value="FOR"]')).not.toBeNull();
     expect(completo.botao('Corpo a corpo')).toBeDefined();
     expect(completo.botao('Furtivo')).toBeUndefined();
   });
 
   it('campo de expressão lê ao vivo e acrescenta a quantidade de dados ou o bônus fixo', () => {
     const { raiz, fixture, emitidos, botao } = montar('2d6', 'LIVRE');
+    botao('Quantidade de dados')!.click();
+    fixture.detectChanges();
     const campo = raiz.querySelector<HTMLInputElement>('input[placeholder="(FOR+VIG)*2"]')!;
     campo.value = '(for+vig)*2';
     campo.dispatchEvent(new Event('input'));
@@ -103,8 +123,8 @@ describe('MontadorEditorPecas', () => {
 
   it('teste de atributo: fórmula dos jogadores com média de dois atributos', () => {
     const { raiz, emitidos, botao } = montar('((Int+soc)/2)d20kh1cm1+prof');
-    const ativo = raiz.querySelector('.editor__atributo.segmentado__item--ativo');
-    expect(ativo?.textContent).toContain('INT');
+    const ativo = raiz.querySelector<HTMLSelectElement>('[aria-label="Atributo principal do teste"]');
+    expect(ativo?.value).toBe('INT');
     expect(botao('Média')?.getAttribute('aria-pressed')).toBe('true');
 
     botao('Só um')!.click();

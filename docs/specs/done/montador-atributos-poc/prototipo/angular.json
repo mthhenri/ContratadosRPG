@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "cli": { "analytics": false, "cache": { "enabled": false } },
+  "projects": {
+    "poc": {
+      "projectType": "application",
+      "root": "",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:application",
+          "options": {
+            "browser": "main.ts",
+            "index": "index.html",
+            "tsConfig": "tsconfig.json",
+            "outputPath": "../../../../../.artifacts/montador-atributos-poc/dist",
+            "styles": ["styles.scss"],
+            "stylePreprocessorOptions": { "includePaths": ["../../../../../frontend/src/styles"] },
+            "optimization": false,
+            "sourceMap": false
+          }
+        }
+      }
+    }
+  }
+}

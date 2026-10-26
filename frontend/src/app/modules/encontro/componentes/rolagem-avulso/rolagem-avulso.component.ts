@@ -15,7 +15,7 @@ import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.compon
 import { Campo } from '../../../../shared/ui/campo/campo.component';
 import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
 import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
-import { GuiaFormula } from '../../../ficha/componentes/guia-formula/guia-formula.component';
+import { GuiaFormula } from '../../../../shared/guia-formula/guia-formula.component';
 import { RolagemService } from '../../../ficha/rolagem.service';
 
 const ATRIBUTOS_NEUTROS: FichaAtributosDto = {

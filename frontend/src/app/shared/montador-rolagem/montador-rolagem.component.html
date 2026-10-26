@@ -43,7 +43,39 @@
             <app-icone [nome]="janela.maximizada() ? 'janela-restaurar' : 'janela-maximizar'" />
         </button>
     }
+    <button
+        painelAcoesExtras
+        app-botao
+        variante="secundario"
+        estilo="texto"
+        tamanho="pequeno"
+        type="button"
+        class="montador-rolagem__guia"
+        aria-label="Como usar o montador"
+        (pointerdown)="$event.stopPropagation()"
+        (click)="guiaAberto.set(true)"
+    >
+        Guia
+    </button>
     <div class="montador-rolagem__caixa">
+        <app-segmentado
+            rotulo="Modelo do montador"
+            [fluido]="true"
+            class="montador-rolagem__modelos"
+        >
+            @for (receita of receitas; track receita.modo) {
+                <button
+                    app-segmentado-item
+                    class="montador-rolagem__modelo"
+                    type="button"
+                    [ativo]="modoAtual() === receita.modo"
+                    [attr.aria-label]="receita.titulo"
+                    (click)="escolherReceita(receita)"
+                >
+                    {{ mobileAtivo() && receita.modo === "TESTE" ? "Teste" : receita.titulo }}
+                </button>
+            }
+        </app-segmentado>
         <input
             class="montador-rolagem__visor"
             [class.montador-rolagem__visor--invalido]="analise().estado === 'INVALIDA'"
@@ -72,126 +104,59 @@
         }
 
         <div class="montador-rolagem__corpo" appOverflowFade>
-            @if (mostraInicio()) {
-                <section class="montador-rolagem__grupo">
-                    <h3 class="montador-rolagem__titulo">
-                        Começar por
-                        <span class="montador-rolagem__subtitulo"
-                            >um modelo que você ajusta depois</span
-                        >
-                    </h3>
-                    <div class="montador-rolagem__receitas">
-                        @for (receita of receitas; track receita.modo) {
-                            <button
-                                app-cartao-receita
-                                type="button"
-                                class="montador-rolagem__receita"
-                                [descricao]="receita.descricao"
-                                (click)="escolherReceita(receita)"
-                            >
-                                {{ receita.titulo }}
-                            </button>
-                        }
-                    </div>
-                </section>
-            } @else {
-                <section class="montador-rolagem__grupo">
-                    <div class="montador-rolagem__cabecalho-grupo">
-                        <h3 class="montador-rolagem__titulo">Fórmula</h3>
+            @switch (analise().estado) {
+                @case ("AVANCADA") {
+                    <div class="montador-rolagem__aviso" role="status">
+                        <strong class="montador-rolagem__aviso-titulo">Fórmula avançada</strong>
+                        <code class="montador-rolagem__codigo">{{ formula() }}</code>
+                        <p class="montador-rolagem__aviso-texto">
+                            Usa recursos que os controles não montam. Edite pelo texto, ou limpe
+                            para montar pelos controles.
+                        </p>
                         <button
                             app-botao
                             variante="secundario"
-                            estilo="texto"
+                            estilo="contorno"
                             tamanho="pequeno"
                             type="button"
-                            class="montador-rolagem__modelos"
-                            [attr.aria-expanded]="modelosAbertos() ? 'true' : 'false'"
-                            (click)="modelosAbertos.set(!modelosAbertos())"
+                            (click)="limpar()"
                         >
-                            Modelos
-                            <app-icone
-                                nome="chevron"
-                                class="montador-rolagem__seta"
-                                [class.montador-rolagem__seta--aberta]="modelosAbertos()"
-                            />
+                            Limpar
                         </button>
                     </div>
-                    @if (modelosAbertos()) {
-                        <div class="montador-rolagem__receitas">
-                            @for (receita of receitas; track receita.modo) {
-                                <button
-                                    app-cartao-receita
-                                    type="button"
-                                    class="montador-rolagem__receita"
-                                    [descricao]="receita.descricao"
-                                    [ativo]="modo() === receita.modo"
-                                    (click)="escolherReceita(receita)"
-                                >
-                                    {{ receita.titulo }}
-                                </button>
-                            }
-                        </div>
-                    }
-
-                    @switch (analise().estado) {
-                        @case ("AVANCADA") {
-                            <div class="montador-rolagem__aviso" role="status">
-                                <strong class="montador-rolagem__aviso-titulo"
-                                    >Fórmula avançada</strong
-                                >
-                                <code class="montador-rolagem__codigo">{{ formula() }}</code>
-                                <p class="montador-rolagem__aviso-texto">
-                                    Usa recursos que os controles não montam. Edite pelo texto, ou
-                                    limpe para montar pelos controles.
-                                </p>
-                                <button
-                                    app-botao
-                                    variante="secundario"
-                                    estilo="contorno"
-                                    tamanho="pequeno"
-                                    type="button"
-                                    (click)="limpar()"
-                                >
-                                    Limpar
-                                </button>
-                            </div>
-                        }
-                        @case ("INVALIDA") {
-                            <div
-                                class="montador-rolagem__aviso montador-rolagem__aviso--erro"
-                                role="status"
-                            >
-                                <strong class="montador-rolagem__aviso-titulo"
-                                    >Fórmula inválida</strong
-                                >
-                                <code class="montador-rolagem__codigo">{{ formula() }}</code>
-                                <p class="montador-rolagem__aviso-texto">
-                                    {{ analise().erro }} Corrija o texto ou limpe para montar pelos
-                                    controles.
-                                </p>
-                                <button
-                                    app-botao
-                                    variante="secundario"
-                                    estilo="contorno"
-                                    tamanho="pequeno"
-                                    type="button"
-                                    (click)="limpar()"
-                                >
-                                    Limpar
-                                </button>
-                            </div>
-                        }
-                    }
-                </section>
-                @if (mostraEditor()) {
-                    <app-montador-editor-pecas
-                        [tokenizada]="tokenizadaEditor()"
-                        [modo]="modo()"
-                        [atalhosDano]="atalhosDano()"
-                        [ambiente]="ambiente()"
-                        (editar)="aplicarEdicao($event)"
-                    />
                 }
+                @case ("INVALIDA") {
+                    <div
+                        class="montador-rolagem__aviso montador-rolagem__aviso--erro"
+                        role="status"
+                    >
+                        <strong class="montador-rolagem__aviso-titulo">Fórmula inválida</strong>
+                        <code class="montador-rolagem__codigo">{{ formula() }}</code>
+                        <p class="montador-rolagem__aviso-texto">
+                            {{ analise().erro }} Corrija o texto ou limpe para montar pelos
+                            controles.
+                        </p>
+                        <button
+                            app-botao
+                            variante="secundario"
+                            estilo="contorno"
+                            tamanho="pequeno"
+                            type="button"
+                            (click)="limpar()"
+                        >
+                            Limpar
+                        </button>
+                    </div>
+                }
+            }
+            @if (mostraEditor()) {
+                <app-montador-editor-pecas
+                    [tokenizada]="tokenizadaEditor()"
+                    [modo]="modoAtual()"
+                    [atalhosDano]="atalhosDano()"
+                    [ambiente]="ambiente()"
+                    (editar)="aplicarEdicao($event)"
+                />
             }
         </div>
 
@@ -274,3 +239,5 @@
         ></span>
     }
 </app-painel-flutuante>
+
+<app-guia-montador [aberto]="guiaAberto()" (fechar)="guiaAberto.set(false)" />

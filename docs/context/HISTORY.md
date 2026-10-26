@@ -1,5 +1,35 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-25 — Montador: modelos compactos, termos independentes e guia de uso
+
+O autor aprovou iterativamente a POC do montador (Teste, Dano de arma e Dados livres),
+depois o guia complementar ao de expressões, e autorizou integrar e commitar. A POC e
+seus anexos foram preservados em `docs/specs/done/montador-atributos-poc/`; integração
+em `docs/specs/done/montador-rolagem-interface-e-guia.spec.md` e anexos.
+
+Atributos agora precedem a combinação; Proficiência/Nível precedem dados extras e bônus.
+Dano/Livre mostram todos os termos, brilho da linha selecionada e inspeção em área estável,
+com sinal, tipo/divisão e valor próprios. Fontes têm multiplicador/divisor, inclusive PROF/NIV;
+dados diferentes convivem. Modelos mantêm montagens locais, visor/Desfazer continuam ligados
+à fórmula textual e os consumidores existentes continuam responsáveis por rolar/registrar.
+O guia explica o uso em três assuntos e abre o GuiaFormula original, movido mecanicamente
+para shared. Nenhuma regra, primitivo, token, dependência ou contrato de API modificado.
+
+Responsabilidades extraídas do editor extenso para lista/adição, inspeção e apresentação;
+o restante apresenta o teste. Delegação Codex (modelo padrão): guia/migração em recorte
+independente e uma revisão somente leitura. Três achados procedentes corrigidos e
+reproduzidos: Limpar no Teste, fatores decimais e Desfazer com texto igual entre modelos.
+Também corrigida a criação de abas do guia fechado, encontrada pela suíte completa.
+
+Verificação no stack local real em quatro viewports, sete superfícies (28 combinações),
+três modelos por superfície, registro POST 201 e foco/fechamento; fluxos aprofundados,
+guias aninhados e inspeção pessoal do principal nas quatro resoluções. Frontend:
+3.622 testes aprovados, mais 89 do leitor; shared: 1.340 aprovados; lint sem erros,
+warnings existentes de convenções; build de produção e POC arquivada aprovados.
+Bundle mantém aviso de 603,33 kB/450 kB já registrado na v1.12.0. Conferência de organização
+local/staged no fecho. Detalhes, correções e limites em
+`docs/specs/done/montador-rolagem-interface-e-guia/verificacao.md`. Sem push/publicação.
+
 ## 2026-10-25 — v1.12.0 publicada em produção
 
 Autor aprovou a v1.12.0 e o envio a produção com as mudanças posteriores à v1.11.0:

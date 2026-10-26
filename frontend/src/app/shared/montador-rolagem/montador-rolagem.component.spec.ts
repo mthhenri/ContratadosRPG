@@ -50,6 +50,38 @@ function montar() {
  * Desfazer real; estados vazia/avançada/inválida/resultado; o painel não fecha ao rolar.
  */
 describe('MontadorRolagem', () => {
+  it('Limpar no Teste conserva os seletores e permite montar outro teste sem digitar a fórmula', () => {
+    const { fixture, hospedeiro, raiz, botaoPorTexto } = montar();
+    botaoPorTexto('Teste de atributo').click();
+    fixture.detectChanges();
+    botaoPorTexto('Limpar').click();
+    fixture.detectChanges();
+    expect(hospedeiro.formula()).toBe('');
+    const atributo = raiz.querySelector<HTMLSelectElement>('[aria-label="Atributo principal do teste"]')!;
+    expect(atributo).not.toBeNull();
+    atributo.value = 'FOR';
+    atributo.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+    expect(hospedeiro.formula()).toBe('FORd20kh1cm1 + PROF');
+  });
+
+  it('Desfazer restaura o modelo mesmo quando a troca preserva o texto', () => {
+    const { fixture, hospedeiro, raiz, botaoPorTexto } = montar();
+    botaoPorTexto('Dano de arma').click();
+    fixture.detectChanges();
+    hospedeiro.formula.set('1d6');
+    fixture.detectChanges();
+    botaoPorTexto('Dados livres').click();
+    fixture.detectChanges();
+    hospedeiro.formula.set('1d6');
+    fixture.detectChanges();
+    botaoPorTexto('Dano de arma').click();
+    fixture.detectChanges();
+    botaoPorTexto('Desfazer').click();
+    fixture.detectChanges();
+    expect(hospedeiro.formula()).toBe('1d6');
+    expect(raiz.querySelector('[aria-label="Dados livres"]')?.getAttribute('aria-pressed')).toBe('true');
+  });
   it('abrir por comando externo abre, preserva a janela aberta e restaura quando minimizada', () => {
     const fixture = TestBed.createComponent(Hospedeiro);
     fixture.detectChanges();
@@ -75,15 +107,32 @@ describe('MontadorRolagem', () => {
   });
   it('vazia: mostra os três pontos de partida; escolher um escreve a fórmula na barra', () => {
     const { fixture, hospedeiro, raiz, botaoPorTexto } = montar();
-    const receitas = Array.from(raiz.querySelectorAll('.montador-rolagem__receita')).map((receita) =>
-      receita.querySelector('.cartao-receita__titulo')?.textContent?.trim(),
-    );
+    const receitas = Array.from(raiz.querySelectorAll('.montador-rolagem__modelo')).map((receita) => receita.textContent?.trim());
     expect(receitas).toEqual(['Teste de atributo', 'Dano de arma', 'Dados livres']);
 
     botaoPorTexto('Dano de arma').click();
     fixture.detectChanges();
     expect(hospedeiro.formula()).toBe('2d6 + FOR [F]');
     expect(raiz.querySelector('.montador-rolagem__receita')).toBeNull();
+    expect(raiz.querySelectorAll('.montador-rolagem__modelo')).toHaveLength(3);
+  });
+
+  it('preserva as montagens ao alternar modelos e Desfazer recupera o modelo anterior', () => {
+    const { fixture, hospedeiro, raiz, botaoPorTexto } = montar();
+    botaoPorTexto('Dano de arma').click();
+    fixture.detectChanges();
+    hospedeiro.formula.set('3d8 [B]');
+    fixture.detectChanges();
+    botaoPorTexto('Teste de atributo').click();
+    fixture.detectChanges();
+    expect(hospedeiro.formula()).toBe('LUTd20kh1cm1 + PROF');
+    botaoPorTexto('Dano de arma').click();
+    fixture.detectChanges();
+    expect(hospedeiro.formula()).toBe('3d8 [B]');
+    botaoPorTexto('Desfazer').click();
+    fixture.detectChanges();
+    expect(hospedeiro.formula()).toBe('LUTd20kh1cm1 + PROF');
+    expect(raiz.querySelector('[aria-label="Teste de atributo"]')?.getAttribute('aria-pressed')).toBe('true');
   });
 
   it('Desfazer volta o texto anterior a cada edição do montador; Limpar também é desfeito', () => {

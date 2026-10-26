@@ -15,6 +15,22 @@ componente Angular já implementado.
 
 ## Princípio
 
+### Montador de rolagem
+
+O montador usa a moldura `PainelFlutuante`, seleção fixa de Teste/Dano/Livre e o visor
+textual/rodapé existentes. No teste, os dois seletores precedem Só um/Soma/Média;
+Proficiência/Nível precedem dados extras e bônus. Dano/Livre usam `FichaTermo` numa lista
+com borda/brilho de seleção da linha inteira (`--accent-border`/`--accent-dim`), mantendo
+a faixa de tipo do cartão. Lista e inspeção ocupam colunas quando a janela comporta;
+em janela estreita ficam empilhadas, com lista limitada no celular. O editor preserva
+as posições de valor/sinal/tipo/divisão e opções, desabilitando o que não se aplica.
+Os controles são Campo, StepInput, Segmentado/Item, Botao e BotaoIcone canônicos.
+O guia usa Modal/Segmentado e abre o GuiaFormula compartilhado em modal aninhado.
+Análogo aprovado: POC em `docs/specs/done/montador-atributos-poc/`; integração e comparação
+em `docs/specs/done/montador-rolagem-interface-e-guia/verificacao.md`.
+
+### Tokens
+
 `tema/_tokens.scss` (CSS custom properties) é a **única fonte de verdade em runtime**. Tailwind
 aponta para essas vars — nunca redeclara hex. Trocar o `--accent` (seletor de tema, spec M1) muda
 tudo de uma vez.

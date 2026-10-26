@@ -1,0 +1,6 @@
+{
+  "extends": "../../../../../frontend/tsconfig.json",
+  "compilerOptions": { "outDir": "../../../../../.artifacts/montador-atributos-poc/ts", "types": [] },
+  "files": ["main.ts"],
+  "include": []
+}

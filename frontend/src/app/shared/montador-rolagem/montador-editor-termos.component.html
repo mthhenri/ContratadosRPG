@@ -1,0 +1,256 @@
+<div class="editor__layout">
+    <div class="editor__montagem">
+        <section class="editor__grupo">
+            <h3>Termos da fórmula</h3>
+            <p class="editor__dica">
+                Selecione uma linha para editar. Cada termo tem seu próprio tipo de dano.
+            </p>
+            <div class="editor__lista">
+                @for (termo of tokenizada().pecas; track $index; let indice = $index) {
+                    <div
+                        class="editor__termo"
+                        [class.editor__termo--selecionado]="selecionado() === indice"
+                        role="group"
+                        [attr.aria-label]="'Termo ' + (indice + 1) + ': ' + rotular(termo)"
+                        (pointerdown)="aoFocar(indice, $event)"
+                        (focusin)="aoFocar(indice, $event)"
+                    >
+                        <app-ficha-termo
+                            [compacta]="true"
+                            [cor]="cor(tipo(termo).primeiro)"
+                            [corSecundaria]="cor(tipo(termo).segundo)"
+                            [rotuloRemover]="'Remover ' + rotular(termo)"
+                            (remover)="remover(indice)"
+                        >
+                            <button
+                                fichaTermoRotulo
+                                app-botao
+                                variante="secundario"
+                                estilo="texto"
+                                tamanho="pequeno"
+                                class="editor__selecionar"
+                                [attr.aria-label]="'Editar ' + rotular(termo)"
+                                [attr.aria-pressed]="selecionado() === indice"
+                                (click)="selecionar(indice)"
+                            >
+                                <span class="editor__identidade"
+                                    ><strong>{{ rotular(termo, true) }}</strong
+                                    ><small>{{ detalhe(termo) }}</small></span
+                                >
+                            </button>
+                            @if (podeValor(termo)) {
+                                <app-step-input
+                                    fichaTermoControles
+                                    tamanho="compacto"
+                                    [min]="termo.tipo === 'NUMERO' ? 0 : 1"
+                                    [max]="maximo(termo)"
+                                    [valorExterno]="valor(termo)"
+                                    [ariaRotulo]="
+                                        nomeValor(termo) +
+                                        ' de ' +
+                                        rotular(termo) +
+                                        ' do termo ' +
+                                        (indice + 1)
+                                    "
+                                    (valorAlterado)="alterarValor(indice, $event)"
+                                />
+                            } @else if (conta(termo)) {
+                                <button
+                                    fichaTermoControles
+                                    app-botao
+                                    variante="secundario"
+                                    estilo="contorno"
+                                    tamanho="pequeno"
+                                    class="editor__editar-conta"
+                                    [attr.aria-label]="'Editar conta do termo ' + (indice + 1)"
+                                    (click)="selecionar(indice)"
+                                >
+                                    Editar conta
+                                </button>
+                            }
+                        </app-ficha-termo>
+                    </div>
+                } @empty {
+                    <app-estado-vazio
+                        tamanho="compacto"
+                        titulo="Monte sua rolagem"
+                        linhaApoio="Adicione dados, atributos, números ou uma expressão pelos controles abaixo."
+                    />
+                }
+            </div>
+        </section>
+        <section class="editor__grupo">
+            <h3>Adicionar dados</h3>
+            <div class="editor__teclado">
+                @for (face of faces; track face) {
+                    <button
+                        app-botao
+                        variante="secundario"
+                        estilo="contorno"
+                        tamanho="pequeno"
+                        posicaoIcone="esquerda"
+                        class="editor__tecla"
+                        [attr.aria-label]="'Adicionar d' + face"
+                        (click)="adicionarDado(face)"
+                    >
+                        <app-icone [nome]="icone(face)" />d{{ face }}
+                    </button>
+                }
+            </div>
+        </section>
+        <section class="editor__grupo">
+            <h3>Adicionar atributo ou bônus</h3>
+            <div class="editor__adicionar-atributo">
+                <app-campo rotulo="Atributo" tamanho="compacto">
+                    <select
+                        class="campo__controle"
+                        [formControl]="atributo"
+                        aria-label="Atributo para adicionar"
+                    >
+                        @for (opcao of atributos; track opcao.sigla) {
+                            <option [value]="opcao.sigla">{{ opcao.nome }}</option>
+                        }
+                    </select>
+                </app-campo>
+                <button
+                    app-botao
+                    variante="secundario"
+                    estilo="contorno"
+                    tamanho="pequeno"
+                    class="editor__tecla"
+                    aria-label="Adicionar atributo"
+                    (click)="adicionarFonte(atributo.value)"
+                >
+                    Adicionar
+                </button>
+            </div>
+            <div class="editor__fontes">
+                <button
+                    app-botao
+                    variante="secundario"
+                    estilo="contorno"
+                    tamanho="pequeno"
+                    class="editor__tecla"
+                    aria-label="Adicionar proficiência"
+                    (click)="adicionarFonte('PROF')"
+                >
+                    Proficiência
+                </button>
+                <button
+                    app-botao
+                    variante="secundario"
+                    estilo="contorno"
+                    tamanho="pequeno"
+                    class="editor__tecla"
+                    aria-label="Adicionar nível"
+                    (click)="adicionarFonte('NIV')"
+                >
+                    Nível
+                </button>
+                <button
+                    app-botao
+                    variante="secundario"
+                    estilo="contorno"
+                    tamanho="pequeno"
+                    class="editor__tecla"
+                    aria-label="Adicionar número"
+                    (click)="adicionarNumero()"
+                >
+                    Número
+                </button>
+            </div>
+        </section>
+        <section class="editor__grupo editor__divisor">
+            <h3>Adicionar expressão</h3>
+            <app-segmentado rotulo="Uso da expressão" [fluido]="true">
+                <button
+                    app-segmentado-item
+                    class="editor__segmento"
+                    [ativo]="uso() === 'BONUS'"
+                    (click)="usoExpressao.setValue('BONUS')"
+                >
+                    Bônus fixo
+                </button>
+                <button
+                    app-segmentado-item
+                    class="editor__segmento"
+                    [ativo]="uso() === 'QUANTIDADE'"
+                    (click)="usoExpressao.setValue('QUANTIDADE')"
+                >
+                    Quantidade de dados
+                </button>
+            </app-segmentado>
+            <app-campo rotulo="Conta" tamanho="compacto"
+                ><input
+                    class="campo__controle"
+                    [formControl]="expressao"
+                    placeholder="(FOR+VIG)*2"
+                    aria-label="Expressão para adicionar"
+                    (keydown.enter)="adicionarExpressao()"
+            /></app-campo>
+            <app-campo rotulo="Dado da expressão" tamanho="compacto">
+                <select
+                    class="campo__controle"
+                    [formControl]="dadoExpressao"
+                    aria-label="Dado da expressão"
+                >
+                    @for (face of faces; track face) {
+                        <option [ngValue]="face">d{{ face }}</option>
+                    }
+                </select>
+            </app-campo>
+            <p class="editor__leitura-expressao" aria-live="polite">{{ leituraExpressao() }}</p>
+            <button
+                app-botao
+                variante="secundario"
+                estilo="contorno"
+                tamanho="pequeno"
+                class="editor__tecla editor__expressao-adicionar"
+                [disabled]="!avaliada().valida"
+                (click)="adicionarExpressao()"
+            >
+                Adicionar expressão
+            </button>
+        </section>
+        @if (atalhos().length) {
+            <section class="editor__grupo editor__divisor">
+                <h3>Atalhos da ficha</h3>
+                @for (atalho of atalhos(); track atalho) {
+                    <button
+                        app-botao
+                        variante="secundario"
+                        estilo="contorno"
+                        tamanho="pequeno"
+                        class="editor__tecla"
+                        [appTooltip]="
+                            atalho === 'CORPO' ? atalhosDano().corpo! : atalhosDano().furtivo!
+                        "
+                        (click)="adicionarAtalho(atalho)"
+                    >
+                        {{ atalho === "CORPO" ? "Corpo a corpo" : "Furtivo" }}
+                    </button>
+                }
+            </section>
+        }
+        <div class="editor__linha editor__divisor">
+            <span>Repetir a rolagem</span
+            ><app-step-input
+                tamanho="compacto"
+                [min]="1"
+                [max]="repeticoesMaxima"
+                [valorExterno]="tokenizada().repeticoes ?? 1"
+                ariaRotulo="Número de rolagens"
+                (valorAlterado)="repetir($event)"
+            />
+        </div>
+    </div>
+    <div class="editor__inspecao">
+        <app-montador-editor-termo
+            [peca]="peca()"
+            [indice]="selecionado()"
+            [ambiente]="ambiente()"
+            [detalhe]="peca() ? detalhe(peca()!) : ''"
+            (alterar)="substituir($event)"
+        />
+    </div>
+</div>

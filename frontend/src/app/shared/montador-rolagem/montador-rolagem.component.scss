@@ -124,10 +124,24 @@
         }
     }
 
-    &__grupo {
-        display: flex;
-        flex-direction: column;
-        gap: var(--space-8);
+    &__modelo {
+        min-width: 0;
+        padding: var(--space-8);
+        min-height: 32px;
+        font-size: 11px;
+    }
+    &__guia {
+        flex: none;
+    }
+    @include bp.mobile {
+        &__modelo,
+        &__guia {
+            min-height: bp.$alvo-toque;
+        }
+        &__modelo {
+            font-size: 10px;
+            padding: var(--space-8) var(--space-4);
+        }
     }
 
     &__cabecalho-grupo {
@@ -166,25 +180,11 @@
         font-family: var(--font-mono);
     }
 
-    &__receitas {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: var(--space-8);
-    }
-
     &__modelos {
         flex: none;
 
         @include bp.mobile {
             min-height: bp.$alvo-toque;
-        }
-    }
-
-    &__seta {
-        transition: transform 0.15s ease;
-
-        &--aberta {
-            transform: rotate(180deg);
         }
     }
 

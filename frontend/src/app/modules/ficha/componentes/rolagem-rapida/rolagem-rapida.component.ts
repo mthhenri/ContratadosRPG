@@ -12,7 +12,7 @@ import { MontadorRolagem, type MontadorUltimaRolagem } from '../../../../shared/
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import type { RolagemRealizadaDto } from '../../rolagem-realizada';
-import { GuiaFormula } from '../guia-formula/guia-formula.component';
+import { GuiaFormula } from '../../../../shared/guia-formula/guia-formula.component';
 
 /**
  * Barra de **Rolagem rápida** (digita uma fórmula e rola na hora, sem salvar preset): extraída de
