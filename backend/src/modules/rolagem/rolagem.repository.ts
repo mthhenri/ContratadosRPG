@@ -62,7 +62,9 @@ export class RolagemRepository extends BaseRepository {
    */
   async registrarRolagem(dto: RolagemInternoRegistrarDto): Promise<RolagemResumoDto> {
     const [inserida] = await this.executarConsulta<{ id: number }>(
-      `INSERT INTO rolagem (ficha_id, encontro_combatente_id, campanha_id, usuario_id, rotulo, formula, tipo_rolagem_visibilidade_id, resultado, created_date, updated_date, is_deleted)
+      `INSERT INTO rolagem
+         (ficha_id, encontro_combatente_id, campanha_id, usuario_id, rotulo, formula,
+          tipo_rolagem_visibilidade_id, resultado, created_date, updated_date, is_deleted)
        SELECT :fichaId, :encontroCombatenteId, :campanhaId, :usuarioId, :rotulo, :formula,
               (SELECT id FROM tipo_rolagem_visibilidade WHERE codigo = :visibilidade AND is_deleted = false),
               :resultado::jsonb, NOW(), NOW(), false
@@ -134,7 +136,9 @@ export class RolagemRepository extends BaseRepository {
                   FROM rolagem
                   ${this.juncoesResumo()}
                   WHERE rolagem.ficha_id = :fichaId AND rolagem.is_deleted = false`,
-      sqlContagem: `SELECT COUNT(*) AS total FROM rolagem WHERE rolagem.ficha_id = :fichaId AND rolagem.is_deleted = false`,
+      sqlContagem: `SELECT COUNT(*) AS total
+                    FROM rolagem
+                    WHERE rolagem.ficha_id = :fichaId AND rolagem.is_deleted = false`,
       parametrosSql: { fichaId: dto.fichaId },
       pagina: dto.pagina,
       itensPorPagina: dto.itensPorPagina,

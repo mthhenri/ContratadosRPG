@@ -52,7 +52,9 @@ export class CenaRepository extends BaseRepository {
    */
   async criarCena(dto: CenaInternoCriarDto): Promise<CenaLinhaDto> {
     const [cenaInserida] = await this.executarConsulta<{ id: number }>(
-      `INSERT INTO cena (campanha_id, tipo_cena_id, tipo_cena_status_id, nome, ordem, created_date, updated_date, is_deleted)
+      `INSERT INTO cena
+         (campanha_id, tipo_cena_id, tipo_cena_status_id, nome, ordem,
+          created_date, updated_date, is_deleted)
        SELECT :campanhaId,
               (SELECT id FROM tipo_cena WHERE codigo = :tipo AND is_deleted = false),
               (SELECT id FROM tipo_cena_status WHERE codigo = :status AND is_deleted = false),
@@ -155,7 +157,8 @@ export class CenaRepository extends BaseRepository {
   async alterarStatus(dto: CenaStatusInternoAlterarDto): Promise<CenaLinhaDto> {
     await this.executarComando(
       `UPDATE cena
-       SET tipo_cena_status_id = (SELECT id FROM tipo_cena_status WHERE codigo = :status AND is_deleted = false)
+       SET tipo_cena_status_id = (SELECT id FROM tipo_cena_status
+                                  WHERE codigo = :status AND is_deleted = false)
        WHERE id = :id AND is_deleted = false`,
       { id: dto.id, status: dto.status },
     );

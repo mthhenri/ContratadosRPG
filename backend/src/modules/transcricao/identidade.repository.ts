@@ -27,7 +27,8 @@ export class IdentidadeRepository extends BaseRepository {
         const [identidade] = await this.executarConsulta<IdentidadeTranscricaoResumoDto>(
             `INSERT INTO identidade_transcricao
              (campanha_id, nome_origem, chave_origem, participante, created_date, updated_date, is_deleted)
-             SELECT campanha.id, :nomeOrigem, :chaveOrigem, :participante, NOW(), NOW(), false FROM campanha
+             SELECT campanha.id, :nomeOrigem, :chaveOrigem, :participante, NOW(), NOW(), false
+             FROM campanha
              WHERE campanha.id = :campanhaId AND campanha.is_deleted = false
              RETURNING ${COLUNAS_IDENTIDADE}`, { ...dto });
         return identidade ?? null;
@@ -35,23 +36,29 @@ export class IdentidadeRepository extends BaseRepository {
 
     async listarIdentidades(dto: IdentidadeTranscricaoListarDto): Promise<IdentidadeTranscricaoResumoDto[]> {
         return this.executarConsulta<IdentidadeTranscricaoResumoDto>(
-            `SELECT ${COLUNAS_IDENTIDADE} FROM identidade_transcricao
-             WHERE identidade_transcricao.campanha_id = :campanhaId AND identidade_transcricao.is_deleted = false
+            `SELECT ${COLUNAS_IDENTIDADE}
+             FROM identidade_transcricao
+             WHERE identidade_transcricao.campanha_id = :campanhaId
+               AND identidade_transcricao.is_deleted = false
              ORDER BY identidade_transcricao.chave_origem COLLATE "C", identidade_transcricao.id`, { ...dto });
     }
 
     async recuperarIdentidade(dto: IdentidadeTranscricaoRecuperarDto): Promise<IdentidadeTranscricaoResumoDto | null> {
         const [identidade] = await this.executarConsulta<IdentidadeTranscricaoResumoDto>(
-            `SELECT ${COLUNAS_IDENTIDADE} FROM identidade_transcricao
-             WHERE identidade_transcricao.id = :id AND identidade_transcricao.is_deleted = false`, { ...dto });
+            `SELECT ${COLUNAS_IDENTIDADE}
+             FROM identidade_transcricao
+             WHERE identidade_transcricao.id = :id
+               AND identidade_transcricao.is_deleted = false`, { ...dto });
         return identidade ?? null;
     }
 
     /** Só o participante muda: o nome de origem identifica a associação. */
     async alterarIdentidade(dto: IdentidadeTranscricaoInternoAlterarDto): Promise<IdentidadeTranscricaoResumoDto | null> {
         const [identidade] = await this.executarConsulta<IdentidadeTranscricaoResumoDto>(
-            `UPDATE identidade_transcricao SET participante = :participante
-             WHERE id = :id AND is_deleted = false RETURNING ${COLUNAS_IDENTIDADE}`, { ...dto });
+            `UPDATE identidade_transcricao
+             SET participante = :participante
+             WHERE id = :id AND is_deleted = false
+             RETURNING ${COLUNAS_IDENTIDADE}`, { ...dto });
         return identidade ?? null;
     }
 
@@ -64,7 +71,8 @@ export class IdentidadeRepository extends BaseRepository {
         const linhas = await this.executarConsulta<{ participante: string }>(
             `SELECT participantes_conhecidos.participante FROM (
                  SELECT identidade_transcricao.participante FROM identidade_transcricao
-                 WHERE identidade_transcricao.campanha_id = :campanhaId AND identidade_transcricao.is_deleted = false
+                 WHERE identidade_transcricao.campanha_id = :campanhaId
+                   AND identidade_transcricao.is_deleted = false
                  UNION
                  SELECT faixa_transcricao.participante FROM faixa_transcricao
                  JOIN sessao_transcricao ON sessao_transcricao.id = faixa_transcricao.sessao_transcricao_id

@@ -70,7 +70,9 @@ export class EncontroRepository extends BaseRepository {
    */
   async criarEncontro(dto: EncontroInternoCriarDto): Promise<EncontroLinhaDto> {
     const [encontroInserido] = await this.executarConsulta<{ id: number }>(
-      `INSERT INTO encontro (campanha_id, cena_id, tipo_encontro_status_id, nome, rodada_atual, turno_indice, created_date, updated_date, is_deleted)
+      `INSERT INTO encontro
+         (campanha_id, cena_id, tipo_encontro_status_id, nome, rodada_atual, turno_indice,
+          created_date, updated_date, is_deleted)
        SELECT :campanhaId, :cenaId,
               (SELECT id FROM tipo_encontro_status WHERE codigo = :status AND is_deleted = false),
               :nome, 0, 0, NOW(), NOW(), false
@@ -195,7 +197,8 @@ export class EncontroRepository extends BaseRepository {
   async alterarStatus(dto: EncontroInternoAlterarStatusDto): Promise<EncontroLinhaDto> {
     await this.executarComando(
       `UPDATE encontro
-       SET tipo_encontro_status_id = (SELECT id FROM tipo_encontro_status WHERE codigo = :status AND is_deleted = false),
+       SET tipo_encontro_status_id = (SELECT id FROM tipo_encontro_status
+                                      WHERE codigo = :status AND is_deleted = false),
            rodada_atual = :rodadaAtual,
            turno_indice = :turnoIndice
        WHERE id = :id AND is_deleted = false`,
@@ -307,7 +310,10 @@ export class EncontroRepository extends BaseRepository {
     dto: EncontroCombatenteInternoAdicionarDto,
   ): Promise<EncontroCombatenteLinhaDto> {
     const [combatenteInserido] = await this.executarConsulta<{ id: number }>(
-      `INSERT INTO encontro_combatente (encontro_id, ficha_id, nome_avulso, iniciativa, cadencia, turnos_por_rodada, ordem, vida_maxima_avulso, vida_atual_avulso, cor_avulso, imagem_url_avulso, condicoes, iniciativa_formula_custom, created_date, updated_date, is_deleted)
+      `INSERT INTO encontro_combatente
+         (encontro_id, ficha_id, nome_avulso, iniciativa, cadencia, turnos_por_rodada,
+          ordem, vida_maxima_avulso, vida_atual_avulso, cor_avulso, imagem_url_avulso,
+          condicoes, iniciativa_formula_custom, created_date, updated_date, is_deleted)
        SELECT :encontroId, :fichaId, :nomeAvulso, NULL, :cadencia, :turnosPorRodada, :ordem,
               :vidaMaximaAvulso, :vidaAtualAvulso, :corAvulso, NULL, :condicoes::jsonb, NULL, NOW(), NOW(), false
        RETURNING id`,
@@ -411,8 +417,11 @@ export class EncontroRepository extends BaseRepository {
   /** Registra uma entrada no log do encontro. */
   async registrarEvento(dto: EncontroEventoInternoRegistrarDto): Promise<void> {
     await this.executarComando(
-      `INSERT INTO encontro_evento (encontro_id, encontro_combatente_id, tipo, rodada, turno, texto, created_date, updated_date, is_deleted)
-       SELECT :encontroId, :combatenteId, :tipo, :rodada, :turno, :texto, NOW(), NOW(), false`,
+      `INSERT INTO encontro_evento
+         (encontro_id, encontro_combatente_id, tipo, rodada, turno, texto,
+          created_date, updated_date, is_deleted)
+       SELECT :encontroId, :combatenteId, :tipo, :rodada, :turno, :texto, NOW(), NOW(), false
+       RETURNING id`,
       {
         encontroId: dto.encontroId,
         combatenteId: dto.combatenteId,

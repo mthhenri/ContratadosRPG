@@ -53,11 +53,14 @@ export class FichaRepository extends BaseRepository {
    */
   async criarFicha(dto: FichaInternoCriarDto): Promise<FichaCriadaDto> {
     const [fichaCriada] = await this.executarConsulta<FichaCriadaDto>(
-      `INSERT INTO ficha (campanha_id, usuario_id, tipo_ficha_id, nome, cor, imagem_url, dados, created_date, updated_date, is_deleted)
+      `INSERT INTO ficha
+         (campanha_id, usuario_id, tipo_ficha_id, nome, cor, imagem_url, dados,
+          created_date, updated_date, is_deleted)
        SELECT :campanhaId, :usuarioId,
               (SELECT id FROM tipo_ficha WHERE codigo = :tipo AND is_deleted = false),
               :nome, :cor, :imagemUrl, :dados::jsonb, NOW(), NOW(), false
-       RETURNING id, campanha_id AS "campanhaId", usuario_id AS "usuarioId", nome, cor, imagem_url AS "imagemUrl", dados`,
+       RETURNING id, campanha_id AS "campanhaId", usuario_id AS "usuarioId", nome, cor,
+                 imagem_url AS "imagemUrl", dados`,
       {
         campanhaId: dto.campanhaId,
         usuarioId: dto.usuarioId,
@@ -157,8 +160,10 @@ export class FichaRepository extends BaseRepository {
               ficha.dados->>'registro' AS registro,
               ficha.dados->>'porte' AS porte,
               ficha.dados->'identidade'->>'comportamento' AS comportamento,
-              COALESCE((ficha.dados->'estado'->>'vidaAtual')::int, (ficha.dados->>'vidaAtual')::int) AS "vidaAtual",
-              COALESCE((ficha.dados->'estado'->>'vidaMaxima')::int, (ficha.dados->>'vidaMaxima')::int) AS "vidaMaxima",
+              COALESCE((ficha.dados->'estado'->>'vidaAtual')::int,
+                       (ficha.dados->>'vidaAtual')::int) AS "vidaAtual",
+              COALESCE((ficha.dados->'estado'->>'vidaMaxima')::int,
+                       (ficha.dados->>'vidaMaxima')::int) AS "vidaMaxima",
               COALESCE((ficha.dados->'estado'->>'energiaAtual')::int,
                        (ficha.dados->'energia'->>'atual')::int) AS "energiaAtual",
               COALESCE((ficha.dados->'estado'->>'energiaMaxima')::int,
@@ -464,7 +469,8 @@ export class FichaRepository extends BaseRepository {
       `UPDATE ficha
        SET campanha_id = :campanhaId, updated_date = NOW()
        WHERE id = :id AND is_deleted = false
-       RETURNING id, campanha_id AS "campanhaId", usuario_id AS "usuarioId", nome, cor, imagem_url AS "imagemUrl", dados`,
+       RETURNING id, campanha_id AS "campanhaId", usuario_id AS "usuarioId", nome, cor,
+                 imagem_url AS "imagemUrl", dados`,
       { id: dto.id, campanhaId: dto.campanhaId },
     );
     return fichaAtribuida;

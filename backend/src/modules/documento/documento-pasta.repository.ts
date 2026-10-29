@@ -317,7 +317,8 @@ export class DocumentoPastaRepository extends BaseRepository {
        SELECT :documentoId, :pastaId,
               (SELECT id FROM tipo_documento_organizacao
                WHERE codigo = :organizacao AND is_deleted = false),
-              :ordem, NOW(), NOW(), false`,
+              :ordem, NOW(), NOW(), false
+       RETURNING id`,
       {
         documentoId: dto.documentoId,
         organizacao: dto.organizacao,

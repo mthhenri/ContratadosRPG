@@ -75,7 +75,9 @@ export class CampanhaRepository extends BaseRepository {
    */
   async criarCampanha(dto: CampanhaInternoCriarDto): Promise<CampanhaCriadaDto> {
     const [campanhaCriada] = await this.executarConsulta<CampanhaCriadaDto>(
-      `INSERT INTO campanha (nome, descricao, codigo_convite, codigo_convite_espectador, created_date, updated_date, is_deleted)
+      `INSERT INTO campanha
+         (nome, descricao, codigo_convite, codigo_convite_espectador,
+          created_date, updated_date, is_deleted)
        SELECT :nome, :descricao, :codigoConvite, :codigoConviteEspectador, NOW(), NOW(), false
        RETURNING id, nome, descricao, codigo_convite AS "codigoConvite",
                  codigo_convite_espectador AS "codigoConviteEspectador"`,
@@ -96,7 +98,9 @@ export class CampanhaRepository extends BaseRepository {
    */
   async criarMembro(dto: CampanhaMembroInternoCriarDto): Promise<void> {
     await this.executarComando(
-      `INSERT INTO campanha_membro (campanha_id, usuario_id, tipo_campanha_membro_papel_id, created_date, updated_date, is_deleted)
+      `INSERT INTO campanha_membro
+         (campanha_id, usuario_id, tipo_campanha_membro_papel_id,
+          created_date, updated_date, is_deleted)
        SELECT :campanhaId, :usuarioId,
               (SELECT id FROM tipo_campanha_membro_papel WHERE codigo = :papel AND is_deleted = false),
               NOW(), NOW(), false

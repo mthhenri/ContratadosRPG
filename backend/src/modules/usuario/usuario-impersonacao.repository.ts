@@ -16,7 +16,8 @@ export class UsuarioImpersonacaoRepository extends BaseRepository {
       `INSERT INTO usuario_impersonacao
          (admin_origem_id, usuario_alvo_id, impersonacao_data,
           created_date, updated_date, is_deleted)
-       SELECT :adminOrigemId, :usuarioAlvoId, NOW(), NOW(), NOW(), false`,
+       SELECT :adminOrigemId, :usuarioAlvoId, NOW(), NOW(), NOW(), false
+       RETURNING id`,
       { adminOrigemId: dto.adminOrigemId, usuarioAlvoId: dto.usuarioAlvoId },
     );
   }

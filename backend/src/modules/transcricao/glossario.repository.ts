@@ -25,7 +25,8 @@ export class GlossarioRepository extends BaseRepository {
         const [termo] = await this.executarConsulta<TermoGlossarioTranscricaoResumoDto>(
             `INSERT INTO termo_glossario_transcricao
              (campanha_id, termo, chave_termo, created_date, updated_date, is_deleted)
-             SELECT campanha.id, :termo, :chaveTermo, NOW(), NOW(), false FROM campanha
+             SELECT campanha.id, :termo, :chaveTermo, NOW(), NOW(), false
+             FROM campanha
              WHERE campanha.id = :campanhaId AND campanha.is_deleted = false
              RETURNING ${COLUNAS_TERMO}`, { ...dto });
         return termo ?? null;
@@ -34,7 +35,8 @@ export class GlossarioRepository extends BaseRepository {
     /** Lista determinística; a ordenação "C" não depende do idioma do banco. */
     async listarTermos(dto: TermoGlossarioTranscricaoListarDto): Promise<TermoGlossarioTranscricaoResumoDto[]> {
         return this.executarConsulta<TermoGlossarioTranscricaoResumoDto>(
-            `SELECT ${COLUNAS_TERMO} FROM termo_glossario_transcricao
+            `SELECT ${COLUNAS_TERMO}
+             FROM termo_glossario_transcricao
              WHERE termo_glossario_transcricao.campanha_id = :campanhaId
                AND termo_glossario_transcricao.is_deleted = false
              ORDER BY termo_glossario_transcricao.chave_termo COLLATE "C", termo_glossario_transcricao.id`,
@@ -43,15 +45,19 @@ export class GlossarioRepository extends BaseRepository {
 
     async recuperarTermo(dto: TermoGlossarioTranscricaoRecuperarDto): Promise<TermoGlossarioTranscricaoResumoDto | null> {
         const [termo] = await this.executarConsulta<TermoGlossarioTranscricaoResumoDto>(
-            `SELECT ${COLUNAS_TERMO} FROM termo_glossario_transcricao
-             WHERE termo_glossario_transcricao.id = :id AND termo_glossario_transcricao.is_deleted = false`, { ...dto });
+            `SELECT ${COLUNAS_TERMO}
+             FROM termo_glossario_transcricao
+             WHERE termo_glossario_transcricao.id = :id
+               AND termo_glossario_transcricao.is_deleted = false`, { ...dto });
         return termo ?? null;
     }
 
     async alterarTermo(dto: TermoGlossarioTranscricaoInternoAlterarDto): Promise<TermoGlossarioTranscricaoResumoDto | null> {
         const [termo] = await this.executarConsulta<TermoGlossarioTranscricaoResumoDto>(
-            `UPDATE termo_glossario_transcricao SET termo = :termo, chave_termo = :chaveTermo
-             WHERE id = :id AND is_deleted = false RETURNING ${COLUNAS_TERMO}`, { ...dto });
+            `UPDATE termo_glossario_transcricao
+             SET termo = :termo, chave_termo = :chaveTermo
+             WHERE id = :id AND is_deleted = false
+             RETURNING ${COLUNAS_TERMO}`, { ...dto });
         return termo ?? null;
     }
 

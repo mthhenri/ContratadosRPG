@@ -1,5 +1,15 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-29 — Legibilidade do SQL dos repositórios
+
+Revisadas as consultas dos repositórios e separadas cláusulas e listas extensas em campanha,
+cena, documento, encontro, ficha, livro, rolagem, transcrição e usuário. Quatro INSERTs
+ganharam `RETURNING id`, conforme a convenção; o teste de criação de usuário passou a ignorar
+espaços ao conferir a lista de colunas. Busca adicional por linhas SQL com mais de 120 caracteres
+contendo cláusulas não encontrou ocorrências. A revisão não abrange migrations nem seeds.
+Backend: build e lint aprovados (5.137 avisos); 1.360 testes passaram, 100 ignorados. A suíte
+não comprova a execução dos casos de integração PostgreSQL ignorados. `repo:verificar` aprovado.
+
 ## 2026-10-29 — Criatura/NPC: specs de VD e exportação; m3-53 descartada
 
 O autor pediu anotar dois refinos: a ficha de Criatura e de NPC recalcular os modificadores

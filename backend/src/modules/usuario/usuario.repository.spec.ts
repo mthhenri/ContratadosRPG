@@ -157,7 +157,7 @@ describe('UsuarioRepository', () => {
 
     expect(raw).toHaveBeenCalledOnce();
     const [sql, parametros] = raw.mock.calls[0] as [string, Record<string, unknown>];
-    expect(sql).toContain(
+    expect(sql.replace(/\s+/g, ' ')).toContain(
       'INSERT INTO usuario (login, senha, nome, tipo_usuario_id, token_versao, created_date, updated_date, is_deleted)',
     );
     expect(sql).toContain('SELECT :login, :senha, :nome, tipo_usuario.id, 1, NOW(), NOW(), false');

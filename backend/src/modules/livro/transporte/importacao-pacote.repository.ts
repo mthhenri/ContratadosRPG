@@ -23,9 +23,12 @@ export class ImportacaoPacoteRepository extends BaseRepository {
     usuarioId: number;
   }): Promise<{ id: number }[]> {
     return this.executarConsulta(
-      `SELECT usuario.id FROM usuario
-      INNER JOIN tipo_usuario ON tipo_usuario.id = usuario.tipo_usuario_id AND tipo_usuario.is_deleted = false
-      WHERE usuario.id = :usuarioId AND usuario.is_deleted = false AND tipo_usuario.codigo = 'ADMIN'`,
+      `SELECT usuario.id
+       FROM usuario
+       INNER JOIN tipo_usuario ON tipo_usuario.id = usuario.tipo_usuario_id
+         AND tipo_usuario.is_deleted = false
+       WHERE usuario.id = :usuarioId AND usuario.is_deleted = false
+         AND tipo_usuario.codigo = 'ADMIN'`,
       dto,
     );
   }
@@ -46,14 +49,20 @@ export class ImportacaoPacoteRepository extends BaseRepository {
     Pick<LivroRecuperacaoAlvoDto, "sistemaIdentificador" | "bancoOid">[]
   > {
     return this
-      .executarConsulta(`SELECT (pg_control_system()).system_identifier::text AS "sistemaIdentificador", pg_database.oid::int AS "bancoOid"
-      FROM pg_database WHERE datname = current_database()`);
+      .executarConsulta(`SELECT (pg_control_system()).system_identifier::text AS "sistemaIdentificador",
+                               pg_database.oid::int AS "bancoOid"
+                        FROM pg_database
+                        WHERE datname = current_database()`);
   }
 
   async bloquearConjunto(): Promise<void> {
     await this.executarConsulta("SELECT pg_advisory_xact_lock(183729, 1)");
     await this.executarConsulta(
-      "SELECT livro.id FROM livro WHERE livro.codigo IN ('sistema', 'guia') AND livro.is_deleted = false ORDER BY livro.codigo FOR UPDATE",
+      `SELECT livro.id
+       FROM livro
+       WHERE livro.codigo IN ('sistema', 'guia') AND livro.is_deleted = false
+       ORDER BY livro.codigo
+       FOR UPDATE`,
     );
   }
 
@@ -62,29 +71,50 @@ export class ImportacaoPacoteRepository extends BaseRepository {
   }): Promise<LivroRecuperacaoEstadoDto[]> {
     return this.executarConsulta(
       `SELECT :codigo::text AS codigo, to_jsonb(livro) AS livro,
-      COALESCE((SELECT jsonb_agg(to_jsonb(regra_peca) ORDER BY regra_peca.id) FROM regra_peca WHERE regra_peca.livro_id = livro.id AND regra_peca.is_deleted = false), '[]'::jsonb) AS pecas,
-      COALESCE((SELECT jsonb_agg(to_jsonb(regra_peca_ancora_antiga) ORDER BY regra_peca_ancora_antiga.id) FROM regra_peca_ancora_antiga WHERE regra_peca_ancora_antiga.livro_id = livro.id AND regra_peca_ancora_antiga.is_deleted = false), '[]'::jsonb) AS ancoras,
-      COALESCE((SELECT jsonb_agg(to_jsonb(livro_versao) ORDER BY livro_versao.id) FROM livro_versao WHERE livro_versao.livro_id = livro.id AND livro_versao.is_deleted = false), '[]'::jsonb) AS versoes
-      FROM (SELECT 1) AS origem LEFT JOIN livro ON livro.codigo = :codigo AND livro.is_deleted = false`,
+              COALESCE((
+                SELECT jsonb_agg(to_jsonb(regra_peca) ORDER BY regra_peca.id)
+                FROM regra_peca
+                WHERE regra_peca.livro_id = livro.id AND regra_peca.is_deleted = false
+              ), '[]'::jsonb) AS pecas,
+              COALESCE((
+                SELECT jsonb_agg(to_jsonb(regra_peca_ancora_antiga)
+                                 ORDER BY regra_peca_ancora_antiga.id)
+                FROM regra_peca_ancora_antiga
+                WHERE regra_peca_ancora_antiga.livro_id = livro.id
+                  AND regra_peca_ancora_antiga.is_deleted = false
+              ), '[]'::jsonb) AS ancoras,
+              COALESCE((
+                SELECT jsonb_agg(to_jsonb(livro_versao) ORDER BY livro_versao.id)
+                FROM livro_versao
+                WHERE livro_versao.livro_id = livro.id AND livro_versao.is_deleted = false
+              ), '[]'::jsonb) AS versoes
+       FROM (SELECT 1) AS origem
+       LEFT JOIN livro ON livro.codigo = :codigo AND livro.is_deleted = false`,
       dto,
     );
   }
 
   async desativarAncoras(dto: { livroId: number }): Promise<number> {
     return this.executarComando(
-      "UPDATE regra_peca_ancora_antiga SET is_deleted = true, deleted_date = NOW() WHERE livro_id = :livroId AND is_deleted = false",
+      `UPDATE regra_peca_ancora_antiga
+       SET is_deleted = true, deleted_date = NOW()
+       WHERE livro_id = :livroId AND is_deleted = false`,
       dto,
     );
   }
   async desativarPecas(dto: { livroId: number }): Promise<number> {
     return this.executarComando(
-      "UPDATE regra_peca SET is_deleted = true, deleted_date = NOW() WHERE livro_id = :livroId AND is_deleted = false",
+      `UPDATE regra_peca
+       SET is_deleted = true, deleted_date = NOW()
+       WHERE livro_id = :livroId AND is_deleted = false`,
       dto,
     );
   }
   async desativarVersoes(dto: { livroId: number }): Promise<number> {
     return this.executarComando(
-      "UPDATE livro_versao SET is_deleted = true, deleted_date = NOW() WHERE livro_id = :livroId AND is_deleted = false",
+      `UPDATE livro_versao
+       SET is_deleted = true, deleted_date = NOW()
+       WHERE livro_id = :livroId AND is_deleted = false`,
       dto,
     );
   }
@@ -125,13 +155,19 @@ export class ImportacaoPacoteRepository extends BaseRepository {
   }): Promise<{ id: number }[]> {
     return this.executarConsulta(
       `INSERT INTO regra_peca
-      (livro_id, peca_pai_id, tipo_regra_peca_id, identificador, ancora, ordem, dados, revisao, created_date, updated_date, is_deleted)
-      SELECT :livroId, :pecaPaiId, (SELECT id FROM tipo_regra_peca WHERE codigo = :tipo AND is_deleted = false),
-      :identificador::uuid, :ancora, :ordem, :dados::jsonb, 1, NOW(), NOW(), false
-      ON CONFLICT (identificador) DO UPDATE SET peca_pai_id = EXCLUDED.peca_pai_id,
-      tipo_regra_peca_id = EXCLUDED.tipo_regra_peca_id, ancora = EXCLUDED.ancora, ordem = EXCLUDED.ordem,
-      dados = EXCLUDED.dados, revisao = regra_peca.revisao + 1, is_deleted = false, deleted_date = NULL
-      WHERE regra_peca.livro_id = EXCLUDED.livro_id RETURNING id`,
+         (livro_id, peca_pai_id, tipo_regra_peca_id, identificador, ancora, ordem, dados,
+          revisao, created_date, updated_date, is_deleted)
+       SELECT :livroId, :pecaPaiId,
+              (SELECT id FROM tipo_regra_peca WHERE codigo = :tipo AND is_deleted = false),
+              :identificador::uuid, :ancora, :ordem, :dados::jsonb, 1, NOW(), NOW(), false
+       ON CONFLICT (identificador) DO UPDATE
+       SET peca_pai_id = EXCLUDED.peca_pai_id,
+           tipo_regra_peca_id = EXCLUDED.tipo_regra_peca_id,
+           ancora = EXCLUDED.ancora, ordem = EXCLUDED.ordem,
+           dados = EXCLUDED.dados, revisao = regra_peca.revisao + 1,
+           is_deleted = false, deleted_date = NULL
+       WHERE regra_peca.livro_id = EXCLUDED.livro_id
+       RETURNING id`,
       {
         livroId: dto.livroId,
         pecaPaiId: dto.pecaPaiId,
@@ -149,10 +185,15 @@ export class ImportacaoPacoteRepository extends BaseRepository {
     usuarioId: number;
   }): Promise<number> {
     return this.executarComando(
-      `INSERT INTO livro_versao (livro_id, tipo_livro_versao_situacao_id, numero, formato, conteudo,
-      publicacao_data, usuario_id, nota, created_date, updated_date, is_deleted)
-      SELECT :livroId, (SELECT id FROM tipo_livro_versao_situacao WHERE codigo = 'PUBLICADA' AND is_deleted = false),
-      :numero, :formato, :conteudo::jsonb, :publicacaoData::timestamptz, :usuarioId, :nota, NOW(), NOW(), false`,
+      `INSERT INTO livro_versao
+         (livro_id, tipo_livro_versao_situacao_id, numero, formato, conteudo,
+          publicacao_data, usuario_id, nota, created_date, updated_date, is_deleted)
+       SELECT :livroId,
+              (SELECT id FROM tipo_livro_versao_situacao
+               WHERE codigo = 'PUBLICADA' AND is_deleted = false),
+              :numero, :formato, :conteudo::jsonb, :publicacaoData::timestamptz,
+              :usuarioId, :nota, NOW(), NOW(), false
+       RETURNING id`,
       {
         livroId: dto.livroId,
         numero: dto.item.numero,
@@ -166,11 +207,15 @@ export class ImportacaoPacoteRepository extends BaseRepository {
   }
   async restaurarPeca(dto: LivroPecaRecuperacaoLinhaDto): Promise<number> {
     return this.executarComando(
-      `UPDATE regra_peca SET peca_pai_id = origem.peca_pai_id,
-      tipo_regra_peca_id = origem.tipo_regra_peca_id, ancora = origem.ancora, ordem = origem.ordem,
-      dados = origem.dados, revisao = origem.revisao, is_deleted = origem.is_deleted, deleted_date = origem.deleted_date
-      FROM jsonb_populate_record(NULL::regra_peca, :linha::jsonb) AS origem
-      WHERE regra_peca.id = origem.id AND regra_peca.livro_id = origem.livro_id AND regra_peca.identificador = origem.identificador`,
+      `UPDATE regra_peca
+       SET peca_pai_id = origem.peca_pai_id,
+           tipo_regra_peca_id = origem.tipo_regra_peca_id,
+           ancora = origem.ancora, ordem = origem.ordem, dados = origem.dados,
+           revisao = origem.revisao, is_deleted = origem.is_deleted,
+           deleted_date = origem.deleted_date
+       FROM jsonb_populate_record(NULL::regra_peca, :linha::jsonb) AS origem
+       WHERE regra_peca.id = origem.id AND regra_peca.livro_id = origem.livro_id
+         AND regra_peca.identificador = origem.identificador`,
       { linha: JSON.stringify(dto) },
     );
   }

@@ -19,7 +19,8 @@ export class DispositivoRepository extends BaseRepository {
         const [pedido] = await this.executarConsulta<DispositivoVinculoCriadoDto>(`
             INSERT INTO transcricao_vinculo (identificador, segredo_hash, nome, codigo, expira_em,
               confirmado, created_date, updated_date, is_deleted)
-            SELECT :identificador, :segredoHash, :nome, :codigo, NOW() + INTERVAL '10 minutes', false, NOW(), NOW(), false
+            SELECT :identificador, :segredoHash, :nome, :codigo,
+                   NOW() + INTERVAL '10 minutes', false, NOW(), NOW(), false
             ON CONFLICT (segredo_hash) DO NOTHING
             RETURNING identificador::text, codigo, ${DATA("expira_em")} AS "expiraEm"`, { ...dto });
         return pedido ?? null;
@@ -27,39 +28,50 @@ export class DispositivoRepository extends BaseRepository {
     async consultarPedido(dto: DispositivoIdentificadorRecuperarDto): Promise<DispositivoVinculoRecuperadoDto | null> {
         const [pedido] = await this.executarConsulta<DispositivoVinculoRecuperadoDto>(`
             SELECT identificador::text, nome, codigo, ${DATA("expira_em")} AS "expiraEm"
-            FROM transcricao_vinculo WHERE identificador = :identificador AND is_deleted = false
+            FROM transcricao_vinculo
+            WHERE identificador = :identificador AND is_deleted = false
               AND confirmado = false AND expira_em > NOW()`, { ...dto });
         return pedido ?? null;
     }
     async confirmar(dto: DispositivoVinculoInternoConfirmarDto): Promise<DispositivoResumoDto | null> {
         const [dispositivo] = await this.executarConsulta<DispositivoResumoDto>(`
             WITH confirmado AS (
-              UPDATE transcricao_vinculo SET confirmado = true
+              UPDATE transcricao_vinculo
+              SET confirmado = true
               WHERE identificador = :identificador AND codigo = :codigo AND is_deleted = false
-                AND confirmado = false AND expira_em > NOW() RETURNING *)
+                AND confirmado = false AND expira_em > NOW()
+              RETURNING *
+            )
             INSERT INTO transcricao_dispositivo (identificador, vinculo_id, usuario_id, token_versao,
               segredo_hash, nome, ultimo_uso, created_date, updated_date, is_deleted)
             SELECT identificador, id, :usuarioId, :tokenVersao, segredo_hash, nome, NOW(), NOW(), NOW(), false
-            FROM confirmado RETURNING ${RESUMO}`, { ...dto });
+            FROM confirmado
+            RETURNING ${RESUMO}`, { ...dto });
         return dispositivo ?? null;
     }
     async autenticar(dto: DispositivoCredencialInternoRecuperarDto): Promise<DispositivoAutenticado | null> {
         const [usuario] = await this.executarConsulta<DispositivoAutenticado>(`
             UPDATE transcricao_dispositivo AS dispositivo SET ultimo_uso = NOW()
-            FROM usuario JOIN tipo_usuario ON tipo_usuario.id = usuario.tipo_usuario_id AND tipo_usuario.is_deleted = false
+            FROM usuario
+            JOIN tipo_usuario ON tipo_usuario.id = usuario.tipo_usuario_id
+              AND tipo_usuario.is_deleted = false
             WHERE dispositivo.segredo_hash = :segredoHash AND dispositivo.is_deleted = false
               AND dispositivo.ultimo_uso > NOW() - INTERVAL '90 days'
               AND usuario.id = dispositivo.usuario_id AND usuario.is_deleted = false
               AND usuario.token_versao = dispositivo.token_versao
-            RETURNING dispositivo.id AS "dispositivoId", dispositivo.identificador::text AS "dispositivoIdentificador", usuario.id AS sub, usuario.login,
-              usuario.token_versao AS "tokenVersao", tipo_usuario.codigo AS tipo`, { ...dto });
+            RETURNING dispositivo.id AS "dispositivoId",
+              dispositivo.identificador::text AS "dispositivoIdentificador",
+              usuario.id AS sub, usuario.login, usuario.token_versao AS "tokenVersao",
+              tipo_usuario.codigo AS tipo`, { ...dto });
         return usuario ?? null;
     }
     async consultarEstado(dto: DispositivoCredencialInternoRecuperarDto): Promise<DispositivoEstadoDto> {
         const usuario = await this.autenticar(dto);
         if (usuario) return { vinculado: true, expirado: false, usuarioId: usuario.sub, login: usuario.login };
         const [pendente] = await this.executarConsulta<{ valido: boolean }>(`
-            SELECT true AS valido FROM transcricao_vinculo WHERE segredo_hash = :segredoHash
+            SELECT true AS valido
+            FROM transcricao_vinculo
+            WHERE segredo_hash = :segredoHash
               AND confirmado = false AND expira_em > NOW() AND is_deleted = false`, { ...dto });
         return { vinculado: false, expirado: !pendente, usuarioId: null, login: null };
     }
@@ -107,7 +119,8 @@ export class DispositivoRepository extends BaseRepository {
     async consultarIntencao(dto: TranscricaoIntencaoInternoRecuperarDto): Promise<TranscricaoIntencaoEstadoDto | null> {
         const [estado] = await this.executarConsulta<TranscricaoIntencaoEstadoDto>(`
             SELECT consumida_em IS NOT NULL AS confirmada, expira_em <= NOW() AS expirada
-            FROM transcricao_intencao WHERE identificador = :identificador
+            FROM transcricao_intencao
+            WHERE identificador = :identificador
               AND usuario_id = :usuarioId AND is_deleted = false`, { ...dto });
         return estado ?? null;
     }

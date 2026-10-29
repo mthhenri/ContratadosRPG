@@ -40,7 +40,8 @@ export class CenaDocumentoRepository extends BaseRepository {
   /** Anexa um documento à cena, no fim da fila. */
   async anexar(dto: CenaDocumentoInternoCriarDto): Promise<CenaDocumentoLinhaDto> {
     const [inserido] = await this.executarConsulta<{ id: number }>(
-      `INSERT INTO cena_documento (cena_id, documento_id, ordem, em_foco, created_date, updated_date, is_deleted)
+      `INSERT INTO cena_documento
+         (cena_id, documento_id, ordem, em_foco, created_date, updated_date, is_deleted)
        SELECT :cenaId, :documentoId, :ordem, false, NOW(), NOW(), false
        RETURNING id`,
       { cenaId: dto.cenaId, documentoId: dto.documentoId, ordem: dto.ordem },
