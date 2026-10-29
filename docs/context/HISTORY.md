@@ -13,7 +13,7 @@ com testes para VD 5 e 30. O NPC não tem VD nem tipos de modificador (usa Categ
 "fazer o mesmo no NPC" é uma decisão de modelo, deixada em aberto para o autor. Resposta do autor
 sobre modificador manual: o recálculo prevalece.
 
-O autor descartou a `m3-53` para repensar. A spec foi movida para `docs/specs/descartadas/`, com
+O autor descartou a `m3-53` para repensar. A spec foi movida para `docs/specs/discarded/`, com
 nota no topo, e `docs/SYSTEM.SPEC.md` §3.1 ganhou esse estado. A exportação foi reaberta na spec
 nova, sem dependência da `m3-53`. As specs de done que citam a `m3-53` ficaram como histórico.
 

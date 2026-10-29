@@ -1,7 +1,7 @@
 # ficha-exportar-criatura-npc-agente.spec.md
 
 > Task avulsa de exportação do M3/M4. Origem: pedido do autor (2026-10-29), anotado como trabalho
-> decidido. Substitui o escopo da `m3-53`, descartada em 2026-10-29 (`docs/specs/descartadas/`), que
+> decidido. Substitui o escopo da `m3-53`, descartada em 2026-10-29 (`docs/specs/discarded/`), que
 > cobria só o PDF do Agente e deixava Criatura e NPC de fora.
 
 ## Objetivo
@@ -52,7 +52,7 @@ respeita quem pode ver cada ficha e os campos privados.
 
 ## Dependências
 
-- Nenhuma spec de exportação em andamento. `m3-53` está em `docs/specs/descartadas/` só como registro.
+- Nenhuma spec de exportação em andamento. `m3-53` está em `docs/specs/discarded/` só como registro.
 - `ficha-avatar-leitura-autorizada.spec.md` e a leitura de permissão de `usuario_ficha_acesso` (M3/M4 concluídos).
 - Consultar `docs/design/DESIGN.md` e o tema `docs/design/tema/` antes de qualquer UI.
 

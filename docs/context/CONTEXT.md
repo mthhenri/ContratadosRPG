@@ -2212,7 +2212,7 @@ M4-09 foi commitada/enviada em `03926a60`; M4-10 fecha com commit/envio separado
 `m8-06` está concluída; módulo inteiro fechado.
 `ui-23` (stat sem valor/rodapé do cartão) já foi concluída — ver `HISTORY.md`
 2026-09-02; a fila abaixo estava desatualizada. As tasks do **M4** estão concluídas,
-incluindo refinamento mobile e integração de acesso. `m3-53` foi descartada pelo autor em 2026-10-29 para ser repensada (`docs/specs/descartadas/`).
+incluindo refinamento mobile e integração de acesso. `m3-53` foi descartada pelo autor em 2026-10-29 para ser repensada (`docs/specs/discarded/`).
 M0, M1, M2, M6, M7 e M8 estão concluídos,
 incluindo todos os ajustes avulsos de pós-milestone.
 

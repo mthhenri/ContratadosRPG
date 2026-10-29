@@ -37,7 +37,7 @@ export function verificarCaminhos(caminhos) {
             erros.push(`${caminho}: mídia fora de fonte/asset/fixture canônicos; evidência vai em .artifacts/.`);
         }
         if (/\.spec\.md$/i.test(caminho)
-            && !/^docs\/specs\/(?:backlog|active|done|descartadas)\/[^/]+\.spec\.md$/.test(caminho)
+            && !/^docs\/specs\/(?:backlog|active|done|discarded)\/[^/]+\.spec\.md$/.test(caminho)
             && !SPECS_EXCECAO.includes(caminho)) {
             erros.push(`${caminho}: spec fora do fluxo backlog → active → done.`);
         }
@@ -52,7 +52,7 @@ export function verificarCaminhos(caminhos) {
             }
             continue;
         }
-        if (!["backlog", "active", "done", "descartadas"].includes(partes[2])) {
+        if (!["backlog", "active", "done", "discarded"].includes(partes[2])) {
             erros.push(`${caminho}: pasta paralela ao ciclo de specs.`);
         } else if (partes.length === 4) {
             if (!partes[3].endsWith(".spec.md") && !partes[3].startsWith("INDEX-")
