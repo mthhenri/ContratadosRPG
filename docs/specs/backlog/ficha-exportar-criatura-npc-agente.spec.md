@@ -1,8 +1,8 @@
 # ficha-exportar-criatura-npc-agente.spec.md
 
 > Task avulsa de exportação do M3/M4. Origem: pedido do autor (2026-10-29), anotado como trabalho
-> decidido. Estende `m3-53-ficha-exportar-pdf.spec.md`, que cobre só o PDF do Agente e deixa Criatura e
-> NPC de fora.
+> decidido. Substitui o escopo da `m3-53`, descartada em 2026-10-29 (`docs/specs/descartadas/`), que
+> cobria só o PDF do Agente e deixava Criatura e NPC de fora.
 
 ## Objetivo
 
@@ -15,8 +15,8 @@ respeita quem pode ver cada ficha e os campos privados.
 1. **Decisão de arquitetura antes de codar** (registrar nesta spec):
    - Markdown e HTML gerados por função pura em `shared/` a partir do DTO da ficha, para que a saída seja
      a mesma no frontend e no backend e não haja recálculo no template.
-   - PDF pela mesma abordagem decidida na `m3-53` (print de rota dedicada ou lib sem servidor); se a
-     `m3-53` for implementada antes, reaproveitar o layout dela.
+   - PDF: a abordagem (print de rota dedicada ou lib sem servidor) é decidida aqui, antes de codar.
+     A `m3-53` foi descartada e não define layout nem arquitetura.
 2. **Exportação preenchida** dos três tipos, com as seções de cada ficha (Agente: identidade, atributos,
    derivados, resistências, habilidades, inventário, sanidade, origem/personalidade; Criatura e NPC:
    identidade, VD/Tenacidade/Defesa, atributos com modificadores, habilidades, ataques, sequelas/traumas
@@ -52,7 +52,7 @@ respeita quem pode ver cada ficha e os campos privados.
 
 ## Dependências
 
-- `m3-53-ficha-exportar-pdf.spec.md` (backlog): decisão de layout e de PDF; esta spec a estende.
+- Nenhuma spec de exportação em andamento. `m3-53` está em `docs/specs/descartadas/` só como registro.
 - `ficha-avatar-leitura-autorizada.spec.md` e a leitura de permissão de `usuario_ficha_acesso` (M3/M4 concluídos).
 - Consultar `docs/design/DESIGN.md` e o tema `docs/design/tema/` antes de qualquer UI.
 
