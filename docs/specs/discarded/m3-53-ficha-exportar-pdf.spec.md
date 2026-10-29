@@ -1,5 +1,10 @@
 # m3-53-ficha-exportar-pdf.spec.md
 
+> **Descartada em 2026-10-29 pelo autor, para ser repensada.** Não é fila de trabalho. O escopo
+> de exportação foi reaberto em `docs/specs/backlog/ficha-exportar-criatura-npc-agente.spec.md`
+> (Agente, Criatura e NPC; PDF, modelo vazio, Markdown e HTML). Esta spec fica como registro das
+> premissas antigas (layout em `print`/PDF, escopo só do Agente).
+
 > Task 50 do milestone `m3-ficha-jogador.spec.md`. Lote de refino da ficha (`m3-40`…`m3-56`).
 > **Spec grande** — pode ser quebrada em subtasks na hora de implementar.
 

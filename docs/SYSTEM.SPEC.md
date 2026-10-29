@@ -145,6 +145,7 @@ contratados-rpg/
       backlog/                  → tasks a implementar
       active/                   → task em andamento na sessão atual
       done/                     → tasks concluídas (histórico)
+      discarded/                → tasks descartadas pelo autor (registro; não são fila)
   package.json                  → workspaces root (npm workspaces)
   docker-compose.yml
   .gitignore
@@ -156,7 +157,9 @@ contratados-rpg/
 ### 3.1 Documentação de tarefa e artefatos de execução
 
 Todo trabalho executável tem uma única spec em
-`docs/specs/{backlog,active,done}/<tarefa>.spec.md`. Planos, decisões de design da
+`docs/specs/{backlog,active,done,discarded}/<tarefa>.spec.md`. `discarded/` guarda
+tasks que o autor tirou de circulação para repensar: não são fila nem referência de
+escopo, e uma nova versão nasce como spec nova em `backlog/`. Planos, decisões de design da
 tarefa, propostas, revisões, auditorias e relatórios de verificação são **anexos**
 em `docs/specs/<estado>/<tarefa>/`, com a spec proprietária ao lado. Mova a spec
 e seus anexos juntos ao mudar de estado; corrija os ponteiros de forma mecânica.

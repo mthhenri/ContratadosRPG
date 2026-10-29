@@ -1,5 +1,25 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-10-29 — Criatura/NPC: specs de VD e exportação; m3-53 descartada
+
+O autor pediu anotar dois refinos: a ficha de Criatura e de NPC recalcular os modificadores
+de atributo pela VD, e a exportação de Agente, Criatura e NPC (PDF, modelo vazio, Markdown e HTML).
+Foram criadas `docs/specs/backlog/criatura-npc-vd-habilidades-ataques.spec.md` e
+`docs/specs/backlog/ficha-exportar-criatura-npc-agente.spec.md`.
+
+Diagnóstico do código: na Criatura o recálculo já existe. O modelo guarda só o tipo de cada
+atributo, e o número é derivado por `calcularValorModificador` na leitura, na DT e na rolagem,
+com testes para VD 5 e 30. O NPC não tem VD nem tipos de modificador (usa Categoria e Nível), então
+"fazer o mesmo no NPC" é uma decisão de modelo, deixada em aberto para o autor. Resposta do autor
+sobre modificador manual: o recálculo prevalece.
+
+O autor descartou a `m3-53` para repensar. A spec foi movida para `docs/specs/discarded/`, com
+nota no topo, e `docs/SYSTEM.SPEC.md` §3.1 ganhou esse estado. A exportação foi reaberta na spec
+nova, sem dependência da `m3-53`. As specs de done que citam a `m3-53` ficaram como histórico.
+
+Pendências: decisão sobre o modificador do NPC e lista de dores de Habilidades e Ataques (o autor
+disse que a UX está ruim, sem detalhar). Sem código alterado nesta leva; o gate visual não foi rodado.
+
 ## 2026-10-25 — Montador: modelos compactos, termos independentes e guia de uso
 
 O autor aprovou iterativamente a POC do montador (Teste, Dano de arma e Dados livres),
