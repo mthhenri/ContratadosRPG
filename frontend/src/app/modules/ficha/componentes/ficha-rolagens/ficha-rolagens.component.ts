@@ -31,6 +31,7 @@ import { Modal } from '../../../../shared/ui/modal/modal.component';
 import { executarPassoPreset } from '../../executar-rolagem';
 import type { RolagemRealizadaDto } from '../../rolagem-realizada';
 import { GuiaFormula } from '../../../../shared/guia-formula/guia-formula.component';
+import type { AjustesTesteMontador } from '../../../../shared/montador-rolagem/montador-leitura';
 import { RolagemRapida } from '../rolagem-rapida/rolagem-rapida.component';
 
 /** Grupo tipado de um passo seguinte no formulário (encadeamento), com as habilidades **deste passo**. */
@@ -118,6 +119,8 @@ export class FichaRolagens {
   readonly proficiencia = input<number | null>(null);
   /** Nível do agente — fonte `NIV` nas fórmulas (m3-22). */
   readonly nivel = input<number>(0);
+  /** Ajustes de teste da ficha, repassados à rolagem rápida (montador). */
+  readonly ajustesTeste = input<AjustesTesteMontador>({});
   /** Habilidades da ficha — o pool que cada passo pode anexar (energia + efeitos). */
   readonly habilidadesDisponiveis = input<readonly FichaHabilidadeDto[]>([]);
   /** Amplificadores do inventário — `Conservador` reduz a Energia das habilidades do preset. */

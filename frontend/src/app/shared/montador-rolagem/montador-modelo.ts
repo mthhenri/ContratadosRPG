@@ -69,6 +69,11 @@ export interface ReceitaMontador {
 }
 
 /** As três receitas, na ordem dos mockups E3.x. Dados livres começa em branco. */
+export const TODOS_OS_MODELOS: readonly MontadorModo[] = ['TESTE', 'DANO', 'LIVRE'];
+
+/** Modelos onde não há ficha (mestre, rolador avulso): sem atributos o "Teste de atributo" não funciona. */
+export const MODELOS_SEM_FICHA: readonly MontadorModo[] = ['DANO', 'LIVRE'];
+
 export const RECEITAS_MONTADOR: readonly ReceitaMontador[] = [
   {
     modo: 'TESTE',

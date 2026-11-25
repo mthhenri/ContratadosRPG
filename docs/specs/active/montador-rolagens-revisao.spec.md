@@ -6,6 +6,40 @@
 > dois", e o autor precisou explicar onde ficam coisas como a habilidade de personalidade. Pedido **C** de
 > `PEDIDO_CLAUDE_CODE_SPECS_SITE.md`. Só especificação: nenhum código nesta etapa.
 
+## Decisões do autor (25/11/2026) e andamento
+
+Decisões: (1) **esqueleto único** das visões (alternativa 1); (D2) **manter o motor e só avisar na tela**; (D3) **o
+dadinho da Visão Geral é a referência**: o Teste do montador leva os mesmos ajustes; (D4) **ocultar o modelo
+Teste** onde não há ficha. Reprodução e medidas: [`montador-rolagens-revisao/reproducao.md`](montador-rolagens-revisao/reproducao.md).
+
+**Entregue** (testes e verificação ao vivo em 1920×1080 e 360×800, base escura):
+
+- Teste determinístico montador → fórmula → motor (`montador-resultado.spec.ts`, Entregável 2), com D1 e D2 fixadas.
+- D1: o editor de Teste não oferece mais "Sem"; "Máximo" acende também para fórmula sem `cm`. A margem do inspetor
+  de termos (Dano/Livre) **não** mudou: lá "Sem" é válido para pools de dano.
+- Segmento aceso = editor mostrado (`resolverTesteDoEditor` e `modoExibidoMontador`, fonte única).
+- Janela única para os três modelos; trocar de modelo não muda o tamanho nem desmaximiza.
+- Aviso quando a troca de modelo substitui a fórmula (a anterior continua guardada).
+- D2: aviso de "Desvantagem" ou "Nenhum dado" sob a faixa de resultado.
+- D3: `ajustesTeste` (dado extra de Formação e modificador de teste: manual + amplificador + Formação) levado do
+  painel de rolagens da ficha até o editor de Teste; trocar o atributo leva os ajustes do novo atributo e preserva o
+  que o jogador mexeu à mão. Paridade com o dadinho provada em teste (atributo positivo).
+- D4: sem ficha (rolagem do mestre, campanha do mestre, rolador avulso) o modelo Teste não é oferecido.
+- Guia do montador: onde ficam os ajustes, margem natural 1 e onde a habilidade de personalidade se define.
+
+**Ainda aberto** (por isso a spec continua em `active/`):
+
+- Entregável 3 inteiro: seções e nomes **iguais** entre o editor de Teste (Atributos, Ajustes, Opções do teste) e o de
+  termos (Termos, Adicionar dados, Adicionar atributo ou bônus, Opções dos dados). Hoje só o comportamento foi
+  unificado, não a estrutura visual.
+- Preservar dentro de cada editor o termo selecionado, o campo de expressão e o segundo atributo ao trocar de editor
+  (o texto da fórmula já é preservado).
+- D5 (duas definições de "é teste": `lerTeste` no frontend × `ehFormulaTeste` no motor) e D6 (NPC passa
+  `proficiencia = nivel`, Criatura não passa PROF/NIV): registradas, sem decisão.
+- A margem "Sem" do inspetor de termos para um pool `1d20kh1` que o motor trata como teste continua com rótulo
+  enganoso.
+- Verificação em 960×1080 e 1366×768, base clara e toque real.
+
 ## Objetivo
 
 Tornar o montador **previsível**: mesma estrutura de campos entre as visões, estado preservado ao trocar,

@@ -9,6 +9,7 @@
         <div class="rolagem-rapida__linha">
             <app-montador-rolagem
                 [oculto]="oculto()"
+                [modelos]="modelosMontador()"
                 [style.visibility]="oculto() ? 'visible' : null"
                 [style.pointer-events]="oculto() ? 'auto' : null"
                 [formula]="formula.value"
@@ -20,6 +21,7 @@
                 [atributos]="atributos()"
                 [proficiencia]="proficiencia()"
                 [nivel]="nivel()"
+                [ajustesTeste]="ajustesTeste()"
                 (rolar)="rolar()"
             />
             <input

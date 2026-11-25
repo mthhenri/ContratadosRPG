@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 
-import { ArquetipoEnum, ClasseEnum } from '@contratados-rpg/shared/enums';
+import { ArquetipoEnum, ClasseEnum, FormacaoBonusEnum } from '@contratados-rpg/shared/enums';
 import type { FichaJogadorDadosDto } from '@contratados-rpg/shared/dtos/ficha';
 
 import { FichaRolagemRegistroService } from '../../ficha-rolagem-registro.service';
@@ -74,5 +74,31 @@ describe('FichaRolagensPainel', () => {
     // O botão continua no DOM (mesma decisão de "esconder sem desmontar" do `.ficha-rol--oculto`
     // de FichaRolagens), mas agora dentro da raiz escondida — não mais um irmão solto e visível.
     expect(raiz.querySelector('.ficha-rolagem-oculta')).not.toBeNull();
+  });
+  /** D3: o painel entrega ao montador os mesmos ajustes que o dadinho da Visão Geral soma. */
+  it('ajustesTeste: dado e bônus de Formação, modificador manual e amplificador por atributo', () => {
+    TestBed.configureTestingModule({ imports: [FichaRolagensPainel], providers: [FichaRolagemRegistroService] });
+    const fixture = TestBed.createComponent(FichaRolagensPainel);
+    fixture.componentRef.setInput('dados', {
+      ...dados,
+      modificadoresTeste: { luta: 1 },
+      identidade: {
+        personalidade: null,
+        origem: {
+          nome: 'Ex-Militar', descricao: '', saberDeCampo: '',
+          formacao: [
+            { bonus: FormacaoBonusEnum.PERICIA_DADO_ATRIBUTO, parametro: 'Luta', texto: '+1 dado em Luta' },
+            { bonus: FormacaoBonusEnum.PERICIA_BONUS_ATRIBUTO, parametro: 'Luta', texto: '+1 em Luta' },
+          ],
+          especialidade: { gatilho: '', efeito: '' },
+        },
+      },
+    });
+    fixture.componentRef.setInput('podeRolar', true);
+    fixture.detectChanges();
+    const ajustes = (fixture.componentInstance as unknown as { ajustesTeste(): Record<string, { dados: number; modificador: number }> })
+      .ajustesTeste();
+    expect(ajustes['luta']).toEqual({ dados: 1, modificador: 2 }); // 1 manual + 1 de Formação
+    expect(ajustes['forca']).toBeUndefined();
   });
 });

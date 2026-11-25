@@ -16,7 +16,14 @@ import { SegmentadoItem } from '../ui/segmentado/segmentado-item.component';
 import type { PainelFlutuantePosicao } from '../ui/painel-flutuante/painel-flutuante.component';
 import { PainelFlutuante } from '../ui/painel-flutuante/painel-flutuante.component';
 import { MontadorEditorPecas } from './montador-editor-pecas.component';
-import { type AmbienteMontador, lerFormula, resumirFormula, type ResumoFormulaMontador } from './montador-leitura';
+import {
+  type AmbienteMontador,
+  type AjustesTesteMontador,
+  avisarDadosDoTeste,
+  lerFormula,
+  resumirFormula,
+  type ResumoFormulaMontador,
+} from './montador-leitura';
 import {
   type AtalhosDanoMontador,
   analisarFormulaMontador,
@@ -25,8 +32,9 @@ import {
   type MontadorModo,
   RECEITAS_MONTADOR,
   type ReceitaMontador,
+  TODOS_OS_MODELOS,
 } from './montador-modelo';
-import { lerTeste, podeMontarPecasOuTeste } from './montador-pecas';
+import { formulaInicialDoTeste, modoExibidoMontador, podeMontarPecasOuTeste } from './montador-pecas';
 
 /** Última rolagem feita pela barra, para o estado "resultado" (o painel não fecha ao rolar). */
 export interface MontadorUltimaRolagem {
@@ -96,6 +104,8 @@ export class MontadorRolagem {
   readonly atributos = input.required<FichaAtributosDto>();
   readonly proficiencia = input<number | null>(null);
   readonly nivel = input<number>(0);
+  /** Ajustes de teste da ficha (dado de Formação, modificador): o Teste os leva como o dadinho da Visão Geral. */
+  readonly ajustesTeste = input<AjustesTesteMontador>({});
 
   /** A instância continua viva fora da aba Rolagens; nessa condição só a janela permanece. */
   readonly oculto = input(false);
@@ -103,13 +113,16 @@ export class MontadorRolagem {
   /** Pede ao consumidor para rolar — o painel não fecha sozinho. */
   readonly rolar = output<void>();
 
-  protected readonly receitas = RECEITAS_MONTADOR;
+  /** Modelos oferecidos. Onde não há ficha (mestre, rolador avulso) o Teste de atributo não faz sentido e some. */
+  readonly modelos = input<readonly MontadorModo[]>(TODOS_OS_MODELOS);
+  protected readonly receitas = computed(() => RECEITAS_MONTADOR.filter((receita) => this.modelos().includes(receita.modo)));
   protected readonly posicaoInicial = POSICAO_INICIAL;
 
   protected readonly ambiente = computed<AmbienteMontador>(() => ({
     atributos: this.atributos(),
     proficiencia: this.proficiencia(),
     nivel: this.nivel(),
+    ajustesTeste: this.ajustesTeste(),
   }));
 
   /**
@@ -133,12 +146,17 @@ export class MontadorRolagem {
   protected readonly tokenizadaEditor = computed(() => this.analise().tokenizada ?? { pecas: [] });
 
   /** Linha de leitura sob o visor: faixa e média de uma rolagem (do motor) e a frase em português. */
-  protected readonly leitura = computed<{ resumo: ResumoFormulaMontador | null; frase: string | null } | null>(() => {
+  protected readonly leitura = computed<{
+    resumo: ResumoFormulaMontador | null;
+    frase: string | null;
+    aviso: string | null;
+  } | null>(() => {
     const analise = this.analise();
     if (analise.estado !== 'PECAS' && analise.estado !== 'AVANCADA') return null;
-    const resumo = resumirFormula(expandirAtalhosDano(this.formula(), this.atalhosDano()), this.ambiente());
+    const expandida = expandirAtalhosDano(this.formula(), this.atalhosDano());
+    const resumo = resumirFormula(expandida, this.ambiente());
     const frase = analise.tokenizada ? lerFormula(analise.tokenizada, this.ambiente(), this.atalhosDano()) : null;
-    return { resumo, frase };
+    return { resumo, frase, aviso: avisarDadosDoTeste(expandida, this.ambiente()) };
   });
 
   protected textoFaixa(resumo: ResumoFormulaMontador): string {
@@ -154,9 +172,8 @@ export class MontadorRolagem {
    * Modelo escolhido; sem escolha explícita, o editor deriva Teste ou Livre da fórmula.
    */
   protected readonly modo = signal<MontadorModo | null>(null);
-  protected readonly modoAtual = computed<MontadorModo>(
-    () => this.modo() ?? (lerTeste(this.tokenizadaEditor()) ? 'TESTE' : 'LIVRE'),
-  );
+  /** Modelo aceso = o do editor que aparece: nunca diverge da tela mostrada (`modoExibidoMontador`). */
+  protected readonly modoAtual = computed<MontadorModo>(() => modoExibidoMontador(this.modo(), this.tokenizadaEditor()));
   protected readonly guiaAberto = signal(false);
   private readonly montagens = new Map<MontadorModo, string>();
 
@@ -175,6 +192,7 @@ export class MontadorRolagem {
     );
     this.formula.set(texto);
     this.modo.set(modo);
+    this.avisoTroca.set(null);
   }
 
   protected desfazer(): void {
@@ -183,7 +201,7 @@ export class MontadorRolagem {
       return;
     }
     this.historico.update((pilha) => pilha.slice(0, -1));
-    this.janela.restaurar(this.painelRef());
+    this.avisoTroca.set(null);
     this.modo.set(passo.modo);
     this.formula.set(passo.texto);
   }
@@ -193,11 +211,28 @@ export class MontadorRolagem {
     this.montagens.set(this.modoAtual(), '');
   }
 
+  /** Aviso de que trocar de modelo substituiu a fórmula do visor (a anterior continua guardada). */
+  protected readonly avisoTroca = signal<string | null>(null);
+
   protected escolherReceita(receita: ReceitaMontador): void {
-    if (this.modo() === receita.modo) return;
-    this.montagens.set(this.modoAtual(), this.formula());
-    this.janela.restaurar(this.painelRef());
-    this.aplicarEdicao(this.montagens.get(receita.modo) ?? receita.formula, receita.modo);
+    if (this.modoAtual() === receita.modo) return;
+    const anterior = this.modoAtual();
+    const textoAnterior = this.formula();
+    this.montagens.set(anterior, textoAnterior);
+    // A janela é uma só para todos os modelos: trocar de modelo não muda o tamanho nem desmaximiza.
+    const guardada = this.montagens.get(receita.modo);
+    const retomada = guardada !== undefined && guardada.trim() !== '';
+    const partida = receita.modo === 'TESTE' ? formulaInicialDoTeste(receita.formula, this.ambiente()) : receita.formula;
+    this.aplicarEdicao(guardada ?? partida, receita.modo);
+    this.avisoTroca.set(
+      !retomada && textoAnterior.trim()
+        ? `"${receita.titulo}" começa do ponto de partida do modelo. A fórmula de "${this.tituloDoModo(anterior)}" continua guardada: volte a ele para retomá-la.`
+        : null,
+    );
+  }
+
+  private tituloDoModo(modo: MontadorModo): string {
+    return RECEITAS_MONTADOR.find((receita) => receita.modo === modo)?.titulo ?? modo;
   }
 
   /** Digitação no visor: é o texto da barra, então não vira passo de Desfazer (o campo de texto já tem o seu). */
@@ -239,8 +274,7 @@ export class MontadorRolagem {
   protected readonly mobileAtivo = signal(this.verificarMobile());
 
   protected aoRedimensionarViewport(): void {
-    this.janelaTeste.atualizarViewport();
-    this.janelaTermos.atualizarViewport();
+    this.janela.atualizarViewport();
     this.mobileAtivo.set(this.verificarMobile());
   }
 
@@ -254,23 +288,14 @@ export class MontadorRolagem {
   }
 
   // === Tamanho, redimensionar (desktop) e maximizar: `JanelaMontador`, a mesma mecânica do `MontadorRolagem` ===
-  private readonly janelaTermos = new JanelaMontador({
+  /** Uma só janela para os três modelos (tamanho do maior editor): trocar de modelo não a redimensiona. */
+  protected readonly janela = new JanelaMontador({
     largura: 760,
     altura: ALTURA_INICIAL,
     larguraMinima: LARGURA_MINIMA,
     alturaMinima: ALTURA_MINIMA,
     posicaoInicial: POSICAO_INICIAL,
   });
-  private readonly janelaTeste = new JanelaMontador({
-    largura: 520,
-    altura: 728,
-    larguraMinima: LARGURA_MINIMA,
-    alturaMinima: ALTURA_MINIMA,
-    posicaoInicial: POSICAO_INICIAL,
-  });
-  protected get janela(): JanelaMontador {
-    return this.modoAtual() === 'TESTE' ? this.janelaTeste : this.janelaTermos;
-  }
 
   protected alternarMaximizar(): void {
     this.janela.alternarMaximizar(this.painelRef());

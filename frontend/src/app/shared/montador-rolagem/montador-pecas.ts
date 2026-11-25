@@ -9,9 +9,14 @@ import {
   type PecaFormulaDto,
   QUANTIDADE_DADOS_MAXIMA,
   REPETICOES_MAXIMA,
+  montarFormula,
+  tokenizarFormula,
 } from '@contratados-rpg/shared/regras/rolagem';
 
-import type { MontadorModo } from './montador-modelo';
+import type { FichaAtributosDto } from '@contratados-rpg/shared/dtos/ficha';
+
+import type { AjusteTesteAtributo, AmbienteMontador } from './montador-leitura';
+import { type MontadorModo, RECEITAS_MONTADOR } from './montador-modelo';
 
 /**
  * Peças que os controles do montador montam e o **teste de atributo** lido das peças.
@@ -237,6 +242,60 @@ export function lerTeste(tokenizada: FormulaTokenizadaDto): TesteMontador | null
     bonus,
     repeticoes: tokenizada.repeticoes ?? 1,
   };
+}
+
+/** Teste que o editor mostra para uma fórmula limpa no modelo Teste (o ponto de partida da receita). */
+const TESTE_INICIAL = lerTeste(tokenizarFormula(RECEITAS_MONTADOR.find((receita) => receita.modo === 'TESTE')!.formula)!)!;
+
+/**
+ * O teste que o editor de Teste mostra para esta fórmula, ou `null` quando quem edita é o editor de termos.
+ * Fonte única da regra "qual editor aparece": o editor e a casca (segmento aceso, tamanho da janela) a usam
+ * juntos, para o modelo aceso nunca divergir da tela mostrada.
+ */
+export function resolverTesteDoEditor(modo: MontadorModo | null, tokenizada: FormulaTokenizadaDto): TesteMontador | null {
+  if (modo === 'TESTE' && tokenizada.pecas.length === 0) return TESTE_INICIAL;
+  return (modo === 'DANO' || modo === 'LIVRE') && podeMontarPecas(tokenizada) ? null : lerTeste(tokenizada);
+}
+
+/**
+ * Modelo que corresponde ao editor mostrado: o editor de Teste quando ele edita a fórmula; senão o modelo
+ * escolhido (Dano ou Livre). Fórmula de dados escolhida em "Teste" cai em "Dados livres", que aceita qualquer
+ * fórmula montável por termos.
+ */
+export function modoExibidoMontador(modo: MontadorModo | null, tokenizada: FormulaTokenizadaDto): MontadorModo {
+  if (resolverTesteDoEditor(modo, tokenizada)) return 'TESTE';
+  return modo === 'DANO' ? 'DANO' : 'LIVRE';
+}
+
+const SEM_AJUSTE: AjusteTesteAtributo = { dados: 0, modificador: 0 };
+
+/** O que a ficha soma ao teste deste atributo (a sigla `LUT` → chave `luta`); zeros quando não há ficha ou ajuste. */
+export function ajusteDaFichaParaAtributo(ambiente: AmbienteMontador, sigla: string): AjusteTesteAtributo {
+  const fonte = fonteDaSigla(sigla);
+  return ambiente.ajustesTeste?.[fonte as keyof FichaAtributosDto] ?? SEM_AJUSTE;
+}
+
+/**
+ * Troca o atributo principal do teste levando os ajustes da ficha: se os dados a mais e o bônus fixo ainda são os do
+ * atributo anterior (o jogador não os mexeu), passam a ser os do novo; o que ele ajustou à mão fica como está.
+ */
+export function trocarAtributoDoTeste(teste: TesteMontador, novos: readonly string[], ambiente: AmbienteMontador): TesteMontador {
+  const antes = ajusteDaFichaParaAtributo(ambiente, teste.atributos[0]);
+  const depois = ajusteDaFichaParaAtributo(ambiente, novos[0]);
+  return {
+    ...teste,
+    atributos: novos,
+    extra: teste.extra === antes.dados ? depois.dados : teste.extra,
+    bonus: teste.bonus === antes.modificador ? depois.modificador : teste.bonus,
+  };
+}
+
+/** Fórmula de partida do modelo Teste para este ambiente: o ponto de partida da receita com os ajustes do atributo. */
+export function formulaInicialDoTeste(formulaDaReceita: string, ambiente: AmbienteMontador): string {
+  const base = lerTeste(tokenizarFormula(formulaDaReceita)!)!;
+  const ajuste = ajusteDaFichaParaAtributo(ambiente, base.atributos[0]);
+  if (ajuste.dados === 0 && ajuste.modificador === 0) return formulaDaReceita;
+  return montarFormula(escreverTeste({ ...base, extra: ajuste.dados, bonus: ajuste.modificador }));
 }
 
 /** Peças do teste, na ordem: pool de d20, `+PROF`, `+NIV`, bônus. */

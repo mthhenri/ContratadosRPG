@@ -7,14 +7,16 @@ import type {
 } from '@contratados-rpg/shared/dtos/ficha';
 import {
   ajusteDadoIniciativaAmplificadores,
+  modificadoresTesteAmplificadores,
   calcularAjusteDadosEquipamento,
   calcularAtributosEfetivos,
   calcularAtributosParaDados,
   calcularProficiencia,
 } from '@contratados-rpg/shared/regras/agente';
-import { obterDadoExtraIniciativaFormacao } from '@contratados-rpg/shared/regras/identidade';
+import { obterBonusRolagemAtributoFormacao, obterDadoExtraIniciativaFormacao } from '@contratados-rpg/shared/regras/identidade';
 
 import { Icone } from '../../../../shared/icone/icone.component';
+import type { AjustesTesteMontador } from '../../../../shared/montador-rolagem/montador-leitura';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { NOME_PRESET_INICIATIVA } from '../../executar-rolagem';
@@ -90,6 +92,25 @@ export class FichaRolagensPainel {
       combinado[chave] = (combinado[chave] ?? 0) + (equipamento[chave] ?? 0);
     });
     return calcularAtributosParaDados(this.dados().atributos, this.dados().estado.lesoes, combinado);
+  });
+
+  /**
+   * O que o "dadinho" do atributo na Visão Geral soma e o Teste do montador deve levar para o mesmo atributo dar o
+   * mesmo resultado: o dado extra de Formação da Origem e o modificador de teste (manual + amplificador + bônus plano de
+   * Formação) — as mesmas funções puras de `shared/regras` que `FichaVisualizacao.rolarTesteAtributo` usa.
+   */
+  protected readonly ajustesTeste = computed<AjustesTesteMontador>(() => {
+    const dados = this.dados();
+    const formacoes = dados.identidade?.origem?.formacao ?? [];
+    const manual = dados.modificadoresTeste ?? {};
+    const amplificador = modificadoresTesteAmplificadores(dados.inventario.amplificadores);
+    const ajustes: Partial<Record<keyof FichaAtributosDto, { dados: number; modificador: number }>> = {};
+    (Object.keys(dados.atributos) as (keyof FichaAtributosDto)[]).forEach((chave) => {
+      const formacao = obterBonusRolagemAtributoFormacao(formacoes, chave);
+      const modificador = (manual[chave] ?? 0) + (amplificador[chave] ?? 0) + formacao.bonus;
+      if (formacao.dados !== 0 || modificador !== 0) ajustes[chave] = { dados: formacao.dados, modificador };
+    });
+    return ajustes;
   });
 
   /**

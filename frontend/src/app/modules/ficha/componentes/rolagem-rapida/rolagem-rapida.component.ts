@@ -8,6 +8,8 @@ import { expandirAtalhosDano, rolarFormula, validarFormula } from '@contratados-
 
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { Icone } from '../../../../shared/icone/icone.component';
+import type { AjustesTesteMontador } from '../../../../shared/montador-rolagem/montador-leitura';
+import { MODELOS_SEM_FICHA, TODOS_OS_MODELOS } from '../../../../shared/montador-rolagem/montador-modelo';
 import { MontadorRolagem, type MontadorUltimaRolagem } from '../../../../shared/montador-rolagem/montador-rolagem.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
@@ -50,6 +52,11 @@ export class RolagemRapida {
   readonly proficiencia = input<number | null>(null);
   /** Nível do agente — fonte `NIV` nas fórmulas. */
   readonly nivel = input<number>(0);
+  /** Ajustes de teste da ficha (dado de Formação, modificador) que o Teste do montador leva. */
+  readonly ajustesTeste = input<AjustesTesteMontador>({});
+  /** Contexto sem ficha (mestre, avulso): o montador não oferece o modelo "Teste de atributo". */
+  readonly semFicha = input(false);
+  protected readonly modelosMontador = computed(() => (this.semFicha() ? MODELOS_SEM_FICHA : TODOS_OS_MODELOS));
   /** Dono/mestre pode rolar; visualizador só-acesso não (m3-51). */
   readonly podeRolar = input(false);
   /** Dano C. a C./Furtivo atuais — expandem os atalhos `CORPO`/`FURTIVO` na fórmula. */

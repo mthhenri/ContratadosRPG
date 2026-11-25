@@ -20,6 +20,7 @@ import {
       [atributos]="atributos"
       [proficiencia]="2"
       [nivel]="2"
+      [modelos]="modelos()"
       (rolar)="rolagens = rolagens + 1"
     />
   `,
@@ -29,6 +30,7 @@ class Hospedeiro {
   readonly atalhos = signal<{ corpo?: string | null; furtivo?: string | null }>({});
   readonly ultimaRolagem = signal<MontadorUltimaRolagem | null>(null);
   readonly atributos = { ...atributosZerados(), forca: 3, vigor: 4, luta: 4 };
+  readonly modelos = signal<readonly ('TESTE' | 'DANO' | 'LIVRE')[]>(['TESTE', 'DANO', 'LIVRE']);
   rolagens = 0;
 }
 
@@ -81,6 +83,99 @@ describe('MontadorRolagem', () => {
     fixture.detectChanges();
     expect(hospedeiro.formula()).toBe('1d6');
     expect(raiz.querySelector('[aria-label="Dados livres"]')?.getAttribute('aria-pressed')).toBe('true');
+  });
+  /** Revisão do montador (`montador-rolagens-revisao`): o modelo aceso é o do editor mostrado. */
+  describe('coerência entre modelo aceso, editor e janela', () => {
+    const aceso = (raiz: HTMLElement) =>
+      Array.from(raiz.querySelectorAll('.montador-rolagem__modelo'))
+        .filter((botao) => botao.getAttribute('aria-pressed') === 'true')
+        .map((botao) => botao.getAttribute('aria-label'));
+
+    it('fórmula de Teste num modelo de dados acende "Teste de atributo", o editor que a edita', () => {
+      const { fixture, hospedeiro, raiz, botaoPorTexto } = montar();
+      botaoPorTexto('Dano de arma').click();
+      fixture.detectChanges();
+      hospedeiro.formula.set('LUTd20kh1cm1 + PROF');
+      fixture.detectChanges();
+      expect(aceso(raiz)).toEqual(['Teste de atributo']);
+    });
+
+    it('fórmula de dados escolhida em "Teste" acende "Dados livres", que a edita', () => {
+      const { fixture, hospedeiro, raiz, botaoPorTexto } = montar();
+      botaoPorTexto('Teste de atributo').click();
+      fixture.detectChanges();
+      hospedeiro.formula.set('2d6');
+      fixture.detectChanges();
+      expect(aceso(raiz)).toEqual(['Dados livres']);
+    });
+
+    it('trocar de modelo que substitui a fórmula avisa e guarda a anterior; editar ou voltar limpa o aviso', () => {
+      const { fixture, hospedeiro, raiz, botaoPorTexto } = montar();
+      botaoPorTexto('Teste de atributo').click();
+      fixture.detectChanges();
+      expect(raiz.querySelector('.montador-rolagem__nota')).toBeNull();
+      botaoPorTexto('Dados livres').click();
+      fixture.detectChanges();
+      expect(hospedeiro.formula()).toBe('');
+      expect(raiz.querySelector('.montador-rolagem__nota')?.textContent).toContain('"Teste de atributo" continua guardada');
+      botaoPorTexto('Teste de atributo').click();
+      fixture.detectChanges();
+      expect(hospedeiro.formula()).toBe('LUTd20kh1cm1 + PROF');
+      expect(raiz.querySelector('.montador-rolagem__nota')).toBeNull();
+    });
+
+    it('a janela é uma só: trocar de modelo não muda o tamanho nem desmaximiza', () => {
+      const { fixture, raiz, botaoPorTexto } = montar();
+      const montador = fixture.debugElement.query(By.directive(MontadorRolagem)).componentInstance as unknown as {
+        janela: { maximizada(): boolean; tamanho(): { largura: number; altura: number } };
+        alternarMaximizar(): void;
+      };
+      botaoPorTexto('Teste de atributo').click();
+      fixture.detectChanges();
+      const tamanho = montador.janela.tamanho();
+      botaoPorTexto('Dados livres').click();
+      fixture.detectChanges();
+      expect(montador.janela.tamanho()).toEqual(tamanho);
+      montador.alternarMaximizar();
+      botaoPorTexto('Dano de arma').click();
+      fixture.detectChanges();
+      botaoPorTexto('Teste de atributo').click();
+      fixture.detectChanges();
+      expect(montador.janela.maximizada()).toBe(true);
+      expect(raiz.querySelector('.montador-rolagem__caixa')).not.toBeNull();
+    });
+  });
+
+  it('sem ficha (modelos informados) o Teste de atributo não é oferecido', () => {
+    const { fixture, hospedeiro, raiz } = montar();
+    hospedeiro.modelos.set(['DANO', 'LIVRE']);
+    fixture.detectChanges();
+    const receitas = Array.from(raiz.querySelectorAll('.montador-rolagem__modelo')).map((receita) => receita.textContent?.trim());
+    expect(receitas).toEqual(['Dano de arma', 'Dados livres']);
+  });
+
+  it('a margem de crítico do Teste não oferece "Sem": todo teste tem margem natural 1 e "Máximo" acende para `cm` ausente', () => {
+    const { fixture, hospedeiro, raiz, botaoPorTexto } = montar();
+    botaoPorTexto('Teste de atributo').click();
+    fixture.detectChanges();
+    hospedeiro.formula.set('LUTd20kh1 + PROF');
+    fixture.detectChanges();
+    const segmentos = Array.from(raiz.querySelectorAll('[aria-label="Margem de crítico do teste"] button'));
+    expect(segmentos.map((botao) => botao.textContent?.trim())).toEqual(['Máximo', '2 maiores', '3 maiores']);
+    expect(segmentos.filter((botao) => botao.getAttribute('aria-pressed') === 'true').map((botao) => botao.textContent?.trim())).toEqual(['Máximo']);
+  });
+
+  it('avisa a desvantagem e a rolagem sem dados, que o motor decide pelos valores da ficha', () => {
+    const { fixture, hospedeiro, raiz } = montar();
+    hospedeiro.formula.set('INTd20kh1cm1 + PROF'); // intelecto 0 → atributo zerado
+    fixture.detectChanges();
+    expect(raiz.querySelector('.montador-rolagem__frase--aviso')?.textContent).toContain('Desvantagem');
+    hospedeiro.formula.set('(LUT-4)d20kh1cm1 + PROF'); // luta 4 − 4 → 0 dados
+    fixture.detectChanges();
+    expect(raiz.querySelector('.montador-rolagem__frase--aviso')?.textContent).toContain('Nenhum dado');
+    hospedeiro.formula.set('LUTd20kh1cm1 + PROF');
+    fixture.detectChanges();
+    expect(raiz.querySelector('.montador-rolagem__frase--aviso')).toBeNull();
   });
   it('abrir por comando externo abre, preserva a janela aberta e restaura quando minimizada', () => {
     const fixture = TestBed.createComponent(Hospedeiro);

@@ -9,6 +9,7 @@ import { rolarFormula, validarFormula } from '@contratados-rpg/shared/regras/rol
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { MontadorRolagem, type MontadorUltimaRolagem } from '../../../../shared/montador-rolagem/montador-rolagem.component';
+import { MODELOS_SEM_FICHA } from '../../../../shared/montador-rolagem/montador-modelo';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
@@ -54,6 +55,7 @@ export class RolagemAvulso implements OnInit {
 
   protected readonly expressao = signal('');
   protected readonly atributosNeutros = ATRIBUTOS_NEUTROS;
+  protected readonly modelosSemFicha = MODELOS_SEM_FICHA;
   protected readonly ultimaRolagem = signal<MontadorUltimaRolagem | null>(null);
   protected readonly formulaValida = computed<boolean | null>(() => {
     const formula = this.expressao().trim();

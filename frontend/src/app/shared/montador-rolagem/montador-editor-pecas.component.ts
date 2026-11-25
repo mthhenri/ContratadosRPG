@@ -1,26 +1,25 @@
 import { Component, computed, effect, input, output, signal } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { montarFormula, tokenizarFormula, type FormulaTokenizadaDto } from '@contratados-rpg/shared/regras/rolagem';
+import { montarFormula, type FormulaTokenizadaDto } from '@contratados-rpg/shared/regras/rolagem';
 import { Campo } from '../ui/campo/campo.component';
 import { Segmentado } from '../ui/segmentado/segmentado.component';
 import { SegmentadoItem } from '../ui/segmentado/segmentado-item.component';
 import { StepInput } from '../ui/stepper/step-input.component';
 import { contarDadosDoPool, type AmbienteMontador } from './montador-leitura';
-import { RECEITAS_MONTADOR, type AtalhosDanoMontador, type MontadorModo } from './montador-modelo';
+import { type AtalhosDanoMontador, type MontadorModo } from './montador-modelo';
 import {
   ATRIBUTOS_MONTADOR,
   escreverTeste,
   fonteDaSigla,
-  lerTeste,
-  podeMontarPecas,
   REPETICOES_MONTADOR,
+  resolverTesteDoEditor,
+  trocarAtributoDoTeste,
+  ajusteDaFichaParaAtributo,
   type CombinacaoTeste,
   type TesteMontador,
 } from './montador-pecas';
 import { MontadorEditorTermos } from './montador-editor-termos.component';
-
-const TESTE_INICIAL = lerTeste(tokenizarFormula(RECEITAS_MONTADOR.find((receita) => receita.modo === 'TESTE')!.formula)!)!;
 
 /** Teste de atributo compacto; os demais modelos delegam a edição independente de termos. */
 @Component({
@@ -40,12 +39,7 @@ export class MontadorEditorPecas {
   protected readonly principal = new FormControl('FOR', { nonNullable: true });
   protected readonly segundo = new FormControl('VIG', { nonNullable: true });
   private readonly segundoGuardado = signal<string | null>(null);
-  protected readonly teste = computed(() => {
-    const modo = this.modo();
-    const tokenizada = this.tokenizada();
-    if (modo === 'TESTE' && tokenizada.pecas.length === 0) return TESTE_INICIAL;
-    return (modo === 'DANO' || modo === 'LIVRE') && podeMontarPecas(tokenizada) ? null : lerTeste(tokenizada);
-  });
+  protected readonly teste = computed(() => resolverTesteDoEditor(this.modo(), this.tokenizada()));
   protected readonly segundoAtual = computed(() => {
     const teste = this.teste();
     const primeiro = teste?.atributos[0];
@@ -53,6 +47,13 @@ export class MontadorEditorPecas {
     return lembrado && lembrado !== primeiro
       ? lembrado
       : this.atributos.find((opcao) => opcao.sigla !== primeiro)!.sigla;
+  });
+  /** O que a ficha soma ao atributo principal (para a linha "Da ficha"); `null` quando nada. */
+  protected readonly ajusteDaFicha = computed(() => {
+    const principal = this.teste()?.atributos[0];
+    if (!principal) return null;
+    const ajuste = ajusteDaFichaParaAtributo(this.ambiente(), principal);
+    return ajuste.dados === 0 && ajuste.modificador === 0 ? null : { ...ajuste, sigla: principal };
   });
   protected readonly modoTeste = computed(() => {
     const teste = this.teste();
@@ -96,7 +97,9 @@ export class MontadorEditorPecas {
     const teste = this.teste();
     if (!teste) return;
     const segundo = teste.atributos[1];
-    this.publicarTeste({ atributos: segundo ? [sigla, segundo === sigla ? teste.atributos[0] : segundo] : [sigla] });
+    const atributos = segundo ? [sigla, segundo === sigla ? teste.atributos[0] : segundo] : [sigla];
+    // Troca o atributo levando os ajustes da ficha (dado de Formação, modificador), como o dadinho da Visão Geral.
+    this.editar.emit(montarFormula(escreverTeste(trocarAtributoDoTeste(teste, atributos, this.ambiente()))));
   }
   protected combinar(combinacao: 'UM' | CombinacaoTeste): void {
     const teste = this.teste();

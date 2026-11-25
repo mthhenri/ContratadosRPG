@@ -1,5 +1,25 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-11-25 — montador-rolagens-revisao (parcial): estado, rótulo de crítico, ajustes da ficha e contexto sem ficha
+
+Reprodução ao vivo e medidas do motor em `docs/specs/active/montador-rolagens-revisao/reproducao.md`. Decisões do
+autor: esqueleto único das visões, manter o motor em "dados a menos" e só avisar, o dadinho da Visão Geral como
+referência e ocultar o modelo Teste onde não há ficha. Entregue: teste determinístico montador → fórmula → motor
+(11 casos, com os rótulos enganosos fixados); editor de Teste sem a opção "Sem" (todo teste tem margem natural 1);
+segmento aceso sempre igual ao editor mostrado; uma só janela para os três modelos (não muda de tamanho nem
+desmaximiza); nota quando a troca de modelo substitui a fórmula; aviso de "Desvantagem"/"Nenhum dado"; o Teste leva o
+dado extra de Formação e o modificador de teste do dadinho (`ajustesTeste`, do painel de rolagens até o editor); o
+modelo Teste some em rolagem do mestre, campanha do mestre e rolador avulso; guia atualizado.
+
+Achado: o texto da fórmula **já** era preservado entre as visões (a hipótese de "estado perdido" valia só para o
+visor na primeira ida a "Dados livres", o segmento aceso errado e o tamanho da janela). O que causava rolagens
+estranhas era o contraste "Sem" × margem natural e o "−1 dado" que, com um atributo, trava em 0 dado (total 0) e com
+dois cai em desvantagem. Em aberto, por isso a spec segue em `active/`: seções e nomes iguais entre os editores,
+termo selecionado/campo de expressão ao trocar de editor, D5/D6 e 960×1080, 1366×768, base clara e toque.
+
+Testes: montador/consumidores 97+ passados; suíte completa do frontend 3.628 de 3.650 na 1ª rodada, com 2 falhas em
+`detalhe-mestre`/`detalhe-jogador` que passam isoladas (98/98); shared 1.348; lint sem erros; build ok.
+
 ## 2026-11-25 — regras-exportar-markdown-pdf: Markdown do Sistema e do Guia baixado pelo próprio site
 
 O autor decidiu: dois formatos (completo e limpo) escolhidos na ação, só para usuário logado, PDF do Sistema

@@ -27,7 +27,18 @@ export interface AmbienteMontador {
   readonly atributos: FichaAtributosDto;
   readonly proficiencia: number | null;
   readonly nivel: number;
+  /** Ajustes de teste por atributo que o "dadinho" da ficha soma e o Teste do montador deve levar (D3). */
+  readonly ajustesTeste?: AjustesTesteMontador;
 }
+
+/** O que a ficha soma ao teste de um atributo: dado extra (Formação) e modificador (manual + amplificador + Formação). */
+export interface AjusteTesteAtributo {
+  readonly dados: number;
+  readonly modificador: number;
+}
+
+/** Ajustes por atributo, pela chave do atributo da ficha (`luta`, `forca`…). Ausente = nenhum. */
+export type AjustesTesteMontador = Readonly<Partial<Record<keyof FichaAtributosDto, AjusteTesteAtributo>>>;
 
 /** Faixa e média de **uma** rolagem (sem repetição). */
 export interface ResumoFormulaMontador {
@@ -225,6 +236,24 @@ export function resumirFormula(texto: string, ambiente: AmbienteMontador): Resum
 /** Quantos dados o primeiro pool da fórmula rola com estes valores (0 se o motor a recusa). */
 export function contarDadosDoPool(texto: string, ambiente: AmbienteMontador): number {
   return rolarCom(texto, ambiente, dadoMinimo)?.dados[0]?.valores.length ?? 0;
+}
+
+/**
+ * Aviso sobre o número de dados de um pool de teste (d20 com manter maior/menor) com estes valores: **desvantagem**
+ * (atributo zerado ou conta ≤ 0 → rola 2+|n| d20 e fica com o menor) ou **nenhum dado** (`(ATR−n)d20kh1` com a
+ * contagem em 0, que o motor trava em zero sem desvantagem: o total é só o que se soma). O motor decide; aqui só se
+ * conta o que ele faria, para o jogador não ser surpreendido por "dados a menos". `null` quando está tudo normal.
+ */
+export function avisarDadosDoTeste(texto: string, ambiente: AmbienteMontador): string | null {
+  const rolado = rolarCom(texto, ambiente, dadoMinimo)?.dados[0];
+  if (!rolado || rolado.faces !== 20 || rolado.mantidos === undefined) return null;
+  if (rolado.desvantagem) {
+    return `Desvantagem: com este número de dados a rolagem fica em ${rolado.valores.length} d20 e vale o menor.`;
+  }
+  if (rolado.valores.length === 0) {
+    return 'Nenhum dado: com os dados a menos o teste não rola nenhum d20, e o total é só o que for somado.';
+  }
+  return null;
 }
 
 /** Uso do campo de expressão: quantidade de dados de um dado, ou bônus fixo. */

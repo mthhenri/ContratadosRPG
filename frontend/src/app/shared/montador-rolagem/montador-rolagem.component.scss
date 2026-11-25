@@ -88,6 +88,20 @@
         overflow-wrap: anywhere;
     }
 
+    &__frase--aviso {
+        color: var(--warning-texto);
+    }
+
+    &__nota {
+        flex: none;
+        margin: 0;
+        font-family: var(--font-sans);
+        font-size: 12px;
+        line-height: 1.4;
+        color: var(--text-dim);
+        overflow-wrap: anywhere;
+    }
+
     &__corpo {
         flex: 1;
         min-height: 0;
@@ -211,7 +225,7 @@
         font-weight: 700;
         letter-spacing: var(--tracking-label);
         text-transform: uppercase;
-        color: var(--warning);
+        color: var(--warning-texto);
 
         .montador-rolagem__aviso--erro & {
             color: var(--erro);

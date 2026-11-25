@@ -63,7 +63,7 @@
             [fluido]="true"
             class="montador-rolagem__modelos"
         >
-            @for (receita of receitas; track receita.modo) {
+            @for (receita of receitas(); track receita.modo) {
                 <button
                     app-segmentado-item
                     class="montador-rolagem__modelo"
@@ -100,7 +100,14 @@
                 @if (linha.frase) {
                     <span class="montador-rolagem__frase">{{ linha.frase }}</span>
                 }
+                @if (linha.aviso; as aviso) {
+                    <span class="montador-rolagem__frase montador-rolagem__frase--aviso">{{ aviso }}</span>
+                }
             </div>
+        }
+
+        @if (avisoTroca(); as aviso) {
+            <p class="montador-rolagem__nota" role="status">{{ aviso }}</p>
         }
 
         <div class="montador-rolagem__corpo" appOverflowFade>

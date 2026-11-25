@@ -67,6 +67,21 @@
         </section>
         <section class="editor__grupo editor__divisor">
             <h3>Ajustes</h3>
+            @if (ajusteDaFicha(); as ficha) {
+                <p class="editor__dica editor__ficha" role="note">
+                    Da ficha em {{ ficha.sigla }}:
+                    @if (ficha.dados !== 0) {
+                        {{ ficha.dados > 0 ? "+" : "" }}{{ ficha.dados }} dado{{ ficha.dados === 1 || ficha.dados === -1 ? "" : "s" }} (Formação)
+                    }
+                    @if (ficha.dados !== 0 && ficha.modificador !== 0) {
+                        ·
+                    }
+                    @if (ficha.modificador !== 0) {
+                        {{ ficha.modificador > 0 ? "+" : "" }}{{ ficha.modificador }} de modificador
+                    }
+                    — já entram nos ajustes abaixo, como no dado da Visão Geral.
+                </p>
+            }
             <div class="editor__bonus">
                 <app-segmentado rotulo="Proficiência no teste" [fluido]="true"
                     ><button
@@ -138,16 +153,16 @@
             <div class="editor__linha">
                 <span>Margem de crítico</span
                 ><app-segmentado rotulo="Margem de crítico do teste">
-                    @for (margem of [0, 1, 2, 3]; track margem) {
+                    <!-- Todo teste tem margem natural 1 (Sistema, "Crítico e Margem de Crítico"): não existe "sem
+                         crítico". Fórmula sem `cm` e `cm1` rolam igual, então as duas acendem "Máximo". -->
+                    @for (margem of [1, 2, 3]; track margem) {
                         <button
                             app-segmentado-item
                             class="editor__segmento"
-                            [ativo]="atual.margem === margem"
+                            [ativo]="(atual.margem || 1) === margem"
                             (click)="alterarTeste({ margem })"
                         >
-                            {{
-                                margem === 0 ? "Sem" : margem === 1 ? "Máximo" : margem + " maiores"
-                            }}
+                            {{ margem === 1 ? "Máximo" : margem + " maiores" }}
                         </button>
                     }
                 </app-segmentado>
