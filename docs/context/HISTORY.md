@@ -1,5 +1,14 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-11-25 — Spec do quadro de investigação adicionada ao backlog, com pendências anotadas
+
+O autor trouxe `quadro-investigacao-campanha` (spec, `design.md` e `prototipo.html`, promove a `I-042`). Entrou em
+`docs/specs/backlog/` exatamente como recebida. A revisão por leitura do código gerou nove pontos a discutir
+(sala do mestre com `except`, "ficha" × ficha de personagem, acoplamento com a Biblioteca, fonte Special Elite,
+rota do espectador, importação, acessibilidade, painel de Investigação existente, número da migration) em
+`quadro-investigacao-campanha/pendencias.md`. Por decisão do autor, a discussão fica para depois; a spec não está
+liberada para execução. O protótipo não foi aberto.
+
 ## 2026-11-25 — Specs pós Sessões 4 e 5: exportar regras, calendário, montador, fichas, auditoria
 
 O autor pediu só planejamento (nenhum código, migration ou `docs/core/`) para cinco pedidos vindos das

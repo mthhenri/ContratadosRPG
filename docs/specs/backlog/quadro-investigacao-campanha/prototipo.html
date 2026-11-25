@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Quadro — protótipo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* VOICE: sala de investigação do Mestre, séria e tátil
+   IDEA: um mural de cortiça com fichas pinadas e fio vermelho entre elas
+   PICTURE: o próprio mural, que ocupa a tela inteira; nada desenhado por cima
+   COLOUR and TYPE: cortiça castanha, papéis em quatro cores, fio vermelho; Special Elite nos títulos, IBM Plex Sans no texto
+   LAYOUT: mural em tela cheia; barra de ferramentas, legenda e sumário flutuando por cima */
+:root{color-scheme:light dark;--ui:light-dark(#fbf7ee,#1f1c18);--uink:light-dark(#1f1b16,#efe7d8);--ul:light-dark(#d8ccb6,#3d372f);--soft:light-dark(#6b5e4c,#b5a890);--yarn:#b3141c}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html,body{height:100%;margin:0}
+body{font:15px/1.45 "IBM Plex Sans",system-ui,sans-serif;color:var(--uink);overflow:hidden;background:#8a6239}
+#board{position:fixed;inset:0;overflow:hidden;touch-action:none;cursor:grab;background-color:#9a6c40;
+ background-image:radial-gradient(circle at 30% 40%,rgba(255,226,180,.16) 0 1px,transparent 1.6px),radial-gradient(circle at 70% 60%,rgba(52,28,10,.34) 0 1.2px,transparent 2px),radial-gradient(circle at 50% 50%,rgba(80,48,22,.22) 0 2px,transparent 3.2px),radial-gradient(ellipse at 50% 40%,transparent 55%,rgba(40,20,6,.45));
+ background-size:7px 9px,11px 13px,29px 23px,100% 100%}
+#board.panning{cursor:grabbing}
+#world{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}
+#world.anim{transition:transform .45s cubic-bezier(.2,.7,.2,1)}
+.note{position:absolute;padding:24px 16px 14px;color:#1f1b16;border-radius:2px;transform:rotate(var(--r,0deg));transform-origin:50% 0;box-shadow:0 1px 0 rgba(0,0,0,.12),0 12px 20px -6px rgba(30,14,2,.55);cursor:grab;user-select:none;-webkit-user-select:none}
+.note.drag{cursor:grabbing;box-shadow:0 22px 34px -8px rgba(30,14,2,.6);z-index:9}
+.note.sel{outline:3px solid #fff6;outline-offset:3px}
+.note.from{outline:3px dashed var(--yarn);outline-offset:4px}
+.note h3{font:20px/1.15 "Special Elite",monospace;margin:0 0 8px;text-wrap:balance}
+.note p{margin:0 0 4px}.note ul{margin:0 0 4px;padding-left:18px}.note li{margin:0 0 3px}
+.band{margin:10px -16px -4px;padding:8px 16px 8px;border-top:1px dashed rgba(0,0,0,.25)}
+.band>span{display:block;font:12px "Special Elite",monospace;letter-spacing:.02em;opacity:.75;margin-bottom:2px}
+.b-sec{background:#dccbf2}.b-open{background:#f8c8a0}
+.ed{position:absolute;top:6px;right:8px;border:0;background:transparent;font:12px "Special Elite",monospace;color:#1f1b16;opacity:.45;padding:4px 6px;cursor:pointer;min-height:28px}
+.ed:hover,.ed:focus-visible{opacity:1}
+.zone{position:absolute;padding:6px 16px;background:#f3ead6;color:#2a2117;font:28px/1.1 "Special Elite",monospace;white-space:nowrap;transform:rotate(-1.2deg);box-shadow:0 6px 12px -6px rgba(30,14,2,.6);cursor:grab;user-select:none}
+.zone::before,.zone::after{content:"";position:absolute;top:-10px;width:54px;height:20px;background:rgba(240,230,200,.62);transform:rotate(-8deg)}
+.zone::before{left:-14px}.zone::after{right:-14px;transform:rotate(9deg)}
+#yarn{position:absolute;left:0;top:0;width:1px;height:1px;overflow:visible;pointer-events:none;z-index:5}
+#tags{position:absolute;left:0;top:0;z-index:6}
+.tag{position:absolute;transform:translate(-50%,-50%) rotate(-2deg);background:#fffaf0;color:#5a1a14;font:13px "Special Elite",monospace;padding:3px 8px;border:1px solid #d9c9b0;white-space:nowrap;cursor:pointer;box-shadow:0 3px 6px -3px rgba(0,0,0,.5)}
+.tag.empty{opacity:0;width:26px;height:20px;padding:0}.tag.empty:hover{opacity:.7}
+.ui{position:fixed;z-index:20;background:var(--ui);color:var(--uink);border:1px solid var(--ul);border-radius:10px;box-shadow:0 10px 28px -10px rgba(0,0,0,.55)}
+#bar{top:12px;left:12px;right:12px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 10px;width:max-content;max-width:calc(100% - 24px)}
+#bar h1{font:20px/1 "Special Elite",monospace;margin:0 10px 0 4px;white-space:nowrap}
+button,.btn{font:600 14px "IBM Plex Sans",sans-serif;min-height:40px;padding:0 12px;border-radius:8px;border:1px solid var(--ul);background:transparent;color:inherit;cursor:pointer}
+button:hover{background:light-dark(#efe5d2,#2c2721)}button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--yarn);outline-offset:2px}
+button.on{background:var(--yarn);border-color:var(--yarn);color:#fff}
+#legend{left:12px;bottom:12px;padding:10px 12px;display:grid;gap:6px;font-size:13px}
+#legend b{font:14px "Special Elite",monospace;font-weight:400}
+.sw{display:flex;align-items:center;gap:8px}.sw i{width:18px;height:14px;border-radius:2px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}
+.sw svg{width:18px;height:14px}
+#status{left:50%;bottom:12px;transform:translateX(-50%);padding:8px 14px;font-size:14px}
+#sum{top:76px;right:12px;bottom:12px;width:340px;display:flex;flex-direction:column}
+#sum[hidden]{display:none}
+#sum header{padding:12px 14px 8px;border-bottom:1px solid var(--ul)}
+#sum header b{font:18px "Special Elite",monospace;font-weight:400;display:block;margin-bottom:8px}
+input,textarea,select{font:16px "IBM Plex Sans",sans-serif;width:100%;padding:8px 10px;border:1px solid var(--ul);border-radius:8px;background:light-dark(#fff,#15130f);color:inherit}
+#list{overflow:auto;padding:6px 6px 14px;flex:1}
+#list h4{font:14px "Special Elite",monospace;color:var(--soft);margin:14px 8px 4px;font-weight:400}
+.it{display:flex;align-items:center;gap:8px;padding:2px 4px;border-radius:8px}
+.it:hover{background:light-dark(#f2e9d8,#29241e)}
+.it i{flex:none;width:12px;height:12px;border-radius:2px}
+.it .go{flex:1;text-align:left;border:0;min-height:36px;padding:0 4px;font-weight:400;background:transparent}
+.it .rn{border:0;min-height:36px;font-size:12px;color:var(--soft);font-weight:400}
+.it input{min-height:36px;padding:4px 8px}
+#dlg{top:50%;left:50%;transform:translate(-50%,-50%);width:min(560px,calc(100% - 24px));max-height:calc(100% - 24px);overflow:auto;padding:16px}
+#dlg[hidden]{display:none}
+#dlg h2{font:22px "Special Elite",monospace;font-weight:400;margin:0 0 12px}
+#dlg label{display:block;font-size:13px;color:var(--soft);margin:10px 0 4px}
+#dlg textarea{min-height:96px;resize:vertical}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.row .sp{flex:1}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+#danger.arm{background:#8f1016;color:#fff;border-color:#8f1016}
+@media(max-width:600px){.two{grid-template-columns:1fr}}
+.s{display:none}
+button,input,select,textarea{touch-action:manipulation}
+body{overscroll-behavior:none}
+#lgT{border:0;min-height:0;padding:0;text-align:left;background:transparent}
+#legend.min{grid-auto-flow:column;align-items:center;gap:8px}
+#legend.min .sw span{display:none}
+#legend.min .sw i,#legend.min .sw svg{width:22px;height:16px}
+@media(pointer:coarse){.ed{opacity:.75;font-size:14px;padding:6px 10px;min-height:36px}}
+@media(max-width:700px){
+ #bar{left:8px;right:8px;top:8px;width:auto;max-width:none;flex-wrap:nowrap;overflow-x:auto;gap:5px;padding:6px;scrollbar-width:none}
+ #bar::-webkit-scrollbar{display:none}
+ #bar h1{display:none}
+ #bar button{flex:none;min-height:40px;padding:0 10px;font-size:13px}
+ .l{display:none}.s{display:inline}
+ #legend{left:8px;bottom:8px;padding:8px 10px;font-size:12px;max-width:calc(100% - 16px)}
+ #status{bottom:64px;width:max-content;max-width:calc(100% - 16px);font-size:13px}
+ #sum{top:auto;left:8px;right:8px;bottom:8px;width:auto;height:66%}
+ #dlg{inset:0;top:0;left:0;transform:none;width:100%;max-height:none;height:100%;border-radius:0;display:flex;flex-direction:column;padding:14px}
+ #dlg[hidden]{display:none}
+ #dlgBody{flex:1;overflow:auto}
+ #dlg .row{position:sticky;bottom:0;background:var(--ui);padding-top:10px}
+ #dlg textarea{min-height:120px}
+}
+
+@media(prefers-reduced-motion:reduce){#world.anim{transition:none}}
+</style>
+</head>
+<body>
+<div id="board"><div id="world"><div id="zonesL"></div><div id="notesL"></div><svg id="yarn"></svg><div id="tags"></div></div></div>
+
+<div id="bar" class="ui">
+ <h1>Quadro — protótipo</h1>
+ <button type="button" id="bSum">Sumário</button>
+ <button type="button" id="bNew"><span class="l">Nova nota</span><span class="s">+ Nota</span></button>
+ <button type="button" id="bLink"><span class="l">Ligar notas</span><span class="s">Ligar</span></button>
+ <button type="button" id="bZone"><span class="l">Nova zona</span><span class="s">+ Zona</span></button>
+ <button type="button" id="bFit"><span class="l">Ver tudo</span><span class="s">Tudo</span></button>
+ <button type="button" id="bOut" aria-label="Afastar">−</button>
+ <button type="button" id="bIn" aria-label="Aproximar">+</button>
+</div>
+
+<div id="legend" class="ui" aria-label="Legenda">
+ <button type="button" id="lgT" aria-expanded="true"><b>Legenda</b></button>
+ <div class="sw"><i style="background:#fbe7a1"></i><span>A mesa sabe (jogado / pista obtida)</span></div>
+ <div class="sw"><i style="background:#dccbf2"></i><span>Bastidor do Mestre</span></div>
+ <div class="sw"><i style="background:#f8c8a0"></i><span>Aberto: decidir</span></div>
+ <div class="sw"><i style="background:#f3a3ad"></i><span>Ameaça central</span></div>
+ <div class="sw"><svg viewBox="0 0 18 14"><path d="M1 4 Q9 13 17 4" stroke="#b3141c" stroke-width="2" fill="none"/></svg><span>Ligação entre notas</span></div>
+</div>
+
+<aside id="sum" class="ui" hidden aria-label="Sumário">
+ <header><b>Sumário</b><input id="q" type="search" placeholder="Buscar nota" aria-label="Buscar nota"></header>
+ <div id="list"></div>
+</aside>
+
+<div id="status" class="ui" role="status">Abrindo o quadro…</div>
+
+<div id="dlg" class="ui" hidden role="dialog" aria-modal="true" aria-labelledby="dlgT">
+ <h2 id="dlgT">Nota</h2>
+ <div id="dlgBody"></div>
+ <div class="row"><button type="button" id="danger">Excluir</button><span class="sp"></span><button type="button" id="cancel">Cancelar</button><button type="button" id="save" class="on">Salvar</button></div>
+</div>
+
+<script>
+{
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=s=>esc(s).split('\n').filter(l=>l.trim()).map(l=>{l=l.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');return l.startsWith('- ')?'<li>'+l.slice(2)+'</li>':'<p>'+l+'</p>'}).join('').replace(/(?:<li>.*?<\/li>)+/g,m=>'<ul>'+m+'</ul>');
+const KIND={mesa:['#fbe7a1','A mesa sabe'],bastidor:['#dccbf2','Bastidor do Mestre'],aberto:['#f8c8a0','Aberto: decidir'],ameaca:['#f3a3ad','Ameaça central']};
+const board=$('#board'),world=$('#world'),yarn=$('#yarn'),tags=$('#tags'),statusEl=$('#status');
+let notes={},links={},zones={},db=null,view={x:80,y:120,s:.5},drag=null,pendingRender=false,linkMode=false,linkFrom=null,sel=null,editing=null,armed=false;
+const ptrs=new Map();let pinch=null,lastTap={};
+const say=(t,keep)=>{statusEl.hidden=!t;statusEl.textContent=t||'';if(t&&!keep){clearTimeout(say.t);say.t=setTimeout(()=>say(''),3500)}};
+const uid=p=>p+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+try{const v=JSON.parse(localStorage.getItem('m7-view')||'null');if(v&&isFinite(v.s))view=v}catch(e){}
+function applyView(anim){world.classList.toggle('anim',!!anim);world.style.transform=`translate(${view.x}px,${view.y}px) scale(${view.s})`;clearTimeout(applyView.t);applyView.t=setTimeout(()=>{try{localStorage.setItem('m7-view',JSON.stringify(view))}catch(e){}},400)}
+function noteHTML(id,n){const k=KIND[n.kind]||KIND.mesa;return `<div class="note${sel===id?' sel':''}${linkFrom===id?' from':''}" data-id="${esc(id)}" style="left:${+n.x||0}px;top:${+n.y||0}px;width:${+n.w||320}px;--r:${+n.r||0}deg;background:${k[0]}"><button type="button" class="ed" data-ed="${esc(id)}">editar</button><h3>${esc(n.title||'Sem título')}</h3>${fmt(n.body)}${n.secret?'<div class="band b-sec"><span>Bastidor</span>'+fmt(n.secret)+'</div>':''}${n.open?'<div class="band b-open"><span>Decidir</span>'+fmt(n.open)+'</div>':''}</div>`}
+function render(){if(drag){pendingRender=true;return}
+ $('#zonesL').innerHTML=Object.entries(zones).map(([id,z])=>`<div class="zone" data-zone="${esc(id)}" style="left:${+z.x||0}px;top:${+z.y||0}px">${esc(z.title||'Zona')}</div>`).join('');
+ $('#notesL').innerHTML=Object.entries(notes).sort((a,b)=>(a[1].y-b[1].y)).map(([id,n])=>noteHTML(id,n)).join('');
+ drawYarn();renderList()}
+const pinOf=n=>[(+n.x||0)+(+n.w||320)/2,(+n.y||0)+7];
+function drawYarn(){let p='',sh='',pins='',tg='';
+ for(const[id,l]of Object.entries(links)){const A=notes[l.a],B=notes[l.b];if(!A||!B)continue;const[a1,a2]=pinOf(A),[b1,b2]=pinOf(B);const d=Math.hypot(b1-a1,b2-a2),cx=(a1+b1)/2,cy=(a2+b2)/2+Math.min(170,d*.2);
+  const dd=`M${a1} ${a2} Q${cx} ${cy} ${b1} ${b2}`;sh+=`<path d="${dd}" transform="translate(3 6)"/>`;p+=`<path d="${dd}"/>`;
+  const mx=.25*a1+.5*cx+.25*b1,my=.25*a2+.5*cy+.25*b2;tg+=`<div class="tag${l.label?'':' empty'}" data-link="${esc(id)}" style="left:${mx}px;top:${my}px" title="Editar ligação">${esc(l.label||'')}</div>`}
+ for(const n of Object.values(notes)){const[x,y]=pinOf(n);pins+=`<circle cx="${x+1.5}" cy="${y+4}" r="8" fill="rgba(30,10,0,.35)"/><circle cx="${x}" cy="${y}" r="8" fill="url(#pg)"/><circle cx="${x-2.5}" cy="${y-2.5}" r="2.4" fill="#ffd2d2" opacity=".8"/>`}
+ yarn.innerHTML=`<defs><radialGradient id="pg" cx="35%" cy="35%" r="70%"><stop offset="0" stop-color="#ff6d6d"/><stop offset=".55" stop-color="#b3141c"/><stop offset="1" stop-color="#55070b"/></radialGradient></defs><g fill="none" stroke="rgba(25,8,0,.28)" stroke-width="3">${sh}</g><g fill="none" stroke="#b3141c" stroke-width="2.4" stroke-linecap="round">${p}</g>${pins}`;
+ tags.innerHTML=tg}
+function zoneOf(n){let best=null,bd=1e9;for(const[id,z]of Object.entries(zones)){const dy=(+n.y||0)-(+z.y||0),dx=(+n.x||0)-(+z.x||0);if(dy<-40)continue;const d=dy+Math.abs(dx)*.6;if(d<bd){bd=d;best=id}}return n.zone&&zones[n.zone]?n.zone:best}
+function renderList(){const q=$('#q').value.trim().toLowerCase(),groups={};
+ for(const[id,n]of Object.entries(notes)){const hay=((n.title||'')+' '+(n.body||'')+' '+(n.secret||'')+' '+(n.open||'')).toLowerCase();if(q&&!hay.includes(q))continue;const z=zoneOf(n)||'_';(groups[z]=groups[z]||[]).push([id,n])}
+ const order=Object.keys(groups).sort((a,b)=>((zones[a]?.y??1e9)-(zones[b]?.y??1e9))||((zones[a]?.x??0)-(zones[b]?.x??0)));
+ $('#list').innerHTML=order.length?order.map(z=>`<h4>${esc(zones[z]?.title||'Sem zona')}</h4>`+groups[z].sort((a,b)=>(a[1].y-b[1].y)||(a[1].x-b[1].x)).map(([id,n])=>`<div class="it" data-it="${esc(id)}"><i style="background:${(KIND[n.kind]||KIND.mesa)[0]}"></i><button type="button" class="go" data-go="${esc(id)}">${esc(n.title||'Sem título')}</button><button type="button" class="rn" data-rn="${esc(id)}">renomear</button></div>`).join('')).join(''):'<p style="padding:8px">Nenhuma nota encontrada.</p>'}
+function focusNote(id){const n=notes[id];if(!n)return;const s=Math.max(view.s,.85),W=board.clientWidth,H=board.clientHeight,el=world.querySelector(`[data-id="${CSS.escape(id)}"]`),h=el?el.offsetHeight:240;
+ view={s,x:W/2-((+n.x)+(+n.w||320)/2)*s-(innerWidth>900&&!$('#sum').hidden?170:0),y:H/2-((+n.y)+h/2)*s};sel=id;applyView(true);render()}
+function fit(){const xs=[],ys=[];for(const n of Object.values(notes)){xs.push(+n.x,(+n.x)+(+n.w||320));ys.push(+n.y,(+n.y)+300)}for(const z of Object.values(zones)){xs.push(+z.x,(+z.x)+400);ys.push(+z.y)}if(!xs.length)return;
+ const x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys),W=board.clientWidth,H=board.clientHeight-80,s=Math.max(.12,Math.min(1.2,Math.min(W/(x1-x0+160),H/(y1-y0+160))));
+ view={s,x:(W-(x1-x0)*s)/2-x0*s,y:80+(H-(y1-y0)*s)/2-y0*s};applyView(true)}
+function zoomAt(f,cx,cy){const s=Math.max(.12,Math.min(2.5,view.s*f));view.x=cx-(cx-view.x)*(s/view.s);view.y=cy-(cy-view.y)*(s/view.s);view.s=s;applyView()}
+const toWorld=(cx,cy)=>[(cx-view.x)/view.s,(cy-view.y)/view.s];
+const LOCAL={notes:()=>notes,links:()=>links,zones:()=>zones};
+async function write(path,data,mode){if(!db){const[col,id]=path.split('/'),o=LOCAL[col]();if(mode==='del')delete o[id];else o[id]=mode==='set'?{...data}:{...o[id],...data};render();return}try{const r=db.doc(path);mode==='del'?await r.delete():mode==='set'?await r.set(data):await r.update(data)}catch(e){say(e&&e.code==='invalid_argument'?'Você não tem permissão para alterar este quadro.':'Não consegui salvar. Tente de novo.')}}
+board.addEventListener('pointerdown',e=>{if(e.target.closest('button,.tag'))return;ptrs.set(e.pointerId,[e.clientX,e.clientY]);board.setPointerCapture(e.pointerId);
+ if(ptrs.size===2){const[a,b]=[...ptrs.values()];pinch={d:Math.hypot(a[0]-b[0],a[1]-b[1]),s:view.s,cx:(a[0]+b[0])/2,cy:(a[1]+b[1])/2};drag=null;return}
+ const ne=e.target.closest('.note'),ze=e.target.closest('.zone');
+ if(ne){const id=ne.dataset.id,n=notes[id];drag={t:'note',id,el:ne,sx:e.clientX,sy:e.clientY,ox:+n.x,oy:+n.y,moved:false}}
+ else if(ze){const id=ze.dataset.zone,z=zones[id];drag={t:'zone',id,el:ze,sx:e.clientX,sy:e.clientY,ox:+z.x,oy:+z.y,moved:false}}
+ else{drag={t:'pan',sx:e.clientX,sy:e.clientY,ox:view.x,oy:view.y,moved:false};board.classList.add('panning')}});
+board.addEventListener('pointermove',e=>{if(!ptrs.has(e.pointerId))return;ptrs.set(e.pointerId,[e.clientX,e.clientY]);
+ if(pinch&&ptrs.size===2){const[a,b]=[...ptrs.values()],d=Math.hypot(a[0]-b[0],a[1]-b[1]);zoomAt((pinch.s*d/pinch.d)/view.s,pinch.cx,pinch.cy);return}
+ if(!drag)return;const dx=e.clientX-drag.sx,dy=e.clientY-drag.sy;if(!drag.moved&&Math.hypot(dx,dy)<(e.pointerType==='touch'?9:4))return;drag.moved=true;
+ if(drag.t==='pan'){view.x=drag.ox+dx;view.y=drag.oy+dy;applyView();return}
+ const nx=Math.round(drag.ox+dx/view.s),ny=Math.round(drag.oy+dy/view.s);drag.el.style.left=nx+'px';drag.el.style.top=ny+'px';
+ if(drag.t==='note'){drag.el.classList.add('drag');notes[drag.id]={...notes[drag.id],x:nx,y:ny};drawYarn()}else zones[drag.id]={...zones[drag.id],x:nx,y:ny}});
+function endPtr(e){ptrs.delete(e.pointerId);if(ptrs.size<2)pinch=null;if(!drag)return;const d=drag;drag=null;board.classList.remove('panning');
+ if(d.t==='note'&&d.moved){const n=notes[d.id];write('notes/'+d.id,{x:n.x,y:n.y})}
+ else if(d.t==='zone'&&d.moved){const z=zones[d.id];write('zones/'+d.id,{x:z.x,y:z.y})}
+ else if(!d.moved&&d.t!=='pan'&&!linkMode&&lastTap.id===d.id&&Date.now()-lastTap.t<380){lastTap={};d.t==='note'?openNote(d.id):openZone(d.id)}
+ else if(d.t==='note'&&!d.moved){lastTap={id:d.id,t:Date.now()};if(linkMode)pickLink(d.id);else sel=d.id;pendingRender=true}
+ else if(d.t==='zone'&&!d.moved){lastTap={id:d.id,t:Date.now()}}
+ else if(d.t==='pan'&&!d.moved&&sel){sel=null;pendingRender=true}
+ if(pendingRender){pendingRender=false;render()}}
+board.addEventListener('pointerup',endPtr);board.addEventListener('pointercancel',endPtr);
+board.addEventListener('wheel',e=>{e.preventDefault();zoomAt(Math.exp(-e.deltaY*(e.ctrlKey?.01:.0016)),e.clientX,e.clientY)},{passive:false});
+board.addEventListener('click',e=>{const b=e.target.closest('[data-ed]');if(b){openNote(b.dataset.ed);return}const t=e.target.closest('.tag');if(t)openLink(t.dataset.link)});
+async function pickLink(id){if(!linkFrom){linkFrom=id;say('Agora escolha a segunda nota.',1);return}if(linkFrom===id){linkFrom=null;say('');return}const a=linkFrom;linkFrom=null;say('Ligação criada.');await write('links/'+uid('l'),{a,b:id,label:''},'set')}
+function field(l,id,v,t){return `<label for="${id}">${l}</label>`+(t==='area'?`<textarea id="${id}">${esc(v)}</textarea>`:`<input id="${id}" value="${esc(v)}">`)}
+function openDlg(title,html,onSave,onDel){$('#dlgT').textContent=title;$('#dlgBody').innerHTML=html;$('#dlg').hidden=false;armed=false;const dz=$('#danger');dz.classList.remove('arm');dz.textContent='Excluir';dz.hidden=!onDel;editing={onSave,onDel};const f=$('#dlgBody input,#dlgBody textarea');if(f)f.focus()}
+function closeDlg(){$('#dlg').hidden=true;editing=null}
+function openNote(id,fresh){const n=fresh||notes[id];if(!n)return;
+ openDlg(fresh?'Nova nota':'Editar nota',field('Nome da nota','fT',n.title)+`<div class="two"><div><label for="fK">Tipo</label><select id="fK">${Object.entries(KIND).map(([k,v])=>`<option value="${k}"${n.kind===k?' selected':''}>${v[1]}</option>`).join('')}</select></div><div><label for="fW">Largura</label><select id="fW">${[260,320,380,460].map(w=>`<option${(+n.w||320)===w?' selected':''}>${w}</option>`).join('')}</select></div></div>`+field('Texto (uma linha começando com “- ” vira item; **negrito**)','fB',n.body,'area')+field('Bastidor (opcional)','fS',n.secret,'area')+field('Em aberto / decidir (opcional)','fO',n.open,'area'),
+ async()=>{const d={title:$('#fT').value.trim()||'Sem título',kind:$('#fK').value,w:+$('#fW').value,body:$('#fB').value,secret:$('#fS').value,open:$('#fO').value};closeDlg();if(fresh)await write('notes/'+id,{...fresh,...d},'set');else await write('notes/'+id,d)},
+ fresh?null:async()=>{closeDlg();for(const[lid,l]of Object.entries(links))if(l.a===id||l.b===id)await write('links/'+lid,null,'del');await write('notes/'+id,null,'del')})}
+function openLink(id){const l=links[id];if(!l)return;openDlg('Ligação: '+(notes[l.a]?.title||'?')+' → '+(notes[l.b]?.title||'?'),field('Etiqueta no fio (opcional)','fL',l.label),async()=>{const label=$('#fL').value.trim();closeDlg();await write('links/'+id,{label})},async()=>{closeDlg();await write('links/'+id,null,'del')})}
+function openZone(id,fresh){const z=fresh||zones[id];openDlg(fresh?'Nova zona':'Editar zona',field('Nome da zona','fZ',z.title),async()=>{const title=$('#fZ').value.trim()||'Zona';closeDlg();await write('zones/'+id,fresh?{...fresh,title}:{title},fresh?'set':'')},fresh?null:async()=>{closeDlg();await write('zones/'+id,null,'del')})}
+$('#save').onclick=()=>editing&&editing.onSave();$('#cancel').onclick=closeDlg;
+$('#danger').onclick=()=>{if(!editing||!editing.onDel)return;if(!armed){armed=true;$('#danger').classList.add('arm');$('#danger').textContent='Confirmar exclusão';return}editing.onDel()};
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!$('#dlg').hidden)closeDlg();else if(linkMode)$('#bLink').click()}});
+const center=()=>toWorld(board.clientWidth/2,board.clientHeight/2);
+$('#bNew').onclick=()=>{const[x,y]=center();openNote(uid('n'),{title:'',kind:'mesa',body:'',secret:'',open:'',w:320,r:+(Math.random()*3-1.5).toFixed(1),x:Math.round(x-160),y:Math.round(y-100)})};
+$('#bZone').onclick=()=>{const[x,y]=center();openZone(uid('z'),{title:'',x:Math.round(x-150),y:Math.round(y-30)})};
+$('#bLink').onclick=()=>{linkMode=!linkMode;linkFrom=null;$('#bLink').classList.toggle('on',linkMode);say(linkMode?'Clique em duas notas para ligar. Esc encerra.':'',linkMode);render()};
+$('#bSum').onclick=()=>{const s=$('#sum');s.hidden=!s.hidden;$('#bSum').classList.toggle('on',!s.hidden);if(!s.hidden)renderList()};
+$('#bFit').onclick=fit;$('#bIn').onclick=()=>zoomAt(1.25,board.clientWidth/2,board.clientHeight/2);$('#bOut').onclick=()=>zoomAt(.8,board.clientWidth/2,board.clientHeight/2);
+$('#q').addEventListener('input',renderList);
+$('#list').addEventListener('click',e=>{const g=e.target.closest('[data-go]');if(g){focusNote(g.dataset.go);if(innerWidth<700)$('#bSum').click();return}
+ const r=e.target.closest('[data-rn]');if(r){const id=r.dataset.rn,row=r.closest('.it'),go=row.querySelector('.go');const inp=document.createElement('input');inp.value=notes[id]?.title||'';inp.setAttribute('aria-label','Novo nome');go.replaceWith(inp);r.hidden=true;inp.focus();inp.select();
+  let done=false;const fin=async ok=>{if(done)return;done=true;const t=inp.value.trim();if(ok&&t&&t!==notes[id]?.title)await write('notes/'+id,{title:t});renderList()};
+  inp.addEventListener('keydown',ev=>{if(ev.key==='Enter')fin(true);if(ev.key==='Escape')fin(false)});inp.addEventListener('blur',()=>fin(true))}});
+{const lg=$('#legend'),bt=$('#lgT');let mn=innerWidth<700;try{const v=localStorage.getItem('m7-legend');if(v)mn=v==='min'}catch(e){}
+ const setL=m=>{lg.classList.toggle('min',m);bt.setAttribute('aria-expanded',String(!m));try{localStorage.setItem('m7-legend',m?'min':'full')}catch(e){}};setL(mn);bt.onclick=()=>setL(!lg.classList.contains('min'))}
+applyView();
+(async()=>{const c=window.claude;if(!c||typeof c.use!=='function'){const S={"zones": {"z1": {"title": "Linha do tempo", "x": 0, "y": -90}, "z2": {"title": "O farol e os desaparecidos", "x": 380, "y": 400}, "z3": {"title": "Decidir", "x": 1500, "y": 400}}, "notes": {"t0": {"title": "Sessão 1", "kind": "mesa", "x": 0, "y": 0, "w": 320, "r": -1.2, "body": "- Chegada à vila de pescadores\n- Três barcos voltaram vazios\n- O faroleiro não responde"}, "t1": {"title": "Sessão 2", "kind": "mesa", "x": 360, "y": 0, "w": 320, "r": 0.8, "body": "- Diário de bordo com páginas arrancadas\n- Luz verde no farol à meia-noite"}, "t2": {"title": "Sessão 3", "kind": "mesa", "x": 720, "y": 0, "w": 320, "r": -0.6, "body": "- Escada do farol desce mais do que sobe\n- Marcas de mãos molhadas na parede"}, "core": {"title": "A coisa no farol", "kind": "ameaca", "x": 760, "y": 620, "w": 380, "r": 0, "body": "Ninguém viu. Só a luz verde e a água no chão.", "secret": "Alimenta-se de lembranças de quem navega. Sal grosso a afasta.", "open": "Quando ela aparece pela primeira vez?"}, "p1": {"title": "Faroleiro Anselmo", "kind": "mesa", "x": 380, "y": 480, "w": 320, "r": 1.2, "body": "- Sumiu há duas semanas\n- Deixou o rádio ligado", "secret": "Está vivo, no fundo da escada."}, "p2": {"title": "Marta, a pescadora", "kind": "mesa", "x": 380, "y": 860, "w": 320, "r": -1.1, "body": "- Último barco a voltar\n- Não lembra o nome do próprio filho"}, "p3": {"title": "O diário de bordo", "kind": "mesa", "x": 1160, "y": 480, "w": 320, "r": 0.9, "body": "- Faltam as páginas de 3 a 9 de março\n- Desenho de uma porta no mar"}, "p4": {"title": "Hipótese da mesa", "kind": "aberto", "x": 1160, "y": 860, "w": 320, "r": -0.7, "body": "A luz verde chama os barcos?"}, "d1": {"title": "Preparar", "kind": "bastidor", "x": 1500, "y": 480, "w": 340, "r": 0.6, "body": "- Cena da escada\n- O que Anselmo sabe\n- Onde estão as páginas"}}, "links": {"l1": {"a": "t0", "b": "t1", "label": ""}, "l2": {"a": "t1", "b": "t2", "label": ""}, "l3": {"a": "core", "b": "p1", "label": "levou"}, "l4": {"a": "core", "b": "p2", "label": "tocou"}, "l5": {"a": "core", "b": "p3", "label": ""}, "l6": {"a": "p4", "b": "core", "label": "luz verde"}}};notes=S.notes;links=S.links;zones=S.zones;render();say('Protótipo com dados fictícios: as mudanças não são salvas.');setTimeout(fit,50);return}
+ db=await c.use('db');if(!db){say('Os dados do quadro não estão disponíveis nesta visualização.',1);return}
+ const t=setTimeout(()=>say('Não consegui alcançar os dados ainda. Eles aparecem assim que a conexão responder.',1),10000);const ok=new Set();let first=true;try{first=!localStorage.getItem('m7-view')}catch(e){}
+ const sub=(col,setter)=>db.collection(col).onSnapshot(s=>{const o={};s.docs.forEach(d=>o[d.id]={...d.data()});setter(o);if(!s.metadata.fromCache){ok.add(col);if(ok.size===3){clearTimeout(t);say('');if(first){first=false;fit()}}}render()},()=>{clearTimeout(t);say('Não consegui carregar parte do quadro.',1)});
+ sub('notes',o=>notes=o);sub('links',o=>links=o);sub('zones',o=>zones=o)})();
+}
+</script>
+</body>
+</html>
