@@ -1,5 +1,24 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-11-25 — Specs pós Sessões 4 e 5: exportar regras, calendário, montador, fichas, auditoria
+
+O autor pediu só planejamento (nenhum código, migration ou `docs/core/`) para cinco pedidos vindos das
+Sessões 4 e 5 (27/10 e 10/11/2026). Seis specs novas em `docs/specs/backlog/`:
+`regras-exportar-markdown-pdf` (A), `montador-rolagens-revisao` (C), `ficha-criatura-npc-revamp-visual` (D),
+`calendario-campanha-mundo` (B), `campanhas-missoes-esquadrao-levantamento` (B, escopo vizinho) e
+`auditoria-visual-geral-site` (E).
+
+Achados que mudam o plano: (A) o conversor de livro em Markdown já existe como função pura em `shared/`
+(`exportarLivroEmMarkdown`) e `GET /livros/:codigo/publicada` é público, então a exportação pelo site é só a
+porta de entrada no frontend; o PDF do Sistema continua suspenso pelo P-108. (C) o montador tem duas telas, não
+três (Dano e Livre usam o mesmo editor), e "Margem de crítico = Sem" rola igual a "Máximo", porque o Sistema dá
+margem natural 1 a todo teste. (D) a fórmula de teste/dano/crítico dos ataques da Criatura só aparece em tooltip;
+não existem campos estruturados de custo/alcance/frequência nas habilidades. (B) não existe entidade de missão
+nem de esquadrão (só o booleano `naBase`), e o vínculo Caderno → Biblioteca (link Markdown, sem tabela) é o
+mecanismo a reaproveitar. O levantamento foi por leitura estática; nada foi reproduzido na aplicação real.
+`criatura-npc-vd-habilidades-ataques` (Entregável 3) se sobrepõe a D; a decisão ficou como pergunta ao autor.
+`repo:verificar` aprovado (árvore local).
+
 ## 2026-10-29 — Legibilidade do SQL dos repositórios
 
 Revisadas as consultas dos repositórios e separadas cláusulas e listas extensas em campanha,
