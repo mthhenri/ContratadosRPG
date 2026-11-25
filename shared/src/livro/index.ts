@@ -7,3 +7,4 @@ export * from "./comparar-livros";
 export * from "./esqueletos";
 export * from "./numero-versao";
 export * from "./exportar-markdown";
+export * from "./exportar-markdown-site";

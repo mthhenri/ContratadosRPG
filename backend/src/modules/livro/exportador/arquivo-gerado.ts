@@ -1,12 +1,9 @@
 import { createHash } from "node:crypto";
 import type { LivroVersaoConteudoDto } from "@contratados-rpg/shared/dtos/livro";
-import { exportarLivroEmMarkdown } from "@contratados-rpg/shared/livro";
+import { PREFIXO_DO_ARQUIVO_DO_LIVRO, exportarLivroEmMarkdown } from "@contratados-rpg/shared/livro";
 
 /** Prefixo do arquivo de cada livro em `docs/core/` (o mesmo que o importador procura). */
-export const PREFIXO_DO_ARQUIVO: Readonly<Record<string, string>> = {
-  sistema: "sistema",
-  guia: "guia_de_mestre",
-};
+export const PREFIXO_DO_ARQUIVO: Readonly<Record<string, string>> = PREFIXO_DO_ARQUIVO_DO_LIVRO;
 
 export interface ArquivoGerado {
   /** Ex.: `sistema-v4.1.4.md`. */

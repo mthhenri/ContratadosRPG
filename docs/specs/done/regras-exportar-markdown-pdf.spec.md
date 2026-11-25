@@ -3,8 +3,31 @@
 > Task avulsa. Origem: pedido do autor após as Sessões 4 e 5 da campanha (27/10 e 10/11/2026) e a
 > revisão posterior. O sistema agora vive só no site (o Google Docs foi abandonado); o autor precisa
 > levá-lo para o ambiente local e passá-lo a uma IA de escrita que trabalha com arquivos.
-> Pedido **A** de `PEDIDO_CLAUDE_CODE_SPECS_SITE.md`, prioridade alta. Só especificação: nenhum
-> código nesta etapa.
+> Pedido **A** de `PEDIDO_CLAUDE_CODE_SPECS_SITE.md`, prioridade alta. Especificada e implementada em
+> 25/11/2026 (ver "Decisões do autor" e "Resultado").
+
+## Decisões do autor (25/11/2026) e resultado
+
+1. **Dois formatos de Markdown, escolhidos na ação:** "completo" (corpo idêntico ao de `docs/core/`, com
+   âncoras `{#id}` e comentários) e "limpo" (sem âncoras, comentários HTML, `<br>` em células e links internos).
+2. **Só usuário logado** vê a ação. **Limite:** é uma regra da interface; `GET /livros/:codigo/publicada`
+   continua público (a leitura do livro é pública), então a restrição não impede quem chama a API direto.
+3. **PDF do Sistema continua suspenso** (P-108). O botão de PDF já estava desabilitado com tooltip "PDF do
+   Sistema: formatação em revisão"; nada mudou nele.
+4. **Sem resposta:** endpoint de download (pergunta 3) e `sha256` no cabeçalho (pergunta 4). Não foram feitos.
+
+Resultado:
+
+- `shared/src/livro/exportar-markdown-site.ts` (função pura): `montarMarkdownExportadoDoLivro`,
+  `limparMarkdownExportado` e `PREFIXO_DO_ARQUIVO_DO_LIVRO` (o backend passou a reutilizá-lo em
+  `arquivo-gerado.ts`, sem alterar a saída de `docs/core/`).
+- `frontend/src/app/modules/regras/regras-exportacao-markdown.service.ts` (lê `/publicada`, monta e baixa) e
+  `regras-exportar-markdown.component.ts` (ação "Markdown" no cabeçalho do leitor, na página, no painel e na gaveta).
+- O menu usa o modo `contextual` do `app-menu-acoes`, com botão próprio: o menu padrão posiciona por
+  `position: fixed` e ficava deslocado dentro da gaveta mobile (ancestral com `transform`). Nenhum primitivo
+  foi alterado.
+- Arquivos: `sistema-v<N>.md`, `guia_de_mestre-v<N>.md` e, no limpo, `…-limpo.md`. Cabeçalho de procedência com
+  livro, versão, data de publicação e instante de geração, e a nota "não é a fonte da verdade".
 
 ## Objetivo
 

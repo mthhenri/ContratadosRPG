@@ -1,5 +1,23 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-11-25 — regras-exportar-markdown-pdf: Markdown do Sistema e do Guia baixado pelo próprio site
+
+O autor decidiu: dois formatos (completo e limpo) escolhidos na ação, só para usuário logado, PDF do Sistema
+suspenso (P-108). A ação "Markdown" fica no cabeçalho do leitor de Regras (página, painel e gaveta) e baixa a
+**publicação atual** (`/livros/:codigo/publicada`, nunca o rascunho) com o mesmo conversor de `regras:exportar`.
+O completo mantém o corpo exato de `docs/core/` (conferido: 52 comentários e 213 âncoras, os mesmos do arquivo
+versionado); o limpo remove âncoras, comentários, `<br>` e links internos. A restrição a logado é só de interface:
+a API de leitura continua pública.
+
+Testes: shared 1.348 passados (8 novos; inclui conferência do limpo contra `docs/core/` real); frontend, pasta
+`regras` 345 passados + 5 do componente novo; backend exportador 6. Lint com 0 erros e build de produção ok.
+App real (Postgres local sem Docker, livros importados em v4.1.4): visitante sem a ação e logado com ela em 360×800,
+960×1080, 1366×768 e 1920×1080, sem overflow; download dos dois arquivos do Sistema e do limpo do Guia.
+Achado na verificação: o `app-menu-acoes` padrão abre deslocado dentro da gaveta mobile (um `position: fixed`
+sob ancestral com `transform` se posiciona pelo ancestral); resolvido usando o modo `contextual` do primitivo
+com botão próprio, sem alterar o primitivo. A tentativa anterior (opção `alinhamento`) foi descartada.
+Limites: base clara e toque real não observados; `repo:verificar` aprovado.
+
 ## 2026-11-25 — Spec do quadro de investigação adicionada ao backlog, com pendências anotadas
 
 O autor trouxe `quadro-investigacao-campanha` (spec, `design.md` e `prototipo.html`, promove a `I-042`). Entrou em

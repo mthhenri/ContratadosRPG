@@ -26,6 +26,7 @@ import { MenuInsercao } from "../../shared/ui/menu-insercao/menu-insercao.compon
 import { RegrasLeitorContexto } from "./regras-leitor-contexto";
 import { RegrasConsultaService } from "./regras-consulta.service";
 import { RegrasPesquisaController } from "./regras-pesquisa.controller";
+import { RegrasExportarMarkdown } from "./regras-exportar-markdown.component";
 import { RegrasImpressaoService } from "./regras-impressao.service";
 import { RegrasPesquisa } from "./regras-pesquisa.component";
 import { RegrasPesquisaProjecao } from "./regras-pesquisa-projecao.component";
@@ -59,7 +60,7 @@ const MARGEM_LATERAL = 32;
         Segmentado, SegmentadoItem, Gaveta, Paleta, RegrasPesquisa, RegrasPesquisaProjecao,
         BotaoIcone, Tooltip, Chip,
         RegrasConteudoRender, OficinaBarra, OficinaSumario, MenuInsercao, OficinaMudancasLista,
-        RegrasMudancasPublicadas, Campo],
+        RegrasMudancasPublicadas, Campo, RegrasExportarMarkdown],
     templateUrl: "./regras-leitor.component.html",
     styleUrl: "./regras-leitor.component.scss",
     changeDetection: ChangeDetectionStrategy.OnPush,

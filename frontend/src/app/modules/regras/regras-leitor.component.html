@@ -361,6 +361,7 @@
                 >
                     <app-icone nome="documentos" />
                 </button>
+                <app-regras-exportar-markdown [livro]="livroAberto.id" />
             </div>
             @if (oficinaAtiva()) {
                 <nav class="regras__sumario" aria-label="Sumário da Oficina">
