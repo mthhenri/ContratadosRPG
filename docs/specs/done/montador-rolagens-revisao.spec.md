@@ -27,7 +27,8 @@ Teste** onde não há ficha. Reprodução e medidas: [`montador-rolagens-revisao
 - D4: sem ficha (rolagem do mestre, campanha do mestre, rolador avulso) o modelo Teste não é oferecido.
 - Guia do montador: onde ficam os ajustes, margem natural 1 e onde a habilidade de personalidade se define.
 
-**Ainda aberto** (por isso a spec continua em `active/`):
+**Fechada em 25/11/2026 por decisão do autor**, com o comportamento corrigido e testado. O que ficou de fora foi
+registrado em [`IDEAS.md` I-064](../../context/IDEAS.md) (acabamento visual, que o autor fará na própria máquina):
 
 - Entregável 3 inteiro: seções e nomes **iguais** entre o editor de Teste (Atributos, Ajustes, Opções do teste) e o de
   termos (Termos, Adicionar dados, Adicionar atributo ou bônus, Opções dos dados). Hoje só o comportamento foi
@@ -282,7 +283,7 @@ Recomendação: **1**, com a correção de D1 e a preservação de estado; **2**
 
 Testes puros e de componente conforme o Entregável 2, mais regressão do corpus e dos consumidores; stack real
 com ficha de jogador, NPC, criatura e contexto de mestre; dois usuários não são necessários (sem tempo real).
-Relatório textual `verificacao.md` com viewports, estados, o que foi reproduzido e o que não.
+Relatório textual: [`montador-rolagens-revisao/verificacao.md`](montador-rolagens-revisao/verificacao.md).
 
 ## Perguntas abertas
 

@@ -249,6 +249,22 @@
 
 ## Abertas
 
+### I-064 — Acabamento do montador de rolagens: estrutura única e estado por editor · frontend/rolagem
+
+- **Ideia:** (1) dar ao editor de Teste (Atributos, Ajustes, Opções do teste) e ao editor de termos de Dano/Livre
+  (Termos, Adicionar dados, Adicionar atributo ou bônus, Opções dos dados) as **mesmas seções com os mesmos nomes**;
+  (2) guardar por editor o termo selecionado, o campo de expressão e o segundo atributo ao trocar de modelo (o texto
+  da fórmula já é preservado); (3) decidir D5 (`lerTeste` no frontend × `ehFormulaTeste` no motor) e D6 (NPC passa
+  `proficiencia = nivel`, Criatura não passa PROF/NIV); (4) a margem "Sem" do inspetor de termos para um pool
+  `1d20kh1` que o motor trata como teste ainda tem rótulo enganoso.
+- **Origem:** fecho da `montador-rolagens-revisao` (2026-11-25): o autor encerrou o pedido C só com o comportamento
+  corrigido e deixou o acabamento visual para a máquina dele.
+- **Por quê:** na Sessão 4 um jogador sentiu "o de atributos é diferente dos outros dois"; o comportamento já é igual,
+  a estrutura da tela não.
+- **Custo aparente:** só UI (mexe em layout, exige verificação visual completa) e uma decisão do autor sobre os nomes
+  das seções; D5/D6 tocam regra e ficam para spec própria. Verificação ainda não feita: 960×1080, 1366×768, base clara
+  e toque real.
+
 ### I-063 — Ícones de identidade para NPC e criatura nos cards · frontend/icones
 
 - **Ideia:** mostrar um ícone de identidade também em NPCs e criaturas, onde hoje o agente já leva o ícone de classe e

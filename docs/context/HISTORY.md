@@ -1,8 +1,19 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-11-25 — montador-rolagens-revisao: fechada (pedido C)
+
+O autor encerrou o pedido C com o comportamento corrigido (entrada parcial logo abaixo) e deixou o acabamento visual
+para a máquina dele: spec e anexos movidos para `docs/specs/done/`. O que ficou de fora virou a ideia I-064 (seções e
+nomes iguais entre os editores, estado por editor, D5/D6, rótulo "Sem" do inspetor de termos).
+
+Gates com os ajustes finais: shared 1.348, backend 1.360 (100 ignorados) e frontend 3.649 de 3.649 passados; lint sem
+erros; build ok. Registro em `docs/specs/done/montador-rolagens-revisao/verificacao.md`. Achado de ambiente: a suíte
+do frontend com paralelismo padrão perde um worker por memória neste contêiner; com `VITEST_MAX_WORKERS=2` passa
+inteira. Os pedidos visuais (D, E) o autor fará na própria máquina.
+
 ## 2026-11-25 — montador-rolagens-revisao (parcial): estado, rótulo de crítico, ajustes da ficha e contexto sem ficha
 
-Reprodução ao vivo e medidas do motor em `docs/specs/active/montador-rolagens-revisao/reproducao.md`. Decisões do
+Reprodução ao vivo e medidas do motor em `docs/specs/done/montador-rolagens-revisao/reproducao.md`. Decisões do
 autor: esqueleto único das visões, manter o motor em "dados a menos" e só avisar, o dadinho da Visão Geral como
 referência e ocultar o modelo Teste onde não há ficha. Entregue: teste determinístico montador → fórmula → motor
 (11 casos, com os rótulos enganosos fixados); editor de Teste sem a opção "Sem" (todo teste tem margem natural 1);
