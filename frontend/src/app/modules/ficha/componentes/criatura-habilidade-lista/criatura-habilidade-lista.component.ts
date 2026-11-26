@@ -34,6 +34,23 @@ interface HabilidadeIndexada {
   readonly indice: number;
 }
 
+/** Habilidades de um tipo, já em ordem alfabética — um grupo da lista. */
+interface GrupoHabilidades {
+  readonly tipo: HabilidadeTipoCriaturaEnum;
+  readonly titulo: string;
+  readonly itens: readonly HabilidadeIndexada[];
+}
+
+/**
+ * Ordem dos grupos na mesa (`criatura-ataques-habilidades-leitura`): o que a criatura **faz** no turno,
+ * depois a que ela **reage**, por fim o que vale **sempre**.
+ */
+const GRUPOS: readonly { readonly tipo: HabilidadeTipoCriaturaEnum; readonly titulo: string }[] = [
+  { tipo: HabilidadeTipoCriaturaEnum.ATIVA, titulo: 'Ativas' },
+  { tipo: HabilidadeTipoCriaturaEnum.GATILHO, titulo: 'Gatilhos' },
+  { tipo: HabilidadeTipoCriaturaEnum.PASSIVA, titulo: 'Passivas' },
+];
+
 /** Editor no próprio lugar da lista `habilidades` (Habilidades Especiais) da ficha de criatura (m4-04b). */
 @Component({
   selector: 'app-criatura-habilidade-lista',
@@ -80,6 +97,15 @@ export class CriaturaHabilidadeLista {
     this.itens()
       .map((item, indice) => ({ item, indice }))
       .sort((a, b) => a.item.nome.localeCompare(b.item.nome, 'pt-BR', { sensitivity: 'base' })),
+  );
+
+  /** Grupos por tipo na ordem de `GRUPOS`, sem os vazios; alfabética dentro de cada um. */
+  protected readonly grupos = computed<GrupoHabilidades[]>(() =>
+    GRUPOS.map(({ tipo, titulo }) => ({
+      tipo,
+      titulo,
+      itens: this.itensOrdenados().filter((entrada) => entrada.item.tipo === tipo),
+    })).filter((grupo) => grupo.itens.length > 0),
   );
 
   protected editando(indice: number): boolean {

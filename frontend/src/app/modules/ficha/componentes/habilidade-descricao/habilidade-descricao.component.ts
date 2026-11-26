@@ -11,6 +11,7 @@ import {
 } from '@angular/core';
 
 import { Icone } from '../../../../shared/icone/icone.component';
+import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { EditorMarkdown } from '../../../../shared/ui/editor-markdown/editor-markdown.component';
 
@@ -48,22 +49,32 @@ export function markdownParaTexto(markdown: string): string {
  * se o conteúdo passou do teto (`scrollHeight > clientHeight`) para saber se o botão existe — o
  * Milkdown monta de forma assíncrona e a largura muda a quebra de linhas, então mede de novo a
  * cada mutação/redimensionamento.
+ *
+ * `expansivel` (`criatura-ataques-habilidades-leitura`): troca o olho com tooltip por "Ver mais /
+ * Ver menos", que tira o teto no próprio cartão — leitura de descrição longa (habilidade com fases)
+ * sem depender de hover, inclusive no toque. Desligado por padrão: a ficha de Agente não muda.
  */
 @Component({
   selector: 'app-habilidade-descricao',
-  imports: [BotaoIcone, EditorMarkdown, Icone],
+  imports: [Botao, BotaoIcone, EditorMarkdown, Icone],
   templateUrl: './habilidade-descricao.component.html',
   styleUrl: './habilidade-descricao.component.scss',
+  host: { '[class.habilidade-descricao--expansivel]': 'expansivel()' },
 })
 export class HabilidadeDescricao {
   /** Descrição em Markdown, como salva no JSONB. */
   readonly valor = input.required<string>();
   /** Nome acessível do editor de leitura (ex.: "Descrição de Fôlego Extra"). */
   readonly rotulo = input.required<string>();
+  /** "Ver mais / Ver menos" no lugar do tooltip (ver a nota da classe). */
+  readonly expansivel = input(false);
 
   private readonly corpo = viewChild.required<ElementRef<HTMLElement>>('corpo');
 
   protected readonly truncada = signal(false);
+  /** Sem o teto de linhas (só no modo `expansivel`). Expandida, a medição não roda: sem corte, ela
+   * diria "não truncada" e o botão de recolher sumiria. */
+  protected readonly expandida = signal(false);
   protected readonly textoCompleto = computed(() => markdownParaTexto(this.valor()));
 
   constructor() {
@@ -72,6 +83,9 @@ export class HabilidadeDescricao {
     afterNextRender(() => {
       const raiz = this.corpo().nativeElement;
       const medir = (): void => {
+        if (this.expandida()) {
+          return;
+        }
         const documento = raiz.querySelector<HTMLElement>('.milkdown .editor');
         this.truncada.set(!!documento && documento.scrollHeight > documento.clientHeight + 1);
       };
@@ -91,5 +105,9 @@ export class HabilidadeDescricao {
 
       medir();
     });
+  }
+
+  protected alternarExpansao(): void {
+    this.expandida.update((valor) => !valor);
   }
 }

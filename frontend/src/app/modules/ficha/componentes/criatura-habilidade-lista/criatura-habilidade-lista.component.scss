@@ -104,9 +104,36 @@
         }
     }
 
+    // Grupo por tipo (Ativas · Gatilhos · Passivas): mesmo rótulo mono do cabeçalho da lista, um
+    // degrau abaixo, com a contagem ao lado.
+    &__grupo + &__grupo {
+        margin-top: 18px;
+    }
+    &__grupo-titulo {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        margin: 0 0 9px;
+        font: 600 10px var(--font-mono);
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        color: var(--text-dim);
+    }
+    &__grupo-contagem {
+        font-weight: 400;
+        color: var(--text-mute);
+    }
+
+    // No máximo duas colunas largas: texto longo (habilidade com fases) lê melhor numa linha de
+    // ~60–80 caracteres do que em três colunas de 300px. `align-items: start` deixa cada cartão
+    // com a própria altura — expandir um não estica o vizinho.
     &__itens {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        grid-template-columns: repeat(
+            auto-fill,
+            minmax(min(100%, max(380px, calc(50% - 6px))), 1fr)
+        );
+        align-items: start;
         gap: 11px;
         margin: 0;
         padding: 0;
@@ -174,19 +201,29 @@
         color: var(--text-dim);
         white-space: pre-wrap;
     }
-    // "Tag clara" (pedido do autor) — mesmo desenho de `&__chip`, mas sem o tom de destaque:
-    // fundo levemente mais claro que o card e quebra de linha preservada (restrição pode ser
-    // um texto livre longo, não só uma palavra).
-    &__restricao {
-        display: inline-block;
-        padding: 3px 7px;
-        font: 11px var(--font-sans);
-        font-style: italic;
-        color: var(--text-mute);
+    // Bloco "Restrição" (`criatura-ataques-habilidades-leitura`): o limite da habilidade em texto do
+    // corpo, não em itálico miúdo, com filete à esquerda na cor do tema. Grid e não flex: o
+    // `app-editor-markdown` compacto impõe `flex: none` no próprio host e, como item flex, ficava na
+    // largura natural do texto — uma restrição de um parágrafo invadia o cartão vizinho.
+    &__restricao-bloco {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        align-items: baseline;
+        gap: 10px;
+        padding: 6px 10px;
         background: var(--surface);
-        border: 1px solid var(--border);
+        border-left: 2px solid var(--accent-border);
         border-radius: var(--radius-compact);
-        white-space: pre-wrap;
+    }
+    &__restricao-rotulo {
+        font: 600 9px var(--font-mono);
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        color: var(--accent);
+    }
+    &__restricao {
+        min-width: 0;
+        color: var(--text);
     }
     &__acoes {
         display: flex;

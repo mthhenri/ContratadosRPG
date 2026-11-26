@@ -38,10 +38,11 @@ describe('markdownParaTexto', () => {
 });
 
 describe('HabilidadeDescricao', () => {
-  function montar(valor: string) {
+  function montar(valor: string, expansivel = false) {
     const fixture = TestBed.createComponent(HabilidadeDescricao);
     fixture.componentRef.setInput('valor', valor);
     fixture.componentRef.setInput('rotulo', 'Descrição de Fôlego Extra');
+    fixture.componentRef.setInput('expansivel', expansivel);
     fixture.detectChanges();
     return fixture;
   }
@@ -81,5 +82,43 @@ describe('HabilidadeDescricao', () => {
     const botao = raiz.querySelector('.habilidade-descricao__ver');
     expect(botao).not.toBeNull();
     expect(botao?.getAttribute('aria-label')).toBe('Ver a descrição completa');
+  });
+
+  describe('modo expansível (criatura-ataques-habilidades-leitura)', () => {
+    const alternar = (raiz: HTMLElement) =>
+      raiz.querySelector<HTMLButtonElement>('.habilidade-descricao__alternar');
+
+    it('troca o olho com tooltip por "Ver mais", que abre e fecha o texto no próprio lugar', async () => {
+      const fixture = montar('Descrição muito longa. '.repeat(40), true);
+      const raiz = fixture.nativeElement as HTMLElement;
+      simularDocumento(raiz, 400, 110);
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      expect(raiz.querySelector('.habilidade-descricao__ver')).toBeNull();
+      expect(alternar(raiz)?.textContent).toContain('Ver mais');
+      expect(alternar(raiz)?.getAttribute('aria-expanded')).toBe('false');
+
+      alternar(raiz)!.click();
+      fixture.detectChanges();
+      expect(raiz.querySelector('.habilidade-descricao__corpo--expandida')).not.toBeNull();
+      expect(alternar(raiz)?.textContent).toContain('Ver menos');
+      expect(alternar(raiz)?.getAttribute('aria-expanded')).toBe('true');
+
+      alternar(raiz)!.click();
+      fixture.detectChanges();
+      expect(raiz.querySelector('.habilidade-descricao__corpo--expandida')).toBeNull();
+      expect(alternar(raiz)?.textContent).toContain('Ver mais');
+    });
+
+    it('descrição curta não ganha botão', async () => {
+      const fixture = montar('Curta.', true);
+      const raiz = fixture.nativeElement as HTMLElement;
+      simularDocumento(raiz, 60, 60);
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      expect(alternar(raiz)).toBeNull();
+    });
   });
 });

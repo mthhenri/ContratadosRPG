@@ -1,5 +1,20 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-11-26 — criatura-ataques-habilidades-leitura: Ataques e Habilidades legíveis na mesa
+
+O autor achou as abas de Ataques e Habilidades da criatura "inusáveis". Olhando a tela com uma criatura de estresse
+(habilidade com três fases, restrição longa, cinco ataques), o pior era a descrição cortada em 5 linhas com o resto
+só num tooltip de olho (a fase 2 e a 3 sumiam), as fórmulas de teste/dano só em tooltip, a ordem alfabética
+misturando tipos e custos, a restrição miúda no rodapé e três colunas estreitas. Agora as habilidades vêm em grupos
+Ativas · Gatilhos · Passivas, com "Ver mais / Ver menos" no próprio cartão (modo novo e opcional de
+`app-habilidade-descricao`; a ficha de Agente não muda) e a restrição em bloco destacado logo após a descrição; os
+ataques vêm do custo mais barato ao mais caro, com a fórmula escrita em cada botão. Duas colunas largas no desktop,
+uma no celular. Selos de custo/tipo e cores dos botões ficaram como o autor tinha pedido antes. Só visual: nada de
+DTO ou regra. O primeiro corte punha a restrição como linha "Quando" acima da descrição; o teste com as duas
+criaturas reais da mesa do autor (O Ausente e O Eco) mostrou que ali a restrição é um limite ("suprimida por
+chumbo"), às vezes um parágrafo, e que como item flex ela não quebrava linha e invadia o cartão vizinho (o
+`app-editor-markdown` compacto impõe `flex: none` no host). Voltou o rótulo "Restrição", depois da descrição, em grid.
+
 ## 2026-11-26 — ficha-json-exportar-importar-admin: fichas de Criatura e NPC em JSON
 
 O autor quis trazer fichas reais de criatura para o agente analisar antes do redesenho de Ataques/Habilidades, que

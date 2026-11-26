@@ -34,25 +34,31 @@ describe('CriaturaAtaqueLista', () => {
     expect(raiz.querySelector('.ataque-lista__cabecalho-item')?.textContent).not.toContain('4D12');
   });
 
-  it('ordena os ataques por nome', () => {
+  it('ordena os ataques do custo mais barato ao mais caro e, no mesmo custo, por nome', () => {
     const desordenados: FichaCriaturaAtaqueDto[] = [
       { nome: 'Zumbido Perfurante', teste: '1d20', custoAcao: CustoAcaoEnum.PADRAO, dano: '3D12', danoCritico: '6D12', area: false },
-      { nome: 'Ecoar', teste: '1d20', custoAcao: CustoAcaoEnum.PADRAO, dano: '2D12', danoCritico: '4D12', area: false },
       { nome: 'Investida', teste: '1d20', custoAcao: CustoAcaoEnum.COMPLETA, dano: '4D12', danoCritico: '8D12', area: false },
+      { nome: 'Ecoar', teste: '1d20', custoAcao: CustoAcaoEnum.PADRAO, dano: '2D12', danoCritico: '4D12', area: false },
+      { nome: 'Toque', teste: '1d20', custoAcao: CustoAcaoEnum.ACAO_LIVRE, dano: '1D6', danoCritico: '2D6', area: false },
+      { nome: 'Avanço', teste: '1d20', custoAcao: CustoAcaoEnum.MOVIMENTO, dano: '1D8', danoCritico: '2D8', area: false },
     ];
     const { raiz } = montar(false, desordenados);
     const nomes = Array.from(raiz.querySelectorAll('.ataque-lista__nome')).map((n) => n.textContent?.trim());
-    expect(nomes).toEqual(['Ecoar', 'Investida', 'Zumbido Perfurante']);
+    expect(nomes).toEqual(['Toque', 'Avanço', 'Ecoar', 'Zumbido Perfurante', 'Investida']);
   });
 
-  it('cada botão de rolagem mostra a própria expressão no tooltip (teste, dano e dano crítico)', () => {
-    const { fixture } = montar(false);
-    const tooltipDe = (classe: string) =>
-      fixture.debugElement.query(By.css(classe)).injector.get(Tooltip).appTooltip();
+  it('cada botão de rolagem escreve a própria fórmula, sem depender de tooltip', () => {
+    const { fixture, raiz } = montar(false);
+    const formulaDe = (classe: string) =>
+      raiz.querySelector(`${classe} .ataque-lista__formula`)?.textContent?.trim();
+    const nomeDe = (classe: string) => raiz.querySelector(classe)?.getAttribute('aria-label');
 
-    expect(tooltipDe('.ataque-lista__rolar--teste')).toBe('Rolar teste: lutad20kh1+3');
-    expect(tooltipDe('.ataque-lista__rolar--dano')).toBe('Rolar dano: 4D12+10');
-    expect(tooltipDe('.ataque-lista__rolar--critico')).toBe('Rolar dano crítico: 8D12+20');
+    expect(formulaDe('.ataque-lista__rolar--teste')).toBe('lutad20kh1+3');
+    expect(formulaDe('.ataque-lista__rolar--dano')).toBe('4D12+10');
+    expect(formulaDe('.ataque-lista__rolar--critico')).toBe('8D12+20');
+    expect(nomeDe('.ataque-lista__rolar--teste')).toBe('Rolar teste: lutad20kh1+3');
+    expect(nomeDe('.ataque-lista__rolar--critico')).toBe('Rolar dano crítico: 8D12+20');
+    expect(fixture.debugElement.query(By.css('.ataque-lista__rolar--dano')).injector.get(Tooltip, null)).toBeNull();
   });
 
   it('organiza o formulário com custo, nome, área, fórmulas empilhadas e efeito no editor Markdown', () => {

@@ -84,11 +84,20 @@ export class CriaturaAtaqueLista {
     efeito: new FormControl('', { nonNullable: true }),
   });
 
-  /** Itens ordenados por nome, com o índice original preservado (edição/remoção operam sobre ele). */
+  /**
+   * Itens do mais barato ao mais caro (Livre → Movimento → Padrão → Completa → Turno, a ordem de
+   * `CustoAcaoEnum`) e por nome dentro do mesmo custo — o mestre acha "o que cabe nesta ação" sem
+   * ler a lista inteira (`criatura-ataques-habilidades-leitura`). O índice original é preservado
+   * (edição/remoção operam sobre ele).
+   */
   protected readonly itensOrdenados = computed<AtaqueIndexado[]>(() =>
     this.itens()
       .map((item, indice) => ({ item, indice }))
-      .sort((a, b) => a.item.nome.localeCompare(b.item.nome, 'pt-BR', { sensitivity: 'base' })),
+      .sort(
+        (a, b) =>
+          CUSTOS_ACAO.indexOf(a.item.custoAcao) - CUSTOS_ACAO.indexOf(b.item.custoAcao) ||
+          a.item.nome.localeCompare(b.item.nome, 'pt-BR', { sensitivity: 'base' }),
+      ),
   );
 
   protected editando(indice: number): boolean {

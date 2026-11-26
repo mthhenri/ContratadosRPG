@@ -34,72 +34,96 @@
     }
 
     <div class="habilidade-lista__rolagem" appOverflowFade>
-        <ul class="habilidade-lista__itens">
-            @if (editando(-1)) {
+        @if (editando(-1)) {
+            <ul class="habilidade-lista__itens">
                 <li class="habilidade-lista__item" #formNovo>
                     <ng-container
                         *ngTemplateOutlet="formulario; context: { $implicit: 'Adicionar' }"
                     />
                 </li>
-            }
-            @for (entrada of itensOrdenados(); track entrada.indice) {
-                @let item = entrada.item;
-                @let idx = entrada.indice;
-                <li
-                    class="habilidade-lista__item"
-                    [class.habilidade-lista__item--editando]="editando(idx)"
-                >
-                    @if (editando(idx)) {
-                        <ng-container
-                            *ngTemplateOutlet="formulario; context: { $implicit: 'Confirmar' }"
-                        />
-                    } @else {
-                        <div class="habilidade-lista__cabecalho-item">
-                            <span class="habilidade-lista__nome">{{ item.nome }}</span>
-                            <span [class]="classeChipTipo(item.tipo)">{{
-                                rotuloTipo(item.tipo)
-                            }}</span>
-                        </div>
-                        <app-habilidade-descricao
-                            class="habilidade-lista__descricao"
-                            [valor]="item.descricao"
-                            [rotulo]="'Descrição de ' + item.nome"
-                        />
-                        @if (item.restricao) {
-                            <app-editor-markdown
-                                class="habilidade-lista__restricao"
-                                [valor]="item.restricao"
-                                [somenteLeitura]="true"
-                                [compacto]="true"
-                                [rotulo]="'Restrição de ' + item.nome"
-                            />
-                        }
-                        @if (editavel() && modoEdicao()) {
-                            <div class="habilidade-lista__acoes">
-                                <button
-                                    app-botao-icone
-                                    class="habilidade-lista__acao"
-                                    type="button"
-                                    aria-label="Editar"
-                                    (click)="editar(idx)"
-                                >
-                                    <app-icone nome="editar" />
-                                </button>
-                                <button
-                                    app-botao-icone
-                                    class="habilidade-lista__acao"
-                                    type="button"
-                                    aria-label="Remover"
-                                    (click)="remover(idx)"
-                                >
-                                    <app-icone nome="excluir" />
-                                </button>
-                            </div>
-                        }
+            </ul>
+        }
+        <!-- Agrupada por tipo (Ativas · Gatilhos · Passivas), alfabética dentro do grupo:
+             o que a criatura faz, a que reage e o que vale sempre (criatura-ataques-habilidades-leitura). -->
+        @for (grupo of grupos(); track grupo.tipo) {
+            <section class="habilidade-lista__grupo" [attr.aria-label]="grupo.titulo">
+                <h4 class="habilidade-lista__grupo-titulo">
+                    {{ grupo.titulo }}
+                    <span class="habilidade-lista__grupo-contagem">{{ grupo.itens.length }}</span>
+                </h4>
+                <ul class="habilidade-lista__itens">
+                    @for (entrada of grupo.itens; track entrada.indice) {
+                        @let item = entrada.item;
+                        @let idx = entrada.indice;
+                        <li
+                            class="habilidade-lista__item"
+                            [class.habilidade-lista__item--editando]="editando(idx)"
+                        >
+                            @if (editando(idx)) {
+                                <ng-container
+                                    *ngTemplateOutlet="
+                                        formulario;
+                                        context: { $implicit: 'Confirmar' }
+                                    "
+                                />
+                            } @else {
+                                <div class="habilidade-lista__cabecalho-item">
+                                    <span class="habilidade-lista__nome">{{ item.nome }}</span>
+                                    <span [class]="classeChipTipo(item.tipo)">{{
+                                        rotuloTipo(item.tipo)
+                                    }}</span>
+                                </div>
+                                <app-habilidade-descricao
+                                    class="habilidade-lista__descricao"
+                                    [valor]="item.descricao"
+                                    [rotulo]="'Descrição de ' + item.nome"
+                                    [expansivel]="true"
+                                />
+                                <!-- Restrição logo após a descrição (que recolhe em "Ver mais"), destacada e
+                                     sempre inteira: nas fichas reais ela é o limite da habilidade
+                                     ("suprimida por chumbo", "uma vez por rodada"), às vezes um parágrafo. -->
+                                @if (item.restricao) {
+                                    <div class="habilidade-lista__restricao-bloco">
+                                        <span class="habilidade-lista__restricao-rotulo"
+                                            >Restrição</span
+                                        >
+                                        <app-editor-markdown
+                                            class="habilidade-lista__restricao"
+                                            [valor]="item.restricao"
+                                            [somenteLeitura]="true"
+                                            [compacto]="true"
+                                            [rotulo]="'Restrição de ' + item.nome"
+                                        />
+                                    </div>
+                                }
+                                @if (editavel() && modoEdicao()) {
+                                    <div class="habilidade-lista__acoes">
+                                        <button
+                                            app-botao-icone
+                                            class="habilidade-lista__acao"
+                                            type="button"
+                                            aria-label="Editar"
+                                            (click)="editar(idx)"
+                                        >
+                                            <app-icone nome="editar" />
+                                        </button>
+                                        <button
+                                            app-botao-icone
+                                            class="habilidade-lista__acao"
+                                            type="button"
+                                            aria-label="Remover"
+                                            (click)="remover(idx)"
+                                        >
+                                            <app-icone nome="excluir" />
+                                        </button>
+                                    </div>
+                                }
+                            }
+                        </li>
                     }
-                </li>
-            }
-        </ul>
+                </ul>
+            </section>
+        }
     </div>
 </section>
 

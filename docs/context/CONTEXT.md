@@ -75,6 +75,10 @@
 > gerador. [Spec](../specs/done/revisao-formatacao-pdf-regras.spec.md) ·
 > [verificação e limites](../specs/done/revisao-formatacao-pdf-regras/verificacao.md).
 >
+> **Ataques e Habilidades da criatura (2026-11-26):** habilidades agrupadas por tipo com "Ver mais" no
+> cartão e restrição destacada; ataques por custo com fórmula visível. O resto do redesenho segue em
+> `ficha-criatura-npc-revamp-visual` (backlog). [Spec](../specs/done/criatura-ataques-habilidades-leitura.spec.md).
+>
 > **Fichas em JSON (2026-11-26):** administrador copia/baixa o JSON de Criatura e NPC no menu ⋯ do acervo ou no
 > "Exportar ▾" do cabeçalho da ficha, e
 > importa por "Importar JSON" (`POST /ficha/importar`, só `ADMIN`), que cria a ficha solta validando **como edição**

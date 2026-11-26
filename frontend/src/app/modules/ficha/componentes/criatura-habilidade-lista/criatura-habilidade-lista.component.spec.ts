@@ -1,3 +1,4 @@
+import { By } from '@angular/platform-browser';
 import { TestBed } from '@angular/core/testing';
 import { describe, expect, it, vi } from 'vitest';
 import { HabilidadeTipoCriaturaEnum } from '@contratados-rpg/shared/enums';
@@ -5,6 +6,8 @@ import type { FichaCriaturaHabilidadeDto } from '@contratados-rpg/shared/dtos/fi
 
 import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
 import { CriaturaHabilidadeLista } from './criatura-habilidade-lista.component';
+
+import { HabilidadeDescricao } from '../habilidade-descricao/habilidade-descricao.component';
 
 describe('CriaturaHabilidadeLista', () => {
   const itens: FichaCriaturaHabilidadeDto[] = [
@@ -28,15 +31,50 @@ describe('CriaturaHabilidadeLista', () => {
     expect(nomes).toEqual(['Pele de Pedra']);
   });
 
-  it('ordena as habilidades por nome', () => {
+  it('agrupa por tipo na ordem Ativas, Gatilhos, Passivas, alfabética dentro do grupo, sem grupo vazio', () => {
     const desordenadas: FichaCriaturaHabilidadeDto[] = [
       { nome: 'Visão no Escuro', tipo: HabilidadeTipoCriaturaEnum.PASSIVA, descricao: 'Enxerga no escuro.' },
       { nome: 'Absorver Impacto', tipo: HabilidadeTipoCriaturaEnum.GATILHO, descricao: 'Reduz dano.' },
       { nome: 'Metamorfose', tipo: HabilidadeTipoCriaturaEnum.ATIVA, descricao: 'Muda de forma.' },
+      { nome: 'Armadura', tipo: HabilidadeTipoCriaturaEnum.PASSIVA, descricao: 'Pele dura.' },
     ];
     const { raiz } = montar(false, desordenadas);
-    const nomes = Array.from(raiz.querySelectorAll('.habilidade-lista__nome')).map((n) => n.textContent?.trim());
-    expect(nomes).toEqual(['Absorver Impacto', 'Metamorfose', 'Visão no Escuro']);
+    const grupos = Array.from(raiz.querySelectorAll('.habilidade-lista__grupo')).map((grupo) => ({
+      titulo: grupo.querySelector('.habilidade-lista__grupo-titulo')?.textContent?.replace(/\s+/g, ' ').trim(),
+      nomes: Array.from(grupo.querySelectorAll('.habilidade-lista__nome')).map((n) => n.textContent?.trim()),
+    }));
+    expect(grupos).toEqual([
+      { titulo: 'Ativas 1', nomes: ['Metamorfose'] },
+      { titulo: 'Gatilhos 1', nomes: ['Absorver Impacto'] },
+      { titulo: 'Passivas 2', nomes: ['Armadura', 'Visão no Escuro'] },
+    ]);
+  });
+
+  it('não mostra grupo de tipo sem habilidade', () => {
+    const { raiz } = montar(false, [
+      { nome: 'Visão no Escuro', tipo: HabilidadeTipoCriaturaEnum.PASSIVA, descricao: 'Enxerga no escuro.' },
+    ]);
+    expect(raiz.querySelectorAll('.habilidade-lista__grupo')).toHaveLength(1);
+  });
+
+  it('a restrição vem destacada logo após a descrição, rotulada "Restrição"; sem restrição, não há bloco', () => {
+    const { raiz } = montar(false, [
+      { nome: 'Fúria', tipo: HabilidadeTipoCriaturaEnum.GATILHO, descricao: 'Ativa ao sofrer dano.', restricao: 'uma vez por cena' },
+      { nome: 'Calma', tipo: HabilidadeTipoCriaturaEnum.PASSIVA, descricao: 'Nada.' },
+    ]);
+    const [furia, calma] = Array.from(raiz.querySelectorAll('.habilidade-lista__item'));
+    const filhos = Array.from(furia.children).map((filho) => filho.classList[0]);
+
+    expect(furia.querySelector('.habilidade-lista__restricao-rotulo')?.textContent?.trim()).toBe('Restrição');
+    expect(filhos.indexOf('habilidade-lista__restricao-bloco')).toBe(filhos.indexOf('habilidade-lista__descricao') + 1);
+    expect(calma.querySelector('.habilidade-lista__restricao-bloco')).toBeNull();
+  });
+
+  it('usa a descrição no modo expansível ("Ver mais"), não o tooltip', () => {
+    const { fixture } = montar(false);
+    const descricao = fixture.debugElement.query(By.directive(HabilidadeDescricao));
+
+    expect(descricao.componentInstance.expansivel()).toBe(true);
   });
 
   it('mostra a descrição pelo componente com teto de linhas, que já traz o nome acessível', () => {

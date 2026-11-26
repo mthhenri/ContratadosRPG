@@ -74,34 +74,49 @@
                             />
                         }
 
+                        <!-- Fórmula escrita no próprio botão (criatura-ataques-habilidades-leitura): o mestre lê
+                             o teste e o dano sem tooltip, também no toque. O botão continua rolando. -->
                         <div class="ataque-lista__rodape">
-                            <button
-                                app-botao
-                                class="ataque-lista__rolar ataque-lista__rolar--teste"
-                                type="button"
-                                [appTooltip]="'Rolar teste: ' + item.teste"
-                                (click)="testar(item)"
-                            >
-                                <app-icone nome="d20" /> Teste
-                            </button>
-                            <button
-                                app-botao
-                                class="ataque-lista__rolar ataque-lista__rolar--dano"
-                                type="button"
-                                [appTooltip]="'Rolar dano: ' + item.dano"
-                                (click)="rolar(item)"
-                            >
-                                <app-icone nome="d20" /> Dano
-                            </button>
-                            <button
-                                app-botao
-                                class="ataque-lista__rolar ataque-lista__rolar--critico"
-                                type="button"
-                                [appTooltip]="'Rolar dano crítico: ' + item.danoCritico"
-                                (click)="criticar(item)"
-                            >
-                                <app-icone nome="d20" /> Crítico
-                            </button>
+                            <div class="ataque-lista__rolagens">
+                                <button
+                                    app-botao
+                                    class="ataque-lista__rolar ataque-lista__rolar--teste"
+                                    type="button"
+                                    [attr.aria-label]="'Rolar teste: ' + item.teste"
+                                    (click)="testar(item)"
+                                >
+                                    <span class="ataque-lista__rolar-rotulo"
+                                        ><app-icone nome="d20" /> Teste</span
+                                    >
+                                    <span class="ataque-lista__formula">{{ item.teste }}</span>
+                                </button>
+                                <button
+                                    app-botao
+                                    class="ataque-lista__rolar ataque-lista__rolar--dano"
+                                    type="button"
+                                    [attr.aria-label]="'Rolar dano: ' + item.dano"
+                                    (click)="rolar(item)"
+                                >
+                                    <span class="ataque-lista__rolar-rotulo"
+                                        ><app-icone nome="d20" /> Dano</span
+                                    >
+                                    <span class="ataque-lista__formula">{{ item.dano }}</span>
+                                </button>
+                                <button
+                                    app-botao
+                                    class="ataque-lista__rolar ataque-lista__rolar--critico"
+                                    type="button"
+                                    [attr.aria-label]="'Rolar dano crítico: ' + item.danoCritico"
+                                    (click)="criticar(item)"
+                                >
+                                    <span class="ataque-lista__rolar-rotulo"
+                                        ><app-icone nome="d20" /> Crítico</span
+                                    >
+                                    <span class="ataque-lista__formula">{{
+                                        item.danoCritico
+                                    }}</span>
+                                </button>
+                            </div>
                             @if (editavel() && modoEdicao()) {
                                 <div class="ataque-lista__acoes">
                                     <button

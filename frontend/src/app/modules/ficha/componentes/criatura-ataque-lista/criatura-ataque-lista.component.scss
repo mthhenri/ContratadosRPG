@@ -108,9 +108,15 @@
         }
     }
 
+    // Mesma grade da lista de Habilidades: no máximo duas colunas largas, cada cartão na própria
+    // altura (`align-items: start`).
     &__itens {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        grid-template-columns: repeat(
+            auto-fill,
+            minmax(min(100%, max(380px, calc(50% - 6px))), 1fr)
+        );
+        align-items: start;
         gap: 11px;
         margin: 0;
         padding: 0;
@@ -134,8 +140,8 @@
         // reage à largura real da célula, não à do viewport.
         container-type: inline-size;
     }
-    // A expressão de dano deixou o cabeçalho (vive no tooltip dos botões de rolagem): o nome ocupa
-    // a largura inteira do card.
+    // A expressão de dano fica nos próprios botões de rolagem (rodapé): o nome ocupa a largura
+    // inteira do card.
     &__cabecalho-item {
         display: flex;
         align-items: baseline;
@@ -202,21 +208,40 @@
 
     &__rodape {
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         gap: 8px;
-        flex-wrap: wrap;
         margin-top: auto;
         padding-top: 10px;
         border-top: 1px solid var(--border);
     }
+    // Três rolagens em colunas iguais quando o cartão tem largura; em cartão estreito (celular)
+    // empilham, rótulo à esquerda e fórmula à direita — nunca cortam a fórmula.
+    &__rolagens {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+        flex: 1 1 auto;
+        min-width: 0;
+        @container (max-width: 420px) {
+            grid-template-columns: 1fr;
+            gap: 6px;
+        }
+    }
     &__rolar {
-        display: inline-flex;
-        align-items: center;
-        gap: 7px;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+        min-width: 0;
         padding: 7px 11px;
-        font: 10px var(--font-mono);
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
+        text-align: left;
+        @container (max-width: 420px) {
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            min-height: bp.$alvo-toque;
+        }
         background: var(--surface);
         border: 1px solid var(--border-strong);
         color: var(--text-dim);
@@ -249,8 +274,29 @@
             }
         }
     }
+    &__rolar-rotulo {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        font: 10px var(--font-mono);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+    }
+    // Fórmula como texto: mono, sem caixa alta (`d20kh1` precisa ficar legível), quebra só se não
+    // couber — nunca corta.
+    &__formula {
+        max-width: 100%;
+        font: 600 12px var(--font-mono);
+        text-transform: none;
+        letter-spacing: 0;
+        overflow-wrap: anywhere;
+        @container (max-width: 420px) {
+            text-align: right;
+        }
+    }
     &__acoes {
         display: flex;
+        flex: none;
         gap: 4px;
         margin-left: auto;
     }

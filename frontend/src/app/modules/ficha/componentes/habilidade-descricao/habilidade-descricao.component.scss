@@ -1,3 +1,5 @@
+@use "tema/breakpoints" as bp;
+
 // Teto de 5 linhas na leitura compacta da descrição de habilidade. O Milkdown renderiza o
 // documento em `.milkdown .editor` (ProseMirror), com `font: 13px/1.7` no compacto — o corte por
 // `-webkit-line-clamp` conta linhas através dos parágrafos/listas dele e põe as reticências na
@@ -18,10 +20,48 @@
         line-clamp: 5;
         overflow: hidden;
     }
+
+    &--expandida ::ng-deep .milkdown .editor {
+        display: block;
+        -webkit-line-clamp: unset;
+        line-clamp: unset;
+        overflow: visible;
+    }
 }
 
 .habilidade-descricao__rodape {
     display: flex;
     justify-content: flex-end;
     margin-top: var(--space-4);
+}
+
+.habilidade-descricao__rodape--inicio {
+    justify-content: flex-start;
+}
+
+// Seta do "Ver mais" aponta para baixo; aberta, para cima (mesmo `chevron` do `app-menu-acoes`).
+.habilidade-descricao__alternar {
+    margin-left: calc(var(--space-8) * -1);
+
+    &--aberto app-icone {
+        transform: rotate(180deg);
+    }
+}
+
+// Só no modo expansível (Criatura): parágrafos separados — habilidade com fases escreve uma fase
+// por parágrafo, e coladas elas viram um bloco só. A ficha de Agente não muda.
+:host(.habilidade-descricao--expansivel)
+    .habilidade-descricao__corpo
+    ::ng-deep
+    .milkdown
+    .editor
+    p
+    + p {
+    margin-top: var(--space-8);
+}
+
+@include bp.mobile {
+    .habilidade-descricao__alternar {
+        min-height: bp.$alvo-toque;
+    }
 }

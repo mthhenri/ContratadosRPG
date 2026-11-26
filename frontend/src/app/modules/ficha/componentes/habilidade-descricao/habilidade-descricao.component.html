@@ -1,4 +1,8 @@
-<div class="habilidade-descricao__corpo" #corpo>
+<div
+    class="habilidade-descricao__corpo"
+    [class.habilidade-descricao__corpo--expandida]="expandida()"
+    #corpo
+>
     <app-editor-markdown
         [valor]="valor()"
         [somenteLeitura]="true"
@@ -6,7 +10,27 @@
         [rotulo]="rotulo()"
     />
 </div>
-@if (truncada()) {
+@if (expansivel()) {
+    @if (truncada() || expandida()) {
+        <div class="habilidade-descricao__rodape habilidade-descricao__rodape--inicio">
+            <button
+                app-botao
+                variante="primario"
+                estilo="texto"
+                tamanho="pequeno"
+                posicaoIcone="direita"
+                type="button"
+                class="habilidade-descricao__alternar"
+                [class.habilidade-descricao__alternar--aberto]="expandida()"
+                [attr.aria-expanded]="expandida()"
+                (click)="alternarExpansao()"
+            >
+                {{ expandida() ? "Ver menos" : "Ver mais" }}
+                <app-icone nome="chevron" />
+            </button>
+        </div>
+    }
+} @else if (truncada()) {
     <div class="habilidade-descricao__rodape">
         <button
             app-botao-icone

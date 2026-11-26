@@ -5,6 +5,11 @@
 > caso é o visual das **habilidades das criaturas**. Pedido **D** de `PEDIDO_CLAUDE_CODE_SPECS_SITE.md`,
 > prioridade alta. Só especificação: nenhum código nesta etapa.
 
+> **2026-11-26:** a parte da Fase 1 que toca as listas de Ataques e Habilidades da Criatura (fórmula visível,
+> agrupamento por tipo, "Quando", descrição expansível) foi feita em
+> [`criatura-ataques-habilidades-leitura`](../done/criatura-ataques-habilidades-leitura.spec.md). O resto desta
+> spec (visão de mesa, NPC, ladrilho unificado, Fase 2) continua aberto.
+
 ## Objetivo
 
 Redesenhar a leitura das fichas de Criatura e de NPC para **uso rápido na mesa durante o combate**:
