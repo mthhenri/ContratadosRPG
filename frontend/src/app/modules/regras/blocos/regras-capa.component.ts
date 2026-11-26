@@ -1,7 +1,7 @@
 import { Component, input } from "@angular/core";
 import { RegrasCapa as BlocoCapa } from "../regras.model";
 
-/** Capa do livro logo após a abertura: selo de versão, título e subtítulo centralizados. */
+/** Capa do livro logo após a abertura: selo de versão, título e subtítulo (se houver) centralizados. */
 @Component({
     selector: "app-regras-capa",
     template: `
@@ -10,7 +10,9 @@ import { RegrasCapa as BlocoCapa } from "../regras.model";
                 <p class="regras-capa__versao">{{ versao }}</p>
             }
             <p class="regras-capa__titulo">{{ bloco().titulo }}</p>
-            <p class="regras-capa__subtitulo">{{ bloco().subtitulo }}</p>
+            @if (bloco().subtitulo; as subtitulo) {
+                <p class="regras-capa__subtitulo">{{ subtitulo }}</p>
+            }
         </header>
     `,
     styleUrl: "./regras-capa.component.scss",

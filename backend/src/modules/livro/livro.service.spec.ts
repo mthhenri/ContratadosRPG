@@ -274,4 +274,14 @@ describe("LivroService — publicar", () => {
     await servico.publicar({ ...dto, numero: "1.0.1" }, admin);
     expect(criarVersao).toHaveBeenCalledTimes(2);
   });
+
+  // `regras-sem-subtitulo`: o autor não quer mais subtítulo; a versão anterior tinha "Nova Era".
+  it("não repete o subtítulo da versão anterior", async () => {
+    const { servico, criarVersao } = criar({
+      arvore: [secao], publicada: versao(10, TipoLivroVersaoSituacaoEnum.PUBLICADA),
+    });
+    await servico.publicar(
+      { codigo: "sistema", situacao: TipoLivroVersaoSituacaoEnum.PUBLICADA, numero: "1.0.1" }, admin);
+    expect(criarVersao.mock.calls[0][0]).toMatchObject({ conteudo: { subtitulo: "" } });
+  });
 });

@@ -211,11 +211,9 @@ export class LivroService {
 
   /** Árvore da cópia de trabalho como fotografia: links resolvidos para a âncora atual. */
   private async montarFotografia(livro: LivroResumoDto, numero: string): Promise<LivroVersaoConteudoDto> {
-    const [arvore, antigas, ultimaPublicada, ultimoRascunho] = await Promise.all([
+    const [arvore, antigas] = await Promise.all([
       this.regraPecaRepository.listarArvore({ livroId: livro.id }),
       this.regraPecaRepository.listarAncorasAntigas({ livroId: livro.id }),
-      this.livroVersaoRepository.recuperarVersaoAtual({ livroId: livro.id, situacao: TipoLivroVersaoSituacaoEnum.PUBLICADA }),
-      this.livroVersaoRepository.recuperarVersaoAtual({ livroId: livro.id, situacao: TipoLivroVersaoSituacaoEnum.RASCUNHO }),
     ]);
     const ancoraPorIdentificador = new Map(arvore.map((peca) => [peca.identificador, peca.ancora]));
     const filhasPorPai = new Map<number | null, RegraPecaArvoreItemDto[]>();
@@ -241,14 +239,12 @@ export class LivroService {
       }
     }
 
-    const anterior = [ultimaPublicada, ultimoRascunho]
-      .filter((versao): versao is LivroVersaoRecuperadaDto => versao !== null)
-      .sort((primeira, segunda) => segunda.id - primeira.id)[0];
     return {
       formato: LIVRO_FORMATO_ATUAL,
       codigo: livro.codigo,
       titulo: livro.titulo,
-      subtitulo: anterior?.conteudo.subtitulo ?? "",
+      // Os livros não têm subtítulo (decisão do autor, 25/11/2026); as versões antigas guardam o seu.
+      subtitulo: "",
       numero,
       pecas: montar(null),
       ...(Object.keys(ancorasAntigas).length > 0 ? { ancorasAntigas } : {}),
