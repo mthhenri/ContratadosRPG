@@ -1,5 +1,14 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-11-26 — v1.13.0: nota e versão
+
+O autor pediu a 1.13.0 numa versão só, cobrindo 25/10 a 26/11 (a skill sugere fatiar períodos longos; mantida a
+escolha do autor). Nota em `docs/patchnotes/1.13.0.md`, aprovada pelo autor: Regras em PDF e Markdown, montador
+de rolagens simplificado, "Não salvo" nas fichas, criatura legível e editável por item, VD recalculando Vida e
+Defesa, Resistências com limite à vista, JSON de criatura/NPC e livros sem "Nova Era". Versão sincronizada nos
+pacotes; `shared` 1.355 testes; simulação da publicação e do workflow (publicaria e criaria `v1.13.0`). Tag e R2
+ficam com o workflow no push para `master`.
+
 ## 2026-11-26 — P-140: ficha de Agente mostra "Não salvo"
 
 O autor pediu a correção do `P-140`: quando o servidor recusava salvar a ficha de Agente, a tela seguia com a
