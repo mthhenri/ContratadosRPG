@@ -110,6 +110,10 @@
         &--salvo {
             color: var(--positive);
         }
+
+        &--erro {
+            color: var(--erro);
+        }
     }
 
     // Grupo de ações do cabeçalho (m3-62): selo de auto-save + gatilhos flutuantes (histórico/

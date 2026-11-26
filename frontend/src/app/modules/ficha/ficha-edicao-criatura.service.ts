@@ -21,6 +21,7 @@ import { calcularTurnosPorRodada } from '@contratados-rpg/shared/regras/encontro
 import { recalcularVitalidadeCriatura } from '@contratados-rpg/shared/regras/criatura';
 
 import { FichaService } from './ficha.service';
+import { lerMotivoRecusa } from './ler-motivo-recusa';
 
 /** Ajuste rápido de Vida (mesma forma de `AjusteVitalidade` do jogador, sem Energia — criatura não tem). */
 export interface AjusteCriaturaVitalidade {
@@ -105,7 +106,10 @@ export class FichaEdicaoCriaturaService {
     this.motivoNaoSalvo.set(null);
     this.estadoPersistencia.set('salvo');
     if (this.temporizadorSalvo) clearTimeout(this.temporizadorSalvo);
-    this.temporizadorSalvo = setTimeout(() => this.estadoPersistencia.set('ocioso'), 2000);
+    // Só apaga o próprio "Salvo": um "Salvando…" ou "Não salvo" que veio depois fica.
+    this.temporizadorSalvo = setTimeout(() => {
+      if (this.estadoPersistencia() === 'salvo') this.estadoPersistencia.set('ocioso');
+    }, 2000);
   }
 
   private agendarPersistencia(): void {
@@ -314,10 +318,4 @@ export class FichaEdicaoCriaturaService {
         this.ajustarImagemFoco(null);
       });
   }
-}
-
-/** Mensagem do servidor numa recusa (`StandardResponse.mensagem`), ou um texto genérico. */
-function lerMotivoRecusa(erro: unknown): string {
-  const mensagem = (erro as { error?: { mensagem?: unknown } } | null)?.error?.mensagem;
-  return typeof mensagem === 'string' && mensagem.trim() ? mensagem : 'O servidor recusou o salvamento.';
 }

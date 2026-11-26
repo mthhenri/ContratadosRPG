@@ -16,6 +16,7 @@ import { HistoricoRolagensSidebar } from '../../../../shared/historico-rolagens-
 import { HistoricoRolagensJanelaService } from '../../../../shared/historico-rolagens-sidebar/historico-rolagens-janela.service';
 import { AnotacoesJanelaService } from '../../anotacoes-janela.service';
 import { Icone } from '../../../../shared/icone/icone.component';
+import { AvisoNaoSalvo } from '../../componentes/aviso-nao-salvo/aviso-nao-salvo.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
@@ -65,6 +66,7 @@ const ITENS_POR_PAGINA_HISTORICO = 20;
     ColunaAcoes,
     ColunaAcoesItem,
     Icone,
+    AvisoNaoSalvo,
     CriaturaEsqueleto,
     CriaturaVisualizacao,
     CalculadoraFlutuante,

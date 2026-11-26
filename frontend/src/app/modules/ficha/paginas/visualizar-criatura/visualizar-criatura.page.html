@@ -149,18 +149,9 @@
             </div>
         </header>
 
-        <!-- Recusa do servidor: a mudança continua na tela e o aviso fica até um salvamento passar
-             (decisão do autor, 2026-11-26). Mesmo tom do "Falha ao salvar" da ficha de NPC. -->
+        <!-- Recusa do servidor: a mudança continua na tela e o aviso fica até salvar (P-140). -->
         @if (fichaEdicao.estadoPersistencia() === 'erro') {
-        <p class="ficha-pagina__nao-salvo" role="alert">
-            <app-icone nome="alerta" />
-            <span class="ficha-pagina__nao-salvo-texto">
-                <span><strong>Não salvo</strong> — {{ fichaEdicao.motivoNaoSalvo() }}</span>
-                <span class="ficha-pagina__nao-salvo-dica"
-                    >A mudança continua na tela; corrija e ela salva sozinha.</span
-                >
-            </span>
-        </p>
+        <app-aviso-nao-salvo [motivo]="fichaEdicao.motivoNaoSalvo() ?? ''" />
         } @if (carregando()) {
         <app-criatura-esqueleto role="status" aria-label="Carregando ficha" />
         } @else if (ficha(); as fichaAtual) {

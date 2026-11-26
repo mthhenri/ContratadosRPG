@@ -1,5 +1,19 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-11-26 — P-140: ficha de Agente mostra "Não salvo"
+
+O autor pediu a correção do `P-140`: quando o servidor recusava salvar a ficha de Agente, a tela seguia com a
+mudança, o indicador sumia e só o aviso passageiro explicava — recarregar perdia a edição. `FichaEdicaoService`
+ganhou o estado `erro` e `motivoNaoSalvo` (mensagem do servidor, extraída por `lerMotivoRecusa`, agora
+compartilhada com a criatura); só um salvamento de dados confirmado limpa o aviso, e upload/remoção de imagem
+não o apaga. O aviso fixo virou o componente `app-aviso-nao-salvo`, usado pela página do Agente e pela da
+criatura (que tinha o bloco inline). De passagem, o temporizador de 2s do "Salvo" (Agente e criatura) só
+volta a ocioso se ainda estiver "Salvo" — antes podia apagar um "Não salvo" ou "Salvando…" que chegasse logo
+depois. Verificado com uma cópia de teste de Agente (#34) nos dois viewports, com a recusa simulada no
+navegador (400 no formato do backend) e a correção salvando de verdade; a criatura conferida de novo. As
+telas de jogador (campanha, cena, encontro) e a ficha flutuante usam o mesmo service mas não exibem estado
+de salvamento — ficaram como estavam.
+
 ## 2026-11-26 — criatura-vd-resistencias-salvamento: VD recalcula Vida e Defesa; resistências legíveis; "Não salvo"
 
 O autor pediu que mudar a VD da criatura recalculasse Vida (pela Tenacidade) e Defesa, e que a ficha fosse

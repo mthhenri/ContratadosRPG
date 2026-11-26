@@ -144,9 +144,10 @@
                 <span
                     class="ficha-pagina__persistencia"
                     [class.ficha-pagina__persistencia--salvo]="fichaEdicao.estadoPersistencia() === 'salvo'"
+                    [class.ficha-pagina__persistencia--erro]="fichaEdicao.estadoPersistencia() === 'erro'"
                     role="status"
                 >
-                    {{ fichaEdicao.estadoPersistencia() === 'salvando' ? 'Salvando…' : 'Salvo' }}
+                    {{ textoPersistencia() }}
                 </span>
                 } @if (ficha()) {
                 <!-- Gatilhos flutuantes (m3-61): no desktop cada um vira um círculo fixo no canto inferior
@@ -305,6 +306,11 @@
                 </div>
             </div>
         </header>
+
+        <!-- Recusa do servidor: a mudança continua na tela e o aviso fica até salvar (P-140). -->
+        @if (fichaEdicao.estadoPersistencia() === 'erro') {
+        <app-aviso-nao-salvo [motivo]="fichaEdicao.motivoNaoSalvo() ?? ''" />
+        }
 
         @if (carregando()) {
         <!-- Esqueleto de carregamento: mesma silhueta de 2 colunas de `FichaVisualizacao` (Identidade +

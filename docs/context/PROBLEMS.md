@@ -29,17 +29,6 @@
 
 ## Ativos
 
-### P-140 — Ficha de Agente esconde salvamento recusado · `ABERTO` · frontend/ficha
-
-- **Sintoma:** quando o servidor recusa salvar a ficha de Agente (validação), a mudança continua na tela, o
-  indicador "Salvando…" some e só o aviso passageiro do interceptor explica; ao recarregar, a mudança some.
-- **Causa:** `FichaEdicaoService` (`frontend/src/app/modules/ficha/ficha-edicao.service.ts`) trata o erro com
-  `catchError` → `estadoPersistencia = 'ocioso'`, sem estado de erro.
-- **Contorno:** ler o aviso passageiro e recarregar a ficha.
-- **Correção:** o mesmo estado `erro` + motivo + aviso fixo "Não salvo" que a criatura ganhou em
-  `criatura-vd-resistencias-salvamento` (2026-11-26).
-- **Desde:** sempre; achado ao corrigir a criatura (2026-11-26).
-
 ### P-139 — Gaveta e janela das Regras cobrem os avisos no celular · `ABERTO` · frontend/regras
 
 - **Sintoma:** com a gaveta do sumário aberta (tela estreita), um aviso disparado ali fica atrás dela e quase

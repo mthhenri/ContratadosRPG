@@ -39,6 +39,7 @@ import type {
 } from '@contratados-rpg/shared/dtos/ficha';
 
 import { FichaService } from './ficha.service';
+import { lerMotivoRecusa } from './ler-motivo-recusa';
 import { normalizarEntrada, type EntradaAgente } from './status-derivado';
 import type { CondicoesFicha } from './condicoes-ficha';
 import type { EstadoSanidade } from './componentes/ficha-sanidade/ficha-sanidade.component';
@@ -69,8 +70,14 @@ export class FichaEdicaoService {
   private readonly fichaService = inject(FichaService);
   private readonly destroyRef = inject(DestroyRef);
 
-  /** Estado do auto-save exposto ao cabeçalho da página ("Salvando…"/"Salvo"). */
-  readonly estadoPersistencia = signal<'ocioso' | 'salvando' | 'salvo'>('ocioso');
+  /** Estado do auto-save exposto ao cabeçalho da página ("Salvando…"/"Salvo"/"Não salvo"). */
+  readonly estadoPersistencia = signal<'ocioso' | 'salvando' | 'salvo' | 'erro'>('ocioso');
+  /**
+   * Motivo da última recusa do PUT da ficha (mensagem do servidor), enquanto `estadoPersistencia`
+   * é `erro` (P-140). Só um salvamento de dados confirmado o limpa — a mudança continua na tela e
+   * a próxima edição reenvia o documento inteiro.
+   */
+  readonly motivoNaoSalvo = signal<string | null>(null);
   private temporizadorSalvo: ReturnType<typeof setTimeout> | null = null;
 
   /**
@@ -123,7 +130,27 @@ export class FichaEdicaoService {
   private marcarSalvo(): void {
     this.estadoPersistencia.set('salvo');
     if (this.temporizadorSalvo) clearTimeout(this.temporizadorSalvo);
-    this.temporizadorSalvo = setTimeout(() => this.estadoPersistencia.set('ocioso'), 2000);
+    // Só apaga o próprio "Salvo": um "Salvando…" ou "Não salvo" que veio depois fica.
+    this.temporizadorSalvo = setTimeout(() => {
+      if (this.estadoPersistencia() === 'salvo') this.estadoPersistencia.set('ocioso');
+    }, 2000);
+  }
+
+  /**
+   * Upload/remoção de imagem é outro canal (multipart): o sucesso dele não prova que os dados
+   * recusados antes foram salvos, então o "Não salvo" de dados continua (P-140).
+   */
+  private marcarSalvoOuManterErro(): void {
+    if (this.motivoNaoSalvo()) {
+      this.estadoPersistencia.set('erro');
+      return;
+    }
+    this.marcarSalvo();
+  }
+
+  /** Falha de imagem: volta ao "Não salvo" de dados se houver um; senão, ocioso (aviso do interceptor). */
+  private restaurarEstadoAposImagem(): void {
+    this.estadoPersistencia.set(this.motivoNaoSalvo() ? 'erro' : 'ocioso');
   }
 
   private agendarPersistencia(): void {
@@ -191,10 +218,11 @@ export class FichaEdicaoService {
             this.fichaBaseSignal.set(fichaAlterada);
           }
           this.edicaoPendente.set(false);
+          this.motivoNaoSalvo.set(null);
           this.marcarSalvo();
           this.confirmacao.next(true);
         },
-        error: () => {
+        error: (erro: unknown) => {
           this.emVoo = false;
           // Restaura o comportamento pré-P-082 pro merge de tempo real (m3-17): sem retry
           // automático, manter `edicaoPendente` presa pra sempre faria todo remoto futuro
@@ -202,7 +230,8 @@ export class FichaEdicaoService {
           // continua com `intencao`, então o documento local não é descartado (P-082): quem
           // chamar `antecipar()` de novo reenvia exatamente o que falhou.
           this.edicaoPendente.set(false);
-          this.estadoPersistencia.set('ocioso');
+          this.motivoNaoSalvo.set(lerMotivoRecusa(erro));
+          this.estadoPersistencia.set('erro');
           this.confirmacao.next(false);
         },
       });
@@ -566,7 +595,7 @@ export class FichaEdicaoService {
       .alterarImagem(this.obterFichaId(), arquivo)
       .pipe(
         catchError(() => {
-          this.estadoPersistencia.set('ocioso');
+          this.restaurarEstadoAposImagem();
           return EMPTY;
         }),
         takeUntilDestroyed(this.destroyRef),
@@ -576,7 +605,7 @@ export class FichaEdicaoService {
         if (fichaAgora) {
           this.ficha.set({ ...fichaAgora, imagemUrl: resultado.imagemUrl });
         }
-        this.marcarSalvo();
+        this.marcarSalvoOuManterErro();
       });
   }
 
@@ -595,7 +624,7 @@ export class FichaEdicaoService {
       .excluirImagem(this.obterFichaId())
       .pipe(
         catchError(() => {
-          this.estadoPersistencia.set('ocioso');
+          this.restaurarEstadoAposImagem();
           return EMPTY;
         }),
         takeUntilDestroyed(this.destroyRef),
@@ -605,7 +634,7 @@ export class FichaEdicaoService {
         if (fichaAgora) {
           this.ficha.set({ ...fichaAgora, imagemUrl: resultado.imagemUrl });
         }
-        this.marcarSalvo();
+        this.marcarSalvoOuManterErro();
         this.ajustarImagemFoco(null);
       });
   }

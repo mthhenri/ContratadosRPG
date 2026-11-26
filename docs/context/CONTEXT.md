@@ -83,8 +83,9 @@
 > [edição](../specs/done/criatura-ataques-habilidades-edicao.spec.md). Mudar a VD recalcula Vida Máxima e
 > Defesa (Tenacidade, só a Vida); Resistências mostram usado/limite e o mínimo da Fraqueza e editam pelo
 > selo; salvamento recusado vira "Não salvo" fixo com o motivo
-> ([spec](../specs/done/criatura-vd-resistencias-salvamento.spec.md)). Na ficha de Agente o mesmo
-> salvamento recusado continua escondido (`P-140`).
+> ([spec](../specs/done/criatura-vd-resistencias-salvamento.spec.md)). A página da ficha de Agente
+> (`/fichas/:id`) ganhou o mesmo "Não salvo" (`app-aviso-nao-salvo`, P-140 corrigido); as telas de jogador
+> em campanha/cena/encontro e a ficha flutuante ainda não mostram estado de salvamento.
 >
 > **Fichas em JSON (2026-11-26):** administrador copia/baixa o JSON de Criatura e NPC no menu ⋯ do acervo ou no
 > "Exportar ▾" do cabeçalho da ficha, e

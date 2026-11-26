@@ -16,6 +16,7 @@ import { HistoricoRolagensSidebar } from '../../../../shared/historico-rolagens-
 import { HistoricoRolagensJanelaService } from '../../../../shared/historico-rolagens-sidebar/historico-rolagens-janela.service';
 import { AnotacoesJanelaService } from '../../anotacoes-janela.service';
 import { Icone } from '../../../../shared/icone/icone.component';
+import { AvisoNaoSalvo } from '../../componentes/aviso-nao-salvo/aviso-nao-salvo.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
@@ -87,6 +88,7 @@ const ITENS_POR_PAGINA_HISTORICO = 20;
     BotaoIcone,
     Chip,
     Icone,
+    AvisoNaoSalvo,
     FichaEsqueleto,
     FichaVisualizacao,
     CalculadoraFlutuante,
@@ -118,6 +120,12 @@ export class FichaVisualizar {
   private readonly confirmacaoService = inject(ConfirmacaoService);
   /** Handlers `ajustar*` (m2-20) — reusados por `CampanhaDetalhe` na visão do jogador. */
   protected readonly fichaEdicao = inject(FichaEdicaoService);
+  protected readonly textoPersistencia = computed(() => {
+    const estado = this.fichaEdicao.estadoPersistencia();
+    if (estado === 'salvando') return 'Salvando…';
+    if (estado === 'erro') return 'Não salvo';
+    return 'Salvo';
+  });
   /** Flag "Rolagem oculta" + registro do histórico (m3-27), compartilhados na página (m2-21). */
   private readonly fichaRolagemRegistro = inject(FichaRolagemRegistroService);
   private readonly campanhaService = inject(CampanhaService);

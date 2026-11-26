@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { signal } from '@angular/core';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { StandardResponse } from '@contratados-rpg/shared/interfaces';
 import { ClasseEnum } from '@contratados-rpg/shared/enums';
 import type { FichaJogadorDadosDto, FichaRecuperadaDto } from '@contratados-rpg/shared/dtos/ficha';
@@ -142,6 +142,51 @@ describe('FichaEdicaoService', () => {
     expect(ficha()?.nome).toBe('Segundo');
     expect(servico.edicaoPendente()).toBe(false);
     expect(servico.estadoPersistencia()).toBe('salvo');
+  });
+
+  it('recusa do servidor vira "Não salvo" com o motivo, e o próximo salvamento que passa limpa (P-140)', async () => {
+    const { servico, http, ficha } = montar();
+
+    servico.ajustarNome('Recusado');
+    await new Promise((r) => setTimeout(r, 550));
+    http
+      .expectOne((req) => req.url.endsWith('/ficha/1'))
+      .flush({ sucesso: false, dados: null, mensagem: 'Vida atual não pode ser negativa' }, { status: 400, statusText: 'Bad Request' });
+
+    expect(servico.estadoPersistencia()).toBe('erro');
+    expect(servico.motivoNaoSalvo()).toBe('Vida atual não pode ser negativa');
+    expect(ficha()?.nome).toBe('Recusado');
+
+    servico.ajustarNome('Corrigido');
+    expect(servico.estadoPersistencia()).toBe('salvando');
+    await new Promise((r) => setTimeout(r, 550));
+    const correcao = http.expectOne((req) => req.url.endsWith('/ficha/1'));
+    expect(correcao.request.body.nome).toBe('Corrigido');
+    correcao.flush(envelope({ ...fichaInicial, nome: 'Corrigido' }));
+
+    expect(servico.estadoPersistencia()).toBe('salvo');
+    expect(servico.motivoNaoSalvo()).toBeNull();
+  });
+
+  it('recusa sem mensagem usa o texto genérico; o "Salvo" anterior não apaga o "Não salvo" depois', async () => {
+    vi.useFakeTimers();
+    try {
+      const { servico, http } = montar();
+      servico.ajustarNome('Primeiro');
+      vi.advanceTimersByTime(550);
+      http.expectOne((req) => req.url.endsWith('/ficha/1')).flush(envelope({ ...fichaInicial, nome: 'Primeiro' }));
+      expect(servico.estadoPersistencia()).toBe('salvo');
+
+      servico.ajustarNome('Segundo');
+      vi.advanceTimersByTime(550);
+      http.expectOne((req) => req.url.endsWith('/ficha/1')).flush('erro', { status: 500, statusText: 'Erro interno' });
+      expect(servico.motivoNaoSalvo()).toBe('O servidor recusou o salvamento.');
+
+      vi.advanceTimersByTime(2000);
+      expect(servico.estadoPersistencia()).toBe('erro');
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('falha no PUT não descarta a edição — "antecipar" reenvia exatamente o que falhou (retry)', async () => {
