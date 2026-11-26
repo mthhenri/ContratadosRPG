@@ -3,25 +3,16 @@
         <h3 class="habilidade-lista__titulo">Habilidades</h3>
         <span class="habilidade-lista__contagem">{{ itens().length }}</span>
         <span class="habilidade-lista__regua"></span>
+        <!-- Só criar no cabeçalho: alterar e excluir ficam em cada cartão
+             (criatura-ataques-habilidades-edicao). -->
         @if (editavel()) {
-            <button
-                app-botao-icone
-                class="habilidade-lista__cabecalho-acao"
-                type="button"
-                [class.habilidade-lista__cabecalho-acao--ativo]="modoEdicao()"
-                [attr.aria-pressed]="modoEdicao()"
-                [attr.aria-label]="modoEdicao() ? 'Concluir edição' : 'Editar habilidades'"
-                [appTooltip]="modoEdicao() ? 'Concluir edição' : 'Editar habilidades'"
-                (click)="alternarModoEdicao()"
-            >
-                <app-icone [nome]="modoEdicao() ? 'check' : 'editar'" />
-            </button>
             <button
                 app-botao-icone
                 class="habilidade-lista__cabecalho-acao habilidade-lista__cabecalho-acao--adicionar"
                 type="button"
                 aria-label="Adicionar habilidade"
                 [appTooltip]="'Adicionar habilidade'"
+                [disabled]="editando(-1)"
                 (click)="adicionar()"
             >
                 <app-icone nome="mais" />
@@ -36,42 +27,122 @@
     <div class="habilidade-lista__rolagem" appOverflowFade>
         @if (editando(-1)) {
             <ul class="habilidade-lista__itens">
-                <li class="habilidade-lista__item" #formNovo>
-                    <ng-container
-                        *ngTemplateOutlet="formulario; context: { $implicit: 'Adicionar' }"
-                    />
+                <li class="habilidade-lista__item habilidade-lista__item--caixa" #formNovo>
+                    <ng-container *ngTemplateOutlet="caixa; context: { $implicit: true }" />
                 </li>
             </ul>
         }
-        <!-- Agrupada por tipo (Ativas · Gatilhos · Passivas), alfabética dentro do grupo:
-             o que a criatura faz, a que reage e o que vale sempre (criatura-ataques-habilidades-leitura). -->
+        <!-- Agrupada por tipo (Ativas · Gatilhos · Passivas), alfabética dentro do grupo. O título
+             compacta o grupo para só os nomes; cada nome abre a habilidade inteira. -->
         @for (grupo of grupos(); track grupo.tipo) {
+            @let compactado = compacto(grupo.tipo);
             <section class="habilidade-lista__grupo" [attr.aria-label]="grupo.titulo">
                 <h4 class="habilidade-lista__grupo-titulo">
-                    {{ grupo.titulo }}
-                    <span class="habilidade-lista__grupo-contagem">{{ grupo.itens.length }}</span>
+                    <button
+                        app-botao
+                        variante="secundario"
+                        estilo="texto"
+                        tamanho="pequeno"
+                        class="habilidade-lista__grupo-alternar"
+                        type="button"
+                        [attr.aria-expanded]="!compactado"
+                        [appTooltip]="compactado ? 'Expandir grupo' : 'Compactar grupo (só nomes)'"
+                        (click)="alternarGrupo(grupo.tipo)"
+                    >
+                        <app-icone
+                            nome="chevron"
+                            class="habilidade-lista__chevron"
+                            [class.habilidade-lista__chevron--fechado]="compactado"
+                        />
+                        {{ grupo.titulo }}
+                        <span class="habilidade-lista__grupo-contagem">{{
+                            grupo.itens.length
+                        }}</span>
+                    </button>
                 </h4>
                 <ul class="habilidade-lista__itens">
                     @for (entrada of grupo.itens; track entrada.indice) {
                         @let item = entrada.item;
                         @let idx = entrada.indice;
-                        <li
-                            class="habilidade-lista__item"
-                            [class.habilidade-lista__item--editando]="editando(idx)"
-                        >
-                            @if (editando(idx)) {
+                        @if (editando(idx)) {
+                            <li class="habilidade-lista__item habilidade-lista__item--caixa">
                                 <ng-container
-                                    *ngTemplateOutlet="
-                                        formulario;
-                                        context: { $implicit: 'Confirmar' }
-                                    "
+                                    *ngTemplateOutlet="caixa; context: { $implicit: false }"
                                 />
-                            } @else {
-                                <div class="habilidade-lista__cabecalho-item">
+                            </li>
+                        } @else if (compactado && !aberto(idx)) {
+                            <li class="habilidade-lista__linha">
+                                <button
+                                    app-botao
+                                    variante="secundario"
+                                    estilo="texto"
+                                    tamanho="pequeno"
+                                    class="habilidade-lista__linha-alternar"
+                                    type="button"
+                                    aria-expanded="false"
+                                    (click)="alternarItem(idx)"
+                                >
+                                    <app-icone
+                                        nome="chevron"
+                                        class="habilidade-lista__chevron habilidade-lista__chevron--fechado"
+                                    />
                                     <span class="habilidade-lista__nome">{{ item.nome }}</span>
+                                </button>
+                            </li>
+                        } @else {
+                            <li class="habilidade-lista__item">
+                                <div class="habilidade-lista__cabecalho-item">
+                                    @if (compactado) {
+                                        <button
+                                            app-botao
+                                            variante="secundario"
+                                            estilo="texto"
+                                            tamanho="pequeno"
+                                            class="habilidade-lista__linha-alternar habilidade-lista__linha-alternar--aberto"
+                                            type="button"
+                                            aria-expanded="true"
+                                            (click)="alternarItem(idx)"
+                                        >
+                                            <app-icone
+                                                nome="chevron"
+                                                class="habilidade-lista__chevron"
+                                            />
+                                            <span class="habilidade-lista__nome">{{
+                                                item.nome
+                                            }}</span>
+                                        </button>
+                                    } @else {
+                                        <span class="habilidade-lista__nome">{{ item.nome }}</span>
+                                    }
                                     <span [class]="classeChipTipo(item.tipo)">{{
                                         rotuloTipo(item.tipo)
                                     }}</span>
+                                    @if (editavel()) {
+                                        <span class="habilidade-lista__acoes">
+                                            <button
+                                                app-botao-icone
+                                                class="habilidade-lista__acao"
+                                                type="button"
+                                                [attr.aria-label]="'Alterar ' + item.nome"
+                                                [appTooltip]="'Alterar habilidade'"
+                                                [disabled]="indiceEmEdicao() !== null"
+                                                (click)="editar(idx)"
+                                            >
+                                                <app-icone nome="editar" />
+                                            </button>
+                                            <button
+                                                app-botao-icone
+                                                class="habilidade-lista__acao habilidade-lista__acao--excluir"
+                                                type="button"
+                                                [attr.aria-label]="'Excluir ' + item.nome"
+                                                [appTooltip]="'Excluir habilidade'"
+                                                [disabled]="indiceEmEdicao() !== null"
+                                                (click)="remover(idx)"
+                                            >
+                                                <app-icone nome="excluir" />
+                                            </button>
+                                        </span>
+                                    }
                                 </div>
                                 <app-habilidade-descricao
                                     class="habilidade-lista__descricao"
@@ -96,30 +167,8 @@
                                         />
                                     </div>
                                 }
-                                @if (editavel() && modoEdicao()) {
-                                    <div class="habilidade-lista__acoes">
-                                        <button
-                                            app-botao-icone
-                                            class="habilidade-lista__acao"
-                                            type="button"
-                                            aria-label="Editar"
-                                            (click)="editar(idx)"
-                                        >
-                                            <app-icone nome="editar" />
-                                        </button>
-                                        <button
-                                            app-botao-icone
-                                            class="habilidade-lista__acao"
-                                            type="button"
-                                            aria-label="Remover"
-                                            (click)="remover(idx)"
-                                        >
-                                            <app-icone nome="excluir" />
-                                        </button>
-                                    </div>
-                                }
-                            }
-                        </li>
+                            </li>
+                        }
                     }
                 </ul>
             </section>
@@ -127,62 +176,80 @@
     </div>
 </section>
 
-<!-- Formulário em grade rotulada, no mesmo desenho do de Ataques. -->
-<ng-template #formulario let-rotuloConfirmar>
-    <form class="habilidade-lista__form" [formGroup]="itemForm" (ngSubmit)="confirmar()">
-        <label class="habilidade-lista__campo">
-            <span class="habilidade-lista__campo-rotulo">Nome</span>
+<!-- Caixa única de criar/alterar, no lugar do cartão e na largura inteira da lista (análogo:
+     `npc-habilidades-lista`). Campos de Markdown usam a receita `campo` num <div>: dentro de um
+     <label>, o clique no texto seria repassado ao primeiro botão da barra do editor. -->
+<ng-template #caixa let-novo>
+    <form
+        class="habilidade-lista__form"
+        [formGroup]="itemForm"
+        [attr.aria-label]="novo ? 'Nova habilidade' : 'Alterar habilidade'"
+        (ngSubmit)="confirmar()"
+        (keydown)="aoTeclar($event)"
+    >
+        <h4 class="habilidade-lista__form-titulo">
+            {{ novo ? "Nova habilidade" : "Alterar habilidade" }}
+        </h4>
+        <app-campo rotulo="Nome" tamanho="compacto" class="habilidade-lista__form-nome">
             <input
-                class="habilidade-lista__input"
+                class="campo__controle"
                 formControlName="nome"
-                placeholder="Nome da habilidade"
-                aria-label="Nome da habilidade"
+                placeholder="Ex.: Imaterialidade"
+                appAutoFocus
+                required
             />
-        </label>
-        <label class="habilidade-lista__campo">
-            <span class="habilidade-lista__campo-rotulo">Tipo</span>
-            <select class="habilidade-lista__select" formControlName="tipo" aria-label="Tipo">
-                @for (t of tipos; track t) {
-                    <option [value]="t">{{ rotuloTipo(t) }}</option>
+        </app-campo>
+        <div class="campo campo--compacto habilidade-lista__form-tipo">
+            <span class="campo__rotulo">Tipo</span>
+            <app-segmentado rotulo="Tipo da habilidade" [fluido]="true">
+                @for (tipo of tipos; track tipo) {
+                    <button
+                        app-segmentado-item
+                        type="button"
+                        [ativo]="itemForm.controls.tipo.value === tipo"
+                        (click)="escolherTipo(tipo)"
+                    >
+                        {{ rotuloTipo(tipo) }}
+                    </button>
                 }
-            </select>
-        </label>
-        <div class="habilidade-lista__campo habilidade-lista__campo--largo">
-            <span class="habilidade-lista__campo-rotulo">Descrição</span>
+            </app-segmentado>
+        </div>
+        <div class="campo campo--compacto habilidade-lista__form-largo">
+            <span class="campo__rotulo">Descrição</span>
             <app-editor-markdown
-                class="habilidade-lista__textarea"
+                class="habilidade-lista__form-descricao"
                 formControlName="descricao"
                 [compacto]="true"
                 [rotulo]="'Descrição'"
             />
+            <span class="campo__dica">Uma fase ou estágio por parágrafo (Enter).</span>
         </div>
-        <div class="habilidade-lista__campo habilidade-lista__campo--largo">
-            <span class="habilidade-lista__campo-rotulo">Restrição</span>
+        <div class="campo campo--compacto habilidade-lista__form-largo">
+            <span class="campo__rotulo">Restrição (opcional)</span>
             <app-editor-markdown
-                class="habilidade-lista__input"
+                class="habilidade-lista__form-restricao"
                 formControlName="restricao"
                 [compacto]="true"
                 [rotulo]="'Restrição'"
             />
         </div>
-        <div class="habilidade-lista__form-acoes">
-            <button
-                app-botao
-                variante="primario"
-                tamanho="pequeno"
-                type="submit"
-                [disabled]="itemForm.invalid"
-            >
-                {{ rotuloConfirmar }}
-            </button>
+        <div class="habilidade-lista__form-rodape">
+            @if (tentouConfirmar() && faltando()) {
+                <span class="campo__erro" role="alert">{{ faltando() }}</span>
+            }
+            <span class="habilidade-lista__form-atalho">Ctrl+Enter salva · Esc cancela</span>
             <button
                 app-botao
                 variante="secundario"
+                estilo="contorno"
                 tamanho="pequeno"
                 type="button"
                 (click)="cancelar()"
             >
                 Cancelar
+            </button>
+            <button app-botao variante="primario" tamanho="pequeno" type="submit">
+                {{ novo ? "Adicionar habilidade" : "Salvar alterações" }}
             </button>
         </div>
     </form>

@@ -44,21 +44,11 @@
         background: var(--border);
     }
 
-    // Gatilho do modo de edição — mesmo lápis de seção `.criatura__lapis` (CriaturaVisualizacao,
-    // usado em Classificação/Atributos/Descrição/Natureza/Tema de Horror/Anotações), replicado
-    // aqui porque o encapsulamento de estilos do Angular não deixa a definição de outro componente
-    // vazar pra este. `--adicionar` reusa o botão mas mantém a caixa quadrada de sempre — só o
-    // gatilho de editar/concluir (pencil/check) muda de forma. As ações por item (editar/remover)
-    // só existem enquanto ativo (`__acoes` abaixo), pra não deixar ícone de edição/remoção sempre
-    // visível na tela.
+    // "+" do cabeçalho: único controle de lista — alterar e excluir ficam em cada cartão
+    // (`criatura-ataques-habilidades-edicao`).
     &__cabecalho-acao {
         flex: none;
         font-size: 12px;
-        &--ativo {
-            color: var(--accent);
-            background: var(--accent-dim);
-            border-color: var(--accent);
-        }
         &--adicionar {
             width: 20px;
             height: 20px;
@@ -108,6 +98,100 @@
         }
     }
 
+    // Grupo por custo de ação — mesmo título-botão de compactar da lista de Habilidades.
+    &__grupo + &__grupo {
+        margin-top: 18px;
+    }
+    &__grupo-titulo {
+        margin: 0 0 9px;
+    }
+    &__grupo-alternar {
+        gap: 8px;
+        margin-left: -8px;
+        font: 600 10px var(--font-mono);
+        letter-spacing: var(--tracking-label);
+        color: var(--text-dim);
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+    }
+    &__grupo-contagem {
+        font-weight: 400;
+        color: var(--text-mute);
+    }
+    &__chevron {
+        flex: none;
+        transition: transform 0.15s ease;
+        &--fechado {
+            transform: rotate(-90deg);
+        }
+    }
+
+    // Linha de grupo compactado: nome (abre o cartão inteiro) e os três dadinhos à direita, que
+    // rolam direto — mesma hierarquia de cor dos botões Teste/Dano/Crítico do cartão.
+    &__linha {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+        padding-right: 8px;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: 5px;
+    }
+    &__linha-alternar {
+        flex: 1 1 auto;
+        justify-content: flex-start;
+        gap: 9px;
+        min-width: 0;
+        padding: 9px 13px;
+        text-align: left;
+        text-transform: none;
+        letter-spacing: 0;
+        white-space: normal;
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+        &--aberto {
+            flex: 0 1 auto;
+            margin: -6px 0 -6px -8px;
+            padding: 6px 8px;
+        }
+    }
+    &__dados {
+        display: flex;
+        flex: none;
+        gap: 6px;
+    }
+    &__dado {
+        width: 30px;
+        height: 30px;
+        font-size: 15px;
+        @include bp.mobile {
+            width: bp.$alvo-toque;
+            height: bp.$alvo-toque;
+        }
+        &--teste {
+            color: var(--text-dim);
+            background: var(--surface);
+            border-color: var(--border-strong);
+        }
+        &--dano {
+            color: var(--accent);
+            background: var(--accent-dim);
+            border-color: var(--accent-border);
+        }
+        &--critico {
+            color: var(--accent-text);
+            background: var(--accent);
+            border-color: var(--accent);
+            box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 55%, transparent);
+            &:hover:not(:disabled) {
+                filter: brightness(1.08);
+            }
+        }
+    }
+
     // Mesma grade da lista de Habilidades: no máximo duas colunas largas, cada cartão na própria
     // altura (`align-items: start`).
     &__itens {
@@ -133,22 +217,29 @@
         background: var(--surface-2);
         border: 1px solid var(--border);
         border-radius: 5px;
-        // Editar mantém o item na própria célula da grade (mesmo efeito de `FichaHabilidades`
-        // pro editor de habilidades do jogador) — a alteração fica no mesmo ponto da lista e no
-        // mesmo formato visual do card, em vez de expandir pra largura cheia e empurrar os
-        // itens seguintes. `container-type` alimenta o `@container` do formulário abaixo, que
-        // reage à largura real da célula, não à do viewport.
+        // `container-type` alimenta o `@container` dos botões de rolagem e da caixa, que reagem à
+        // largura real da célula, não à do viewport.
         container-type: inline-size;
+        min-width: 0;
+        // Caixa de criar/alterar: ocupa a linha inteira da grade e se destaca com a borda do tema.
+        &--caixa {
+            grid-column: 1 / -1;
+            background: var(--surface);
+            border-color: var(--accent-border);
+        }
     }
-    // A expressão de dano fica nos próprios botões de rolagem (rodapé): o nome ocupa a largura
-    // inteira do card.
+    // Nome e ações numa linha só: o nome quebra dentro do próprio espaço.
     &__cabecalho-item {
         display: flex;
-        align-items: baseline;
+        align-items: center;
+        gap: 9px;
+        min-width: 0;
     }
     &__nome {
+        min-width: 0;
         font: 600 14px var(--font-sans);
         color: var(--text);
+        overflow-wrap: break-word;
     }
 
     &__marcas {
@@ -294,6 +385,7 @@
             text-align: right;
         }
     }
+    // Alterar/excluir no cabeçalho do cartão, empurrados para a direita.
     &__acoes {
         display: flex;
         flex: none;
@@ -313,82 +405,75 @@
             color: var(--accent);
             border-color: var(--accent-border);
         }
+        &--excluir:hover {
+            color: var(--erro);
+            border-color: var(--erro);
+        }
+        @include bp.mobile {
+            width: bp.$alvo-toque;
+            height: bp.$alvo-toque;
+        }
     }
-    // --- Formulário: cabeçalho (custo, nome, área), três fórmulas iguais e efeito em texto livre. ---
+    // --- Caixa de criar/alterar (`criatura-ataques-habilidades-edicao`) ---
+    // Duas colunas quando a célula tem largura: nome/custo/alvo e as três fórmulas, uma abaixo da
+    // outra (pedido do autor). Uma coluna no celular. Controles do primitivo `campo` e `app-segmentado`.
     &__form {
         display: grid;
-        gap: 10px;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 12px 18px;
         width: 100%;
-    }
-    &__campo {
-        display: grid;
-        gap: 4px;
-        min-width: 0;
-    }
-    // Custo de ação + Nome + Área lado a lado só quando a célula do card realmente tem espaço
-    // (achado recorrente do projeto: a largura que espreme é a do card, não a do viewport — ver
-    // `ficha-atributos__grade`/`ficha-vitalidade`); empilhado por padrão, como no mobile de antes.
-    &__linha-inicial {
-        display: grid;
-        grid-template-columns: 1fr;
-        align-items: stretch;
-        gap: 10px;
-        min-width: 0;
-        @container (min-width: 480px) {
-            grid-template-columns: minmax(120px, 1fr) minmax(0, 2fr) auto;
-            align-items: end;
+        @container (min-width: 640px) {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
         }
     }
-    // Teste, Dano e Dano crítico empilhados — cada fórmula com a largura inteira do card, nunca
-    // dividindo linha com as outras duas (pedido do autor: uma abaixo da outra).
-    &__formulas {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 10px;
-        min-width: 0;
-    }
-    &__campo-rotulo {
-        font: 600 9px var(--font-mono);
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: var(--text-mute);
-    }
-    &__form-acoes {
+    &__form-titulo,
+    &__form-largo,
+    &__form-rodape {
         grid-column: 1 / -1;
-        display: flex;
-        gap: 6px;
     }
-    &__select,
-    &__input {
-        width: 100%;
+    &__form-titulo {
+        margin: 0;
+        font: 700 11px var(--font-mono);
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        color: var(--accent);
+    }
+    &__form-coluna {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
         min-width: 0;
-        padding: 6px 8px;
-        font: 12px var(--font-sans);
-        color: var(--text);
-        background: var(--surface);
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
-        outline: 0;
-        &:focus {
-            border-color: var(--accent);
+    }
+    // Cinco custos não cabem numa linha estreita: o segmentado quebra em vez de vazar.
+    &__form-segmentado {
+        flex-wrap: wrap;
+    }
+    &__form-formula {
+        font-family: var(--font-mono);
+    }
+    &__form-efeito {
+        resize: vertical;
+        overflow: auto;
+    }
+    // Dentro de `&__form` para vencer o `min-height: 84px` que o editor compacto põe no próprio host.
+    &__form &__form-efeito {
+        min-height: 120px;
+    }
+    &__form-rodape {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 8px 10px;
+        .campo__erro {
+            margin-right: auto;
         }
     }
-    &__textarea {
-        min-height: 76px;
-        resize: vertical;
-    }
-    &__checkbox {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        align-self: end;
-        padding-bottom: 6px;
-        white-space: nowrap;
-        font: 12px var(--font-sans);
-        color: var(--text-dim);
+    &__form-atalho {
+        font: 10px var(--font-mono);
+        color: var(--text-mute);
         @include bp.mobile {
-            align-self: start;
-            padding-bottom: 0;
+            display: none;
         }
     }
 }

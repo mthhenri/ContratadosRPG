@@ -23,6 +23,10 @@ import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmaca
 import { EditorMarkdown } from '../../../../shared/ui/editor-markdown/editor-markdown.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
+import { Campo } from '../../../../shared/ui/campo/campo.component';
+import { Segmentado } from '../../../../shared/ui/segmentado/segmentado.component';
+import { SegmentadoItem } from '../../../../shared/ui/segmentado/segmentado-item.component';
+import { AutoFocus } from '../../../../shared/auto-focus/auto-focus.directive';
 import { rotuloCustoAcao, rotuloCustoAcaoCurto } from '../../rotulos-criatura';
 
 const CUSTOS_ACAO: readonly CustoAcaoEnum[] = Object.values(CustoAcaoEnum) as CustoAcaoEnum[];
@@ -31,6 +35,13 @@ const CUSTOS_ACAO: readonly CustoAcaoEnum[] = Object.values(CustoAcaoEnum) as Cu
 interface AtaqueIndexado {
   readonly item: FichaCriaturaAtaqueDto;
   readonly indice: number;
+}
+
+/** Ataques de um custo de ação, já por nome — um grupo da lista. */
+interface GrupoAtaques {
+  readonly custo: CustoAcaoEnum;
+  readonly titulo: string;
+  readonly itens: readonly AtaqueIndexado[];
 }
 
 /** Editor no próprio lugar da lista `ataques` da ficha de criatura (m4-04b), com botão de rolagem por linha. */
@@ -46,6 +57,10 @@ interface AtaqueIndexado {
     NgTemplateOutlet,
     EstadoVazio,
     OverflowFade,
+    Campo,
+    Segmentado,
+    SegmentadoItem,
+    AutoFocus,
   ],
   templateUrl: './criatura-ataque-lista.component.html',
   styleUrl: './criatura-ataque-lista.component.scss',
@@ -67,10 +82,18 @@ export class CriaturaAtaqueLista {
   protected readonly rotuloCustoAcao = rotuloCustoAcao;
   protected readonly rotuloCustoAcaoCurto = rotuloCustoAcaoCurto;
 
+  /**
+   * Item na caixa de criar/alterar: `-1` é item novo, `null` nenhum. Alterar e excluir ficam em cada
+   * cartão, sem modo de edição geral (`criatura-ataques-habilidades-edicao`, pedido do autor).
+   */
   protected readonly indiceEmEdicao = signal<number | null>(null);
-  /** Editar/remover por item só aparece dentro deste modo — evita os ícones ficarem sempre
-   * visíveis; o autor entra e sai dele de propósito (botão "Editar"/"Concluir" no cabeçalho). */
-  protected readonly modoEdicao = signal(false);
+  /** Já tentou confirmar a caixa inválida — só então o aviso do que falta aparece. */
+  protected readonly tentouConfirmar = signal(false);
+
+  /** Grupos compactados (só nome + dadinhos). Não é lembrado: a ficha sempre abre expandida. */
+  protected readonly gruposCompactos = signal<ReadonlySet<CustoAcaoEnum>>(new Set());
+  /** Ataques abertos por inteiro dentro de um grupo compactado (índice original). */
+  protected readonly itensAbertos = signal<ReadonlySet<number>>(new Set());
 
   private readonly confirmacaoService = inject(ConfirmacaoService);
 
@@ -100,6 +123,15 @@ export class CriaturaAtaqueLista {
       ),
   );
 
+  /** Grupos por custo na ordem de `CustoAcaoEnum` (Livre → Turno), sem os vazios. */
+  protected readonly grupos = computed<GrupoAtaques[]>(() =>
+    CUSTOS_ACAO.map((custo) => ({
+      custo,
+      titulo: rotuloCustoAcao(custo),
+      itens: this.itensOrdenados().filter((entrada) => entrada.item.custoAcao === custo),
+    })).filter((grupo) => grupo.itens.length > 0),
+  );
+
   protected editando(indice: number): boolean {
     return this.indiceEmEdicao() === indice;
   }
@@ -111,10 +143,58 @@ export class CriaturaAtaqueLista {
     return `ataque-lista__marca ataque-lista__marca--${custo.toLowerCase()}`;
   }
 
-  protected alternarModoEdicao(): void {
-    this.modoEdicao.update((valor) => !valor);
-    if (!this.modoEdicao()) {
+  protected compacto(custo: CustoAcaoEnum): boolean {
+    return this.gruposCompactos().has(custo);
+  }
+
+  protected aberto(indice: number): boolean {
+    return this.itensAbertos().has(indice);
+  }
+
+  /** Compacta/expande um grupo; ao mudar, os ataques abertos daquele grupo voltam a fechar. */
+  protected alternarGrupo(custo: CustoAcaoEnum): void {
+    this.gruposCompactos.update((atual) => alternarNoConjunto(atual, custo));
+    const doGrupo = new Set(this.itens().flatMap((item, indice) => (item.custoAcao === custo ? [indice] : [])));
+    this.itensAbertos.update((atual) => new Set([...atual].filter((indice) => !doGrupo.has(indice))));
+  }
+
+  /** Abre/fecha um ataque dentro de grupo compactado. */
+  protected alternarItem(indice: number): void {
+    this.itensAbertos.update((atual) => alternarNoConjunto(atual, indice));
+  }
+
+  protected escolherCusto(custo: CustoAcaoEnum): void {
+    this.itemForm.controls.custoAcao.setValue(custo);
+  }
+
+  protected escolherArea(area: boolean): void {
+    this.itemForm.controls.area.setValue(area);
+  }
+
+  /** O que falta para confirmar, em texto — vazio quando a caixa está válida. */
+  protected faltando(): string {
+    const controles = this.itemForm.controls;
+    const campos = [
+      controles.nome.invalid ? 'nome' : null,
+      controles.teste.invalid ? 'teste' : null,
+      controles.dano.invalid ? 'dano' : null,
+      controles.danoCritico.invalid ? 'dano crítico' : null,
+    ].filter((campo) => campo !== null);
+    if (!campos.length) {
+      return '';
+    }
+    const ultimo = campos.pop();
+    return `Informe ${campos.length ? `${campos.join(', ')} e ${ultimo}` : ultimo}.`;
+  }
+
+  /** Esc cancela e Ctrl/Cmd+Enter confirma, de qualquer campo da caixa. */
+  protected aoTeclar(evento: KeyboardEvent): void {
+    if (evento.key === 'Escape') {
+      evento.preventDefault();
       this.cancelar();
+    } else if (evento.key === 'Enter' && (evento.ctrlKey || evento.metaKey)) {
+      evento.preventDefault();
+      this.confirmar();
     }
   }
 
@@ -136,12 +216,14 @@ export class CriaturaAtaqueLista {
 
   protected adicionar(): void {
     this.itemForm.reset({ nome: '', teste: '', custoAcao: CustoAcaoEnum.PADRAO, dano: '', danoCritico: '', area: false, efeito: '' });
+    this.tentouConfirmar.set(false);
     this.indiceEmEdicao.set(-1);
   }
 
   protected editar(indice: number): void {
     const item = this.itens()[indice];
     this.itemForm.reset({ ...item, efeito: item.efeito ?? '' });
+    this.tentouConfirmar.set(false);
     this.indiceEmEdicao.set(indice);
   }
 
@@ -151,7 +233,11 @@ export class CriaturaAtaqueLista {
 
   protected confirmar(): void {
     const indice = this.indiceEmEdicao();
-    if (indice === null || this.itemForm.invalid) {
+    if (indice === null) {
+      return;
+    }
+    if (this.itemForm.invalid) {
+      this.tentouConfirmar.set(true);
       return;
     }
     const bruto = this.itemForm.getRawValue();
@@ -207,6 +293,17 @@ export class CriaturaAtaqueLista {
   }
 
   private emitir(itens: readonly FichaCriaturaAtaqueDto[]): void {
+    // Índices mudam ao excluir/criar: os ataques abertos de grupo compactado fecham.
+    this.itensAbertos.set(new Set());
     this.itensMudou.emit(itens);
   }
+}
+
+/** Cópia do conjunto com `valor` incluído ou retirado. */
+function alternarNoConjunto<T>(conjunto: ReadonlySet<T>, valor: T): ReadonlySet<T> {
+  const copia = new Set(conjunto);
+  if (!copia.delete(valor)) {
+    copia.add(valor);
+  }
+  return copia;
 }

@@ -125,17 +125,129 @@ describe('CriaturaHabilidadeLista', () => {
     expect(rolarAteOFormulario).toHaveBeenCalledWith({ block: 'nearest' });
   });
 
-  it('só mostra editar/remover por item depois de ativar o modo de edição', () => {
+  it('sem modo de edição geral: alterar e excluir ficam em cada cartão editável', () => {
+    const { raiz } = montar(true);
+    const rotulos = Array.from(raiz.querySelectorAll('button')).map((b) => b.getAttribute('aria-label'));
+
+    expect(rotulos).not.toContain('Editar habilidades');
+    expect(rotulos).toContain('Adicionar habilidade');
+    const acoes = raiz.querySelector('.habilidade-lista__item .habilidade-lista__cabecalho-item .habilidade-lista__acoes');
+    expect(Array.from(acoes!.querySelectorAll('button')).map((b) => b.getAttribute('aria-label'))).toEqual([
+      'Alterar Pele de Pedra',
+      'Excluir Pele de Pedra',
+    ]);
+  });
+
+  it('ficha só de leitura não tem criar, alterar nem excluir', () => {
+    const { raiz } = montar(false);
+    expect(raiz.querySelector('.habilidade-lista__acoes')).toBeNull();
+    expect(raiz.querySelector('[aria-label="Adicionar habilidade"]')).toBeNull();
+  });
+
+  it('alterar troca o cartão pela mesma caixa de criar, preenchida e na largura inteira', () => {
+    const { fixture, raiz } = montar(true, [
+      { nome: 'Fúria', tipo: HabilidadeTipoCriaturaEnum.GATILHO, descricao: 'Ativa ao sofrer dano.', restricao: 'uma vez por cena' },
+    ]);
+    raiz.querySelector<HTMLButtonElement>('[aria-label="Alterar Fúria"]')!.click();
+    fixture.detectChanges();
+
+    const caixa = raiz.querySelector('.habilidade-lista__item--caixa');
+    expect(caixa?.querySelector('.habilidade-lista__form-titulo')?.textContent?.trim()).toBe('Alterar habilidade');
+    expect(caixa?.querySelector('button[type="submit"]')?.textContent?.trim()).toBe('Salvar alterações');
+    expect(fixture.componentInstance['itemForm'].getRawValue()).toEqual({
+      nome: 'Fúria', tipo: HabilidadeTipoCriaturaEnum.GATILHO, descricao: 'Ativa ao sofrer dano.', restricao: 'uma vez por cena',
+    });
+    const ativo = caixa?.querySelector('.segmentado__item--ativo')?.textContent?.trim();
+    expect(ativo).toBe('De Gatilho');
+    expect(raiz.querySelector('.habilidade-lista__nome')).toBeNull();
+
+    fixture.componentInstance['adicionar']();
+    fixture.detectChanges();
+    expect(raiz.querySelector('.habilidade-lista__form-titulo')?.textContent?.trim()).toBe('Nova habilidade');
+  });
+
+  it('o segmentado de tipo escolhe o tipo da habilidade', () => {
     const { fixture, raiz } = montar(true);
-    expect(raiz.querySelector('.habilidade-lista__acoes')).toBeNull();
-
-    fixture.componentInstance['alternarModoEdicao']();
+    fixture.componentInstance['adicionar']();
     fixture.detectChanges();
-    expect(raiz.querySelector('.habilidade-lista__acoes')).not.toBeNull();
 
-    fixture.componentInstance['alternarModoEdicao']();
+    const ativa = Array.from(raiz.querySelectorAll<HTMLButtonElement>('.segmentado__item')).find(
+      (botao) => botao.textContent?.trim() === 'Ativa',
+    )!;
+    ativa.click();
     fixture.detectChanges();
-    expect(raiz.querySelector('.habilidade-lista__acoes')).toBeNull();
+
+    expect(fixture.componentInstance['itemForm'].controls.tipo.value).toBe(HabilidadeTipoCriaturaEnum.ATIVA);
+    expect(ativa.getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('confirmar a caixa incompleta diz o que falta e não emite', () => {
+    const { fixture, raiz, emitidos } = montar(true);
+    fixture.componentInstance['adicionar']();
+    fixture.detectChanges();
+    expect(raiz.querySelector('.habilidade-lista__form [role="alert"]')).toBeNull();
+
+    fixture.componentInstance['confirmar']();
+    fixture.detectChanges();
+
+    expect(raiz.querySelector('.habilidade-lista__form [role="alert"]')?.textContent?.trim()).toBe(
+      'Informe nome e descrição.',
+    );
+    expect(emitidos).toHaveLength(0);
+  });
+
+  it('Esc cancela e Ctrl+Enter confirma a caixa', () => {
+    const { fixture, raiz, emitidos } = montar(true);
+    fixture.componentInstance['adicionar']();
+    fixture.detectChanges();
+    const form = () => raiz.querySelector('.habilidade-lista__form')!;
+
+    form().dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    fixture.detectChanges();
+    expect(raiz.querySelector('.habilidade-lista__form')).toBeNull();
+
+    fixture.componentInstance['adicionar']();
+    fixture.componentInstance['itemForm'].patchValue({ nome: 'Eco', descricao: 'Repete.' });
+    fixture.detectChanges();
+    form().dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', ctrlKey: true, bubbles: true }));
+
+    expect(emitidos[0]?.at(-1)).toEqual({ nome: 'Eco', tipo: HabilidadeTipoCriaturaEnum.PASSIVA, descricao: 'Repete.' });
+  });
+
+  it('compactar um grupo deixa só os nomes; o nome abre e fecha a habilidade; expandir volta tudo', () => {
+    const { fixture, raiz } = montar(true, [
+      { nome: 'Imaterialidade', tipo: HabilidadeTipoCriaturaEnum.ATIVA, descricao: 'Atravessa matéria.' },
+      { nome: 'Encaixe', tipo: HabilidadeTipoCriaturaEnum.ATIVA, descricao: 'Agarra o rosto.' },
+      { nome: 'Pele', tipo: HabilidadeTipoCriaturaEnum.PASSIVA, descricao: 'Dura.' },
+    ]);
+    const grupo = (indice: number) => raiz.querySelectorAll('.habilidade-lista__grupo')[indice];
+    const alternarGrupo = (indice: number) => {
+      grupo(indice).querySelector<HTMLButtonElement>('.habilidade-lista__grupo-alternar')!.click();
+      fixture.detectChanges();
+    };
+
+    alternarGrupo(0);
+    expect(grupo(0).querySelector('.habilidade-lista__grupo-alternar')?.getAttribute('aria-expanded')).toBe('false');
+    expect(Array.from(grupo(0).querySelectorAll('.habilidade-lista__linha')).map((l) => l.textContent?.trim())).toEqual([
+      'Encaixe',
+      'Imaterialidade',
+    ]);
+    expect(grupo(0).querySelector('app-habilidade-descricao')).toBeNull();
+    expect(grupo(1).querySelector('app-habilidade-descricao')).not.toBeNull();
+
+    grupo(0).querySelector<HTMLButtonElement>('.habilidade-lista__linha-alternar')!.click();
+    fixture.detectChanges();
+    expect(grupo(0).querySelectorAll('.habilidade-lista__linha')).toHaveLength(1);
+    expect(grupo(0).querySelectorAll('app-habilidade-descricao')).toHaveLength(1);
+    const aberto = grupo(0).querySelector<HTMLButtonElement>('.habilidade-lista__linha-alternar--aberto')!;
+    expect(aberto.getAttribute('aria-expanded')).toBe('true');
+    aberto.click();
+    fixture.detectChanges();
+    expect(grupo(0).querySelectorAll('.habilidade-lista__linha')).toHaveLength(2);
+
+    alternarGrupo(0);
+    expect(grupo(0).querySelectorAll('.habilidade-lista__linha')).toHaveLength(0);
+    expect(grupo(0).querySelectorAll('app-habilidade-descricao')).toHaveLength(2);
   });
 
   it('adiciona uma habilidade e emite a lista inteira', () => {

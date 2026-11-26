@@ -24,9 +24,12 @@ import { EditorMarkdown } from '../../../../shared/ui/editor-markdown/editor-mar
 import { HabilidadeDescricao } from '../habilidade-descricao/habilidade-descricao.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
+import { Campo } from '../../../../shared/ui/campo/campo.component';
+import { Segmentado } from '../../../../shared/ui/segmentado/segmentado.component';
+import { SegmentadoItem } from '../../../../shared/ui/segmentado/segmentado-item.component';
+import { AutoFocus } from '../../../../shared/auto-focus/auto-focus.directive';
 import { rotuloHabilidadeTipoCriatura } from '../../rotulos-criatura';
 
-const TIPOS: readonly HabilidadeTipoCriaturaEnum[] = Object.values(HabilidadeTipoCriaturaEnum) as HabilidadeTipoCriaturaEnum[];
 
 /** Uma habilidade da ficha com o índice original (preservado ao ordenar por nome). */
 interface HabilidadeIndexada {
@@ -65,6 +68,10 @@ const GRUPOS: readonly { readonly tipo: HabilidadeTipoCriaturaEnum; readonly tit
     NgTemplateOutlet,
     EstadoVazio,
     OverflowFade,
+    Campo,
+    Segmentado,
+    SegmentadoItem,
+    AutoFocus,
   ],
   templateUrl: './criatura-habilidade-lista.component.html',
   styleUrl: './criatura-habilidade-lista.component.scss',
@@ -75,13 +82,22 @@ export class CriaturaHabilidadeLista {
 
   readonly itensMudou = output<readonly FichaCriaturaHabilidadeDto[]>();
 
-  protected readonly tipos = TIPOS;
+  /** Tipos na ordem dos grupos — também a ordem do seletor de tipo da caixa. */
+  protected readonly tipos = GRUPOS.map((grupo) => grupo.tipo);
   protected readonly rotuloTipo = rotuloHabilidadeTipoCriatura;
 
+  /**
+   * Item na caixa de criar/alterar: `-1` é item novo, `null` nenhum. Alterar e excluir ficam em cada
+   * cartão, sem modo de edição geral (`criatura-ataques-habilidades-edicao`, pedido do autor).
+   */
   protected readonly indiceEmEdicao = signal<number | null>(null);
-  /** Editar/remover por item só aparece dentro deste modo — evita os ícones ficarem sempre
-   * visíveis; o autor entra e sai dele de propósito (botão "Editar"/"Concluir" no cabeçalho). */
-  protected readonly modoEdicao = signal(false);
+  /** Já tentou confirmar a caixa inválida — só então o aviso do que falta aparece. */
+  protected readonly tentouConfirmar = signal(false);
+
+  /** Grupos compactados (só nomes). Não é lembrado: a ficha sempre abre expandida (decisão do autor). */
+  protected readonly gruposCompactos = signal<ReadonlySet<HabilidadeTipoCriaturaEnum>>(new Set());
+  /** Itens abertos por inteiro dentro de um grupo compactado (índice original). */
+  protected readonly itensAbertos = signal<ReadonlySet<number>>(new Set());
 
   private readonly confirmacaoService = inject(ConfirmacaoService);
 
@@ -119,10 +135,47 @@ export class CriaturaHabilidadeLista {
     return `habilidade-lista__chip habilidade-lista__chip--${tipo.toLowerCase()}`;
   }
 
-  protected alternarModoEdicao(): void {
-    this.modoEdicao.update((valor) => !valor);
-    if (!this.modoEdicao()) {
+  protected compacto(tipo: HabilidadeTipoCriaturaEnum): boolean {
+    return this.gruposCompactos().has(tipo);
+  }
+
+  protected aberto(indice: number): boolean {
+    return this.itensAbertos().has(indice);
+  }
+
+  /** Compacta/expande um grupo; ao mudar, os itens abertos daquele grupo voltam a fechar. */
+  protected alternarGrupo(tipo: HabilidadeTipoCriaturaEnum): void {
+    this.gruposCompactos.update((atual) => alternarNoConjunto(atual, tipo));
+    const doGrupo = new Set(this.itens().flatMap((item, indice) => (item.tipo === tipo ? [indice] : [])));
+    this.itensAbertos.update((atual) => new Set([...atual].filter((indice) => !doGrupo.has(indice))));
+  }
+
+  /** Abre/fecha um item dentro de grupo compactado. */
+  protected alternarItem(indice: number): void {
+    this.itensAbertos.update((atual) => alternarNoConjunto(atual, indice));
+  }
+
+  protected escolherTipo(tipo: HabilidadeTipoCriaturaEnum): void {
+    this.itemForm.controls.tipo.setValue(tipo);
+  }
+
+  /** O que falta para confirmar, em texto — vazio quando a caixa está válida. */
+  protected faltando(): string {
+    const campos = [
+      this.itemForm.controls.nome.invalid ? 'nome' : null,
+      this.itemForm.controls.descricao.invalid ? 'descrição' : null,
+    ].filter((campo) => campo !== null);
+    return campos.length ? `Informe ${campos.join(' e ')}.` : '';
+  }
+
+  /** Esc cancela e Ctrl/Cmd+Enter confirma, de qualquer campo da caixa. */
+  protected aoTeclar(evento: KeyboardEvent): void {
+    if (evento.key === 'Escape') {
+      evento.preventDefault();
       this.cancelar();
+    } else if (evento.key === 'Enter' && (evento.ctrlKey || evento.metaKey)) {
+      evento.preventDefault();
+      this.confirmar();
     }
   }
 
@@ -144,12 +197,14 @@ export class CriaturaHabilidadeLista {
 
   protected adicionar(): void {
     this.itemForm.reset({ nome: '', tipo: HabilidadeTipoCriaturaEnum.PASSIVA, descricao: '', restricao: '' });
+    this.tentouConfirmar.set(false);
     this.indiceEmEdicao.set(-1);
   }
 
   protected editar(indice: number): void {
     const item = this.itens()[indice];
     this.itemForm.reset({ nome: item.nome, tipo: item.tipo, descricao: item.descricao, restricao: item.restricao ?? '' });
+    this.tentouConfirmar.set(false);
     this.indiceEmEdicao.set(indice);
   }
 
@@ -159,7 +214,11 @@ export class CriaturaHabilidadeLista {
 
   protected confirmar(): void {
     const indice = this.indiceEmEdicao();
-    if (indice === null || this.itemForm.invalid) {
+    if (indice === null) {
+      return;
+    }
+    if (this.itemForm.invalid) {
+      this.tentouConfirmar.set(true);
       return;
     }
     const bruto = this.itemForm.getRawValue();
@@ -200,6 +259,17 @@ export class CriaturaHabilidadeLista {
   }
 
   private emitir(itens: readonly FichaCriaturaHabilidadeDto[]): void {
+    // Índices mudam ao excluir/criar: os itens abertos de grupo compactado fecham.
+    this.itensAbertos.set(new Set());
     this.itensMudou.emit(itens);
   }
+}
+
+/** Cópia do conjunto com `valor` incluído ou retirado. */
+function alternarNoConjunto<T>(conjunto: ReadonlySet<T>, valor: T): ReadonlySet<T> {
+  const copia = new Set(conjunto);
+  if (!copia.delete(valor)) {
+    copia.add(valor);
+  }
+  return copia;
 }

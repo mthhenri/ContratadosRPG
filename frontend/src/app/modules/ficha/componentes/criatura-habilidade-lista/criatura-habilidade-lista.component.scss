@@ -40,21 +40,11 @@
         background: var(--border);
     }
 
-    // Gatilho do modo de edição — mesmo lápis de seção `.criatura__lapis` (CriaturaVisualizacao,
-    // usado em Classificação/Atributos/Descrição/Natureza/Tema de Horror/Anotações), replicado
-    // aqui porque o encapsulamento de estilos do Angular não deixa a definição de outro componente
-    // vazar pra este. `--adicionar` reusa o botão mas mantém a caixa quadrada de sempre — só o
-    // gatilho de editar/concluir (pencil/check) muda de forma. As ações por item (editar/remover)
-    // só existem enquanto ativo (`__acoes` abaixo), pra não deixar ícone de edição/remoção sempre
-    // visível na tela.
+    // "+" do cabeçalho: único controle de lista — alterar e excluir ficam em cada cartão
+    // (`criatura-ataques-habilidades-edicao`).
     &__cabecalho-acao {
         flex: none;
         font-size: 12px;
-        &--ativo {
-            color: var(--accent);
-            background: var(--accent-dim);
-            border-color: var(--accent);
-        }
         &--adicionar {
             width: 20px;
             height: 20px;
@@ -104,24 +94,64 @@
         }
     }
 
-    // Grupo por tipo (Ativas · Gatilhos · Passivas): mesmo rótulo mono do cabeçalho da lista, um
-    // degrau abaixo, com a contagem ao lado.
+    // Grupo por tipo (Ativas · Gatilhos · Passivas). O título é o botão que compacta o grupo
+    // (`app-botao` secundário/texto): aqui só a tipografia do rótulo de grupo e o alinhamento à
+    // esquerda, sem o respiro lateral do botão, para o título ficar na linha dos cartões.
     &__grupo + &__grupo {
         margin-top: 18px;
     }
     &__grupo-titulo {
-        display: flex;
-        align-items: baseline;
-        gap: 8px;
         margin: 0 0 9px;
+    }
+    &__grupo-alternar {
+        gap: 8px;
+        margin-left: -8px;
         font: 600 10px var(--font-mono);
-        text-transform: uppercase;
         letter-spacing: var(--tracking-label);
         color: var(--text-dim);
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
     }
     &__grupo-contagem {
         font-weight: 400;
         color: var(--text-mute);
+    }
+    // Seta para baixo = aberto; para a direita = compactado (mesmo `chevron` do "Ver mais").
+    &__chevron {
+        flex: none;
+        transition: transform 0.15s ease;
+        &--fechado {
+            transform: rotate(-90deg);
+        }
+    }
+
+    // Linha de grupo compactado: só o nome, que abre a habilidade inteira.
+    &__linha {
+        display: flex;
+        min-width: 0;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: 5px;
+    }
+    &__linha-alternar {
+        flex: 1 1 auto;
+        justify-content: flex-start;
+        gap: 9px;
+        min-width: 0;
+        padding: 9px 13px;
+        text-align: left;
+        text-transform: none;
+        letter-spacing: 0;
+        white-space: normal;
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+        &--aberto {
+            flex: 0 1 auto;
+            margin: -6px 0 -6px -8px;
+            padding: 6px 8px;
+        }
     }
 
     // No máximo duas colunas largas: texto longo (habilidade com fases) lê melhor numa linha de
@@ -146,23 +176,54 @@
         display: flex;
         flex-direction: column;
         gap: 7px;
+        min-width: 0;
         padding: 13px 15px;
         background: var(--surface-2);
         border: 1px solid var(--border);
         border-radius: 5px;
-        // Editar mantém o item na própria célula da grade (mesmo efeito de `FichaHabilidades` pro
-        // editor de habilidades do jogador) — a alteração fica no mesmo ponto da lista e no mesmo
-        // formato visual do card, sem expandir pra largura cheia nem empurrar os itens seguintes.
+        // Caixa de criar/alterar: ocupa a linha inteira da grade (meia coluna era apertada demais
+        // para descrição com fases) e se destaca com a borda do tema enquanto aberta.
+        &--caixa {
+            grid-column: 1 / -1;
+            background: var(--surface);
+            border-color: var(--accent-border);
+        }
     }
+    // Nome, selo e ações numa linha só: o nome quebra dentro do próprio espaço, para lápis e
+    // lixeira (44px no celular) não caírem numa segunda linha.
     &__cabecalho-item {
         display: flex;
         align-items: center;
         gap: 9px;
-        flex-wrap: wrap;
+        min-width: 0;
+        > * {
+            flex: none;
+        }
+        > .habilidade-lista__nome,
+        > .habilidade-lista__linha-alternar {
+            flex: 0 1 auto;
+            min-width: 0;
+        }
+        // Celular: nome na largura toda da primeira linha, selo abaixo dele e ações à direita das
+        // duas — lado a lado com o selo, o nome quebrava no meio da palavra.
+        @include bp.mobile {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            align-items: start;
+            gap: 6px 9px;
+            > .habilidade-lista__acoes {
+                grid-column: 2;
+                grid-row: 1 / span 2;
+            }
+            > [class*="habilidade-lista__chip"] {
+                justify-self: start;
+            }
+        }
     }
     &__nome {
         font: 600 14px var(--font-sans);
         color: var(--text);
+        overflow-wrap: break-word;
     }
     &__chip {
         padding: 3px 7px;
@@ -225,11 +286,11 @@
         min-width: 0;
         color: var(--text);
     }
+    // Alterar/excluir no cabeçalho do cartão, empurrados para a direita.
     &__acoes {
         display: flex;
         gap: 4px;
-        margin-top: auto;
-        padding-top: 4px;
+        margin-left: auto;
     }
     &__acao {
         display: inline-flex;
@@ -244,53 +305,66 @@
             color: var(--accent);
             border-color: var(--accent-border);
         }
+        &--excluir:hover {
+            color: var(--erro);
+            border-color: var(--erro);
+        }
+        @include bp.mobile {
+            width: bp.$alvo-toque;
+            height: bp.$alvo-toque;
+        }
     }
-    // --- Formulário: grade rotulada (mesmo desenho do de Ataques) ---
-    // Nome ocupa o máximo da coluna; o Tipo (Ativa/Gatilho/Passiva) fica só com a largura que precisa,
-    // no fim da linha. Descrição/Restrição/ações ocupam a linha inteira (`--largo`/`__form-acoes`).
+    // --- Caixa de criar/alterar (`criatura-ataques-habilidades-edicao`) ---
+    // Nome e Tipo lado a lado; Descrição, Restrição e rodapé na linha inteira. Os controles são os
+    // do primitivo `campo` (`campo__controle`) e `app-segmentado`.
     &__form {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
-        gap: 10px;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 340px);
+        gap: 12px 14px;
         width: 100%;
-    }
-    &__campo {
-        display: grid;
-        gap: 4px;
-        min-width: 0;
-        &--largo {
-            grid-column: 1 / -1;
+        @include bp.mobile {
+            grid-template-columns: minmax(0, 1fr);
         }
     }
-    &__campo-rotulo {
-        font: 600 9px var(--font-mono);
+    &__form-titulo {
+        grid-column: 1 / -1;
+        margin: 0;
+        font: 700 11px var(--font-mono);
         text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: var(--text-mute);
+        letter-spacing: var(--tracking-label);
+        color: var(--accent);
     }
-    &__form-acoes {
+    &__form-largo {
+        grid-column: 1 / -1;
+    }
+    &__form-descricao,
+    &__form-restricao {
+        resize: vertical;
+        overflow: auto;
+    }
+    // Dentro de `&__form` para vencer o `min-height: 84px` que o editor compacto põe no próprio host.
+    &__form &__form-descricao {
+        min-height: 160px;
+    }
+    &__form &__form-restricao {
+        min-height: 84px;
+    }
+    &__form-rodape {
         grid-column: 1 / -1;
         display: flex;
-        gap: 6px;
-    }
-    &__select,
-    &__input,
-    &__textarea {
-        width: 100%;
-        min-width: 0;
-        padding: 6px 8px;
-        font: 12px var(--font-sans);
-        color: var(--text);
-        background: var(--surface);
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
-        outline: 0;
-        &:focus {
-            border-color: var(--accent);
+        align-items: center;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 8px 10px;
+        .campo__erro {
+            margin-right: auto;
         }
     }
-    &__textarea {
-        resize: vertical;
-        min-height: 56px;
+    &__form-atalho {
+        font: 10px var(--font-mono);
+        color: var(--text-mute);
+        @include bp.mobile {
+            display: none;
+        }
     }
 }

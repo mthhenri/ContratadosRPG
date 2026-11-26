@@ -80,3 +80,13 @@ ao NPC; e deixar a UX de **Habilidades e Ataques** melhor, que o autor considera
 
 - **Modificador manual:** o recálculo sempre prevalece. Não existe valor de modificador fixado à mão, e
   a ficha não guarda o número, só o tipo.
+
+## Decidido pelo autor (2026-11-26)
+
+- **Vida Máxima e Defesa acompanham a VD.** Ao mudar a VD da criatura, a Vida Máxima é recalculada por
+  `VD × multiplicador da Tenacidade` e a Defesa por `15 + VD ÷ 2` (guia de mestre, "Saúde" e "Defesa"),
+  sobrescrevendo ajustes manuais anteriores; depois da troca o mestre ainda pode editar à mão. A Vida
+  atual acompanha a mesma diferença. (Hoje a troca de VD não mexe em nenhuma das duas — ex.: O Ausente
+  no banco local, VD 45 com Vida 1.650, valor do estágio anterior.)
+- **Habilidades e Ataques (Entregável 3):** resolvido fora desta spec, em
+  `criatura-ataques-habilidades-leitura` e `criatura-ataques-habilidades-edicao` (done).

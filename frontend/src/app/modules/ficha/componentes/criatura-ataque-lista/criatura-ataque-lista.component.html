@@ -3,25 +3,16 @@
         <h3 class="ataque-lista__titulo">Ataques</h3>
         <span class="ataque-lista__contagem">{{ itens().length }}</span>
         <span class="ataque-lista__regua"></span>
+        <!-- Só criar no cabeçalho: alterar e excluir ficam em cada cartão
+             (criatura-ataques-habilidades-edicao). -->
         @if (editavel()) {
-            <button
-                app-botao-icone
-                class="ataque-lista__cabecalho-acao"
-                type="button"
-                [class.ataque-lista__cabecalho-acao--ativo]="modoEdicao()"
-                [attr.aria-pressed]="modoEdicao()"
-                [attr.aria-label]="modoEdicao() ? 'Concluir edição' : 'Editar ataques'"
-                [appTooltip]="modoEdicao() ? 'Concluir edição' : 'Editar ataques'"
-                (click)="alternarModoEdicao()"
-            >
-                <app-icone [nome]="modoEdicao() ? 'check' : 'editar'" />
-            </button>
             <button
                 app-botao-icone
                 class="ataque-lista__cabecalho-acao ataque-lista__cabecalho-acao--adicionar"
                 type="button"
                 aria-label="Adicionar ataque"
                 [appTooltip]="'Adicionar ataque'"
+                [disabled]="editando(-1)"
                 (click)="adicionar()"
             >
                 <app-icone nome="mais" />
@@ -34,205 +25,355 @@
     }
 
     <div class="ataque-lista__rolagem" appOverflowFade>
-        <ul class="ataque-lista__itens">
-            @if (editando(-1)) {
-                <li class="ataque-lista__item" #formNovo>
-                    <ng-container
-                        *ngTemplateOutlet="formulario; context: { $implicit: 'Adicionar' }"
-                    />
+        @if (editando(-1)) {
+            <ul class="ataque-lista__itens">
+                <li class="ataque-lista__item ataque-lista__item--caixa" #formNovo>
+                    <ng-container *ngTemplateOutlet="caixa; context: { $implicit: true }" />
                 </li>
-            }
-            @for (entrada of itensOrdenados(); track entrada.indice) {
-                @let item = entrada.item;
-                @let idx = entrada.indice;
-                <li class="ataque-lista__item" [class.ataque-lista__item--editando]="editando(idx)">
-                    @if (editando(idx)) {
-                        <ng-container
-                            *ngTemplateOutlet="formulario; context: { $implicit: 'Confirmar' }"
+            </ul>
+        }
+        <!-- Agrupados por custo de ação (Livre › Movimento › Padrão › Completa › Turno), por nome dentro
+             do grupo. O título compacta o grupo: cada ataque vira nome + três dadinhos que rolam direto. -->
+        @for (grupo of grupos(); track grupo.custo) {
+            @let compactado = compacto(grupo.custo);
+            <section class="ataque-lista__grupo" [attr.aria-label]="grupo.titulo">
+                <h4 class="ataque-lista__grupo-titulo">
+                    <button
+                        app-botao
+                        variante="secundario"
+                        estilo="texto"
+                        tamanho="pequeno"
+                        class="ataque-lista__grupo-alternar"
+                        type="button"
+                        [attr.aria-expanded]="!compactado"
+                        [appTooltip]="compactado ? 'Expandir grupo' : 'Compactar grupo (só nomes)'"
+                        (click)="alternarGrupo(grupo.custo)"
+                    >
+                        <app-icone
+                            nome="chevron"
+                            class="ataque-lista__chevron"
+                            [class.ataque-lista__chevron--fechado]="compactado"
                         />
-                    } @else {
-                        <div class="ataque-lista__cabecalho-item">
-                            <span class="ataque-lista__nome">{{ item.nome }}</span>
-                        </div>
-
-                        <div class="ataque-lista__marcas">
-                            <span [class]="classeMarcaCusto(item.custoAcao)">{{
-                                rotuloCustoAcaoCurto(item.custoAcao)
-                            }}</span>
-                            @if (item.area) {
-                                <span class="ataque-lista__marca">Área</span>
-                            }
-                        </div>
-
-                        @if (item.efeito) {
-                            <app-editor-markdown
-                                class="ataque-lista__efeito"
-                                [valor]="item.efeito"
-                                [somenteLeitura]="true"
-                                [compacto]="true"
-                                [rotulo]="'Efeito adicional'"
-                            />
-                        }
-
-                        <!-- Fórmula escrita no próprio botão (criatura-ataques-habilidades-leitura): o mestre lê
-                             o teste e o dano sem tooltip, também no toque. O botão continua rolando. -->
-                        <div class="ataque-lista__rodape">
-                            <div class="ataque-lista__rolagens">
+                        {{ grupo.titulo }}
+                        <span class="ataque-lista__grupo-contagem">{{ grupo.itens.length }}</span>
+                    </button>
+                </h4>
+                <ul class="ataque-lista__itens">
+                    @for (entrada of grupo.itens; track entrada.indice) {
+                        @let item = entrada.item;
+                        @let idx = entrada.indice;
+                        @if (editando(idx)) {
+                            <li class="ataque-lista__item ataque-lista__item--caixa">
+                                <ng-container
+                                    *ngTemplateOutlet="caixa; context: { $implicit: false }"
+                                />
+                            </li>
+                        } @else if (compactado && !aberto(idx)) {
+                            <li class="ataque-lista__linha">
                                 <button
                                     app-botao
-                                    class="ataque-lista__rolar ataque-lista__rolar--teste"
+                                    variante="secundario"
+                                    estilo="texto"
+                                    tamanho="pequeno"
+                                    class="ataque-lista__linha-alternar"
                                     type="button"
-                                    [attr.aria-label]="'Rolar teste: ' + item.teste"
-                                    (click)="testar(item)"
+                                    aria-expanded="false"
+                                    (click)="alternarItem(idx)"
                                 >
-                                    <span class="ataque-lista__rolar-rotulo"
-                                        ><app-icone nome="d20" /> Teste</span
-                                    >
-                                    <span class="ataque-lista__formula">{{ item.teste }}</span>
+                                    <app-icone
+                                        nome="chevron"
+                                        class="ataque-lista__chevron ataque-lista__chevron--fechado"
+                                    />
+                                    <span class="ataque-lista__nome">{{ item.nome }}</span>
                                 </button>
-                                <button
-                                    app-botao
-                                    class="ataque-lista__rolar ataque-lista__rolar--dano"
-                                    type="button"
-                                    [attr.aria-label]="'Rolar dano: ' + item.dano"
-                                    (click)="rolar(item)"
-                                >
-                                    <span class="ataque-lista__rolar-rotulo"
-                                        ><app-icone nome="d20" /> Dano</span
-                                    >
-                                    <span class="ataque-lista__formula">{{ item.dano }}</span>
-                                </button>
-                                <button
-                                    app-botao
-                                    class="ataque-lista__rolar ataque-lista__rolar--critico"
-                                    type="button"
-                                    [attr.aria-label]="'Rolar dano crítico: ' + item.danoCritico"
-                                    (click)="criticar(item)"
-                                >
-                                    <span class="ataque-lista__rolar-rotulo"
-                                        ><app-icone nome="d20" /> Crítico</span
-                                    >
-                                    <span class="ataque-lista__formula">{{
-                                        item.danoCritico
-                                    }}</span>
-                                </button>
-                            </div>
-                            @if (editavel() && modoEdicao()) {
-                                <div class="ataque-lista__acoes">
+                                <span class="ataque-lista__dados">
                                     <button
                                         app-botao-icone
-                                        class="ataque-lista__acao"
+                                        class="ataque-lista__dado ataque-lista__dado--teste"
                                         type="button"
-                                        aria-label="Editar"
-                                        (click)="editar(idx)"
+                                        [attr.aria-label]="
+                                            'Rolar teste de ' + item.nome + ': ' + item.teste
+                                        "
+                                        [appTooltip]="'Teste: ' + item.teste"
+                                        (click)="testar(item)"
                                     >
-                                        <app-icone nome="editar" />
+                                        <app-icone nome="d20" />
                                     </button>
                                     <button
                                         app-botao-icone
-                                        class="ataque-lista__acao"
+                                        class="ataque-lista__dado ataque-lista__dado--dano"
                                         type="button"
-                                        aria-label="Remover"
-                                        (click)="remover(idx)"
+                                        [attr.aria-label]="
+                                            'Rolar dano de ' + item.nome + ': ' + item.dano
+                                        "
+                                        [appTooltip]="'Dano: ' + item.dano"
+                                        (click)="rolar(item)"
                                     >
-                                        <app-icone nome="excluir" />
+                                        <app-icone nome="d20" />
                                     </button>
+                                    <button
+                                        app-botao-icone
+                                        class="ataque-lista__dado ataque-lista__dado--critico"
+                                        type="button"
+                                        [attr.aria-label]="
+                                            'Rolar dano crítico de ' +
+                                            item.nome +
+                                            ': ' +
+                                            item.danoCritico
+                                        "
+                                        [appTooltip]="'Crítico: ' + item.danoCritico"
+                                        (click)="criticar(item)"
+                                    >
+                                        <app-icone nome="d20" />
+                                    </button>
+                                </span>
+                            </li>
+                        } @else {
+                            <li class="ataque-lista__item">
+                                <div class="ataque-lista__cabecalho-item">
+                                    @if (compactado) {
+                                        <button
+                                            app-botao
+                                            variante="secundario"
+                                            estilo="texto"
+                                            tamanho="pequeno"
+                                            class="ataque-lista__linha-alternar ataque-lista__linha-alternar--aberto"
+                                            type="button"
+                                            aria-expanded="true"
+                                            (click)="alternarItem(idx)"
+                                        >
+                                            <app-icone
+                                                nome="chevron"
+                                                class="ataque-lista__chevron"
+                                            />
+                                            <span class="ataque-lista__nome">{{ item.nome }}</span>
+                                        </button>
+                                    } @else {
+                                        <span class="ataque-lista__nome">{{ item.nome }}</span>
+                                    }
+                                    @if (editavel()) {
+                                        <span class="ataque-lista__acoes">
+                                            <button
+                                                app-botao-icone
+                                                class="ataque-lista__acao"
+                                                type="button"
+                                                [attr.aria-label]="'Alterar ' + item.nome"
+                                                [appTooltip]="'Alterar ataque'"
+                                                [disabled]="indiceEmEdicao() !== null"
+                                                (click)="editar(idx)"
+                                            >
+                                                <app-icone nome="editar" />
+                                            </button>
+                                            <button
+                                                app-botao-icone
+                                                class="ataque-lista__acao ataque-lista__acao--excluir"
+                                                type="button"
+                                                [attr.aria-label]="'Excluir ' + item.nome"
+                                                [appTooltip]="'Excluir ataque'"
+                                                [disabled]="indiceEmEdicao() !== null"
+                                                (click)="remover(idx)"
+                                            >
+                                                <app-icone nome="excluir" />
+                                            </button>
+                                        </span>
+                                    }
                                 </div>
-                            }
-                        </div>
+
+                                <div class="ataque-lista__marcas">
+                                    <span [class]="classeMarcaCusto(item.custoAcao)">{{
+                                        rotuloCustoAcaoCurto(item.custoAcao)
+                                    }}</span>
+                                    @if (item.area) {
+                                        <span class="ataque-lista__marca">Área</span>
+                                    }
+                                </div>
+
+                                @if (item.efeito) {
+                                    <app-editor-markdown
+                                        class="ataque-lista__efeito"
+                                        [valor]="item.efeito"
+                                        [somenteLeitura]="true"
+                                        [compacto]="true"
+                                        [rotulo]="'Efeito adicional'"
+                                    />
+                                }
+
+                                <!-- Fórmula escrita no próprio botão (criatura-ataques-habilidades-leitura): o
+                                     mestre lê o teste e o dano sem tooltip, também no toque. -->
+                                <div class="ataque-lista__rodape">
+                                    <div class="ataque-lista__rolagens">
+                                        <button
+                                            app-botao
+                                            class="ataque-lista__rolar ataque-lista__rolar--teste"
+                                            type="button"
+                                            [attr.aria-label]="'Rolar teste: ' + item.teste"
+                                            (click)="testar(item)"
+                                        >
+                                            <span class="ataque-lista__rolar-rotulo"
+                                                ><app-icone nome="d20" /> Teste</span
+                                            >
+                                            <span class="ataque-lista__formula">{{
+                                                item.teste
+                                            }}</span>
+                                        </button>
+                                        <button
+                                            app-botao
+                                            class="ataque-lista__rolar ataque-lista__rolar--dano"
+                                            type="button"
+                                            [attr.aria-label]="'Rolar dano: ' + item.dano"
+                                            (click)="rolar(item)"
+                                        >
+                                            <span class="ataque-lista__rolar-rotulo"
+                                                ><app-icone nome="d20" /> Dano</span
+                                            >
+                                            <span class="ataque-lista__formula">{{
+                                                item.dano
+                                            }}</span>
+                                        </button>
+                                        <button
+                                            app-botao
+                                            class="ataque-lista__rolar ataque-lista__rolar--critico"
+                                            type="button"
+                                            [attr.aria-label]="
+                                                'Rolar dano crítico: ' + item.danoCritico
+                                            "
+                                            (click)="criticar(item)"
+                                        >
+                                            <span class="ataque-lista__rolar-rotulo"
+                                                ><app-icone nome="d20" /> Crítico</span
+                                            >
+                                            <span class="ataque-lista__formula">{{
+                                                item.danoCritico
+                                            }}</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </li>
+                        }
                     }
-                </li>
-            }
-        </ul>
+                </ul>
+            </section>
+        }
     </div>
 </section>
 
-<!-- Formulário em grade rotulada: a linha de flex-wrap anterior deixava sete controles sem rótulo
-     em ordem imprevisível conforme a largura da coluna. -->
-<ng-template #formulario let-rotuloConfirmar>
-    <form class="ataque-lista__form" [formGroup]="itemForm" (ngSubmit)="confirmar()">
-        <div class="ataque-lista__linha-inicial">
-            <label class="ataque-lista__campo">
-                <span class="ataque-lista__campo-rotulo">Custo de ação</span>
-                <select
-                    class="ataque-lista__select"
-                    formControlName="custoAcao"
-                    aria-label="Custo de ação"
-                >
-                    @for (c of custosAcao; track c) {
-                        <option [value]="c">{{ rotuloCustoAcao(c) }}</option>
-                    }
-                </select>
-            </label>
-            <label class="ataque-lista__campo">
-                <span class="ataque-lista__campo-rotulo">Nome</span>
+<!-- Caixa única de criar/alterar, no lugar do cartão e na largura inteira da lista (análogo:
+     `npc-habilidades-lista`). Coluna 1: nome, custo e alvo; coluna 2: as três fórmulas, uma abaixo
+     da outra (pedido do autor); efeito na linha inteira. O efeito usa a receita `campo` num <div>:
+     dentro de um <label>, o clique no texto seria repassado ao primeiro botão da barra do editor. -->
+<ng-template #caixa let-novo>
+    <form
+        class="ataque-lista__form"
+        [formGroup]="itemForm"
+        [attr.aria-label]="novo ? 'Novo ataque' : 'Alterar ataque'"
+        (ngSubmit)="confirmar()"
+        (keydown)="aoTeclar($event)"
+    >
+        <h4 class="ataque-lista__form-titulo">{{ novo ? "Novo ataque" : "Alterar ataque" }}</h4>
+        <div class="ataque-lista__form-coluna">
+            <app-campo rotulo="Nome" tamanho="compacto">
                 <input
-                    class="ataque-lista__input"
+                    class="campo__controle"
                     formControlName="nome"
-                    placeholder="Nome do ataque"
-                    aria-label="Nome do ataque"
+                    placeholder="Ex.: Golpe Longilíneo"
+                    appAutoFocus
+                    required
                 />
-            </label>
-            <label class="ataque-lista__checkbox">
-                <input type="checkbox" formControlName="area" /> Atinge área
-            </label>
+            </app-campo>
+            <div class="campo campo--compacto">
+                <span class="campo__rotulo">Custo de ação</span>
+                <app-segmentado
+                    rotulo="Custo de ação"
+                    class="ataque-lista__form-segmentado"
+                    [fluido]="true"
+                >
+                    @for (custo of custosAcao; track custo) {
+                        <button
+                            app-segmentado-item
+                            type="button"
+                            [ativo]="itemForm.controls.custoAcao.value === custo"
+                            (click)="escolherCusto(custo)"
+                        >
+                            {{ rotuloCustoAcaoCurto(custo) }}
+                        </button>
+                    }
+                </app-segmentado>
+            </div>
+            <div class="campo campo--compacto">
+                <span class="campo__rotulo">Alvo</span>
+                <app-segmentado rotulo="Alvo do ataque" [fluido]="true">
+                    <button
+                        app-segmentado-item
+                        type="button"
+                        [ativo]="!itemForm.controls.area.value"
+                        (click)="escolherArea(false)"
+                    >
+                        Alvo único
+                    </button>
+                    <button
+                        app-segmentado-item
+                        type="button"
+                        [ativo]="itemForm.controls.area.value"
+                        (click)="escolherArea(true)"
+                    >
+                        Área
+                    </button>
+                </app-segmentado>
+            </div>
         </div>
-        <div class="ataque-lista__formulas">
-            <label class="ataque-lista__campo">
-                <span class="ataque-lista__campo-rotulo">Teste (fórmula)</span>
+        <div class="ataque-lista__form-coluna">
+            <app-campo rotulo="Teste" tamanho="compacto">
                 <input
-                    class="ataque-lista__input"
+                    class="campo__controle ataque-lista__form-formula"
                     formControlName="teste"
-                    placeholder="ex.: 1D20"
-                    aria-label="Fórmula de teste"
+                    placeholder="Ex.: LUTd20kh1cm1"
+                    required
                 />
-            </label>
-            <label class="ataque-lista__campo">
-                <span class="ataque-lista__campo-rotulo">Dano</span>
+            </app-campo>
+            <app-campo rotulo="Dano" tamanho="compacto">
                 <input
-                    class="ataque-lista__input"
+                    class="campo__controle ataque-lista__form-formula"
                     formControlName="dano"
-                    placeholder="ex.: 4D12"
-                    aria-label="Fórmula de dano"
+                    placeholder="Ex.: 2D12+6 [Físico]"
+                    required
                 />
-            </label>
-            <label class="ataque-lista__campo">
-                <span class="ataque-lista__campo-rotulo">Dano crítico (fórmula)</span>
+            </app-campo>
+            <app-campo rotulo="Dano crítico" tamanho="compacto">
                 <input
-                    class="ataque-lista__input"
+                    class="campo__controle ataque-lista__form-formula"
                     formControlName="danoCritico"
-                    placeholder="ex.: 8D12"
-                    aria-label="Fórmula de dano crítico"
+                    placeholder="Ex.: 4D12+12 [Físico]"
+                    required
                 />
-            </label>
+            </app-campo>
         </div>
-        <div class="ataque-lista__campo">
-            <span class="ataque-lista__campo-rotulo">Efeito adicional</span>
+        <div class="campo campo--compacto ataque-lista__form-largo">
+            <span class="campo__rotulo">Efeito (opcional)</span>
             <app-editor-markdown
-                class="ataque-lista__input ataque-lista__textarea"
+                class="ataque-lista__form-efeito"
                 formControlName="efeito"
                 [compacto]="true"
                 [rotulo]="'Efeito adicional'"
             />
+            <span class="campo__dica">Um estágio por parágrafo (Enter).</span>
         </div>
-        <div class="ataque-lista__form-acoes">
-            <button
-                app-botao
-                variante="primario"
-                tamanho="pequeno"
-                type="submit"
-                [disabled]="itemForm.invalid"
-            >
-                {{ rotuloConfirmar }}
-            </button>
+        <div class="ataque-lista__form-rodape">
+            @if (tentouConfirmar() && faltando()) {
+                <span class="campo__erro" role="alert">{{ faltando() }}</span>
+            }
+            <span class="ataque-lista__form-atalho">Ctrl+Enter salva · Esc cancela</span>
             <button
                 app-botao
                 variante="secundario"
+                estilo="contorno"
                 tamanho="pequeno"
                 type="button"
                 (click)="cancelar()"
             >
                 Cancelar
+            </button>
+            <button app-botao variante="primario" tamanho="pequeno" type="submit">
+                {{ novo ? "Adicionar ataque" : "Salvar alterações" }}
             </button>
         </div>
     </form>

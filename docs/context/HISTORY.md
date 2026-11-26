@@ -1,5 +1,21 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-11-26 — criatura-ataques-habilidades-edicao: criar, alterar e excluir por item; grupos compactáveis
+
+Logo depois do redesenho de leitura, o autor pediu para tirar o modo de edição geral de Ataques e Habilidades
+da criatura ("fica mais fácil"): lápis e lixeira em cada cartão, excluir com confirmação, alterar trocando o
+cartão pela mesma caixa de criar, e essa caixa redesenhada porque estava difícil de usar. Pediu também para
+compactar cada grupo a só os nomes, abrindo item a item; nos ataques, agrupados por custo de ação, a linha
+compactada leva os três dadinhos Teste/Dano/Crítico. Decisões do autor: caixa no lugar do cartão (não modal),
+compactação não lembrada. A caixa nova ocupa a largura inteira da lista e segue o formulário do NPC
+(`app-campo` + `app-segmentado` no lugar de `select`/`checkbox` nativos), com exemplos de fórmula do sistema,
+aviso do que falta, Esc/Ctrl+Enter e foco no nome; as três fórmulas do ataque continuam uma abaixo da outra,
+como o autor tinha pedido. A inspeção ao vivo com O Ausente pegou a Descrição presa em 84px (o editor
+compacto vencia o `min-height`) e, no celular, os botões de 44px espremendo o nome até quebrar no meio da
+palavra — corrigidos. A preferência registrada de "ações por item só dentro de modo de edição" deixou de
+valer para essas duas listas. No mesmo pedido o autor decidiu que mudar a VD recalcula Vida Máxima e Defesa
+pela fórmula; ficou registrado em `criatura-npc-vd-habilidades-ataques` (backlog) como próxima tarefa.
+
 ## 2026-11-26 — criatura-ataques-habilidades-leitura: Ataques e Habilidades legíveis na mesa
 
 O autor achou as abas de Ataques e Habilidades da criatura "inusáveis". Olhando a tela com uma criatura de estresse

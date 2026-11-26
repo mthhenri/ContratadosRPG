@@ -75,9 +75,13 @@
 > gerador. [Spec](../specs/done/revisao-formatacao-pdf-regras.spec.md) ·
 > [verificação e limites](../specs/done/revisao-formatacao-pdf-regras/verificacao.md).
 >
-> **Ataques e Habilidades da criatura (2026-11-26):** habilidades agrupadas por tipo com "Ver mais" no
-> cartão e restrição destacada; ataques por custo com fórmula visível. O resto do redesenho segue em
-> `ficha-criatura-npc-revamp-visual` (backlog). [Spec](../specs/done/criatura-ataques-habilidades-leitura.spec.md).
+> **Ataques e Habilidades da criatura (2026-11-26):** habilidades em grupos por tipo e ataques em grupos
+> por custo, cada grupo compactável (só nomes; ataque compactado rola pelos três dadinhos); "Ver mais"
+> no cartão, restrição destacada, fórmula visível. Criar/alterar/excluir direto em cada item, numa caixa
+> única no lugar do cartão (sem modo de edição geral). O resto do redesenho segue em
+> `ficha-criatura-npc-revamp-visual` (backlog). Specs: [leitura](../specs/done/criatura-ataques-habilidades-leitura.spec.md),
+> [edição](../specs/done/criatura-ataques-habilidades-edicao.spec.md). Próximo pedido do autor: Vida e
+> Defesa recalculadas pela VD (`criatura-npc-vd-habilidades-ataques`, decisão registrada).
 >
 > **Fichas em JSON (2026-11-26):** administrador copia/baixa o JSON de Criatura e NPC no menu ⋯ do acervo ou no
 > "Exportar ▾" do cabeçalho da ficha, e
