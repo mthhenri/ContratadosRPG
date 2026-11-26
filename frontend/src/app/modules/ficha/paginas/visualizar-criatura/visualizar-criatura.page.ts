@@ -4,7 +4,7 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { catchError, filter, finalize, firstValueFrom, map, of, switchMap } from 'rxjs';
 
-import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
+import { TipoCampanhaMembroPapelEnum, TipoFichaEnum } from '@contratados-rpg/shared/enums';
 import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
 import type { FichaAcessoResumoDto, FichaCriaturaRecuperadaDto } from '@contratados-rpg/shared/dtos/ficha';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
@@ -24,6 +24,7 @@ import { ColunaAcoesItem } from '../../../../shared/ui/coluna-acoes/coluna-acoes
 import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
 import { Modal } from '../../../../shared/ui/modal/modal.component';
 import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
+import { ExportarFichaJson } from '../../componentes/exportar-ficha-json/exportar-ficha-json.component';
 import { SessaoService } from '../../../../core/services/sessao.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { TopbarContextoService } from '../../../../core/services/topbar-contexto.service';
@@ -71,6 +72,7 @@ const ITENS_POR_PAGINA_HISTORICO = 20;
     HistoricoRolagensSidebar,
     Tooltip,
     Modal,
+    ExportarFichaJson,
   ],
   providers: [FichaEdicaoCriaturaService, FichaRolagemRegistroService],
   templateUrl: './visualizar-criatura.page.html',
@@ -101,6 +103,7 @@ export class CriaturaVisualizar {
   /** `campanhaId` da rota-pai (`/campanhas/:campanhaId/criatura/:id`), ou `null` sob `/fichas/criatura/:id`. */
   private readonly campanhaIdRota = lerParamRota(this.rotaAtiva, 'campanhaId');
   protected readonly fichaId = Number(lerParamRota(this.rotaAtiva, 'id'));
+  protected readonly TipoFichaEnum = TipoFichaEnum;
 
   /**
    * `campanhaId` efetivo (m4-11): sob a rota campanha-scoped, conhecido de imediato; sob

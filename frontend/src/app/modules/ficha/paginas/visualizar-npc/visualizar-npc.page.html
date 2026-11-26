@@ -78,8 +78,9 @@
             <span class="ficha-pagina__campanha">{{ nomeCampanha }}</span>
             }
             <span class="ficha-pagina__cabecalho-regua"></span>
-            @if (textoPersistencia(); as texto) {
             <div class="ficha-pagina__acoes">
+                <app-exportar-ficha-json [fichaId]="fichaId" [tipo]="TipoFichaEnum.NPC" />
+                @if (textoPersistencia(); as texto) {
                 <span
                     class="ficha-pagina__persistencia"
                     [class.ficha-pagina__persistencia--salvo]="edicao.estadoPersistencia() === 'salvo'"
@@ -87,10 +88,10 @@
                     role="status"
                     >{{ texto }}</span
                 >
+                } @else {
+                <span class="sr-only" role="status"></span>
+                }
             </div>
-            } @else {
-            <span class="sr-only" role="status"></span>
-            }
         </header>
         @if (carregando()) {
         <div class="ficha-pagina__esqueleto" role="status" aria-label="Carregando NPC">

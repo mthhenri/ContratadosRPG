@@ -3459,6 +3459,122 @@ export const schemasContratosPublicos = {
         "additionalProperties": false,
         "description": "Entrada do atalho **Rolar tudo** do mestre — preenche de uma vez a iniciativa de todos os\ncombatentes que ainda não têm uma. O mapa é `combatenteId → iniciativa já somada`; quem já tem\niniciativa (o jogador que rolou a sua) é ignorado pelo backend, nunca sobrescrito."
     },
+    "FichaCriaturaExportadaDto": {
+        "type": "object",
+        "properties": {
+            "formato": {
+                "type": "string"
+            },
+            "versao": {
+                "type": "number"
+            },
+            "tipo": {
+                "type": "string"
+            },
+            "exportacaoData": {
+                "type": "string",
+                "description": "ISO 8601 do momento da exportação — informativo, ignorado na importação."
+            },
+            "nome": {
+                "type": "string"
+            },
+            "cor": {
+                "type": "string"
+            },
+            "dados": {
+                "$ref": "#/components/schemas/FichaCriaturaDadosDto"
+            }
+        },
+        "required": [
+            "formato",
+            "versao",
+            "tipo",
+            "exportacaoData",
+            "nome",
+            "cor",
+            "dados"
+        ],
+        "additionalProperties": false,
+        "description": "Envelope do **arquivo JSON** de uma ficha (`ficha-json-exportar-importar-admin`): o que o acervo\ncopia/baixa e o que o modal de importar aceita de volta. Carrega só o conteúdo — `nome`, `cor` e o\ndocumento de jogo `dados` exatamente como a API devolve. Identidade e posse (`id`, dono, campanha,\nimagem, enquadramento, `oculta`) **não** viajam: a importação sempre cria uma ficha nova no acervo\nde quem importa, e o backend revalida `dados` contra `shared/regras` como em qualquer criação.\n\n`formato`/`versao` identificam o arquivo; uma mudança incompatível no envelope sobe a `versao`."
+    },
+    "FichaNpcExportadaDto": {
+        "type": "object",
+        "properties": {
+            "formato": {
+                "type": "string"
+            },
+            "versao": {
+                "type": "number"
+            },
+            "tipo": {
+                "type": "string"
+            },
+            "exportacaoData": {
+                "type": "string"
+            },
+            "nome": {
+                "type": "string"
+            },
+            "cor": {
+                "type": "string"
+            },
+            "dados": {
+                "$ref": "#/components/schemas/FichaNpcDadosDto"
+            }
+        },
+        "required": [
+            "formato",
+            "versao",
+            "tipo",
+            "exportacaoData",
+            "nome",
+            "cor",
+            "dados"
+        ],
+        "additionalProperties": false,
+        "description": "Mesmo envelope de {@link FichaCriaturaExportadaDto}, para NPC."
+    },
+    "FichaImportarDto": {
+        "type": "object",
+        "properties": {
+            "ficha": {
+                "oneOf": [
+                    {
+                        "$ref": "#/components/schemas/FichaCriaturaExportadaDto"
+                    },
+                    {
+                        "$ref": "#/components/schemas/FichaNpcExportadaDto"
+                    }
+                ]
+            }
+        },
+        "required": [
+            "ficha"
+        ],
+        "additionalProperties": false,
+        "description": "Entrada da importação administrativa (`POST /ficha/importar`, só `ADMIN`): o próprio arquivo\nexportado. A ficha nasce solta no acervo de quem importa e é validada **como edição** — regras do\njogo sim, distribuição de criação não —, para que uma ficha ajustada depois de criada volte igual."
+    },
+    "FichaImportadaDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "tipo": {
+                "type": "string",
+                "enum": [
+                    "CRIATURA",
+                    "NPC"
+                ]
+            }
+        },
+        "required": [
+            "id",
+            "tipo"
+        ],
+        "additionalProperties": false,
+        "description": "Saída da importação — o `id` da ficha criada e o tipo, para a tela abrir a rota certa."
+    },
     "FichaComboPassoDto": {
         "type": "object",
         "properties": {
@@ -14542,6 +14658,15 @@ export const operacoesContratosPublicos = {
         "tag": "Fichas",
         "publica": false,
         "responseSchema": "FichaMediasEsquadraoDto"
+    },
+    "FichaController_importar": {
+        "controller": "FichaController",
+        "metodo": "post",
+        "caminho": "/ficha/importar",
+        "tag": "Fichas",
+        "publica": false,
+        "requestSchema": "FichaImportarDto",
+        "responseSchema": "FichaImportadaDto"
     },
     "FichaController_criarCriatura": {
         "controller": "FichaController",

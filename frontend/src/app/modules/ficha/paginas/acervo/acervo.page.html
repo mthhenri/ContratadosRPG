@@ -40,6 +40,17 @@
                 >
                     <app-icone nome="agente" /> Criar NPC
                 </button>
+                } @if (ehAdmin()) {
+                <button
+                    app-botao
+                    variante="secundario"
+                    estilo="contorno"
+                    tamanho="medio"
+                    type="button"
+                    (click)="abrirImportarJson()"
+                >
+                    <app-icone nome="importar" /> Importar JSON
+                </button>
                 }
             </div>
             <app-campo rotulo="Filtrar por tipo" tamanho="compacto" class="acervo__filtro">
@@ -153,6 +164,30 @@
         <app-icone nome="duplicar" />
         <span>Duplicar ficha</span>
     </button>
+    @if (ehAdmin() && ehTipoFichaArquivoJson(menuAberto.tipo)) {
+    <button
+        app-botao
+        class="acervo__menu-item"
+        type="button"
+        role="menuitem"
+        [disabled]="exportandoJson() === menuAberto.id"
+        (click)="exportarJson(menuAberto.id, menuAberto.tipo, 'copiar')"
+    >
+        <app-icone nome="copiar" />
+        <span>Copiar JSON</span>
+    </button>
+    <button
+        app-botao
+        class="acervo__menu-item"
+        type="button"
+        role="menuitem"
+        [disabled]="exportandoJson() === menuAberto.id"
+        (click)="exportarJson(menuAberto.id, menuAberto.tipo, 'baixar')"
+    >
+        <app-icone nome="documentos" />
+        <span>Baixar JSON</span>
+    </button>
+    }
     <button
         app-botao
         class="acervo__menu-item"
@@ -249,4 +284,7 @@
         </button>
     </div>
 </app-modal>
+}
+@if (importandoJson()) {
+<app-importar-ficha-json (fechou)="fecharImportarJson()" (importada)="aoImportarJson($event)" />
 }

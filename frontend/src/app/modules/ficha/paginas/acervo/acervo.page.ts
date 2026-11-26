@@ -4,7 +4,13 @@ import { finalize, forkJoin } from 'rxjs';
 
 import type { CampanhaResumoDto } from '@contratados-rpg/shared/dtos/campanha';
 import type { FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
-import { TipoCampanhaMembroPapelEnum, TipoFichaEnum } from '@contratados-rpg/shared/enums';
+import {
+  TipoCampanhaMembroPapelEnum,
+  TipoFichaEnum,
+  TipoUsuarioEnum,
+} from '@contratados-rpg/shared/enums';
+
+import { SessaoService } from '../../../../core/services/sessao.service';
 
 import { Icone } from '../../../../shared/icone/icone.component';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
@@ -14,6 +20,7 @@ import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmaca
 import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
 import { Esqueleto } from '../../../../shared/ui/esqueleto/esqueleto.component';
 import { Modal } from '../../../../shared/ui/modal/modal.component';
+import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
 import { CampanhaService } from '../../../campanha/campanha.service';
 import { CartaoFichaAcervo, type ItemAcervo } from '../../componentes/cartao-ficha-acervo/cartao-ficha-acervo.component';
 import { confirmarRemocaoDaCampanha } from '../../ficha-confirmacoes';
@@ -21,6 +28,15 @@ import { FichaService } from '../../ficha.service';
 import { ordenarPorNome } from '../../ordenacao-nome';
 import { montarItemNpc } from "../../npc-acervo";
 import { montarItemCriatura } from "../../criatura-acervo";
+import {
+  type FichaJsonImportada,
+  ImportarFichaJson,
+} from '../../componentes/importar-ficha-json/importar-ficha-json.component';
+import {
+  FichaArquivoJsonService,
+  type ModoExportacaoJson,
+  ehTipoFichaArquivoJson,
+} from '../../ficha-arquivo-json.service';
 import { rotuloClasseCompleto } from '../../rotulos-ficha';
 import { rotuloPatente } from '../../status-derivado';
 
@@ -75,7 +91,17 @@ const TIPOS_ACERVO: readonly DefinicaoTipoAcervo[] = [
  */
 @Component({
   selector: 'app-ficha-acervo',
-  imports: [Botao, Campo, Cartao, Icone, CartaoFichaAcervo, Modal, EstadoVazio, Esqueleto],
+  imports: [
+    Botao,
+    Campo,
+    Cartao,
+    Icone,
+    CartaoFichaAcervo,
+    Modal,
+    EstadoVazio,
+    Esqueleto,
+    ImportarFichaJson,
+  ],
   templateUrl: './acervo.page.html',
   styleUrl: './acervo.page.scss',
 })
@@ -85,8 +111,12 @@ export class FichaAcervo {
   private readonly confirmacaoService = inject(ConfirmacaoService);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly sessaoService = inject(SessaoService);
+  private readonly arquivoJson = inject(FichaArquivoJsonService);
+  private readonly notificacao = inject(NotificacaoService);
 
   protected readonly TipoFichaEnum = TipoFichaEnum;
+  protected readonly ehTipoFichaArquivoJson = ehTipoFichaArquivoJson;
   protected readonly FILTRO_TODOS = FILTRO_TODOS;
   protected readonly tipos = TIPOS_ACERVO;
 
@@ -196,6 +226,17 @@ export class FichaAcervo {
   );
 
   /**
+   * Exportar/importar JSON (`ficha-json-exportar-importar-admin`) só é oferecido ao administrador
+   * global. É gate de oferta: as rotas de leitura/criação do backend seguem sendo a autoridade.
+   */
+  protected readonly ehAdmin = computed(
+    () => this.sessaoService.usuario()?.tipo === TipoUsuarioEnum.ADMIN,
+  );
+  protected readonly importandoJson = signal(false);
+  /** `id` da ficha com exportação em andamento — desabilita os dois itens do menu dela. */
+  protected readonly exportandoJson = signal<number | null>(null);
+
+  /**
    * Campanhas elegíveis para a dialog "Atribuir a campanha": todas, para agente; só onde o
    * usuário é mestre, para criatura/NPC (§14 — coerente com quem pode criar/gerenciar o tipo).
    */
@@ -288,8 +329,10 @@ export class FichaAcervo {
     const espacoAbaixo = window.innerHeight - retangulo.bottom;
     const espacoAcima = retangulo.top;
     const right = window.innerWidth - retangulo.right;
+    // Os dois itens de JSON (admin, criatura/NPC) alongam o menu em ~80px.
+    const alturaMenu = this.ehAdmin() && ehTipoFichaArquivoJson(item.tipo) ? 270 : 190;
     this.menuFichaPosicao.set(
-      espacoAbaixo < 190 && espacoAcima > espacoAbaixo
+      espacoAbaixo < alturaMenu && espacoAcima > espacoAbaixo
         ? { bottom: window.innerHeight - retangulo.top + 6, right }
         : { top: retangulo.bottom + 6, right },
     );
@@ -475,6 +518,34 @@ export class FichaAcervo {
         this.fichas.update((lista) => lista.filter((ficha) => ficha.id !== fichaId));
       },
     });
+  }
+
+  /** Copia ou baixa o JSON da ficha do menu (⋯), sempre lido do servidor no momento. */
+  protected exportarJson(fichaId: number, tipo: TipoFichaEnum, modo: ModoExportacaoJson): void {
+    if (!ehTipoFichaArquivoJson(tipo)) {
+      return;
+    }
+    this.exportandoJson.set(fichaId);
+    this.arquivoJson
+      .exportar(fichaId, tipo, modo)
+      .pipe(finalize(() => this.exportandoJson.set(null)))
+      .subscribe({ next: () => this.fecharMenuFicha() });
+  }
+
+  protected abrirImportarJson(): void {
+    this.importandoJson.set(true);
+  }
+
+  protected fecharImportarJson(): void {
+    this.importandoJson.set(false);
+  }
+
+  /** Ficha importada: fecha o modal e abre a ficha nova (a lista recarrega ao voltar). */
+  protected aoImportarJson(importada: FichaJsonImportada): void {
+    this.importandoJson.set(false);
+    this.notificacao.notificar({ severidade: 'sucesso', resumo: 'Ficha importada' });
+    const segmento = importada.tipo === TipoFichaEnum.CRIATURA ? 'criatura' : 'npc';
+    void this.router.navigate(['/fichas', segmento, importada.id]);
   }
 
   /** Atualiza o chip pelo retorno autoritativo da mutação e pelo nome da campanha já carregada. */

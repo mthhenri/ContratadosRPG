@@ -13,6 +13,7 @@ import {
   PorteCriaturaEnum,
   TenacidadeEnum,
   TipoDanoEnum,
+  TipoFichaEnum,
 } from '@contratados-rpg/shared/enums';
 import {
   FichaAcessoConcedidoDto,
@@ -23,6 +24,8 @@ import {
   FichaCriaturaAlteradaDto,
   FichaCriaturaDadosDto,
   FichaCriaturaRecuperadaDto,
+  FichaImportadaDto,
+  FichaImportarDto,
   FichaImagemAlteradaDto,
   FichaJogadorDadosDto,
   FichaRecuperadaDto,
@@ -102,6 +105,23 @@ describe('FichaService', () => {
     requisicao.flush(envelope(criada));
 
     expect(recebido).toEqual(criada);
+  });
+
+  it('importa o arquivo JSON pela rota administrativa (ficha-json-exportar-importar-admin)', () => {
+    const { servico, http } = criar();
+    const ficha = {
+      formato: 'contratados-rpg.ficha', versao: 1, tipo: TipoFichaEnum.NPC,
+      exportacaoData: '2026-11-26T00:00:00.000Z', nome: 'Helena', cor: null, dados: {},
+    } as unknown as FichaImportarDto['ficha'];
+
+    let recebido: FichaImportadaDto | undefined;
+    servico.importarFicha({ ficha }).subscribe((r) => (recebido = r));
+    const requisicao = http.expectOne((req) => req.url.endsWith('/ficha/importar'));
+    expect(requisicao.request.method).toBe('POST');
+    expect(requisicao.request.body).toEqual({ ficha });
+    requisicao.flush(envelope({ id: 40, tipo: TipoFichaEnum.NPC }));
+
+    expect(recebido).toEqual({ id: 40, tipo: TipoFichaEnum.NPC });
   });
 
   it('recupera uma ficha pelo id', () => {

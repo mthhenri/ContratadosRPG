@@ -1,0 +1,59 @@
+<app-modal [aberto]="true" titulo="Importar JSON" (fechou)="fechou.emit()">
+    <p class="dialogo__aviso">
+        Cole o JSON de uma criatura ou NPC exportado pelo acervo. A ficha nasce solta no seu acervo.
+    </p>
+
+    <app-campo rotulo="JSON da ficha" [erro]="erro()" class="importar-json__campo">
+        <textarea
+            class="campo__controle campo__controle--area importar-json__texto"
+            aria-label="JSON da ficha"
+            spellcheck="false"
+            rows="10"
+            [value]="texto()"
+            (input)="aoDigitar($event)"
+        ></textarea>
+    </app-campo>
+
+    <div class="dialogo__acoes">
+        <button
+            app-botao
+            variante="primario"
+            class="dialogo__acao"
+            type="button"
+            [disabled]="importando()"
+            (click)="importar()"
+        >
+            <app-icone nome="importar" />
+            {{ importando() ? 'Importando…' : 'Importar' }}
+        </button>
+        <button
+            app-botao
+            variante="secundario"
+            class="dialogo__acao"
+            type="button"
+            [disabled]="importando()"
+            (click)="entradaArquivo.click()"
+        >
+            <app-icone nome="documentos" />
+            Escolher arquivo
+        </button>
+        <input
+            #entradaArquivo
+            type="file"
+            hidden
+            accept="application/json,.json"
+            aria-label="Arquivo JSON da ficha"
+            (change)="aoSelecionarArquivo($event)"
+        />
+        <button
+            app-botao
+            variante="secundario"
+            class="dialogo__acao"
+            type="button"
+            [disabled]="importando()"
+            (click)="fechou.emit()"
+        >
+            Cancelar
+        </button>
+    </div>
+</app-modal>

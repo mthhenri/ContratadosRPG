@@ -1,0 +1,44 @@
+@use "tema/breakpoints" as bp;
+
+// Mesmo conteúdo dos modais do acervo ("Duplicar", "Atribuir a campanha" — `acervo.page.scss`),
+// repetido aqui porque o estilo do acervo é encapsulado na própria página.
+.dialogo__aviso {
+    margin: 0 0 16px;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--text);
+}
+
+.dialogo__acoes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.dialogo__acao {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 11px 18px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+
+    @include bp.mobile {
+        width: 100%;
+        justify-content: center;
+        min-height: bp.$alvo-toque;
+    }
+}
+
+.importar-json__campo {
+    margin-bottom: 16px;
+}
+
+.importar-json__texto {
+    min-height: 220px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    white-space: pre;
+}

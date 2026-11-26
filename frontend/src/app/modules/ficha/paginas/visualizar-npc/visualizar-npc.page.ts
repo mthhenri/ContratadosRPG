@@ -3,10 +3,11 @@ import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormControl, ReactiveFormsModule } from "@angular/forms";
 import { ActivatedRoute, Router, RouterLink } from "@angular/router";
 import { filter, firstValueFrom, merge } from "rxjs";
-import { TipoCampanhaMembroPapelEnum } from "@contratados-rpg/shared/enums";
+import { TipoCampanhaMembroPapelEnum, TipoFichaEnum } from "@contratados-rpg/shared/enums";
 import type { CampanhaMembroResumoDto } from "@contratados-rpg/shared/dtos/campanha";
 import type { FichaAcessoResumoDto, FichaImagemFocoDto } from "@contratados-rpg/shared/dtos/ficha";
 import type { RolagemResumoDto } from "@contratados-rpg/shared/dtos/rolagem";
+import { ExportarFichaJson } from "../../componentes/exportar-ficha-json/exportar-ficha-json.component";
 import { SessaoService } from "../../../../core/services/sessao.service";
 import { TempoRealService } from "../../../../core/services/tempo-real.service";
 import { TopbarContextoService } from "../../../../core/services/topbar-contexto.service";
@@ -43,7 +44,8 @@ import { BandejaDados } from "../../../../shared/bandeja-dados/bandeja-dados.com
     selector: "app-npc-visualizar", providers: [FichaEdicaoNpcService, NpcEdicaoFormulario, FichaRolagemRegistroService, NpcRolagemService],
     imports: [ReactiveFormsModule, RouterLink, Icone, Tooltip, CalculadoraFlutuante,
         HistoricoRolagensSidebar, Botao, BotaoIcone, Campo, Cartao, ColunaAcoes, ColunaAcoesItem,
-        EditorMarkdown, Esqueleto, EstadoVazio, Modal, PainelFlutuante, NpcVisualizacao, Chip, BandejaDados],
+        EditorMarkdown, Esqueleto, EstadoVazio, Modal, PainelFlutuante, NpcVisualizacao, Chip, BandejaDados,
+        ExportarFichaJson],
     templateUrl: "./visualizar-npc.page.html", styleUrl: "./visualizar-npc.page.scss",
 })
 export class NpcVisualizar {
@@ -63,6 +65,7 @@ export class NpcVisualizar {
     private readonly router = inject(Router);
     private readonly destroyRef = inject(DestroyRef);
     readonly fichaId = Number(lerParamRota(inject(ActivatedRoute), "id"));
+    protected readonly TipoFichaEnum = TipoFichaEnum;
     readonly campanhaId = computed(() => this.edicao.ficha()?.campanhaId ?? null);
     readonly campanhaNome = signal("");
     /** Estado de persistência do cabeçalho — vazio quando não há o que dizer (como na criatura). */

@@ -3465,6 +3465,59 @@ describe('FichaService', () => {
       dados: criarDadosCriatura(),
     } as unknown as FichaRecuperadaDto;
 
+    describe('importarFicha (ficha-json-exportar-importar-admin)', () => {
+      const usuarioAdmin: JwtPayload = { ...usuarioMestre, tipo: TipoUsuarioEnum.ADMIN };
+      // Retirada total acima do limite: recusada na criação, mas válida pelas regras do jogo —
+      // é o caso de uma criatura ajustada depois de criada.
+      const dadosEditados = () => criarDadosCriatura({ vd: 5, resistencias: [],
+        fraquezas: [{ tipo: TipoDanoEnum.EXPLOSAO, subtipo: null, valor: 5 }], atributos: {
+        destreza: 1, pontaria: 1, vigor: 1, intelecto: 1, sentidos: 1, vontade: 1,
+        social: -1, medicina: -1, forca: 4, luta: 3,
+      } });
+      const arquivo = (dados = dadosEditados()) => ({
+        formato: 'contratados-rpg.ficha' as const, versao: 1 as const,
+        tipo: TipoFichaEnum.CRIATURA as const, exportacaoData: '2026-11-26T00:00:00.000Z',
+        nome: ' A Estátua ', cor: null, dados,
+      });
+
+      it('admin importa criatura editada (sem a distribuição da criação) solta no próprio acervo', async () => {
+        campanhaRepositorio.recuperarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.MESTRE });
+        await expect(service.criarFichaCriatura({ campanhaId: 3, nome: 'x', dados: dadosEditados() }, usuarioMestre))
+          .rejects.toThrow(BusinessException);
+        fichaRepositorio.criarFicha.mockResolvedValue({ ...fichaCriaturaPersistida, id: 31 });
+
+        const resultado = await service.importarFicha({ ficha: arquivo() }, usuarioAdmin);
+
+        expect(resultado).toEqual({ id: 31, tipo: TipoFichaEnum.CRIATURA });
+        expect(fichaRepositorio.criarFicha).toHaveBeenCalledWith({
+          campanhaId: null, usuarioId: usuarioAdmin.sub, tipo: TipoFichaEnum.CRIATURA,
+          nome: 'A Estátua', cor: null, dados: dadosEditados(),
+        });
+        expect(campanhaGateway.emitirFichaCriada).not.toHaveBeenCalled();
+      });
+
+      it('recusa quem não é admin, mesmo sendo mestre', async () => {
+        await expect(service.importarFicha({ ficha: arquivo() }, usuarioMestre))
+          .rejects.toThrow(UnauthorizedAccessException);
+        expect(fichaRepositorio.criarFicha).not.toHaveBeenCalled();
+      });
+
+      it('recusa arquivo de outro formato/versão, sem nome ou que viola as regras do jogo', async () => {
+        const invalidos = [
+          { ...arquivo(), formato: 'outro' },
+          { ...arquivo(), versao: 2 },
+          { ...arquivo(), nome: '  ' },
+          { ...arquivo(), tipo: TipoFichaEnum.JOGADOR },
+          arquivo(criarDadosCriatura({ vd: -1 })),
+        ];
+        for (const ficha of invalidos) {
+          await expect(service.importarFicha({ ficha } as never, usuarioAdmin))
+            .rejects.toThrow(BusinessException);
+        }
+        expect(fichaRepositorio.criarFicha).not.toHaveBeenCalled();
+      });
+    });
+
     describe('criarFichaCriatura', () => {
       it('aceita realocação negativa válida e persiste o atributo escolhido', async () => {
         campanhaRepositorio.recuperarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.MESTRE });

@@ -75,6 +75,13 @@
 > gerador. [Spec](../specs/done/revisao-formatacao-pdf-regras.spec.md) ·
 > [verificação e limites](../specs/done/revisao-formatacao-pdf-regras/verificacao.md).
 >
+> **Fichas em JSON (2026-11-26):** administrador copia/baixa o JSON de Criatura e NPC no menu ⋯ do acervo ou no
+> "Exportar ▾" do cabeçalho da ficha, e
+> importa por "Importar JSON" (`POST /ficha/importar`, só `ADMIN`), que cria a ficha solta validando **como edição**
+> — a criação recusaria criaturas ajustadas depois de criadas. Agente fica fora. Serve para trazer fichas reais ao
+> redesenho de Ataques/Habilidades. [Spec](../specs/done/ficha-json-exportar-importar-admin.spec.md) ·
+> [verificação](../specs/done/ficha-json-exportar-importar-admin/verificacao.md).
+>
 > **Última revisão:** 2026-10-09 · `regras-mobile-tabelas-e-rodape`: amplificadores sem
 > quebra no nome, módulos associados aos efeitos, rolagem local sem sobreposição da última
 > coluna, Sumário alinhado ao seletor, ícone da topbar e marca funcional no rodapé.
@@ -2970,7 +2977,9 @@ sem concessão recebe lista vazia e 403 direto na criatura). A criação **não*
 criatura a todo membro antes de qualquer revelação deliberada, contradizendo a regra de
 invisibilidade; a edição segue transmitindo `ficha:alterada`, seguro porque a sala `ficha:<id>`
 já exige a mesma permissão de visualização para entrar. DTOs de operação próprios
-(`shared/src/dtos/ficha/ficha-criatura-operacao.dtos.ts`) — ver seção 6. Listagem de criaturas
+(`shared/src/dtos/ficha/ficha-criatura-operacao.dtos.ts`) — ver seção 6. Importação administrativa
+(`POST /ficha/importar`, `FichaImportarDto` em `ficha-arquivo.dtos.ts`) cria criatura/NPC solta a partir do
+arquivo JSON do acervo com a validação da **edição** (sem `validarRealocacaoAtributos` da criação). Listagem de criaturas
 por campanha (mini-cards, sem abrir a ficha completa) ganhou a subseção "Criaturas" do painel do
 mestre no `m4-04b` — ver o parágrafo do `CampanhaDetalhe` acima; revelação/visibilidade seletiva
 continua em aberto para `m4-09`.

@@ -30,6 +30,8 @@ import type {
   FichaCriaturaCriarDto,
   FichaCriaturaRecuperadaDto,
   FichaImagemAlteradaDto,
+  FichaImportadaDto,
+  FichaImportarDto,
   FichaInventarioItemMandarParaBaseDto,
   FichaInventarioItemPegarDto,
   FichaMediasEsquadraoDto,
@@ -43,8 +45,9 @@ import type {
   FichaResumoDto,
   FichaVitalidadeAlterarDto,
 } from '@contratados-rpg/shared/dtos/ficha';
+import { TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
 import { montarArquivoImagem } from '../../core/armazenamento';
-import { ActiveUser } from '../../core/decorators';
+import { ActiveUser, TiposPermitidos } from '../../core/decorators';
 import { DocumentarController } from '../../core/openapi';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
 import { FichaService } from './ficha.service';
@@ -102,6 +105,16 @@ export class FichaController {
    * Exclusão (`DELETE /ficha/:id`) e acesso (`/ficha/:id/acesso*`) são agnósticos de tipo — a
    * criatura reusa essas rotas sem endpoint próprio (ver `FichaService`, seção "Ficha de criatura").
    */
+  /** Importação administrativa do arquivo JSON exportado pelo acervo (só `ADMIN`). */
+  @TiposPermitidos(TipoUsuarioEnum.ADMIN)
+  @Post('importar')
+  importar(
+    @Body() dto: FichaImportarDto,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<FichaImportadaDto> {
+    return this.fichaService.importarFicha(dto, usuarioAtivo);
+  }
+
   @Post('criatura')
   criarCriatura(
     @Body() dto: FichaCriaturaCriarDto,

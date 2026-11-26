@@ -20,6 +20,8 @@ import type {
   FichaCriaturaAlteradaDto,
   FichaCriaturaCriadaDto,
   FichaCriaturaCriarDto,
+  FichaImportadaDto,
+  FichaImportarDto,
   FichaCriaturaDadosDto,
   FichaCriaturaInternoAlterarDto,
   FichaCriaturaVitalidadeInternoAlterarDto,
@@ -63,6 +65,7 @@ import {
   ItemCategoriaEnum,
   TipoCampanhaMembroPapelEnum,
   TipoFichaEnum,
+  TipoUsuarioEnum,
 } from '@contratados-rpg/shared/enums';
 import {
   MAESTRIA_PONTOS_MINIMO,
@@ -1306,6 +1309,49 @@ export class FichaService {
       vontade: dados.atributos.vontade,
     });
     return resumo.pesoUsado > resumo.inventarioEfetivo;
+  }
+
+  /**
+   * Importação administrativa de ficha (`ficha-json-exportar-importar-admin`): recebe o arquivo
+   * exportado pelo acervo e cria a ficha **solta** no acervo do administrador. Valida como a edição
+   * de cada tipo (`alterarFichaCriatura`/`alterarFichaNpc`), não como a criação: as regras do jogo
+   * valem, mas a distribuição de atributos da criação de criatura não — uma criatura ajustada depois
+   * de criada precisa voltar igual. Sem campanha, nenhum evento de sala é emitido.
+   */
+  async importarFicha(dto: FichaImportarDto, usuarioAtivo: JwtPayload): Promise<FichaImportadaDto> {
+    if (usuarioAtivo.tipo !== TipoUsuarioEnum.ADMIN) {
+      throw new UnauthorizedAccessException();
+    }
+    const ficha = dto?.ficha;
+    if (!ficha || ficha.formato !== 'contratados-rpg.ficha' || ficha.versao !== 1) {
+      throw new BusinessException('Arquivo de ficha inválido ou de versão não suportada');
+    }
+    if (typeof ficha.nome !== 'string' || !ficha.nome.trim()) {
+      throw new BusinessException('A ficha importada não tem nome');
+    }
+    this.validarCor(ficha.cor);
+
+    let dados: FichaJogadorDadosDto;
+    if (ficha.tipo === TipoFichaEnum.CRIATURA) {
+      this.validarDadosCriaturaContraRegras(ficha.dados);
+      dados = ficha.dados as unknown as FichaJogadorDadosDto;
+    } else if (ficha.tipo === TipoFichaEnum.NPC) {
+      // Mesmo critério de `alterarFichaNpc`: competências só são exigidas de NPC que já as tem.
+      validarDadosNpc(ficha.dados, ficha.dados?.competencias !== undefined);
+      dados = this.resolverCondicoesNpc(ficha.dados) as unknown as FichaJogadorDadosDto;
+    } else {
+      throw new BusinessException('Só é possível importar ficha de Criatura ou de NPC');
+    }
+
+    const criada = await this.fichaRepositorio.criarFicha({
+      campanhaId: null,
+      usuarioId: usuarioAtivo.sub,
+      tipo: ficha.tipo,
+      nome: ficha.nome.trim(),
+      cor: ficha.cor ?? null,
+      dados,
+    });
+    return { id: criada.id, tipo: ficha.tipo };
   }
 
   /** Valida o documento de criatura contra `shared/regras/criatura` (`m4-02`) — o motor é o único árbitro. */

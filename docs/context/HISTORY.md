@@ -1,5 +1,20 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-11-26 — ficha-json-exportar-importar-admin: fichas de Criatura e NPC em JSON
+
+O autor quis trazer fichas reais de criatura para o agente analisar antes do redesenho de Ataques/Habilidades, que
+considera inusável. Entrou um exportar/importar "simplão", só para administrador: no acervo, o menu ⋯ de criatura e
+NPC ganhou "Copiar JSON" e "Baixar JSON", e o topo ganhou "Importar JSON" (colar ou escolher arquivo). O arquivo leva
+só nome, cor e `dados`, com `formato`/`versao`; identidade e posse não viajam. A primeira versão importava pelas rotas
+de criação, mas a verificação ao vivo mostrou que 2 das 4 criaturas reais do banco local eram recusadas: a criação
+confere a distribuição de atributos (`validarRealocacaoAtributos`) e a edição não, então criatura ajustada depois de
+criada exportava e não voltava. O autor decidiu importar **como edição**: rota `POST /ficha/importar`
+(`@TiposPermitidos(ADMIN)`), ficha solta, regras do jogo sim, distribuição de criação não; NPC com o critério de
+`alterarFichaNpc`. A pedido do autor, o exportar também foi para o cabeçalho da própria ficha de criatura e de NPC
+("Exportar ▾", com o primitivo `app-menu-acoes`), com a mesma ação do acervo. Verificado em `1920×1080` e `360×800`
+contra o menu e os modais do próprio acervo e o "Publicar ▾" da Oficina. A outra spec de
+exportação (PDF/Markdown/HTML) continua no backlog.
+
 ## 2026-11-26 — revisao-formatacao-pdf-regras: botão ligado ao gerador e spec encerrada
 
 Com os livros aprovados, o botão "Exportar PDF" passou a gerar e baixar o arquivo no navegador, o Sistema voltou a

@@ -4,7 +4,7 @@ import type {
 } from "@contratados-rpg/shared/dtos/ficha";
 import {
     CategoriaNpcEnum, HabilidadeTipoNpcEnum, ItemCategoriaEnum, PatenteEnum,
-    TipoCampanhaMembroPapelEnum, TipoFichaEnum,
+    TipoCampanhaMembroPapelEnum, TipoFichaEnum, TipoUsuarioEnum,
 } from "@contratados-rpg/shared/enums";
 import type { ArmazenamentoProvedor } from "../../core/armazenamento";
 import { BusinessException, UnauthorizedAccessException } from "../../core/exceptions";
@@ -92,6 +92,19 @@ describe("FichaService — NPC (m4-07)", () => {
             gateway as unknown as CampanhaGateway,
             {} as ArmazenamentoProvedor,
         );
+    });
+
+    it("admin importa NPC solto, validado como edição e sem evento de campanha", async () => {
+        const admin = { sub: 10, tipo: TipoUsuarioEnum.ADMIN } as JwtPayload;
+        const resultado = await service.importarFicha({ ficha: {
+            formato: "contratados-rpg.ficha", versao: 1, tipo: TipoFichaEnum.NPC,
+            exportacaoData: "2026-11-26T00:00:00.000Z", nome: "Rafael", cor: null, dados: criarDados(),
+        } }, admin);
+        expect(resultado).toEqual({ id: 7, tipo: TipoFichaEnum.NPC });
+        expect(repositorio.criarFicha).toHaveBeenCalledWith(expect.objectContaining({
+            campanhaId: null, usuarioId: 10, tipo: TipoFichaEnum.NPC, nome: "Rafael",
+        }));
+        expect(gateway.emitirFichaRecortesAlterados).not.toHaveBeenCalled();
     });
 
     it("rejeita criação sem Competências e não apaga seleção já configurada na edição", async () => {

@@ -115,6 +115,7 @@
             <span class="ficha-pagina__cabecalho-regua"></span>
 
             <div class="ficha-pagina__acoes">
+                <app-exportar-ficha-json [fichaId]="fichaId" [tipo]="TipoFichaEnum.CRIATURA" />
                 @if (fichaEdicao.estadoPersistencia() !== 'ocioso') {
                 <span
                     class="ficha-pagina__persistencia"

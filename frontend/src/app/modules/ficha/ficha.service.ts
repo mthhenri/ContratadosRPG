@@ -16,6 +16,8 @@ import {
   FichaCriaturaCriadaDto,
   FichaCriaturaCriarDto,
   FichaCriaturaRecuperadaDto,
+  FichaImportadaDto,
+  FichaImportarDto,
   FichaImagemAlteradaDto,
   FichaMediasEsquadraoDto,
   FichaNpcCriadaDto,
@@ -88,6 +90,16 @@ export class FichaService {
     return this.httpClient
       .post<StandardResponse<FichaCriadaDto>>(this.base, dto)
       .pipe(map((resposta) => resposta.dados as FichaCriadaDto));
+  }
+
+  /**
+   * Importação administrativa do arquivo JSON de criatura/NPC (`POST /ficha/importar`, só `ADMIN`)
+   * — a ficha nasce solta no acervo e é validada como edição, não como criação.
+   */
+  importarFicha(dto: FichaImportarDto): Observable<FichaImportadaDto> {
+    return this.httpClient
+      .post<StandardResponse<FichaImportadaDto>>(`${this.base}/importar`, dto)
+      .pipe(map((resposta) => resposta.dados as FichaImportadaDto));
   }
 
   /**

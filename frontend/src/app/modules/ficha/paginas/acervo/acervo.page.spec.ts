@@ -8,6 +8,7 @@ import {
   NivelAmeacaEnum,
   TipoCampanhaMembroPapelEnum,
   TipoFichaEnum,
+  TipoUsuarioEnum,
 } from '@contratados-rpg/shared/enums';
 import type { CampanhaResumoDto } from '@contratados-rpg/shared/dtos/campanha';
 import type { FichaCriarDto, FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
@@ -16,6 +17,8 @@ import { FichaAcervo } from './acervo.page';
 import { FichaService } from '../../ficha.service';
 import { CampanhaService } from '../../../campanha/campanha.service';
 import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
+import { SessaoService } from '../../../../core/services/sessao.service';
+import { FichaArquivoJsonService } from '../../ficha-arquivo-json.service';
 
 /**
  * Prova o acervo de fichas (m3-28, `/fichas`): lista todas as fichas do usuário (com e sem
@@ -125,6 +128,7 @@ describe('FichaAcervo', () => {
       fichas?: FichaResumoDto[];
       campanhas?: CampanhaResumoDto[];
       confirmarResultado?: boolean;
+      admin?: boolean;
     } = {},
   ) {
     const fichaService = {
@@ -145,10 +149,20 @@ describe('FichaAcervo', () => {
       confirmar: vi.fn(() => Promise.resolve(opcoes.confirmarResultado ?? true)),
     };
 
+    const arquivoJson = {
+      exportar: vi.fn(() => of(undefined)),
+      importar: vi.fn(() => of(77)),
+    };
+    const sessaoService = {
+      usuario: () => ({ id: 7, tipo: opcoes.admin ? TipoUsuarioEnum.ADMIN : TipoUsuarioEnum.NORMAL }),
+    };
+
     TestBed.configureTestingModule({
       imports: [FichaAcervo],
       providers: [
         provideRouter([]),
+        { provide: FichaArquivoJsonService, useValue: arquivoJson },
+        { provide: SessaoService, useValue: sessaoService },
         { provide: FichaService, useValue: fichaService },
         { provide: CampanhaService, useValue: campanhaService },
         { provide: ConfirmacaoService, useValue: confirmacaoService },
@@ -167,6 +181,7 @@ describe('FichaAcervo', () => {
       campanhaService,
       confirmacaoService,
       navegar,
+      arquivoJson,
     };
   }
 
@@ -560,6 +575,119 @@ describe('FichaAcervo', () => {
 
       const opcoes = Array.from(raiz.querySelectorAll('app-modal select option')).map((el) => el.textContent);
       expect(opcoes).toEqual(['Operação Alfa']);
+    });
+  });
+
+  describe('JSON de criatura/NPC (ficha-json-exportar-importar-admin)', () => {
+    const textos = (raiz: HTMLElement) => raiz.textContent ?? '';
+
+    it('usuário comum não vê "Importar JSON" nem os itens de JSON no menu', () => {
+      const { fixture, raiz } = montar({ fichas: [criaturaResumo()] });
+
+      expect(textos(raiz)).not.toContain('Importar JSON');
+      abrirMenuFicha(raiz, fixture);
+      expect(textos(raiz)).not.toContain('Copiar JSON');
+      expect(textos(raiz)).not.toContain('Baixar JSON');
+    });
+
+    it.each([
+      ['criatura', true],
+      ['NPC', true],
+      ['agente', false],
+    ] as const)('admin: itens de JSON no menu de %s → %s', (tipo, mostra) => {
+      const ficha =
+        tipo === 'criatura' ? criaturaResumo() : tipo === 'NPC' ? npcResumo() : fichaResumo();
+      const { fixture, raiz } = montar({ fichas: [ficha], admin: true });
+
+      abrirMenuFicha(raiz, fixture);
+
+      expect(textos(raiz).includes('Copiar JSON')).toBe(mostra);
+      expect(textos(raiz).includes('Baixar JSON')).toBe(mostra);
+    });
+
+    it('"Copiar JSON" exporta a criatura pelo tipo e fecha o menu', () => {
+      const { fixture, raiz, arquivoJson } = montar({
+        fichas: [criaturaResumo({ id: 2 })],
+        admin: true,
+      });
+
+      abrirMenuFicha(raiz, fixture);
+      clicarItemMenu(raiz, fixture, 'Copiar JSON');
+
+      expect(arquivoJson.exportar).toHaveBeenCalledWith(2, TipoFichaEnum.CRIATURA, 'copiar');
+      expect(raiz.querySelector('.acervo__menu')).toBeNull();
+    });
+
+    it('"Baixar JSON" exporta o NPC como arquivo', () => {
+      const { fixture, raiz, arquivoJson } = montar({
+        fichas: [npcResumo({ id: 3 })],
+        admin: true,
+      });
+
+      abrirMenuFicha(raiz, fixture);
+      clicarItemMenu(raiz, fixture, 'Baixar JSON');
+
+      expect(arquivoJson.exportar).toHaveBeenCalledWith(3, TipoFichaEnum.NPC, 'baixar');
+    });
+
+    function abrirImportar(raiz: HTMLElement, fixture: { detectChanges(): void }) {
+      (
+        Array.from(raiz.querySelectorAll('button')).find((botao) =>
+          botao.textContent?.includes('Importar JSON'),
+        ) as HTMLButtonElement
+      ).click();
+      fixture.detectChanges();
+    }
+
+    function digitarEImportar(
+      raiz: HTMLElement,
+      fixture: { detectChanges(): void },
+      texto: string,
+    ) {
+      const area = raiz.querySelector('app-importar-ficha-json textarea') as HTMLTextAreaElement;
+      area.value = texto;
+      area.dispatchEvent(new Event('input'));
+      fixture.detectChanges();
+      (
+        Array.from(raiz.querySelectorAll('app-importar-ficha-json button')).find(
+          (botao) => botao.textContent?.trim() === 'Importar',
+        ) as HTMLButtonElement
+      ).click();
+      fixture.detectChanges();
+    }
+
+    it('importar JSON inválido mostra o erro no modal sem chamar a API', () => {
+      const { fixture, raiz, arquivoJson } = montar({ admin: true });
+
+      abrirImportar(raiz, fixture);
+      digitarEImportar(raiz, fixture, '{ quebrado');
+
+      expect(raiz.querySelector('app-importar-ficha-json')?.textContent).toContain(
+        'não é um JSON válido',
+      );
+      expect(arquivoJson.importar).not.toHaveBeenCalled();
+    });
+
+    it('importar JSON válido cria a ficha, fecha o modal e abre a ficha nova', () => {
+      const { fixture, raiz, arquivoJson, navegar } = montar({ admin: true });
+      const texto = JSON.stringify({
+        formato: 'contratados-rpg.ficha',
+        versao: 1,
+        tipo: TipoFichaEnum.NPC,
+        exportacaoData: '2026-11-26T00:00:00.000Z',
+        nome: 'Dona Marta',
+        cor: null,
+        dados: { categoria: 'CIVIL' },
+      });
+
+      abrirImportar(raiz, fixture);
+      digitarEImportar(raiz, fixture, texto);
+
+      expect(arquivoJson.importar).toHaveBeenCalledWith(
+        expect.objectContaining({ tipo: TipoFichaEnum.NPC, nome: 'Dona Marta' }),
+      );
+      expect(raiz.querySelector('app-importar-ficha-json')).toBeNull();
+      expect(navegar).toHaveBeenCalledWith(['/fichas', 'npc', 77]);
     });
   });
 });
