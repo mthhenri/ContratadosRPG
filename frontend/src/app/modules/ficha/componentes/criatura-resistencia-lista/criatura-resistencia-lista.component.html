@@ -2,28 +2,38 @@
     <header class="resistencia-lista__cabecalho">
         <h3 class="resistencia-lista__titulo">{{ titulo() }}</h3>
         <span class="resistencia-lista__regua"></span>
-        @if (dica(); as texto) {
-            <span class="resistencia-lista__dica">{{ texto }}</span>
+        <!-- Orçamento sempre à vista (criatura-ficha-usabilidade): usado / limite nas Resistências,
+             mínimo exigido nas Fraquezas. Passar do limite faz o servidor recusar salvar. -->
+        @if (limite(); as total) {
+            <span
+                class="resistencia-lista__orcamento"
+                [class.resistencia-lista__orcamento--excedido]="excesso() > 0"
+                tabindex="0"
+                [attr.aria-label]="
+                    'Limite de Resistências: ' + custoUsado() + ' de ' + total + ' pontos'
+                "
+                [appTooltip]="'Limite de Resistências = 2 × VD (+25% por Fraqueza além da 1ª). Geral conta 2×, subtipo conta ½.'"
+                >{{ custoUsado() }} / {{ total }} pts</span
+            >
+        }
+        @if (minimo(); as valorMinimo) {
+            <span
+                class="resistencia-lista__orcamento"
+                [class.resistencia-lista__orcamento--excedido]="quantidadeAbaixoDoMinimo() > 0"
+                tabindex="0"
+                [attr.aria-label]="'Valor mínimo de cada Fraqueza: ' + valorMinimo"
+                [appTooltip]="'Cada Fraqueza vale ao menos 5 ou metade da soma das Resistências.'"
+                >mín. {{ valorMinimo }}</span
+            >
         }
         @if (editavel()) {
             <button
                 app-botao-icone
-                class="resistencia-lista__alternar-edicao"
-                type="button"
-                [class.resistencia-lista__alternar-edicao--ativo]="modoEdicao()"
-                [attr.aria-pressed]="modoEdicao()"
-                [attr.aria-label]="modoEdicao() ? 'Concluir edição' : 'Editar itens'"
-                [appTooltip]="modoEdicao() ? 'Concluir edição' : 'Editar itens'"
-                (click)="alternarModoEdicao()"
-            >
-                <app-icone [nome]="modoEdicao() ? 'check' : 'editar'" />
-            </button>
-            <button
-                app-botao-icone
                 class="resistencia-lista__adicionar"
                 type="button"
-                aria-label="Adicionar"
+                [attr.aria-label]="'Adicionar em ' + titulo()"
                 [appTooltip]="'Adicionar'"
+                [disabled]="editando(-1)"
                 (click)="adicionar()"
             >
                 <app-icone nome="mais" />
@@ -31,148 +41,172 @@
         }
     </header>
 
-    @if (!itens().length) {
+    @if (excesso() > 0) {
+        <p class="resistencia-lista__aviso" role="alert">
+            Passa {{ excesso() }} pts do limite — a ficha não salva até ajustar.
+        </p>
+    }
+    @if (quantidadeAbaixoDoMinimo() > 0) {
+        <p class="resistencia-lista__aviso" role="alert">
+            Fraqueza abaixo do mínimo ({{ minimo() }}) — a ficha não salva até ajustar.
+        </p>
+    }
+
+    @if (!itens().length && !editando(-1)) {
         <app-estado-vazio tamanho="compacto" titulo="Nenhum item." />
     }
 
-    @if (variante() === "resistencia") {
-        <ul class="resistencia-lista__grade">
-            @for (item of itens(); track $index) {
-                <!-- O formulário é bem mais largo que um box de ~77px: em edição o item abandona a grade e
-             ocupa a linha inteira, em vez de estourar a coluna. -->
-                <li [class]="classeGradeItem(item, editando($index))">
-                    @if (editando($index)) {
-                        <ng-container *ngTemplateOutlet="formulario" />
+    <!-- Clicar no selo abre a caixa dele (Remover fica dentro dela) — sem modo de edição geral. -->
+    <ul
+        [class]="
+            variante() === 'resistencia' ? 'resistencia-lista__grade' : 'resistencia-lista__itens'
+        "
+    >
+        @for (item of itens(); track $index) {
+            @if (editando($index)) {
+                <li class="resistencia-lista__caixa">
+                    <ng-container *ngTemplateOutlet="formulario" />
+                </li>
+            } @else {
+                <li class="resistencia-lista__celula">
+                    @if (editavel()) {
+                        <button
+                            app-botao
+                            type="button"
+                            [class]="classeSelo(item)"
+                            [attr.aria-label]="'Alterar ' + descricao(item) + ', ' + item.valor"
+                            [appTooltip]="descricao(item) + ' — clique para alterar'"
+                            [disabled]="indiceEmEdicao() !== null"
+                            (click)="editar($index)"
+                        >
+                            <ng-container
+                                *ngTemplateOutlet="conteudoSelo; context: { $implicit: item }"
+                            />
+                        </button>
                     } @else {
                         <span
-                            class="resistencia-lista__grade-tipo"
+                            [class]="classeSelo(item)"
                             tabindex="0"
-                            [appTooltip]="item.tipo + (item.subtipo ? ' · ' + item.subtipo : '')"
-                            [attr.aria-label]="
-                                item.tipo + (item.subtipo ? ' · ' + item.subtipo : '')
-                            "
+                            [attr.aria-label]="descricao(item) + ', ' + item.valor"
+                            [appTooltip]="descricao(item)"
                         >
-                            <app-icone class="icone--texto" [nome]="ICONE_TIPO_DANO[item.tipo]" />
-                            {{ abreviacao[item.tipo] }}
+                            <ng-container
+                                *ngTemplateOutlet="conteudoSelo; context: { $implicit: item }"
+                            />
                         </span>
-                        <span class="resistencia-lista__grade-valor">{{ item.valor }}</span>
-                        @if (editavel() && modoEdicao()) {
-                            <div class="resistencia-lista__grade-acoes">
-                                <button
-                                    app-botao-icone
-                                    class="resistencia-lista__acao"
-                                    type="button"
-                                    aria-label="Editar"
-                                    (click)="editar($index)"
-                                >
-                                    <app-icone nome="editar" />
-                                </button>
-                                <button
-                                    app-botao-icone
-                                    class="resistencia-lista__acao"
-                                    type="button"
-                                    aria-label="Remover"
-                                    (click)="remover($index)"
-                                >
-                                    <app-icone nome="excluir" />
-                                </button>
-                            </div>
-                        }
                     }
                 </li>
             }
-        </ul>
-    } @else {
-        <ul class="resistencia-lista__itens">
-            @for (item of itens(); track $index) {
-                <li [class]="classeItem(item, editando($index))">
-                    @if (editando($index)) {
-                        <ng-container *ngTemplateOutlet="formulario" />
-                    } @else {
-                        <span class="resistencia-lista__item-corpo">
-                            <app-icone class="icone--texto" [nome]="ICONE_TIPO_DANO[item.tipo]" />
-                            <span class="resistencia-lista__item-texto">
-                                @if (item.subtipo) {
-                                    <span class="resistencia-lista__tipo">{{ item.tipo }}</span>
-                                    <span class="resistencia-lista__subtipo">{{
-                                        item.subtipo
-                                    }}</span>
-                                } @else {
-                                    <span class="resistencia-lista__subtipo">{{ item.tipo }}</span>
-                                }
-                            </span>
-                        </span>
-                        <span class="resistencia-lista__valor">+{{ item.valor }}</span>
-                        @if (editavel() && modoEdicao()) {
-                            <div class="resistencia-lista__acoes">
-                                <button
-                                    app-botao-icone
-                                    class="resistencia-lista__acao"
-                                    type="button"
-                                    aria-label="Editar"
-                                    (click)="editar($index)"
-                                >
-                                    <app-icone nome="editar" />
-                                </button>
-                                <button
-                                    app-botao-icone
-                                    class="resistencia-lista__acao"
-                                    type="button"
-                                    aria-label="Remover"
-                                    (click)="remover($index)"
-                                >
-                                    <app-icone nome="excluir" />
-                                </button>
-                            </div>
-                        }
-                    }
-                </li>
-            }
-        </ul>
-    }
+        }
+    </ul>
 
     @if (editando(-1)) {
-        <div class="resistencia-lista__form-novo">
+        <div class="resistencia-lista__caixa resistencia-lista__caixa--nova">
             <ng-container *ngTemplateOutlet="formulario" />
         </div>
     }
 </section>
 
-<!-- Formulário em grade compacta: Tipo, Subtipo e Valor dividem a mesma linha tanto para
-     Resistências quanto para Fraquezas. -->
+<!-- Conteúdo do selo: chip fininho (tipo abreviado + valor) nas Resistências; linha com
+     tipo/subtipo e "+valor" nas Fraquezas. -->
+<ng-template #conteudoSelo let-item>
+    @if (variante() === "resistencia") {
+        <span class="resistencia-lista__grade-tipo">
+            <app-icone class="icone--texto" [nome]="iconeTipo(item)" />
+            {{ abreviacaoTipo(item) }}
+        </span>
+        <span class="resistencia-lista__grade-valor">{{ item.valor }}</span>
+    } @else {
+        <span class="resistencia-lista__item-corpo">
+            <app-icone class="icone--texto" [nome]="iconeTipo(item)" />
+            <span class="resistencia-lista__item-texto">
+                @if (item.subtipo) {
+                    <span class="resistencia-lista__tipo">{{ item.tipo }}</span>
+                    <span class="resistencia-lista__subtipo">{{ item.subtipo }}</span>
+                } @else {
+                    <span class="resistencia-lista__subtipo">{{ item.tipo }}</span>
+                }
+            </span>
+        </span>
+        <span class="resistencia-lista__valor">+{{ item.valor }}</span>
+    }
+</ng-template>
+
+<!-- Caixa de criar/alterar: tipo em segmentado, subtipo e valor com `app-campo`, custo ao vivo
+     (Resistências) ou mínimo (Fraquezas), e Remover dentro da caixa ao alterar. -->
 <ng-template #formulario>
-    <form class="resistencia-lista__form" [formGroup]="itemForm" (ngSubmit)="confirmar()">
-        <label class="resistencia-lista__campo">
-            <span class="resistencia-lista__campo-rotulo">Tipo</span>
-            <select
-                class="resistencia-lista__select"
-                formControlName="tipo"
-                aria-label="Tipo de dano"
+    <form
+        class="resistencia-lista__form"
+        [formGroup]="itemForm"
+        [attr.aria-label]="(indiceEmEdicao() === -1 ? 'Adicionar em ' : 'Alterar em ') + titulo()"
+        (ngSubmit)="confirmar()"
+        (keydown.escape)="cancelar()"
+    >
+        <div class="campo campo--compacto resistencia-lista__form-largo">
+            <span class="campo__rotulo">Tipo de dano</span>
+            <app-segmentado
+                rotulo="Tipo de dano"
+                class="resistencia-lista__segmentado"
+                [fluido]="true"
             >
                 @for (tipo of tipos; track tipo) {
-                    <option [value]="tipo">{{ tipo }}</option>
+                    <button
+                        app-segmentado-item
+                        type="button"
+                        [ativo]="itemForm.controls.tipo.value === tipo"
+                        (click)="escolherTipo(tipo)"
+                    >
+                        {{ tipo }}
+                    </button>
                 }
-            </select>
-        </label>
-        <label class="resistencia-lista__campo">
-            <span class="resistencia-lista__campo-rotulo">Subtipo</span>
+            </app-segmentado>
+        </div>
+        <app-campo rotulo="Subtipo (opcional)" tamanho="compacto">
+            <input class="campo__controle" formControlName="subtipo" placeholder="Ex.: Cortante" />
+        </app-campo>
+        <app-campo rotulo="Valor" tamanho="compacto">
             <input
-                class="resistencia-lista__input"
-                formControlName="subtipo"
-                placeholder="Opcional"
-                aria-label="Subtipo"
-            />
-        </label>
-        <label class="resistencia-lista__campo">
-            <span class="resistencia-lista__campo-rotulo">Valor</span>
-            <input
-                class="resistencia-lista__input"
+                class="campo__controle"
                 type="number"
+                min="0"
                 formControlName="valor"
-                aria-label="Valor"
+                appAutoFocus
+                required
             />
-        </label>
-        <div class="resistencia-lista__form-acoes">
+        </app-campo>
+        @if (textoAjuda(); as ajuda) {
+            <p
+                class="resistencia-lista__ajuda resistencia-lista__form-largo"
+                [class.resistencia-lista__ajuda--alerta]="ajudaEmAlerta()"
+                aria-live="polite"
+            >
+                {{ ajuda }}
+            </p>
+        }
+        <div class="resistencia-lista__form-acoes resistencia-lista__form-largo">
+            @if (indiceEmEdicao() !== -1) {
+                <button
+                    app-botao
+                    variante="perigo"
+                    estilo="contorno"
+                    tamanho="pequeno"
+                    type="button"
+                    class="resistencia-lista__remover"
+                    (click)="remover(indiceEmEdicao()!)"
+                >
+                    <app-icone nome="excluir" /> Remover
+                </button>
+            }
+            <button
+                app-botao
+                variante="secundario"
+                estilo="contorno"
+                tamanho="pequeno"
+                type="button"
+                (click)="cancelar()"
+            >
+                Cancelar
+            </button>
             <button
                 app-botao
                 variante="primario"
@@ -180,16 +214,7 @@
                 type="submit"
                 [disabled]="itemForm.invalid"
             >
-                {{ indiceEmEdicao() === -1 ? "Adicionar" : "Confirmar" }}
-            </button>
-            <button
-                app-botao
-                variante="secundario"
-                tamanho="pequeno"
-                type="button"
-                (click)="cancelar()"
-            >
-                Cancelar
+                {{ indiceEmEdicao() === -1 ? "Adicionar" : "Salvar" }}
             </button>
         </div>
     </form>

@@ -1,6 +1,11 @@
 import { TipoDanoEnum } from '../../enums';
 import type { FichaCriaturaResistenciaDto } from '../../dtos/ficha';
-import type { CustoResistenciaCalcularDto, FraquezaValidarDto, LimiteResistenciasCalcularDto } from './criatura.dtos';
+import type {
+  CustoResistenciaCalcularDto,
+  FraquezaMinimoCalcularDto,
+  FraquezaValidarDto,
+  LimiteResistenciasCalcularDto,
+} from './criatura.dtos';
 
 /** Limite de Resistências = 2×VD, +25% por Fraqueza declarada além da 1ª
  * (docs/core/guia_de_mestre-v4.2.0.md — "Guia de Criação de Ameaças" > "Resistências e
@@ -20,10 +25,24 @@ export function calcularCustoResistencia(dto: CustoResistenciaCalcularDto): numb
   return custo;
 }
 
-/** Valor mínimo de uma Fraqueza é 5 ou metade da soma de todas as resistências da criatura, o
- * que for maior (docs/... "Fraquezas"). */
+/** Custo total das resistências declaradas no Limite (soma de `calcularCustoResistencia`). */
+export function somarCustoResistencias(resistencias: readonly FichaCriaturaResistenciaDto[]): number {
+  return resistencias.reduce(
+    (total, resistencia) =>
+      total +
+      calcularCustoResistencia({ valor: resistencia.valor, tipo: resistencia.tipo, ehSubtipo: resistencia.subtipo !== null }),
+    0,
+  );
+}
+
+/** Valor mínimo de uma Fraqueza: 5 ou metade da soma de todas as resistências da criatura, o
+ * que for maior (docs/... "Fraquezas"), arredondado para cima — valores são inteiros. */
+export function calcularValorMinimoFraqueza(dto: FraquezaMinimoCalcularDto): number {
+  return Math.ceil(Math.max(5, dto.somaResistencias / 2));
+}
+
 export function validarFraqueza(dto: FraquezaValidarDto): boolean {
-  return dto.valor >= Math.max(5, dto.somaResistencias / 2);
+  return dto.valor >= calcularValorMinimoFraqueza({ somaResistencias: dto.somaResistencias });
 }
 
 /** Multiplicador de crítico quando o ataque acerta a Fraqueza: 3× para tipo amplo, 4× para

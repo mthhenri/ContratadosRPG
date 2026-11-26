@@ -87,6 +87,13 @@ export class CriaturaVisualizar {
   protected readonly cadernoAberto = computed(() => this.cadernoRef()?.aberto() ?? false);
   private readonly fichaService = inject(FichaService);
   protected readonly fichaEdicao = inject(FichaEdicaoCriaturaService);
+  /** Texto do estado de persistência no cabeçalho (mesmas palavras da ficha de NPC). */
+  protected readonly textoPersistencia = computed(() => {
+    const estado = this.fichaEdicao.estadoPersistencia();
+    if (estado === 'salvando') return 'Salvando…';
+    if (estado === 'erro') return 'Não salvo';
+    return 'Salvo';
+  });
   private readonly fichaRolagemRegistro = inject(FichaRolagemRegistroService);
   private readonly campanhaService = inject(CampanhaService);
   private readonly rolagemService = inject(RolagemService);

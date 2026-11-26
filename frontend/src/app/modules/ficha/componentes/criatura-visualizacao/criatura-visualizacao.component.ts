@@ -31,6 +31,7 @@ import type {
 import {
   calcularDtAtributoCriatura,
   calcularLimiteResistencias,
+  calcularValorMinimoFraqueza,
   calcularValorModificador,
   somarResistenciasCriaturaPorTipo,
   validarFichaCriatura,
@@ -452,6 +453,13 @@ export class CriaturaVisualizacao {
     calcularLimiteResistencias({
       vd: this.dados().vd,
       quantidadeFraquezasExtras: Math.max(0, this.dados().fraquezas.length - 1),
+    }),
+  );
+
+  /** Valor mínimo de cada Fraqueza: 5 ou metade da soma das Resistências (guia de mestre). */
+  protected readonly minimoFraqueza = computed(() =>
+    calcularValorMinimoFraqueza({
+      somaResistencias: this.dados().resistencias.reduce((total, resistencia) => total + resistencia.valor, 0),
     }),
   );
 

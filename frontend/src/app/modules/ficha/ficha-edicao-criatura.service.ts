@@ -18,6 +18,7 @@ import type {
 import { CadenciaEnum } from '@contratados-rpg/shared/enums';
 import type { NivelAmeacaEnum, PorteCriaturaEnum, TenacidadeEnum } from '@contratados-rpg/shared/enums';
 import { calcularTurnosPorRodada } from '@contratados-rpg/shared/regras/encontro';
+import { recalcularVitalidadeCriatura } from '@contratados-rpg/shared/regras/criatura';
 
 import { FichaService } from './ficha.service';
 
@@ -38,7 +39,11 @@ export class FichaEdicaoCriaturaService {
   private readonly fichaService = inject(FichaService);
   private readonly destroyRef = inject(DestroyRef);
 
-  readonly estadoPersistencia = signal<'ocioso' | 'salvando' | 'salvo'>('ocioso');
+  /** `erro`: o servidor recusou o último salvamento e a tela tem mudança não salva — fica até um
+   * salvamento passar (decisão do autor, 2026-11-26: manter a mudança e avisar, não desfazer). */
+  readonly estadoPersistencia = signal<'ocioso' | 'salvando' | 'salvo' | 'erro'>('ocioso');
+  /** Motivo da última recusa (mensagem do servidor), enquanto `estadoPersistencia` é `erro`. */
+  readonly motivoNaoSalvo = signal<string | null>(null);
   private temporizadorSalvo: ReturnType<typeof setTimeout> | null = null;
 
   private readonly ajustePendente = new Subject<void>();
@@ -72,9 +77,10 @@ export class FichaEdicaoCriaturaService {
               dados: fichaAtual.dados,
             })
             .pipe(
-              catchError(() => {
+              catchError((erro: unknown) => {
                 this.edicaoPendente.set(false);
-                this.estadoPersistencia.set('ocioso');
+                this.motivoNaoSalvo.set(lerMotivoRecusa(erro));
+                this.estadoPersistencia.set('erro');
                 return EMPTY;
               }),
             );
@@ -96,6 +102,7 @@ export class FichaEdicaoCriaturaService {
   }
 
   private marcarSalvo(): void {
+    this.motivoNaoSalvo.set(null);
     this.estadoPersistencia.set('salvo');
     if (this.temporizadorSalvo) clearTimeout(this.temporizadorSalvo);
     this.temporizadorSalvo = setTimeout(() => this.estadoPersistencia.set('ocioso'), 2000);
@@ -136,8 +143,24 @@ export class FichaEdicaoCriaturaService {
     this.alterarDados((dados) => ({ ...dados, na }));
   }
 
+  /** Mudar a VD recalcula Vida Máxima e Defesa pela fórmula e desloca a Vida atual na mesma
+   * diferença (decisão do autor, 2026-11-26 — `recalcularVitalidadeCriatura`). Confirmar a mesma VD
+   * (o campo também confirma ao perder o foco) não mexe em nada: um ajuste manual de Vida ou Defesa
+   * só é sobrescrito quando a VD muda de fato. Campo vazio (`NaN`) é ignorado. */
   ajustarVd(vd: number): void {
-    this.alterarDados((dados) => ({ ...dados, vd }));
+    if (!Number.isFinite(vd)) {
+      return;
+    }
+    this.alterarDados((dados) => dados.vd === vd ? dados : ({
+      ...dados,
+      vd,
+      ...recalcularVitalidadeCriatura({
+        vd,
+        tenacidade: dados.tenacidade,
+        vidaMaxima: dados.vidaMaxima,
+        vidaAtual: dados.vidaAtual,
+      }),
+    }));
   }
 
   ajustarAtributos(atributos: FichaAtributosDto): void {
@@ -148,8 +171,21 @@ export class FichaEdicaoCriaturaService {
     this.alterarDados((dados) => ({ ...dados, modificadores }));
   }
 
+  /** Mudar a Tenacidade recalcula só a Vida (a Defesa não depende dela; um ajuste manual de
+   * Defesa continua). Confirmar a mesma Tenacidade não mexe em nada. */
   ajustarTenacidade(tenacidade: TenacidadeEnum): void {
-    this.alterarDados((dados) => ({ ...dados, tenacidade }));
+    this.alterarDados((dados) => {
+      if (dados.tenacidade === tenacidade) {
+        return dados;
+      }
+      const { vidaMaxima, vidaAtual } = recalcularVitalidadeCriatura({
+        vd: dados.vd,
+        tenacidade,
+        vidaMaxima: dados.vidaMaxima,
+        vidaAtual: dados.vidaAtual,
+      });
+      return { ...dados, tenacidade, vidaMaxima, vidaAtual };
+    });
   }
 
   ajustarResistencias(resistencias: readonly FichaCriaturaResistenciaDto[]): void {
@@ -278,4 +314,10 @@ export class FichaEdicaoCriaturaService {
         this.ajustarImagemFoco(null);
       });
   }
+}
+
+/** Mensagem do servidor numa recusa (`StandardResponse.mensagem`), ou um texto genérico. */
+function lerMotivoRecusa(erro: unknown): string {
+  const mensagem = (erro as { error?: { mensagem?: unknown } } | null)?.error?.mensagem;
+  return typeof mensagem === 'string' && mensagem.trim() ? mensagem : 'O servidor recusou o salvamento.';
 }

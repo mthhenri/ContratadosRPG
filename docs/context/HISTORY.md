@@ -1,5 +1,21 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-11-26 — criatura-vd-resistencias-salvamento: VD recalcula Vida e Defesa; resistências legíveis; "Não salvo"
+
+O autor pediu que mudar a VD da criatura recalculasse Vida (pela Tenacidade) e Defesa, e que a ficha fosse
+revista para ficar boa de usar, começando pelas Resistências — ele quase não usa a ficha porque estava ruim.
+O motor ganhou `recalcularVitalidadeCriatura` (Vida Máxima e Defesa pela fórmula do guia, sobrescrevendo
+ajuste manual, e Vida atual andando a mesma diferença, nunca negativa), `somarCustoResistencias` e
+`calcularValorMinimoFraqueza` (a validação passou a usar as duas). Mudar a VD recalcula Vida e Defesa; mudar a
+Tenacidade só a Vida; confirmar o mesmo valor não mexe — o campo confirma ao perder o foco, e sem essa guarda
+só clicar na VD apagaria um ajuste manual. Testando ao vivo, baixar a VD de O Ausente para 20 fazia o
+servidor recusar todo salvamento (resistências 60 > limite 40) enquanto a tela seguia mostrando a mudança e o
+indicador apenas sumia. Decisão do autor: manter a mudança e avisar — a criatura ganhou estado "Não salvo"
+com o motivo, fixo até salvar (a ficha de Agente tem o mesmo defeito, `P-140`). Resistências e Fraquezas
+mostram usado/limite e o mínimo, avisam quando a ficha não vai salvar, e o selo virou botão que abre a caixa
+(tipo em segmentado, custo ao vivo com Geral 2× e subtipo ½, Remover dentro), sem modo de edição. Verificado
+com a cópia de teste de O Ausente nos dois viewports, incluindo recusa e correção ponta a ponta.
+
 ## 2026-11-26 — criatura-ataques-habilidades-edicao: criar, alterar e excluir por item; grupos compactáveis
 
 Logo depois do redesenho de leitura, o autor pediu para tirar o modo de edição geral de Ataques e Habilidades

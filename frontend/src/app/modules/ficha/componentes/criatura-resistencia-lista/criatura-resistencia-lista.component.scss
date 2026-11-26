@@ -1,10 +1,14 @@
+@use "tema/breakpoints" as bp;
+
 :host {
     display: block;
 }
 
 // Resistências/Fraquezas da ficha de criatura — alvo de fidelidade
-// docs/design/examples/ficha-de-criatura.html: cabeçalho "rótulo + régua + ações", boxes compactos
-// pras Resistências e cards com tom de aviso pras Fraquezas. Só tokens do tema (proibição #29).
+// docs/design/examples/ficha-de-criatura.html: cabeçalho "rótulo + régua + ações", chips
+// fininhos pras Resistências e linhas com tom de aviso pras Fraquezas. Só tokens do tema.
+// `criatura-ficha-usabilidade`: orçamento à vista, selo clicável (sem modo de edição) e caixa com
+// custo ao vivo.
 .resistencia-lista {
     &__cabecalho {
         display: flex;
@@ -24,11 +28,18 @@
         height: 1px;
         background: var(--border);
     }
-    &__dica {
-        font: 9px var(--font-mono);
+    // Usado / limite (Resistências) ou mínimo (Fraquezas): mono miúdo como a antiga dica, em
+    // `--erro` quando a ficha está fora da regra.
+    &__orcamento {
+        flex: none;
+        font: 600 10px var(--font-mono);
+        letter-spacing: 0.06em;
         text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: var(--text-mute);
+        color: var(--text-dim);
+        cursor: help;
+        &--excedido {
+            color: var(--erro);
+        }
     }
     &__adicionar {
         width: 20px;
@@ -41,20 +52,19 @@
         &:hover {
             background: var(--accent-dim);
         }
-    }
-    // Gatilho do modo de edição — mesmo lápis de seção `.criatura__lapis` (CriaturaVisualizacao,
-    // usado em Classificação/Atributos/Descrição/Natureza/Tema de Horror/Anotações), replicado
-    // aqui porque o encapsulamento de estilos do Angular não deixa a definição de outro componente
-    // vazar pra este. As ações por item (editar/remover) só existem enquanto ativo (`__grade-acoes`/
-    // `__acoes` abaixo), pra não deixar ícone de edição/remoção sempre visível.
-    &__alternar-edicao {
-        flex: none;
-        font-size: 12px;
-        &--ativo {
-            color: var(--accent);
-            background: var(--accent-dim);
-            border-color: var(--accent);
+        @include bp.mobile {
+            width: bp.$alvo-toque;
+            height: bp.$alvo-toque;
         }
+    }
+    &__aviso {
+        margin: 0 0 10px;
+        padding: 6px 10px;
+        font: 12px/1.45 var(--font-sans);
+        color: var(--erro);
+        background: color-mix(in srgb, var(--erro) 12%, transparent);
+        border: 1px solid color-mix(in srgb, var(--erro) 40%, transparent);
+        border-radius: var(--radius-control);
     }
 
     // Fraquezas: o rótulo e a régua ganham o tom de perigo do mockup.
@@ -67,8 +77,7 @@
         }
     }
 
-    // --- Variante "resistencia": chips fininhos (tipo + valor lado a lado, pedido do autor: menos
-    // altura, cada um ocupando só a própria largura em vez de uma grade de caixas quadradas) ---
+    // --- Resistências: chips fininhos (tipo + valor lado a lado, pedido do autor) ---
     &__grade {
         display: flex;
         flex-wrap: wrap;
@@ -77,6 +86,24 @@
         padding: 0;
         list-style: none;
     }
+    &__celula {
+        display: flex;
+        min-width: 0;
+    }
+    // A caixa de criar/alterar ocupa a linha inteira (o formulário não cabe num chip).
+    &__caixa {
+        flex: 1 1 100%;
+        grid-column: 1 / -1;
+        padding: 10px;
+        background: var(--surface-2);
+        border: 1px dashed var(--border-strong);
+        border-radius: var(--radius-control);
+        &--nova {
+            margin-top: 8px;
+        }
+    }
+    // Selo: `app-botao` (ou `span` só leitura) com a pele local — a base do primitivo só traz raio,
+    // fonte e cursor; cor por tipo de dano vem daqui (mesmo precedente dos botões de rolagem).
     &__grade-item {
         display: flex;
         flex-direction: row;
@@ -86,20 +113,13 @@
         background: var(--surface-2);
         border: 1px solid var(--border);
         border-radius: var(--radius-control);
-        // Em edição o formulário não cabe num box: o item ocupa a linha inteira.
-        &--editando {
-            grid-column: 1 / -1;
-            background: transparent;
-            border: 1px dashed var(--border-strong);
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
         }
 
-        // Cor por tipo de dano (pedido do autor) — mesma paleta `--dano-*` de `_tokens.scss` já
-        // usada no chip de resumo de `ResultadoRolagem`. `:not(&--editando)` em vez de depender da
-        // ordem no arquivo: as duas classes (`--<tipo>` e `--editando`) têm a mesma especificidade,
-        // então sem essa guarda a última declarada no CSS vencia o empate — o `:not` garante que o
-        // tratamento neutro de edição sempre prevalece, não importa a ordem.
+        // Cor por tipo de dano (pedido do autor) — paleta `--dano-*` de `_tokens.scss`.
         @each $tipo in fisico, balistico, explosao, quimico, geral {
-            &--#{$tipo}:not(&--editando) {
+            &--#{$tipo} {
                 border-color: var(--dano-#{$tipo}-border);
                 background: var(--dano-#{$tipo}-dim);
 
@@ -108,8 +128,7 @@
                     color: var(--dano-#{$tipo});
                 }
 
-                // Com subtipo (ex.: Físico Cortante): variação mais escura do mesmo matiz, não uma
-                // cor nova — o tipo continua reconhecível, só o subtipo fica diferenciado.
+                // Com subtipo: variação mais escura do mesmo matiz, não uma cor nova.
                 &.resistencia-lista__grade-item--com-subtipo {
                     border-color: color-mix(in srgb, var(--dano-#{$tipo}) 55%, black);
                     background: color-mix(in srgb, var(--dano-#{$tipo}) 10%, var(--surface-2));
@@ -122,26 +141,33 @@
             }
         }
     }
+    button.resistencia-lista__grade-item,
+    button.resistencia-lista__item {
+        &:hover:not(:disabled) {
+            filter: brightness(1.15);
+        }
+        &:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+    }
     &__grade-tipo {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
         font: 8px var(--font-mono);
         text-transform: uppercase;
         letter-spacing: 0.07em;
         color: var(--text-mute);
-        border-bottom: 1px dotted var(--border-strong);
-        cursor: help;
     }
     &__grade-valor {
         font: 700 13px var(--font-mono);
         color: var(--text);
         line-height: 1;
     }
-    &__grade-acoes {
-        display: flex;
-        gap: 4px;
-    }
 
-    // --- Variante "fraqueza": linhas com tom de aviso, em grade de 2 colunas (divergência
-    // deliberada do mockup, que mostra uma coluna só — ver docs/context/CONTEXT.md) ---
+    // --- Fraquezas: linhas com tom de aviso, em grade de 2 colunas (divergência deliberada do
+    // mockup, que mostra uma coluna só — ver docs/context/CONTEXT.md) ---
     &__itens {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -149,29 +175,27 @@
         margin: 0;
         padding: 0;
         list-style: none;
+        > .resistencia-lista__celula > * {
+            flex: 1 1 auto;
+        }
     }
     &__item {
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 8px;
-        flex-wrap: wrap;
+        min-width: 0;
         padding: 6px 10px;
+        text-align: left;
         background: var(--accent-dim);
         border: 1px solid var(--accent-border);
         border-radius: var(--radius-control);
-        // Em edição o formulário (2 colunas próprias) não cabe numa célula: ocupa a linha inteira.
-        &--editando {
-            grid-column: 1 / -1;
-            background: transparent;
-            border-style: dashed;
-            border-color: var(--border-strong);
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
         }
 
-        // Cor por tipo de dano (pedido do autor), substituindo o `--accent` uniforme acima — mesma
-        // receita e a mesma guarda `:not(&--editando)` de `&__grade-item`.
         @each $tipo in fisico, balistico, explosao, quimico, geral {
-            &--#{$tipo}:not(&--editando) {
+            &--#{$tipo} {
                 border-color: var(--dano-#{$tipo}-border);
                 background: var(--dano-#{$tipo}-dim);
 
@@ -180,7 +204,6 @@
                     color: var(--dano-#{$tipo});
                 }
 
-                // Com subtipo: mesma variação mais escura do matiz usada em `&__grade-item`.
                 &.resistencia-lista__item--com-subtipo {
                     border-color: color-mix(in srgb, var(--dano-#{$tipo}) 55%, black);
                     background: color-mix(in srgb, var(--dano-#{$tipo}) 10%, var(--surface-2));
@@ -192,8 +215,11 @@
                 }
             }
         }
+        // Abaixo do mínimo: contorno tracejado em `--erro`, por cima da cor do tipo.
+        &.resistencia-lista__item--abaixo {
+            border: 1px dashed var(--erro);
+        }
     }
-    // Ícone do tipo de dano à esquerda do bloco tipo/subtipo (icones-dano-habilidade-fragmento-reacao).
     &__item-corpo {
         display: flex;
         align-items: center;
@@ -222,67 +248,36 @@
         color: var(--accent);
     }
 
-    &__acoes {
-        display: flex;
-        gap: 4px;
-    }
-    &__acao {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 24px;
-        height: 24px;
-        color: var(--text-dim);
-        background: transparent;
-        border: 1px solid var(--border-strong);
-        &:hover {
-            color: var(--accent);
-            border-color: var(--accent-border);
-        }
-    }
-    // --- Formulário (mesmo nos dois modos): Tipo, Subtipo e Valor em uma linha compacta. ---
+    // --- Caixa de criar/alterar: tipo (segmentado) na linha toda; subtipo e valor lado a lado;
+    // ajuda ao vivo; ações à direita, Remover à esquerda. ---
     &__form {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 8px;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 120px);
+        gap: 10px;
         width: 100%;
     }
-    &__form-novo {
-        margin-top: 8px;
-        padding: 10px;
-        background: var(--surface-2);
-        border: 1px dashed var(--border-strong);
-        border-radius: var(--radius-control);
+    &__form-largo {
+        grid-column: 1 / -1;
     }
-    &__campo {
-        display: grid;
-        gap: 4px;
-        min-width: 0;
+    // Cinco tipos não cabem numa coluna estreita: o segmentado quebra em vez de vazar.
+    &__segmentado {
+        flex-wrap: wrap;
     }
-    &__campo-rotulo {
-        font: 600 9px var(--font-mono);
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: var(--text-mute);
+    &__ajuda {
+        margin: 0;
+        font: 11px var(--font-mono);
+        color: var(--text-dim);
+        &--alerta {
+            color: var(--erro);
+        }
     }
     &__form-acoes {
-        grid-column: 1 / -1;
         display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
         gap: 6px;
     }
-    &__select,
-    &__input {
-        width: 100%;
-        min-width: 0;
-        padding: 6px 8px;
-        font: 12px var(--font-sans);
-        color: var(--text);
-        background: var(--surface);
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
-        outline: 0;
-        &:focus {
-            border-color: var(--accent);
-        }
+    &__remover {
+        margin-right: auto;
     }
 }

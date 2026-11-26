@@ -52,6 +52,22 @@ export interface DefesaBaseCalcularDto {
   readonly vd: number;
 }
 
+/** Entrada do recálculo de Vida e Defesa de uma criatura já criada, depois de mudar VD ou
+ * Tenacidade: os valores novos de VD/Tenacidade e a Vida que a ficha tinha. */
+export interface CriaturaVitalidadeRecalcularDto {
+  readonly vd: number;
+  readonly tenacidade: TenacidadeEnum;
+  readonly vidaMaxima: number;
+  readonly vidaAtual: number;
+}
+
+/** Vida Máxima e Defesa pela fórmula, e Vida atual deslocada na mesma diferença da máxima. */
+export interface CriaturaVitalidadeRecalculadaDto {
+  readonly vidaMaxima: number;
+  readonly vidaAtual: number;
+  readonly defesa: number;
+}
+
 // ── Resistências e Fraquezas ─────────────────────────────────────────────────
 
 export interface LimiteResistenciasCalcularDto {
@@ -65,6 +81,11 @@ export interface CustoResistenciaCalcularDto {
   readonly tipo: TipoDanoEnum;
   /** `true` quando `valor` é de um subtipo específico (ex.: "Físico Cortante"), não do tipo amplo. */
   readonly ehSubtipo: boolean;
+}
+
+export interface FraquezaMinimoCalcularDto {
+  /** Soma dos `valor` de todas as resistências declaradas da criatura. */
+  readonly somaResistencias: number;
 }
 
 export interface FraquezaValidarDto {

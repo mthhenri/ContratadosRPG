@@ -221,7 +221,7 @@
                                     ><app-icone
                                         class="icone--texto"
                                         nome="valor-desafio"
-                                        appTooltip="Valor de Desafio"
+                                        appTooltip="Valor de Desafio — mudar recalcula Vida Máxima e Defesa"
                                     />
                                     VD</span
                                 >
@@ -295,7 +295,7 @@
                                     ><app-icone
                                         class="icone--texto"
                                         nome="tenacidade"
-                                        appTooltip="Tenacidade"
+                                        appTooltip="Tenacidade — mudar recalcula a Vida Máxima"
                                     />
                                     Tenacidade</span
                                 >
@@ -466,7 +466,7 @@
                         <app-criatura-resistencia-lista
                             titulo="Resistências"
                             variante="resistencia"
-                            [dica]="'Limite ' + limiteResistencias() + ' pts'"
+                            [limite]="limiteResistencias()"
                             [itens]="dados().resistencias"
                             [editavel]="ajustavel()"
                             (itensMudou)="aoResistenciasMudar($event)"
@@ -475,6 +475,7 @@
                         <app-criatura-resistencia-lista
                             titulo="Fraquezas"
                             variante="fraqueza"
+                            [minimo]="minimoFraqueza()"
                             [itens]="dados().fraquezas"
                             [editavel]="ajustavel()"
                             (itensMudou)="aoFraquezasMudar($event)"

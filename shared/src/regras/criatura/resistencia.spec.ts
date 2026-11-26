@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { TipoDanoEnum } from '../../enums';
 import {
+  calcularValorMinimoFraqueza,
+  somarCustoResistencias,
   calcularCustoResistencia,
   calcularLimiteResistencias,
   calcularMultiplicadorCriticoFraqueza,
@@ -66,5 +68,34 @@ describe('somarResistenciasCriaturaPorTipo', () => {
 
   it('lista vazia devolve mapa vazio', () => {
     expect(somarResistenciasCriaturaPorTipo([])).toEqual({});
+  });
+});
+
+// Guia de mestre, "Resistências e Fraquezas": Limite (Geral conta 2×, subtipo ½) e mínimo da Fraqueza.
+describe('somarCustoResistencias', () => {
+  it('O Ausente: Físico 30 + Balístico 30 = 60 pontos', () => {
+    expect(
+      somarCustoResistencias([
+        { tipo: TipoDanoEnum.FISICO, subtipo: null, valor: 30 },
+        { tipo: TipoDanoEnum.BALISTICO, subtipo: null, valor: 30 },
+      ]),
+    ).toBe(60);
+  });
+
+  it('Geral conta em dobro e subtipo pela metade', () => {
+    expect(
+      somarCustoResistencias([
+        { tipo: TipoDanoEnum.GERAL, subtipo: null, valor: 10 },
+        { tipo: TipoDanoEnum.FISICO, subtipo: 'Cortante', valor: 10 },
+      ]),
+    ).toBe(25);
+  });
+});
+
+describe('calcularValorMinimoFraqueza', () => {
+  it('5 ou metade da soma das resistências, o maior, arredondado para cima', () => {
+    expect(calcularValorMinimoFraqueza({ somaResistencias: 0 })).toBe(5);
+    expect(calcularValorMinimoFraqueza({ somaResistencias: 60 })).toBe(30);
+    expect(calcularValorMinimoFraqueza({ somaResistencias: 61 })).toBe(31);
   });
 });

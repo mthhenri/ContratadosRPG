@@ -1,7 +1,7 @@
 import { ModificadorCriaturaEnum } from '../../enums';
 import type { FichaCriaturaDadosDto } from '../../dtos/ficha';
 import type { FichaCriaturaValidadaDto } from './criatura.dtos';
-import { calcularCustoResistencia, calcularLimiteResistencias, validarFraqueza } from './resistencia';
+import { calcularLimiteResistencias, somarCustoResistencias, validarFraqueza } from './resistencia';
 
 /** Distribuição fixa de Modificadores exigida por toda criatura, independente do VD
  * (docs/core/guia_de_mestre-v4.2.0.md — "Guia de Criação de Ameaças" > "Modificadores" >
@@ -27,11 +27,7 @@ export function validarFichaCriatura(dados: FichaCriaturaDadosDto): FichaCriatur
   const violacoes: string[] = [];
 
   const somaResistencias = dados.resistencias.reduce((total, resistencia) => total + resistencia.valor, 0);
-  const custoResistencias = dados.resistencias.reduce(
-    (total, resistencia) =>
-      total + calcularCustoResistencia({ valor: resistencia.valor, tipo: resistencia.tipo, ehSubtipo: resistencia.subtipo !== null }),
-    0,
-  );
+  const custoResistencias = somarCustoResistencias(dados.resistencias);
   const quantidadeFraquezasExtras = Math.max(0, dados.fraquezas.length - 1);
   const limiteResistencias = calcularLimiteResistencias({ vd: dados.vd, quantidadeFraquezasExtras });
   if (custoResistencias > limiteResistencias) {

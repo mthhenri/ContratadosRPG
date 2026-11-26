@@ -88,5 +88,7 @@ ao NPC; e deixar a UX de **Habilidades e Ataques** melhor, que o autor considera
   sobrescrevendo ajustes manuais anteriores; depois da troca o mestre ainda pode editar à mão. A Vida
   atual acompanha a mesma diferença. (Hoje a troca de VD não mexe em nenhuma das duas — ex.: O Ausente
   no banco local, VD 45 com Vida 1.650, valor do estágio anterior.)
+- **Feito (2026-11-26):** o recálculo de Vida/Defesa pela VD da Criatura foi entregue em
+  `criatura-vd-resistencias-salvamento` (done). Aqui segue aberta só a parte de NPC.
 - **Habilidades e Ataques (Entregável 3):** resolvido fora desta spec, em
   `criatura-ataques-habilidades-leitura` e `criatura-ataques-habilidades-edicao` (done).

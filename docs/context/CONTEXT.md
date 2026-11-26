@@ -80,8 +80,11 @@
 > no cartão, restrição destacada, fórmula visível. Criar/alterar/excluir direto em cada item, numa caixa
 > única no lugar do cartão (sem modo de edição geral). O resto do redesenho segue em
 > `ficha-criatura-npc-revamp-visual` (backlog). Specs: [leitura](../specs/done/criatura-ataques-habilidades-leitura.spec.md),
-> [edição](../specs/done/criatura-ataques-habilidades-edicao.spec.md). Próximo pedido do autor: Vida e
-> Defesa recalculadas pela VD (`criatura-npc-vd-habilidades-ataques`, decisão registrada).
+> [edição](../specs/done/criatura-ataques-habilidades-edicao.spec.md). Mudar a VD recalcula Vida Máxima e
+> Defesa (Tenacidade, só a Vida); Resistências mostram usado/limite e o mínimo da Fraqueza e editam pelo
+> selo; salvamento recusado vira "Não salvo" fixo com o motivo
+> ([spec](../specs/done/criatura-vd-resistencias-salvamento.spec.md)). Na ficha de Agente o mesmo
+> salvamento recusado continua escondido (`P-140`).
 >
 > **Fichas em JSON (2026-11-26):** administrador copia/baixa o JSON de Criatura e NPC no menu ⋯ do acervo ou no
 > "Exportar ▾" do cabeçalho da ficha, e

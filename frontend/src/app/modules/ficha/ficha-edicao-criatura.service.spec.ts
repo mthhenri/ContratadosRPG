@@ -67,6 +67,46 @@ describe('FichaEdicaoCriaturaService', () => {
     expect(servico.estadoPersistencia()).toBe('salvo');
   });
 
+  it('mudar a VD recalcula Vida Máxima e Defesa pela fórmula e desloca a Vida atual na mesma diferença', async () => {
+    const { servico, http, ficha } = montar();
+    servico.ajustarVitalidade({ campo: 'vidaAtual', valor: 40 });
+
+    // Resistente ×75: VD 31 → Vida Máxima 2.325 (era 100, ajustada à mão); Defesa 15 + 31÷2 = 30.
+    servico.ajustarVd(31);
+    expect(ficha()?.dados).toMatchObject({ vd: 31, vidaMaxima: 2325, vidaAtual: 2265, defesa: 30 });
+
+    servico.ajustarVd(40);
+    expect(ficha()?.dados).toMatchObject({ vd: 40, vidaMaxima: 3000, vidaAtual: 2940, defesa: 35 });
+
+    await new Promise((r) => setTimeout(r, 550));
+    const requisicao = http.expectOne((req) => req.url.endsWith('/ficha/criatura/4'));
+    expect(requisicao.request.body.dados).toMatchObject({ vd: 40, vidaMaxima: 3000, vidaAtual: 2940, defesa: 35 });
+    requisicao.flush(envelope(ficha()!));
+  });
+
+  it('confirmar a mesma VD (ou campo vazio) não sobrescreve Vida e Defesa ajustadas à mão', async () => {
+    const { servico, http, ficha } = montar();
+    servico.ajustarDefesa(42);
+
+    servico.ajustarVd(30);
+    servico.ajustarVd(Number.NaN);
+    expect(ficha()?.dados).toMatchObject({ vd: 30, vidaMaxima: 100, vidaAtual: 100, defesa: 42 });
+
+    await new Promise((r) => setTimeout(r, 550));
+    http.expectOne((req) => req.url.endsWith('/ficha/criatura/4')).flush(envelope(ficha()!));
+  });
+
+  it('mudar a Tenacidade recalcula só a Vida; a Defesa ajustada à mão continua', async () => {
+    const { servico, http, ficha } = montar();
+    servico.ajustarDefesa(42);
+
+    servico.ajustarTenacidade(TenacidadeEnum.PADRAO);
+    expect(ficha()?.dados).toMatchObject({ tenacidade: TenacidadeEnum.PADRAO, vidaMaxima: 1050, vidaAtual: 1050, defesa: 42 });
+
+    await new Promise((r) => setTimeout(r, 550));
+    http.expectOne((req) => req.url.endsWith('/ficha/criatura/4')).flush(envelope(ficha()!));
+  });
+
   it('ajusta a lista de ataques inteira e persiste', async () => {
     const { servico, http, ficha } = montar();
     const novosAtaques = [{ nome: 'Golpe', teste: 'lutad20kh1+3', custoAcao: 'PADRAO' as never, dano: '4D12+10', danoCritico: '8D12+20', area: false }];
