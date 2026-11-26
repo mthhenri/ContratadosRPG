@@ -1,5 +1,12 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-11-26 — v1.13.1: troca de tipo de cena
+
+Versão pedida pelo autor como patch (1.13.1), embora seja funcionalidade nova — a regra da skill sugeriria minor;
+mantida a escolha. Nota em `docs/patchnotes/1.13.1.md`, aprovada pelo autor: trocar o tipo da cena, a mesa
+acompanhando ao vivo, histórico abrindo o combate certo. Versão sincronizada nos pacotes; `shared` 1.356 testes;
+simulação da publicação. Tag e R2 ficam com o workflow no push para `master`.
+
 ## 2026-11-26 — cena-trocar-tipo: trocar o tipo da cena no meio dela
 
 Pedido do autor: a cena "Sessão 7" nasce Investigação, vira Combate, volta, vira Resistência e volta, sem criar
