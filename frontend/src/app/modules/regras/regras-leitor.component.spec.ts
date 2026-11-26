@@ -8,6 +8,7 @@ import { RegrasLeitor } from "./regras-leitor.component";
 import { RegrasService } from "./regras.service";
 import { RegrasPesquisaController } from "./regras-pesquisa.controller";
 import { RegrasLeituraStore } from "./regras-leitura.store";
+import { RegrasExportacaoPdfService } from "./regras-exportacao-pdf.service";
 
 describe("Leitor compartilhado de Regras", () => {
     const documento: RegrasDocumento = {
@@ -41,6 +42,23 @@ describe("Leitor compartilhado de Regras", () => {
         leitor.detectChanges();
         expect(raiz.querySelectorAll('input[aria-label="Pesquisar no livro"]')).toHaveLength(1);
         expect(raiz.querySelector(".regras__ir-para")).toBeNull();
+        leitor.destroy();
+    });
+
+    it("fecha a gaveta ao exportar o PDF, para o aviso não ficar escondido atrás dela", () => {
+        const exportar = vi.spyOn(TestBed.inject(RegrasExportacaoPdfService), "exportar")
+            .mockResolvedValue();
+        const leitor = TestBed.createComponent(RegrasLeitor);
+        leitor.componentRef.setInput("livro", "sistema");
+        leitor.componentRef.setInput("emPainel", true);
+        leitor.detectChanges();
+        const raiz = leitor.nativeElement as HTMLElement;
+        raiz.querySelector<HTMLButtonElement>('[aria-label="Abrir sumário das Regras"]')!.click();
+        leitor.detectChanges();
+        raiz.querySelector<HTMLButtonElement>('[aria-label="Exportar PDF"]')!.click();
+        leitor.detectChanges();
+        expect(exportar).toHaveBeenCalledExactlyOnceWith("sistema");
+        expect(raiz.querySelector("app-gaveta.gaveta--aberta")).toBeNull();
         leitor.destroy();
     });
 

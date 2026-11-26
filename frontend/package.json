@@ -26,6 +26,7 @@
     "@contratados-rpg/shared": "*",
     "@milkdown/kit": "^7.22.1",
     "@milkdown/plugin-collab": "^7.22.1",
+    "jspdf": "^4.2.1",
     "marked": "^18.0.9",
     "rxjs": "~7.8.0",
     "socket.io-client": "^4.8.3",

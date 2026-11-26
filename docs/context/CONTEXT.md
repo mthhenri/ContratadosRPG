@@ -66,10 +66,14 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Avaliação do autor:** formatação do PDF precisa de revisão substancial (P-108).
-> Exportação do Sistema temporariamente suspensa; Guia disponível. Revisão no
-> [backlog](../specs/backlog/revisao-formatacao-pdf-regras.spec.md), sem aprovação
-> editorial da apresentação entregue.
+> **Sem subtítulo (2026-11-25):** a publicação não grava mais "Nova Era"; o site muda quando o autor publicar a
+> próxima versão de cada livro. [Spec](../specs/done/regras-sem-subtitulo.spec.md).
+
+> **PDF das Regras (2026-11-26):** livro de sistema desenhado por código (`modules/regras/pdf/`, jsPDF), baixado
+> direto pelo botão "Exportar PDF" nos dois livros (Sistema reativado), sempre da publicação atual e no tema de quem
+> exporta. A impressão antiga foi removida e `P-108` encerrado. Tipo de bloco novo no livro exige desenhista no
+> gerador. [Spec](../specs/done/revisao-formatacao-pdf-regras.spec.md) ·
+> [verificação e limites](../specs/done/revisao-formatacao-pdf-regras/verificacao.md).
 >
 > **Última revisão:** 2026-10-09 · `regras-mobile-tabelas-e-rodape`: amplificadores sem
 > quebra no nome, módulos associados aos efeitos, rolagem local sem sobreposição da última
@@ -137,7 +141,7 @@
 > usos gerais; botão Regras da topbar com o livro aberto (`documentos`). [Contrato de marcas](../design/MARCAS.md).
 > Revisão visual das Regras concluída: subclasses, termos, abertura e grades no leitor, cor
 > de Vida/Energia; [verificação](../specs/done/revisao-visual-regras/verificacao.md).
-> M10 implementada, 11/11; revisão editorial da exportação segue aberta em P-108.
+> M10 implementada, 11/11; a exportação em PDF foi refeita em `revisao-formatacao-pdf-regras`.
 > `icones-recursos-sistema` arquivada em `done/` por decisão do autor: entrega 1 concluída;
 > entrega 2 (ícone ao lado do texto) com verificação ao vivo registrada em 09/10 e três defeitos corrigidos
 > ([relato](../specs/done/icones-recursos-sistema/entrega-2-verificacao.md)). Glifos, tooltip por extenso e limites
@@ -2223,7 +2227,7 @@ incluindo todos os ajustes avulsos de pós-milestone.
 | `transcricoes-01`…`09` | Transcriber | **ABANDONADA em 17/10/2026**, por decisão do autor: o fluxo Python pessoal já resolve a necessidade. Integração sem endpoints, rotas web ou atalhos; link residual de dispositivos no Perfil removido e desativação reconferida em 22/10 ([verificação](../specs/done/transcricoes-desativacao-acessos-residuais/verificacao.md)). 01/03 preservadas como histórico; 02/04–09 e guarda-chuva arquivados como abandonados. Código, dados e migrations preservados; nenhuma retomada planejada. [Desativação](../specs/done/transcricoes-desativacao.spec.md) |
 | `civil-guia-criacao` | ficha | mapeia o escopo de `PROBLEMS.md` `P-018` (o guia de criação trata a classe Civil como um agente comum em vários passos) — spec de levantamento, ainda não implementa |
 | `ficha-exportar-criatura-npc-agente` | ficha | exportar Agente, Criatura e NPC em PDF, modelo vazio, Markdown e HTML (substitui a `m3-53`, descartada) |
-| `revisao-formatacao-pdf-regras` | regras | revisão substancial da apresentação e aprovação visual do autor; Sistema suspenso (P-108) |
+| ~~`revisao-formatacao-pdf-regras`~~ | regras | concluída; [verificação](../specs/done/revisao-formatacao-pdf-regras/verificacao.md) |
 | `regras-glossario` | regras | esboço independente do M10: termos marcados com cartão; pontos a fechar com o autor |
 | ~~`m11-10`~~ | regras | concluída; ver [guarda-chuva](../specs/done/m11-oficina-regras.spec.md) |
 | `regras-visual-06`…`10` | regras | cinco correções restantes após bateria visual; textos e contraste; [mapa e prioridades](../specs/done/regras-auditoria-visual-completa/auditoria.md) |
@@ -2243,7 +2247,7 @@ seletor e encontro; NPC e criatura ficam sem ícone de identidade (`I-063`).
 As duas avaliações de usabilidade permanecem no backlog.
 
 Milestones ainda não abertos: `m5-guia-missao`. M10 `m10-regras` implementada: `m10-01`…`m10-11`
-concluídas; revisão de formatação da exportação permanece aberta em P-108. O M8 `m8-espectadores-campanha` está **concluído**
+concluídas; a exportação em PDF foi refeita depois. O M8 `m8-espectadores-campanha` está **concluído**
 (`m8-01`…`m8-06`).
 
 ---
@@ -2284,7 +2288,7 @@ reproduzem isoladas (arquivo único), não na suíte completa.
 | M7 | Encontro de Combate | **concluído** — 8 tasks originais (`m7-01` contrato, `m7-02` motor puro, `m7-03` backend de montagem, `m7-04` backend de condução/tempo real, `m7-05` painel do mestre, `m7-06` visão do jogador, `m7-07` log da rodada, `m7-08` refinamento mobile) + 9 ajustes de pós-milestone (`m7-09`…`m7-17`, ver seção 4 "Encontro de Combate"). Numeração M7 é sugestão, não decisão de roadmap |
 | M8 | Espectadores e Prévias de Campanha | **concluído** — `m8-01`…`m8-06` (banco + contratos do papel ESPECTADOR; backend de permissões e as duas projeções de leitura; frontend de entrada/gestão de convites-membros/Painel do espectador ao vivo/Prévia de jogador fidedigna/visão read-only de Iniciativa; `m8-06` fechou com gate de validação integrada entre 4 contas reais). Numeração M8 é sugestão, não decisão de roadmap — ver `docs/context/IDEAS.md` |
 | M11 | Oficina das Regras (editor da estrutura dos livros no site) | **concluída (10/10)** — `m11-01` (contrato da árvore no `shared/`) e `m11-02` (tabelas e repositórios) `m11-03` (importador) e `m11-04` (publicação e leitura por papel) e `m11-05` (comparador puro) e `m11-06` (núcleo da Oficina: API de edição e edição no lugar) e `m11-07` (inserir e estruturar) e `m11-08` (blocos ricos), `m11-09` (mudanças e publicar) e `m11-10` (troca da fonte da verdade) concluídas; [guarda-chuva](../specs/done/m11-oficina-regras.spec.md) |
-| M10 | Regras (documentos do sistema no site) | **implementada, 11/11** — revisão editorial da exportação pendente (P-108); fonte visual `docs/specs/done/m10-regras/m10-regras-exemplao.html` |
+| M10 | Regras (documentos do sistema no site) | **implementada, 11/11** — PDF refeito em `revisao-formatacao-pdf-regras`; fonte visual `docs/specs/done/m10-regras/m10-regras-exemplao.html` |
 
 ---
 

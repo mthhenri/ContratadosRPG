@@ -27,7 +27,7 @@ import { RegrasLeitorContexto } from "./regras-leitor-contexto";
 import { RegrasConsultaService } from "./regras-consulta.service";
 import { RegrasPesquisaController } from "./regras-pesquisa.controller";
 import { RegrasExportarMarkdown } from "./regras-exportar-markdown.component";
-import { RegrasImpressaoService } from "./regras-impressao.service";
+import { RegrasExportacaoPdfService } from "./regras-exportacao-pdf.service";
 import { RegrasPesquisa } from "./regras-pesquisa.component";
 import { RegrasPesquisaProjecao } from "./regras-pesquisa-projecao.component";
 import { BotaoIcone } from "../../shared/ui/botao-icone/botao-icone.component";
@@ -85,7 +85,7 @@ export class RegrasLeitor {
     private readonly sessao = inject(SessaoService);
     protected readonly oficina = inject(OficinaStore);
     protected readonly pesquisa = inject(RegrasPesquisaController);
-    protected readonly impressao = inject(RegrasImpressaoService);
+    protected readonly exportacaoPdf = inject(RegrasExportacaoPdfService);
     protected readonly gavetaAberta = signal(false);
     protected readonly paletaAberta = signal(false);
     protected readonly mobile = signal(window.innerWidth <= 560);
@@ -238,6 +238,12 @@ export class RegrasLeitor {
             this.assinatura?.unsubscribe();
             this.desconectar?.();
         });
+    }
+
+    /** A gaveta cobre os avisos: fecha para o "Gerando o PDF…" aparecer. */
+    protected exportarPdf(livro: RegrasDocumento["id"]): void {
+        this.gavetaAberta.set(false);
+        void this.exportacaoPdf.exportar(livro);
     }
 
     protected trocarDocumento(livro: RegrasDocumento["id"]): void {

@@ -27,7 +27,7 @@
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
-            "allowedCommonJsDependencies": ["extend"],
+            "allowedCommonJsDependencies": ["extend", "core-js", "raf", "rgbcolor", "html2canvas"],
             "stylePreprocessorOptions": {
               "includePaths": ["src/styles"]
             },

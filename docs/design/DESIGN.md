@@ -271,17 +271,13 @@ Destaques usam `--accent-dim`/`--text`, ocorrência atual com contorno `--accent
 Rolagem posiciona o destaque abaixo da barra e do contador medidos na aplicação.
 [Pesquisa, comparação visual e gates](../specs/done/m10-09-pesquisa-regras/m10-09-verificacao.md).
 
-Desde M10-10, `app-botao-icone` compacto com tooltip Exportar PDF fica ao lado
-do título/versão no trilho/gaveta. Projeção sob demanda reutiliza os blocos do
-leitor em papel A4 claro, com tokens `--papel-*`, IBM Plex, capa/tarjas/versão,
-sumário hierárquico e margens com livro/versão e página/total. Capítulos e
-arquétipos começam em novas páginas; caixas curtas/linhas permanecem inteiras,
-containers longos fragmentam. Cores de ameaça são preservadas. Controles e
-marcas de pesquisa ficam fora da impressão. Sumário sem páginas e referências
-por nome são limites da impressão nativa.
-[Inspeção dos livros e limites](../specs/done/m10-10-exportar-pdf/verificacao.md).
-Após avaliação do autor, a apresentação dos PDFs permanece em revisão (P-108).
-Exportar o Sistema está temporariamente desativado; o Guia permanece disponível.
+`app-botao-icone` compacto com tooltip Exportar PDF fica ao lado do título/versão no
+trilho/gaveta, nos dois livros. O PDF é um **livro de sistema** desenhado por código
+(`modules/regras/pdf/`), baixado direto, sempre da publicação atual e **no tema de quem
+exporta** (base e destaque): capa, sumário com número de página, A4, IBM Plex, os mesmos
+ícones de identidade do leitor. Enquanto gera, o botão fica desabilitado e um aviso diz
+"Gerando o PDF…". Cores do gerador só em `pdf/paleta.ts` (a base clara parte dos tokens
+`--papel-*`). [Desenho e decisões](../specs/done/revisao-formatacao-pdf-regras/design.md).
 
 **Uso da marca (decisão do autor, M10-04, 08/10/2026):** a marca própria
 ContratadosRPG — SCP misturado com D20, assets `frontend/public/logo-{black,white}.*`

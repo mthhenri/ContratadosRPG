@@ -48,7 +48,7 @@ O pedido é **em boa parte já resolvido pela infraestrutura existente**; falta 
 | Leitura "do papel" | `GET /livros/:codigo` | ADMIN/TESTER enxergam o **rascunho** quando ele é mais novo que a publicação (`PAPEIS_QUE_VEEM_RASCUNHO`). Não serve de base para exportar: o arquivo exportado nunca deve conter rascunho. |
 | Pacote JSON administrativo | `GET /livros/pacotes/publicados` (`ADMIN`), `oficina/oficina-exportar.component.*`, `oficina-exportacao.service.ts`, `livro-pacote.*` | Baixa JSON **estruturado** da publicação atual para importar em outro ambiente (`regras:importar-pacote`). É transporte entre bancos, não leitura. Não gera Markdown. |
 | PDF | `frontend/src/app/modules/regras/regras-impressao.service.ts` e `regras-impressao.component.*` | **Impressão nativa** do navegador (`window.print`) com CSS `@media print` (M10-10). **Sistema está suspenso** em `exportarDocumento` (`documento.id === "sistema"` retorna sem fazer nada) por causa do **P-108** (formatação "bem estranha"). Guia exporta. |
-| Revisão do PDF | `docs/specs/backlog/revisao-formatacao-pdf-regras.spec.md` | Já planejada: avaliar página a página, ajustar a impressão nativa e **reativar o Sistema** só após aprovação do autor. Esta spec **não a duplica**. |
+| Revisão do PDF | `docs/specs/done/revisao-formatacao-pdf-regras.spec.md` | Já planejada: avaliar página a página, ajustar a impressão nativa e **reativar o Sistema** só após aprovação do autor. Esta spec **não a duplica**. |
 | Botão na tela | `regras.page.html`, `regras-flutuante.component.html` | Existe a ação **Exportar PDF** (cabeçalho do trilho). **Não existe** ação de Markdown. |
 
 Observações de fidelidade, medidas em `docs/core/sistema-v4.1.5.md` (3.331 linhas) e confirmadas no

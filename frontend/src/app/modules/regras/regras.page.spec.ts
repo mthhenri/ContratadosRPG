@@ -42,7 +42,7 @@ describe("RegrasPage", () => {
 
     afterEach(() => vi.restoreAllMocks());
 
-    it("anuncia carga e exibe versão, conteúdo, exportação suspensa e atribuição do documento recebido",
+    it("anuncia carga e exibe versão, conteúdo, exportação disponível e atribuição do documento recebido",
         async () => {
             const { fixture, respostas, raiz } = await montar();
             expect(raiz.querySelector('[aria-label="Carregando documento"]')).not.toBeNull();
@@ -52,7 +52,7 @@ describe("RegrasPage", () => {
             expect(raiz.textContent).toContain("Conteúdo do livro");
             expect(raiz.querySelector("a[download]")).toBeNull();
             expect(raiz.querySelector<HTMLButtonElement>('[aria-label="Exportar PDF"]')?.disabled)
-                .toBe(true);
+                .toBe(false);
             expect(raiz.querySelector("footer")?.textContent).toContain("CC BY-SA 3.0");
         });
 

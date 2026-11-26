@@ -161,7 +161,7 @@ Pesquisar Mercenário no Guia, em 360×800: o estado vazio oferece “1 RESULTAD
 - Rolagem horizontal local e primeira coluna fixa são recursos esperados para tabelas com chave comum. Não há falha só porque uma coluna precisa de rolagem; RV-01/RV-03 têm associação/sobreposição concretas.
 - Fundo claro de NA Extrema/Catastrófica é tratamento canônico, não defeito por divergir da superfície escura.
 - “GUIA DE CRIAÇÃO DE MISSÕES / EM BREVE…” é conteúdo autoral ainda não publicado, não bloco perdido.
-- PDF do Sistema permanece suspenso por [P-108/spec própria](../../backlog/revisao-formatacao-pdf-regras.spec.md); a auditoria de PDF está fora deste recorte.
+- PDF do Sistema permanece suspenso por [P-108/spec própria](../../active/revisao-formatacao-pdf-regras.spec.md); a auditoria de PDF está fora deste recorte.
 - Botão fixo Voltar ao topo, tarjas de censura e conteúdo desabilitado de exportação não foram tratados como defeitos novos.
 - Transições de gaveta e scroll suave produziram capturas transitórias cortadas. Foram reconferidas depois da transição; não originaram specs.
 

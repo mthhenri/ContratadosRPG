@@ -29,6 +29,48 @@
 
 ## Ativos
 
+### P-139 — Gaveta e janela das Regras cobrem os avisos no celular · `ABERTO` · frontend/regras
+
+- **Sintoma:** com a gaveta do sumário aberta (tela estreita), um aviso disparado ali fica atrás dela e quase
+  invisível; acontece, por exemplo, ao exportar o Markdown.
+  A janela flutuante das Regras, em tela estreita, ocupa tudo e cobre qualquer aviso, inclusive os da exportação
+  em PDF (sucesso e falha): o arquivo baixa, mas a falha passa despercebida até fechar a janela.
+- **Causa:** `.notificacoes` usa `z-index: 50`; `.regras__gaveta-area` usa 70 e `.painel-flutuante__janela` passa de 1200.
+- **Contorno:** fechar a gaveta ou a janela. Na página, a exportação em PDF já fecha a gaveta no clique.
+- **Correção:** acertar as camadas (mexe em `app-notificacoes`, compartilhado: avaliar todos os consumidores) ou
+  fechar a gaveta nas demais ações que avisam.
+- **Desde:** observado em `revisao-formatacao-pdf-regras` (2026-11-26).
+
+### P-138 — Suíte do frontend falha em massa no Node 26 · `CONTORNADO` · testes/ambiente
+
+- **Sintoma:** `npm run test --workspace=frontend` falha em 33 arquivos (688 testes) com
+  `Cannot read properties of undefined (reading 'clear' | 'getItem')`.
+- **Causa:** Node 26.13.0 na máquina do autor expõe um `localStorage` global próprio, sem armazenamento, que encobre o
+  do jsdom (confirmado: com a opção abaixo passam os 3.685 testes).
+- **Contorno:** rodar com `NODE_OPTIONS=--no-experimental-webstorage`.
+- **Correção:** passar a opção na configuração do teste ou fixar a versão do Node no repositório.
+- **Desde:** observado em `regras-sem-subtitulo` (2026-11-25).
+
+### P-136 — Nota de troca de modelo do montador fica na tela depois de digitar no visor · `ABERTO` · frontend/rolagem
+
+- **Sintoma:** depois que a nota "… começa do ponto de partida do modelo" aparece, digitar uma fórmula no visor não a
+  apaga (continua também após rolar), e o texto passa a descrever uma fórmula que já não está lá.
+- **Causa:** `aoDigitarVisor` (`montador-rolagem.component.ts`) grava a fórmula sem limpar `avisoTroca`; só as edições
+  pelos controles (`aplicarEdicao`) e o Desfazer limpam.
+- **Contorno:** mexer em qualquer controle do montador.
+- **Correção:** `this.avisoTroca.set(null)` em `aoDigitarVisor`, com teste.
+- **Desde:** `montador-rolagens-revisao` (2026-11-25).
+
+### P-137 — Item ativo do segmentado perde a cor de texto no hover/toque · `ABERTO` · frontend/ui
+
+- **Sintoma:** com o ponteiro sobre o item ativo (ou depois de tocá-lo), o texto usa `--text` em vez de
+  `--accent-text`: na base clara fica escuro sobre o vermelho (cerca de 3,6:1, contra 5:1 do branco).
+- **Causa:** em `segmentado-item.component.scss`, `:host:hover:not(:disabled)` tem especificidade maior que
+  `:host(.segmentado__item--ativo)`. Vale para todo consumidor do primitivo.
+- **Contorno:** tirar o ponteiro do item.
+- **Correção:** excluir o item ativo da regra de hover (primitivo compartilhado: medir impacto antes).
+- **Desde:** não investigada; o arquivo não mudou na branch da revisão do montador.
+
 ### P-134 — Calculadora minimizada não reabre no primeiro acionamento da ficha completa · `CONTORNADO` · frontend/painéis
 
 - **Sintoma:** minimizar a Calculadora na ficha completa e acionar a ação Calculadora alterna
@@ -132,18 +174,6 @@
 - **Correção:** investigar recorrência a partir do diagnóstico de P-104 e dos limites
   da [verificação do sumário](../specs/done/regras-sumario-classes-subclasses/verificacao.md).
 - **Desde:** gate de `regras-sumario-classes-subclasses`, 09/10/2026.
-
-### P-108 — Formatação do PDF de Regras precisa de revisão · `CONTORNADO` · frontend/impressão
-
-- **Sintoma:** autor avaliou o PDF da M10-10 como “bem estranho” e pediu revisão
-  substancial da formatação; apresentação editorial ainda não aprovada.
-- **Causa:** não investigada com o autor; geração/paginação técnica não comprova
-  qualidade editorial. Não atribuir defeitos específicos sem essa avaliação.
-- **Contorno:** exportação do Sistema temporariamente desativada na UI e no
-  service; exportação do Guia continua disponível.
-- **Correção:** [revisão da formatação](../specs/backlog/revisao-formatacao-pdf-regras.spec.md),
-  com corte visual aprovado e conferência completa antes de reativar o Sistema.
-- **Desde:** avaliação do autor em 08/10/2026 após a entrega da M10-10.
 
 ### P-093 — Sistema contradiz a si mesmo no arredondamento de bônus · `ACEITO` · docs/core
 

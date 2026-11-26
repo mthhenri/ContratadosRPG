@@ -31,7 +31,6 @@
             [id]="identificador(arquetipo.nome || chave(arquetipo)) + '-painel'"
             [attr.aria-labelledby]="identificador(arquetipo.nome || chave(arquetipo)) + '-aba'"
         >
-            <h4 class="regras-arquetipos__impressao">{{ arquetipo.nome || "Arquétipo sem nome" }}</h4>
             <div class="regras-arquetipos__lado">
                 <div class="regras-arquetipos__nome">
                     @if (icone(arquetipo.nome); as nomeIcone) {

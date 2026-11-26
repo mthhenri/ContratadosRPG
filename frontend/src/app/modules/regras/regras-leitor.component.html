@@ -351,13 +351,9 @@
                     app-botao-icone
                     tamanho="compacto"
                     aria-label="Exportar PDF"
-                    [appTooltip]="
-                        livroAberto.id === 'sistema'
-                            ? 'PDF do Sistema: formatação em revisão'
-                            : 'Exportar PDF'
-                    "
-                    [disabled]="livroAberto.id === 'sistema' || impressao.preparando()"
-                    (click)="impressao.exportarDocumento(livroAberto)"
+                    [appTooltip]="exportacaoPdf.exportando() ? 'Gerando o PDF…' : 'Exportar PDF'"
+                    [disabled]="exportacaoPdf.exportando()"
+                    (click)="exportarPdf(livroAberto.id)"
                 >
                     <app-icone nome="documentos" />
                 </button>

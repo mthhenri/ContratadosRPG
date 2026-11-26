@@ -1,5 +1,67 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-11-26 — revisao-formatacao-pdf-regras: botão ligado ao gerador e spec encerrada
+
+Com os livros aprovados, o botão "Exportar PDF" passou a gerar e baixar o arquivo no navegador, o Sistema voltou a
+exportar e a impressão antiga saiu (`regras-impressao.*` e o título que só existia para o papel). A verificação em
+Chromium, Edge e Firefox achou o que os testes não viam: no celular o aviso de geração ficava atrás da gaveta do
+sumário (agora o clique a fecha; o resto virou P-139). A revisão independente não achou defeito nos livros atuais, mas
+reproduziu cinco riscos para edições futuras (título órfão, conteúdo antes do 1º capítulo sumindo, selo de ameaça
+compacto, campo curto de ficha omitido), todos corrigidos com teste, e mostrou que a conferência por palavras era fraca;
+a conferência por trecho inteiro confirmou os 2.130 textos. A fonte Backrooms, sem licença, entrou por decisão do autor.
+Gates: frontend 3.723, backend 1.361, `shared` 1.348. `P-108` encerrado.
+
+## 2026-11-25 — revisao-formatacao-pdf-regras: ajustes do autor sobre os livros completos
+
+Ao folhear os livros, o autor pediu texto justificado, parágrafo inteiro (e a chamada junto do que anuncia), os trios de
+arquétipos sem continuação solta, os ícones do site e o PDF no tema de quem exporta. Tema escuro saiu do "fora de
+escopo". Os ícones são lidos do SVG do próprio `Icone`, para não haver segunda cópia da geometria; os arquétipos que
+não cabem apertam só a própria página (piso de 7,4 pt). Sistema em 59 páginas, Guia em 26, nenhuma palavra perdida, nos
+temas claro, escuro e escuro com destaque roxo. O botão do site continua por ligar.
+
+## 2026-11-25 — revisao-formatacao-pdf-regras (fatias 2 e 3): os dois livros completos
+
+Com a capa aprovada, o gerador passou a desenhar todos os tipos de bloco. Sistema: 126 → **60 páginas**; Guia: 46 →
+**26** (publicação local 4.1.4/4.2.0), nenhuma palavra perdida, sumário inteiro numerado; todas as páginas olhadas.
+Larguras de coluna das tabelas passam a seguir o texto. Gates: frontend 3.693 testes (com a opção do Node 26, P-138),
+`tsc`, build; ESLint com 0 erros e 72 avisos de `max-len` nos arquivos novos. Aguarda aprovação do autor antes de
+ligar o botão e reativar o Sistema.
+
+## 2026-11-25 — revisao-formatacao-pdf-regras: capa escolhida num configurador
+
+O autor quis testar variações da capa e decidir com um amigo; publiquei um configurador (artifact privado) com seis
+variantes e um código de escolha. Escolha aplicada ao gerador: registro oficial em carimbo inclinado, logo de 110 mm,
+nome na fonte Backrooms (enviada pelo autor, sem licença no arquivo, só A–Z) e barra do livro no pé. O pincel ganhou
+`girado` (matriz do PDF) e a família `backrooms`. Capas do Sistema e do Guia geradas e olhadas; 35 testes e `tsc`.
+
+## 2026-11-25 — regras-sem-subtitulo: livros publicam sem "Nova Era"
+
+O autor disse que "Nova Era" era só um extra, não o nome do jogo. O texto era o `subtitulo` do conteúdo de cada
+versão, que a publicação copiava da anterior (sem campo na Oficina). Entre publicar sem subtítulo, criar um campo e
+migrar o banco, o autor escolheu o primeiro: `LivroService` grava vazio e o leitor não desenha a linha. Versões já
+publicadas não foram tocadas: **o site muda quando o autor publicar a próxima versão de cada livro**, e
+`regras:exportar` leva isso a `docs/core/`. Verificação em `docs/specs/done/regras-sem-subtitulo/`.
+
+## 2026-11-25 — revisao-formatacao-pdf-regras (fatia 1): gerador próprio e amostra
+
+O autor rejeitou o PDF por impressão nativa (capa estourada, sumário longo, páginas quase vazias, tabelas cortadas) e
+escolheu desenhar o PDF por código, como o Ars Arcana, contra a recomendação inicial (Paged.js). Desenho, plano e spec
+revisada em `docs/specs/active/`. Entregue em `frontend/src/app/modules/regras/pdf/`: paginador puro, texto rico,
+tabela, blocos do recorte, capa, sumário numerado em duas colunas, topo, rodapé, marcadores e crédito do logo, com
+`jspdf@4.2.1` (sem autotable) e IBM Plex em TTF, convertido do WOFF dos pacotes oficiais (eles não trazem TTF).
+
+Amostra do Sistema **4.1.4** local (capa, sumário, Introdução, Combatente com arquétipos, Corpo a Corpo): 7 páginas,
+todas olhadas. Ajuste do autor na capa:
+logo maior, sem fundo no registro (alinhado à esquerda com barra), sem "Nova Era" e livro/versão no pé. Gates: 31 testes do gerador, `tsc` da aplicação, build e `repo:verificar`. Pendentes: aprovação visual do
+autor; blocos restantes e Guia; botão, download e conferência em navegadores; 42 avisos de `max-len` nos arquivos novos;
+suíte completa e revisão independente. O gerador ainda não é importado pela aplicação.
+
+## 2026-11-25 — montador-rolagens-revisao: conferência complementar de telas
+
+Pendência do fecho conferida na máquina do autor: 1366×768, 960×1080, 1920×1080, 768×1024 e 360×800 (toque emulado),
+bases clara e escura. Layout sem corte nem overflow. Achados registrados sem correção: P-136 e P-137. Detalhes e
+limites em `docs/specs/done/montador-rolagens-revisao/verificacao.md`.
+
 ## 2026-11-25 — montador-rolagens-revisao: fechada (pedido C)
 
 O autor encerrou o pedido C com o comportamento corrigido (entrada parcial logo abaixo) e deixou o acabamento visual

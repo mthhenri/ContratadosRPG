@@ -2,7 +2,7 @@
 
 Em 08/10/2026 o autor considerou a formatação do PDF estranha e pediu revisão
 substancial. O relatório anterior registra a inspeção técnica, não aprovação
-editorial. Trabalho futuro em [revisão de formatação](../../backlog/revisao-formatacao-pdf-regras.spec.md),
+editorial. Trabalho futuro em [revisão de formatação](../../active/revisao-formatacao-pdf-regras.spec.md),
 P-108. Requisitos históricos da M10-10 preservados.
 
 Exportação do Sistema temporariamente bloqueada na UI compartilhada e no service.
