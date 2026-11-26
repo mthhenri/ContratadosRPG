@@ -1281,6 +1281,30 @@ export const schemasContratosPublicos = {
         "additionalProperties": false,
         "description": "Entrada de \"abrir\" (`PLANEJADA → ATIVA`) — o `id` vem da rota."
     },
+    "CenaTipoAlterarDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "tipo": {
+                "type": "string",
+                "enum": [
+                    "COMBATE",
+                    "INVESTIGACAO",
+                    "FURTIVA",
+                    "PERSEGUICAO",
+                    "RESISTENCIA"
+                ]
+            }
+        },
+        "required": [
+            "id",
+            "tipo"
+        ],
+        "additionalProperties": false,
+        "description": "Entrada da troca de tipo da cena (`cena-trocar-tipo`) — o `id` vem da rota. Só cena `PLANEJADA`\nou `ATIVA`. Sair de um tipo com iniciativa encerra o encontro corrente; entrar num tipo com\niniciativa abre um encontro novo em `MONTAGEM` (`cenaTemIniciativa`)."
+    },
     "CenaEncerrarDto": {
         "type": "object",
         "properties": {
@@ -14313,6 +14337,15 @@ export const operacoesContratosPublicos = {
         "caminho": "/cena/:id/encerrar",
         "tag": "Cenas",
         "publica": false,
+        "responseSchema": "CenaRecuperadaDto"
+    },
+    "CenaController_alterarTipo": {
+        "controller": "CenaController",
+        "metodo": "post",
+        "caminho": "/cena/:id/tipo",
+        "tag": "Cenas",
+        "publica": false,
+        "requestSchema": "CenaTipoAlterarDto",
         "responseSchema": "CenaRecuperadaDto"
     },
     "CenaController_criarEncontro": {

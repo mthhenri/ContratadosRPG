@@ -1,5 +1,42 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-11-26 — cena-trocar-tipo: trocar o tipo da cena no meio dela
+
+Pedido do autor: a cena "Sessão 7" nasce Investigação, vira Combate, volta, vira Resistência e volta, sem criar
+outra cena. Decisões do autor antes da spec: **toda saída de um tipo com iniciativa encerra o combate** (vai para o
+histórico) e toda entrada abre um **combate novo** em `MONTAGEM` — inclusive entre Combate/Furtiva/Perseguição; não
+existe "retomar". Documentos da Investigação são da cena, não do tipo, e voltam intactos.
+
+Banco: a `0031` só permitia um encontro vivo por cena (`uix_encontro_cena_ativo`), o que impedia o segundo
+combate. A `0041` troca o índice único por `ix_encontro_cena` (o `DOWN` recusa voltar se alguma cena já tiver mais de
+um encontro, para não apagar histórico). Um índice parcial pelo status exigiria fixar o id serial de
+`tipo_encontro_status` no SQL; a invariante "um encontro aberto por cena" ficou na `CenaService`, na transação,
+como a de "uma cena ativa por campanha". `CenaRepository` lê o encontro **mais recente** (`LEFT JOIN LATERAL`); como
+depois de Combate → Investigação esse encontro (encerrado) continua sendo o mais recente, a service o descarta quando o
+tipo atual não tem iniciativa (`linhaNoTipo`/`resumoNoTipo`, por `cenaTemIniciativa`) — senão a Investigação mostraria
+o combate velho e o hub marcaria `temEncontro`.
+
+Backend: `POST cena/:id/tipo` (`CenaTipoAlterarDto`), `CenaService.alterarTipo` (mestre; cena planejada ou ativa;
+encerra → altera → cria, numa transação; emite `encontro:alterado` do encerrado e `cena:alterada` + o encontro novo
+depois do commit, com a trava de cena planejada de sempre). Criação de encontro extraída para
+`criarEncontroDaCena`, comum à criação de cena. Frontend: `CenaTrocarTipoDialog` (molde do "Nova cena", confirmação
+quando há combate aberto), item "Trocar tipo" nos dois painéis do mestre, `EncontroPainelDadosService.alterarTipoCena`
+e refetch da cena quando o `cena:alterada` traz outro tipo (a casca troca de painel para todos).
+
+Revisão independente (subagente revisor, só leitura) achou o que o teste unitário não pegava: sem o índice único,
+duas trocas concorrentes (ou troca + encerramento) podiam deixar dois encontros abertos — resolvido com
+`CenaRepository.travarPorId` (`FOR UPDATE`) e releitura da cena dentro da transação de troca, encerramento e
+encerramento da ativa; o `encontro:alterado` do combate encerrado, chegando depois da resposta REST, voltava à tela
+— agora ignorado em cena sem iniciativa e quando é mais antigo que o atual. Dois achados foram ao autor e viraram
+decisões: em cena **planejada** a montagem descartada é excluída (soft delete), porque encerrada ela aparecia no
+histórico dos jogadores quando a cena abrisse; e o histórico ganhou `?encontro=<id>` no painel da cena — o menu de
+combates encerrados e o link antigo `/iniciativa/:id` passaram a abrir sempre a cena, ou seja, o combate atual.
+
+Gates: `shared` 1.356, `backend` 1.381, `frontend` 3.786 testes (com o contorno do P-138), lint sem erros, build ok,
+migrate/rollback/migrate da `0041`. Ao vivo em 1920×1080 e 360×800 com mestre e jogador: a sequência do pedido roda
+numa cena só, o documento fica, cada passagem por Combate deixa um encontro `ENCERRADO`, e o jogador troca de painel
+sem recarregar; a montagem descartada de cena planejada some para o jogador, e o histórico abre o combate certo. Relatório em `docs/specs/done/cena-trocar-tipo/verificacao.md`.
+
 ## 2026-11-26 — v1.13.0: nota e versão
 
 O autor pediu a 1.13.0 numa versão só, cobrindo 25/10 a 26/11 (a skill sugere fatiar períodos longos; mantida a

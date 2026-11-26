@@ -549,6 +549,114 @@ describe('EncontroPainelDadosService', () => {
       expect(dados.cenaPlanejada()).toBe(false);
     });
 
+    describe('troca de tipo (cena-trocar-tipo)', () => {
+      it('`cena:alterada` com outro tipo refaz a carga da cena, que traz encontro e documentos', () => {
+        const { dados, cenaAlterada$, cenaService } = montar({ usuarioId: USUARIO_JOGADOR });
+        cenaService.recuperarCena.mockClear();
+        cenaService.recuperarCena.mockReturnValue(
+          of({
+            id: CENA_ID,
+            campanhaId: CAMPANHA_ID,
+            nome: 'Contenção no Setor 12',
+            tipo: CenaTipoEnum.INVESTIGACAO,
+            status: CenaStatusEnum.ATIVA,
+            encontro: null,
+          }) as never,
+        );
+
+        cenaAlterada$.next({
+          campanhaId: CAMPANHA_ID,
+          cena: {
+            id: CENA_ID,
+            nome: 'Contenção no Setor 12',
+            tipo: CenaTipoEnum.INVESTIGACAO,
+            status: CenaStatusEnum.ATIVA,
+            temEncontro: false,
+          },
+        });
+
+        expect(cenaService.recuperarCena).toHaveBeenCalledWith(CENA_ID);
+        expect(dados.cena()?.tipo).toBe(CenaTipoEnum.INVESTIGACAO);
+        expect(dados.encontro()).toBeNull();
+        expect(cenaService.listarDocumentos).toHaveBeenCalledWith(CENA_ID);
+      });
+
+      it('`cena:alterada` com o mesmo tipo não refaz a carga', () => {
+        const { dados, cenaAlterada$, cenaService } = montar({ usuarioId: USUARIO_MESTRE });
+        cenaService.recuperarCena.mockClear();
+        const tipo = dados.cena()?.tipo as CenaTipoEnum;
+
+        cenaAlterada$.next({
+          campanhaId: CAMPANHA_ID,
+          cena: { id: CENA_ID, nome: 'Renomeada', tipo, status: CenaStatusEnum.ATIVA, temEncontro: true },
+        });
+
+        expect(cenaService.recuperarCena).not.toHaveBeenCalled();
+        expect(dados.cena()?.nome).toBe('Renomeada');
+      });
+
+      it('`encontro:alterado` atrasado do combate encerrado não volta à cena sem iniciativa', () => {
+        const { dados, encontroAlterado$ } = montar({ usuarioId: USUARIO_MESTRE });
+        const encontroAnterior = dados.encontro()!;
+
+        dados.alterarTipoCena(CenaTipoEnum.INVESTIGACAO);
+        encontroAlterado$.next({
+          encontro: { ...encontroAnterior, status: EncontroStatusEnum.ENCERRADO },
+        });
+
+        expect(dados.encontro()).toBeNull();
+      });
+
+      it('`encontro:alterado` de um encontro mais antigo não substitui o combate novo', () => {
+        const { dados, encontroAlterado$ } = montar({ usuarioId: USUARIO_MESTRE });
+        const atual = dados.encontro()!;
+
+        encontroAlterado$.next({
+          encontro: { ...atual, id: atual.id - 1, status: EncontroStatusEnum.ENCERRADO },
+        });
+
+        expect(dados.encontro()?.id).toBe(atual.id);
+      });
+
+      it('`?encontro=` abre o combate anterior pedido, e só ele recebe `encontro:alterado`', () => {
+        const contexto = configurarPainel({ usuarioId: USUARIO_MESTRE, encontroDaRota: 77 });
+        const anterior = { ...encontroAtivo, id: 77, cenaId: CENA_ID, status: EncontroStatusEnum.ENCERRADO };
+        contexto.encontroService.recuperarEncontro.mockReturnValue(of(anterior) as never);
+        const dados = TestBed.inject(EncontroPainelDadosService);
+
+        expect(contexto.encontroService.recuperarEncontro).toHaveBeenCalledWith(77);
+        expect(dados.encontro()?.id).toBe(77);
+        expect(dados.vendoCombateAnterior()).toBe(true);
+
+        contexto.encontroAlterado$.next({ encontro: { ...encontroAtivo, rodadaAtual: 9 } });
+        expect(dados.encontro()?.id).toBe(77);
+      });
+
+      it('`?encontro=` de outra cena é ignorado: fica o encontro da cena', () => {
+        const contexto = configurarPainel({ usuarioId: USUARIO_MESTRE, encontroDaRota: 77 });
+        contexto.encontroService.recuperarEncontro.mockReturnValue(
+          of({ ...encontroAtivo, id: 77, cenaId: 901 }) as never,
+        );
+        const dados = TestBed.inject(EncontroPainelDadosService);
+
+        expect(dados.encontro()?.id).toBe(encontroAtivo.id);
+        expect(dados.vendoCombateAnterior()).toBe(false);
+      });
+
+      it('alterarTipoCena chama o backend, troca a cena e refaz a listagem de encontros', () => {
+        const { dados, cenaService, encontroService } = montar({ usuarioId: USUARIO_MESTRE });
+        encontroService.listarPorCampanha.mockClear();
+
+        dados.alterarTipoCena(CenaTipoEnum.RESISTENCIA);
+
+        expect(cenaService.alterarTipo).toHaveBeenCalledWith(CENA_ID, CenaTipoEnum.RESISTENCIA);
+        expect(dados.cena()?.tipo).toBe(CenaTipoEnum.RESISTENCIA);
+        expect(dados.encontro()).toBeNull();
+        expect(encontroService.listarPorCampanha).toHaveBeenCalledWith(CAMPANHA_ID);
+        expect(dados.emOperacao()).toBe(false);
+      });
+    });
+
     describe('encerramento da cena desta tela', () => {
       const encerrada = {
         id: CENA_ID,

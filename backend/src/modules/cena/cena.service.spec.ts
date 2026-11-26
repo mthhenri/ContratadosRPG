@@ -41,6 +41,8 @@ interface CenaRepositorioDublado {
   recuperarMaiorOrdem: Mock<CenaRepository['recuperarMaiorOrdem']>;
   alterarStatus: Mock<CenaRepository['alterarStatus']>;
   alterarOrdem: Mock<CenaRepository['alterarOrdem']>;
+  alterarTipo: Mock<CenaRepository['alterarTipo']>;
+  travarPorId: Mock<CenaRepository['travarPorId']>;
 }
 
 interface EncontroServiceDublado {
@@ -54,6 +56,7 @@ describe('CenaService', () => {
   let encontroRepositorio: {
     criarEncontro: Mock<EncontroRepository['criarEncontro']>;
     recuperarPorId: Mock<EncontroRepository['recuperarPorId']>;
+    excluirEncontro: Mock<EncontroRepository['excluirEncontro']>;
   };
   let encontroService: EncontroServiceDublado;
   let campanhaRepositorio: { recuperarMembro: Mock<CampanhaRepository['recuperarMembro']> };
@@ -94,9 +97,14 @@ describe('CenaService', () => {
       recuperarMaiorOrdem: vi.fn<CenaRepository['recuperarMaiorOrdem']>().mockResolvedValue(3),
       alterarStatus: vi.fn<CenaRepository['alterarStatus']>(linhaAlterada),
       alterarOrdem: vi.fn<CenaRepository['alterarOrdem']>().mockResolvedValue(undefined),
+      alterarTipo: vi.fn<CenaRepository['alterarTipo']>((dto) =>
+        Promise.resolve(criarCenaLinha({ id: dto.id, tipo: dto.tipo })),
+      ),
+      travarPorId: vi.fn<CenaRepository['travarPorId']>().mockResolvedValue(undefined),
     };
     encontroRepositorio = {
       criarEncontro: vi.fn<EncontroRepository['criarEncontro']>(),
+      excluirEncontro: vi.fn<EncontroRepository['excluirEncontro']>().mockResolvedValue(undefined),
       recuperarPorId: vi.fn<EncontroRepository['recuperarPorId']>().mockResolvedValue({
         id: 50,
         campanhaId: 5,
@@ -215,8 +223,11 @@ describe('CenaService', () => {
       cenaRepositorio.alterarStatus.mockResolvedValue(
         criarCenaLinha({ id: 800, status: CenaStatusEnum.ENCERRADA, encontroId: 40 }),
       );
-      cenaRepositorio.recuperarPorId.mockResolvedValue(
-        criarCenaLinha({ id: 901, status: CenaStatusEnum.ATIVA, encontroId: 51 }),
+      // A ativa é relida sob a trava (id 800); a nova, depois de criada (901).
+      cenaRepositorio.recuperarPorId.mockImplementation(({ id }) =>
+        Promise.resolve(
+          id === 800 ? ativaAtual : criarCenaLinha({ id: 901, status: CenaStatusEnum.ATIVA, encontroId: 51 }),
+        ),
       );
       const chamadas: Record<string, boolean[]> = {};
       encontroService.encerrarEncontroDaCena.mockImplementation(() => {
@@ -301,8 +312,15 @@ describe('CenaService', () => {
 
   describe('abrirCena', () => {
     it('PLANEJADA → ATIVA encerrando a ativa atual na mesma transação; o encontro passa a ser transmitido', async () => {
-      cenaRepositorio.recuperarAtivaPorCampanha.mockResolvedValue(
-        criarCenaLinha({ id: 800, status: CenaStatusEnum.ATIVA, tipo: CenaTipoEnum.INVESTIGACAO, encontroId: null }),
+      const ativaAtual = criarCenaLinha({
+        id: 800,
+        status: CenaStatusEnum.ATIVA,
+        tipo: CenaTipoEnum.INVESTIGACAO,
+        encontroId: null,
+      });
+      cenaRepositorio.recuperarAtivaPorCampanha.mockResolvedValue(ativaAtual);
+      cenaRepositorio.recuperarPorId.mockImplementation(({ id }) =>
+        Promise.resolve(id === 800 ? ativaAtual : criarCenaLinha()),
       );
       cenaRepositorio.alterarStatus.mockImplementation((dto) =>
         dto.id === 800
@@ -521,6 +539,190 @@ describe('CenaService', () => {
         UnauthorizedAccessException,
       );
       expect(campanhaRepositorio.recuperarMembro).toHaveBeenCalledWith({ campanhaId: 77, usuarioId: 2 });
+    });
+  });
+  describe('alterarTipo (cena-trocar-tipo)', () => {
+    /** Estado persistido da cena no dublê: `alterarTipo` troca o tipo e `criarEncontro` abre o 77. */
+    let cenaPersistida: CenaLinhaDto;
+    let ordem: string[];
+
+    function prepararCena(overrides: Partial<CenaLinhaDto>): void {
+      cenaPersistida = criarCenaLinha({ status: CenaStatusEnum.ATIVA, ...overrides });
+      ordem = [];
+      cenaRepositorio.recuperarPorId.mockImplementation(() => Promise.resolve(cenaPersistida));
+      cenaRepositorio.travarPorId.mockImplementation(() => {
+        ordem.push(`travar:${dentroDaTransacao}`);
+        return Promise.resolve();
+      });
+      cenaRepositorio.alterarTipo.mockImplementation((dto) => {
+        ordem.push(`alterarTipo:${dentroDaTransacao}`);
+        cenaPersistida = { ...cenaPersistida, tipo: dto.tipo };
+        return Promise.resolve(cenaPersistida);
+      });
+      encontroService.encerrarEncontroDaCena.mockImplementation((dto) => {
+        ordem.push(`encerrar:${dto.id}:${dentroDaTransacao}`);
+        return Promise.resolve();
+      });
+      encontroRepositorio.criarEncontro.mockImplementation((dto) => {
+        ordem.push(`criar:${dto.nome}:${dto.status}:${dentroDaTransacao}`);
+        cenaPersistida = { ...cenaPersistida, encontroId: 77 };
+        return Promise.resolve({ id: 77 } as Awaited<ReturnType<EncontroRepository['criarEncontro']>>);
+      });
+      encontroService.recuperarEncontro.mockImplementation((dto) =>
+        Promise.resolve({ id: dto.id } as Awaited<ReturnType<EncontroService['recuperarEncontro']>>),
+      );
+    }
+
+    it('Investigação → Combate abre um encontro novo em MONTAGEM, sem encerrar nada', async () => {
+      prepararCena({ tipo: CenaTipoEnum.INVESTIGACAO, encontroId: null });
+
+      const cena = await service.alterarTipo({ id: 900, tipo: CenaTipoEnum.COMBATE }, mestre);
+
+      expect(ordem).toEqual(['travar:true', 'alterarTipo:true', `criar:Emboscada no Setor 7:${EncontroStatusEnum.MONTAGEM}:true`]);
+      expect(cena.tipo).toBe(CenaTipoEnum.COMBATE);
+      expect(cena.encontro?.id).toBe(77);
+      expect(eventosEmitidos().map((evento) => evento.cena)).toEqual([
+        expect.objectContaining({ id: 900, tipo: CenaTipoEnum.COMBATE, temEncontro: true }),
+      ]);
+      expect(encontroService.emitirEncontroAlterado).toHaveBeenCalledWith({ id: 77 });
+    });
+
+    it('Combate → Investigação encerra o combate e deixa a cena sem encontro', async () => {
+      prepararCena({ tipo: CenaTipoEnum.COMBATE, encontroId: 50 });
+
+      const cena = await service.alterarTipo({ id: 900, tipo: CenaTipoEnum.INVESTIGACAO }, mestre);
+
+      // O repositório continua devolvendo o encontro 50 (o mais recente); o tipo o descarta.
+      expect(cenaPersistida.encontroId).toBe(50);
+      expect(ordem).toEqual(['travar:true', 'encerrar:50:true', 'alterarTipo:true']);
+      expect(encontroRepositorio.criarEncontro).not.toHaveBeenCalled();
+      expect(cena.encontro).toBeNull();
+      expect(eventosEmitidos().map((evento) => evento.cena)).toEqual([
+        expect.objectContaining({ tipo: CenaTipoEnum.INVESTIGACAO, temEncontro: false }),
+      ]);
+      expect(encontroService.emitirEncontroAlterado.mock.calls).toEqual([[{ id: 50 }]]);
+    });
+
+    it('Furtiva → Combate encerra o encontro atual e abre outro, nessa ordem', async () => {
+      prepararCena({ tipo: CenaTipoEnum.FURTIVA, encontroId: 50 });
+
+      const cena = await service.alterarTipo({ id: 900, tipo: CenaTipoEnum.COMBATE }, mestre);
+
+      expect(ordem).toEqual([
+        'travar:true',
+        'encerrar:50:true',
+        'alterarTipo:true',
+        `criar:Emboscada no Setor 7:${EncontroStatusEnum.MONTAGEM}:true`,
+      ]);
+      expect(cena.encontro?.id).toBe(77);
+      expect(encontroService.emitirEncontroAlterado.mock.calls).toEqual([[{ id: 50 }], [{ id: 77 }]]);
+    });
+
+    it('Investigação → Resistência só troca o tipo', async () => {
+      prepararCena({ tipo: CenaTipoEnum.INVESTIGACAO, encontroId: null });
+
+      await service.alterarTipo({ id: 900, tipo: CenaTipoEnum.RESISTENCIA }, mestre);
+
+      expect(ordem).toEqual(['travar:true', 'alterarTipo:true']);
+      expect(encontroService.emitirEncontroAlterado).not.toHaveBeenCalled();
+    });
+
+    it('troca o tipo de cena planejada também', async () => {
+      prepararCena({ tipo: CenaTipoEnum.RESISTENCIA, status: CenaStatusEnum.PLANEJADA, encontroId: null });
+
+      const cena = await service.alterarTipo({ id: 900, tipo: CenaTipoEnum.PERSEGUICAO }, mestre);
+
+      expect(cena.tipo).toBe(CenaTipoEnum.PERSEGUICAO);
+      expect(cena.encontro?.id).toBe(77);
+    });
+
+    it('cena planejada descarta a montagem (soft delete) em vez de encerrá-la — a mesa nunca a viu', async () => {
+      prepararCena({ tipo: CenaTipoEnum.COMBATE, status: CenaStatusEnum.PLANEJADA, encontroId: 50 });
+      encontroRepositorio.excluirEncontro.mockImplementation((dto) => {
+        ordem.push(`excluir:${dto.id}:${dentroDaTransacao}`);
+        return Promise.resolve();
+      });
+
+      await service.alterarTipo({ id: 900, tipo: CenaTipoEnum.FURTIVA }, mestre);
+
+      expect(ordem).toEqual([
+        'travar:true',
+        'excluir:50:true',
+        'alterarTipo:true',
+        `criar:Emboscada no Setor 7:${EncontroStatusEnum.MONTAGEM}:true`,
+      ]);
+      expect(encontroService.encerrarEncontroDaCena).not.toHaveBeenCalled();
+      // Só o encontro novo é transmitido; o descartado não tem estado a anunciar.
+      expect(encontroService.emitirEncontroAlterado.mock.calls).toEqual([[{ id: 77 }]]);
+    });
+
+    it('relê a cena sob a trava: uma troca concorrente que já abriu um combate tem o encontro encerrado', async () => {
+      prepararCena({ tipo: CenaTipoEnum.INVESTIGACAO, encontroId: null });
+      // Outra aba trocou para Combate (encontro 60) entre a leitura inicial e a trava.
+      cenaRepositorio.travarPorId.mockImplementation(() => {
+        ordem.push(`travar:${dentroDaTransacao}`);
+        cenaPersistida = { ...cenaPersistida, tipo: CenaTipoEnum.COMBATE, encontroId: 60 };
+        return Promise.resolve();
+      });
+
+      await service.alterarTipo({ id: 900, tipo: CenaTipoEnum.FURTIVA }, mestre);
+
+      expect(ordem).toEqual([
+        'travar:true',
+        'encerrar:60:true',
+        'alterarTipo:true',
+        `criar:Emboscada no Setor 7:${EncontroStatusEnum.MONTAGEM}:true`,
+      ]);
+    });
+
+    it('relê a cena sob a trava: encerrada por outra aba, a troca é recusada sem abrir encontro', async () => {
+      prepararCena({ tipo: CenaTipoEnum.COMBATE, encontroId: 50 });
+      cenaRepositorio.travarPorId.mockImplementation(() => {
+        cenaPersistida = { ...cenaPersistida, status: CenaStatusEnum.ENCERRADA };
+        return Promise.resolve();
+      });
+
+      await expect(service.alterarTipo({ id: 900, tipo: CenaTipoEnum.FURTIVA }, mestre)).rejects.toBeInstanceOf(
+        BusinessException,
+      );
+      expect(encontroService.encerrarEncontroDaCena).not.toHaveBeenCalled();
+      expect(encontroRepositorio.criarEncontro).not.toHaveBeenCalled();
+    });
+
+    it('recusa quem não é mestre', async () => {
+      prepararCena({ tipo: CenaTipoEnum.INVESTIGACAO, encontroId: null });
+      campanhaRepositorio.recuperarMembro.mockResolvedValue(membroComPapel(TipoCampanhaMembroPapelEnum.JOGADOR));
+
+      await expect(service.alterarTipo({ id: 900, tipo: CenaTipoEnum.COMBATE }, jogador)).rejects.toBeInstanceOf(
+        UnauthorizedAccessException,
+      );
+      expect(transacaoService.executar).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ['cena encerrada', { status: CenaStatusEnum.ENCERRADA, tipo: CenaTipoEnum.COMBATE }, CenaTipoEnum.INVESTIGACAO],
+      ['mesmo tipo', { tipo: CenaTipoEnum.INVESTIGACAO, encontroId: null }, CenaTipoEnum.INVESTIGACAO],
+      ['tipo inválido', { tipo: CenaTipoEnum.INVESTIGACAO, encontroId: null }, 'TEATRO' as CenaTipoEnum],
+    ])('recusa %s', async (_caso, cena, tipo) => {
+      prepararCena(cena);
+
+      await expect(service.alterarTipo({ id: 900, tipo }, mestre)).rejects.toBeInstanceOf(BusinessException);
+      expect(transacaoService.executar).not.toHaveBeenCalled();
+    });
+
+    it('cena sem iniciativa não expõe o encontro encerrado que sobrou de um combate', async () => {
+      prepararCena({ tipo: CenaTipoEnum.INVESTIGACAO, encontroId: 50 });
+      cenaRepositorio.listarPorCampanha.mockResolvedValue([
+        { id: 900, nome: 'Sessão 7', tipo: CenaTipoEnum.INVESTIGACAO, status: CenaStatusEnum.ATIVA, temEncontro: true },
+        { id: 901, nome: 'Briga', tipo: CenaTipoEnum.COMBATE, status: CenaStatusEnum.PLANEJADA, temEncontro: true },
+      ]);
+
+      const cena = await service.recuperarCena({ id: 900 }, mestre);
+      const cenas = await service.listarPorCampanha({ campanhaId: 5 }, mestre);
+
+      expect(cena.encontro).toBeNull();
+      expect(encontroService.recuperarEncontro).not.toHaveBeenCalled();
+      expect(cenas.map((item) => item.temEncontro)).toEqual([false, true]);
     });
   });
 });

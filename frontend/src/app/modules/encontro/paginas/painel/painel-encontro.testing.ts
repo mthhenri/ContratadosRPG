@@ -263,6 +263,8 @@ export interface OpcoesDoPainel {
    * `providers`, e um segundo provedor na raiz criaria duas instâncias (duas cargas).
    */
   readonly semServicoDeDados?: boolean;
+  /** `?encontro=<id>` na rota — um combate anterior aberto pelo histórico (`cena-trocar-tipo`). */
+  readonly encontroDaRota?: number;
 }
 
 /**
@@ -282,6 +284,7 @@ export function configurarPainel(opcoes: OpcoesDoPainel = {}) {
     membrosPendentes = false,
     encontroPendente = false,
     semServicoDeDados = false,
+    encontroDaRota,
   } = opcoes;
   const encontroAlterado$ = new Subject<EncontroAlteradoDto>();
   const encontroIniciativaPedido$ = new Subject<{ id: number; campanhaId: number }>();
@@ -367,6 +370,8 @@ export function configurarPainel(opcoes: OpcoesDoPainel = {}) {
         ),
       ),
     ),
+    // Troca de tipo (cena-trocar-tipo) — devolve a cena no tipo pedido, sem encontro por padrão.
+    alterarTipo: vi.fn((_id: number, tipo: CenaTipoEnum) => of({ ...cenaDe(null), tipo })),
     // Coluna Documentos (m7-25) — vazia por padrão; testes de Investigação sobrescrevem.
     listarDocumentos: vi.fn((): Observable<CenaDocumentoResumoDto[]> => of([])),
     anexarDocumento: vi.fn((): Observable<CenaDocumentoResumoDto[]> => of([])),
@@ -481,6 +486,9 @@ export function configurarPainel(opcoes: OpcoesDoPainel = {}) {
           snapshot: { paramMap: new Map([['campanhaId', String(CAMPANHA_ID)]]) },
           paramMap: of(
             convertToParamMap({ campanhaId: String(CAMPANHA_ID), cenaId: String(CENA_ID) }),
+          ),
+          queryParamMap: of(
+            convertToParamMap(encontroDaRota === undefined ? {} : { encontro: String(encontroDaRota) }),
           ),
         },
       },

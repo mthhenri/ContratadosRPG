@@ -36,9 +36,13 @@ import { PainelCenaSemIniciativaMestre } from '../painel-sem-iniciativa-mestre/p
 export class PainelCenaShell {
   protected readonly dados = inject(EncontroPainelDadosService);
 
-  /** `true` enquanto a cena carrega **ou** quando o tipo dela tem iniciativa. */
+  /**
+   * `true` enquanto a cena carrega, quando o tipo dela tem iniciativa **ou** quando a rota abriu um
+   * combate anterior (`?encontro=`, `cena-trocar-tipo`) — o histórico de uma cena que hoje é de
+   * Investigação ainda é lido no painel de Iniciativa.
+   */
   protected readonly comIniciativa = computed(() => {
     const cena = this.dados.cena();
-    return cena === null || cenaTemIniciativa(cena.tipo);
+    return cena === null || cenaTemIniciativa(cena.tipo) || this.dados.vendoCombateAnterior();
   });
 }

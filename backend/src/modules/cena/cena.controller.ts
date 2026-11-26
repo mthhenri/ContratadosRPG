@@ -8,6 +8,7 @@ import type {
   CenaRecuperadaDto,
   CenaReordenarDto,
   CenaResumoDto,
+  CenaTipoAlterarDto,
 } from '@contratados-rpg/shared/dtos/cena';
 import type {
   EncontroCriadoDto,
@@ -85,6 +86,15 @@ export class CenaController {
     @ActiveUser() usuarioAtivo: JwtPayload,
   ): Promise<CenaRecuperadaDto> {
     return this.cenaService.encerrarCena({ id }, usuarioAtivo);
+  }
+
+  @Post('cena/:id/tipo')
+  alterarTipo(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: CenaTipoAlterarDto,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<CenaRecuperadaDto> {
+    return this.cenaService.alterarTipo({ ...dto, id }, usuarioAtivo);
   }
 
   @Post('campanha/:id/encontro')

@@ -27,7 +27,7 @@ describe('redirecionarEncontroParaCena', () => {
   it('leva o combate do histórico à cena dona do encontro', async () => {
     const recuperar = vi.fn(() => of({ id: 13, cenaId: 44 }));
 
-    await expect(executar(recuperar)).resolves.toBe('/campanhas/9/cenas/44');
+    await expect(executar(recuperar)).resolves.toBe('/campanhas/9/cenas/44?encontro=13');
     expect(recuperar).toHaveBeenCalledWith(13);
   });
 

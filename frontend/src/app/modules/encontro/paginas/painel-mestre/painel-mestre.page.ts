@@ -18,7 +18,7 @@ import type {
   EncontroResumoDto,
 } from '@contratados-rpg/shared/dtos/encontro';
 import type { FichaAtributosDto, FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
-import { CadenciaEnum, EncontroStatusEnum } from '@contratados-rpg/shared/enums';
+import { CadenciaEnum, type CenaTipoEnum, EncontroStatusEnum } from '@contratados-rpg/shared/enums';
 import { rolarFormula } from '@contratados-rpg/shared/regras/rolagem';
 
 import { BandejaDados } from '../../../../shared/bandeja-dados/bandeja-dados.component';
@@ -42,6 +42,7 @@ import { FichaFlutuante } from '../../../ficha/componentes/ficha-flutuante/ficha
 import { nomeCadencia } from '../../../ficha/rotulos-criatura';
 import { CenaService } from '../../../cena/cena.service';
 import { RolagemMestre } from '../../../cena/componentes/rolagem-mestre/rolagem-mestre.component';
+import { CenaTrocarTipoDialog } from '../../../cena/componentes/cena-trocar-tipo-dialog/cena-trocar-tipo-dialog.component';
 import { CartaoCombatente } from '../../componentes/cartao-combatente/cartao-combatente.component';
 import { ConducaoTurno } from '../../componentes/conducao-turno/conducao-turno.component';
 import { ResumoCombatente } from '../../componentes/resumo-combatente/resumo-combatente.component';
@@ -126,6 +127,7 @@ const ATRIBUTOS_NEUTROS: FichaAtributosDto = {
     BotaoIcone,
     Esqueleto,
     EstadoVazio,
+    CenaTrocarTipoDialog,
   ],
   templateUrl: './painel-mestre.page.html',
   styleUrl: './painel-mestre.page.scss',
@@ -187,6 +189,8 @@ export class PainelEncontroMestre {
 
   /** Painel de adicionar avulso aberto — fluxo à parte, porque não há ficha nenhuma para escolher. */
   protected readonly adicionandoAvulso = signal(false);
+  /** Dialog "Trocar tipo" aberto (`cena-trocar-tipo`). */
+  protected readonly trocandoTipo = signal(false);
 
   protected readonly EncontroStatusEnum = EncontroStatusEnum;
   protected readonly CadenciaEnum = CadenciaEnum;
@@ -589,6 +593,15 @@ export class PainelEncontroMestre {
   }
 
   /**
+   * Troca o tipo da cena (o dialog já confirmou o encerramento do combate). Fecha o dialog antes:
+   * com um tipo sem iniciativa a casca troca este painel pelo outro, e nada daqui sobrevive.
+   */
+  protected trocarTipo(tipo: CenaTipoEnum): void {
+    this.trocandoTipo.set(false);
+    this.dados.alterarTipoCena(tipo);
+  }
+
+  /**
    * Pede confirmação (ui-15) e encerra o combate — depois disso o encontro fica só de leitura. Pelo
    * endpoint da cena (m7-23): encerrar o combate é encerrar a cena dele, que leva o encontro junto.
    */
@@ -649,6 +662,9 @@ export class PainelEncontroMestre {
    */
   protected abrirDoHistorico(resumo: EncontroResumoDto): void {
     this.historicoAberto.set(false);
-    void this.roteador.navigate(['/campanhas', this.dados.campanhaId, 'cenas', resumo.cenaId]);
+    // `?encontro=`: a cena pode ter vários combates encerrados (`cena-trocar-tipo`) — a rota diz qual.
+    void this.roteador.navigate(['/campanhas', this.dados.campanhaId, 'cenas', resumo.cenaId], {
+      queryParams: { encontro: resumo.id },
+    });
   }
 }

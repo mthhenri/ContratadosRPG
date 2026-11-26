@@ -135,7 +135,20 @@
         >
             Encerrar combate
         </button>
-        } }
+        } } @if (dados.encontro() && dados.mutavel() && dados.cena(); as cena) {
+        <!-- Troca de tipo (cena-trocar-tipo): da cena, não do combate — categoria própria, como no
+             painel sem iniciativa. Só com a cena viva (encontro aberto). -->
+        <div class="coluna-acoes__categoria">Cena</div>
+        <button
+            app-coluna-acoes-item
+            [icone]="iconeTipoCena(cena.tipo)"
+            appTooltip="Trocar o tipo desta cena — o combate atual é encerrado e vai para o histórico"
+            [disabled]="dados.emOperacao()"
+            (click)="trocandoTipo.set(true)"
+        >
+            Trocar tipo
+        </button>
+        }
         <div class="coluna-acoes__categoria">Ferramentas</div>
         <button
             app-coluna-acoes-item
@@ -493,6 +506,16 @@
         } }
     </div>
 </div>
+
+@if (trocandoTipo() && dados.cena(); as cena) {
+<app-cena-trocar-tipo-dialog
+    [nomeCena]="cena.nome"
+    [tipoAtual]="cena.tipo"
+    [combateAberto]="dados.mutavel()"
+    (escolhido)="trocarTipo($event)"
+    (fechou)="trocandoTipo.set(false)"
+/>
+}
 
 <!-- Sem gatilho próprio: a coluna de ações abre as duas janelas pelo `alternar()` delas, que sabe
      restaurar em vez de fechar quando a janela está minimizada (mesmo racional de `detalhe-mestre`). -->

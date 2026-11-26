@@ -1,7 +1,21 @@
 import { DestroyRef, Injectable, computed, effect, inject, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
-import { EMPTY, Observable, Subject, type Subscription, catchError, filter, finalize, merge, switchMap, tap } from 'rxjs';
+import {
+  EMPTY,
+  Observable,
+  Subject,
+  type Subscription,
+  catchError,
+  combineLatest,
+  filter,
+  finalize,
+  map,
+  merge,
+  of,
+  switchMap,
+  tap,
+} from 'rxjs';
 
 import type { CenaDocumentoResumoDto, CenaRecuperadaDto } from '@contratados-rpg/shared/dtos/cena';
 import type {
@@ -84,6 +98,12 @@ export class EncontroPainelDadosService {
 
   /** `cenaId` da rota — a cena que a tela mostra. Sinal porque trocar de cena reusa o componente. */
   private readonly cenaIdDaRota = signal<number | null>(null);
+
+  /**
+   * `?encontro=<id>` — um combate anterior desta cena, aberto pelo histórico (`cena-trocar-tipo`:
+   * uma cena acumula combates encerrados, e só a cena não diz qual mostrar). `null` = o da cena.
+   */
+  private readonly encontroIdDaRota = signal<number | null>(null);
 
   private readonly carregandoEncontro = signal(true);
   private readonly cenaAtual = signal<CenaDoPainelDto | null>(null);
@@ -200,6 +220,15 @@ export class EncontroPainelDadosService {
    */
   private readonly idsRolagensExcluidas = new Set<number>();
 
+  /**
+   * A tela mostra um combate anterior pedido pela rota (`?encontro=`) — a casca usa o painel de
+   * Iniciativa mesmo que o tipo atual da cena não tenha iniciativa.
+   */
+  readonly vendoCombateAnterior = computed(() => {
+    const encontroId = this.encontroIdDaRota();
+    return encontroId !== null && this.encontro()?.id === encontroId;
+  });
+
   /** `true` quando a tela está mostrando um encontro do histórico, não o combate da mesa. */
   readonly vendoHistorico = computed(
     () => this.encontro()?.status === EncontroStatusEnum.ENCERRADO,
@@ -266,6 +295,7 @@ export class EncontroPainelDadosService {
       .pipe(
         switchMap((cenaId) =>
           this.cenaService.recuperarCena(cenaId).pipe(
+            switchMap((recuperada) => this.comEncontroDaRota(recuperada)),
             tap({
               next: (recuperada) => {
                 this.definirCena(recuperada);
@@ -289,12 +319,17 @@ export class EncontroPainelDadosService {
     // `paramMap` (e não o `snapshot`) porque ir de uma cena a outra troca só o parâmetro: o
     // Angular reusa o componente, e um `snapshot` lido no construtor ficaria congelado no primeiro
     // valor. Emite de imediato, então também faz a carga inicial.
-    this.rotaAtiva.paramMap.pipe(takeUntilDestroyed()).subscribe({
-      next: (parametros) => {
-        this.cenaIdDaRota.set(Number(parametros.get('cenaId')));
-        this.carregar();
-      },
-    });
+    // `queryParamMap` junto: abrir outro combate do histórico na mesma cena troca só o `?encontro=`.
+    combineLatest([this.rotaAtiva.paramMap, this.rotaAtiva.queryParamMap])
+      .pipe(takeUntilDestroyed())
+      .subscribe({
+        next: ([parametros, consulta]) => {
+          const encontroId = consulta.get('encontro');
+          this.cenaIdDaRota.set(Number(parametros.get('cenaId')));
+          this.encontroIdDaRota.set(encontroId === null ? null : Number(encontroId));
+          this.carregar();
+        },
+      });
 
     this.tempoRealService.conectar();
     this.tempoRealService.entrarSalaCampanha(this.campanhaId);
@@ -311,7 +346,30 @@ export class EncontroPainelDadosService {
         ),
         takeUntilDestroyed(),
       )
-      .subscribe({ next: (evento) => this.encontroAtual.set(evento.encontro) });
+      .subscribe({
+        next: (evento) => {
+          // Troca de tipo (`cena-trocar-tipo`): o `encontro:alterado` do combate encerrado pode
+          // chegar depois da resposta REST — numa cena sem iniciativa ele não é mais da tela, e um
+          // encontro mais antigo (id menor) que o atual nunca o substitui.
+          const cena = this.cenaAtual();
+          const atual = this.encontroAtual();
+          // Combate anterior aberto pelo histórico: só ele interessa à tela.
+          const encontroDaRota = this.encontroIdDaRota();
+          if (encontroDaRota !== null) {
+            if (evento.encontro.id === encontroDaRota) {
+              this.encontroAtual.set(evento.encontro);
+            }
+            return;
+          }
+          if (cena && !cenaTemIniciativa(cena.tipo)) {
+            return;
+          }
+          if (atual && evento.encontro.id < atual.id) {
+            return;
+          }
+          this.encontroAtual.set(evento.encontro);
+        },
+      });
 
     // Abrir/encerrar a cena desta tela (por aqui, pelo hub ou por outra aba do mestre).
     this.tempoRealService.cenaAlterada$
@@ -324,6 +382,14 @@ export class EncontroPainelDadosService {
       )
       .subscribe({
         next: ({ cena }) => {
+          // Troca de tipo (`cena-trocar-tipo`): o encontro (encerrado ou novo) e a coluna Documentos
+          // mudam juntos — o refetch autorizado traz tudo no recorte de quem olha, e a casca troca o
+          // painel pelo tipo novo.
+          const tipoAnterior = this.cenaAtual()?.tipo;
+          if (tipoAnterior !== undefined && tipoAnterior !== cena.tipo) {
+            this.carregar();
+            return;
+          }
           if (this.ehMestre() || cena.status === CenaStatusEnum.ATIVA) {
             this.cenaAtual.update((atual) =>
               atual ? { ...atual, nome: cena.nome, tipo: cena.tipo, status: cena.status } : atual,
@@ -591,6 +657,21 @@ export class EncontroPainelDadosService {
     this.encontroAtual.set(estado);
   }
 
+  /**
+   * Com `?encontro=<id>`, troca o encontro da cena pelo combate anterior pedido — desde que seja
+   * desta cena; falhou ou é de outra, fica o da cena. Sem o parâmetro, a cena segue como veio.
+   */
+  private comEncontroDaRota(recuperada: CenaRecuperadaDto): Observable<CenaRecuperadaDto> {
+    const encontroId = this.encontroIdDaRota();
+    if (encontroId === null || recuperada.encontro?.id === encontroId) {
+      return of(recuperada);
+    }
+    return this.encontroService.recuperarEncontro(encontroId).pipe(
+      map((encontro) => (encontro.cenaId === recuperada.id ? { ...recuperada, encontro } : recuperada)),
+      catchError(() => of(recuperada)),
+    );
+  }
+
   /** Troca a cena e o encontro dela de uma vez — carga e respostas de abrir/encerrar a cena. */
   definirCena(recuperada: CenaRecuperadaDto): void {
     const { encontro, ...cena } = recuperada;
@@ -606,6 +687,24 @@ export class EncontroPainelDadosService {
       this.documentosDaCena.set([]);
       this.carregandoDocumentosInterno.set(false);
     }
+  }
+
+  /**
+   * Troca o tipo da cena (`cena-trocar-tipo`, só o mestre). A resposta já traz a cena com o encontro
+   * novo (ou nenhum); a listagem de encontros da campanha é refeita porque o anterior foi para o
+   * histórico.
+   */
+  alterarTipoCena(tipo: CenaTipoEnum): void {
+    const cenaId = this.cena()?.id;
+    if (cenaId === undefined || this.emOperacao()) {
+      return;
+    }
+    this.executar(this.cenaService.alterarTipo(cenaId, tipo), (alterada) => {
+      this.definirCena(alterada);
+      this.encontroService
+        .listarPorCampanha(this.campanhaId)
+        .subscribe({ next: (encontros) => this.encontrosDaCampanhaInterno.set(encontros) });
+    });
   }
 
   /** Busca a coluna Documentos da cena de Investigação. */

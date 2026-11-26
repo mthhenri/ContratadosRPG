@@ -10,6 +10,7 @@ import type {
   CenaRecuperarDto,
   CenaReordenarDto,
   CenaResumoDto,
+  CenaTipoAlterarDto,
 } from '@contratados-rpg/shared/dtos/cena';
 import type {
   EncontroCriadoDto,
@@ -51,6 +52,11 @@ import { CenaRepository } from './cena.repository';
  * quem não é mestre, a listagem a omite e o `cena:alterada` só vai à sala do mestre. O jogador lê só
  * a cena `ATIVA` (`jogador-acesso-somente-cena-atual`). A política vive em `cena-visibilidade.ts`,
  * a mesma que o `EncontroService` e a `CenaDocumentoService` aplicam.
+ *
+ * **Um encontro aberto por cena (`cena-trocar-tipo`).** Trocar o tipo encerra o encontro corrente e,
+ * se o tipo novo tem iniciativa, abre outro em `MONTAGEM` — a cena acumula encontros encerrados no
+ * histórico, mas nunca dois abertos. Arbitrado aqui, na transação (migration 0041). O repositório
+ * devolve o encontro mais recente; `linhaNoTipo` o descarta quando o tipo atual não tem iniciativa.
  *
  * **Emissão depois de confirmar (§9).** Toda escrita roda dentro da transação; `cena:alterada` e
  * `encontro:alterado` saem só depois do commit.
@@ -99,12 +105,7 @@ export class CenaService {
         ordem: maiorOrdem + 1,
       });
       if (cenaTemIniciativa(dto.tipo)) {
-        await this.encontroRepositorio.criarEncontro({
-          campanhaId: dto.campanhaId,
-          cenaId: cenaInserida.id,
-          nome,
-          status: EncontroStatusEnum.MONTAGEM,
-        });
+        await this.criarEncontroDaCena(cenaInserida);
       }
       return {
         cenaCriada: await this.recuperarCenaObrigatoria(cenaInserida.id),
@@ -170,10 +171,12 @@ export class CenaService {
 
     const { cenaAberta, cenaEncerrada } = await this.transacaoService.executar(async () => ({
       cenaEncerrada: await this.encerrarCenaAtivaDaCampanha(cenaEncontrada.campanhaId),
-      cenaAberta: await this.cenaRepositorio.alterarStatus({
-        id: cenaEncontrada.id,
-        status: CenaStatusEnum.ATIVA,
-      }),
+      cenaAberta: this.linhaNoTipo(
+        await this.cenaRepositorio.alterarStatus({
+          id: cenaEncontrada.id,
+          status: CenaStatusEnum.ATIVA,
+        }),
+      ),
     }));
 
     await this.emitirAlteracoes([cenaEncerrada, cenaAberta]);
@@ -192,12 +195,75 @@ export class CenaService {
       throw new BusinessException('Só a cena em andamento pode ser encerrada');
     }
 
-    const cenaEncerrada = await this.transacaoService.executar(() =>
-      this.encerrarCenaComEncontro(cenaEncontrada),
-    );
+    const cenaEncerrada = await this.transacaoService.executar(async () => {
+      // Relida sob trava: uma troca de tipo concorrente pode ter aberto outro encontro.
+      const cenaTravada = await this.travarERecuperarCena(cenaEncontrada.id);
+      if (cenaTravada.status !== CenaStatusEnum.ATIVA) {
+        throw new BusinessException('Só a cena em andamento pode ser encerrada');
+      }
+      return this.encerrarCenaComEncontro(cenaTravada);
+    });
 
     await this.emitirAlteracoes([cenaEncerrada]);
     return this.recuperarCena({ id: cenaEncerrada.id }, usuarioAtivo);
+  }
+
+  /**
+   * Troca o tipo da cena planejada ou ativa (`cena-trocar-tipo`). Na mesma transação: encerra o
+   * encontro corrente (se houver), altera o tipo e, se o tipo novo tem iniciativa, abre um encontro
+   * novo em `MONTAGEM` — toda troca que passa por iniciativa começa um combate do zero (decisões 1 e
+   * 2 da spec). Em cena `PLANEJADA` a montagem descartada é excluída (soft delete), não encerrada:
+   * a mesa nunca a viu (decisão 4). Os documentos da Investigação (`cena_documento`) não são tocados.
+   */
+  async alterarTipo(dto: CenaTipoAlterarDto, usuarioAtivo: JwtPayload): Promise<CenaRecuperadaDto> {
+    const cenaEncontrada = await this.recuperarCenaObrigatoria(dto.id);
+    await this.validarMestre(cenaEncontrada.campanhaId, usuarioAtivo);
+    if (cenaEncontrada.status === CenaStatusEnum.ENCERRADA) {
+      throw new BusinessException('Uma cena encerrada não troca de tipo');
+    }
+    if (!(Object.values(CenaTipoEnum) as string[]).includes(dto.tipo)) {
+      throw new BusinessException('Tipo de cena inválido');
+    }
+    if (dto.tipo === cenaEncontrada.tipo) {
+      throw new BusinessException('A cena já é desse tipo');
+    }
+
+    const { cenaAlterada, encontroEncerradoId } = await this.transacaoService.executar(async () => {
+      // Relida sob trava (`FOR UPDATE`): duas trocas, ou uma troca e um encerramento, da mesma cena
+      // em paralelo não deixam dois encontros abertos nem um encontro aberto em cena encerrada.
+      const cenaTravada = await this.travarERecuperarCena(cenaEncontrada.id);
+      if (cenaTravada.status === CenaStatusEnum.ENCERRADA) {
+        throw new BusinessException('Uma cena encerrada não troca de tipo');
+      }
+      if (dto.tipo === cenaTravada.tipo) {
+        throw new BusinessException('A cena já é desse tipo');
+      }
+      // Cena planejada: a mesa nunca viu a montagem — ela é descartada (soft delete), não vai ao
+      // histórico, senão vazaria aos jogadores quando a cena abrir. Cena ativa: encerra e fica.
+      const encontroAbertoId = cenaTravada.encontroId;
+      const descartarMontagem = cenaTravada.status === CenaStatusEnum.PLANEJADA;
+      if (encontroAbertoId !== null) {
+        if (descartarMontagem) {
+          await this.encontroRepositorio.excluirEncontro({ id: encontroAbertoId });
+        } else {
+          await this.encontroService.encerrarEncontroDaCena({ id: encontroAbertoId });
+        }
+      }
+      const cenaComTipoNovo = await this.cenaRepositorio.alterarTipo({ id: cenaEncontrada.id, tipo: dto.tipo });
+      if (cenaTemIniciativa(dto.tipo)) {
+        await this.criarEncontroDaCena(cenaComTipoNovo);
+      }
+      return {
+        cenaAlterada: await this.recuperarCenaObrigatoria(cenaEncontrada.id),
+        encontroEncerradoId: descartarMontagem ? null : encontroAbertoId,
+      };
+    });
+
+    if (encontroEncerradoId !== null) {
+      await this.encontroService.emitirEncontroAlterado({ id: encontroEncerradoId });
+    }
+    await this.emitirAlteracoes([cenaAlterada]);
+    return this.recuperarCena({ id: cenaAlterada.id }, usuarioAtivo);
   }
 
   /**
@@ -250,10 +316,11 @@ export class CenaService {
       incluirPlanejadas: true,
       incluirEncerradas: true,
     });
-    for (const cena of cenasReordenadas.filter((cenaListada) => idsPlanejados.has(cenaListada.id))) {
+    const resumos = cenasReordenadas.map((cena) => this.resumoNoTipo(cena));
+    for (const cena of resumos.filter((cenaListada) => idsPlanejados.has(cenaListada.id))) {
       this.campanhaGateway.emitirCenaAlterada({ campanhaId: dto.campanhaId, cena });
     }
-    return cenasReordenadas;
+    return resumos;
   }
 
   /**
@@ -289,10 +356,11 @@ export class CenaService {
     usuarioAtivo: JwtPayload,
   ): Promise<CenaResumoDto[]> {
     const membro = await this.validarMembro(dto.campanhaId, usuarioAtivo);
-    return this.cenaRepositorio.listarPorCampanha({
+    const cenas = await this.cenaRepositorio.listarPorCampanha({
       campanhaId: dto.campanhaId,
       ...recorteCenasDoPapel(membro.papel),
     });
+    return cenas.map((cena) => this.resumoNoTipo(cena));
   }
 
   // ── Apoio ──────────────────────────────────────────────────────────────────
@@ -324,7 +392,7 @@ export class CenaService {
    */
   private async encerrarCenaAtivaDaCampanha(campanhaId: number): Promise<CenaLinhaDto | null> {
     const cenaAtiva = await this.cenaRepositorio.recuperarAtivaPorCampanha({ campanhaId });
-    return cenaAtiva ? this.encerrarCenaComEncontro(cenaAtiva) : null;
+    return cenaAtiva ? this.encerrarCenaComEncontro(await this.travarERecuperarCena(cenaAtiva.id)) : null;
   }
 
   /** `→ ENCERRADA` e, junto, o encontro da cena (regra de encerramento do `EncontroService`). */
@@ -332,7 +400,36 @@ export class CenaService {
     if (cena.encontroId !== null) {
       await this.encontroService.encerrarEncontroDaCena({ id: cena.encontroId });
     }
-    return this.cenaRepositorio.alterarStatus({ id: cena.id, status: CenaStatusEnum.ENCERRADA });
+    return this.linhaNoTipo(
+      await this.cenaRepositorio.alterarStatus({ id: cena.id, status: CenaStatusEnum.ENCERRADA }),
+    );
+  }
+
+  /**
+   * Abre o encontro da cena em `MONTAGEM`, com o nome dela — na criação de cena de tipo com
+   * iniciativa e na troca para um. Só chamado dentro de uma transação.
+   */
+  private async criarEncontroDaCena(cena: CenaLinhaDto): Promise<void> {
+    await this.encontroRepositorio.criarEncontro({
+      campanhaId: cena.campanhaId,
+      cenaId: cena.id,
+      nome: cena.nome,
+      status: EncontroStatusEnum.MONTAGEM,
+    });
+  }
+
+  /**
+   * O repositório devolve o encontro mais recente da cena; ele só vale para a cena quando o tipo
+   * atual tem iniciativa. Depois de trocar Combate → Investigação, o encontro encerrado continua no
+   * histórico, mas a cena não o tem mais.
+   */
+  private linhaNoTipo(cena: CenaLinhaDto): CenaLinhaDto {
+    return cenaTemIniciativa(cena.tipo) ? cena : { ...cena, encontroId: null };
+  }
+
+  /** O mesmo recorte de `linhaNoTipo` para o item de listagem. */
+  private resumoNoTipo(cena: CenaResumoDto): CenaResumoDto {
+    return cena.temEncontro && !cenaTemIniciativa(cena.tipo) ? { ...cena, temEncontro: false } : cena;
   }
 
   /**
@@ -360,13 +457,19 @@ export class CenaService {
     }
   }
 
+  /** Trava a cena (`FOR UPDATE`) e a relê já sob a trava. Só chamado dentro de uma transação. */
+  private async travarERecuperarCena(id: number): Promise<CenaLinhaDto> {
+    await this.cenaRepositorio.travarPorId({ id });
+    return this.recuperarCenaObrigatoria(id);
+  }
+
   /** Recupera a cena ou estoura 404. */
   private async recuperarCenaObrigatoria(id: number): Promise<CenaLinhaDto> {
     const cenaEncontrada = await this.cenaRepositorio.recuperarPorId({ id });
     if (!cenaEncontrada) {
       throw new ResourceNotFoundException('Cena');
     }
-    return cenaEncontrada;
+    return this.linhaNoTipo(cenaEncontrada);
   }
 
   /** Exige ser membro da campanha; devolve o papel para quem precisa distinguir mestre. */

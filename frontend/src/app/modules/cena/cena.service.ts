@@ -8,6 +8,7 @@ import type {
   CenaDocumentoResumoDto,
   CenaRecuperadaDto,
   CenaResumoDto,
+  CenaTipoAlterarDto,
 } from '@contratados-rpg/shared/dtos/cena';
 import { StandardResponse } from '@contratados-rpg/shared/interfaces';
 
@@ -73,6 +74,16 @@ export class CenaService {
   encerrarCena(id: number): Observable<CenaRecuperadaDto> {
     return this.httpClient
       .post<StandardResponse<CenaRecuperadaDto>>(`${this.base}/${id}/encerrar`, {})
+      .pipe(map((resposta) => resposta.dados as CenaRecuperadaDto));
+  }
+
+  /**
+   * Troca o tipo da cena planejada ou ativa (`cena-trocar-tipo`). Sair de um tipo com iniciativa
+   * encerra o combate; entrar num abre outro em `MONTAGEM` — quem decide é o backend.
+   */
+  alterarTipo(id: number, tipo: CenaTipoAlterarDto['tipo']): Observable<CenaRecuperadaDto> {
+    return this.httpClient
+      .post<StandardResponse<CenaRecuperadaDto>>(`${this.base}/${id}/tipo`, { tipo })
       .pipe(map((resposta) => resposta.dados as CenaRecuperadaDto));
   }
 

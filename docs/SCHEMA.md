@@ -443,7 +443,9 @@ CREATE TABLE encontro (
   cena_id                  INTEGER NOT NULL   -- fk_encontro_cena (m7-21; NOT NULL desde a 0033, m7-22)
 );
 -- ix_encontro_campanha: (campanha_id)
--- uix_encontro_cena_ativo: UNIQUE (cena_id) WHERE is_deleted = false AND cena_id IS NOT NULL
+-- ix_encontro_cena: (cena_id) WHERE is_deleted = false AND cena_id IS NOT NULL
+--   (0041, cena-trocar-tipo; substituiu o uix_encontro_cena_ativo da 0031 — uma cena acumula
+--   encontros ENCERRADO; no máximo um aberto por cena é invariante da CenaService)
 ```
 
 Desde a m7-22 o encontro só nasce dentro da `CenaService`, na mesma transação da cena — por isso

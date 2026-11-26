@@ -106,4 +106,17 @@ describe('CenaService', () => {
 
     expect(recebido).toEqual(recuperada);
   });
+
+  it('alterarTipo usa POST /cena/5/tipo com o tipo novo e devolve o estado completo', () => {
+    const { servico, http } = criar();
+    let recebido: CenaRecuperadaDto | undefined;
+
+    servico.alterarTipo(5, CenaTipoEnum.RESISTENCIA).subscribe((dados) => (recebido = dados));
+    const requisicao = http.expectOne((req) => req.url.endsWith('/cena/5/tipo'));
+    expect(requisicao.request.method).toBe('POST');
+    expect(requisicao.request.body).toEqual({ tipo: CenaTipoEnum.RESISTENCIA });
+    requisicao.flush(envelope(recuperada));
+
+    expect(recebido).toEqual(recuperada);
+  });
 });

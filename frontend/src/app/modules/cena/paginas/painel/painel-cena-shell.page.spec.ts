@@ -1,6 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 
-import { CenaTipoEnum, EncontroStatusEnum } from '@contratados-rpg/shared/enums';
+import { of } from 'rxjs';
+
+import { CenaStatusEnum, CenaTipoEnum, EncontroStatusEnum } from '@contratados-rpg/shared/enums';
 
 import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
 import {
@@ -201,5 +203,51 @@ describe('PainelCenaShell', () => {
     expect(texto((fixture.nativeElement as HTMLElement).querySelector('app-acao-jogador'))).toContain(
       'Encerrado',
     );
+  });
+
+  describe('troca de tipo ao vivo (cena-trocar-tipo)', () => {
+    it('combate anterior pela rota (`?encontro=`) usa a Iniciativa mesmo numa cena que hoje é Investigação', () => {
+      const { fixture } = montar({
+        cenaTipo: CenaTipoEnum.INVESTIGACAO,
+        semEncontro: true,
+        encontroDaRota: encontroAtivo.id,
+        estado: { ...encontroAtivo, status: EncontroStatusEnum.ENCERRADO },
+      });
+      const elemento = fixture.nativeElement as HTMLElement;
+
+      expect(elemento.querySelector('app-painel-encontro-mestre')).not.toBeNull();
+      expect(elemento.querySelector('app-painel-cena-sem-iniciativa-mestre')).toBeNull();
+    });
+
+    it('`cena:alterada` com outro tipo troca o painel no lugar, para o jogador, sem sair da rota', () => {
+      const { fixture, cenaAlterada$, cenaService } = montar({ usuarioId: USUARIO_JOGADOR });
+      const elemento = fixture.nativeElement as HTMLElement;
+      expect(elemento.querySelector('app-painel-encontro-jogador')).not.toBeNull();
+      cenaService.recuperarCena.mockReturnValue(
+        of({
+          id: CENA_ID,
+          campanhaId: CAMPANHA_ID,
+          nome: 'Sessão 7',
+          tipo: CenaTipoEnum.INVESTIGACAO,
+          status: CenaStatusEnum.ATIVA,
+          encontro: null,
+        }) as never,
+      );
+
+      cenaAlterada$.next({
+        campanhaId: CAMPANHA_ID,
+        cena: {
+          id: CENA_ID,
+          nome: 'Sessão 7',
+          tipo: CenaTipoEnum.INVESTIGACAO,
+          status: CenaStatusEnum.ATIVA,
+          temEncontro: false,
+        },
+      });
+      fixture.detectChanges();
+
+      expect(elemento.querySelector('app-painel-encontro-jogador')).toBeNull();
+      expect(elemento.querySelector('app-painel-cena-sem-iniciativa-jogador')).not.toBeNull();
+    });
   });
 });

@@ -712,7 +712,10 @@ describe('PainelEncontroMestre', () => {
       elemento.querySelector<HTMLButtonElement>('.historico__item')!.click();
       fixture.detectChanges();
 
-      expect(navegar).toHaveBeenCalledWith(['/campanhas', CAMPANHA_ID, 'cenas', encerrado.cenaId]);
+      // `?encontro=`: a cena pode ter vários combates encerrados (`cena-trocar-tipo`).
+      expect(navegar).toHaveBeenCalledWith(['/campanhas', CAMPANHA_ID, 'cenas', encerrado.cenaId], {
+        queryParams: { encontro: encerrado.id },
+      });
       expect(elemento.querySelector('.historico__menu')).toBeNull();
     });
 
@@ -848,6 +851,7 @@ describe('PainelEncontroMestre', () => {
         'Adicionar avulso',
         'Editar combatentes',
         'Encerrar combate',
+        'Trocar tipo',
         'Calculadora',
         'Caderno',
         'Biblioteca',
@@ -855,7 +859,7 @@ describe('PainelEncontroMestre', () => {
       const categorias = Array.from(
         elemento.querySelectorAll('app-coluna-acoes .coluna-acoes__categoria'),
       ).map((categoria) => texto(categoria));
-      expect(categorias).toEqual(['Combate', 'Ferramentas']);
+      expect(categorias).toEqual(['Combate', 'Cena', 'Ferramentas']);
     });
 
     it('a ficha resumida é a de quem age agora, com o nível de Ameaça e a Cadência', () => {
@@ -981,7 +985,9 @@ describe('PainelEncontroMestre', () => {
         expect(texto(cartoes[0].querySelector('.historico__nome'))).toBe(soEncerrado.nome);
 
         cartoes[0].click();
-        expect(navegar).toHaveBeenCalledWith(['/campanhas', CAMPANHA_ID, 'cenas', CENA_ID]);
+        expect(navegar).toHaveBeenCalledWith(['/campanhas', CAMPANHA_ID, 'cenas', CENA_ID], {
+          queryParams: { encontro: soEncerrado.id },
+        });
       });
 
       it('o estado vazio e a coluna levam ao "Nova cena" do hub (m7-23), sem dialog local', () => {

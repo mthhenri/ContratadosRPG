@@ -6,6 +6,7 @@ import type {
   CenaOrdemInternoAlterarDto,
   CenaResumoDto,
   CenaStatusInternoAlterarDto,
+  CenaTipoInternoAlterarDto,
 } from '@contratados-rpg/shared/dtos/cena';
 import { CenaStatusEnum } from '@contratados-rpg/shared/enums';
 import { BaseRepository } from '../../core/base/base.repository';
@@ -17,8 +18,11 @@ import { KNEX_CONNECTION } from '../../database/database.provider';
  * service. `tipo` e `status` traduzem `codigo ↔ id` de `tipo_cena`/`tipo_cena_status` no SQL
  * (§10.2.12) — a service só vê o `codigo` (`CenaTipoEnum`/`CenaStatusEnum`).
  *
- * O encontro da cena é lido por `LEFT JOIN` (no máximo um por cena, `uix_encontro_cena_ativo`) só
- * para saber se ele existe; escrever nele é do `EncontroRepository`.
+ * O encontro da cena é o **mais recente** dela (`LEFT JOIN LATERAL`): desde a troca de tipo
+ * (`cena-trocar-tipo`, migration 0041) uma cena pode ter vários encontros ao longo da vida, e só o
+ * mais recente pode estar aberto. Se o tipo atual tem iniciativa (e portanto se esse encontro vale
+ * para a cena) é a service que decide, por `cenaTemIniciativa`; escrever nele é do
+ * `EncontroRepository`.
  */
 @Injectable()
 export class CenaRepository extends BaseRepository {
@@ -41,9 +45,14 @@ export class CenaRepository extends BaseRepository {
             INNER JOIN tipo_cena_status
               ON tipo_cena_status.id = cena.tipo_cena_status_id
              AND tipo_cena_status.is_deleted = false
-            LEFT JOIN encontro
-              ON encontro.cena_id = cena.id
-             AND encontro.is_deleted = false`;
+            LEFT JOIN LATERAL (
+              SELECT encontro_da_cena.id
+              FROM encontro AS encontro_da_cena
+              WHERE encontro_da_cena.cena_id = cena.id
+                AND encontro_da_cena.is_deleted = false
+              ORDER BY encontro_da_cena.id DESC
+              LIMIT 1
+            ) AS encontro ON true`;
   }
 
   /**
@@ -161,6 +170,30 @@ export class CenaRepository extends BaseRepository {
                                   WHERE codigo = :status AND is_deleted = false)
        WHERE id = :id AND is_deleted = false`,
       { id: dto.id, status: dto.status },
+    );
+    return this.recuperarPorId({ id: dto.id }) as Promise<CenaLinhaDto>;
+  }
+
+  /**
+   * Trava a linha da cena até o fim da transação (`FOR UPDATE`) — serializa troca de tipo e
+   * encerramento da mesma cena, que juntos garantem "no máximo um encontro aberto por cena" desde
+   * que a 0041 tirou o índice único. Só chamado dentro de uma transação.
+   */
+  async travarPorId(dto: { id: number }): Promise<void> {
+    await this.executarConsulta<{ id: number }>(
+      `SELECT cena.id FROM cena WHERE cena.id = :id AND cena.is_deleted = false FOR UPDATE`,
+      { id: dto.id },
+    );
+  }
+
+  /** Troca o tipo da cena e devolve a linha atualizada (`cena-trocar-tipo`). */
+  async alterarTipo(dto: CenaTipoInternoAlterarDto): Promise<CenaLinhaDto> {
+    await this.executarComando(
+      `UPDATE cena
+       SET tipo_cena_id = (SELECT id FROM tipo_cena
+                           WHERE codigo = :tipo AND is_deleted = false)
+       WHERE id = :id AND is_deleted = false`,
+      { id: dto.id, tipo: dto.tipo },
     );
     return this.recuperarPorId({ id: dto.id }) as Promise<CenaLinhaDto>;
   }

@@ -1,0 +1,38 @@
+<!-- Trocar tipo (cena-trocar-tipo): mesmo molde do "Nova cena" — app-modal + app-seletor. O tipo
+     atual fica na lista, marcado e indisponível. -->
+<app-modal [aberto]="true" titulo="Trocar tipo" [largura]="'480px'" (fechou)="fechou.emit()">
+    <form class="trocar-tipo" [formGroup]="formulario" (ngSubmit)="trocar()">
+        <p class="trocar-tipo__ajuda">{{ ajuda() }}</p>
+        <app-campo rotulo="Tipo" tamanho="amplo">
+            <app-seletor
+                rotulo="Tipo"
+                formControlName="tipo"
+                [opcoes]="opcoesTipo()"
+                placeholder="Escolha o novo tipo…"
+                [obrigatorio]="true"
+            />
+        </app-campo>
+        <div class="trocar-tipo__acoes">
+            <button
+                app-botao
+                variante="secundario"
+                tamanho="medio"
+                class="trocar-tipo__acao trocar-tipo__acao--cancelar"
+                type="button"
+                (click)="fechou.emit()"
+            >
+                Cancelar
+            </button>
+            <button
+                app-botao
+                variante="primario"
+                tamanho="medio"
+                class="trocar-tipo__acao"
+                type="submit"
+                [disabled]="formulario.invalid"
+            >
+                Trocar tipo
+            </button>
+        </div>
+    </form>
+</app-modal>

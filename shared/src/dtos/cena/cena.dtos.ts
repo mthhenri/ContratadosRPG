@@ -36,6 +36,16 @@ export interface CenaAbrirDto {
   readonly id: number;
 }
 
+/**
+ * Entrada da troca de tipo da cena (`cena-trocar-tipo`) — o `id` vem da rota. Só cena `PLANEJADA`
+ * ou `ATIVA`. Sair de um tipo com iniciativa encerra o encontro corrente; entrar num tipo com
+ * iniciativa abre um encontro novo em `MONTAGEM` (`cenaTemIniciativa`).
+ */
+export interface CenaTipoAlterarDto {
+  readonly id: number;
+  readonly tipo: CenaTipoEnum;
+}
+
 /** Entrada de "encerrar" (`ATIVA → ENCERRADA`) — o `id` vem da rota. */
 export interface CenaEncerrarDto {
   readonly id: number;

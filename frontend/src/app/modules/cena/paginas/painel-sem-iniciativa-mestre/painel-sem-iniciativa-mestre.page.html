@@ -26,7 +26,17 @@
         >
             Encerrar cena
         </button>
-        } @if (dados.ehInvestigacao()) {
+        }
+        <button
+            app-coluna-acoes-item
+            [icone]="iconeTipoCena(cena.tipo)"
+            appTooltip="Trocar o tipo desta cena — os documentos anexados continuam nela"
+            [disabled]="dados.emOperacao()"
+            (click)="trocandoTipo.set(true)"
+        >
+            Trocar tipo
+        </button>
+        @if (dados.ehInvestigacao()) {
         <button
             app-coluna-acoes-item
             icone="documentos"
@@ -308,6 +318,15 @@
     />
     }
 </app-modal>
+}
+
+@if (trocandoTipo() && dados.cena(); as cena) {
+<app-cena-trocar-tipo-dialog
+    [nomeCena]="cena.nome"
+    [tipoAtual]="cena.tipo"
+    (escolhido)="trocarTipo($event)"
+    (fechou)="trocandoTipo.set(false)"
+/>
 }
 
 <!-- Sem gatilho próprio: a coluna de ações abre as duas janelas pelo `alternar()` delas. -->

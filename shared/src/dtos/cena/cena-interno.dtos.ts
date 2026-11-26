@@ -31,6 +31,12 @@ export interface CenaStatusInternoAlterarDto {
   readonly status: CenaStatusEnum;
 }
 
+/** Entrada interna da troca de tipo da cena (`cena-trocar-tipo`). */
+export interface CenaTipoInternoAlterarDto {
+  readonly id: number;
+  readonly tipo: CenaTipoEnum;
+}
+
 /** Entrada interna da reordenação de uma cena planejada. */
 export interface CenaOrdemInternoAlterarDto {
   readonly id: number;

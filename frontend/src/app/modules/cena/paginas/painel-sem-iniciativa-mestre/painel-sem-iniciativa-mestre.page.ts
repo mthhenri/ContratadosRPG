@@ -38,6 +38,7 @@ import { CenaService } from '../../cena.service';
 import { RolagemMestre } from '../../componentes/rolagem-mestre/rolagem-mestre.component';
 import { CenaDocumentoLeituraService } from "../../cena-documento-leitura.service";
 import { rotuloStatusCena, rotuloTipoCena } from '../../rotulos-cena';
+import { CenaTrocarTipoDialog } from '../../componentes/cena-trocar-tipo-dialog/cena-trocar-tipo-dialog.component';
 
 /**
  * Painel de uma cena **sem iniciativa** — visão do mestre (m7-24). Resistência e Investigação não
@@ -74,6 +75,7 @@ import { rotuloStatusCena, rotuloTipoCena } from '../../rotulos-cena';
     RolagemMestre,
     EspectadorFichaCard,
     FichaFlutuante,
+    CenaTrocarTipoDialog,
   ],
   templateUrl: './painel-sem-iniciativa-mestre.page.html',
   styleUrl: './painel-sem-iniciativa-mestre.page.scss',
@@ -133,6 +135,8 @@ export class PainelCenaSemIniciativaMestre {
   protected readonly documentoFoco = this.leitura.documento;
   protected readonly carregandoDocumentoFoco = this.leitura.carregando;
   protected readonly modalAnexarAberto = signal(false);
+  /** Dialog "Trocar tipo" aberto (`cena-trocar-tipo`). */
+  protected readonly trocandoTipo = signal(false);
   protected readonly bibliotecaCarregando = signal(false);
   private readonly bibliotecaDocumentos = signal<readonly DocumentoResumoDto[]>([]);
 
@@ -283,6 +287,15 @@ export class PainelCenaSemIniciativaMestre {
           );
         }
       });
+  }
+
+  /**
+   * Troca o tipo da cena. O dialog fecha antes da chamada: com um tipo de iniciativa a casca troca
+   * este painel pelo de Iniciativa, e nada daqui sobrevive.
+   */
+  protected trocarTipo(tipo: CenaTipoEnum): void {
+    this.trocandoTipo.set(false);
+    this.dados.alterarTipoCena(tipo);
   }
 
   /** Encerra a cena — depois disso ela fica só de leitura e vai para as encerradas do hub. */

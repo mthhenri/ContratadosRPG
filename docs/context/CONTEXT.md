@@ -3165,7 +3165,21 @@ migrations `0032`/`0033`) e só nasce dentro dela, pela `CenaService` (`backend/
 na mesma transação — só para os tipos em que `cenaTemIniciativa` é verdadeiro. O ciclo de vida é o
 da cena: abrir (`PLANEJADA → ATIVA`) torna o encontro visível à mesa, encerrar a cena encerra o
 encontro junto, e no máximo uma cena `ATIVA` por campanha (abrir/criar já ativa encerra a atual na
-mesma operação). `POST campanha/:id/encontro` e `POST encontro/:id/encerrar` mantêm a URL no
+mesma operação). **Troca de tipo (`cena-trocar-tipo`).** O mestre troca o tipo da cena
+`PLANEJADA` ou `ATIVA` (`POST cena/:id/tipo`, item "Trocar tipo" na coluna de ações dos dois painéis
+do mestre, `CenaTrocarTipoDialog`). Na mesma transação: encerra o encontro aberto, altera o tipo e,
+se o tipo novo tem iniciativa, abre outro em `MONTAGEM` — não existe "retomar" combate, e a regra
+vale também entre Combate/Furtiva/Perseguição. Em cena `PLANEJADA` a montagem descartada é excluída
+(soft delete), não encerrada, para não vazar ao histórico da mesa. A cena é travada
+(`CenaRepository.travarPorId`, `FOR UPDATE`) e relida na transação de troca e de encerramento. Uma cena acumula encontros `ENCERRADO`
+(migration `0041` trocou `uix_encontro_cena_ativo` pelo índice comum `ix_encontro_cena`); no
+máximo um aberto por cena é invariante da `CenaService`. O `CenaRepository` lê o encontro mais
+recente (`LEFT JOIN LATERAL`) e a service o descarta quando o tipo atual não tem iniciativa
+(`linhaNoTipo`). `cena_documento` não é tocado: voltar à Investigação mostra os mesmos documentos.
+No painel, `cena:alterada` com tipo diferente refaz a carga da cena (a casca troca de painel para
+todos, sem recarregar a página). Como a cena acumula combates, o painel aceita `?encontro=<id>`:
+mostra aquele combate (só leitura, no painel de Iniciativa mesmo com o tipo atual sem iniciativa);
+o menu de combates encerrados e o redirect de `/iniciativa/:encontroId` levam o parâmetro. `POST campanha/:id/encontro` e `POST encontro/:id/encerrar` mantêm a URL no
 `CenaController` (criam uma cena `COMBATE` ativa / encerram a cena-mãe), mas desde a `m7-23`
 nenhuma tela os chama — o frontend cria e encerra pelos endpoints de cena (`CenaService` do
 frontend, `modules/cena/`). **Trava anti-vazamento:** encontro de cena `PLANEJADA` é só do mestre — `GET` 403,
