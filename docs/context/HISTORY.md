@@ -1,5 +1,53 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-11-28 — ui-43: defeitos de navegação e layout nas telas do mestre
+
+O autor pediu uma avaliação da tela de campanha do mestre ("não estou vendo o que preciso ver"; as duas setas o
+confundiam). A análise foi feita ao vivo, com a conta de teste `codex.dev` na "Campanha do Codex", em 1920, 1366
+e 360. Ela virou uma página privada, "Telas do Mestre", com as capturas em `.artifacts/avaliacao-tela-campanha/`.
+O autor escolheu corrigir primeiro os defeitos claros e deixar o redesenho da visão da campanha para depois.
+Também escolheu os ícones e o conteúdo da barra nova. Para a análise, a campanha de teste ganhou 4 documentos e
+5 cenas (uma Investigação aberta); esses dados ficaram no banco local.
+
+O que mudou (`docs/specs/done/ui-43-mestre-defeitos-navegacao.spec.md`):
+
+- **Duas setas iguais:** o botão da `app-coluna-acoes` usava a seta `voltar`, idêntica ao Voltar do cabeçalho,
+  a 55px de distância. Agora usa o par novo `barra-lateral-expandir`/`barra-lateral-recolher` (Tabler, MIT)
+  em todas as nove telas com coluna.
+- **Uma barra só:** na revisão, o autor pediu que a barra lateral fosse a mesma em todas as telas. O estado
+  expandido/retraído era salvo por tela (`contratados-rpg:coluna-acoes:<id>`) e agora é uma preferência
+  única, `contratados-rpg:coluna-acoes`, guardada também num signal de módulo para duas colunas vivas não
+  discordarem. A primeira leitura migra a chave antiga da tela. Ao vivo: abrir na campanha mantém aberta no
+  hub e na cena; fechar na cena chega fechada na Biblioteca recarregada.
+- **"Encerrar cena"** trocou a lixeira por `parar`, um quadrado cheio. O vazado se lia como caixa de seleção,
+  achado só na verificação ao vivo. **"Trocar tipo"** trocou o ícone do tipo atual por `trocar`, na cena sem
+  iniciativa e na Iniciativa.
+- **Hub de Cenas:** ganhou a coluna de ações, só para o mestre: "Nova cena" saiu do cabeçalho, como o "Novo
+  combate" da `ui-38`, e entraram Calculadora, Caderno e Biblioteca. A ficha citada no Caderno abre na
+  `app-ficha-flutuante`; a lista de fichas só é pedida nesse momento. O jogador segue sem coluna.
+- **Biblioteca do mestre:** ganhou a coluna com Calculadora e Caderno. O `BibliotecaLayout` passou a ter o
+  encaixe opcional `[bibliotecaColuna]` + `[comColuna]`; mesa, espectador e prévias não mudam.
+- **Cartões quebrados:** a grade da aba Esquadrão tinha 3 colunas fixas pela janela. Em 1366 o cartão ficava
+  com 276px (nome letra por letra), e com a coluna aberta em 1920 o rótulo encostava no número ("ENERGIA43").
+  Agora a grade usa `auto-fill` com mínimo de 400px, e o `espectador-ficha-card` empilha Vida/Energia por
+  container query abaixo de 440px. Medido ao vivo:
+  - 3 colunas em 1920, com a coluna fechada e aberta;
+  - 2 → 1 em 1366 e em 960 (fechada → aberta);
+  - nenhum `.barra-recurso__topo` transbordando;
+  - nome em uma linha.
+
+  No espectador em 1366, o cartão de 348px, que antes encostava, agora empilha.
+
+Testes: 3.793 do frontend passando, com `NODE_OPTIONS=--no-experimental-webstorage` (P-138). Há testes novos de
+ícone, do botão da coluna, dos ícones de Encerrar/Trocar e das colunas do hub (só mestre) e da Biblioteca do
+mestre. Lint sem erros; build com o aviso de budget já conhecido (604 kB). Verificação ao vivo nas telas de
+campanha, hub, Investigação e Biblioteca: mestre em 1920 e 360, campanha também em 1366 e 960 com a coluna
+aberta e fechada, e jogador e espectador em 1920, 1366 e 360. Sem overflow horizontal. Capturas em
+`.artifacts/ui-43-mestre-defeitos-navegacao/`.
+
+Ficaram fora, registrados: `P-141` ("Encerrar combate" ainda usa a lixeira; aguarda o OK do autor por ser um
+consumidor não nomeado no pedido) e `P-142` (cenas com iniciativa que não são Combate se chamam "Iniciativa").
+
 ## 2026-11-26 — v1.13.1: troca de tipo de cena
 
 Versão pedida pelo autor como patch (1.13.1), embora seja funcionalidade nova — a regra da skill sugeriria minor;

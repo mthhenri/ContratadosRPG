@@ -56,6 +56,11 @@ export class BibliotecaLayout {
   readonly leitoresPorDocumento = input<DocumentoLeitoresPorDocumento>(NENHUM_LEITOR);
   /** Setas de ordem na lista — só o mestre. */
   readonly ordenavel = input(false);
+  /**
+   * Há uma `app-coluna-acoes` projetada em `[bibliotecaColuna]` (ui-43, só o mestre): a casca a põe
+   * antes do conteúdo e, no celular, mantém o piso da barra inferior que ela vira.
+   */
+  readonly comColuna = input(false);
   readonly bloqueado = input(false);
 
   readonly vazioTitulo = input.required<string>();

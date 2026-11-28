@@ -1,6 +1,8 @@
 <!-- Estrutura comum da Biblioteca (m9-05): casca do hub de cenas + o corpo (m9-11,
      `app-biblioteca-corpo`) — lista (com a busca no topo) | documento aberto. -->
-<div class="biblioteca">
+<div class="biblioteca" [class.biblioteca--sem-coluna]="!comColuna()">
+    <!-- ui-43: a coluna de ações do mestre, quando a página a projeta. -->
+    <ng-content select="[bibliotecaColuna]" />
     <div class="biblioteca__conteudo">
         <header class="biblioteca__cabecalho">
             <a

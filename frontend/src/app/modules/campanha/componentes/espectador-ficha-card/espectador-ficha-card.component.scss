@@ -6,8 +6,15 @@
 @use "tema/breakpoints" as bp;
 @use "tema/glow" as glow;
 
+// Abaixo desta largura do próprio cartão, Vida/Energia empilham e as reações perdem o "·" — o
+// arranjo que o mobile já usava. Medido pela largura do cartão, não da janela (ui-43): com a
+// coluna de ações aberta, ou em 1366, o cartão fica estreito sem a janela cruzar `bp.mobile`, e
+// rótulo e valor encostavam ("ENERGIA43").
+$cartao-estreito: 440px;
+
 :host {
     display: block;
+    container: ficha-cartao / inline-size;
 }
 
 .espectador-ficha {
@@ -142,6 +149,11 @@
             flex-direction: column;
             gap: var(--space-4);
         }
+
+        @container ficha-cartao (max-width: #{$cartao-estreito - 1px}) {
+            flex-direction: column;
+            gap: var(--space-4);
+        }
     }
 
     &__recurso-primitivo {
@@ -177,6 +189,12 @@
         // No mobile as reações quebram de linha; o separador "·" ficaria no começo da linha de
         // baixo, então some e o `gap` separa os itens (P-096).
         @include bp.mobile {
+            span:not(:first-child)::before {
+                content: none;
+            }
+        }
+
+        @container ficha-cartao (max-width: #{$cartao-estreito - 1px}) {
             span:not(:first-child)::before {
                 content: none;
             }

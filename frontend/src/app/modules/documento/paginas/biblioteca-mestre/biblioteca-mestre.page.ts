@@ -14,10 +14,19 @@ import type {
 } from '@contratados-rpg/shared/dtos/documento';
 import { DocumentoAlteracaoEnum } from '@contratados-rpg/shared/enums';
 
+import { SessaoService } from '../../../../core/services/sessao.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { TopbarContextoService } from '../../../../core/services/topbar-contexto.service';
+import { CalculadoraFlutuante } from '../../../../shared/calculadora-flutuante/calculadora-flutuante.component';
 import { Icone } from '../../../../shared/icone/icone.component';
+import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
+import { ColunaAcoes } from '../../../../shared/ui/coluna-acoes/coluna-acoes.component';
+import { ColunaAcoesItem } from '../../../../shared/ui/coluna-acoes/coluna-acoes-item.component';
+import { resolverFichaParaAbrir } from '../../../encontro/encontro-leitura.util';
+import { FichaFlutuante } from '../../../ficha/componentes/ficha-flutuante/ficha-flutuante.component';
+import { FichaService } from '../../../ficha/ficha.service';
+import { CadernoFlutuante } from '../../../pagina-caderno/caderno-flutuante.component';
 import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
 import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
 import { CampanhaService } from '../../../campanha/campanha.service';
@@ -65,6 +74,12 @@ import type { TelaComRascunhoDocumento } from '../../rascunho-documento.guard';
     DocumentoCriarDialog,
     DocumentoEdicao,
     LeitorDocumento,
+    Tooltip,
+    ColunaAcoes,
+    ColunaAcoesItem,
+    CalculadoraFlutuante,
+    CadernoFlutuante,
+    FichaFlutuante,
   ],
   templateUrl: './biblioteca-mestre.page.html',
   styleUrl: './biblioteca-mestre.page.scss',
@@ -110,6 +125,19 @@ export class BibliotecaMestre implements TelaComRascunhoDocumento {
 
   /** A edição aberta — o rascunho vive nela. */
   private readonly edicao = viewChild(DocumentoEdicao);
+
+  // Ferramentas da coluna de ações (ui-43) — o mesmo par Calculadora/Caderno da cena.
+  private readonly sessaoService = inject(SessaoService);
+  private readonly fichaService = inject(FichaService);
+  private readonly calculadoraRef = viewChild<CalculadoraFlutuante>('calculadora');
+  private readonly cadernoRef = viewChild<CadernoFlutuante>('caderno');
+  private readonly fichaFlutuanteRef = viewChild<FichaFlutuante>('fichaFlutuante');
+  /** Janela da calculadora aberta — marca o item "Calculadora" da coluna. */
+  protected readonly calculadoraAberta = signal(false);
+  /** Caderno aberto (mesmo minimizado) — marca o item "Caderno" da coluna. */
+  protected readonly cadernoAberto = computed(() => this.cadernoRef()?.aberto() ?? false);
+  /** `id` de quem olha — o Caderno precisa dele para as páginas privadas. */
+  protected readonly usuarioAtivoId = computed(() => this.sessaoService.usuario()?.id ?? null);
 
   /** Pedidos de recarga da lista (depois de uma escrita, reconexão). */
   private readonly recarregar$ = new Subject<void>();
@@ -188,6 +216,31 @@ export class BibliotecaMestre implements TelaComRascunhoDocumento {
   // ── Lista ───────────────────────────────────────────────────────────────────
 
   /** Com edição não salva, pergunta antes: o documento criado abre no lugar dela. */
+  /** Mesmo racional da cena: só o `alternar()` do componente restaura a janela minimizada. */
+  protected alternarCalculadora(): void {
+    this.calculadoraRef()?.alternar();
+  }
+
+  protected alternarCaderno(): void {
+    this.cadernoRef()?.alternar();
+  }
+
+  /**
+   * Ficha citada no Caderno: a Biblioteca não guarda as fichas da campanha, então lista só quando o
+   * mestre pede para abrir uma e resolve o tipo como a cena faz (`resolverFichaParaAbrir`).
+   */
+  protected abrirFichaDoCaderno(fichaId: number): void {
+    this.fichaService.listarFichas(this.campanhaId).subscribe({
+      next: (fichas) => {
+        const tipo = fichas.find((ficha) => ficha.id === fichaId)?.tipo ?? null;
+        const alvo = resolverFichaParaAbrir(fichaId, tipo, fichas);
+        if (alvo) {
+          this.fichaFlutuanteRef()?.abrir(alvo);
+        }
+      },
+    });
+  }
+
   protected async abrirNovoDocumento(): Promise<void> {
     if (await this.confirmarDescarte()) {
       this.sairDaEdicao();

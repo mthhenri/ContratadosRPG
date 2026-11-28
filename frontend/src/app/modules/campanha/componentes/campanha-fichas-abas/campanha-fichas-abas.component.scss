@@ -57,24 +57,18 @@
         text-align: center;
     }
 
-    // Grid de 3 colunas — colapsa a 2 no tablet, 1 no mobile (mesmo padrão de
-    // `.espectador__ficha-grid`).
+    // Colunas pela largura que a grade tem, não pela janela (ui-43): a coluna de ações aberta tira
+    // 144px daqui sem a janela mudar de faixa, e em 1366 as 3 colunas fixas deixavam o cartão com
+    // 276px — nome quebrando letra por letra. Com 400px de mínimo: 3 colunas em 1920 (como antes),
+    // 2 em 1366 e na tela dividida, 1 no mobile.
     &__grade {
         list-style: none;
         margin: 0 0 var(--space-16);
         padding: 2px;
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 400px), 1fr));
         gap: var(--space-8);
         align-items: start;
-
-        @include bp.tablet {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-
-        @include bp.mobile {
-            grid-template-columns: minmax(0, 1fr);
-        }
     }
 
     // Alvo de toque dos botões de criar no mobile.

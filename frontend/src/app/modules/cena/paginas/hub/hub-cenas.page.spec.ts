@@ -16,6 +16,7 @@ import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
 import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
 import { CampanhaService } from '../../../campanha/campanha.service';
+import { FichaService } from '../../../ficha/ficha.service';
 import { CenaService } from '../../cena.service';
 import { HubCenas } from './hub-cenas.page';
 
@@ -72,13 +73,28 @@ describe('HubCenas', () => {
       criarCena: vi.fn(),
     };
     const reconexao$ = new Subject<void>();
-    const tempoReal = {
+    const tempoRealDoHub: Record<string | symbol, unknown> = {
       conectar: vi.fn(),
       entrarSalaCampanha: vi.fn(),
       sairSalaCampanha: vi.fn(),
       reconexao: signal(0),
       reconexao$: reconexao$.asObservable(),
       cenaAlterada$,
+    };
+    // As Ferramentas da coluna (ui-43: Caderno, Biblioteca, janela de ficha) escutam outros fluxos
+    // do tempo real desde que nascem; aqui eles só precisam existir e ficar calados.
+    const tempoReal = new Proxy(tempoRealDoHub, {
+      get: (alvo, chave) => {
+        if (!(chave in alvo)) {
+          alvo[chave] = String(chave).endsWith('$') ? new Subject() : vi.fn();
+        }
+        return alvo[chave];
+      },
+    }) as typeof tempoRealDoHub & {
+      conectar: ReturnType<typeof vi.fn>;
+      entrarSalaCampanha: ReturnType<typeof vi.fn>;
+      sairSalaCampanha: ReturnType<typeof vi.fn>;
+      reconexao: ReturnType<typeof signal<number>>;
     };
     TestBed.configureTestingModule({
       providers: [
@@ -93,6 +109,7 @@ describe('HubCenas', () => {
         },
         { provide: SessaoService, useValue: { usuario: () => ({ id: usuarioId }) } },
         { provide: TempoRealService, useValue: tempoReal },
+        { provide: FichaService, useValue: { listarFichas: vi.fn(() => of([])) } },
         {
           provide: ActivatedRoute,
           useValue: {
@@ -223,11 +240,12 @@ describe('HubCenas', () => {
     });
 
     describe('"Nova cena"', () => {
-      it('o botão do cabeçalho abre o dialog, avisando que há uma cena ativa', () => {
+      it('o item da coluna de ações abre o dialog, avisando que há uma cena ativa (ui-43)', () => {
         const { raiz, fixture } = montar();
         expect(raiz.querySelector('app-cena-criar-dialog')).toBeNull();
+        expect(botao(raiz.querySelector('.hub-cenas__cabecalho'), 'Nova cena')).toBeUndefined();
 
-        botao(raiz.querySelector('.hub-cenas__cabecalho'), 'Nova cena')!.click();
+        botao(raiz.querySelector('app-coluna-acoes'), 'Nova cena')!.click();
         fixture.detectChanges();
 
         expect(raiz.querySelector('app-cena-criar-dialog')).not.toBeNull();
@@ -383,6 +401,17 @@ describe('HubCenas', () => {
 
       expect(cenaService.listarPorCampanha).toHaveBeenCalledTimes(1);
     });
+  });
+
+  it('a coluna de ações (Nova cena + Ferramentas) é só do mestre (ui-43)', () => {
+    const rotulos = (raiz: HTMLElement) =>
+      Array.from(raiz.querySelectorAll('app-coluna-acoes .coluna-acoes__item')).map((item) =>
+        texto(item),
+      );
+
+    expect(rotulos(montar().raiz)).toEqual(['Nova cena', 'Calculadora', 'Caderno', 'Biblioteca']);
+    TestBed.resetTestingModule();
+    expect(montar({ usuarioId: JOGADOR, cenas: [] }).raiz.querySelector('app-coluna-acoes')).toBeNull();
   });
 
   it('mostra o esqueleto enquanto não sabe quem olha, sem piscar controles de mestre', () => {

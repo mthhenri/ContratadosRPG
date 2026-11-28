@@ -29,6 +29,27 @@
 
 ## Ativos
 
+### P-142 — Cena com iniciativa que não é Combate se chama "Iniciativa" e oferece "Iniciar combate" · `ABERTO` · frontend/cenas
+
+- **Sintoma:** em Furtiva, Perseguição e Resistência, o título é "Iniciativa · <nome>" e a condução diz
+  "Iniciar combate"; o tipo da cena só aparece no ícone pequeno do título.
+- **Causa:** o painel com iniciativa (`painel-mestre.page.html`) nasceu para o Combate e só a casca foi
+  reaproveitada pelos demais tipos.
+- **Contorno:** nenhum; o mestre sabe o tipo que escolheu.
+- **Correção:** título com o rótulo do tipo (`rotuloTipoCena`) e o verbo da condução por tipo — pedir ao autor o
+  texto de cada um. Entra no redesenho das cenas.
+- **Desde:** observado na análise das telas do mestre (2026-11-28), registrado na `ui-43`.
+
+### P-141 — "Encerrar combate" usa a lixeira de Excluir · `ABERTO` · frontend/encontro
+
+- **Sintoma:** na coluna da Iniciativa do mestre, "Encerrar combate" tem o ícone `excluir` (lixeira), o mesmo de
+  "Excluir campanha", embora só encerre e não apague nada.
+- **Causa:** mesma escolha que a `ui-43` corrigiu em "Encerrar cena"; o item do combate ficou fora do pedido.
+- **Contorno:** o rótulo e o tooltip dizem "Encerrar".
+- **Correção:** trocar para `parar` em `painel-mestre.page.html`, como "Encerrar cena" — aguarda o OK do autor
+  (consumidor não nomeado no pedido, regra de `gerenciamento-de-impacto`).
+- **Desde:** encontrado no mapa de impacto da `ui-43` (2026-11-28).
+
 ### P-139 — Gaveta e janela das Regras cobrem os avisos no celular · `ABERTO` · frontend/regras
 
 - **Sintoma:** com a gaveta do sumário aberta (tela estreita), um aviso disparado ali fica atrás dela e quase

@@ -23,6 +23,7 @@ import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmaca
 import { EditorMarkdown } from '../../../../shared/ui/editor-markdown/editor-markdown.component';
 import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
 import { CampanhaService } from '../../../campanha/campanha.service';
+import { FichaService } from '../../../ficha/ficha.service';
 import { DocumentoCriarDialog } from '../../componentes/documento-criar-dialog/documento-criar-dialog.component';
 import { BibliotecaLayout } from '../../componentes/biblioteca-layout/biblioteca-layout.component';
 import { DocumentoService } from '../../documento.service';
@@ -107,6 +108,8 @@ describe('BibliotecaMestre', () => {
       documentoAlterado$,
       documentoOrganizacaoAlterada$: new Subject<never>(),
       documentoLeitores$,
+      // A janela de ficha das Ferramentas (ui-43) escuta a revogação desde que nasce.
+      acessoRevogado$: new Subject<never>(),
     };
     TestBed.configureTestingModule({
       providers: [
@@ -120,6 +123,7 @@ describe('BibliotecaMestre', () => {
           },
         },
         { provide: TempoRealService, useValue: tempoReal },
+        { provide: FichaService, useValue: { listarFichas: vi.fn(() => of([])) } },
         {
           provide: ActivatedRoute,
           useValue: {
@@ -182,6 +186,19 @@ describe('BibliotecaMestre', () => {
   function tituloEdicao(raiz: HTMLElement): HTMLInputElement {
     return painel(raiz).querySelector('input.campo__controle') as HTMLInputElement;
   }
+
+  it('tem a coluna de ações com as Ferramentas, antes do conteúdo (ui-43)', () => {
+    const { raiz } = montar();
+    const coluna = raiz.querySelector('.biblioteca > app-coluna-acoes');
+
+    expect(coluna).not.toBeNull();
+    expect(
+      Array.from(coluna!.querySelectorAll('.coluna-acoes__item')).map((item) => texto(item)),
+    ).toEqual(['Calculadora', 'Caderno']);
+    expect(raiz.querySelector('.biblioteca')?.classList.contains('biblioteca--sem-coluna')).toBe(
+      false,
+    );
+  });
 
   it('segundo clique fecha e aria-pressed acompanha a seleção', async () => {
     const contexto = montar();

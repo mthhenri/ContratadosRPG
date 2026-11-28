@@ -7,6 +7,7 @@ import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 import { CenaStatusEnum, CenaTipoEnum, TipoDocumentoEnum } from '@contratados-rpg/shared/enums';
 
 import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
+import { ColunaAcoesItem } from '../../../../shared/ui/coluna-acoes/coluna-acoes-item.component';
 import { EspectadorFichaCard } from '../../../campanha/componentes/espectador-ficha-card/espectador-ficha-card.component';
 import {
   CAMPANHA_ID,
@@ -155,6 +156,21 @@ describe('PainelCenaSemIniciativaMestre', () => {
   });
 
   describe('cena ativa', () => {
+    it('"Encerrar cena" usa o parar e "Trocar tipo" usa o trocar, nunca a lixeira nem o tipo (ui-43)', () => {
+      const { fixture } = montar();
+      const iconePorRotulo = new Map(
+        fixture.debugElement
+          .queryAll(By.directive(ColunaAcoesItem))
+          .map((item) => [
+            texto(item.nativeElement as HTMLElement),
+            (item.componentInstance as ColunaAcoesItem).icone(),
+          ]),
+      );
+
+      expect(iconePorRotulo.get('Encerrar cena')).toBe('parar');
+      expect(iconePorRotulo.get('Trocar tipo')).toBe('trocar');
+    });
+
     it('"Encerrar cena" confirma, encerra pela cena e a tela fica só de leitura', async () => {
       const { fixture, cenaService } = montar();
       const confirmar = vi

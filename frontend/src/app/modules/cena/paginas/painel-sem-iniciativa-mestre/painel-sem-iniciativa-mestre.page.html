@@ -19,7 +19,7 @@
         } @else {
         <button
             app-coluna-acoes-item
-            icone="excluir"
+            icone="parar"
             appTooltip="Encerrar a cena — depois disso ela fica só de leitura"
             [disabled]="dados.emOperacao()"
             (click)="encerrarCena()"
@@ -29,7 +29,7 @@
         }
         <button
             app-coluna-acoes-item
-            [icone]="iconeTipoCena(cena.tipo)"
+            icone="trocar"
             appTooltip="Trocar o tipo desta cena — os documentos anexados continuam nela"
             [disabled]="dados.emOperacao()"
             (click)="trocandoTipo.set(true)"

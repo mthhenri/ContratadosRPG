@@ -60,6 +60,11 @@ import { Component, computed, input } from "@angular/core";
  * `fragmento-construtor`/`fragmento-potencializador` trocaram de desenho (Prisma e Cristal radiante).
  * Marcas preenchidas (m10-04): `scp`/`criatura` são o logo oficial, `contratados` é a marca
  * SCP + D20. Geometria e crédito aprovados em `docs/design/MARCAS.md`.
+ * Navegação e condução (ui-43), da Tabler Icons (MIT): `barra-lateral-recolher`/
+ * `barra-lateral-expandir` ("layout-sidebar-left-collapse"/"-expand"), o botão da coluna de ações —
+ * antes era a seta `voltar`, igual ao Voltar ao lado do título; `parar` ("player-stop"), "Encerrar
+ * cena" — antes era a lixeira `excluir`; `trocar` ("arrows-exchange"), "Trocar tipo" — antes era o
+ * ícone do tipo atual.
  * Cenas (UI-41): `cena-*` identifica cada tipo e `cenas` é o genérico (claquete).
  * Desenhos originais Codex (OpenAI), aprovados pelo autor na prancha da UI-41;
  * Furtiva segue o pedido expresso de homem encapuzado. O glifo `combate` é preservado.
@@ -187,6 +192,10 @@ export type IconeNome =
   | 'membros'
   | 'vincular'
   | 'senha'
+  | 'barra-lateral-recolher'
+  | 'barra-lateral-expandir'
+  | 'parar'
+  | 'trocar'
   | 'caderno'
   | 'desfazer'
   | 'refazer'

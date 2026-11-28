@@ -14,6 +14,7 @@
     [leitoresPorDocumento]="leitoresPorDocumento()"
     [ordenavel]="true"
     [bloqueado]="bloqueado()"
+    [comColuna]="true"
     vazioTitulo="Nenhum documento ainda."
     vazioApoio="Crie cartas, relatórios e imagens para revelar à mesa na hora certa."
     painelVazioApoio="Escolha um documento na lista para ler, editar ou revelar à mesa."
@@ -22,6 +23,29 @@
     (mover)="mover($event)"
     (fecharDocumento)="fecharDocumento()"
 >
+    <!-- ui-43: as Ferramentas da cena (a Biblioteca é a própria página, então fica de fora). -->
+    <app-coluna-acoes bibliotecaColuna id="biblioteca-mestre" rotulo="Ações da biblioteca">
+        <div class="coluna-acoes__categoria">Ferramentas</div>
+        <button
+            app-coluna-acoes-item
+            icone="calculadora"
+            appTooltip="Calculadora"
+            [pressionado]="calculadoraAberta()"
+            (click)="alternarCalculadora()"
+        >
+            Calculadora
+        </button>
+        <button
+            app-coluna-acoes-item
+            icone="caderno"
+            appTooltip="Caderno"
+            [pressionado]="cadernoAberto()"
+            (click)="alternarCaderno()"
+        >
+            Caderno
+        </button>
+    </app-coluna-acoes>
+
     <button
         bibliotecaAcao
         app-botao
@@ -102,3 +126,20 @@
     (fechou)="fecharNovoDocumento()"
 />
 }
+
+<!-- Ferramentas da coluna (ui-43), sem gatilho próprio, como na cena. -->
+<app-calculadora-flutuante #calculadora [(aberta)]="calculadoraAberta" [mostrarGatilho]="false" />
+@if (usuarioAtivoId(); as usuarioId) {
+<app-caderno-flutuante
+    #caderno
+    [mostrarGatilho]="false"
+    [campanhaId]="campanhaId"
+    [campanhaNome]="campanhaNome()"
+    [usuarioAtivoId]="usuarioId"
+    [ehMestre]="true"
+    [membros]="membros()"
+    [temInventario]="false"
+    (abrirFicha)="abrirFichaDoCaderno($event)"
+/>
+}
+<app-ficha-flutuante #fichaFlutuante [ehMestre]="true" />

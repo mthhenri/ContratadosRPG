@@ -1,5 +1,16 @@
 # CONTEXT.md — Painel do Projeto
 
+> **Telas do mestre (2026-11-28):** [`ui-43`](../specs/done/ui-43-mestre-defeitos-navegacao.spec.md)
+> concluída. A coluna de ações é uma barra só para o site (aberta numa tela, aberta em todas) e recolhe
+> com o ícone de barra lateral (não mais a seta de Voltar).
+> "Encerrar cena" usa `parar` e "Trocar tipo" usa `trocar`. O hub de Cenas (mestre) e a Biblioteca
+> do mestre ganharam a coluna com as Ferramentas. Os cartões do Esquadrão não quebram mais com a
+> coluna aberta nem em 1366.
+> **Próximo, em conversa com o autor:** o redesenho da *visão* da tela de campanha do mestre: mostrar
+> a cena aberta, as planejadas, a Biblioteca e o Caderno de relance (mockups antes de spec). Depois
+> vêm as cenas e a Biblioteca, e o quadro de investigação (`quadro-investigacao-campanha`, ainda com
+> as decisões do autor a registrar em `pendencias.md`). `P-141` e `P-142` registram o que ficou fora.
+
 > **Organização documental:** tarefas, planos, propostas e relatórios agora ficam
 > juntos em `docs/specs/<estado>/`, conforme [política §3.1](../SYSTEM.SPEC.md#31-documentação-de-tarefa-e-artefatos-de-execução)
 > e [mapa](../specs/README.md). Capturas/saídas brutas ficam em `.artifacts/`, local

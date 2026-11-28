@@ -13,8 +13,9 @@
 @include casca.casca("biblioteca");
 
 .biblioteca {
-    &__conteudo {
-        // A casca reserva o piso da barra inferior da coluna de ações, que a biblioteca não tem.
+    // A casca reserva o piso da barra inferior da coluna de ações; sem coluna (jogador, espectador,
+    // prévias) o piso sobra. A do mestre tem coluna desde a ui-43.
+    &--sem-coluna &__conteudo {
         @include bp.mobile {
             padding-bottom: 12px;
         }

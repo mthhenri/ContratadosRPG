@@ -1,7 +1,8 @@
 // Hub de cenas (m7-23). Análogo aprovado: a Iniciativa do mestre sem combate (ui-38) — a casca
 // `_casca-iniciativa` (cabeçalho `//` + título + régua, divisor de seção) e os cartões "Combates
 // anteriores" (`.historico__card` de `painel-mestre.page.scss`), cuja receita o `.cena-cartao`
-// repete. Sem coluna de ações: o hub só navega e conduz o ciclo das cenas. Só tokens (#29).
+// repete. Coluna de ações só para o mestre (ui-43): "Nova cena" e as Ferramentas, como a cena sem
+// iniciativa (m7-24); o jogador continua sem ela. Só tokens (#29).
 
 @use "tema/breakpoints" as bp;
 @use "../../../encontro/paginas/casca-iniciativa" as casca;
@@ -9,8 +10,9 @@
 @include casca.casca("hub-cenas");
 
 .hub-cenas {
-    &__conteudo {
-        // A casca reserva o piso da barra inferior da coluna de ações, que o hub não tem.
+    // A casca reserva o piso da barra inferior da coluna de ações; sem coluna (jogador, ou enquanto
+    // não se sabe quem olha), o piso sobra.
+    &--sem-coluna &__conteudo {
         @include bp.mobile {
             padding-bottom: 12px;
         }

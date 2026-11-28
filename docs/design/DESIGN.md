@@ -536,6 +536,14 @@ consumidores de `.utilitario-flutuante` (ficha, Iniciativa, campanha do jogador)
 futuras, mesmo padrão de rollout gradual de `ui-28`…`ui-32`. A visão do **mestre** da Iniciativa
 migrou na `ui-37` e a do **jogador** na `ui-39` (ambas abaixo) — as duas com a coluna de ações.
 
+Expandida ou retraída é **uma preferência só para o site inteiro** (`ui-43`,
+`contratados-rpg:coluna-acoes`): aberta na campanha, continua aberta na cena, no hub e na
+Biblioteca; o `[id]` de cada tela só serve para migrar a preferência antiga, que era por tela.
+O botão de expandir/retrair usa o par `barra-lateral-expandir`/`barra-lateral-recolher` (`ui-43`),
+nunca a seta `voltar`, que fica reservada ao Voltar do cabeçalho logo ao lado. Na coluna das cenas,
+"Encerrar cena" usa `parar` (quadrado cheio, nunca a lixeira `excluir`) e "Trocar tipo" usa
+`trocar` (nunca o ícone do tipo atual, que já está no título).
+
 `app-coluna-acoes-item` aceita `[pressionado]` (`boolean | null`, `ui-37`) para item de
 **alternância** (Editar combatentes, Selecionar combatentes, Adicionar avulso): vira `aria-pressed`
 e ganha o mesmo destaque `--ativo` do item de rota, sem o `aria-current="page"` que só cabe a rota.
@@ -586,7 +594,8 @@ jogador"). A tela é uma **casca** (`PainelCenaShell`, desde a `m7-23` o painel 
 `PainelEncontroMestre` ou `PainelEncontroJogador`, no molde de `detalhe-shell`; o layout comum das
 duas vive no parcial `paginas/_casca-iniciativa.scss` (mixin `casca`), incluído por cada página com o
 próprio bloco BEM (`iniciativa-mestre`/`iniciativa-jogador`) — e também pelo hub de cenas
-(`hub-cenas`), que não usa a coluna de ações, e pelos painéis de cena sem iniciativa
+(`hub-cenas`; desde a `ui-43` com a coluna de ações **só para o mestre**: "Nova cena", que saiu do
+cabeçalho, e as Ferramentas Calculadora, Caderno e Biblioteca), e pelos painéis de cena sem iniciativa
 (`cena-mestre`/`cena-jogador`, `m7-24`: a mesma composição **sem a trilha** — coluna de ações |
 Rolagens | palco com a grade de agentes do Esquadrão ou a própria ficha). Quem inclui o mixin herda os elementos dele
 (`__linha`, `__trilha`, `__palco`...): não reutilize esses nomes para outra coisa no próprio bloco.
@@ -713,8 +722,10 @@ leitor das regras na topbar) junta dois análogos aprovados: a **casca do hub de
 composição **lista | conteúdo do Caderno**. A `m9-05` (visão da mesa) reusa a mesma composição sem
 os controles do mestre.
 
-- **Casca:** o mixin `casca` de `_casca-iniciativa.scss` com o bloco `biblioteca`, sem coluna de
-  ações — cabeçalho com voltar, `//`, "Biblioteca", nome da campanha, régua e a ação principal
+- **Casca:** o mixin `casca` de `_casca-iniciativa.scss` com o bloco `biblioteca`. Só a visão do
+  **mestre** tem coluna de ações (`ui-43`): "Ferramentas" (Calculadora e Caderno), projetada em
+  `[bibliotecaColuna]` com `[comColuna]="true"`; mesa, espectador e prévias seguem sem coluna —
+  cabeçalho com voltar, `//`, "Biblioteca", nome da campanha, régua e a ação principal
   (`app-botao` `primario` `pequeno`, "Novo documento"); divisor de seção "Documentos" com a contagem.
 - **Lista** (360px no desktop): `ol` de **`.documento-cartao`**, a receita do `.cena-cartao` do hub
   (superfície, borda, raio de cartão, hover com `--accent-border`). O cartão leva o ícone do tipo

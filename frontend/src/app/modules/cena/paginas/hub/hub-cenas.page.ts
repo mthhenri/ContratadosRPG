@@ -1,5 +1,14 @@
 import { iconeTipoCena } from "../../../../shared/icone/icones-dominio";
-import { Component, DestroyRef, computed, effect, inject, signal, untracked } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  computed,
+  effect,
+  inject,
+  signal,
+  untracked,
+  viewChild,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NgTemplateOutlet } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -21,7 +30,15 @@ import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmaca
 import { Esqueleto } from '../../../../shared/ui/esqueleto/esqueleto.component';
 import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
 import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
+import { CalculadoraFlutuante } from '../../../../shared/calculadora-flutuante/calculadora-flutuante.component';
+import { ColunaAcoes } from '../../../../shared/ui/coluna-acoes/coluna-acoes.component';
+import { ColunaAcoesItem } from '../../../../shared/ui/coluna-acoes/coluna-acoes-item.component';
 import { CampanhaService } from '../../../campanha/campanha.service';
+import { BibliotecaFlutuante } from '../../../documento/componentes/biblioteca-flutuante/biblioteca-flutuante.component';
+import { resolverFichaParaAbrir } from '../../../encontro/encontro-leitura.util';
+import { FichaFlutuante } from '../../../ficha/componentes/ficha-flutuante/ficha-flutuante.component';
+import { FichaService } from '../../../ficha/ficha.service';
+import { CadernoFlutuante } from '../../../pagina-caderno/caderno-flutuante.component';
 import { CenaCriarDialog } from '../../componentes/cena-criar-dialog/cena-criar-dialog.component';
 import { CenaService } from '../../cena.service';
 import { rotuloTipoCena } from '../../rotulos-cena';
@@ -41,6 +58,10 @@ import { rotuloTipoCena } from '../../rotulos-cena';
  *
  * O papel sai dos membros + sessão e só decide o que aparece. Quem barra é o backend (§14).
  *
+ * **Coluna de ações (ui-43), só do mestre:** "Nova cena" e as Ferramentas (Calculadora, Caderno,
+ * Biblioteca) da cena, para o mestre não precisar voltar à campanha para abri-las. O jogador nunca
+ * fica nesta tela tempo suficiente para usá-la (entra na cena ou vê o vazio) e continua sem coluna.
+ *
  * **Tempo real:** qualquer `cena:alterada` da campanha (e a reconexão) refaz a listagem — é ela
  * que traz a ordem das planejadas, que o evento não carrega, e o recorte do jogador continua sendo
  * do backend. O evento é só o sinal: o jogador no vazio entra sozinho na cena que o mestre abrir.
@@ -58,6 +79,12 @@ import { rotuloTipoCena } from '../../rotulos-cena';
     Esqueleto,
     EstadoVazio,
     CenaCriarDialog,
+    ColunaAcoes,
+    ColunaAcoesItem,
+    CalculadoraFlutuante,
+    CadernoFlutuante,
+    BibliotecaFlutuante,
+    FichaFlutuante,
   ],
   templateUrl: './hub-cenas.page.html',
   styleUrl: './hub-cenas.page.scss',
@@ -74,8 +101,23 @@ export class HubCenas {
   private readonly roteador = inject(Router);
   private readonly rotaAtiva = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly fichaService = inject(FichaService);
 
   protected readonly campanhaId = Number(this.rotaAtiva.snapshot.paramMap.get('campanhaId'));
+
+  private readonly calculadoraRef = viewChild<CalculadoraFlutuante>('calculadora');
+  private readonly cadernoRef = viewChild<CadernoFlutuante>('caderno');
+  private readonly bibliotecaRef = viewChild<BibliotecaFlutuante>('biblioteca');
+  private readonly fichaFlutuanteRef = viewChild<FichaFlutuante>('fichaFlutuante');
+  /** Janela da calculadora aberta — marca o item "Calculadora" da coluna de ações. */
+  protected readonly calculadoraAberta = signal(false);
+  /** Caderno aberto (mesmo minimizado) — marca o item "Caderno" da coluna. */
+  protected readonly cadernoAberto = computed(() => this.cadernoRef()?.aberto() ?? false);
+  /** Biblioteca aberta (mesmo minimizada) — marca o item "Biblioteca" da coluna. */
+  protected readonly bibliotecaAberta = computed(() => this.bibliotecaRef()?.aberto() ?? false);
+  /** `id` de quem olha — o Caderno precisa dele para as páginas privadas. */
+  protected readonly usuarioAtivoId = computed(() => this.sessaoService.usuario()?.id ?? null);
+  protected readonly membrosDaCampanha = computed(() => this.membros() ?? []);
 
   private readonly cenas = signal<readonly CenaResumoDto[]>([]);
   private readonly carregandoCenas = signal(true);
@@ -187,6 +229,35 @@ export class HubCenas {
             }),
         );
       }
+    });
+  }
+
+  /** Mesmo racional da cena: só o `alternar()` do componente restaura a janela minimizada. */
+  protected alternarCalculadora(): void {
+    this.calculadoraRef()?.alternar();
+  }
+
+  protected alternarCaderno(): void {
+    this.cadernoRef()?.alternar();
+  }
+
+  protected alternarBiblioteca(): void {
+    this.bibliotecaRef()?.alternar();
+  }
+
+  /**
+   * Ficha citada no Caderno: o hub não guarda as fichas da campanha, então lista só quando o mestre
+   * pede para abrir uma e resolve o tipo como a cena faz (`resolverFichaParaAbrir`).
+   */
+  protected abrirFichaDoCaderno(fichaId: number): void {
+    this.fichaService.listarFichas(this.campanhaId).subscribe({
+      next: (fichas) => {
+        const tipo = fichas.find((ficha) => ficha.id === fichaId)?.tipo ?? null;
+        const alvo = resolverFichaParaAbrir(fichaId, tipo, fichas);
+        if (alvo) {
+          this.fichaFlutuanteRef()?.abrir(alvo);
+        }
+      },
     });
   }
 

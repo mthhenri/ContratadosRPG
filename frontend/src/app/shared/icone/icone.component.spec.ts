@@ -180,6 +180,22 @@ describe('Icone', () => {
     expect(new Set(formas).size).toBe(nomes.length);
   });
 
+  it('os glifos de navegação e condução (ui-43) são próprios e não reaproveitam vizinhos', () => {
+    const nomes: IconeNome[] = [
+      'barra-lateral-recolher',
+      'barra-lateral-expandir',
+      'parar',
+      'trocar',
+      'voltar',
+      'chevron-direita',
+      'excluir',
+      'cena-investigacao',
+    ];
+    const formas = nomes.map(assinatura);
+    expect(formas.every((forma) => forma !== '')).toBe(true);
+    expect(new Set(formas).size).toBe(nomes.length);
+  });
+
   it('`senha` tem glifo próprio, sem reaproveitar a medalha de `patente`', () => {
     expect(assinatura('senha')).not.toBe('');
     expect(assinatura('senha')).not.toBe(assinatura('patente'));

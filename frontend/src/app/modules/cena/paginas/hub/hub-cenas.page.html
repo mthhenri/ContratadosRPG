@@ -2,7 +2,52 @@
      andamento em destaque, as planejadas e o histórico (só o mestre). Cada cartão leva ao painel da
      cena; os controles de condução (abrir, reordenar, encerrar) ficam ao lado do cartão. O jogador
      nunca vê a lista: entra na cena atual ou vê o vazio (jogador-acesso-somente-cena-atual). -->
-<div class="hub-cenas">
+<div class="hub-cenas" [class.hub-cenas--sem-coluna]="carregando() || !ehMestre()">
+    <!-- ui-43: a coluna de ações da cena, só do mestre — "Nova cena" (antes no cabeçalho, como o
+         "Novo combate" da Iniciativa sem combate, ui-38) e as Ferramentas. -->
+    @if (!carregando() && ehMestre()) {
+    <app-coluna-acoes id="hub-cenas" rotulo="Ações das cenas">
+        <div class="coluna-acoes__categoria">Cena</div>
+        <button
+            app-coluna-acoes-item
+            icone="mais"
+            appTooltip="Planejar uma cena nova, ou abrir já para a mesa"
+            [disabled]="emOperacao()"
+            [pressionado]="criandoCena()"
+            (click)="abrirNovaCena()"
+        >
+            Nova cena
+        </button>
+        <div class="coluna-acoes__categoria">Ferramentas</div>
+        <button
+            app-coluna-acoes-item
+            icone="calculadora"
+            appTooltip="Calculadora"
+            [pressionado]="calculadoraAberta()"
+            (click)="alternarCalculadora()"
+        >
+            Calculadora
+        </button>
+        <button
+            app-coluna-acoes-item
+            icone="caderno"
+            appTooltip="Caderno"
+            [pressionado]="cadernoAberto()"
+            (click)="alternarCaderno()"
+        >
+            Caderno
+        </button>
+        <button
+            app-coluna-acoes-item
+            icone="biblioteca"
+            appTooltip="Biblioteca"
+            [pressionado]="bibliotecaAberta()"
+            (click)="alternarBiblioteca()"
+        >
+            Biblioteca
+        </button>
+    </app-coluna-acoes>
+    }
     <div class="hub-cenas__conteudo">
         <header class="hub-cenas__cabecalho">
             <a
@@ -20,20 +65,6 @@
             <span class="hub-cenas__campanha">{{ campanhaNome() }}</span>
             }
             <span class="hub-cenas__regua"></span>
-            @if (!carregando() && ehMestre()) {
-            <button
-                app-botao
-                variante="primario"
-                tamanho="pequeno"
-                class="hub-cenas__acao"
-                type="button"
-                [disabled]="emOperacao()"
-                (click)="abrirNovaCena()"
-            >
-                <app-icone nome="mais" />
-                Nova cena
-            </button>
-            }
         </header>
 
         @if (carregando() || resolvendoCenaAtual()) {
@@ -194,4 +225,30 @@
     (criada)="aoCriarCena($event)"
     (fechou)="fecharNovaCena()"
 />
+}
+
+<!-- Ferramentas da coluna (ui-43), sem gatilho próprio, como na cena: a coluna abre cada janela pelo
+     `alternar()` dela; a Biblioteca só inicia a store na primeira abertura. -->
+@if (!carregando() && ehMestre()) {
+<app-calculadora-flutuante #calculadora [(aberta)]="calculadoraAberta" [mostrarGatilho]="false" />
+@if (usuarioAtivoId(); as usuarioId) {
+<app-caderno-flutuante
+    #caderno
+    [mostrarGatilho]="false"
+    [campanhaId]="campanhaId"
+    [campanhaNome]="campanhaNome()"
+    [usuarioAtivoId]="usuarioId"
+    [ehMestre]="true"
+    [membros]="membrosDaCampanha()"
+    [temInventario]="false"
+    (abrirFicha)="abrirFichaDoCaderno($event)"
+/>
+}
+<app-biblioteca-flutuante
+    #biblioteca
+    [campanhaId]="campanhaId"
+    [campanhaNome]="campanhaNome()"
+    [ehMestre]="true"
+/>
+<app-ficha-flutuante #fichaFlutuante [ehMestre]="true" />
 }

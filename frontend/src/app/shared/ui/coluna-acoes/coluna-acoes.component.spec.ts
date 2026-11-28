@@ -2,8 +2,9 @@ import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 
-import { ColunaAcoes } from './coluna-acoes.component';
+import { ColunaAcoes, reiniciarColunaAcoesParaTeste } from './coluna-acoes.component';
 import { ColunaAcoesItem } from './coluna-acoes-item.component';
+import { Icone } from '../../icone/icone.component';
 
 @Component({
   imports: [ColunaAcoes, ColunaAcoesItem],
@@ -18,6 +19,17 @@ import { ColunaAcoesItem } from './coluna-acoes-item.component';
 })
 class HospedeiroTeste {}
 
+/** Uma segunda tela, com outro `[id]` — a barra precisa acompanhar a primeira (ui-43). */
+@Component({
+  imports: [ColunaAcoes, ColunaAcoesItem],
+  template: `
+    <app-coluna-acoes id="outra-tela" rotulo="Ações da cena">
+      <button app-coluna-acoes-item icone="caderno">Caderno</button>
+    </app-coluna-acoes>
+  `,
+})
+class OutraTelaTeste {}
+
 /**
  * Prova `app-coluna-acoes`/`app-coluna-acoes-item`
  * (`campanha-detalhe-mestre-coluna-acoes.spec.md`, entregável 2): retração padrão, persistência
@@ -28,14 +40,19 @@ describe('ColunaAcoes', () => {
 
   beforeEach(() => {
     localStorage.clear();
-    TestBed.configureTestingModule({ imports: [HospedeiroTeste] });
+    reiniciarColunaAcoesParaTeste();
+    TestBed.configureTestingModule({ imports: [HospedeiroTeste, OutraTelaTeste] });
     fixture = TestBed.createComponent(HospedeiroTeste);
     fixture.detectChanges();
   });
 
+  const expandida = (alvo: ComponentFixture<unknown>): boolean =>
+    alvo.debugElement
+      .query(By.directive(ColunaAcoes))
+      .nativeElement.classList.contains('coluna-acoes--expandida');
+
   it('nasce retraída por padrão (sem estado persistido)', () => {
-    const host = fixture.debugElement.query(By.directive(ColunaAcoes));
-    expect(host.nativeElement.classList.contains('coluna-acoes--expandida')).toBe(false);
+    expect(expandida(fixture)).toBe(false);
   });
 
   it('expande ao clicar no botão de alternar e persiste em localStorage', () => {
@@ -45,18 +62,56 @@ describe('ColunaAcoes', () => {
     botaoAlternar.click();
     fixture.detectChanges();
 
-    const host = fixture.debugElement.query(By.directive(ColunaAcoes));
-    expect(host.nativeElement.classList.contains('coluna-acoes--expandida')).toBe(true);
-    expect(localStorage.getItem('contratados-rpg:coluna-acoes:teste-coluna')).toBe('true');
+    expect(expandida(fixture)).toBe(true);
+    expect(localStorage.getItem('contratados-rpg:coluna-acoes')).toBe('true');
+  });
+
+  it('é a mesma barra em todas as telas: abrir numa abre na outra, já viva ou nova (ui-43)', () => {
+    const outraTelaViva = TestBed.createComponent(OutraTelaTeste);
+    outraTelaViva.detectChanges();
+
+    (fixture.debugElement.query(By.css('.coluna-acoes__alternar')).nativeElement as HTMLButtonElement).click();
+    fixture.detectChanges();
+    outraTelaViva.detectChanges();
+    expect(expandida(outraTelaViva)).toBe(true);
+
+    // Recarregar a página: o módulo esquece, o armazenamento lembra — para qualquer `[id]`.
+    reiniciarColunaAcoesParaTeste();
+    const outraTelaNova = TestBed.createComponent(OutraTelaTeste);
+    outraTelaNova.detectChanges();
+    expect(expandida(outraTelaNova)).toBe(true);
+  });
+
+  it('sem a preferência nova, migra a antiga da tela que abre primeiro (ui-43)', () => {
+    localStorage.clear();
+    localStorage.setItem('contratados-rpg:coluna-acoes:outra-tela', 'true');
+    reiniciarColunaAcoesParaTeste();
+
+    const outraTela = TestBed.createComponent(OutraTelaTeste);
+    outraTela.detectChanges();
+    expect(expandida(outraTela)).toBe(true);
+  });
+
+  it('o botão de alternar usa o ícone de barra lateral, nunca a seta de Voltar (ui-43)', () => {
+    const iconeDoBotao = (): string =>
+      (
+        fixture.debugElement.query(By.css('.coluna-acoes__alternar app-icone'))
+          .componentInstance as Icone
+      ).nome();
+
+    expect(iconeDoBotao()).toBe('barra-lateral-expandir');
+    (fixture.debugElement.query(By.css('.coluna-acoes__alternar')).nativeElement as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(iconeDoBotao()).toBe('barra-lateral-recolher');
   });
 
   it('restaura o estado expandido persistido ao recriar', () => {
-    localStorage.setItem('contratados-rpg:coluna-acoes:teste-coluna', 'true');
+    localStorage.setItem('contratados-rpg:coluna-acoes', 'true');
+    reiniciarColunaAcoesParaTeste();
     const outraFixture = TestBed.createComponent(HospedeiroTeste);
     outraFixture.detectChanges();
 
-    const host = outraFixture.debugElement.query(By.directive(ColunaAcoes));
-    expect(host.nativeElement.classList.contains('coluna-acoes--expandida')).toBe(true);
+    expect(expandida(outraFixture)).toBe(true);
   });
 
   it('reflete [ativo] e [contagem] nos itens', () => {

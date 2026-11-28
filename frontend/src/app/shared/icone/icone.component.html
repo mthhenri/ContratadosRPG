@@ -1016,6 +1016,35 @@ c0 -18 -10 -8 -25 24 l-16 32 21 -24 c11 -13 20 -27 20 -32z m38 -74 c-3 -3
             />
             <path d="M15 9h.01" />
         }
+        @case ("barra-lateral-recolher") {
+            <!-- Painel lateral com seta para dentro — "layout-sidebar-left-collapse" da Tabler Icons
+           (MIT). Recolher a coluna de ações (ui-43); a seta `voltar` fica só para Voltar. -->
+            <path d="M4 6a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z" />
+            <path d="M9 4v16" />
+            <path d="M15 10l-2 2l2 2" />
+        }
+        @case ("barra-lateral-expandir") {
+            <!-- Painel lateral com seta para fora — "layout-sidebar-left-expand" da Tabler Icons
+           (MIT). Expandir a coluna de ações (ui-43). -->
+            <path d="M4 6a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z" />
+            <path d="M9 4v16" />
+            <path d="M14 10l2 2l-2 2" />
+        }
+        @case ("parar") {
+            <!-- Quadrado de parar cheio — "player-stop-filled" da Tabler Icons (MIT). "Encerrar
+           cena" (ui-43): encerrar não apaga nada, então não usa a lixeira de `excluir`. Cheio
+           porque o quadrado vazado se lia como caixa de seleção na coluna. -->
+            <path
+                fill="currentColor"
+                d="M6 8a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-8a2 2 0 0 1 -2 -2z"
+            />
+        }
+        @case ("trocar") {
+            <!-- Duas setas opostas — "arrows-exchange" da Tabler Icons (MIT). "Trocar tipo" da cena
+           (ui-43): antes usava o ícone do tipo atual e parecia um selo. -->
+            <path d="M7 10h14l-4 -4" />
+            <path d="M17 14h-14l4 4" />
+        }
         @case ("d20") {
             <!-- d20 (icosaedro) preenchido — recorte de `shared/src/icons/d20.svg` (glifo de terceiros,
            fill sólido em `currentColor`; svg aninhado remapeia o viewBox original 512×512 para os
