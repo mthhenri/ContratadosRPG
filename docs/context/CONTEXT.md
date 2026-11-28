@@ -9,7 +9,7 @@
 > **Próximo, em conversa com o autor:** o redesenho da *visão* da tela de campanha do mestre: mostrar
 > a cena aberta, as planejadas, a Biblioteca e o Caderno de relance (mockups antes de spec). Depois
 > vêm as cenas e a Biblioteca, e o quadro de investigação (`quadro-investigacao-campanha`, ainda com
-> as decisões do autor a registrar em `pendencias.md`). `P-141` e `P-142` registram o que ficou fora.
+> as decisões do autor a registrar em `pendencias.md`). `P-142` registra o que ficou fora (o `P-141` já foi corrigido).
 
 > **Organização documental:** tarefas, planos, propostas e relatórios agora ficam
 > juntos em `docs/specs/<estado>/`, conforme [política §3.1](../SYSTEM.SPEC.md#31-documentação-de-tarefa-e-artefatos-de-execução)

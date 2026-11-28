@@ -40,16 +40,6 @@
   texto de cada um. Entra no redesenho das cenas.
 - **Desde:** observado na análise das telas do mestre (2026-11-28), registrado na `ui-43`.
 
-### P-141 — "Encerrar combate" usa a lixeira de Excluir · `ABERTO` · frontend/encontro
-
-- **Sintoma:** na coluna da Iniciativa do mestre, "Encerrar combate" tem o ícone `excluir` (lixeira), o mesmo de
-  "Excluir campanha", embora só encerre e não apague nada.
-- **Causa:** mesma escolha que a `ui-43` corrigiu em "Encerrar cena"; o item do combate ficou fora do pedido.
-- **Contorno:** o rótulo e o tooltip dizem "Encerrar".
-- **Correção:** trocar para `parar` em `painel-mestre.page.html`, como "Encerrar cena" — aguarda o OK do autor
-  (consumidor não nomeado no pedido, regra de `gerenciamento-de-impacto`).
-- **Desde:** encontrado no mapa de impacto da `ui-43` (2026-11-28).
-
 ### P-139 — Gaveta e janela das Regras cobrem os avisos no celular · `ABERTO` · frontend/regras
 
 - **Sintoma:** com a gaveta do sumário aberta (tela estreita), um aviso disparado ali fica atrás dela e quase

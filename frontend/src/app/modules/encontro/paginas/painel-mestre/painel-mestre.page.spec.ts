@@ -17,6 +17,7 @@ import {
 } from '@contratados-rpg/shared/enums';
 
 import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
+import { ColunaAcoesItem } from '../../../../shared/ui/coluna-acoes/coluna-acoes-item.component';
 import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
 import {
   CAMPANHA_ID,
@@ -594,6 +595,21 @@ describe('PainelEncontroMestre', () => {
 
       expect(botaoDaConducao(elemento, 'Encerrar')).toBeDefined();
       expect(itemDaColuna(elemento, 'Encerrar combate')).toBeDefined();
+    });
+
+    it('"Encerrar combate" usa o parar e "Trocar tipo" usa o trocar, nunca a lixeira (ui-43, P-141)', () => {
+      const { fixture } = montar(encontroAtivo);
+      const iconePorRotulo = new Map(
+        fixture.debugElement
+          .queryAll(By.directive(ColunaAcoesItem))
+          .map((item) => [
+            texto(item.nativeElement as HTMLElement),
+            (item.componentInstance as ColunaAcoesItem).icone(),
+          ]),
+      );
+
+      expect(iconePorRotulo.get('Encerrar combate')).toBe('parar');
+      expect(iconePorRotulo.get('Trocar tipo')).toBe('trocar');
     });
 
     it('avança e volta o turno pelos botões da barra', () => {

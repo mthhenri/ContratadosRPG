@@ -128,7 +128,7 @@
         @if (dados.emCombate()) {
         <button
             app-coluna-acoes-item
-            icone="excluir"
+            icone="parar"
             appTooltip="Encerrar o combate — depois disso ele fica só de leitura"
             [disabled]="dados.emOperacao()"
             (click)="encerrarCombate()"

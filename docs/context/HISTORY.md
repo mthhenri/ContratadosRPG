@@ -1,5 +1,12 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-11-28 — P-141: "Encerrar combate" deixa a lixeira
+
+Com o OK do autor, "Encerrar combate", na coluna da Iniciativa do mestre (`painel-mestre.page.html`), passou a
+usar o quadrado `parar`, como "Encerrar cena" na `ui-43`. A lixeira fica só para o que apaga. O teste da página
+fixa os dois ícones da coluna (`parar` e `trocar`); a página tem 58 testes passando. Verificado ao vivo com um
+combate de teste iniciado na "Campanha do Codex", que depois foi encerrado.
+
 ## 2026-11-28 — ui-43: defeitos de navegação e layout nas telas do mestre
 
 O autor pediu uma avaliação da tela de campanha do mestre ("não estou vendo o que preciso ver"; as duas setas o
@@ -45,7 +52,7 @@ campanha, hub, Investigação e Biblioteca: mestre em 1920 e 360, campanha tamb�
 aberta e fechada, e jogador e espectador em 1920, 1366 e 360. Sem overflow horizontal. Capturas em
 `.artifacts/ui-43-mestre-defeitos-navegacao/`.
 
-Ficaram fora, registrados: `P-141` ("Encerrar combate" ainda usa a lixeira; aguarda o OK do autor por ser um
+Ficaram fora, registrados: `P-141` ("Encerrar combate" ainda usa a lixeira; corrigido logo depois, bloco acima, com o OK do autor por ser um
 consumidor não nomeado no pedido) e `P-142` (cenas com iniciativa que não são Combate se chamam "Iniciativa").
 
 ## 2026-11-26 — v1.13.1: troca de tipo de cena
