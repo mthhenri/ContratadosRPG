@@ -5,11 +5,14 @@
 > com o ícone de barra lateral (não mais a seta de Voltar).
 > "Encerrar cena" usa `parar` e "Trocar tipo" usa `trocar`. O hub de Cenas (mestre) e a Biblioteca
 > do mestre ganharam a coluna com as Ferramentas. Os cartões do Esquadrão não quebram mais com a
-> coluna aberta nem em 1366.
+> coluna aberta nem em 1366. [`ui-44`](../specs/done/ui-44-mestre-defeitos-pequenos.spec.md) fechou os
+> defeitos pequenos: cenas com iniciativa falam do próprio tipo ("Iniciar perseguição"), o palco da
+> Investigação mostra o título do documento em foco, a contagem das abas tem rótulo e as abas
+> compactas do celular têm nome acessível (`P-129`, `P-142` e `P-141` corrigidos).
 > **Próximo, em conversa com o autor:** o redesenho da *visão* da tela de campanha do mestre: mostrar
 > a cena aberta, as planejadas, a Biblioteca e o Caderno de relance (mockups antes de spec). Depois
 > vêm as cenas e a Biblioteca, e o quadro de investigação (`quadro-investigacao-campanha`, ainda com
-> as decisões do autor a registrar em `pendencias.md`). `P-142` registra o que ficou fora (o `P-141` já foi corrigido).
+> as decisões do autor a registrar em `pendencias.md`).
 
 > **Organização documental:** tarefas, planos, propostas e relatórios agora ficam
 > juntos em `docs/specs/<estado>/`, conforme [política §3.1](../SYSTEM.SPEC.md#31-documentação-de-tarefa-e-artefatos-de-execução)

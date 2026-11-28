@@ -71,9 +71,11 @@
             @case ("esquadrao") {
                 <header class="fichas-abas__secao">
                     <span class="fichas-abas__secao-regua"></span>
-                    <span class="fichas-abas__secao-contagem" aria-hidden="true">{{
-                        fichasEsquadrao().length
-                    }}</span>
+                    <!-- ui-44: a contagem diz o que conta (antes era só o número). -->
+                    <span class="fichas-abas__secao-contagem"
+                        >{{ fichasEsquadrao().length }}
+                        {{ fichasEsquadrao().length === 1 ? "agente" : "agentes" }}</span
+                    >
                     <button
                         app-botao
                         type="button"
@@ -124,9 +126,11 @@
             @case ("criaturas") {
                 <header class="fichas-abas__secao">
                     <span class="fichas-abas__secao-regua"></span>
-                    <span class="fichas-abas__secao-contagem" aria-hidden="true">{{
-                        criaturas().length
-                    }}</span>
+                    <!-- ui-44: a contagem diz o que conta (antes era só o número). -->
+                    <span class="fichas-abas__secao-contagem"
+                        >{{ criaturas().length }}
+                        {{ criaturas().length === 1 ? "criatura" : "criaturas" }}</span
+                    >
                     <a
                         app-botao
                         variante="primario"
@@ -171,9 +175,10 @@
             @case ("npcs") {
                 <header class="fichas-abas__secao">
                     <span class="fichas-abas__secao-regua"></span>
-                    <span class="fichas-abas__secao-contagem" aria-hidden="true">{{
-                        npcs().length
-                    }}</span>
+                    <!-- ui-44: a contagem diz o que conta (antes era só o número). -->
+                    <span class="fichas-abas__secao-contagem"
+                        >{{ npcs().length }} {{ npcs().length === 1 ? "NPC" : "NPCs" }}</span
+                    >
                     <a
                         app-botao
                         variante="primario"

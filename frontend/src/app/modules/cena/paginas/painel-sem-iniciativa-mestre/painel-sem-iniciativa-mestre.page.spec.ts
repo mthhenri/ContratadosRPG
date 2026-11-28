@@ -338,6 +338,29 @@ describe('PainelCenaSemIniciativaMestre', () => {
       expect(cenaService.focarDocumento).toHaveBeenCalledWith(CENA_ID, 40);
     });
 
+    it('o palco mostra o título do documento em foco acima do texto (ui-44)', async () => {
+      const montado = montarInvestigacao();
+      const { fixture } = montado;
+      comDocumentos(montado, [
+        {
+          documentoId: 40,
+          titulo: 'Relatório do informante',
+          tipo: TipoDocumentoEnum.TEXTO,
+          revelado: true,
+          ordem: 1,
+          emFoco: true,
+        },
+      ]);
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      const foco = (fixture.nativeElement as HTMLElement).querySelector('.cena-mestre__foco');
+      expect(texto(foco?.querySelector('.cena-mestre__secao-titulo'))).toBe(
+        'Relatório do informante',
+      );
+      expect(foco?.querySelector('app-leitor-documento')).not.toBeNull();
+    });
+
     it('"Apresentar à mesa" revela o documento em foco', () => {
       const montado = montarInvestigacao();
       const { fixture, cenaService } = montado;

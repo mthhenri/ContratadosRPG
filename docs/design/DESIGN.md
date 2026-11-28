@@ -573,7 +573,10 @@ a seção "Combates anteriores" (cartões) logo abaixo do estado vazio.
   cabeçalho, item e resultado compacto do painel lateral, como coluna da página (sem gatilho, sem
   fundo, sem fechar); a lista rola por dentro do container posicionado que a hospeda.
 - **Palco:** `app-conducao-turno` (voltar · quem age · avançar primário · Encerrar `perigo`; em
-  montagem, Pedir/Rolar iniciativas e Iniciar combate; encerrado, só o estado) sobre
+  montagem, Pedir/Rolar iniciativas e Iniciar combate; encerrado, só o estado). Desde a `ui-44`
+  o texto segue o tipo da cena (`vocabularioEncontroCena`): Furtiva → "infiltração", Perseguição →
+  "perseguição", Resistência → "resistência" — o título vira `<Tipo> · <nome>`, a categoria da
+  coluna leva o rótulo do tipo e a condução diz "Iniciar perseguição". A barra fica sobre
   `app-resumo-combatente` (280px: foto **quadrada** na largura da coluna, Vida/Energia, Reações em
   2 colunas e Resistências em **3 + 2**, caixas `.ficha-mini`/`.ficha-resistencia` da ficha de
   campanha) ao lado da grade `.grade--compacta.grade--palco` (`repeat(auto-fill, minmax(260px,

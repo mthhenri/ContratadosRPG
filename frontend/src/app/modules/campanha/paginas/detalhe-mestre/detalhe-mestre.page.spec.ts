@@ -475,20 +475,20 @@ describe('CampanhaDetalheMestre', () => {
       expect(raiz.textContent).not.toContain('Criaturas e NPCs');
     });
 
-    it('cada aba tem o mesmo cabeçalho de seção, com contagem e o botão de criar da aba', () => {
+    it('cada aba tem o mesmo cabeçalho de seção, com a contagem rotulada (ui-44) e o botão de criar da aba', () => {
       const { raiz, fixture } = montar();
       const cabecalho = () => ({
         contagem: raiz.querySelector('.fichas-abas__secao-contagem')?.textContent?.trim(),
         botao: raiz.querySelector('.fichas-abas__secao [app-botao]')?.textContent?.trim(),
       });
-      expect(cabecalho()).toEqual({ contagem: '1', botao: 'Novo Agente' });
+      expect(cabecalho()).toEqual({ contagem: '1 agente', botao: 'Novo Agente' });
       abrirAba(raiz, fixture, 'Criaturas');
-      expect(cabecalho()).toEqual({ contagem: '2', botao: 'Nova criatura' });
+      expect(cabecalho()).toEqual({ contagem: '2 criaturas', botao: 'Nova criatura' });
       expect(raiz.querySelector('.fichas-abas__secao a')?.getAttribute('href')).toBe(
         `/campanhas/${CAMPANHA_ID}/criatura/nova`,
       );
       abrirAba(raiz, fixture, 'NPCs');
-      expect(cabecalho()).toEqual({ contagem: '2', botao: 'Novo NPC' });
+      expect(cabecalho()).toEqual({ contagem: '2 NPCs', botao: 'Novo NPC' });
       expect(raiz.querySelector('.fichas-abas__secao a')?.getAttribute('href')).toBe(
         `/campanhas/${CAMPANHA_ID}/npc/novo`,
       );
@@ -561,7 +561,7 @@ describe('CampanhaDetalheMestre', () => {
       expect(raiz.querySelector('.fichas-abas__estado')?.textContent).toContain(
         'Nenhuma criatura nesta campanha.',
       );
-      expect(raiz.querySelector('.fichas-abas__secao-contagem')?.textContent?.trim()).toBe('0');
+      expect(raiz.querySelector('.fichas-abas__secao-contagem')?.textContent?.trim()).toBe('0 criaturas');
       expect(raiz.querySelector('.fichas-abas__secao a')).not.toBeNull();
       abrirAba(raiz, fixture, 'NPCs');
       expect(raiz.querySelector('.fichas-abas__estado')?.textContent).toContain('Nenhum NPC nesta campanha.');

@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 
-import { EncontroStatusEnum } from '@contratados-rpg/shared/enums';
+import { CenaTipoEnum, EncontroStatusEnum } from '@contratados-rpg/shared/enums';
 
 import { ConducaoTurno } from './conducao-turno.component';
 
@@ -83,6 +83,30 @@ describe('ConducaoTurno', () => {
 
   describe('em montagem', () => {
     const emMontagem = { status: EncontroStatusEnum.MONTAGEM };
+
+    it('fala do que a cena conduz, concordando o gênero (ui-44, P-142)', () => {
+      const casos: ReadonlyArray<readonly [CenaTipoEnum | null, string, string]> = [
+        [null, 'Iniciar combate', 'Combate ainda não iniciado'],
+        [CenaTipoEnum.COMBATE, 'Iniciar combate', 'Combate ainda não iniciado'],
+        [CenaTipoEnum.FURTIVA, 'Iniciar infiltração', 'Infiltração ainda não iniciada'],
+        [CenaTipoEnum.PERSEGUICAO, 'Iniciar perseguição', 'Perseguição ainda não iniciada'],
+        [CenaTipoEnum.RESISTENCIA, 'Iniciar resistência', 'Resistência ainda não iniciada'],
+      ];
+      for (const [tipoCena, iniciar, aguardando] of casos) {
+        TestBed.resetTestingModule();
+        const { raiz, botao } = montar({ ...emMontagem, temCombatentes: true, tipoCena });
+        expect(botao(iniciar)).toBeDefined();
+        expect(texto(raiz)).toContain(aguardando);
+      }
+    });
+
+    it('encerrada, diz o que foi encerrado no gênero do tipo (ui-44)', () => {
+      const { raiz } = montar({
+        status: EncontroStatusEnum.ENCERRADO,
+        tipoCena: CenaTipoEnum.PERSEGUICAO,
+      });
+      expect(texto(raiz)).toContain('Perseguição encerrada — só leitura');
+    });
 
     it('não acende a moldura e mostra o estado de espera', () => {
       const { raiz, botao } = montar({ ...emMontagem, temCombatentes: true });

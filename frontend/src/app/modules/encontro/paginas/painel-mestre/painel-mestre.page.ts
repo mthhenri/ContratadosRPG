@@ -41,6 +41,7 @@ import { BibliotecaFlutuante } from '../../../documento/componentes/biblioteca-f
 import { FichaFlutuante } from '../../../ficha/componentes/ficha-flutuante/ficha-flutuante.component';
 import { nomeCadencia } from '../../../ficha/rotulos-criatura';
 import { CenaService } from '../../../cena/cena.service';
+import { rotuloTipoCena, vocabularioEncontroCena } from '../../../cena/rotulos-cena';
 import { RolagemMestre } from '../../../cena/componentes/rolagem-mestre/rolagem-mestre.component';
 import { CenaTrocarTipoDialog } from '../../../cena/componentes/cena-trocar-tipo-dialog/cena-trocar-tipo-dialog.component';
 import { CartaoCombatente } from '../../componentes/cartao-combatente/cartao-combatente.component';
@@ -137,6 +138,20 @@ const ATRIBUTOS_NEUTROS: FichaAtributosDto = {
 })
 export class PainelEncontroMestre {
   protected readonly iconeTipoCena = iconeTipoCena;
+  /**
+   * `P-142`: a tela fala do que a cena conduz — título "Perseguição · nome", categoria
+   * "Perseguição", "Encerrar perseguição". Sem cena carregada, cai no Combate.
+   */
+  protected readonly rotuloTipo = computed(() => {
+    const tipo = this.dados.cena()?.tipo;
+    return tipo ? rotuloTipoCena(tipo) : 'Combate';
+  });
+  protected readonly substantivoEncontro = computed(
+    () => vocabularioEncontroCena(this.dados.cena()?.tipo).substantivo,
+  );
+  protected readonly artigoEncontro = computed(() =>
+    vocabularioEncontroCena(this.dados.cena()?.tipo).feminino ? 'a' : 'o',
+  );
   protected readonly tiposImagemAceitos = IMAGEM_MIMES_ACCEPT;
   protected readonly dados = inject(EncontroPainelDadosService);
   protected readonly janelaHistorico = inject(HistoricoRolagensJanelaService);

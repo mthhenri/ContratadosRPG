@@ -10,6 +10,7 @@ import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 import {
   CadenciaEnum,
   CenaStatusEnum,
+  CenaTipoEnum,
   CombatenteOrigemEnum,
   EncontroStatusEnum,
   RolagemVisibilidadeEnum,
@@ -612,6 +613,23 @@ describe('PainelEncontroMestre', () => {
       expect(iconePorRotulo.get('Trocar tipo')).toBe('trocar');
     });
 
+    it('numa Perseguição, título, coluna e condução falam de perseguição (ui-44, P-142)', () => {
+      const elemento = montarPainel(PainelEncontroMestre, {
+        estado: encontroAtivo,
+        cenaTipo: CenaTipoEnum.PERSEGUICAO,
+      }).fixture.nativeElement as HTMLElement;
+
+      expect(texto(elemento.querySelector('.iniciativa-mestre__titulo'))).toBe(
+        'Perseguição · Contenção no Setor 12',
+      );
+      expect(itemDaColuna(elemento, 'Encerrar perseguição')).toBeDefined();
+      expect(itemDaColuna(elemento, 'Encerrar combate')).toBeUndefined();
+      const categorias = Array.from(
+        elemento.querySelectorAll('app-coluna-acoes .coluna-acoes__categoria'),
+      ).map((categoria) => texto(categoria));
+      expect(categorias[0]).toBe('Perseguição');
+    });
+
     it('avança e volta o turno pelos botões da barra', () => {
       const { fixture, encontroService } = montar(encontroAtivo);
       const elemento = fixture.nativeElement as HTMLElement;
@@ -846,7 +864,7 @@ describe('PainelEncontroMestre', () => {
       const elemento = montar().fixture.nativeElement as HTMLElement;
 
       expect(texto(elemento.querySelector('.iniciativa-mestre__titulo'))).toBe(
-        'Iniciativa · Contenção no Setor 12',
+        'Combate · Contenção no Setor 12',
       );
       expect(texto(elemento.querySelector('.iniciativa-mestre__campanha'))).toBe(
         'Campanha de Teste',

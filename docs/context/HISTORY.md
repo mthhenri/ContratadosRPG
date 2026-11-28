@@ -1,5 +1,32 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-11-28 — ui-44: defeitos pequenos das telas do mestre (P-142, P-129)
+
+Depois da `ui-43`, o autor pediu para fechar os defeitos pequenos antes dos mockups. Ele escolheu o vocabulário
+das cenas com iniciativa: o nome de cada tipo.
+
+- **`P-142`:** `vocabularioEncontroCena` (`cena/rotulos-cena.ts`, função pura de apresentação) dá o substantivo
+  e o gênero de cada tipo: Combate → "combate", Furtiva → "infiltração", Perseguição → "perseguição",
+  Resistência → "resistência".
+  - O título da tela com iniciativa virou `<Tipo> · <nome>`; antes era "Iniciativa · <nome>".
+  - A categoria da coluna leva o rótulo do tipo, e "Encerrar combate" virou "Encerrar <substantivo>".
+  - `app-conducao-turno` ganhou o input `tipoCena` e concorda "Iniciar …", "… ainda não iniciada" e
+    "… encerrada — só leitura".
+  - O histórico de encontros e o estado vazio continuam falando de combate.
+- **Palco da Investigação:** o documento em foco ganhou o título, no cabeçalho de seção da própria tela, o
+  mesmo de "Agentes".
+- **Contagem:** o número ao lado de "Novo agente" e equivalentes virou "4 agentes", "2 criaturas", "1 NPC".
+- **`P-129`:** no primitivo `app-aba`, o rótulo das abas compactas do celular saiu do `display: none` e passou
+  a ser escondido só visualmente (recorte de 1px). Não muda nada na tela, mas a aba volta a ter nome para
+  leitor de tela. Verificado nas abas da campanha (Criaturas) e da ficha de NPC (Habilidades), por papel `tab`
+  e nome, em 360×800.
+
+Testes: 3.798 do frontend passando, com `NODE_OPTIONS=--no-experimental-webstorage`. Há testes novos do
+vocabulário na condução (os quatro tipos e o encerrado), da Iniciativa em Perseguição, do título no palco e
+da contagem. Lint sem erros; build com o budget conhecido (604 kB). Verificação ao vivo em 1920 e 360:
+Investigação com documento em foco, campanha, e a cena de teste em Perseguição com um avulso em montagem
+(depois devolvida a Investigação). Capturas em `.artifacts/ui-44-mestre-defeitos-pequenos/`.
+
 ## 2026-11-28 — P-141: "Encerrar combate" deixa a lixeira
 
 Com o OK do autor, "Encerrar combate", na coluna da Iniciativa do mestre (`painel-mestre.page.html`), passou a

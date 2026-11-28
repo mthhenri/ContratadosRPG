@@ -82,7 +82,7 @@
             Nova cena
         </button>
         } @else if (dados.mutavel()) {
-        <div class="coluna-acoes__categoria">Combate</div>
+        <div class="coluna-acoes__categoria">{{ rotuloTipo() }}</div>
         @if (dados.cenaPlanejada()) {
         <!-- Cena planejada (m7-23): a montagem segue livre, mas a mesa só entra depois de aberta. -->
         <button
@@ -129,11 +129,14 @@
         <button
             app-coluna-acoes-item
             icone="parar"
-            appTooltip="Encerrar o combate — depois disso ele fica só de leitura"
+            [appTooltip]="
+                'Encerrar ' + artigoEncontro() + ' ' + substantivoEncontro() +
+                ' — depois disso fica só de leitura'
+            "
             [disabled]="dados.emOperacao()"
             (click)="encerrarCombate()"
         >
-            Encerrar combate
+            Encerrar {{ substantivoEncontro() }}
         </button>
         } } @if (dados.encontro() && dados.mutavel() && dados.cena(); as cena) {
         <!-- Troca de tipo (cena-trocar-tipo): da cena, não do combate — categoria própria, como no
@@ -142,7 +145,11 @@
         <button
             app-coluna-acoes-item
             icone="trocar"
-            appTooltip="Trocar o tipo desta cena — o combate atual é encerrado e vai para o histórico"
+            [appTooltip]="
+                'Trocar o tipo desta cena — ' + artigoEncontro() + ' ' + substantivoEncontro() +
+                ' atual é ' + (artigoEncontro() === 'a' ? 'encerrada' : 'encerrado') +
+                ' e vai para o histórico'
+            "
             [disabled]="dados.emOperacao()"
             (click)="trocandoTipo.set(true)"
         >
@@ -193,7 +200,8 @@
             <span class="iniciativa-mestre__indice">//</span>
             <h1 class="iniciativa-mestre__titulo">
                 <app-icone class="icone--texto" [nome]="iconeTipoCena(dados.cena()?.tipo)" />
-                {{ dados.encontro() ? 'Iniciativa · ' + dados.encontro()!.nome : 'Iniciativa' }}
+                {{ dados.encontro() ? rotuloTipo() + ' · ' + dados.encontro()!.nome : 'Iniciativa'
+                }}
             </h1>
             @if (dados.campanhaNome()) {
             <span class="iniciativa-mestre__campanha">{{ dados.campanhaNome() }}</span>
@@ -280,6 +288,7 @@
                     [emOperacao]="dados.emOperacao()"
                     [temCombatentes]="dados.combatentes().length > 0"
                     [faltamIniciativas]="dados.faltamIniciativas()"
+                    [tipoCena]="dados.cena()?.tipo ?? null"
                     (voltar)="voltarTurno()"
                     (avancar)="dados.avancarTurno()"
                     (encerrar)="encerrarCombate()"

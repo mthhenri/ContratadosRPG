@@ -43,7 +43,7 @@
         class="conducao__acao conducao__encerrar"
         type="button"
         [disabled]="emOperacao()"
-        [appTooltip]="'Encerrar o combate — depois disso ele fica só de leitura'"
+        [appTooltip]="frases().encerrarDica"
         (click)="encerrar.emit()"
     >
         Encerrar
@@ -51,7 +51,7 @@
 } @else if (emMontagem()) {
     <div class="conducao__centro">
         <span class="conducao__rotulo">Aguardando</span>
-        <span class="conducao__nome conducao__nome--vazio">Combate ainda não iniciado</span>
+        <span class="conducao__nome conducao__nome--vazio">{{ frases().aguardando }}</span>
     </div>
 
     <div class="conducao__acoes">
@@ -87,16 +87,16 @@
             [appTooltip]="
                 faltamIniciativas()
                     ? 'Falta iniciativa para algum combatente'
-                    : 'Começar o combate na rodada 1'
+                    : frases().iniciarDica
             "
             (click)="iniciar.emit()"
         >
-            Iniciar combate
+            {{ frases().iniciar }}
         </button>
     </div>
 } @else {
     <div class="conducao__centro">
         <span class="conducao__rotulo">Situação</span>
-        <span class="conducao__nome conducao__nome--vazio">Combate encerrado — só leitura</span>
+        <span class="conducao__nome conducao__nome--vazio">{{ frases().encerradoLeitura }}</span>
     </div>
 }

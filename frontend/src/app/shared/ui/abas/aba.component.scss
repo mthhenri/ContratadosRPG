@@ -6,6 +6,8 @@
 // outra, mesmo efeito visual — então o primitivo segue as origens de verdade, não o exemplo
 // congelado (que o próprio comentário do catálogo já avisa: "o mais simples, não o único").
 :host {
+    // Âncora do rótulo escondido só visualmente no mobile (ui-44), que é `position: absolute`.
+    position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -66,14 +68,27 @@
 // Some no mobile — a Simulação ainda alarga a aba ativa com `flex-grow` pra reencaixar o rótulo
 // (decisão anterior, fora do escopo desta task); o primitivo segue a Ficha: nenhum item ganha
 // mais espaço, só o item ativo reexibe o próprio rótulo, com reticências se não couber.
+//
+// Escondido só **visualmente** (ui-44, `P-129`): com `display: none` o rótulo saía também da árvore
+// de acessibilidade, e a aba compacta ficava sem nome para leitor de tela e para `getByRole`. O
+// recorte de 1px mantém o texto lido sem ocupar espaço — a tela fica igual.
 :host ::ng-deep .abas__rotulo {
     @include bp.mobile {
-        display: none;
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
     }
 }
 
 :host(.abas__item--ativa) ::ng-deep .abas__rotulo {
     @include bp.mobile {
+        position: static;
+        width: auto;
+        height: auto;
+        clip-path: none;
         display: inline-block;
         white-space: nowrap;
         overflow: hidden;

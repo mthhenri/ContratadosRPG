@@ -33,6 +33,32 @@ export const TIPOS_DE_CENA: readonly CenaTipoEnum[] = [
   CenaTipoEnum.RESISTENCIA,
 ];
 
+/**
+ * Como a tela com iniciativa chama o que se conduz nela (`P-142`, decisão do autor de 28/11): cada
+ * tipo usa o próprio nome — "Iniciar perseguição", "Infiltração ainda não iniciada". `feminino`
+ * concorda os particípios. Sem tipo (ainda carregando) ou fora dos tipos com iniciativa, "combate".
+ */
+export interface VocabularioEncontroCena {
+  /** Em minúsculas, para o meio da frase: "combate", "infiltração"… */
+  readonly substantivo: string;
+  readonly feminino: boolean;
+}
+
+const VOCABULARIO_COMBATE: VocabularioEncontroCena = { substantivo: 'combate', feminino: false };
+
+const VOCABULARIO_ENCONTRO: Partial<Record<CenaTipoEnum, VocabularioEncontroCena>> = {
+  [CenaTipoEnum.COMBATE]: VOCABULARIO_COMBATE,
+  [CenaTipoEnum.FURTIVA]: { substantivo: 'infiltração', feminino: true },
+  [CenaTipoEnum.PERSEGUICAO]: { substantivo: 'perseguição', feminino: true },
+  [CenaTipoEnum.RESISTENCIA]: { substantivo: 'resistência', feminino: true },
+};
+
+export function vocabularioEncontroCena(
+  tipo: CenaTipoEnum | null | undefined,
+): VocabularioEncontroCena {
+  return (tipo && VOCABULARIO_ENCONTRO[tipo]) || VOCABULARIO_COMBATE;
+}
+
 /** Rótulo da navegação para a cena atual, preservando o nome Cenas. */
 export function rotuloNavegacaoCena(tipo: CenaTipoEnum | null | undefined): string {
     return tipo ? `Cenas — ${rotuloTipoCena(tipo)} em andamento` : "Cenas";

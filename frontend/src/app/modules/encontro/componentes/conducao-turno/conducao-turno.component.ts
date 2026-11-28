@@ -1,11 +1,12 @@
 import { Component, computed, input, output } from '@angular/core';
 
-import { EncontroStatusEnum } from '@contratados-rpg/shared/enums';
+import { CenaTipoEnum, EncontroStatusEnum } from '@contratados-rpg/shared/enums';
 
 import { Icone } from '../../../../shared/icone/icone.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
+import { vocabularioEncontroCena } from '../../../cena/rotulos-cena';
 
 /**
  * Barra de condução do mestre (`ui-37`) — a "vez" no topo do palco. Três leituras do mesmo
@@ -42,6 +43,28 @@ export class ConducaoTurno {
   readonly emOperacao = input(false);
   readonly temCombatentes = input(false);
   readonly faltamIniciativas = input(false);
+  /**
+   * Tipo da cena (`P-142`): Furtiva, Perseguição e Resistência falam do que conduzem ("Iniciar
+   * perseguição"), não de "combate". Sem tipo, fala de combate.
+   */
+  readonly tipoCena = input<CenaTipoEnum | null>(null);
+
+  private readonly vocabulario = computed(() => vocabularioEncontroCena(this.tipoCena()));
+  /** As frases da barra, já concordadas com o substantivo do tipo. */
+  protected readonly frases = computed(() => {
+    const { substantivo, feminino } = this.vocabulario();
+    const artigo = feminino ? 'a' : 'o';
+    const iniciado = feminino ? 'iniciada' : 'iniciado';
+    const encerrado = feminino ? 'encerrada' : 'encerrado';
+    const maiusculo = substantivo.charAt(0).toUpperCase() + substantivo.slice(1);
+    return {
+      encerrarDica: `Encerrar ${artigo} ${substantivo} — depois disso fica só de leitura`,
+      aguardando: `${maiusculo} ainda não ${iniciado}`,
+      iniciarDica: `Começar ${artigo} ${substantivo} na rodada 1`,
+      iniciar: `Iniciar ${substantivo}`,
+      encerradoLeitura: `${maiusculo} ${encerrado} — só leitura`,
+    };
+  });
 
   readonly voltar = output<void>();
   readonly avancar = output<void>();

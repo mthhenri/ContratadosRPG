@@ -29,17 +29,6 @@
 
 ## Ativos
 
-### P-142 — Cena com iniciativa que não é Combate se chama "Iniciativa" e oferece "Iniciar combate" · `ABERTO` · frontend/cenas
-
-- **Sintoma:** em Furtiva, Perseguição e Resistência, o título é "Iniciativa · <nome>" e a condução diz
-  "Iniciar combate"; o tipo da cena só aparece no ícone pequeno do título.
-- **Causa:** o painel com iniciativa (`painel-mestre.page.html`) nasceu para o Combate e só a casca foi
-  reaproveitada pelos demais tipos.
-- **Contorno:** nenhum; o mestre sabe o tipo que escolheu.
-- **Correção:** título com o rótulo do tipo (`rotuloTipoCena`) e o verbo da condução por tipo — pedir ao autor o
-  texto de cada um. Entra no redesenho das cenas.
-- **Desde:** observado na análise das telas do mestre (2026-11-28), registrado na `ui-43`.
-
 ### P-139 — Gaveta e janela das Regras cobrem os avisos no celular · `ABERTO` · frontend/regras
 
 - **Sintoma:** com a gaveta do sumário aberta (tela estreita), um aviso disparado ali fica atrás dela e quase
@@ -114,22 +103,6 @@
   [spec de avatar autorizado](../specs/backlog/ficha-avatar-leitura-autorizada.spec.md).
 - **Desde:** confirmado na retomada de 19/10/2026;
   [método e limites](../specs/done/auditoria-ficha-oculta-retomada-cobertura/verificacao.md).
-
-### P-129 — Abas não selecionadas da campanha/NPC sem nome acessível no celular · `ABERTO` · frontend/acessibilidade
-
-> Recorte da campanha corrigido: as três abas têm `aria-label`, inclusive quando
-> só o ícone aparece; [verificação](../specs/done/investigacao-rolagem-coluna-e-icones-abas/verificacao.md).
-> A pendência permanece nas abas da ficha de NPC citadas abaixo.
-
-- **Sintoma:** em 360×800, a aba Criaturas não selecionada não é encontrada por papel
-  `tab` e nome "Criaturas"; o desenho aparece, mas falta nome acessível.
-- **Causa:** `shared/ui/abas/aba.component.scss` oculta `.abas__rotulo` com `display: none`
-  no mobile, salvo no item ativo; os ícones são decorativos e os botões de
-  `campanha-fichas-abas.component.html` não têm rótulo acessível alternativo.
-- **Contorno:** para verificação automatizada, selecionar pelo atributo estável `valor`.
-- **Correção:** preservar o nome acessível das abas compactas sem reexibir seu texto
-  visual; medir os consumidores do primitivo antes de alterar.
-- **Desde:** preexistente, confirmado no gate visual da UI-42 em 2026-10-17. Em 18/10, a mesma ausência foi observada em Habilidades do NPC a 360×800; inspeção usou `#npc-aba-habilidades`, sem alterar o primitivo nesta task.
 
 ### P-126 — Sem gate que compare `docs/design/tema/` e `frontend/src/styles/tema/` · `ABERTO` · design/tema
 

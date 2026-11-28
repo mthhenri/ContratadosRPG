@@ -241,8 +241,14 @@
                     </app-estado-vazio>
                     } @else if (carregandoDocumentoFoco()) {
                     <app-esqueleto class="cena-mestre__esqueleto-foco" />
-                    } @else if (documentoFoco()) {
-                    <app-leitor-documento [documento]="documentoFoco()!" />
+                    } @else if (documentoFoco(); as documento) {
+                    <!-- ui-44: o título do documento em foco, no cabeçalho de seção da tela (o de
+                         "Agentes") — antes o palco só mostrava o texto. -->
+                    <header class="cena-mestre__secao">
+                        <h2 class="cena-mestre__secao-titulo">{{ documento.titulo }}</h2>
+                        <span class="cena-mestre__secao-regua"></span>
+                    </header>
+                    <app-leitor-documento [documento]="documento" />
                     }
                 </section>
                 }
