@@ -107,6 +107,7 @@ export class CadernoFlutuante implements OnDestroy {
   protected readonly semVagaInventario = computed(() => !this.ehMestre() || !this.temInventario());
 
   protected readonly painelRef = viewChild<PainelFlutuante>('painel');
+  private readonly conteudoRef = viewChild(CadernoConteudo);
   private readonly gatilho = viewChild<ElementRef<HTMLButtonElement>>('gatilho');
   private tamanhoAntesDeMaximizar: CadernoTamanho | null = null;
   private posicaoAntesDeMaximizar: PainelFlutuantePosicao | null = null;
@@ -149,6 +150,35 @@ export class CadernoFlutuante implements OnDestroy {
     if (!this.ehMobile() && !this.maximizada()) {
       this.store.alterarTamanho(this.estado().tamanho, this.viewportSemColuna());
     }
+  }
+
+  /**
+   * Abre (ou restaura) a janela já numa página do próprio caderno — "Abrir" da mesa do mestre na
+   * campanha (ui-45). Com o Caderno em janela externa, só foca a janela.
+   */
+  abrirPagina(id: number): void {
+    if (!this.mostrarJanelaPronta()) return;
+    this.conteudoRef()?.abrirPaginaDoMeuCaderno(id);
+  }
+
+  /** Abre (ou restaura) a janela numa página nova do próprio caderno (ui-45). */
+  abrirNovaPagina(): void {
+    if (!this.mostrarJanelaPronta()) return;
+    this.conteudoRef()?.comecarPaginaNoMeuCaderno();
+  }
+
+  /** Garante a janela aberta e à vista; `false` quando o Caderno vive na janela externa. */
+  private mostrarJanelaPronta(): boolean {
+    if (this.recolhido()) {
+      this.janelaCaderno.abrir(this.campanhaId());
+      return false;
+    }
+    if (this.store.estado().aberto && this.painelRef()?.minimizado()) {
+      this.painelRef()?.restaurar();
+    } else if (!this.store.estado().aberto) {
+      this.abrir();
+    }
+    return true;
   }
 
   /**

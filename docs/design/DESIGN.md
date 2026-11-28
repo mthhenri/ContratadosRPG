@@ -549,6 +549,42 @@ nunca a seta `voltar`, que fica reservada ao Voltar do cabeçalho logo ao lado. 
 e ganha o mesmo destaque `--ativo` do item de rota, sem o `aria-current="page"` que só cabe a rota.
 `null` (padrão) mantém o item comum.
 
+### Campanha — visão do mestre (`ui-45`)
+
+Direção "A · Roteiro no topo", escolhida pelo autor entre três mockups. Ela responde de relance
+"onde a sessão está". A ordem é a mesma no desktop e no mobile:
+
+- **Cabeçalho em uma faixa.** "Onde a equipe está" é um `app-segmentado` fluido (Na base · Em
+  missão) numa caixa de 240px, e não mais um chip que alternava ao clicar. A missão fica numa linha
+  com reticências e o rótulo "Missão"; um "Missão:" no começo da descrição é descartado. **Ler
+  missão** abre o texto inteiro no lugar.
+- **Roteiro da sessão** (`app-campanha-roteiro`): uma faixa que rola de lado por dentro, sem
+  quebrar linha no desktop, na receita de `.cena-cartao` do hub.
+  - Bloco "Encerradas N".
+  - Destaque da cena ativa: borda e fundo de acento, chips Ativa e tipo, "N documentos · “título”
+    em foco no palco" na Investigação, e **Conduzir cena**.
+  - Sem cena ativa, um destaque tracejado: "Próxima: …" com **Abrir cena**, ou "Nenhuma cena
+    planejada" com **Nova cena** (hub com `?nova=1`).
+  - As planejadas na ordem do hub, mais "+ Nova cena".
+  - No mobile, o destaque fica na largura toda e só as seguintes rolam (sem o chip "Planejada").
+- **Fichas:** a contagem entra no rótulo da aba ("Esquadrão · 4", no mobile só no nome acessível).
+  O botão de criar da aba ativa fica no fim da barra, fora do `tablist`. Os cartões usam
+  `[compacto]` (retrato de 72px) e `[mostrarUltimaRolagem]="false"`, numa grade com mínimo de 340px.
+  As duas opções existem só para essa grade; o espectador e a cena seguem com o cartão inteiro.
+- **Documentos e Caderno** (`app-campanha-mesa-mestre`) ficam **embaixo das fichas**, lado a lado.
+  Eles empilham quando a coluna estreita.
+  - **Documentos:** os da Investigação ativa ("Em foco" · "Revelado" · "Oculto"), ou, sem ela, os
+    cinco últimos revelados da Biblioteca.
+  - **Caderno · última editada:** título, "editada há…" e trecho de três linhas. **Abrir** chama
+    `CadernoFlutuante.abrirPagina`; o vazio tem **Nova página**.
+  - Os botões "Biblioteca" e "Abrir" são `app-botao` secundário em contorno.
+- **Rolagens em foco:** a coluna de 420px da direita é só o painel Rolagens⇆Inventário, com o
+  histórico em `[linha]` do `app-cartao-rolagem` (total · teste · quem · hora).
+- **Altura da página:** acima de `$bp-tablet` a página tem a altura da tela e não rola. A coluna das
+  fichas e o painel das rolagens rolam cada um por dentro. Ajuste do autor depois da primeira versão,
+  que punha a mesa na lateral e empurrava as rolagens para baixo.
+- **Tablet e mobile:** fluxo normal, com as rolagens por último.
+
 ### Iniciativa — visão do mestre (`ui-37`)
 
 Composição aprovada na POC "Tela de Iniciativa" (v9): **coluna de ações | trilha de turnos | coluna

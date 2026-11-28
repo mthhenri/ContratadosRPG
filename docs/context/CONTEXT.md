@@ -9,10 +9,15 @@
 > defeitos pequenos: cenas com iniciativa falam do próprio tipo ("Iniciar perseguição"), o palco da
 > Investigação mostra o título do documento em foco, a contagem das abas tem rótulo e as abas
 > compactas do celular têm nome acessível (`P-129`, `P-142` e `P-141` corrigidos).
-> **Próximo, em conversa com o autor:** o redesenho da *visão* da tela de campanha do mestre: mostrar
-> a cena aberta, as planejadas, a Biblioteca e o Caderno de relance (mockups antes de spec). Depois
-> vêm as cenas e a Biblioteca, e o quadro de investigação (`quadro-investigacao-campanha`, ainda com
-> as decisões do autor a registrar em `pendencias.md`).
+> [`ui-45`](../specs/done/ui-45-campanha-mestre-roteiro.spec.md) redesenhou a tela de campanha do
+> mestre (direção "Roteiro no topo"): estado da equipe em segmentado, missão em uma linha, faixa do
+> roteiro (cena ativa ou próxima, planejadas, encerradas), cartões compactos sem "última rolagem",
+> Documentos e última página do Caderno embaixo das fichas, e a lateral só para as rolagens (em linha),
+> com a página travada na altura da tela.
+> **Próximo, em conversa com o autor:** os mockups que restam: a organização da coluna de ações, as
+> telas de cena, a Biblioteca como página e o mobile. Também falta o quadro de investigação
+> (`quadro-investigacao-campanha`, ainda com as decisões do autor a registrar em `pendencias.md`;
+> "fixar página do Caderno" segue em aberto lá).
 
 > **Organização documental:** tarefas, planos, propostas e relatórios agora ficam
 > juntos em `docs/specs/<estado>/`, conforme [política §3.1](../SYSTEM.SPEC.md#31-documentação-de-tarefa-e-artefatos-de-execução)

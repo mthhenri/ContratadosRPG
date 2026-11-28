@@ -35,6 +35,13 @@ $cartao-estreito: 440px;
         }
     }
 
+    // Grade densa da campanha do mestre (ui-45): retrato de 72px no lugar dos 128px; o resto do
+    // cartão não muda.
+    &--compacto &__avatar {
+        width: 72px;
+        height: 72px;
+    }
+
     &__cabecalho {
         display: flex;
         align-items: flex-start;

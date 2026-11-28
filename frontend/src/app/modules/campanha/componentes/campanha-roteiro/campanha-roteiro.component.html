@@ -1,0 +1,148 @@
+<section class="roteiro" aria-label="Roteiro da sessão">
+    <header class="roteiro__secao">
+        <h2 class="roteiro__secao-titulo">Roteiro da sessão</h2>
+        <span class="roteiro__secao-regua"></span>
+        <a class="roteiro__todas" [routerLink]="['/campanhas', campanhaId(), 'cenas']"
+            >Todas as cenas <app-icone nome="chevron" class="roteiro__seta"
+        /></a>
+    </header>
+
+    @if (cenas() === null) {
+        <div class="roteiro__faixa" role="status" aria-label="Carregando cenas">
+            <app-esqueleto class="roteiro__esqueleto-destaque" />
+            <app-esqueleto class="roteiro__esqueleto-cartao" />
+            <app-esqueleto class="roteiro__esqueleto-cartao" />
+        </div>
+    } @else {
+        <div class="roteiro__faixa">
+            @if (encerradas() > 0) {
+                <div class="roteiro__encerradas">
+                    <span class="roteiro__encerradas-rotulo">Encerradas</span>
+                    <span class="roteiro__encerradas-numero">{{ encerradas() }}</span>
+                </div>
+            }
+
+            @if (ativa(); as cena) {
+                <div class="roteiro__destaque roteiro__destaque--ativa">
+                    <div class="roteiro__destaque-texto">
+                        <span class="roteiro__chips">
+                            <app-chip severidade="primario" tom="contorno">Ativa</app-chip>
+                            <app-chip variante="sutil"
+                                ><app-icone
+                                    class="icone--texto"
+                                    [nome]="iconeTipoCena(cena.tipo)"
+                                />
+                                {{ rotuloTipoCena(cena.tipo) }}</app-chip
+                            >
+                        </span>
+                        <span class="roteiro__destaque-nome">{{ cena.nome }}</span>
+                        @if (ativaEhInvestigacao()) {
+                            <span class="roteiro__destaque-apoio">
+                                {{ documentosAtiva().length }}
+                                {{ documentosAtiva().length === 1 ? "documento" : "documentos" }}
+                                @if (documentoEmFoco(); as foco) {
+                                    ·
+                                    <span class="roteiro__destaque-foco">“{{ foco.titulo }}”</span>
+                                    em foco no palco
+                                }
+                            </span>
+                        }
+                    </div>
+                    <a
+                        app-botao
+                        variante="primario"
+                        estilo="preenchido"
+                        tamanho="medio"
+                        class="roteiro__destaque-acao"
+                        [routerLink]="['/campanhas', campanhaId(), 'cenas', cena.id]"
+                    >
+                        Conduzir cena
+                    </a>
+                </div>
+            } @else {
+                <div class="roteiro__destaque roteiro__destaque--vazio">
+                    <div class="roteiro__destaque-texto">
+                        <span class="roteiro__chips">
+                            <app-chip variante="sutil">Nenhuma cena aberta</app-chip>
+                        </span>
+                        @if (proxima(); as cena) {
+                            <span class="roteiro__destaque-nome">Próxima: {{ cena.nome }}</span>
+                            <span class="roteiro__destaque-apoio"
+                                >{{ rotuloTipoCena(cena.tipo) }} · abrir a cena leva a mesa até
+                                ela.</span
+                            >
+                        } @else {
+                            <span class="roteiro__destaque-nome">Nenhuma cena planejada</span>
+                            <span class="roteiro__destaque-apoio"
+                                >Planeje a próxima cena para abri-la na hora certa.</span
+                            >
+                        }
+                    </div>
+                    @if (proxima(); as cena) {
+                        <button
+                            app-botao
+                            type="button"
+                            variante="primario"
+                            estilo="preenchido"
+                            tamanho="medio"
+                            class="roteiro__destaque-acao"
+                            [carregando]="emOperacao()"
+                            [disabled]="emOperacao()"
+                            (click)="abrirCena.emit(cena)"
+                        >
+                            Abrir cena
+                        </button>
+                    } @else {
+                        <a
+                            app-botao
+                            variante="primario"
+                            estilo="preenchido"
+                            tamanho="medio"
+                            class="roteiro__destaque-acao"
+                            [routerLink]="['/campanhas', campanhaId(), 'cenas']"
+                            [queryParams]="{ nova: 1 }"
+                        >
+                            Nova cena
+                        </a>
+                    }
+                </div>
+            }
+
+            <ol class="roteiro__seguintes" aria-label="Próximas cenas">
+                @for (cena of seguintes(); track cena.id) {
+                    <li class="roteiro__item">
+                        <a
+                            class="roteiro__cartao"
+                            [routerLink]="['/campanhas', campanhaId(), 'cenas', cena.id]"
+                        >
+                            <span class="roteiro__chips">
+                                <app-chip variante="sutil" class="roteiro__chip-planejada">Planejada</app-chip>
+                                <app-chip variante="sutil"
+                                    ><app-icone
+                                        class="icone--texto"
+                                        [nome]="iconeTipoCena(cena.tipo)"
+                                    />
+                                    {{ rotuloTipoCena(cena.tipo) }}</app-chip
+                                >
+                            </span>
+                            <span class="roteiro__cartao-nome">{{ cena.nome }}</span>
+                        </a>
+                    </li>
+                }
+
+                @if (ativa() || proxima()) {
+                    <li class="roteiro__item">
+                        <a
+                            class="roteiro__nova"
+                            [routerLink]="['/campanhas', campanhaId(), 'cenas']"
+                            [queryParams]="{ nova: 1 }"
+                            [appTooltip]="'Planejar uma cena nova, ou abrir já para a mesa'"
+                        >
+                            <app-icone nome="mais" /> Nova cena
+                        </a>
+                    </li>
+                }
+            </ol>
+        </div>
+    }
+</section>

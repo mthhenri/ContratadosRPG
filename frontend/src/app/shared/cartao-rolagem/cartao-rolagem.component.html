@@ -1,21 +1,36 @@
-<div class="cartao-rolagem__meta">
-    <span class="cartao-rolagem__rotulo">{{ rolagem().rotulo }}</span>
-    <span class="cartao-rolagem__autor">{{ autor() }}</span>
+@if (linha()) {
+    <!-- ui-45: uma linha só (total · teste · quem · hora), para a mesa do mestre na campanha. -->
+    <strong class="cartao-rolagem__total">{{ rolagem().resultado.total }}</strong>
+    <span class="cartao-rolagem__linha-texto">
+        <span class="cartao-rolagem__rotulo">{{ rolagem().rotulo }}</span>
+        <span class="cartao-rolagem__autor">{{ autor() }}</span>
+    </span>
     @if (privada()) {
         <app-chip severidade="aviso" tom="contorno">privada</app-chip>
     }
     <span class="cartao-rolagem__data">{{
-        tempo() ?? (rolagem().createdDate | date: "dd/MM HH:mm")
+        tempo() ?? (rolagem().createdDate | date: "HH:mm")
     }}</span>
-</div>
-@if (rolagem().formula) {
-    <span class="cartao-rolagem__formula">{{ rolagem().formula }}</span>
+} @else {
+    <div class="cartao-rolagem__meta">
+        <span class="cartao-rolagem__rotulo">{{ rolagem().rotulo }}</span>
+        <span class="cartao-rolagem__autor">{{ autor() }}</span>
+        @if (privada()) {
+            <app-chip severidade="aviso" tom="contorno">privada</app-chip>
+        }
+        <span class="cartao-rolagem__data">{{
+            tempo() ?? (rolagem().createdDate | date: "dd/MM HH:mm")
+        }}</span>
+    </div>
+    @if (rolagem().formula) {
+        <span class="cartao-rolagem__formula">{{ rolagem().formula }}</span>
+    }
+    <app-resultado-rolagem
+        [resultado]="rolagem().resultado"
+        [corFicha]="rolagem().corFicha"
+        [compacto]="true"
+    />
 }
-<app-resultado-rolagem
-    [resultado]="rolagem().resultado"
-    [corFicha]="rolagem().corFicha"
-    [compacto]="true"
-/>
 @if (ehAdmin()) {
     <button
         app-botao-icone

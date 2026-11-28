@@ -1,5 +1,54 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-11-28 — ui-45: tela de campanha do mestre com o roteiro no topo
+
+O autor queria ver de relance, na tela de campanha, o que importa durante a sessão: a cena aberta, as
+próximas, o que os jogadores já viram e o que ele anotou. Três mockups foram ao canvas, em 1920×945 (a área
+útil do monitor do autor), e ele escolheu a direção "A · Roteiro no topo".
+
+- **Cabeçalho em uma faixa:**
+  - "Na base / Em missão" virou um `app-segmentado` (antes era um chip que alternava ao clicar).
+  - A missão ficou numa linha com reticências e **Ler missão** abre o texto no lugar.
+- **Roteiro da sessão** (`app-campanha-roteiro`), com três estados:
+  - com cena ativa: destaque com **Conduzir cena** e, na Investigação, os documentos e o que está em foco;
+  - sem cena ativa: "Próxima: …" com **Abrir cena**;
+  - sem nenhuma cena: **Nova cena**.
+
+  A faixa mostra também a contagem de encerradas e as planejadas na ordem do hub. As cenas vêm da mesma
+  leitura que já resolvia a cena ativa (`CampanhaDetalheDadosService.cenas`).
+- **Fichas:** contagem no rótulo da aba e botão de criar no fim da barra. Os cartões do mestre ficaram
+  compactos (retrato de 72px) e **sem a "Última rolagem"**, que agora só aparece no histórico. São opções
+  novas dos cartões, desligadas por padrão, então o espectador e a cena não mudam.
+- **Mesa do mestre**, na lateral:
+  - Documentos da Investigação ativa (ou os últimos revelados da Biblioteca);
+  - "Caderno · última editada", que abre a página no painel do Caderno por métodos novos e só aditivos do
+    `CadernoFlutuante`;
+  - Rolagens⇆Inventário, com o histórico em uma linha por rolagem (`app-cartao-rolagem [linha]`).
+- **Ficou de fora por não existir no sistema:** fixar uma página do Caderno (questão aberta do quadro de
+  investigação), "aberta há N min" e a contagem de criaturas por cena planejada.
+
+Testes: 3.809 do frontend passando, com `NODE_OPTIONS=--no-experimental-webstorage`. Lint sem erros e build
+com o budget conhecido.
+
+Verificação ao vivo em 1920×945 (coluna aberta e recolhida), 1920×1080, 1366×768, 960×1080 e 360×800. Os
+estados que o banco não tinha foram simulados interceptando GETs no navegador, sem escrita. Não houve
+overflow nem erro de console. Em 1920×945, o roteiro, a primeira linha de fichas e a mesa aparecem sem
+rolar.
+
+Quatro achados só apareceram ao vivo e foram corrigidos:
+- "MISSÃO MISSÃO:" repetido, porque a descrição já começava com "Missão:";
+- chips empilhando nos cartões de cena estreitos;
+- rótulo "ESQUADRÃ…" cortado na aba ativa do celular;
+- o chip "Planejada" empilhando no celular.
+
+Ajuste do autor ainda antes do commit: com a mesa na lateral, a página passou a rolar e as rolagens perderam
+o foco. Três arranjos foram ao canvas. O escolhido põe Documentos e Caderno **embaixo das fichas**, deixa a
+lateral só para Rolagens⇆Inventário e trava a página na altura da tela, com cada coluna rolando por
+dentro. "Biblioteca" e "Abrir" viraram botões em contorno.
+
+Relatório e mapa de impacto em
+[`ui-45-campanha-mestre-roteiro/relatorio.md`](../specs/done/ui-45-campanha-mestre-roteiro/relatorio.md).
+
 ## 2026-11-28 — ui-44: defeitos pequenos das telas do mestre (P-142, P-129)
 
 Depois da `ui-43`, o autor pediu para fechar os defeitos pequenos antes dos mockups. Ele escolheu o vocabulário

@@ -27,13 +27,21 @@ import { ConfirmacaoService } from '../ui/confirmacao/confirmacao.service';
   imports: [DatePipe, Icone, ResultadoRolagem, BotaoIcone, Chip],
   templateUrl: './cartao-rolagem.component.html',
   styleUrl: './cartao-rolagem.component.scss',
-  host: { '[style.--cor-ficha]': 'rolagem().corFicha' },
+  host: {
+    '[style.--cor-ficha]': 'rolagem().corFicha',
+    '[class.cartao-rolagem--linha]': 'linha()',
+  },
 })
 export class CartaoRolagem {
   readonly rolagem = input.required<RolagemResumoDto>();
   readonly autor = input.required<string>();
   readonly tempo = input<string | null>(null);
   readonly somenteLeitura = input(false);
+  /**
+   * Uma linha só — total, teste, quem e hora, sem fórmula nem dados (ui-45, mesa do mestre na
+   * campanha, onde a lista é para varrer de olho). Os demais históricos seguem no cartão inteiro.
+   */
+  readonly linha = input(false);
 
   private readonly sessao = inject(SessaoService);
   private readonly rolagemService = inject(RolagemService);

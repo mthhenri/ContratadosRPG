@@ -142,6 +142,19 @@ describe('EspectadorFichaCard', () => {
     expect(raiz.querySelector('.espectador-ficha__ultima-rolagem-vazio')).toBeNull();
   });
 
+  it('sem a faixa "Última rolagem" quando o consumidor a desliga, e com retrato menor no compacto (ui-45)', () => {
+    const raiz = montar(ficha(), rolagem(), 'há 8s');
+    expect(raiz.querySelector('.espectador-ficha__ultima-rolagem')).not.toBeNull();
+    expect(raiz.querySelector('.espectador-ficha--compacto')).toBeNull();
+
+    fixture.componentRef.setInput('mostrarUltimaRolagem', false);
+    fixture.componentRef.setInput('compacto', true);
+    fixture.detectChanges();
+
+    expect(raiz.querySelector('.espectador-ficha__ultima-rolagem')).toBeNull();
+    expect(raiz.querySelector('.espectador-ficha--compacto')).not.toBeNull();
+  });
+
   it('mostra "Nenhuma rolagem carregada ainda" — nunca "nunca rolou" — sem rolagem', () => {
     const raiz = montar(ficha(), null);
 

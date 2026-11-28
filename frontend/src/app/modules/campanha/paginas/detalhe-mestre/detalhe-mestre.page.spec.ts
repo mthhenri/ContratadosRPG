@@ -12,9 +12,18 @@ import {
   ComportamentoCriaturaEnum,
   NivelAmeacaEnum,
   PorteCriaturaEnum,
+  CenaStatusEnum,
+  CenaTipoEnum,
   TipoCampanhaMembroPapelEnum,
+  TipoDocumentoEnum,
   TipoFichaEnum,
+  TipoPaginaCadernoEnum,
 } from '@contratados-rpg/shared/enums';
+import type { CenaDocumentoResumoDto, CenaResumoDto } from '@contratados-rpg/shared/dtos/cena';
+import type { DocumentoResumoDto } from '@contratados-rpg/shared/dtos/documento';
+import type { PaginaCadernoResumoDto } from '@contratados-rpg/shared/dtos/pagina-caderno';
+import { DocumentoService } from '../../../documento/documento.service';
+import { CadernoFlutuante } from '../../../pagina-caderno/caderno-flutuante.component';
 import { CampanhaMembroResumoDto, CampanhaRecuperadaDto } from '@contratados-rpg/shared/dtos/campanha';
 import type { FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
 
@@ -165,7 +174,14 @@ describe('CampanhaDetalheMestre', () => {
     } as FichaResumoDto,
   ];
 
-  function montar() {
+  interface OpcoesMontar {
+    readonly cenas?: readonly CenaResumoDto[];
+    readonly documentosCena?: readonly CenaDocumentoResumoDto[];
+    readonly documentosBiblioteca?: readonly DocumentoResumoDto[];
+    readonly paginasCaderno?: readonly PaginaCadernoResumoDto[];
+  }
+
+  function montar(opcoes: OpcoesMontar = {}) {
     const campanhaService = {
       recuperarCampanha: vi.fn(() => of({ ...campanhaBase })),
       listarMembros: vi.fn(() => of(membros)),
@@ -228,11 +244,19 @@ describe('CampanhaDetalheMestre', () => {
     };
     const sessaoService = { usuario: () => ({ id: 1, login: 'x', nome: 'x' }) };
     const paginaCadernoService = {
-      listarPaginas: vi.fn(() => of([])),
+      listarPaginas: vi.fn(() => of(paginasCaderno)),
+      recuperarPagina: vi.fn(() => of({ conteudoMarkdown: '**Pistas** da sessão 7' })),
       listarPaginasMembro: vi.fn(() => of([])),
       buscarCampanha: vi.fn(() => of({ itens: [], totalItens: 0, paginaAtual: 1, totalPaginas: 0 })),
     };
     const confirmacaoService = { confirmar: vi.fn(() => Promise.resolve(true)) };
+    const cenaService = {
+      listarPorCampanha: vi.fn(() => of(opcoes.cenas ?? [])),
+      listarDocumentos: vi.fn(() => of(opcoes.documentosCena ?? [])),
+      abrirCena: vi.fn((id: number) => of({ id })),
+    };
+    const documentoService = { listar: vi.fn(() => of(opcoes.documentosBiblioteca ?? [])) };
+    const paginasCaderno = opcoes.paginasCaderno ?? [];
     const topbarContexto = { definir: vi.fn(), limpar: vi.fn() };
 
     Object.defineProperty(navigator, 'clipboard', {
@@ -244,6 +268,8 @@ describe('CampanhaDetalheMestre', () => {
     const tempoRealService = {
       campanhaIngressada$: new Subject<number>().asObservable(),
       cenaAlterada$: new Subject().asObservable(),
+      cenaDocumentoAlterado$: new Subject<{ campanhaId: number; cenaId: number }>().asObservable(),
+      documentoAlterado$: new Subject<{ campanhaId: number }>().asObservable(),
       conectar: vi.fn(),
       entrarSalaCampanha: vi.fn(),
       sairSalaCampanha: vi.fn(),
@@ -277,7 +303,8 @@ describe('CampanhaDetalheMestre', () => {
         provideRouter([]),
         CampanhaDetalheDadosService,
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => String(CAMPANHA_ID) } } } },
-        { provide: CenaService, useValue: { listarPorCampanha: vi.fn(() => of([])) } },
+        { provide: CenaService, useValue: cenaService },
+        { provide: DocumentoService, useValue: documentoService },
         { provide: CampanhaService, useValue: campanhaService },
         { provide: FichaService, useValue: fichaService },
         { provide: RolagemService, useValue: rolagemService },
@@ -309,6 +336,9 @@ describe('CampanhaDetalheMestre', () => {
       rolagemService,
       estadoAlterado$,
       reconexao$,
+      cenaService,
+      documentoService,
+      paginaCadernoService,
     };
   }
 
@@ -318,11 +348,27 @@ describe('CampanhaDetalheMestre', () => {
   }
 
   function abrirAba(raiz: HTMLElement, fixture: ReturnType<typeof montar>['fixture'], rotulo: string) {
+    // ui-45: o rótulo da aba leva a contagem ("Criaturas · 2").
     const aba = Array.from(raiz.querySelectorAll<HTMLButtonElement>('button[app-aba]')).find(
-      (el) => el.textContent?.trim() === rotulo,
+      (el) => el.textContent?.trim().startsWith(rotulo),
     );
     aba!.click();
     fixture.detectChanges();
+  }
+
+  /** Item do segmentado "Onde a equipe está" (ui-45) pelo texto. */
+  function itemEstadoEquipe(raiz: HTMLElement, rotulo: string): HTMLButtonElement {
+    return Array.from(
+      raiz.querySelectorAll<HTMLButtonElement>('.detalhe-mestre__estado-equipe [app-segmentado-item]'),
+    ).find((el) => el.textContent?.trim() === rotulo)!;
+  }
+
+  function estadoEquipeAtivo(raiz: HTMLElement): string | undefined {
+    return Array.from(
+      raiz.querySelectorAll<HTMLButtonElement>('.detalhe-mestre__estado-equipe [app-segmentado-item]'),
+    )
+      .find((el) => el.getAttribute('aria-pressed') === 'true')
+      ?.textContent?.trim();
   }
 
   it('enquanto carrega, mostra a casca real com a silhueta de cabeçalho, cartões e painel lateral', () => {
@@ -377,34 +423,32 @@ describe('CampanhaDetalheMestre', () => {
   // === P-086: clicar Na Base/Em Missão aplica a resposta do PUT direto — sem GET de campanha/
   // inventário — e o eco de `estadoAlterado$` (mesmo autor, mesma sala) é idempotente.
 
-  it('clique em Na Base/Em Missão troca o texto pela resposta do PUT, sem refazer campanha/inventário', () => {
+  it('escolher Em missão no segmentado aplica a resposta do PUT, sem refazer campanha/inventário', () => {
     const { fixture, raiz, campanhaService } = montar();
     campanhaService.recuperarCampanha.mockClear();
     campanhaService.recuperarInventario.mockClear();
-    const botao = raiz.querySelector<HTMLButtonElement>('.detalhe-mestre__estado-operacional')!;
-    expect(botao.textContent?.trim()).toContain('Na Base');
+    expect(estadoEquipeAtivo(raiz)).toBe('Na base');
 
-    botao.click();
+    itemEstadoEquipe(raiz, 'Em missão').click();
     fixture.detectChanges();
 
     expect(campanhaService.alterarEstado).toHaveBeenCalledWith(CAMPANHA_ID, false);
-    expect(botao.textContent?.trim()).toContain('Em Missão');
+    expect(estadoEquipeAtivo(raiz)).toBe('Em missão');
     expect(campanhaService.recuperarCampanha).not.toHaveBeenCalled();
     expect(campanhaService.recuperarInventario).not.toHaveBeenCalled();
   });
 
   it('o eco de estadoAlterado$ da própria mutação é idempotente — não refaz nem desfaz o PUT', () => {
     const { fixture, raiz, campanhaService, estadoAlterado$ } = montar();
-    const botao = raiz.querySelector<HTMLButtonElement>('.detalhe-mestre__estado-operacional')!;
 
-    botao.click();
+    itemEstadoEquipe(raiz, 'Em missão').click();
     fixture.detectChanges();
     campanhaService.recuperarCampanha.mockClear();
 
     estadoAlterado$.next({ id: CAMPANHA_ID, naBase: false });
     fixture.detectChanges();
 
-    expect(botao.textContent?.trim()).toContain('Em Missão');
+    expect(estadoEquipeAtivo(raiz)).toBe('Em missão');
     expect(campanhaService.recuperarCampanha).not.toHaveBeenCalled();
   });
 
@@ -414,16 +458,22 @@ describe('CampanhaDetalheMestre', () => {
     campanhaService.recuperarCampanha.mockReturnValue(respostaLenta$);
     reconexao$.next();
 
-    const botao = raiz.querySelector<HTMLButtonElement>('.detalhe-mestre__estado-operacional')!;
-    botao.click();
+    itemEstadoEquipe(raiz, 'Em missão').click();
     fixture.detectChanges();
-    expect(botao.textContent?.trim()).toContain('Em Missão');
+    expect(estadoEquipeAtivo(raiz)).toBe('Em missão');
 
     // Resposta antiga da reconexão (pedida antes do PUT) ainda traz o naBase anterior.
     respostaLenta$.next({ ...campanhaBase, naBase: true });
     fixture.detectChanges();
 
-    expect(botao.textContent?.trim()).toContain('Em Missão');
+    expect(estadoEquipeAtivo(raiz)).toBe('Em missão');
+  });
+
+  it('escolher o estado que já está ativo não chama o PUT (ui-45)', () => {
+    const { fixture, raiz, campanhaService } = montar();
+    itemEstadoEquipe(raiz, 'Na base').click();
+    fixture.detectChanges();
+    expect(campanhaService.alterarEstado).not.toHaveBeenCalled();
   });
 
   it('não renderiza banner de crítico nem coluna "Membros" ao lado do Esquadrão', () => {
@@ -439,8 +489,8 @@ describe('CampanhaDetalheMestre', () => {
     expect(cartao.componentInstance.mostrarAcoes()).toBe(true);
   });
 
-  it('entrega ao cartão a última rolagem já carregada no feed para a mesma ficha', () => {
-    const { fixture, dados } = montar();
+  it('o cartão do mestre não repete a última rolagem — ela fica só no histórico, numa linha (ui-45)', () => {
+    const { fixture, raiz, dados } = montar();
     dados.rolagensFeed.set([
       {
         id: 77,
@@ -458,37 +508,47 @@ describe('CampanhaDetalheMestre', () => {
         corFicha: null,
       },
     ]);
+    dados.carregandoRolagens.set(false);
     fixture.detectChanges();
 
     const cartao = fixture.debugElement.query(By.directive(EspectadorFichaCard));
-    expect(cartao.componentInstance.ultimaRolagem()?.id).toBe(77);
+    expect(cartao.componentInstance.mostrarUltimaRolagem()).toBe(false);
+    expect(cartao.componentInstance.compacto()).toBe(true);
+    expect(raiz.querySelector('.espectador-ficha__ultima-rolagem')).toBeNull();
+    const linha = raiz.querySelector('.detalhe-mestre__rolagens-lista li');
+    expect(linha?.classList).toContain('cartao-rolagem--linha');
+    expect(linha?.textContent).toContain('Destreza');
   });
 
   describe('abas Esquadrão · Criaturas · NPCs (m4-15)', () => {
     it('mostra as três abas, com o Esquadrão ativo e sem filtro nem "Criaturas e NPCs"', () => {
       const { raiz } = montar();
       const abas = Array.from(raiz.querySelectorAll<HTMLButtonElement>('button[app-aba]'));
-      expect(abas.map((aba) => aba.textContent?.trim())).toEqual(['Esquadrão', 'Criaturas', 'NPCs']);
+      expect(abas.map((aba) => aba.textContent?.trim())).toEqual([
+        'Esquadrão · 1',
+        'Criaturas · 2',
+        'NPCs · 2',
+      ]);
       expect(abas.map((aba) => aba.getAttribute('aria-selected'))).toEqual(['true', 'false', 'false']);
       expect(raiz.querySelector('app-campanha-fichas-especiais')).toBeNull();
       expect(raiz.querySelector('select')).toBeNull();
       expect(raiz.textContent).not.toContain('Criaturas e NPCs');
     });
 
-    it('cada aba tem o mesmo cabeçalho de seção, com a contagem rotulada (ui-44) e o botão de criar da aba', () => {
+    it('a contagem vai no rótulo da aba e o botão de criar da aba ativa fica no fim da barra (ui-45)', () => {
       const { raiz, fixture } = montar();
-      const cabecalho = () => ({
-        contagem: raiz.querySelector('.fichas-abas__secao-contagem')?.textContent?.trim(),
-        botao: raiz.querySelector('.fichas-abas__secao [app-botao]')?.textContent?.trim(),
+      const barra = () => ({
+        aba: raiz.querySelector('button[app-aba][aria-selected="true"]')?.getAttribute('aria-label'),
+        botao: raiz.querySelector('.fichas-abas__barra .fichas-abas__secao [app-botao]')?.textContent?.trim(),
       });
-      expect(cabecalho()).toEqual({ contagem: '1 agente', botao: 'Novo Agente' });
+      expect(barra()).toEqual({ aba: 'Esquadrão, 1', botao: 'Novo Agente' });
       abrirAba(raiz, fixture, 'Criaturas');
-      expect(cabecalho()).toEqual({ contagem: '2 criaturas', botao: 'Nova criatura' });
+      expect(barra()).toEqual({ aba: 'Criaturas, 2', botao: 'Nova criatura' });
       expect(raiz.querySelector('.fichas-abas__secao a')?.getAttribute('href')).toBe(
         `/campanhas/${CAMPANHA_ID}/criatura/nova`,
       );
       abrirAba(raiz, fixture, 'NPCs');
-      expect(cabecalho()).toEqual({ contagem: '2 NPCs', botao: 'Novo NPC' });
+      expect(barra()).toEqual({ aba: 'NPCs, 2', botao: 'Novo NPC' });
       expect(raiz.querySelector('.fichas-abas__secao a')?.getAttribute('href')).toBe(
         `/campanhas/${CAMPANHA_ID}/npc/novo`,
       );
@@ -561,7 +621,9 @@ describe('CampanhaDetalheMestre', () => {
       expect(raiz.querySelector('.fichas-abas__estado')?.textContent).toContain(
         'Nenhuma criatura nesta campanha.',
       );
-      expect(raiz.querySelector('.fichas-abas__secao-contagem')?.textContent?.trim()).toBe('0 criaturas');
+      expect(raiz.querySelector('button[app-aba][aria-selected="true"]')?.textContent?.trim()).toBe(
+        'Criaturas · 0',
+      );
       expect(raiz.querySelector('.fichas-abas__secao a')).not.toBeNull();
       abrirAba(raiz, fixture, 'NPCs');
       expect(raiz.querySelector('.fichas-abas__estado')?.textContent).toContain('Nenhum NPC nesta campanha.');
@@ -573,7 +635,9 @@ describe('CampanhaDetalheMestre', () => {
       primeira.focus();
       raiz.querySelector('app-abas')!.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
       fixture.detectChanges();
-      expect(raiz.querySelector('button[app-aba][aria-selected="true"]')?.textContent?.trim()).toBe('Criaturas');
+      expect(raiz.querySelector('button[app-aba][aria-selected="true"]')?.textContent?.trim()).toBe(
+        'Criaturas · 2',
+      );
       expect(raiz.querySelector('.fichas-abas__secao-titulo')).toBeNull();
     });
   });
@@ -1189,6 +1253,163 @@ describe('CampanhaDetalheMestre', () => {
       fixture.detectChanges();
 
       expect(campanhaService.recuperarInventario).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('roteiro da sessão e mesa do mestre (ui-45)', () => {
+    const cena = (
+      id: number,
+      nome: string,
+      status: CenaStatusEnum,
+      tipo: CenaTipoEnum = CenaTipoEnum.COMBATE,
+    ): CenaResumoDto => ({ id, nome, tipo, status, temEncontro: false });
+
+    const investigacao = cena(11, 'Estação 03:17', CenaStatusEnum.ATIVA, CenaTipoEnum.INVESTIGACAO);
+    const documentosCena: CenaDocumentoResumoDto[] = [
+      { documentoId: 1, titulo: 'Relatório Sigma', tipo: TipoDocumentoEnum.TEXTO, revelado: true, ordem: 0, emFoco: true },
+      { documentoId: 2, titulo: 'Foto do vagão', tipo: TipoDocumentoEnum.IMAGEM, revelado: true, ordem: 1, emFoco: false },
+      { documentoId: 3, titulo: 'Manifesto', tipo: TipoDocumentoEnum.TEXTO, revelado: false, ordem: 2, emFoco: false },
+    ];
+    const documento = (id: number, titulo: string, revelado: boolean, updatedDate: string): DocumentoResumoDto => ({
+      id, campanhaId: CAMPANHA_ID, titulo, tipo: TipoDocumentoEnum.TEXTO, imagemUrl: null, revelado, ordem: id, updatedDate,
+    });
+    const pagina = (id: number, titulo: string, updatedDate: string): PaginaCadernoResumoDto => ({
+      id, campanhaId: CAMPANHA_ID, usuarioAutorId: 1, autorNome: 'Mestre', tipo: TipoPaginaCadernoEnum.PRIVADA, titulo, updatedDate,
+    });
+
+    function estabilizar(fixture: ReturnType<typeof montar>['fixture']) {
+      fixture.detectChanges();
+      fixture.detectChanges();
+    }
+
+    const texto = (el: Element | null | undefined) => (el?.textContent ?? '').replace(/\s+/g, ' ').trim();
+
+    it('com Investigação ativa: destaque com Conduzir, documentos e foco; encerradas contadas', () => {
+      const { fixture, raiz } = montar({
+        cenas: [
+          cena(1, 'Abertura', CenaStatusEnum.ENCERRADA),
+          cena(2, 'Briefing', CenaStatusEnum.ENCERRADA),
+          investigacao,
+          cena(12, 'O vagão de arquivo', CenaStatusEnum.PLANEJADA),
+        ],
+        documentosCena,
+      });
+      estabilizar(fixture);
+
+      expect(texto(raiz.querySelector('.roteiro__encerradas-numero'))).toBe('2');
+      const destaque = raiz.querySelector('.roteiro__destaque--ativa');
+      expect(texto(destaque)).toContain('Estação 03:17');
+      expect(texto(destaque)).toContain('3 documentos · “Relatório Sigma” em foco no palco');
+      expect(destaque?.querySelector('a[app-botao]')?.getAttribute('href')).toBe(`/campanhas/${CAMPANHA_ID}/cenas/11`);
+      expect(Array.from(raiz.querySelectorAll('.roteiro__cartao-nome')).map(texto)).toEqual(['O vagão de arquivo']);
+
+      expect(texto(raiz.querySelector('.mesa__secao-titulo'))).toBe('Documentos da cena');
+      expect(
+        Array.from(raiz.querySelectorAll('.mesa__documento')).map((linha) => [
+          texto(linha.querySelector('.mesa__documento-titulo')),
+          texto(linha.querySelector('app-chip')),
+        ]),
+      ).toEqual([
+        ['Relatório Sigma', 'Em foco'],
+        ['Foto do vagão', 'Revelado'],
+        ['Manifesto', 'Oculto'],
+      ]);
+    });
+
+    it('sem cena aberta: a primeira planejada vira "Próxima" e Abrir cena abre e entra nela', () => {
+      const { fixture, raiz, cenaService, navegar } = montar({
+        cenas: [
+          cena(12, 'O vagão de arquivo', CenaStatusEnum.PLANEJADA),
+          cena(13, 'Fuga pela linha', CenaStatusEnum.PLANEJADA, CenaTipoEnum.PERSEGUICAO),
+        ],
+      });
+      estabilizar(fixture);
+
+      expect(raiz.querySelector('.roteiro__encerradas')).toBeNull();
+      const destaque = raiz.querySelector('.roteiro__destaque--vazio');
+      expect(texto(destaque)).toContain('Nenhuma cena aberta');
+      expect(texto(destaque)).toContain('Próxima: O vagão de arquivo');
+      expect(Array.from(raiz.querySelectorAll('.roteiro__cartao-nome')).map(texto)).toEqual(['Fuga pela linha']);
+
+      (destaque?.querySelector('button[app-botao]') as HTMLButtonElement).click();
+      expect(cenaService.abrirCena).toHaveBeenCalledWith(12);
+      expect(navegar).toHaveBeenCalledWith(['/campanhas', CAMPANHA_ID, 'cenas', 12]);
+    });
+
+    it('sem nenhuma cena: "Nenhuma cena planejada" e Nova cena leva ao hub com o dialog aberto', () => {
+      const { fixture, raiz } = montar({ cenas: [] });
+      estabilizar(fixture);
+
+      const destaque = raiz.querySelector('.roteiro__destaque--vazio');
+      expect(texto(destaque)).toContain('Nenhuma cena planejada');
+      expect(destaque?.querySelector('a[app-botao]')?.getAttribute('href')).toBe(
+        `/campanhas/${CAMPANHA_ID}/cenas?nova=1`,
+      );
+      expect(raiz.querySelector('.roteiro__nova')).toBeNull();
+    });
+
+    it('sem Investigação ativa: a mesa lista os revelados mais recentes da Biblioteca, sem os ocultos', () => {
+      const { fixture, raiz, cenaService } = montar({
+        cenas: [cena(5, 'Tiroteio', CenaStatusEnum.ATIVA)],
+        documentosBiblioteca: [
+          documento(1, 'Antigo', true, '2026-11-01T10:00:00Z'),
+          documento(2, 'Oculto', false, '2026-11-28T10:00:00Z'),
+          documento(3, 'Recente', true, '2026-11-27T10:00:00Z'),
+        ],
+      });
+      estabilizar(fixture);
+
+      expect(cenaService.listarDocumentos).not.toHaveBeenCalled();
+      expect(texto(raiz.querySelector('.mesa__secao-titulo'))).toBe('Revelados na Biblioteca');
+      expect(Array.from(raiz.querySelectorAll('.mesa__documento-titulo')).map(texto)).toEqual(['Recente', 'Antigo']);
+      // Combate ativo: o destaque não fala de documentos.
+      expect(texto(raiz.querySelector('.roteiro__destaque--ativa'))).not.toContain('documento');
+    });
+
+    it('Caderno: mostra a página editada por último com o trecho e abre ela no painel', () => {
+      const { fixture, raiz, paginaCadernoService } = montar({
+        paginasCaderno: [
+          pagina(1, 'Antiga', '2026-11-01T10:00:00Z'),
+          pagina(2, 'Pistas da sessão 7', '2026-11-28T10:00:00Z'),
+        ],
+      });
+      estabilizar(fixture);
+
+      expect(paginaCadernoService.recuperarPagina).toHaveBeenCalledWith(2);
+      expect(texto(raiz.querySelector('.mesa__pagina-titulo'))).toContain('Pistas da sessão 7');
+      expect(texto(raiz.querySelector('.mesa__pagina-trecho'))).toBe('Pistas da sessão 7');
+
+      const caderno = fixture.debugElement.query(By.directive(CadernoFlutuante)).componentInstance as CadernoFlutuante;
+      const abrirPagina = vi.spyOn(caderno, 'abrirPagina').mockImplementation(() => undefined);
+      (raiz.querySelector('.mesa__pagina') as HTMLButtonElement).click();
+      expect(abrirPagina).toHaveBeenCalledWith(2);
+    });
+
+    it('Caderno vazio: estado vazio com "Nova página", que abre o painel numa página nova', () => {
+      const { fixture, raiz } = montar();
+      estabilizar(fixture);
+
+      const bloco = raiz.querySelector('[aria-label="Caderno"]');
+      expect(texto(bloco)).toContain('O caderno está vazio.');
+      const caderno = fixture.debugElement.query(By.directive(CadernoFlutuante)).componentInstance as CadernoFlutuante;
+      const abrirNova = vi.spyOn(caderno, 'abrirNovaPagina').mockImplementation(() => undefined);
+      (bloco?.querySelector('button[app-botao]') as HTMLButtonElement).click();
+      expect(abrirNova).toHaveBeenCalledTimes(1);
+    });
+
+    it('a missão é uma linha só; "Ler missão" abre o texto inteiro no lugar', () => {
+      const { fixture, raiz } = montar();
+      expect(texto(raiz.querySelector('.detalhe-mestre__missao-linha'))).toBe('Operação em curso');
+      expect(raiz.querySelector('#detalhe-mestre-missao')).toBeNull();
+
+      const alternar = raiz.querySelector('.detalhe-mestre__missao-alternar') as HTMLButtonElement;
+      expect(alternar.getAttribute('aria-expanded')).toBe('false');
+      alternar.click();
+      fixture.detectChanges();
+
+      expect(texto(raiz.querySelector('#detalhe-mestre-missao'))).toBe('Operação em curso');
+      expect(alternar.getAttribute('aria-expanded')).toBe('true');
+      expect(texto(alternar)).toBe('Recolher missão');
     });
   });
 });

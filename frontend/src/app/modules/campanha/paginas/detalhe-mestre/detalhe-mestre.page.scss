@@ -33,6 +33,7 @@
 .detalhe-mestre__conteudo {
     flex: 1;
     min-width: 0;
+    min-height: 0;
     // 24px no topo replica o padding vertical que `.conteudo` tinha antes da margem negativa acima
     // cancelá-lo; `var(--space-20)` nos demais lados replica o horizontal.
     padding: 24px var(--space-20) var(--space-20);
@@ -94,36 +95,66 @@
     background: var(--border);
 }
 
-.detalhe-mestre__estado-operacional {
+// ui-45: estado da equipe como escolha explícita (`app-segmentado` fluido dentro de uma caixa de
+// largura fixa no desktop; na largura toda no mobile).
+.detalhe-mestre__estado-equipe {
     flex: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    min-height: 28px;
-    padding: 4px 8px;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    background: var(--surface-2);
-    color: var(--text);
-    font: 600 0.66rem var(--font-mono);
+    width: 240px;
+
+    @include bp.mobile {
+        width: 100%;
+        order: 1;
+
+        [app-segmentado-item] {
+            min-height: bp.$alvo-toque;
+        }
+    }
+}
+
+// ui-45: a missão em uma linha só, com reticências; "Ler missão" abre o texto inteiro no lugar,
+// logo abaixo do cabeçalho (`.detalhe-mestre__descricao`).
+.detalhe-mestre__missao {
+    flex: 1 1 360px;
+    min-width: 0;
+    margin: 0 0 0 var(--space-8);
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-8);
+    font-size: 13px;
+    color: var(--text-dim);
+
+    @include bp.mobile {
+        order: 2;
+        flex-basis: 100%;
+        margin-left: 0;
+    }
+}
+
+.detalhe-mestre__missao-rotulo {
+    flex: none;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
+    letter-spacing: var(--tracking-label);
+    color: var(--accent);
+}
+
+.detalhe-mestre__missao-linha {
+    min-width: 0;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 
-    app-icone {
-        display: inline-flex;
-        width: 12px;
-        height: 12px;
-    }
+.detalhe-mestre__missao-alternar {
+    flex: none;
 
-    &--base {
-        color: var(--text);
-    }
-
-    &--missao {
-        color: var(--vida);
-        border-color: var(--vida-border);
-        background: color-mix(in srgb, var(--vida) 12%, transparent);
+    @include bp.mobile {
+        order: 3;
+        width: 100%;
+        justify-content: center;
+        min-height: bp.$alvo-toque;
     }
 }
 
@@ -202,7 +233,7 @@
 // abaixo do conteúdo principal em vez de sumir).
 .detalhe-mestre__corpo {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 400px;
+    grid-template-columns: minmax(0, 1fr) 420px;
     gap: var(--space-16);
     flex: 1;
     min-height: 0;
@@ -297,10 +328,47 @@
     height: 64px;
 }
 
+// Fichas e, embaixo delas, Documentos e Caderno (ui-45). Acima do tablet a página fica na altura da
+// tela e esta coluna rola por dentro quando passa dela — a coluna das rolagens nunca é empurrada.
 .detalhe-mestre__esquadrao {
     display: flex;
     flex-direction: column;
+    gap: var(--space-16);
     min-height: 0;
+}
+
+@media (min-width: bp.$bp-tablet + 1px) {
+    // A página inteira na altura da tela (pedido do autor na ui-45: sem scroll na página, como era
+    // antes); cada coluna do corpo rola por dentro.
+    :host {
+        height: calc(100dvh - var(--altura-topbar));
+    }
+
+    .detalhe-mestre__corpo {
+        grid-template-rows: minmax(0, 1fr);
+    }
+
+    .detalhe-mestre__esquadrao {
+        overflow-y: auto;
+        padding-right: 2px;
+
+        // Cada bloco na própria altura: quem rola é a coluna, não a grade de fichas espremida
+        // por cima de Documentos/Caderno (achado ao vivo em 1366×768).
+        > app-campanha-fichas-abas,
+        > app-campanha-mesa-mestre {
+            flex: none;
+        }
+    }
+
+    .detalhe-mestre__painel-lateral {
+        overflow: hidden;
+    }
+
+    .detalhe-mestre__painel-rolagens,
+    .detalhe-mestre__painel-inventario {
+        flex: 1;
+        max-height: none;
+    }
 }
 
 // === Menu "⋯" por cartão — Esquadrão, Criaturas e NPCs (raiz do template) ===

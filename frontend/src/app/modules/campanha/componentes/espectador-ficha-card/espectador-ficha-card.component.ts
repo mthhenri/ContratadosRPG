@@ -95,6 +95,13 @@ export class EspectadorFichaCard {
   readonly menuAberto = input(false);
   /** Ampliação por mouse, inclusive para espectadores (decisão do autor na UI-40). */
   readonly mostrarPreviewAvatar = input(true);
+  /**
+   * Faixa "Última rolagem" no rodapé (ui-45). O mestre a desliga na campanha — lá a rolagem vive só
+   * no histórico ao lado; espectador e cena continuam com ela.
+   */
+  readonly mostrarUltimaRolagem = input(true);
+  /** Retrato menor (72px) para a grade densa da campanha do mestre (ui-45). */
+  readonly compacto = input(false);
 
   readonly abrirFicha = output<void>();
   readonly alternarMenu = output<MouseEvent>();

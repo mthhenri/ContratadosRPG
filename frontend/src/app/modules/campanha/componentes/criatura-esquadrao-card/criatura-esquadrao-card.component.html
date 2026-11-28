@@ -1,4 +1,8 @@
-<article class="criatura-card" [class.criatura-card--critico]="criatura().critico">
+<article
+    class="criatura-card"
+    [class.criatura-card--critico]="criatura().critico"
+    [class.criatura-card--compacto]="compacto()"
+>
     <div class="criatura-card__cabecalho">
         <span class="criatura-card__avatar" aria-hidden="true" [style.--cor-ficha]="criatura().cor">
             @if (criatura().imagemUrl; as urlImagem) {
@@ -65,17 +69,21 @@
         </button>
     </div>
 
-    <div class="criatura-card__ultima-rolagem" [style.--cor-ficha]="criatura().cor">
-        @if (ultimaRolagem(); as rolagem) {
-            <span class="criatura-card__ultima-rolagem-rotulo">Última rolagem</span>
-            <span class="criatura-card__ultima-rolagem-texto"
-                >{{ rolagem.rotulo }} — {{ rolagem.resultado.total }}</span
-            >
-            @if (ultimaRolagemTempo(); as tempo) {
-                <span class="criatura-card__ultima-rolagem-tempo">{{ tempo }}</span>
+    @if (mostrarUltimaRolagem()) {
+        <div class="criatura-card__ultima-rolagem" [style.--cor-ficha]="criatura().cor">
+            @if (ultimaRolagem(); as rolagem) {
+                <span class="criatura-card__ultima-rolagem-rotulo">Última rolagem</span>
+                <span class="criatura-card__ultima-rolagem-texto"
+                    >{{ rolagem.rotulo }} — {{ rolagem.resultado.total }}</span
+                >
+                @if (ultimaRolagemTempo(); as tempo) {
+                    <span class="criatura-card__ultima-rolagem-tempo">{{ tempo }}</span>
+                }
+            } @else {
+                <span class="criatura-card__ultima-rolagem-vazio"
+                    >Nenhuma rolagem carregada ainda</span
+                >
             }
-        } @else {
-            <span class="criatura-card__ultima-rolagem-vazio">Nenhuma rolagem carregada ainda</span>
-        }
-    </div>
+        </div>
+    }
 </article>

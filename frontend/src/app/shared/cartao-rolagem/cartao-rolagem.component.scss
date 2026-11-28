@@ -12,7 +12,38 @@
     position: relative;
 }
 
+// ui-45: uma linha só. Mesma caixa e régua lateral; o total ganha a cor da ficha, e a lixeira do
+// ADMIN entra na linha em vez de flutuar sobre a hora.
+:host(.cartao-rolagem--linha) {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-12);
+    padding: var(--space-8) var(--space-12);
+
+    .cartao-rolagem__excluir {
+        position: static;
+    }
+}
+
 .cartao-rolagem {
+    &__total {
+        flex: none;
+        min-width: 28px;
+        font-family: var(--font-mono);
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--cor-ficha, var(--text));
+    }
+
+    &__linha-texto {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        align-items: baseline;
+        flex-wrap: wrap;
+        gap: 2px var(--space-8);
+    }
+
     &__meta {
         display: flex;
         align-items: baseline;

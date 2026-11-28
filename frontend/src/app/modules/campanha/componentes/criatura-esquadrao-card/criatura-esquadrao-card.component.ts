@@ -57,6 +57,10 @@ export class CriaturaEsquadraoCard {
   readonly ultimaRolagemTempo = input<string | null>(null);
   /** Se o menu "⋯" DESTE cartão está aberto — controlado pelo pai, como `EspectadorFichaCard`. */
   readonly menuAberto = input(false);
+  /** Faixa "Última rolagem" no rodapé — a campanha do mestre a desliga (ui-45). */
+  readonly mostrarUltimaRolagem = input(true);
+  /** Retrato menor (72px) para a grade densa da campanha do mestre (ui-45). */
+  readonly compacto = input(false);
 
   readonly abrirFicha = output<void>();
   readonly alternarMenu = output<MouseEvent>();

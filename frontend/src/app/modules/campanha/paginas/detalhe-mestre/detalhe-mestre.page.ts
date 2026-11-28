@@ -42,6 +42,11 @@ import type { RolagemRealizadaDto } from '../../../ficha/rolagem-realizada';
 import { RolagemRapida } from '../../../ficha/componentes/rolagem-rapida/rolagem-rapida.component';
 import { HistoricoRolagensJanelaService } from '../../../../shared/historico-rolagens-sidebar/historico-rolagens-janela.service';
 import { IdentidadeClasse } from '../../../ficha/componentes/identidade-classe/identidade-classe.component';
+import type { CenaResumoDto } from '@contratados-rpg/shared/dtos/cena';
+import { CenaService } from '../../../cena/cena.service';
+import { CampanhaRoteiro } from '../../componentes/campanha-roteiro/campanha-roteiro.component';
+import { CampanhaMesaMestre } from '../../componentes/campanha-mesa-mestre/campanha-mesa-mestre.component';
+import { CampanhaMesaMestreService } from './campanha-mesa-mestre.service';
 
 /** Tipos de ficha com cartão e menu ⋯ na campanha do mestre. */
 type TipoFichaMenu = typeof TipoFichaEnum.JOGADOR | typeof TipoFichaEnum.CRIATURA | typeof TipoFichaEnum.NPC;
@@ -81,7 +86,10 @@ const ATRIBUTOS_NEUTROS: FichaAtributosDto = { destreza: 0, forca: 0, luta: 0, p
     Modal,
     RolagemRapida,
     NgTemplateOutlet,
+    CampanhaRoteiro,
+    CampanhaMesaMestre,
   ],
+  providers: [CampanhaMesaMestreService],
   templateUrl: './detalhe-mestre.page.html',
   styleUrl: './detalhe-mestre.page.scss',
 })
@@ -96,6 +104,31 @@ export class CampanhaDetalheMestre {
   private readonly confirmacaoService = inject(ConfirmacaoService);
   private readonly formBuilder = inject(FormBuilder);
   private readonly router = inject(Router);
+  private readonly cenaService = inject(CenaService);
+  /** Documentos e Caderno da mesa, e os documentos da Investigação ativa no roteiro (ui-45). */
+  protected readonly mesa = inject(CampanhaMesaMestreService);
+
+  /** Texto inteiro da missão aberto no lugar (ui-45) — fechado, ela é uma linha só. */
+  protected readonly missaoAberta = signal(false);
+  /** "Abrir cena" do roteiro em voo — trava o botão. */
+  protected readonly abrindoCena = signal(false);
+
+  /** A mesa só pede dado quando a campanha já é conhecida (`dados.id`). */
+  private readonly _efeitoIniciarMesa = effect(() => {
+    if (this.dados.campanha()) {
+      this.mesa.iniciar();
+    }
+  });
+
+  /** O Caderno privado não tem broadcast: ao fechar a janela dele, a mesa relê a última página. */
+  private cadernoEstavaAberto = false;
+  private readonly _efeitoCadernoFechado = effect(() => {
+    const aberto = this.cadernoAberto();
+    if (this.cadernoEstavaAberto && !aberto) {
+      this.mesa.recarregarCaderno();
+    }
+    this.cadernoEstavaAberto = aberto;
+  });
 
   protected readonly TipoFichaEnum = TipoFichaEnum;
   protected readonly TipoCampanhaMembroPapelEnum = TipoCampanhaMembroPapelEnum;
@@ -194,6 +227,54 @@ export class CampanhaDetalheMestre {
   /** Autor + origem (ficha, combatente avulso ou "Mestre") — ver `montarAutoriaRolagem`. */
   protected autorRolagem(rolagem: RolagemResumoDto): string {
     return montarAutoriaRolagem(rolagem);
+  }
+
+  /**
+   * Texto da missão sem um "Missão:" que o mestre tenha escrito no começo da descrição — o rótulo
+   * "Missão" já vem da tela (ui-45), e repetido ficava "MISSÃO Missão: …".
+   */
+  protected textoMissao(descricao: string): string {
+    return descricao.replace(/^\s*miss[ãa]o\s*:\s*/i, '');
+  }
+
+  /** Segmentado "Na base / Em missão" (ui-45): só troca quando o valor escolhido é outro. */
+  protected definirEstadoEquipe(naBase: boolean): void {
+    if (this.dados.campanha()?.naBase === naBase) {
+      return;
+    }
+    this.alterarEstadoCampanha();
+  }
+
+  /**
+   * "Abrir cena" do roteiro (ui-45): só aparece sem cena ativa, então não há cena a encerrar nem o
+   * que confirmar — mesmo `abrirCena` + navegação do hub (`HubCenas.abrirPlanejada`).
+   */
+  protected abrirCenaDoRoteiro(cena: CenaResumoDto): void {
+    if (this.abrindoCena()) {
+      return;
+    }
+    this.abrindoCena.set(true);
+    this.cenaService
+      .abrirCena(cena.id)
+      .pipe(finalize(() => this.abrindoCena.set(false)))
+      .subscribe({
+        next: () => void this.router.navigate(['/campanhas', this.dados.id, 'cenas', cena.id]),
+      });
+  }
+
+  /** "Biblioteca" da mesa (ui-45): o mesmo painel flutuante da coluna de ações, aberto. */
+  protected abrirBibliotecaDaMesa(): void {
+    this.bibliotecaRef()?.abrir();
+  }
+
+  /** "Abrir" da página do Caderno na mesa (ui-45). */
+  protected abrirPaginaDoCaderno(paginaId: number): void {
+    this.cadernoRef()?.abrirPagina(paginaId);
+  }
+
+  /** "Nova página" do Caderno vazio na mesa (ui-45). */
+  protected abrirNovaPaginaDoCaderno(): void {
+    this.cadernoRef()?.abrirNovaPagina();
   }
 
   /** Alterna Na Base/Em Missão — só o mestre altera; o jogador só lê (`CampanhaDetalheJogador`). */

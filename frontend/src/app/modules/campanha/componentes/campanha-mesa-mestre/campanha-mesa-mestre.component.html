@@ -1,0 +1,127 @@
+<section class="mesa__bloco" aria-label="Documentos">
+    <header class="mesa__secao">
+        <h2 class="mesa__secao-titulo">{{ tituloDocumentos() }}</h2>
+        <span class="mesa__secao-regua"></span>
+        <button
+            app-botao
+            type="button"
+            variante="secundario"
+            estilo="contorno"
+            tamanho="pequeno"
+            class="mesa__link"
+            (click)="abrirBiblioteca.emit()"
+        >
+            <app-icone nome="biblioteca" /> Biblioteca
+        </button>
+    </header>
+
+    @switch (estadoDocumentos()) {
+        @case ("CARREGANDO") {
+            <div class="mesa__esqueleto" role="status" aria-label="Carregando documentos">
+                @for (i of [0, 1, 2]; track i) {
+                    <app-esqueleto class="mesa__esqueleto-linha" />
+                }
+            </div>
+        }
+        @case ("ERRO") {
+            <app-estado-vazio
+                tamanho="compacto"
+                icone="alerta"
+                titulo="Não foi possível carregar os documentos."
+            />
+        }
+        @default {
+            @if (linhas().length === 0) {
+                <app-estado-vazio
+                    tamanho="compacto"
+                    icone="documentos"
+                    [titulo]="
+                        comInvestigacao()
+                            ? 'Nenhum documento anexado à cena.'
+                            : 'Nada revelado aos jogadores ainda.'
+                    "
+                />
+            } @else {
+                <ul class="mesa__documentos">
+                    @for (linha of linhas(); track linha.id) {
+                        <li class="mesa__documento" [class.mesa__documento--foco]="linha.emFoco">
+                            <span class="mesa__documento-titulo">{{ linha.titulo }}</span>
+                            <app-chip variante="sutil" [severidade]="linha.severidade">{{
+                                linha.estado
+                            }}</app-chip>
+                        </li>
+                    }
+                </ul>
+            }
+        }
+    }
+</section>
+
+<section class="mesa__bloco" aria-label="Caderno">
+    <header class="mesa__secao">
+        <h2 class="mesa__secao-titulo">Caderno · última editada</h2>
+        <span class="mesa__secao-regua"></span>
+        @if (pagina(); as paginaAtual) {
+            <button
+                app-botao
+                type="button"
+                variante="secundario"
+                estilo="contorno"
+                tamanho="pequeno"
+                class="mesa__link"
+                (click)="abrirPagina.emit(paginaAtual.id)"
+            >
+                <app-icone nome="caderno" /> Abrir
+            </button>
+        }
+    </header>
+
+    @switch (estadoCaderno()) {
+        @case ("CARREGANDO") {
+            <div class="mesa__esqueleto" role="status" aria-label="Carregando caderno">
+                <app-esqueleto class="mesa__esqueleto-linha" />
+                <app-esqueleto class="mesa__esqueleto-paragrafo" />
+            </div>
+        }
+        @case ("ERRO") {
+            <app-estado-vazio
+                tamanho="compacto"
+                icone="alerta"
+                titulo="Não foi possível carregar o caderno."
+            />
+        }
+        @default {
+            @if (pagina(); as paginaAtual) {
+                <button
+                    type="button"
+                    class="mesa__pagina"
+                    (click)="abrirPagina.emit(paginaAtual.id)"
+                >
+                    <span class="mesa__pagina-titulo">
+                        {{ paginaAtual.titulo || "Página sem título" }}
+                        @if (editadaHa(); as ha) {
+                            <span class="mesa__pagina-data">· editada {{ ha }}</span>
+                        }
+                    </span>
+                    @if (trecho(); as texto) {
+                        <span class="mesa__pagina-trecho">{{ texto }}</span>
+                    }
+                </button>
+            } @else {
+                <app-estado-vazio tamanho="compacto" icone="caderno" titulo="O caderno está vazio.">
+                    <button
+                        estadoVazioAcao
+                        app-botao
+                        type="button"
+                        variante="secundario"
+                        estilo="contorno"
+                        tamanho="pequeno"
+                        (click)="novaPagina.emit()"
+                    >
+                        Nova página
+                    </button>
+                </app-estado-vazio>
+            }
+        }
+    }
+</section>

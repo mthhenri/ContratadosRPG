@@ -2,7 +2,6 @@ import { Component, computed, input, output, signal, viewChild } from '@angular/
 import { RouterLink } from '@angular/router';
 import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
 import type { FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
-import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 import { TipoFichaEnum } from '@contratados-rpg/shared/enums';
 
 import { Icone } from '../../../../shared/icone/icone.component';
@@ -34,8 +33,9 @@ export interface AlvoFicha {
 
 /**
  * Corpo da campanha do mestre (m4-15): Esquadrão · Criaturas · NPCs em abas do mesmo padrão —
- * cabeçalho de seção (contagem + botão de criar) e grade de cartões do Esquadrão
- * (`EspectadorFichaCard`/`CriaturaEsquadraoCard`). Criaturas e NPCs em ordem A–Z; o Esquadrão
+ * contagem no rótulo da aba e botão de criar no fim da barra (ui-45), e grade de cartões do Esquadrão
+ * (`EspectadorFichaCard`/`CriaturaEsquadraoCard`) compactos e sem a faixa "Última rolagem" — na
+ * campanha do mestre a rolagem vive só no histórico ao lado (ui-45). Criaturas e NPCs em ordem A–Z; o Esquadrão
  * mantém a ordem recebida. Só apresenta: abrir ficha, menu ⋯ (que mora na raiz da página, fora do
  * grid com máscara de overflow) e criar agente saem como eventos; o diálogo de acesso de jogadores
  * é daqui (`abrirAcesso`, chamado pelo item do menu da página).
@@ -66,7 +66,6 @@ export class CampanhaFichasAbas {
   /** Todas as fichas visíveis da campanha — criaturas e NPCs saem daqui. */
   readonly fichas = input.required<readonly FichaResumoDto[]>();
   readonly membros = input<readonly CampanhaMembroResumoDto[]>([]);
-  readonly rolagens = input<readonly RolagemResumoDto[]>([]);
   readonly textoAtualizacao = input<string | null>(null);
   /** Ficha cujo menu ⋯ está aberto (dropdown na raiz da página). */
   readonly menuFichaId = input<number | null>(null);
@@ -107,10 +106,6 @@ export class CampanhaFichasAbas {
   /** Abre o diálogo de acesso de visualização de uma criatura/NPC (item do menu ⋯ da página). */
   abrirAcesso(fichaId: number): void {
     this.acessoRef()?.abrir(fichaId);
-  }
-
-  protected ultimaRolagem(fichaId: number): RolagemResumoDto | null {
-    return this.rolagens().find((rolagem) => rolagem.fichaId === fichaId) ?? null;
   }
 
   protected alvo(ficha: { id: number; usuarioId: number; nome: string }, donoNome?: string): AlvoFicha {

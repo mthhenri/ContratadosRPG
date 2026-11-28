@@ -2,8 +2,8 @@
 
 // Abas Esquadrão · Criaturas · NPCs do corpo da campanha do mestre (m4-15). Cabeçalho de seção e
 // grade vieram de `detalhe-mestre.page.scss` (`__secao*`, `__esquadrao-grid`), onde serviam só ao
-// Esquadrão; o esqueleto de carga espelha `.espectador-ficha` (avatar 128px + coluna de texto/
-// barras + faixa "Última rolagem") e fica aqui junto da grade que ele imita.
+// Esquadrão; o esqueleto de carga espelha o `.espectador-ficha` compacto da campanha (ui-45:
+// retrato de 72px, sem a faixa "Última rolagem") e fica aqui junto da grade que ele imita.
 :host {
     display: flex;
     flex-direction: column;
@@ -18,27 +18,44 @@
         min-height: 0;
     }
 
+    // ui-45: abas (com a contagem no rótulo) e, no fim da mesma linha, o botão de criar da aba
+    // ativa. No mobile o botão desce para a linha de baixo, na largura toda.
+    &__barra {
+        display: flex;
+        align-items: center;
+        gap: var(--space-12);
+
+        app-abas {
+            flex: 1;
+            min-width: 0;
+        }
+
+        @include bp.mobile {
+            flex-direction: column;
+            align-items: stretch;
+        }
+    }
+
+    // No mobile só a aba ativa mostra o rótulo (ui-44) e ele já é curto; a contagem sai do texto
+    // visível e fica no nome acessível da aba.
+    &__contagem {
+        @include bp.mobile {
+            display: none;
+        }
+    }
+
     &__secao {
+        flex: none;
         display: flex;
         align-items: center;
         gap: 10px;
-        margin-bottom: 12px;
-        flex-wrap: wrap;
-    }
 
-    &__secao-regua {
-        flex: 1;
-        min-width: 20px;
-        height: 1px;
-        background: var(--border);
-    }
-
-    &__secao-contagem {
-        flex: none;
-        font-family: var(--font-mono);
-        font-size: 12px;
-        font-weight: 600;
-        color: var(--text-mute);
+        @include bp.mobile {
+            [app-botao] {
+                flex: 1;
+                justify-content: center;
+            }
+        }
     }
 
     &__secao-atualizado {
@@ -58,15 +75,15 @@
     }
 
     // Colunas pela largura que a grade tem, não pela janela (ui-43): a coluna de ações aberta tira
-    // 144px daqui sem a janela mudar de faixa, e em 1366 as 3 colunas fixas deixavam o cartão com
-    // 276px — nome quebrando letra por letra. Com 400px de mínimo: 3 colunas em 1920 (como antes),
-    // 2 em 1366 e na tela dividida, 1 no mobile.
+    // 144px daqui sem a janela mudar de faixa. Com o cartão compacto (ui-45, retrato de 72px) o
+    // mínimo cai de 400px para 340px: 3 colunas em 1920 mesmo com a mesa ao lado, 2 em 1366, 1 no
+    // mobile.
     &__grade {
         list-style: none;
         margin: 0 0 var(--space-16);
         padding: 2px;
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(min(100%, 400px), 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
         gap: var(--space-8);
         align-items: start;
     }
@@ -76,11 +93,16 @@
         &__secao [app-botao] {
             min-height: bp.$alvo-toque;
         }
+
+        &__esqueleto-botao {
+            width: 100%;
+        }
     }
 
     // === Esqueleto de carga — só a geometria de cada bloco; a identidade (cor/raio/pulso) é de
     // `app-esqueleto`.
     &__esqueleto-abas {
+        flex: 1;
         height: 42px;
     }
 
@@ -115,8 +137,8 @@
 
     &__esqueleto-avatar {
         flex: none;
-        width: 128px;
-        height: 128px;
+        width: 72px;
+        height: 72px;
     }
 
     &__esqueleto-linha-curta {
@@ -132,10 +154,5 @@
     &__esqueleto-barra {
         width: 100%;
         height: 22px;
-    }
-
-    &__esqueleto-rodape {
-        height: 30px;
-        margin: 0 var(--space-12) var(--space-12);
     }
 }

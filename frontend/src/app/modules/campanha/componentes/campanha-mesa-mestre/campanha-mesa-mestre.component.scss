@@ -1,0 +1,159 @@
+// Mesa do mestre (ui-45): blocos Documentos e Caderno. Caixa na receita de
+// `.detalhe-mestre__painel-lateral` (análogo: o painel de rolagens da mesma página) e cabeçalho de
+// seção no padrão "título mono apagado + régua" (`.detalhe-mestre__historico-cabecalho`). Só tokens
+// (#29).
+
+@use "tema/breakpoints" as bp;
+
+// Embaixo das fichas (ui-45, ajuste do autor): os dois blocos lado a lado; empilham quando a coluna
+// fica estreita.
+:host {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+    gap: var(--space-12);
+    align-items: start;
+    min-width: 0;
+}
+
+.mesa {
+    &__bloco {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-8);
+        padding: var(--space-12) var(--space-16);
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-card);
+    }
+
+    &__secao {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        min-height: 28px;
+    }
+
+    &__secao-titulo {
+        margin: 0;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        color: var(--text-mute);
+        white-space: nowrap;
+    }
+
+    &__secao-regua {
+        flex: 1;
+        min-width: 12px;
+        height: 1px;
+        background: var(--border);
+    }
+
+    &__link {
+        flex: none;
+
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+    }
+
+    &__documentos {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+    }
+
+    &__documento {
+        display: flex;
+        align-items: center;
+        gap: var(--space-8);
+        padding: 6px 0;
+        border-top: 1px solid var(--border);
+
+        &:first-child {
+            border-top: 0;
+        }
+
+        &--foco .mesa__documento-titulo {
+            color: var(--text);
+            font-weight: 600;
+        }
+    }
+
+    &__documento-titulo {
+        flex: 1;
+        min-width: 0;
+        font-size: 13px;
+        color: var(--text-dim);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    // A página inteira é o alvo de "abrir" — botão sem caixa, o bloco já é a moldura.
+    &__pagina {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding: 0;
+        text-align: left;
+        color: inherit;
+        background: none;
+        border: 0;
+        cursor: pointer;
+        font: inherit;
+
+        &:hover .mesa__pagina-titulo {
+            color: var(--accent);
+        }
+
+        &:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 4px;
+            border-radius: var(--radius-compact);
+        }
+    }
+
+    &__pagina-titulo {
+        font-family: var(--font-mono);
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text);
+        overflow-wrap: anywhere;
+    }
+
+    &__pagina-data {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 400;
+        color: var(--text-mute);
+    }
+
+    &__pagina-trecho {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        font-size: 13px;
+        line-height: 1.5;
+        color: var(--text-dim);
+    }
+
+    &__esqueleto {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-8);
+    }
+
+    &__esqueleto-linha {
+        height: 18px;
+    }
+
+    &__esqueleto-paragrafo {
+        height: 54px;
+    }
+}

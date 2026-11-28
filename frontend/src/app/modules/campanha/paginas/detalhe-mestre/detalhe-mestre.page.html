@@ -18,6 +18,8 @@
         <span class="detalhe-mestre__cabecalho-regua"></span>
     </header>
 
+    <app-campanha-roteiro [campanhaId]="0" [cenas]="null" />
+
     <div class="detalhe-mestre__corpo">
         <section class="detalhe-mestre__esquadrao">
             <app-campanha-fichas-abas
@@ -26,6 +28,7 @@
                 [fichasEsquadrao]="[]"
                 [fichas]="[]"
             />
+            <app-campanha-mesa-mestre />
         </section>
 
         <aside class="detalhe-mestre__painel-lateral">
@@ -127,23 +130,62 @@
         </a>
         <span class="detalhe-mestre__cabecalho-indice">//</span>
         <h1 class="detalhe-mestre__titulo">{{ campanhaAtual.nome }}</h1>
+        <!-- ui-45: o estado da equipe é uma escolha explícita entre os dois valores, não um chip
+             que alterna ao clicar. -->
+        <div class="detalhe-mestre__estado-equipe">
+        <app-segmentado rotulo="Onde a equipe está" [fluido]="true">
+            <button
+                app-segmentado-item
+                [ativo]="campanhaAtual.naBase"
+                (click)="definirEstadoEquipe(true)"
+            >
+                <app-icone nome="guardada" /> Na base
+            </button>
+            <button
+                app-segmentado-item
+                [ativo]="!campanhaAtual.naBase"
+                (click)="definirEstadoEquipe(false)"
+            >
+                <app-icone nome="combate" /> Em missão
+            </button>
+        </app-segmentado>
+        </div>
+        @if (campanhaAtual.descricao) {
+        <p class="detalhe-mestre__missao">
+            <span class="detalhe-mestre__missao-rotulo">Missão</span>
+            @if (!missaoAberta()) {
+            <span class="detalhe-mestre__missao-linha">{{ textoMissao(campanhaAtual.descricao) }}</span>
+            }
+        </p>
         <button
             app-botao
-            class="detalhe-mestre__estado-operacional"
             type="button"
-            [class.detalhe-mestre__estado-operacional--base]="campanhaAtual.naBase"
-            [class.detalhe-mestre__estado-operacional--missao]="!campanhaAtual.naBase"
-            (click)="alterarEstadoCampanha()"
+            variante="secundario"
+            estilo="contorno"
+            tamanho="pequeno"
+            class="detalhe-mestre__missao-alternar"
+            [attr.aria-expanded]="missaoAberta()"
+            aria-controls="detalhe-mestre-missao"
+            (click)="missaoAberta.set(!missaoAberta())"
         >
-            <app-icone [nome]="campanhaAtual.naBase ? 'guardada' : 'combate'" />
-            {{ campanhaAtual.naBase ? 'Na Base' : 'Em Missão' }}
+            {{ missaoAberta() ? 'Recolher missão' : 'Ler missão' }}
         </button>
+        } @else {
         <span class="detalhe-mestre__cabecalho-regua"></span>
+        }
     </header>
 
-    @if (campanhaAtual.descricao) {
-    <p class="detalhe-mestre__descricao">{{ campanhaAtual.descricao }}</p>
+    @if (campanhaAtual.descricao && missaoAberta()) {
+    <p id="detalhe-mestre-missao" class="detalhe-mestre__descricao">{{ textoMissao(campanhaAtual.descricao) }}</p>
     }
+
+    <app-campanha-roteiro
+        [campanhaId]="campanhaAtual.id"
+        [cenas]="dados.cenas()"
+        [documentosAtiva]="mesa.documentosCena()"
+        [emOperacao]="abrindoCena()"
+        (abrirCena)="abrirCenaDoRoteiro($event)"
+    />
 
     <div class="detalhe-mestre__corpo">
         <section class="detalhe-mestre__esquadrao">
@@ -152,16 +194,30 @@
                 [fichasEsquadrao]="fichasEsquadrao()"
                 [fichas]="dados.fichas()"
                 [membros]="dados.membros()"
-                [rolagens]="dados.rolagensFeed()"
                 [textoAtualizacao]="dados.textoAtualizacao()"
                 [menuFichaId]="menuFichaAberto()?.id ?? null"
                 (abrirFicha)="abrirFichaDoCartao($event)"
                 (alternarMenu)="alternarMenuDoCartao($event)"
                 (criarAgente)="abrirCriarFicha()"
             />
+            <!-- ui-45: Documentos e Caderno embaixo das fichas, lado a lado; a coluna da direita é só
+                 das rolagens (pedido do autor depois da 1ª versão, que as empurrava para baixo). -->
+            <app-campanha-mesa-mestre
+                [comInvestigacao]="mesa.investigacaoAtiva() !== null"
+                [documentosCena]="mesa.documentosCena()"
+                [revelados]="mesa.revelados()"
+                [estadoDocumentos]="mesa.estadoDocumentos()"
+                [pagina]="mesa.paginaRecente()"
+                [trecho]="mesa.trechoPagina()"
+                [estadoCaderno]="mesa.estadoCaderno()"
+                [agora]="dados.agora()"
+                (abrirBiblioteca)="abrirBibliotecaDaMesa()"
+                (abrirPagina)="abrirPaginaDoCaderno($event)"
+                (novaPagina)="abrirNovaPaginaDoCaderno()"
+            />
         </section>
 
-        <aside class="detalhe-mestre__painel-lateral">
+        <aside class="detalhe-mestre__painel-lateral" aria-label="Rolagens e inventário">
             <app-segmentado rotulo="Painel lateral" [fluido]="true">
                 <button
                     app-segmentado-item
@@ -247,7 +303,12 @@
                 } @else {
                 <ul class="detalhe-mestre__rolagens-lista">
                     @for (item of dados.rolagensFeed(); track item.id) {
-                    <li app-cartao-rolagem [rolagem]="item" [autor]="autorRolagem(item)"></li>
+                    <li
+                        app-cartao-rolagem
+                        [rolagem]="item"
+                        [autor]="autorRolagem(item)"
+                        [linha]="true"
+                    ></li>
                     }
                 </ul>
                 } }

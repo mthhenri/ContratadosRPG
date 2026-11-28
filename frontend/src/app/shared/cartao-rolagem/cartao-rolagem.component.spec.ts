@@ -67,6 +67,23 @@ describe('CartaoRolagem', () => {
     expect(privada.nativeElement.textContent).toContain('privada');
   });
 
+  it('em linha: total, teste, quem e hora, sem fórmula nem o detalhe dos dados (ui-45)', () => {
+    const fixture = montar(TipoUsuarioEnum.NORMAL);
+    fixture.componentRef.setInput('linha', true);
+    fixture.detectChanges();
+    const raiz = fixture.nativeElement as HTMLElement;
+
+    expect(raiz.classList).toContain('cartao-rolagem--linha');
+    expect(raiz.querySelector('.cartao-rolagem__total')?.textContent?.trim()).toBe(
+      String(rolagem.resultado.total),
+    );
+    expect(raiz.textContent).toContain('Luta');
+    expect(raiz.textContent).toContain('Agente · Ficha');
+    expect(raiz.textContent).toContain('15:30');
+    expect(raiz.textContent).not.toContain('2d6+3');
+    expect(raiz.querySelector('app-resultado-rolagem')).toBeNull();
+  });
+
   it('não renderiza a lixeira para quem não é ADMIN', () => {
     expect(montar(TipoUsuarioEnum.NORMAL).nativeElement.querySelector('button')).toBeNull();
   });

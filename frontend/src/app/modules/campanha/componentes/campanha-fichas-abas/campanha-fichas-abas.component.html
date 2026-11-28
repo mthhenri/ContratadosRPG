@@ -1,9 +1,8 @@
 @if (carregando()) {
-    <app-esqueleto class="fichas-abas__esqueleto-abas" />
-    <header class="fichas-abas__secao">
-        <span class="fichas-abas__secao-regua"></span>
+    <div class="fichas-abas__barra">
+        <app-esqueleto class="fichas-abas__esqueleto-abas" />
         <app-esqueleto class="fichas-abas__esqueleto-botao" />
-    </header>
+    </div>
     <ul class="fichas-abas__grade">
         @for (i of [0, 1, 2]; track i) {
             <li class="fichas-abas__esqueleto-card">
@@ -12,70 +11,61 @@
                     <div class="fichas-abas__esqueleto-card-texto">
                         <app-esqueleto class="fichas-abas__esqueleto-linha-curta" />
                         <app-esqueleto class="fichas-abas__esqueleto-linha-nome" />
-                        <app-esqueleto class="fichas-abas__esqueleto-linha-curta" />
-                        <app-esqueleto class="fichas-abas__esqueleto-barra" />
                         <app-esqueleto class="fichas-abas__esqueleto-barra" />
                     </div>
                 </div>
-                <app-esqueleto class="fichas-abas__esqueleto-rodape" />
             </li>
         }
     </ul>
 } @else {
-    <app-abas rotulo="Fichas da campanha" (navegou)="selecionarAba($event)">
-        <button
-            app-aba
-            valor="esquadrao"
-            aria-label="Esquadrão"
-            id="fichas-aba-esquadrao"
-            aria-controls="fichas-painel"
-            [ativa]="abaAtiva() === 'esquadrao'"
-            (click)="selecionarAba('esquadrao')"
-        >
-            <app-icone nome="membros" />
-            <span class="abas__rotulo">Esquadrão</span>
-        </button>
-        <button
-            app-aba
-            valor="criaturas"
-            aria-label="Criaturas"
-            id="fichas-aba-criaturas"
-            aria-controls="fichas-painel"
-            [ativa]="abaAtiva() === 'criaturas'"
-            (click)="selecionarAba('criaturas')"
-        >
-            <app-icone nome="criatura" />
-            <span class="abas__rotulo">Criaturas</span>
-        </button>
-        <button
-            app-aba
-            valor="npcs"
-            aria-label="NPCs"
-            id="fichas-aba-npcs"
-            aria-controls="fichas-painel"
-            [ativa]="abaAtiva() === 'npcs'"
-            (click)="selecionarAba('npcs')"
-        >
-            <app-icone nome="npc" />
-            <span class="abas__rotulo">NPCs</span>
-        </button>
-    </app-abas>
+    <!-- ui-45: a contagem vai no rótulo da aba e o botão de criar fica no fim da barra (fora do
+         tablist, que só pode conter abas). -->
+    <div class="fichas-abas__barra">
+        <app-abas rotulo="Fichas da campanha" (navegou)="selecionarAba($event)">
+            <button
+                app-aba
+                valor="esquadrao"
+                [attr.aria-label]="'Esquadrão, ' + fichasEsquadrao().length"
+                id="fichas-aba-esquadrao"
+                aria-controls="fichas-painel"
+                [ativa]="abaAtiva() === 'esquadrao'"
+                (click)="selecionarAba('esquadrao')"
+            >
+                <app-icone nome="membros" />
+                <span class="abas__rotulo">Esquadrão<span class="fichas-abas__contagem"> · {{ fichasEsquadrao().length }}</span></span>
+            </button>
+            <button
+                app-aba
+                valor="criaturas"
+                [attr.aria-label]="'Criaturas, ' + criaturas().length"
+                id="fichas-aba-criaturas"
+                aria-controls="fichas-painel"
+                [ativa]="abaAtiva() === 'criaturas'"
+                (click)="selecionarAba('criaturas')"
+            >
+                <app-icone nome="criatura" />
+                <span class="abas__rotulo">Criaturas<span class="fichas-abas__contagem"> · {{ criaturas().length }}</span></span>
+            </button>
+            <button
+                app-aba
+                valor="npcs"
+                [attr.aria-label]="'NPCs, ' + npcs().length"
+                id="fichas-aba-npcs"
+                aria-controls="fichas-painel"
+                [ativa]="abaAtiva() === 'npcs'"
+                (click)="selecionarAba('npcs')"
+            >
+                <app-icone nome="npc" />
+                <span class="abas__rotulo">NPCs<span class="fichas-abas__contagem"> · {{ npcs().length }}</span></span>
+            </button>
+        </app-abas>
 
-    <section
-        class="fichas-abas__painel"
-        appAbaPainel
-        id="fichas-painel"
-        [attr.aria-labelledby]="'fichas-aba-' + abaAtiva()"
-    >
-        @switch (abaAtiva()) {
-            @case ("esquadrao") {
-                <header class="fichas-abas__secao">
-                    <span class="fichas-abas__secao-regua"></span>
-                    <!-- ui-44: a contagem diz o que conta (antes era só o número). -->
-                    <span class="fichas-abas__secao-contagem"
-                        >{{ fichasEsquadrao().length }}
-                        {{ fichasEsquadrao().length === 1 ? "agente" : "agentes" }}</span
-                    >
+        <div class="fichas-abas__secao">
+            @if (textoAtualizacao(); as texto) {
+                <span class="fichas-abas__secao-atualizado">{{ texto }}</span>
+            }
+            @switch (abaAtiva()) {
+                @case ("esquadrao") {
                     <button
                         app-botao
                         type="button"
@@ -88,10 +78,45 @@
                         <app-icone nome="novo-agente" />
                         Novo Agente
                     </button>
-                    @if (textoAtualizacao(); as texto) {
-                        <span class="fichas-abas__secao-atualizado">{{ texto }}</span>
-                    }
-                </header>
+                }
+                @case ("criaturas") {
+                    <a
+                        app-botao
+                        variante="primario"
+                        estilo="preenchido"
+                        tamanho="medio"
+                        posicaoIcone="esquerda"
+                        [routerLink]="['/campanhas', campanhaId(), 'criatura', 'nova']"
+                    >
+                        <app-icone nome="alerta" />
+                        Nova criatura
+                    </a>
+                }
+                @case ("npcs") {
+                    <a
+                        app-botao
+                        variante="primario"
+                        estilo="preenchido"
+                        tamanho="medio"
+                        posicaoIcone="esquerda"
+                        [routerLink]="['/campanhas', campanhaId(), 'npc', 'novo']"
+                    >
+                        <app-icone nome="agente" />
+                        Novo NPC
+                    </a>
+                }
+            }
+        </div>
+    </div>
+
+    <section
+        class="fichas-abas__painel"
+        appAbaPainel
+        id="fichas-painel"
+        [attr.aria-labelledby]="'fichas-aba-' + abaAtiva()"
+    >
+        @switch (abaAtiva()) {
+            @case ("esquadrao") {
                 @if (fichasEsquadrao().length === 0) {
                     <p class="fichas-abas__estado">Nenhuma ficha na campanha ainda.</p>
                 } @else {
@@ -100,7 +125,8 @@
                             <li>
                                 <app-espectador-ficha-card
                                     [ficha]="ficha"
-                                    [ultimaRolagem]="ultimaRolagem(ficha.id)"
+                                    [mostrarUltimaRolagem]="false"
+                                    [compacto]="true"
                                     [mostrarAcoes]="true"
                                     [menuAberto]="menuFichaId() === ficha.id"
                                     [mostrarPreviewAvatar]="true"
@@ -124,25 +150,6 @@
                 }
             }
             @case ("criaturas") {
-                <header class="fichas-abas__secao">
-                    <span class="fichas-abas__secao-regua"></span>
-                    <!-- ui-44: a contagem diz o que conta (antes era só o número). -->
-                    <span class="fichas-abas__secao-contagem"
-                        >{{ criaturas().length }}
-                        {{ criaturas().length === 1 ? "criatura" : "criaturas" }}</span
-                    >
-                    <a
-                        app-botao
-                        variante="primario"
-                        estilo="preenchido"
-                        tamanho="medio"
-                        posicaoIcone="esquerda"
-                        [routerLink]="['/campanhas', campanhaId(), 'criatura', 'nova']"
-                    >
-                        <app-icone nome="alerta" />
-                        Nova criatura
-                    </a>
-                </header>
                 @if (criaturas().length === 0) {
                     <p class="fichas-abas__estado">Nenhuma criatura nesta campanha.</p>
                 } @else {
@@ -151,7 +158,8 @@
                             <li>
                                 <app-criatura-esquadrao-card
                                     [criatura]="cartao.dados"
-                                    [ultimaRolagem]="ultimaRolagem(cartao.ficha.id)"
+                                    [mostrarUltimaRolagem]="false"
+                                    [compacto]="true"
                                     [menuAberto]="menuFichaId() === cartao.ficha.id"
                                     (abrirFicha)="
                                         abrirFicha.emit({
@@ -173,24 +181,6 @@
                 }
             }
             @case ("npcs") {
-                <header class="fichas-abas__secao">
-                    <span class="fichas-abas__secao-regua"></span>
-                    <!-- ui-44: a contagem diz o que conta (antes era só o número). -->
-                    <span class="fichas-abas__secao-contagem"
-                        >{{ npcs().length }} {{ npcs().length === 1 ? "NPC" : "NPCs" }}</span
-                    >
-                    <a
-                        app-botao
-                        variante="primario"
-                        estilo="preenchido"
-                        tamanho="medio"
-                        posicaoIcone="esquerda"
-                        [routerLink]="['/campanhas', campanhaId(), 'npc', 'novo']"
-                    >
-                        <app-icone nome="agente" />
-                        Novo NPC
-                    </a>
-                </header>
                 @if (npcs().length === 0) {
                     <p class="fichas-abas__estado">Nenhum NPC nesta campanha.</p>
                 } @else {
@@ -199,7 +189,8 @@
                             <li>
                                 <app-espectador-ficha-card
                                     [ficha]="cartao.dados"
-                                    [ultimaRolagem]="ultimaRolagem(cartao.ficha.id)"
+                                    [mostrarUltimaRolagem]="false"
+                                    [compacto]="true"
                                     [mostrarAcoes]="true"
                                     [mostrarEnergia]="cartao.mostrarEnergia"
                                     [menuAberto]="menuFichaId() === cartao.ficha.id"

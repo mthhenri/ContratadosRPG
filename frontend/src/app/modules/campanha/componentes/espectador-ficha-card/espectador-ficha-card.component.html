@@ -1,4 +1,8 @@
-<article class="espectador-ficha" [class.espectador-ficha--critico]="ficha().critico">
+<article
+    class="espectador-ficha"
+    [class.espectador-ficha--critico]="ficha().critico"
+    [class.espectador-ficha--compacto]="compacto()"
+>
     <div class="espectador-ficha__cabecalho">
         <span
             class="espectador-ficha__avatar"
@@ -129,27 +133,29 @@
         }
     </div>
 
-    <div class="espectador-ficha__ultima-rolagem" [style.--cor-ficha]="ficha().cor">
-        @if (ultimaRolagem(); as rolagem) {
-            <span class="espectador-ficha__ultima-rolagem-rotulo">Última rolagem</span>
-            <span
-                class="espectador-ficha__ultima-rolagem-texto"
-                [class.espectador-ficha__ultima-rolagem-texto--critico]="ultimaRolagemCritica()"
-            >
-                @if (ultimaRolagemCritica()) {
-                    <app-icone class="espectador-ficha__ultima-rolagem-critico" nome="critico" />
-                    <span class="sr-only">Crítico: </span>
+    @if (mostrarUltimaRolagem()) {
+        <div class="espectador-ficha__ultima-rolagem" [style.--cor-ficha]="ficha().cor">
+            @if (ultimaRolagem(); as rolagem) {
+                <span class="espectador-ficha__ultima-rolagem-rotulo">Última rolagem</span>
+                <span
+                    class="espectador-ficha__ultima-rolagem-texto"
+                    [class.espectador-ficha__ultima-rolagem-texto--critico]="ultimaRolagemCritica()"
+                >
+                    @if (ultimaRolagemCritica()) {
+                        <app-icone class="espectador-ficha__ultima-rolagem-critico" nome="critico" />
+                        <span class="sr-only">Crítico: </span>
+                    }
+                    <span class="espectador-ficha__ultima-rolagem-nome">{{ rolagem.rotulo }}</span>
+                    <span class="espectador-ficha__ultima-rolagem-total">— {{ rolagem.resultado.total }}</span>
+                </span>
+                @if (ultimaRolagemTempo(); as tempo) {
+                    <span class="espectador-ficha__ultima-rolagem-tempo">{{ tempo }}</span>
                 }
-                <span class="espectador-ficha__ultima-rolagem-nome">{{ rolagem.rotulo }}</span>
-                <span class="espectador-ficha__ultima-rolagem-total">— {{ rolagem.resultado.total }}</span>
-            </span>
-            @if (ultimaRolagemTempo(); as tempo) {
-                <span class="espectador-ficha__ultima-rolagem-tempo">{{ tempo }}</span>
+            } @else {
+                <span class="espectador-ficha__ultima-rolagem-vazio"
+                    >Nenhuma rolagem carregada ainda</span
+                >
             }
-        } @else {
-            <span class="espectador-ficha__ultima-rolagem-vazio"
-                >Nenhuma rolagem carregada ainda</span
-            >
-        }
-    </div>
+        </div>
+    }
 </article>

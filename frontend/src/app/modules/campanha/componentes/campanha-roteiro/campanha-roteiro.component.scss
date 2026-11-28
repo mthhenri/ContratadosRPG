@@ -1,0 +1,318 @@
+// Faixa "Roteiro da sessão" (ui-45). Cartões na receita de `.cena-cartao` do hub de cenas
+// (`hub-cenas.page.scss`, análogo aprovado): `--surface`, borda `--border`, raio de cartão, hover em
+// `--surface-2` + `--accent-border`; a cena ativa com a mesma borda de acento parada. A faixa nunca
+// quebra para uma segunda linha no desktop — rola de lado, dentro dela (a página não rola). No
+// mobile o destaque ocupa a largura toda e só as seguintes rolam. Só tokens (#29).
+
+@use "tema/breakpoints" as bp;
+
+:host {
+    display: block;
+    min-width: 0;
+}
+
+.roteiro {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
+
+    &__secao {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+    }
+
+    &__secao-titulo {
+        margin: 0;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        color: var(--text-mute);
+    }
+
+    &__secao-regua {
+        flex: 1;
+        min-width: 20px;
+        height: 1px;
+        background: var(--border);
+    }
+
+    &__todas {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        color: var(--text-dim);
+        text-decoration: none;
+
+        &:hover {
+            color: var(--accent);
+        }
+
+        &:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+    }
+
+    // O glifo `chevron` aponta para baixo; girado, indica "abrir" (mesmo uso do hub).
+    &__seta {
+        width: 12px;
+        height: 12px;
+        transform: rotate(-90deg);
+    }
+
+    // Desktop: uma linha só, rolando de lado dentro da faixa. Mobile: o destaque em cima, na
+    // largura toda, e só a trilha das seguintes rola de lado.
+    &__faixa {
+        display: flex;
+        align-items: stretch;
+        gap: 10px;
+        padding-bottom: 4px;
+        overflow-x: auto;
+
+        @include bp.mobile {
+            flex-direction: column;
+            overflow-x: visible;
+            padding-bottom: 0;
+        }
+    }
+
+    &__seguintes {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        flex: none;
+        display: flex;
+        align-items: stretch;
+        gap: 10px;
+
+        &:empty {
+            display: none;
+        }
+
+        @include bp.mobile {
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+    }
+
+    &__encerradas {
+        flex: none;
+        width: 112px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: var(--space-8);
+        padding: var(--space-12) 14px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-card);
+
+        @include bp.mobile {
+            display: none;
+        }
+    }
+
+    &__encerradas-rotulo {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        color: var(--text-mute);
+    }
+
+    &__encerradas-numero {
+        font-family: var(--font-mono);
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--text-dim);
+    }
+
+    &__destaque {
+        flex: 1 0 420px;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: var(--space-16);
+        padding: var(--space-16) 18px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-card);
+
+        &--ativa {
+            border-color: var(--accent-border);
+            background: linear-gradient(var(--accent-dim), var(--accent-dim)), var(--surface);
+        }
+
+        &--vazio {
+            border-style: dashed;
+            border-color: var(--border-strong);
+        }
+
+        @include bp.mobile {
+            flex: none;
+            flex-direction: column;
+            align-items: stretch;
+            gap: var(--space-12);
+            padding: var(--space-12) 14px;
+        }
+    }
+
+    &__destaque-texto {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    &__chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    // No mobile a trilha "Próximas cenas" já diz que são planejadas; o chip só empilhava.
+    &__chip-planejada {
+        @include bp.mobile {
+            display: none;
+        }
+    }
+
+    &__destaque-nome {
+        font-family: var(--font-mono);
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--text);
+        overflow-wrap: anywhere;
+    }
+
+    &__destaque-apoio {
+        font-size: 13px;
+        color: var(--text-dim);
+    }
+
+    &__destaque-foco {
+        color: var(--text);
+    }
+
+    &__destaque-acao {
+        flex: none;
+
+        @include bp.mobile {
+            width: 100%;
+            justify-content: center;
+            min-height: bp.$alvo-toque;
+        }
+    }
+
+    &__item {
+        flex: 0 0 250px;
+        display: flex;
+
+        // "Nova cena" não precisa da largura de um cartão de cena.
+        &:has(.roteiro__nova) {
+            flex-basis: 150px;
+        }
+
+        @include bp.mobile {
+            flex-basis: 200px;
+        }
+    }
+
+    &__cartao {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 6px;
+        padding: var(--space-12) 14px;
+        color: inherit;
+        text-decoration: none;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-card);
+        transition:
+            border-color 0.15s ease,
+            background-color 0.15s ease;
+
+        &:hover {
+            background: var(--surface-2);
+            border-color: var(--accent-border);
+        }
+
+        &:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+    }
+
+    &__cartao-nome {
+        font-family: var(--font-mono);
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text);
+        overflow-wrap: anywhere;
+    }
+
+    &__nova {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        min-height: bp.$alvo-toque;
+        padding: var(--space-12);
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        color: var(--text-dim);
+        text-decoration: none;
+        border: 1px dashed var(--border-strong);
+        border-radius: var(--radius-card);
+
+        &:hover {
+            color: var(--accent);
+            border-color: var(--accent-border);
+        }
+
+        &:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        app-icone {
+            width: 14px;
+            height: 14px;
+        }
+    }
+
+    &__esqueleto-destaque {
+        flex: 1 0 420px;
+        height: 96px;
+    }
+
+    &__esqueleto-cartao {
+        flex: 0 0 220px;
+        height: 96px;
+
+        @include bp.mobile {
+            display: none;
+        }
+    }
+}

@@ -118,6 +118,18 @@ describe('CriaturaEsquadraoCard', () => {
     expect(raiz.textContent).not.toContain('nunca rolou');
   });
 
+  it('sem a faixa "Última rolagem" quando desligada, e com retrato menor no compacto (ui-45)', () => {
+    const raiz = montar(criatura());
+    expect(raiz.querySelector('.criatura-card__ultima-rolagem')).not.toBeNull();
+
+    fixture.componentRef.setInput('mostrarUltimaRolagem', false);
+    fixture.componentRef.setInput('compacto', true);
+    fixture.detectChanges();
+
+    expect(raiz.querySelector('.criatura-card__ultima-rolagem')).toBeNull();
+    expect(raiz.querySelector('.criatura-card--compacto')).not.toBeNull();
+  });
+
   it('sinaliza crítico (vida ≤ 0) na borda do card', () => {
     const raiz = montar(criatura({ critico: true }));
     expect(raiz.querySelector('.criatura-card--critico')).not.toBeNull();

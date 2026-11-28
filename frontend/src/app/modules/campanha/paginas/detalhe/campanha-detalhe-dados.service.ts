@@ -1,6 +1,6 @@
 import { DestroyRef, Injectable, Injector, computed, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { bufferTime, catchError, filter, finalize, forkJoin, map, merge, of, Subject, switchMap, type Observable, type Subscription } from 'rxjs';
+import { bufferTime, catchError, filter, finalize, forkJoin, map, merge, of, Subject, switchMap, tap, type Observable, type Subscription } from 'rxjs';
 import { CenaStatusEnum, TipoCampanhaMembroPapelEnum, TipoFichaEnum } from '@contratados-rpg/shared/enums';
 import type { CenaResumoDto } from '@contratados-rpg/shared/dtos/cena';
 import { CenaService } from '../../../cena/cena.service';
@@ -78,6 +78,12 @@ export class CampanhaDetalheDadosService {
 
   readonly campanha = signal<CampanhaRecuperadaDto | null>(null);
   readonly cenaAtiva = signal<CenaResumoDto | null>(null);
+  /**
+   * Lista inteira das cenas na ordem do hub (ui-45, roteiro do mestre) — preenchida pela mesma
+   * leitura que resolve `cenaAtiva`, sem GET extra. `null` até a primeira resposta; a prévia de
+   * jogador não a preenche (ela só resolve a cena ativa redigida).
+   */
+  readonly cenas = signal<readonly CenaResumoDto[] | null>(null);
   readonly inventarioEsquadrao = signal<readonly CampanhaInventarioItemDto[]>([]);
   readonly estadoInventario = signal<EstadoInventario>('NAO_CARREGADO');
   readonly membros = signal<CampanhaMembroResumoDto[]>([]);
@@ -213,6 +219,7 @@ export class CampanhaDetalheDadosService {
     this.idInterno = id;
 
     this.observarCenaAtiva(() => this.cenaService.listarPorCampanha(id).pipe(
+      tap(cenas => this.cenas.set(cenas)),
       map(cenas => cenas.find(cena => cena.status === CenaStatusEnum.ATIVA) ?? null),
     ));
 

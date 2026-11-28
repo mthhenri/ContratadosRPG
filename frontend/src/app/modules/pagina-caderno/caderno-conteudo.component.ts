@@ -344,6 +344,27 @@ export class CadernoConteudo {
     this.listaRecolhida.update((recolhida) => !recolhida);
   }
 
+  /**
+   * Abre uma página do próprio caderno pedida de fora do painel (ui-45, mesa do mestre na
+   * campanha): volta para "Meu caderno" e passa pelo mesmo caminho do clique na lista, inclusive a
+   * pergunta sobre o rascunho não salvo. A página que já está aberta continua aberta (o clique na
+   * lista a fecharia).
+   */
+  abrirPaginaDoMeuCaderno(id: number): void {
+    if (this.modoCaderno() !== 'MEU') this.selecionarModo('MEU');
+    if (this.store.paginaAtiva()?.id === id) {
+      this.store.definirVistaMobile('CONTEUDO');
+      return;
+    }
+    this.selecionarPagina(id);
+  }
+
+  /** Começa uma página nova no próprio caderno, pedida de fora do painel (ui-45). */
+  comecarPaginaNoMeuCaderno(): void {
+    if (this.modoCaderno() !== 'MEU') this.selecionarModo('MEU');
+    this.iniciarNovaPagina();
+  }
+
   protected iniciarNovaPagina(): void {
     this.exclusaoPendente.set(false);
     this.avisoImportacao.set(null);
